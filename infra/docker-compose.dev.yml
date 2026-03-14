@@ -1,0 +1,95 @@
+services:
+  # ==================== PostgreSQL 16 ====================
+  postgres:
+    image: postgres:16-alpine
+    container_name: ecole-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ecole}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ecole}
+      POSTGRES_DB: ${POSTGRES_DB:-ecole_platform}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ecole} -d ${POSTGRES_DB:-ecole_platform}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecole-network
+
+  # ==================== Redis 7 ====================
+  redis:
+    image: redis:7-alpine
+    container_name: ecole-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - ecole-network
+
+  # ==================== FastAPI Backend ====================
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: ecole-backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-ecole}:${POSTGRES_PASSWORD:-ecole}@postgres:5432/${POSTGRES_DB:-ecole_platform}
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-me-in-production}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
+      APP_ENV: development
+      LOG_LEVEL: DEBUG
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:3000}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../backend/app:/app/app
+      - ../backend/alembic:/app/alembic
+      - ../backend/tests:/app/tests
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ecole-network
+
+  # ==================== Vite Web Frontend ====================
+  web:
+    image: node:20-alpine
+    container_name: ecole-web
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "5173:5173"
+    volumes:
+      - ../web:/app
+      - web_node_modules:/app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - ecole-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  web_node_modules:
+
+networks:
+  ecole-network:
+    driver: bridge

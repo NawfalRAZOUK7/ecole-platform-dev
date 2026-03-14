@@ -1,0 +1,82 @@
+# ==================== Python ====================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.venv/
+venv/
+env/
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+pytestdebug.log
+
+# ==================== Node / React ====================
+node_modules/
+dist/
+.pnp
+.pnp.js
+coverage/
+.next/
+out/
+.nuxt/
+.cache/
+*.tsbuildinfo
+.npm
+.eslintcache
+
+# ==================== Flutter / Dart ====================
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+*.iml
+.metadata
+pubspec.lock
+
+# ==================== Docker ====================
+.env
+docker-compose.override.yml
+
+# ==================== IDE ====================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ==================== OS ====================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# ==================== Secrets ====================
+*.pem
+*.key
+.env.local
+.env.*.local
+secrets/
