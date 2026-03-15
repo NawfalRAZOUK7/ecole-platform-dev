@@ -1,4 +1,4 @@
-.PHONY: up down restart logs migrate seed test lint shell build clean
+.PHONY: up down restart logs migrate seed test lint shell build clean status health
 
 COMPOSE_FILE = infra/docker-compose.dev.yml
 DC = docker compose -f $(COMPOSE_FILE)
@@ -66,4 +66,4 @@ status:
 	$(DC) ps
 
 health:
-	curl -s http://localhost:8000/api/v1/health | python -m json.tool
+	@curl -sf http://localhost:8000/api/v1/health | python3 -m json.tool || echo '❌ Backend health check failed'
