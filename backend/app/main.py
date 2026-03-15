@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.router import router as v1_router
 from app.core.config import settings
+from app.core.middleware import register_middleware
 
 app = FastAPI(
     title="École Platform API",
@@ -18,6 +19,10 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+
+# Register middleware and exception handlers (S-039, S-069)
+# Must be registered BEFORE CORS middleware so CorrelationIdMiddleware wraps everything
+register_middleware(app)
 
 # CORS middleware
 app.add_middleware(
