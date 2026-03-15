@@ -1,0 +1,446 @@
+# CI Pipeline — École Platform
+#
+# Reference: S-125 — CI pipeline, EP-08 Testing & Quality
+# Stages: lint → unit → integration → contract → security
+# Coverage enforcement: ≥80% overall, ≥90% API, ≥85% business logic
+
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "20"
+
+jobs:
+  # ──────────────────────────────────────────────────────────
+  # Stage 1: Lint
+  # ──────────────────────────────────────────────────────────
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements-dev.txt
+
+      - name: Ruff check (lint)
+        run: |
+          cd backend
+          ruff check app/ tests/
+
+      - name: Ruff format check
+        run: |
+          cd backend
+          ruff format --check app/ tests/
+
+  # ──────────────────────────────────────────────────────────
+  # Stage 2: Unit Tests (no DB/Redis needed)
+  # ──────────────────────────────────────────────────────────
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: lint
+    env:
+      JWT_SECRET_KEY: test-secret-key-ci-only
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+      REFRESH_TOKEN_EXPIRE_DAYS: "7"
+      DATABASE_URL: postgresql+asyncpg://ecole:ecole@localhost:5432/ecole_platform
+      REDIS_URL: redis://localhost:6379/0
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements-dev.txt
+
+      - name: Run unit tests with coverage
+        run: |
+          cd backend
+          pytest tests/test_unit_*.py -v --tb=short \
+            --cov=app/core \
+            --cov-report=term-missing \
+            --cov-report=xml:coverage-unit.xml \
+            --cov-fail-under=85
+
+      - name: Upload unit coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-unit
+          path: backend/coverage-unit.xml
+
+  # ──────────────────────────────────────────────────────────
+  # Stage 3: Integration Tests (needs DB + Redis)
+  # ──────────────────────────────────────────────────────────
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ecole
+          POSTGRES_PASSWORD: ecole
+          POSTGRES_DB: ecole_platform
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ecole -d ecole_platform"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://ecole:ecole@localhost:5432/ecole_platform
+      REDIS_URL: redis://localhost:6379/0
+      JWT_SECRET_KEY: test-secret-key-ci-only
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+      REFRESH_TOKEN_EXPIRE_DAYS: "7"
+      APP_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements-dev.txt
+
+      - name: Run migrations
+        run: |
+          cd backend
+          alembic upgrade head
+
+      - name: Seed test data
+        run: |
+          cd backend
+          python -m app.seed
+
+      - name: Start API server
+        run: |
+          cd backend
+          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          # Wait for server to be ready
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8000/api/v1/health && break
+            sleep 1
+          done
+
+      - name: Run integration tests (auth + phase3)
+        run: |
+          cd backend
+          pytest tests/test_auth.py tests/test_phase3.py -v --tb=short \
+            --cov=app/api \
+            --cov-report=term-missing \
+            --cov-report=xml:coverage-integration.xml \
+            --cov-fail-under=90
+
+      - name: Upload integration coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-integration
+          path: backend/coverage-integration.xml
+
+  # ──────────────────────────────────────────────────────────
+  # Stage 4: Contract Tests (needs running API)
+  # ──────────────────────────────────────────────────────────
+  contract-tests:
+    name: Contract Tests
+    runs-on: ubuntu-latest
+    needs: integration-tests
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ecole
+          POSTGRES_PASSWORD: ecole
+          POSTGRES_DB: ecole_platform
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ecole -d ecole_platform"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://ecole:ecole@localhost:5432/ecole_platform
+      REDIS_URL: redis://localhost:6379/0
+      JWT_SECRET_KEY: test-secret-key-ci-only
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+      REFRESH_TOKEN_EXPIRE_DAYS: "7"
+      APP_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements-dev.txt
+
+      - name: Run migrations + seed
+        run: |
+          cd backend
+          alembic upgrade head
+          python -m app.seed
+
+      - name: Start API server
+        run: |
+          cd backend
+          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8000/api/v1/health && break
+            sleep 1
+          done
+
+      - name: Run contract tests
+        run: |
+          cd backend
+          pytest tests/test_contract.py -v --tb=short
+
+  # ──────────────────────────────────────────────────────────
+  # Stage 5: RBAC Security Tests (needs running API)
+  # ──────────────────────────────────────────────────────────
+  security-tests:
+    name: RBAC Security Tests
+    runs-on: ubuntu-latest
+    needs: integration-tests
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ecole
+          POSTGRES_PASSWORD: ecole
+          POSTGRES_DB: ecole_platform
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ecole -d ecole_platform"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://ecole:ecole@localhost:5432/ecole_platform
+      REDIS_URL: redis://localhost:6379/0
+      JWT_SECRET_KEY: test-secret-key-ci-only
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+      REFRESH_TOKEN_EXPIRE_DAYS: "7"
+      APP_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements-dev.txt
+
+      - name: Run migrations + seed
+        run: |
+          cd backend
+          alembic upgrade head
+          python -m app.seed
+
+      - name: Start API server
+        run: |
+          cd backend
+          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8000/api/v1/health && break
+            sleep 1
+          done
+
+      - name: Run RBAC security tests
+        run: |
+          cd backend
+          pytest tests/test_rbac_security.py -v --tb=short
+
+  # ──────────────────────────────────────────────────────────
+  # Stage 6: Full Coverage Report
+  # ──────────────────────────────────────────────────────────
+  coverage-report:
+    name: Coverage Report
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests, contract-tests, security-tests]
+    if: always()
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ecole
+          POSTGRES_PASSWORD: ecole
+          POSTGRES_DB: ecole_platform
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ecole -d ecole_platform"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://ecole:ecole@localhost:5432/ecole_platform
+      REDIS_URL: redis://localhost:6379/0
+      JWT_SECRET_KEY: test-secret-key-ci-only
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+      REFRESH_TOKEN_EXPIRE_DAYS: "7"
+      APP_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements-dev.txt
+
+      - name: Run migrations + seed
+        run: |
+          cd backend
+          alembic upgrade head
+          python -m app.seed
+
+      - name: Start API server
+        run: |
+          cd backend
+          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8000/api/v1/health && break
+            sleep 1
+          done
+
+      - name: Run all tests with combined coverage
+        run: |
+          cd backend
+          pytest tests/ -v --tb=short \
+            --cov=app \
+            --cov-report=term-missing \
+            --cov-report=html:htmlcov \
+            --cov-report=xml:coverage.xml \
+            --cov-fail-under=80
+
+      - name: Upload full coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-full
+          path: |
+            backend/coverage.xml
+            backend/htmlcov/
+
+  # ──────────────────────────────────────────────────────────
+  # Stage 7: Web Frontend Lint
+  # ──────────────────────────────────────────────────────────
+  web-lint:
+    name: Web Frontend Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd web
+          npm ci
+
+      - name: TypeScript compile check
+        run: |
+          cd web
+          npx tsc --noEmit
+
+      - name: Vite build
+        run: |
+          cd web
+          npm run build
