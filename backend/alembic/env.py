@@ -6,7 +6,12 @@ Migration groups ordered: G1-IAM → G2-ERP → G3-LMS → G4-COM → G5-Billing
 
 import asyncio
 import os
+import sys
 from logging.config import fileConfig
+from pathlib import Path
+
+# Ensure the backend root (/app) is in sys.path so 'app' package is importable
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from alembic import context
 from sqlalchemy import pool
