@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.router import router as v1_router
 from app.core.config import settings
+from app.core.idempotency import IdempotencyMiddleware
 from app.core.middleware import register_middleware
 
 app = FastAPI(
@@ -20,9 +21,12 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# Register middleware and exception handlers (S-039, S-069)
+# Register middleware and exception handlers (S-039, S-069, S-070)
 # Must be registered BEFORE CORS middleware so CorrelationIdMiddleware wraps everything
 register_middleware(app)
+
+# Idempotency-Key middleware for POST/PUT/PATCH (S-070)
+app.add_middleware(IdempotencyMiddleware)
 
 # CORS middleware
 app.add_middleware(
