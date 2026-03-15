@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.router import router as v1_router
 from app.core.config import settings
 from app.core.idempotency import IdempotencyMiddleware
+from app.core.metrics import register_metrics
 from app.core.middleware import register_middleware
 
 app = FastAPI(
@@ -20,6 +21,9 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+
+# Register Prometheus metrics middleware and /metrics endpoint (S-128, F2)
+register_metrics(app)
 
 # Register middleware and exception handlers (S-039, S-069, S-070)
 # Must be registered BEFORE CORS middleware so CorrelationIdMiddleware wraps everything

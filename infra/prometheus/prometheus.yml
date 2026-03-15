@@ -1,0 +1,53 @@
+# Prometheus configuration — École Platform
+#
+# Reference: S-128 — Prometheus metrics exporter, F2 — Observability & SLO
+# Scrapes the FastAPI /metrics endpoint for golden signal metrics.
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+
+# Alert rules
+rule_files:
+  - "alert_rules.yml"
+
+# Alertmanager target
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - "alertmanager:9093"
+
+# Scrape targets
+scrape_configs:
+  # ── FastAPI Backend ──
+  - job_name: "ecole-backend"
+    metrics_path: "/metrics"
+    scrape_interval: 10s
+    static_configs:
+      - targets: ["backend:8000"]
+        labels:
+          env: "development"
+          service: "api-backend"
+
+  # ── Prometheus self-monitoring ──
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # ── PostgreSQL exporter (optional — add postgres_exporter container) ──
+  # - job_name: "postgres"
+  #   static_configs:
+  #     - targets: ["postgres-exporter:9187"]
+  #       labels:
+  #         env: "development"
+  #         service: "postgresql"
+
+  # ── Redis exporter (optional — add redis_exporter container) ──
+  # - job_name: "redis"
+  #   static_configs:
+  #     - targets: ["redis-exporter:9121"]
+  #       labels:
+  #         env: "development"
+  #         service: "redis"

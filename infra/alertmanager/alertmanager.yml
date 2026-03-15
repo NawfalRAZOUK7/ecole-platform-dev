@@ -1,0 +1,82 @@
+# Alertmanager configuration — École Platform
+#
+# Reference: S-130 — Alertmanager rules, F2 Ch08 — Alerting & Severity Model
+# Anti-noise: deduplication, grouping, cooldown intervals
+
+global:
+  resolve_timeout: 5m
+
+# Route tree — route alerts by severity
+route:
+  receiver: "default"
+  group_by: ["alertname", "severity", "service"]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+
+  routes:
+    # SEV-1: Critical — immediate notification
+    - match:
+        severity: SEV-1
+      receiver: "critical-channel"
+      group_wait: 10s
+      group_interval: 1m
+      repeat_interval: 15m
+      continue: false
+
+    # SEV-2: Major — urgent but grouped
+    - match:
+        severity: SEV-2
+      receiver: "major-channel"
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 1h
+      continue: false
+
+    # SEV-3: Warning — low priority
+    - match:
+        severity: SEV-3
+      receiver: "warning-channel"
+      group_wait: 1m
+      group_interval: 10m
+      repeat_interval: 4h
+
+# Inhibition rules — suppress lower severity when higher is firing
+inhibit_rules:
+  # If SEV-1 fires for a service, suppress SEV-2/SEV-3 for same service
+  - source_match:
+      severity: SEV-1
+    target_match_re:
+      severity: "SEV-2|SEV-3"
+    equal: ["service"]
+
+  # If SEV-2 fires, suppress SEV-3 for same service
+  - source_match:
+      severity: SEV-2
+    target_match:
+      severity: SEV-3
+    equal: ["service"]
+
+# Receivers — configure notification channels
+# In production, replace with actual webhook/email/PagerDuty endpoints
+receivers:
+  - name: "default"
+    # Default: log to alertmanager (no external notification in dev)
+
+  - name: "critical-channel"
+    # Production: PagerDuty + Slack #ops-incidents
+    # webhook_configs:
+    #   - url: "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK"
+    #     send_resolved: true
+
+  - name: "major-channel"
+    # Production: Slack #ops-alerts
+    # webhook_configs:
+    #   - url: "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK"
+    #     send_resolved: true
+
+  - name: "warning-channel"
+    # Production: Slack #ops-monitoring (low priority)
+    # webhook_configs:
+    #   - url: "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK"
+    #     send_resolved: true

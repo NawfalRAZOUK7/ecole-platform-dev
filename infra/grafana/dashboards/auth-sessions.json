@@ -1,0 +1,104 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "panels": [
+    {
+      "title": "Login Attempts (success vs failure)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(auth_login_count{status=\"success\"}[5m]))",
+          "legendFormat": "Success",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(auth_login_count{status=\"failure\"}[5m]))",
+          "legendFormat": "Failure",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "reqps" } }
+    },
+    {
+      "title": "Login Success Rate (%)",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(auth_login_count{status=\"success\"}[10m])) / sum(rate(auth_login_count[10m])) * 100",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 85 },
+              { "color": "green", "value": 95 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "Token Refresh Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(auth_token_refresh_count{status=\"success\"}[5m]))",
+          "legendFormat": "Success",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(auth_token_refresh_count{status=\"failure\"}[5m]))",
+          "legendFormat": "Failure",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "title": "Auth Errors by Endpoint",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(api_error_count{path=~\"/api/v1/auth/.*\"}[5m])) by (path, status)",
+          "legendFormat": "{{ path }} {{ status }}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "401/403 Deny Rate",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "expr": "sum(rate(api_request_count{status=\"401\"}[5m]))",
+          "legendFormat": "401 (Unauthenticated)",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(api_request_count{status=\"403\"}[5m]))",
+          "legendFormat": "403 (Unauthorized)",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(rate(api_request_count{status=\"429\"}[5m]))",
+          "legendFormat": "429 (Rate Limited)",
+          "refId": "C"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["ecole", "auth", "sessions"],
+  "time": { "from": "now-1h", "to": "now" },
+  "title": "Auth & Sessions",
+  "uid": "ecole-auth-sessions"
+}

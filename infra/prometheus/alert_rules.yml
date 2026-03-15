@@ -1,0 +1,204 @@
+# Alertmanager rules — École Platform SLO thresholds
+#
+# Reference: S-130 — Alertmanager rules, F2 Ch07/Ch08 — SLI/SLO & Alerting
+# Severity model: SEV-1 (critical), SEV-2 (major), SEV-3 (warning)
+
+groups:
+  # ══════════════════════════════════════════════════════
+  # SEV-1: Critical — Immediate response required
+  # ══════════════════════════════════════════════════════
+  - name: sev1_critical
+    rules:
+      # API availability below 99.5% over 1 hour
+      - alert: ApiAvailabilityCritical
+        expr: |
+          (
+            sum(rate(api_request_count{status=~"5.."}[1h]))
+            /
+            sum(rate(api_request_count[1h]))
+          ) > 0.005
+        for: 5m
+        labels:
+          severity: SEV-1
+          service: api-backend
+          category: availability
+        annotations:
+          summary: "API availability below 99.5% (SEV-1)"
+          description: "Server error rate is {{ $value | humanizePercentage }} over the last 1h. SLO target: 99.5% availability."
+          runbook: "RBK-F4-001"
+
+      # Database pool saturation >= 90% for 10 minutes
+      - alert: DbPoolSaturationCritical
+        expr: |
+          (db_pool_in_use / db_pool_size) >= 0.90
+        for: 10m
+        labels:
+          severity: SEV-1
+          service: postgresql
+          category: saturation
+        annotations:
+          summary: "Database pool saturation >= 90% (SEV-1)"
+          description: "DB pool utilization at {{ $value | humanizePercentage }}. Risk of connection exhaustion."
+          runbook: "RBK-F4-004"
+
+      # Webhook signature failures (any occurrence)
+      - alert: WebhookSignatureFailure
+        expr: |
+          increase(webhook_signature_failures[5m]) > 0
+        for: 1m
+        labels:
+          severity: SEV-1
+          service: api-backend
+          category: security
+        annotations:
+          summary: "Webhook signature verification failure (SEV-1)"
+          description: "{{ $value }} webhook signature failures in last 5 minutes. Possible compromise."
+          runbook: "RBK-F4-003"
+
+  # ══════════════════════════════════════════════════════
+  # SEV-2: Major — Urgent attention required
+  # ══════════════════════════════════════════════════════
+  - name: sev2_major
+    rules:
+      # API p95 latency > 500ms for 10 minutes
+      - alert: ApiLatencyHigh
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(api_request_duration_seconds_bucket[5m])) by (le)
+          ) > 0.5
+        for: 10m
+        labels:
+          severity: SEV-2
+          service: api-backend
+          category: latency
+        annotations:
+          summary: "API p95 latency > 500ms (SEV-2)"
+          description: "API p95 latency is {{ $value | humanizeDuration }}. SLO target: 350ms p95."
+          runbook: "RBK-F4-004"
+
+      # API error rate > 2% for 5 minutes
+      - alert: ApiErrorRateHigh
+        expr: |
+          (
+            sum(rate(api_error_count[5m]))
+            /
+            sum(rate(api_request_count[5m]))
+          ) > 0.02
+        for: 5m
+        labels:
+          severity: SEV-2
+          service: api-backend
+          category: errors
+        annotations:
+          summary: "API error rate > 2% (SEV-2)"
+          description: "Error rate at {{ $value | humanizePercentage }}. SLO target: < 1%."
+          runbook: "RBK-F4-001"
+
+      # Auth login success rate < 90% over 10 minutes
+      - alert: AuthLoginSuccessLow
+        expr: |
+          (
+            sum(rate(auth_login_count{status="success"}[10m]))
+            /
+            sum(rate(auth_login_count[10m]))
+          ) < 0.90
+        for: 5m
+        labels:
+          severity: SEV-2
+          service: api-backend
+          category: auth
+        annotations:
+          summary: "Login success rate below 90% (SEV-2)"
+          description: "Login success rate at {{ $value | humanizePercentage }}. Possible auth infrastructure issue."
+          runbook: "RBK-F4-002"
+
+      # Database pool wait warning >= 85%
+      - alert: DbPoolSaturationWarning
+        expr: |
+          (db_pool_in_use / db_pool_size) >= 0.85
+        for: 10m
+        labels:
+          severity: SEV-2
+          service: postgresql
+          category: saturation
+        annotations:
+          summary: "Database pool saturation >= 85% (SEV-2)"
+          description: "DB pool utilization at {{ $value | humanizePercentage }}."
+          runbook: "RBK-F4-004"
+
+      # Provider timeout count > 30 in 5 minutes
+      - alert: ProviderTimeoutHigh
+        expr: |
+          increase(webhook_received_count{status="timeout"}[5m]) > 30
+        for: 1m
+        labels:
+          severity: SEV-2
+          service: api-backend
+          category: external
+        annotations:
+          summary: "External provider timeouts > 30 in 5m (SEV-2)"
+          description: "{{ $value }} provider timeouts detected."
+          runbook: "RBK-F4-003"
+
+      # Backup job failure
+      - alert: BackupJobFailed
+        expr: |
+          increase(backup_job_failure_count[1h]) > 0
+        for: 1m
+        labels:
+          severity: SEV-2
+          service: postgresql
+          category: backup
+        annotations:
+          summary: "Backup job failed (SEV-2)"
+          description: "A backup job has failed in the last hour. Investigate immediately."
+          runbook: "RBK-F4-006"
+
+  # ══════════════════════════════════════════════════════
+  # SEV-3: Warning — Monitor closely
+  # ══════════════════════════════════════════════════════
+  - name: sev3_warning
+    rules:
+      # High request rate (traffic spike)
+      - alert: ApiRequestRateHigh
+        expr: |
+          sum(rate(api_request_count[1m])) > 500
+        for: 5m
+        labels:
+          severity: SEV-3
+          service: api-backend
+          category: traffic
+        annotations:
+          summary: "API request rate > 500 req/s (SEV-3)"
+          description: "Current request rate: {{ $value }} req/s."
+
+      # Payment failure rate elevated
+      - alert: PaymentFailureElevated
+        expr: |
+          (
+            sum(rate(payment_completed_count{outcome="failed"}[15m]))
+            /
+            sum(rate(payment_completed_count[15m]))
+          ) > 0.10
+        for: 10m
+        labels:
+          severity: SEV-3
+          service: api-backend
+          category: billing
+        annotations:
+          summary: "Payment failure rate > 10% (SEV-3)"
+          description: "Payment failure rate at {{ $value | humanizePercentage }}."
+          runbook: "RBK-F4-003"
+
+      # No backup in 25 hours (missed daily backup)
+      - alert: BackupMissed
+        expr: |
+          (time() - last_successful_backup_timestamp{asset="postgresql"}) > 90000
+        for: 5m
+        labels:
+          severity: SEV-3
+          service: postgresql
+          category: backup
+        annotations:
+          summary: "PostgreSQL backup missed (>25h since last) (SEV-3)"
+          description: "Last successful backup was {{ $value | humanizeDuration }} ago."

@@ -1,0 +1,124 @@
+# Staging Environment — École Platform
+#
+# Reference: S-127 — Staging environment, F1 Ch03 — Environment Topology
+# Stage deployment with managed-like services, anonymized data, TLS.
+#
+# URLs (per F1):
+#   API: https://staging-api.ecole-platform.example/api/v1
+#   Web: https://staging.ecole-platform.example
+#
+# Usage: docker compose -f infra/docker-compose.staging.yml up -d
+
+services:
+  # ==================== PostgreSQL 16 (Stage) ====================
+  postgres:
+    image: postgres:16-alpine
+    container_name: ecole-staging-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-ecole_platform_staging}
+    ports:
+      - "5432:5432"
+    volumes:
+      - staging_postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      # WAL archiving for PITR (F3)
+      - staging_wal_archive:/var/lib/postgresql/wal_archive
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=replica"
+      - "-c"
+      - "archive_mode=on"
+      - "-c"
+      - "archive_command=cp %p /var/lib/postgresql/wal_archive/%f"
+      - "-c"
+      - "max_wal_senders=3"
+      - "-c"
+      - "log_statement=mod"
+      - "-c"
+      - "log_min_duration_statement=200"
+      - "-c"
+      - "shared_preload_libraries=pg_stat_statements"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB:-ecole_platform_staging}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecole-staging-network
+    restart: unless-stopped
+
+  # ==================== Redis 7 (Stage) ====================
+  redis:
+    image: redis:7-alpine
+    container_name: ecole-staging-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - staging_redis_data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecole-staging-network
+    restart: unless-stopped
+
+  # ==================== FastAPI Backend (Stage) ====================
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: ecole-staging-backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-ecole_platform_staging}
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
+      APP_ENV: staging
+      LOG_LEVEL: INFO
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://staging.ecole-platform.example}
+      ENABLE_TRACING: "true"
+      ENABLE_STRICT_RATE_LIMIT: "true"
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ecole-staging-network
+    restart: unless-stopped
+
+  # ==================== Nginx Reverse Proxy (Stage) ====================
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: ecole-staging-nginx
+    volumes:
+      - ./nginx/nginx-staging.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
+    networks:
+      - ecole-staging-network
+    restart: unless-stopped
+
+volumes:
+  staging_postgres_data:
+  staging_redis_data:
+  staging_wal_archive:
+
+networks:
+  ecole-staging-network:
+    driver: bridge
