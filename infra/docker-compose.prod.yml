@@ -1,50 +1,269 @@
-# Production Docker Compose — Placeholder
-# Reference: Pack F1 — Deployment Architecture
+# Production Environment — École Platform
 #
-# Production deployment will use managed services:
-# - Managed PostgreSQL (with PITR backups per F3)
-# - Managed Redis
-# - Container orchestration (Docker Compose or K8s)
-# - Nginx reverse proxy with TLS
-# - Centralized secret management
+# Reference: Phase 0A — Infrastructure Production Hardening
 #
-# This file will be expanded in Sprint 9 (EP-09: DevOps & Infrastructure)
+# Prerequisites:
+#   1. Create .env.prod with all required vars (see .env.example)
+#   2. Place TLS certs in ./certs/ (fullchain.pem, privkey.pem)
+#   3. Create Docker secrets files in ./secrets/:
+#        echo "your-jwt-secret" > infra/secrets/jwt_secret_key.txt
+#        echo "your-db-password" > infra/secrets/db_password.txt
+#        echo "your-smtp-password" > infra/secrets/smtp_password.txt
+#
+# Usage:
+#   docker compose -f infra/docker-compose.prod.yml --env-file .env.prod up -d
+#
+# URLs (per F1):
+#   API: https://api.ecole-platform.example/api/v1
+#   Web: https://ecole-platform.example
 
 services:
+  # ==================== FastAPI Backend (Production) ====================
   backend:
     build:
       context: ../backend
       dockerfile: Dockerfile
       target: production
+    # Note: no container_name to allow scaling with --scale backend=N
     environment:
+      # Database — use managed PostgreSQL URL in production
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://ecole:ecole@postgres:5432/ecole_platform}
+      # Cache — use managed Redis URL in production
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      # Auth
+      JWT_SECRET_KEY_FILE: /run/secrets/jwt_secret_key
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-15}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
+      # App
       APP_ENV: production
-      LOG_LEVEL: INFO
+      LOG_LEVEL: ${LOG_LEVEL:-WARNING}
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://ecole-platform.example}
+      # Features
+      ENABLE_TRACING: "true"
+      ENABLE_STRICT_RATE_LIMIT: "true"
+      # File uploads
+      UPLOAD_DIR: ${UPLOAD_DIR:-/app/uploads}
+      MAX_FILE_SIZE_MB: ${MAX_FILE_SIZE_MB:-25}
+      # SMTP
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD_FILE: /run/secrets/smtp_password
+      # S3 / Object storage
+      S3_ENDPOINT: ${S3_ENDPOINT}
+      S3_BUCKET: ${S3_BUCKET:-ecole-uploads}
+      S3_REGION: ${S3_REGION:-auto}
+      # TOTP
+      TOTP_ISSUER: ${TOTP_ISSUER:-EcolePlatform}
+      # Timezone
+      TZ: ${TZ:-Africa/Casablanca}
+    volumes:
+      - backend_uploads:/app/uploads
+    secrets:
+      - jwt_secret_key
+      - smtp_password
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ecole-prod-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "2.0"
+        reservations:
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; r = httpx.get('http://localhost:8000/api/v1/health'); r.raise_for_status()"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+
+  # ==================== PostgreSQL 16 (Production) ====================
+  # NOTE: In production, prefer a managed database (AWS RDS, Azure Database,
+  #       DigitalOcean Managed DB, etc.) and remove this service.
+  #       Set DATABASE_URL to the managed DB connection string instead.
+  postgres:
+    image: postgres:16-alpine
+    container_name: ecole-prod-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ecole}
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_DB: ${POSTGRES_DB:-ecole_platform}
+    volumes:
+      - prod_postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - prod_wal_archive:/var/lib/postgresql/wal_archive
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=replica"
+      - "-c"
+      - "archive_mode=on"
+      - "-c"
+      - "archive_command=cp %p /var/lib/postgresql/wal_archive/%f"
+      - "-c"
+      - "max_wal_senders=5"
+      - "-c"
+      - "max_connections=200"
+      - "-c"
+      - "shared_buffers=256MB"
+      - "-c"
+      - "effective_cache_size=768MB"
+      - "-c"
+      - "work_mem=4MB"
+      - "-c"
+      - "maintenance_work_mem=64MB"
+      - "-c"
+      - "log_statement=mod"
+      - "-c"
+      - "log_min_duration_statement=200"
+      - "-c"
+      - "shared_preload_libraries=pg_stat_statements"
+    secrets:
+      - db_password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ecole} -d ${POSTGRES_DB:-ecole_platform}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecole-prod-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: "2.0"
+        reservations:
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  # ==================== Redis 7 (Production) ====================
+  # NOTE: In production, prefer managed Redis (AWS ElastiCache,
+  #       Azure Cache, etc.) and remove this service.
+  #       Set REDIS_URL to the managed Redis connection string instead.
+  redis:
+    image: redis:7-alpine
+    container_name: ecole-prod-redis
+    volumes:
+      - prod_redis_data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf --maxmemory 512mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecole-prod-network
+    restart: unless-stopped
     deploy:
       resources:
         limits:
           memory: 512M
-          cpus: "1.0"
-    restart: unless-stopped
+          cpus: "0.5"
+        reservations:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
+  # ==================== Web Frontend (Production) ====================
   web:
     build:
       context: ../web
       dockerfile: Dockerfile
+      target: production
+    container_name: ecole-prod-web
+    networks:
+      - ecole-prod-network
+    restart: unless-stopped
     deploy:
       resources:
         limits:
           memory: 256M
           cpus: "0.5"
-    restart: unless-stopped
+        reservations:
+          memory: 64M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
+  # ==================== Nginx Reverse Proxy (Production) ====================
   nginx:
-    image: nginx:alpine
+    image: nginx:1.25-alpine
+    container_name: ecole-prod-nginx
+    volumes:
+      - ./nginx/nginx-prod.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/ssl:ro
+      - certbot_webroot:/var/www/certbot:ro
     ports:
       - "80:80"
       - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - backend
       - web
+    networks:
+      - ecole-prod-network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.5"
+        reservations:
+          memory: 32M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost/api/v1/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# ==================== Docker Secrets ====================
+# In Docker Swarm: use `docker secret create`
+# In Compose: secrets read from local files (create before first deploy)
+secrets:
+  jwt_secret_key:
+    file: ./secrets/jwt_secret_key.txt
+  db_password:
+    file: ./secrets/db_password.txt
+  smtp_password:
+    file: ./secrets/smtp_password.txt
+
+# ==================== Volumes ====================
+volumes:
+  prod_postgres_data:
+  prod_redis_data:
+  prod_wal_archive:
+  backend_uploads:
+  certbot_webroot:
+
+# ==================== Network ====================
+networks:
+  ecole-prod-network:
+    driver: bridge

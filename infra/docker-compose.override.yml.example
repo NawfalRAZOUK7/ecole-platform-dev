@@ -1,0 +1,94 @@
+# Docker Compose Override — Local Dev Customization
+#
+# Copy this file to docker-compose.override.yml to customize your local setup.
+# The override file is automatically merged with docker-compose.dev.yml.
+#
+#   cp infra/docker-compose.override.yml.example infra/docker-compose.override.yml
+#
+# docker-compose.override.yml is .gitignored — your changes stay local.
+#
+# Usage:
+#   docker compose -f infra/docker-compose.dev.yml -f infra/docker-compose.override.yml up -d
+#
+# Common customizations:
+#   - Change exposed ports (avoid conflicts with other projects)
+#   - Add extra volumes (e.g., mount custom config)
+#   - Adjust resource limits for your machine
+#   - Add debug tools (pgAdmin, Redis Commander, Mailhog)
+
+services:
+  # ==================== Port Overrides ====================
+  # Uncomment to change default ports
+
+  # postgres:
+  #   ports:
+  #     - "5433:5432"  # Use 5433 if 5432 is taken
+
+  # redis:
+  #   ports:
+  #     - "6380:6379"  # Use 6380 if 6379 is taken
+
+  # backend:
+  #   ports:
+  #     - "8001:8000"  # Use 8001 if 8000 is taken
+
+  # web:
+  #   ports:
+  #     - "5174:5173"  # Use 5174 if 5173 is taken
+
+  # ==================== Resource Overrides ====================
+  # Uncomment to adjust memory/CPU limits for your machine
+
+  # postgres:
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 2G      # Increase for large datasets
+  #         cpus: "2.0"
+
+  # backend:
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 1G      # Increase for heavy AI processing
+  #         cpus: "2.0"
+
+  # ==================== Debug Tools ====================
+  # Uncomment to add useful dev tools
+
+  # pgAdmin — PostgreSQL web UI at http://localhost:5050
+  # pgadmin:
+  #   image: dpage/pgadmin4:latest
+  #   container_name: ecole-pgadmin
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: admin@ecole.local
+  #     PGADMIN_DEFAULT_PASSWORD: admin
+  #   ports:
+  #     - "5050:80"
+  #   depends_on:
+  #     - postgres
+  #   networks:
+  #     - ecole-network
+
+  # Redis Commander — Redis web UI at http://localhost:8081
+  # redis-commander:
+  #   image: rediscommander/redis-commander:latest
+  #   container_name: ecole-redis-commander
+  #   environment:
+  #     REDIS_HOSTS: local:redis:6379
+  #   ports:
+  #     - "8081:8081"
+  #   depends_on:
+  #     - redis
+  #   networks:
+  #     - ecole-network
+
+  # Mailhog — SMTP testing at http://localhost:8025
+  # mailhog:
+  #   image: mailhog/mailhog:latest
+  #   container_name: ecole-mailhog
+  #   ports:
+  #     - "1025:1025"   # SMTP
+  #     - "8025:8025"   # Web UI
+  #   networks:
+  #     - ecole-network
