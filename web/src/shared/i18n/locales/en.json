@@ -1,0 +1,124 @@
+{
+  "app": {
+    "name": "Ecole Platform",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "retry": "Retry",
+    "empty": "No items to display",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "close": "Close"
+  },
+  "nav": {
+    "feed": "Feed",
+    "notifications": "Notifications",
+    "content": "Content",
+    "results": "Results",
+    "invoices": "Invoices",
+    "activities": "Activities",
+    "profile": "My Profile",
+    "logout": "Logout"
+  },
+  "login": {
+    "title": "Sign In",
+    "email": "Email address",
+    "password": "Password",
+    "school": "School ID",
+    "submit": "Sign In",
+    "loading": "Signing in...",
+    "error": {
+      "invalid": "Invalid email or password",
+      "locked": "Account locked. Try again later.",
+      "generic": "Login error"
+    }
+  },
+  "feed": {
+    "title": "News Feed",
+    "empty": "No news at the moment",
+    "loadMore": "Load more"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications"
+  },
+  "content": {
+    "title": "Content Library",
+    "empty": "No content available",
+    "type": "Type",
+    "level": "Level",
+    "language": "Language",
+    "allTypes": "All types",
+    "allLevels": "All levels",
+    "allLanguages": "All languages",
+    "progress": {
+      "not_started": "Not started",
+      "in_progress": "In progress",
+      "completed": "Completed"
+    }
+  },
+  "results": {
+    "title": "Results",
+    "empty": "No results available",
+    "assignment": "Assignment",
+    "course": "Course",
+    "score": "Score",
+    "status": "Status",
+    "dueAt": "Due date",
+    "feedback": "Feedback"
+  },
+  "invoices": {
+    "title": "Invoices",
+    "empty": "No invoices",
+    "amount": "Amount",
+    "status": "Status",
+    "issuedDate": "Issued date",
+    "dueDate": "Due date",
+    "pay": "Pay",
+    "items": "Details",
+    "statusLabels": {
+      "pending": "Pending",
+      "paid": "Paid",
+      "failed": "Failed",
+      "canceled": "Canceled"
+    }
+  },
+  "activities": {
+    "title": "Activities",
+    "empty": "No activities available",
+    "start": "Start",
+    "type": "Type",
+    "difficulty": "Difficulty",
+    "objective": "Objective"
+  },
+  "profile": {
+    "title": "My Profile",
+    "role": "Role",
+    "school": "School",
+    "email": "Email",
+    "permissions": "Permissions",
+    "language": "Language",
+    "logout": "Sign Out"
+  },
+  "errors": {
+    "validation": "Validation error",
+    "authn": "Authentication required",
+    "authz": "Access denied",
+    "conflict": "Data conflict",
+    "system": "System error",
+    "rate_limit": "Too many requests",
+    "not_found": "Resource not found",
+    "network": "Network error",
+    "unknown": "Unknown error"
+  },
+  "roles": {
+    "ADM": "Administrator",
+    "DIR": "Director",
+    "TCH": "Teacher",
+    "PAR": "Parent",
+    "STD": "Student",
+    "SUP": "Support",
+    "SYS": "System"
+  }
+}

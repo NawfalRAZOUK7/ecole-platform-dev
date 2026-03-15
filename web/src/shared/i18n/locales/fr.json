@@ -1,0 +1,124 @@
+{
+  "app": {
+    "name": "Ecole Platform",
+    "loading": "Chargement...",
+    "error": "Une erreur est survenue",
+    "retry": "Reessayer",
+    "empty": "Aucun element a afficher",
+    "back": "Retour",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "close": "Fermer"
+  },
+  "nav": {
+    "feed": "Fil d'actualite",
+    "notifications": "Notifications",
+    "content": "Contenus",
+    "results": "Resultats",
+    "invoices": "Factures",
+    "activities": "Activites",
+    "profile": "Mon profil",
+    "logout": "Deconnexion"
+  },
+  "login": {
+    "title": "Connexion",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "school": "Identifiant ecole",
+    "submit": "Se connecter",
+    "loading": "Connexion en cours...",
+    "error": {
+      "invalid": "Email ou mot de passe incorrect",
+      "locked": "Compte verrouille. Reessayez plus tard.",
+      "generic": "Erreur de connexion"
+    }
+  },
+  "feed": {
+    "title": "Fil d'actualite",
+    "empty": "Aucune actualite pour le moment",
+    "loadMore": "Charger plus"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "Aucune notification"
+  },
+  "content": {
+    "title": "Bibliotheque de contenus",
+    "empty": "Aucun contenu disponible",
+    "type": "Type",
+    "level": "Niveau",
+    "language": "Langue",
+    "allTypes": "Tous les types",
+    "allLevels": "Tous les niveaux",
+    "allLanguages": "Toutes les langues",
+    "progress": {
+      "not_started": "Non commence",
+      "in_progress": "En cours",
+      "completed": "Termine"
+    }
+  },
+  "results": {
+    "title": "Resultats",
+    "empty": "Aucun resultat disponible",
+    "assignment": "Devoir",
+    "course": "Cours",
+    "score": "Note",
+    "status": "Statut",
+    "dueAt": "Date limite",
+    "feedback": "Commentaire"
+  },
+  "invoices": {
+    "title": "Factures",
+    "empty": "Aucune facture",
+    "amount": "Montant",
+    "status": "Statut",
+    "issuedDate": "Date d'emission",
+    "dueDate": "Date d'echeance",
+    "pay": "Payer",
+    "items": "Details",
+    "statusLabels": {
+      "pending": "En attente",
+      "paid": "Payee",
+      "failed": "Echouee",
+      "canceled": "Annulee"
+    }
+  },
+  "activities": {
+    "title": "Activites",
+    "empty": "Aucune activite disponible",
+    "start": "Commencer",
+    "type": "Type",
+    "difficulty": "Difficulte",
+    "objective": "Objectif"
+  },
+  "profile": {
+    "title": "Mon profil",
+    "role": "Role",
+    "school": "Ecole",
+    "email": "Email",
+    "permissions": "Permissions",
+    "language": "Langue",
+    "logout": "Se deconnecter"
+  },
+  "errors": {
+    "validation": "Erreur de validation",
+    "authn": "Authentification requise",
+    "authz": "Acces non autorise",
+    "conflict": "Conflit de donnees",
+    "system": "Erreur systeme",
+    "rate_limit": "Trop de requetes",
+    "not_found": "Ressource introuvable",
+    "network": "Erreur reseau",
+    "unknown": "Erreur inconnue"
+  },
+  "roles": {
+    "ADM": "Administrateur",
+    "DIR": "Directeur",
+    "TCH": "Enseignant",
+    "PAR": "Parent",
+    "STD": "Eleve",
+    "SUP": "Support",
+    "SYS": "Systeme"
+  }
+}
