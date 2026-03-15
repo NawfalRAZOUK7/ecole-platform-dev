@@ -61,6 +61,12 @@ from app.models.billing import (
 # G6 — Audit
 from app.models.audit import AuditLog
 
+# G7 — AI
+from app.models.ai import (
+    AIPreference,
+    WritingAttempt,
+)
+
 __all__ = [
     # IAM
     "User",
@@ -104,4 +110,7 @@ __all__ = [
     "ProviderWebhookEvent",
     # Audit
     "AuditLog",
+    # AI
+    "WritingAttempt",
+    "AIPreference",
 ]

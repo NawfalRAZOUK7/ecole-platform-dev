@@ -57,6 +57,9 @@ from app.api.v1.notifications import router as notifications_router
 from app.api.v1.consents import router as consents_router
 from app.api.v1.feed import router as feed_router
 
+# Phase 8 — AI & Data routers
+from app.api.v1.ai import router as ai_router
+
 router = APIRouter()
 
 
@@ -103,3 +106,6 @@ router.include_router(payments_router)
 router.include_router(notifications_router)
 router.include_router(consents_router)
 router.include_router(feed_router)
+
+# Mount sub-routers — Phase 8 AI & Data
+router.include_router(ai_router)
