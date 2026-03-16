@@ -134,6 +134,7 @@ class Session(TimestampMixin, Base):
     """Auth session — tracks JWT refresh sessions with revocation.
 
     revoke_at IS NULL means the session is still active.
+    Phase 2A: Added user_agent, ip_address, device_name for session management.
     """
 
     __tablename__ = "sessions"
@@ -147,6 +148,11 @@ class Session(TimestampMixin, Base):
     )
     source: Mapped[str | None] = mapped_column(String(50), nullable=True)
     correlation_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True)
+
+    # Phase 2A — device fingerprint columns
+    user_agent: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
+    device_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
 
     # Relationships
     user: Mapped["User"] = relationship(back_populates="sessions")

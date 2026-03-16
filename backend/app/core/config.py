@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
 
+    # Rate limiting (Phase 2A)
+    enable_strict_rate_limit: bool = False  # True in production/staging
+
     # CORS
     cors_origins: str = "http://localhost:5173,http://localhost:3000"
 

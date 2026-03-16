@@ -66,7 +66,7 @@ class AuthService:
         self.audit = AuditService(db)
 
     # ------------------------------------------------------------------
-    # Login (S-030)
+    # Login (S-030, Phase 2A: device info)
     # ------------------------------------------------------------------
     async def login(
         self,
@@ -75,6 +75,8 @@ class AuthService:
         school_id: uuid.UUID,
         source: str = "web",
         ip_address: str | None = None,
+        user_agent: str | None = None,
+        device_name: str | None = None,
     ) -> dict[str, Any]:
         """Authenticate user and create a session.
 
@@ -163,13 +165,16 @@ class AuthService:
                 error_code="ERR-IAM-404",
             )
 
-        # 5. Create session record
+        # 5. Create session record (Phase 2A: include device info)
         cid = get_correlation_id()
         session = Session(
             user_id=user.id,
             school_id=school_id,
             source=source,
             correlation_id=uuid.UUID(cid) if cid else None,
+            user_agent=user_agent[:500] if user_agent else None,
+            ip_address=ip_address[:45] if ip_address else None,
+            device_name=device_name[:200] if device_name else None,
         )
         self.db.add(session)
         await self.db.flush()  # Get session.id
@@ -405,6 +410,169 @@ class AuthService:
                 for m in memberships
             ],
         }
+
+    # ------------------------------------------------------------------
+    # Session listing (Phase 2A)
+    # ------------------------------------------------------------------
+    async def list_sessions(
+        self,
+        user_id: uuid.UUID,
+        school_id: uuid.UUID,
+    ) -> list[dict[str, Any]]:
+        """List active sessions for the authenticated user.
+
+        Returns sessions with device info (user_agent, ip_address, device_name).
+        Only returns non-revoked sessions for the user's current school.
+        """
+        result = await self.db.execute(
+            select(Session)
+            .where(
+                Session.user_id == user_id,
+                Session.school_id == school_id,
+                Session.revoke_at.is_(None),
+            )
+            .order_by(Session.created_at.desc())
+        )
+        sessions = result.scalars().all()
+
+        return [
+            {
+                "session_id": s.id,
+                "source": s.source,
+                "user_agent": s.user_agent,
+                "ip_address": s.ip_address,
+                "device_name": s.device_name,
+                "created_at": s.created_at.isoformat() if s.created_at else None,
+                "last_active": s.updated_at.isoformat() if s.updated_at else None,
+            }
+            for s in sessions
+        ]
+
+    # ------------------------------------------------------------------
+    # Session revocation (Phase 2A)
+    # ------------------------------------------------------------------
+    async def revoke_session(
+        self,
+        target_session_id: uuid.UUID,
+        actor_user_id: uuid.UUID,
+        actor_school_id: uuid.UUID,
+        actor_role: str,
+        ip_address: str | None = None,
+    ) -> dict[str, Any]:
+        """Revoke a specific session.
+
+        Users can revoke their own sessions.
+        ADM can revoke any session within their school.
+        """
+        # Find the target session
+        result = await self.db.execute(
+            select(Session).where(
+                Session.id == target_session_id,
+                Session.revoke_at.is_(None),
+            )
+        )
+        session = result.scalar_one_or_none()
+
+        if session is None:
+            raise NotFoundError("Session not found", error_code="ERR-IAM-404")
+
+        # School boundary check
+        if session.school_id != actor_school_id:
+            raise NotFoundError("Session not found", error_code="ERR-IAM-404")
+
+        # Authorization: owner or ADM
+        if session.user_id != actor_user_id and actor_role != "ADM":
+            raise AuthorizationError(
+                "Cannot revoke another user's session",
+                error_code="ERR-AUTHZ-001",
+            )
+
+        # Revoke
+        session.revoke_at = datetime.now(timezone.utc)
+        await self.db.flush()
+
+        # Clean up Redis tokens
+        await self.redis.delete(f"refresh_jti:{target_session_id}")
+        await self.redis.delete(f"csrf:{target_session_id}")
+
+        # Audit
+        await self.audit.log_event(
+            school_id=actor_school_id,
+            actor_id=actor_user_id,
+            action_type="AUTH_SESSION_REVOKED",
+            outcome="success",
+            target_type="session",
+            target_id=target_session_id,
+            ip_address=ip_address,
+        )
+
+        return {"message": "Session revoked successfully"}
+
+    # ------------------------------------------------------------------
+    # Password change (Phase 2A)
+    # ------------------------------------------------------------------
+    async def change_password(
+        self,
+        user_id: uuid.UUID,
+        school_id: uuid.UUID,
+        current_password: str,
+        new_password: str,
+        current_session_id: uuid.UUID,
+        ip_address: str | None = None,
+    ) -> dict[str, Any]:
+        """Change user's password (requires current password).
+
+        Enforces password policy on the new password.
+        Revokes all other sessions (keeps current one).
+        """
+        # Load user
+        result = await self.db.execute(select(User).where(User.id == user_id))
+        user = result.scalar_one_or_none()
+        if user is None:
+            raise NotFoundError("User not found", error_code="ERR-IAM-404")
+
+        # Verify current password
+        if not verify_password(current_password, user.password_hash):
+            raise AuthenticationError(
+                "Current password is incorrect",
+                error_code="ERR-IAM-401",
+            )
+
+        # Enforce password policy
+        from app.core.password_policy import password_validator
+        password_validator.validate(
+            new_password,
+            email=user.email,
+            full_name=user.full_name,
+        )
+
+        # Update password
+        user.password_hash = hash_password(new_password)
+        await self.db.flush()
+
+        # Revoke all OTHER active sessions (keep current one)
+        await self.db.execute(
+            update(Session)
+            .where(
+                Session.user_id == user_id,
+                Session.revoke_at.is_(None),
+                Session.id != current_session_id,
+            )
+            .values(revoke_at=datetime.now(timezone.utc))
+        )
+
+        # Audit
+        await self.audit.log_event(
+            school_id=school_id,
+            actor_id=user_id,
+            action_type="PASSWORD_CHANGED",
+            outcome="success",
+            target_type="user",
+            target_id=user_id,
+            ip_address=ip_address,
+        )
+
+        return {"message": "Password changed successfully"}
 
 
 class InvitationService:
@@ -750,7 +918,10 @@ class RecoveryService:
         new_password: str,
         ip_address: str | None = None,
     ) -> dict[str, Any]:
-        """Reset user's password. Requires status=verified."""
+        """Reset user's password. Requires status=verified.
+
+        Phase 2A: enforces password policy before accepting the new password.
+        """
         # Find recovery request
         result = await self.db.execute(
             select(AccountRecoveryRequest).where(
@@ -767,6 +938,20 @@ class RecoveryService:
                 "Recovery request must be verified before resetting password",
                 error_code="ERR-IAM-CONFLICT",
             )
+
+        # Phase 2A: load user to get email/name for password policy check
+        user_result = await self.db.execute(
+            select(User).where(User.id == recovery.user_id)
+        )
+        user = user_result.scalar_one_or_none()
+
+        # Phase 2A: enforce password policy
+        from app.core.password_policy import password_validator
+        password_validator.validate(
+            new_password,
+            email=user.email if user else None,
+            full_name=user.full_name if user else None,
+        )
 
         # Update password
         new_hash = hash_password(new_password)

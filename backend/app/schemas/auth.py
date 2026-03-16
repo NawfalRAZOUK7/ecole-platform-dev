@@ -94,4 +94,12 @@ class RecoveryVerifyRequest(BaseModel):
 
 class RecoveryResetRequest(BaseModel):
     request_id: UUID
-    new_password: str = Field(..., min_length=8, description="New password (min 8 chars)")
+    new_password: str = Field(..., min_length=12, description="New password (min 12 chars, Phase 2A policy)")
+
+
+# ---------------------------------------------------------------------------
+# Password change (Phase 2A)
+# ---------------------------------------------------------------------------
+class ChangePasswordRequest(BaseModel):
+    current_password: str = Field(..., min_length=1, description="Current password for verification")
+    new_password: str = Field(..., min_length=12, description="New password (min 12 chars, Phase 2A policy)")

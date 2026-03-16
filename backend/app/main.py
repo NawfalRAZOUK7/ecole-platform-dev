@@ -13,6 +13,7 @@ from app.core.config import settings
 from app.core.idempotency import IdempotencyMiddleware
 from app.core.metrics import register_metrics
 from app.core.middleware import register_middleware
+from app.core.rate_limit import RateLimitMiddleware
 
 app = FastAPI(
     title="École Platform API",
@@ -32,6 +33,9 @@ register_middleware(app)
 # Idempotency-Key middleware for POST/PUT/PATCH (S-070)
 app.add_middleware(IdempotencyMiddleware)
 
+# Rate limiting middleware — X-RateLimit headers + per-endpoint categories (Phase 2A)
+app.add_middleware(RateLimitMiddleware)
+
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -39,7 +43,13 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["X-Correlation-Id", "X-Request-Id"],
+    expose_headers=[
+        "X-Correlation-Id",
+        "X-Request-Id",
+        "X-RateLimit-Limit",
+        "X-RateLimit-Remaining",
+        "X-RateLimit-Reset",
+    ],
 )
 
 # Mount API v1 router
