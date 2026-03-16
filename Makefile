@@ -1,7 +1,7 @@
 .PHONY: up down restart logs migrate seed test lint shell build clean status health \
        staging-up staging-down prod-up prod-down monitoring-up monitoring-down \
        shell-db redis-cli backup restore docker-prune version \
-       migrate-new migrate-down test-cov lint-fix format web-install web-lint
+       migrate-new migrate-down migrate-status test-cov lint-fix format web-install web-lint
 
 # ==================== Compose Files ====================
 COMPOSE_FILE = infra/docker-compose.dev.yml
@@ -85,6 +85,14 @@ migrate-new:
 
 migrate-down:
 	$(DC) exec backend alembic downgrade -1
+
+migrate-status:
+	$(DC) exec backend alembic current
+	@echo "---"
+	$(DC) exec backend alembic history --verbose
+
+migrate-validate:
+	$(DC) exec backend python scripts/validate_migrations.py --verbose
 
 seed:
 	$(DC) exec backend python -m app.seed

@@ -1,6 +1,7 @@
-"""IAM domain models — Users, Memberships, Sessions, Invitations, Recovery.
+"""IAM domain models — Users, Memberships, Sessions, Invitations, Recovery, Parent-Child Links.
 
 Reference: Pack C4 (Data Model — IAM section), Sprint 1 stories S-014, S-021.
+Phase 1A: parent_child_links table for explicit parent-child relationships.
 Migration group: G1-IAM (no dependencies).
 """
 
@@ -51,6 +52,11 @@ class RecoveryStatus(str, enum.Enum):
     PENDING = "pending"
     VERIFIED = "verified"
     RESET = "reset"
+
+
+class LinkStatus(str, enum.Enum):
+    ACTIVE = "active"
+    REVOKED = "revoked"
 
 
 # ---------------------------------------------------------------------------
@@ -220,4 +226,46 @@ class AccountRecoveryRequest(TimestampMixin, Base):
 
     __table_args__ = (
         Index("idx_recovery_user_status", "user_id", "status"),
+    )
+
+
+class ParentChildLink(TimestampMixin, Base):
+    """Explicit parent-child relationship for ABAC ownership guard.
+
+    Phase 1A: replaces the enrollment-based derivation in get_parent_child_ids().
+    A parent (PAR role) is linked to one or more students (STD role) in a school.
+    linked_by tracks who created the link (ADM or the parent themselves).
+    """
+
+    __tablename__ = "parent_child_links"
+
+    parent_user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    child_user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default=LinkStatus.ACTIVE.value
+    )
+    linked_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    linked_by: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+
+    # Relationships
+    parent: Mapped["User"] = relationship(foreign_keys=[parent_user_id])
+    child: Mapped["User"] = relationship(foreign_keys=[child_user_id])
+    linker: Mapped["User | None"] = relationship(foreign_keys=[linked_by])
+
+    __table_args__ = (
+        UniqueConstraint(
+            "parent_user_id", "child_user_id", "school_id",
+            name="uq_parent_child_links_parent_child_school",
+        ),
+        Index("idx_parent_child_links_parent", "parent_user_id", "school_id"),
+        Index("idx_parent_child_links_child", "child_user_id"),
     )

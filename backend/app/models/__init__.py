@@ -8,6 +8,7 @@ from app.models.iam import (
     AccountRecoveryRequest,
     InvitationCode,
     Membership,
+    ParentChildLink,
     Session,
     User,
 )
@@ -74,6 +75,7 @@ __all__ = [
     "Session",
     "InvitationCode",
     "AccountRecoveryRequest",
+    "ParentChildLink",
     # ERP
     "AcademicYear",
     "Period",

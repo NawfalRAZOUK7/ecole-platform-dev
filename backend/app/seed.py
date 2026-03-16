@@ -36,6 +36,7 @@ from app.models.iam import (
     AccountRecoveryRequest,
     InvitationCode,
     Membership,
+    ParentChildLink,
     Session,
     User,
 )
@@ -108,6 +109,7 @@ async def clear_all(session: AsyncSession) -> None:
             "assessments, assignments, courses, justification_reviews, "
             "absence_justifications, attendance_records, attendance_sessions, "
             "teacher_assignments, enrollments, classes, periods, academic_years, "
+            "writing_attempts, ai_preferences, parent_child_links, "
             "account_recovery_requests, invitation_codes, sessions, memberships, "
             "users CASCADE"
         )
@@ -578,6 +580,42 @@ async def seed_audit(session: AsyncSession) -> None:
     print("  [Audit] 3 audit log entries")
 
 
+async def seed_parent_child_links(session: AsyncSession) -> None:
+    """Seed parent-child links — explicit parent-student relationships (Phase 1A)."""
+    links = [
+        # Parent 1 (Hassan Alaoui) -> Student 1 (Yassine Alaoui) — father-son
+        ParentChildLink(
+            parent_user_id=PARENT_1_ID,
+            child_user_id=STUDENT_1_ID,
+            school_id=SCHOOL_ID,
+            status="active",
+            linked_at=_now(),
+            linked_by=ADMIN_ID,
+        ),
+        # Parent 1 (Hassan Alaoui) -> Student 3 (Omar Benali) — second child
+        ParentChildLink(
+            parent_user_id=PARENT_1_ID,
+            child_user_id=STUDENT_3_ID,
+            school_id=SCHOOL_ID,
+            status="active",
+            linked_at=_now(),
+            linked_by=ADMIN_ID,
+        ),
+        # Parent 2 (Khadija Idrissi) -> Student 2 (Salma Idrissi) — mother-daughter
+        ParentChildLink(
+            parent_user_id=PARENT_2_ID,
+            child_user_id=STUDENT_2_ID,
+            school_id=SCHOOL_ID,
+            status="active",
+            linked_at=_now(),
+            linked_by=ADMIN_ID,
+        ),
+    ]
+    session.add_all(links)
+    await session.flush()
+    print("  [IAM] 3 parent-child links (2 parents -> 3 students)")
+
+
 async def main() -> None:
     print("=" * 60)
     print("Ecole Platform — Seeding development database")
@@ -589,6 +627,7 @@ async def main() -> None:
 
         print("\nSeeding domains:")
         await seed_iam(session)
+        await seed_parent_child_links(session)
         await seed_erp(session)
         await seed_lms(session)
         await seed_com(session)

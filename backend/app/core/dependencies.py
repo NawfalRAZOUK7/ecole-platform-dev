@@ -162,23 +162,18 @@ async def get_parent_child_ids(
 ) -> set[uuid.UUID]:
     """Get the set of student IDs linked to a parent in a school.
 
-    Uses enrollments + memberships to derive parent-child relationships.
-    Parents can only access data for their linked children.
+    Phase 1A: uses parent_child_links table for explicit parent-child relationships.
+    Parents can only access data for their linked children (ABAC ownership guard).
     """
-    # Query: find students in the same school that share an enrollment
-    # For MVP: parent-child link is derived from the parent_id field on invoices
-    # or from a shared school context. In production this would use a parent_child_links table.
-    # For now, we use a simplified approach via enrollment data.
-    from app.models.erp import Enrollment
+    from app.models.iam import ParentChildLink
 
-    # Get all student memberships in this school
     result = await db.execute(
-        select(Enrollment.student_id).where(
-            Enrollment.school_id == school_id,
+        select(ParentChildLink.child_user_id).where(
+            ParentChildLink.parent_user_id == parent_user_id,
+            ParentChildLink.school_id == school_id,
+            ParentChildLink.status == "active",
         )
     )
-    # For MVP: return all student IDs in the school (will be refined with parent_child_links)
-    # TODO: Implement proper parent-child linking table in Phase 3
     return set(result.scalars().all())
 
 
