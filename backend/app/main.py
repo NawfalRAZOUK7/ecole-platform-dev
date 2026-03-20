@@ -4,7 +4,10 @@ Modular monolith backend serving the École Platform API.
 Architecture: Router → Service → Repository (Pack D2)
 Security pipeline: AuthN → Context → RBAC → ABAC → INV → Audit → Events (Pack D6)
 Phase 3A: OpenAPI tags, endpoint descriptions, spec export, Redoc page.
+Phase 3C: WebSocket real-time notifications with Redis Pub/Sub.
 """
+
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,6 +18,7 @@ from app.core.idempotency import IdempotencyMiddleware
 from app.core.metrics import register_metrics
 from app.core.middleware import register_middleware
 from app.core.rate_limit import RateLimitMiddleware
+from app.core.ws_manager import ws_manager
 
 # ---------------------------------------------------------------------------
 # OpenAPI tag metadata — groups endpoints by domain (Phase 3A)
@@ -101,13 +105,28 @@ OPENAPI_TAGS = [
         "description": "AI & Data — Writing assistance, recommendations, KPIs, event schema.",
     },
     {
+        "name": "websocket",
+        "description": "WebSocket — Real-time event delivery for connected clients.",
+    },
+    {
         "name": "system",
         "description": "System — Health check, version, and operational endpoints.",
     },
 ]
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan — startup and shutdown hooks."""
+    # Startup: initialize WebSocket manager with Redis Pub/Sub
+    await ws_manager.startup()
+    yield
+    # Shutdown: close all WebSocket connections and Redis Pub/Sub
+    await ws_manager.shutdown()
+
+
 app = FastAPI(
     title="École Platform API",
+    lifespan=lifespan,
     description=(
         "EdTech SaaS platform API for K-12 schools in Morocco.\n\n"
         "## Domains\n"

@@ -22,6 +22,7 @@ from app.core.response import success_response
 from app.models.billing import Invoice, PaymentAttempt, ProviderWebhookEvent
 from app.schemas.billing import PaymentInitiateRequest, WebhookEventRequest
 from app.services.audit import AuditService
+from app.services.realtime import publish_payment_updated
 
 router = APIRouter(prefix="/payments", tags=["billing-payments"])
 
@@ -245,7 +246,16 @@ async def handle_provider_webhook(
 
     await db.flush()
 
-    # 5. Audit
+    # 5. Real-time push (Phase 3C) — notify parent of payment status change
+    if payment_attempt is not None and body.status in ("paid", "failed", "canceled"):
+        await publish_payment_updated(
+            parent_id=payment_attempt.parent_id,
+            payment_attempt_id=payment_attempt.id,
+            status=body.status,
+            invoice_id=payment_attempt.invoice_id,
+        )
+
+    # 6. Audit
     await audit.log_event(
         school_id=auth.school_id,
         actor_id=auth.user_id,

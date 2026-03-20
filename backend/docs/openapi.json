@@ -4172,6 +4172,10 @@
       "description": "AI & Data — Writing assistance, recommendations, KPIs, event schema."
     },
     {
+      "name": "websocket",
+      "description": "WebSocket — Real-time event delivery for connected clients."
+    },
+    {
       "name": "system",
       "description": "System — Health check, version, and operational endpoints."
     }

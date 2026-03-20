@@ -25,6 +25,7 @@ from app.core.storage import storage, validate_file_size, validate_mime_type
 from app.models.lms import Assignment, Course, Grade, Submission, SubmissionFile
 from app.schemas.lms import GradeRequest, SubmissionCreateRequest
 from app.services.audit import AuditService
+from app.services.realtime import publish_grade_published
 
 router = APIRouter(prefix="/submissions", tags=["lms-submissions"])
 
@@ -241,6 +242,16 @@ async def grade_submission(
         },
         ip_address=_get_client_ip(request),
     )
+
+    # 7. Real-time push (Phase 3C) — notify student when grade is published
+    if body.publish:
+        await publish_grade_published(
+            student_id=submission.student_id,
+            grade_id=grade.id,
+            submission_id=submission_id,
+            score=float(body.score),
+            assignment_title=assignment.title,
+        )
 
     return success_response({
         "id": str(grade.id),
