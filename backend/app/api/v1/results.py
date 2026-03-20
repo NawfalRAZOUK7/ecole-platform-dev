@@ -31,7 +31,7 @@ from app.models.lms import Assignment, Course, Grade, Submission
 router = APIRouter(prefix="/results", tags=["lms-results"])
 
 
-@router.get("")
+@router.get("", summary="List student results", response_description="Paginated list of grades and results")
 async def list_results(
     student_id: uuid.UUID | None = Query(None),
     cursor: str | None = Query(None),

@@ -25,7 +25,7 @@ from app.models.com import ParentFeedItem
 router = APIRouter(prefix="/feed", tags=["com-feed"])
 
 
-@router.get("")
+@router.get("", summary="List parent feed items", response_description="Paginated activity feed")
 async def list_feed(
     student_id: uuid.UUID | None = Query(None),
     cursor: str | None = Query(None),

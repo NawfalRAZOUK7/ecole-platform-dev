@@ -56,7 +56,7 @@ def _get_client_ip(request: Request) -> str | None:
 # ---------------------------------------------------------------------------
 # S-048: POST /attendance/sessions — Take attendance (TCH)
 # ---------------------------------------------------------------------------
-@router.post("/sessions", status_code=201)
+@router.post("/sessions", status_code=201, summary="Create attendance session", response_description="Attendance session with records")
 async def create_attendance_session(
     body: AttendanceSessionCreateRequest,
     request: Request,
@@ -175,7 +175,7 @@ async def create_attendance_session(
 # ---------------------------------------------------------------------------
 # S-049: POST /attendance/justifications — Submit justification (PAR)
 # ---------------------------------------------------------------------------
-@router.post("/justifications", status_code=201)
+@router.post("/justifications", status_code=201, summary="Submit absence justification", response_description="Justification record")
 async def create_justification(
     body: JustificationCreateRequest,
     request: Request,
@@ -270,7 +270,7 @@ async def create_justification(
 # ---------------------------------------------------------------------------
 # S-050: POST /attendance/justifications/{id}/review — Review (ADM)
 # ---------------------------------------------------------------------------
-@router.post("/justifications/{justification_id}/review", status_code=201)
+@router.post("/justifications/{justification_id}/review", status_code=201, summary="Review absence justification", response_description="Review decision record")
 async def review_justification(
     justification_id: uuid.UUID,
     body: JustificationReviewRequest,

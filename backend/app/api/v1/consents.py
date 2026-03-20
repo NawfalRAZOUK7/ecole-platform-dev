@@ -37,7 +37,7 @@ def _get_client_ip(request: Request) -> str | None:
     return None
 
 
-@router.get("")
+@router.get("", summary="List consent preferences", response_description="List of consent settings")
 async def list_consents(
     cursor: str | None = Query(None),
     limit: int | None = Query(None),
@@ -89,7 +89,7 @@ async def list_consents(
     return list_response(items, next_cursor=next_cursor, has_more=has_more)
 
 
-@router.put("/{consent_id}")
+@router.put("/{consent_id}", summary="Update consent preference", response_description="Updated consent record")
 async def update_consent(
     consent_id: uuid.UUID,
     body: ConsentUpdateRequest,

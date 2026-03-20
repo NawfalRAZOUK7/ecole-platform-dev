@@ -46,7 +46,7 @@ def _get_client_ip(request: Request) -> str | None:
     return None
 
 
-@router.post("", status_code=201)
+@router.post("", status_code=201, summary="Create a course", response_description="Created course record")
 async def create_course(
     body: CourseCreateRequest,
     request: Request,
@@ -112,7 +112,7 @@ async def create_course(
     })
 
 
-@router.get("")
+@router.get("", summary="List courses", response_description="Paginated list of courses")
 async def list_courses(
     class_id: uuid.UUID | None = Query(None),
     cursor: str | None = Query(None),

@@ -42,7 +42,7 @@ def _get_client_ip(request: Request) -> str | None:
 # ---------------------------------------------------------------------------
 # S-058: GET /activities — List activities (STD)
 # ---------------------------------------------------------------------------
-@router.get("")
+@router.get("", summary="List activities", response_description="Paginated list of activities")
 async def list_activities(
     activity_type: str | None = Query(None, alias="type"),
     difficulty: str | None = Query(None),
@@ -97,7 +97,7 @@ async def list_activities(
 # ---------------------------------------------------------------------------
 # S-058: POST /activity-sessions — Start activity session (STD)
 # ---------------------------------------------------------------------------
-@router.post("/sessions", status_code=201)
+@router.post("/sessions", status_code=201, summary="Start activity session", response_description="Created activity session")
 async def create_activity_session(
     body: ActivitySessionCreateRequest,
     request: Request,
@@ -170,7 +170,7 @@ async def create_activity_session(
 # ---------------------------------------------------------------------------
 # S-059: POST /activity-sessions/{id}/complete — Complete session (STD)
 # ---------------------------------------------------------------------------
-@router.post("/sessions/{session_id}/complete", status_code=200)
+@router.post("/sessions/{session_id}/complete", status_code=200, summary="Complete activity session", response_description="Completed session with score")
 async def complete_activity_session(
     session_id: uuid.UUID,
     body: ActivitySessionCompleteRequest,

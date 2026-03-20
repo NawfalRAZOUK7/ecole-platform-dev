@@ -35,7 +35,7 @@ def _get_client_ip(request: Request) -> str | None:
 # ---------------------------------------------------------------------------
 # POST /invites/create — ADM only
 # ---------------------------------------------------------------------------
-@router.post("/create", status_code=201)
+@router.post("/create", status_code=201, summary="Create invitation code", response_description="Plaintext invitation code (shown once)")
 async def create_invite(
     body: InviteCreateRequest,
     request: Request,
@@ -61,7 +61,7 @@ async def create_invite(
 # ---------------------------------------------------------------------------
 # POST /invites/consume — Authenticated user
 # ---------------------------------------------------------------------------
-@router.post("/consume")
+@router.post("/consume", summary="Consume invitation code", response_description="New membership details")
 async def consume_invite(
     body: InviteConsumeRequest,
     request: Request,
@@ -106,7 +106,7 @@ async def consume_invite(
 # ---------------------------------------------------------------------------
 # POST /invites/revoke — ADM only
 # ---------------------------------------------------------------------------
-@router.post("/revoke")
+@router.post("/revoke", summary="Revoke invitation code", response_description="Revocation confirmation")
 async def revoke_invite(
     body: InviteRevokeRequest,
     request: Request,

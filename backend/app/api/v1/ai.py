@@ -51,7 +51,7 @@ def _get_client_ip(request: Request) -> str | None:
 # ---------------------------------------------------------------------------
 # S-143: POST /writing-attempts — Writing assistance (STD)
 # ---------------------------------------------------------------------------
-@router.post("/writing-attempts", status_code=200)
+@router.post("/writing-attempts", status_code=200, summary="Create writing attempt", response_description="AI writing feedback")
 async def create_writing_attempt(
     body: WritingAttemptRequest,
     request: Request,
@@ -182,7 +182,7 @@ async def create_writing_attempt(
 # ---------------------------------------------------------------------------
 # S-144: POST /ai/preferences/opt-out — AI opt-out (PAR)
 # ---------------------------------------------------------------------------
-@router.post("/ai/preferences/opt-out", status_code=200)
+@router.post("/ai/preferences/opt-out", status_code=200, summary="Update AI opt-out preference", response_description="Updated AI preferences")
 async def update_ai_opt_out(
     body: AIOptOutRequest,
     request: Request,
@@ -265,7 +265,7 @@ async def update_ai_opt_out(
 # ---------------------------------------------------------------------------
 # S-145: GET /recommendations — Learning recommendations (STD, PAR)
 # ---------------------------------------------------------------------------
-@router.get("/recommendations")
+@router.get("/recommendations", summary="Get learning recommendations", response_description="Personalized recommendations")
 async def get_recommendations(
     auth: AuthContext = Depends(requires_permission("PERM-IA:recommendation:read")),
     db: AsyncSession = Depends(get_db),
@@ -335,7 +335,7 @@ async def get_recommendations(
 # ---------------------------------------------------------------------------
 # S-140: GET /kpis — KPI dashboard (ADM)
 # ---------------------------------------------------------------------------
-@router.get("/kpis")
+@router.get("/kpis", summary="Get school KPIs", response_description="Key performance indicators")
 async def get_kpis(
     period: int = Query(default=7, ge=1, le=90, description="Period in days"),
     auth: AuthContext = Depends(requires_permission("PERM-IA:request:read")),
@@ -358,7 +358,7 @@ async def get_kpis(
 # ---------------------------------------------------------------------------
 # S-146: GET /events/schema — Event schema registry
 # ---------------------------------------------------------------------------
-@router.get("/events/schema")
+@router.get("/events/schema", summary="Get analytics event schema", response_description="Event schema definition")
 async def get_event_schema(
     auth: AuthContext = Depends(requires_permission("PERM-IA:request:read")),
 ):

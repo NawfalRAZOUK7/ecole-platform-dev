@@ -46,6 +46,11 @@ jobs:
           cd backend
           ruff format --check app/ tests/
 
+      - name: OpenAPI spec drift check (Phase 3A)
+        run: |
+          cd backend
+          python scripts/export_openapi.py --check
+
   # ──────────────────────────────────────────────────────────
   # Stage 2: Unit Tests (no DB/Redis needed)
   # ──────────────────────────────────────────────────────────

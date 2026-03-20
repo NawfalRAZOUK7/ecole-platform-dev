@@ -25,7 +25,7 @@ from app.models.com import Notification
 router = APIRouter(prefix="/notifications", tags=["com-notifications"])
 
 
-@router.get("")
+@router.get("", summary="List notifications", response_description="Paginated list of notifications")
 async def list_notifications(
     cursor: str | None = Query(None),
     limit: int | None = Query(None),

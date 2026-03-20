@@ -1,7 +1,8 @@
 .PHONY: up down restart logs migrate seed test lint shell build clean status health \
        staging-up staging-down prod-up prod-down monitoring-up monitoring-down \
        shell-db redis-cli backup restore docker-prune version \
-       migrate-new migrate-down migrate-status test-cov lint-fix format web-install web-lint
+       migrate-new migrate-down migrate-status test-cov lint-fix format web-install web-lint \
+       openapi openapi-check
 
 # ==================== Compose Files ====================
 COMPOSE_FILE = infra/docker-compose.dev.yml
@@ -111,6 +112,12 @@ lint-fix:
 
 format:
 	$(DC) exec backend ruff format app/
+
+openapi:
+	$(DC) exec backend python scripts/export_openapi.py --redoc
+
+openapi-check:
+	$(DC) exec backend python scripts/export_openapi.py --check
 
 shell:
 	$(DC) exec backend bash

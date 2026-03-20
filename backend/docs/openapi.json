@@ -1,0 +1,3868 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "École Platform API",
+    "description": "EdTech SaaS platform API for K-12 schools in Morocco.\n\n## Domains\n- **IAM** — Authentication, authorization, invitations, recovery, 2FA\n- **ERP** — Classes, enrollments, teacher assignments, attendance\n- **LMS** — Courses, assignments, submissions, results, content, activities, assessments\n- **Billing** — Invoices and payments\n- **COM** — Notifications, consents, parent feed\n- **AI** — Writing assistance, recommendations, KPIs\n\n## Authentication\nAll protected endpoints require a `Bearer` access token in the `Authorization` header.\nTokens are obtained via `POST /auth/login`.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Health check",
+        "description": "Health check endpoint.\n\nReturns service status and version. Used by Docker health checks\nand monitoring systems (Pack F2).",
+        "operationId": "health_check_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Service status, version, and timestamp",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Authenticate user",
+        "description": "Authenticate user and create a session.\n\nReturns access token in response body.\nSets refresh token as HttpOnly/Secure/SameSite=Lax cookie.\nSets CSRF token as non-HttpOnly cookie (for double-submit pattern).",
+        "operationId": "login_api_v1_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Access token or 2FA temp token",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Refresh access token",
+        "description": "Refresh the access token using a valid refresh token from the HttpOnly cookie.\n\nRequires X-CSRF-Token header matching the double-submit cookie value.\nImplements token rotation: old refresh token invalidated, new one issued.",
+        "operationId": "refresh_api_v1_auth_refresh_post",
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          },
+          {
+            "name": "refresh_token",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Refresh Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "New access token",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Revoke current session",
+        "description": "Revoke the user's session and clear authentication cookies.\n\nIdempotent: calling logout on an already-revoked session returns 200.",
+        "operationId": "logout_api_v1_auth_logout_post",
+        "responses": {
+          "200": {
+            "description": "Empty success response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Get current user profile",
+        "description": "Return the authenticated user's profile with permissions and memberships.\n\nThis endpoint is the frontend's source of truth for RBAC UI gating.",
+        "operationId": "me_api_v1_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "User profile with permissions and memberships",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/sessions": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "List active sessions",
+        "description": "List the authenticated user's active sessions with device info.\n\nReturns sessions with: session_id, source, user_agent, ip_address,\ndevice_name, created_at, last_active.",
+        "operationId": "list_sessions_api_v1_auth_sessions_get",
+        "responses": {
+          "200": {
+            "description": "List of active sessions with device info",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/sessions/{session_id}": {
+      "delete": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Revoke a session",
+        "description": "Revoke a specific session by ID.\n\nUsers can revoke their own sessions. ADM can revoke any session in the school.\nInvalidates the refresh token and clears the session from Redis.",
+        "operationId": "revoke_session_api_v1_auth_sessions__session_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session revocation confirmation",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/change-password": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Change password",
+        "description": "Change the authenticated user's password.\n\nRequires current password verification. Enforces password policy on new password.\nRevokes all other active sessions (keeps current session).",
+        "operationId": "change_password_api_v1_auth_change_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Password change confirmation",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/2fa/setup": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Start 2FA setup",
+        "description": "Generate a new TOTP secret and QR code provisioning URI.\n\nReturns the secret and URI for the authenticator app.\n2FA is not yet active — call /auth/2fa/verify-setup with a valid code to activate.",
+        "operationId": "two_factor_setup_api_v1_auth_2fa_setup_post",
+        "responses": {
+          "200": {
+            "description": "TOTP secret and provisioning URI",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/2fa/verify-setup": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Activate 2FA",
+        "description": "Verify first TOTP code to activate 2FA.\n\nReturns 10 single-use backup codes (shown once, store securely).",
+        "operationId": "two_factor_verify_setup_api_v1_auth_2fa_verify_setup_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TwoFactorVerifySetupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Backup codes and confirmation",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/2fa/disable": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Disable 2FA",
+        "description": "Disable 2FA. Requires a valid TOTP code or backup code.",
+        "operationId": "two_factor_disable_api_v1_auth_2fa_disable_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TwoFactorDisableRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "2FA deactivation confirmation",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/2fa/verify": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Verify 2FA code during login",
+        "description": "Verify TOTP code during login flow.\n\nCalled after login returns requires_2fa=true.\nAccepts temp_token + TOTP code (or backup code) and returns full tokens.",
+        "operationId": "two_factor_verify_login_api_v1_auth_2fa_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TwoFactorVerifyLoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Access token after successful 2FA",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/verify-email": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Verify email address",
+        "description": "Verify email address via OTP sent during invite consumption.",
+        "operationId": "verify_email_api_v1_auth_verify_email_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailVerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Email verification confirmation",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/invites/create": {
+      "post": {
+        "tags": [
+          "invitations"
+        ],
+        "summary": "Create invitation code",
+        "description": "Create an invitation code for onboarding new users.\n\nReturns the plaintext code (shown once, never stored).",
+        "operationId": "create_invite_api_v1_invites_create_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Plaintext invitation code (shown once)",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/invites/consume": {
+      "post": {
+        "tags": [
+          "invitations"
+        ],
+        "summary": "Consume invitation code",
+        "description": "Consume an invitation code to join a school with the specified role.\n\nIdempotent: same code + same user = returns existing membership.",
+        "operationId": "consume_invite_api_v1_invites_consume_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteConsumeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "New membership details",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/invites/revoke": {
+      "post": {
+        "tags": [
+          "invitations"
+        ],
+        "summary": "Revoke invitation code",
+        "description": "Soft-revoke an invitation code.\n\nIdempotent: revoking an already-revoked code is a no-op.",
+        "operationId": "revoke_invite_api_v1_invites_revoke_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteRevokeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Revocation confirmation",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/recovery/request": {
+      "post": {
+        "tags": [
+          "recovery"
+        ],
+        "summary": "Request password recovery",
+        "description": "Request account recovery. Always returns 200 to prevent email enumeration.\n\nIf user exists: creates recovery request and generates OTP (logged in dev).\nIf user doesn't exist: returns success anyway.",
+        "operationId": "request_recovery_api_v1_recovery_request_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoveryRequestCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Recovery request ID (always 200, no email enumeration)",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/recovery/verify": {
+      "post": {
+        "tags": [
+          "recovery"
+        ],
+        "summary": "Verify recovery OTP",
+        "description": "Verify recovery OTP. Transitions status: pending -> verified.\n\nLockout after 5 failed attempts (30-minute lock).",
+        "operationId": "verify_recovery_api_v1_recovery_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoveryVerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OTP verification confirmation",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/recovery/reset": {
+      "post": {
+        "tags": [
+          "recovery"
+        ],
+        "summary": "Reset password",
+        "description": "Reset user's password. Requires status=verified.\n\nRevokes all active sessions for the user (force re-login).\nState machine: pending -> verified -> reset (no backward transitions).",
+        "operationId": "reset_password_api_v1_recovery_reset_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoveryResetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset confirmation",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/classes/{class_id}": {
+      "get": {
+        "tags": [
+          "erp-classes"
+        ],
+        "summary": "Get class details",
+        "description": "Get class details by ID.\n\nFull security pipeline:\n1. AuthN — verified by get_current_user (via requires_permission)\n2. RBAC — requires PERM-ERP:class:read\n3. ABAC — school boundary (404 for other school's classes)\n4. ABAC — teacher assignment (TCH only sees assigned classes)",
+        "operationId": "get_class_api_v1_classes__class_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "class_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Class Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Class with capacity, level, academic year",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/enrollments": {
+      "post": {
+        "tags": [
+          "erp-enrollments"
+        ],
+        "summary": "Enroll student in class",
+        "description": "Enroll a student in a class.\n\nValidates:\n- Student exists and is in the same school\n- Class exists and is in the same school\n- Period is active\n- INV-ERP-CLASS-ACTIVE: one active enrollment per student per period (409)\n\nIdempotent: re-enrolling same student in same class returns existing enrollment.",
+        "operationId": "create_enrollment_api_v1_enrollments_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnrollmentCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Enrollment record",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/class-assignments": {
+      "post": {
+        "tags": [
+          "erp-class-assignments"
+        ],
+        "summary": "Assign teacher to class",
+        "description": "Assign a teacher to a class for a period.\n\nValidates:\n1. Teacher exists and is in the same school\n2. Class exists and is in the same school\n3. Period exists and is in the same school\n4. No duplicate assignment (idempotent if same tuple exists)",
+        "operationId": "create_teacher_assignment_api_v1_class_assignments_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TeacherAssignmentCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Teacher assignment record",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/attendance/sessions": {
+      "post": {
+        "tags": [
+          "erp-attendance"
+        ],
+        "summary": "Create attendance session",
+        "description": "Create an attendance session with records for a class.\n\nValidates:\n1. Class exists and is in the same school\n2. Teacher is assigned to the class (ABAC)\n3. Period is active\n4. No duplicate session for same class/date/slot (409)\n5. Creates attendance records for each student",
+        "operationId": "create_attendance_session_api_v1_attendance_sessions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttendanceSessionCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Attendance session with records",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/attendance/justifications": {
+      "post": {
+        "tags": [
+          "erp-attendance"
+        ],
+        "summary": "Submit absence justification",
+        "description": "Submit an absence justification for a student.\n\nValidates:\n1. Attendance record exists and is in the same school\n2. Student is absent/late (only those can be justified)\n3. Parent-child ownership (ABAC)\n4. No duplicate justification for same record (idempotent)",
+        "operationId": "create_justification_api_v1_attendance_justifications_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JustificationCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Justification record",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/attendance/justifications/{justification_id}/review": {
+      "post": {
+        "tags": [
+          "erp-attendance"
+        ],
+        "summary": "Review absence justification",
+        "description": "Review an absence justification (approve or reject).\n\nValidates:\n1. Justification exists and is in the same school\n2. Justification is still pending\n3. If rejecting, rejection_reason is required\n4. Updates justification status + creates review record",
+        "operationId": "review_justification_api_v1_attendance_justifications__justification_id__review_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "justification_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Justification Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JustificationReviewRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Review decision record",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/courses": {
+      "post": {
+        "tags": [
+          "lms-courses"
+        ],
+        "summary": "Create a course",
+        "description": "Create a course for a class.\n\nValidates:\n1. Class exists and is in the same school\n2. Teacher is assigned to the class (ABAC)\n3. Creates course",
+        "operationId": "create_course_api_v1_courses_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CourseCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created course record",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "lms-courses"
+        ],
+        "summary": "List courses",
+        "description": "List courses, optionally filtered by class.\n\nTCH: only sees courses for assigned classes.",
+        "operationId": "list_courses_api_v1_courses_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "class_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Class Id"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of courses",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assignments": {
+      "post": {
+        "tags": [
+          "lms-assignments"
+        ],
+        "summary": "Create an assignment",
+        "description": "Create an assignment for a course.\n\nValidates:\n1. Course exists and is in the same school\n2. Teacher owns the course\n3. Creates assignment",
+        "operationId": "create_assignment_api_v1_assignments_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignmentCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created assignment record",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "lms-assignments"
+        ],
+        "summary": "List assignments",
+        "description": "List assignments, optionally filtered by course.",
+        "operationId": "list_assignments_api_v1_assignments_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Course Id"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of assignments",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/submissions": {
+      "post": {
+        "tags": [
+          "lms-submissions"
+        ],
+        "summary": "Submit student work",
+        "description": "Create a submission for an assignment.\n\nValidates:\n1. Assignment exists\n2. Course is in the same school\n3. INV-LMS-SUBMISSION: one active submission per student per assignment (idempotent)",
+        "operationId": "create_submission_api_v1_submissions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmissionCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Submission record",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/submissions/{submission_id}/grade": {
+      "post": {
+        "tags": [
+          "lms-submissions"
+        ],
+        "summary": "Grade a submission",
+        "description": "Grade a student submission.\n\nValidates:\n1. Submission exists\n2. Assignment is in teacher's course (teacher owns the course)\n3. Submission must be in 'submitted' status\n4. Score <= assignment total_points\n5. Creates grade, updates submission status to 'graded'",
+        "operationId": "grade_submission_api_v1_submissions__submission_id__grade_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "submission_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Submission Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GradeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Updated submission with grade",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/results": {
+      "get": {
+        "tags": [
+          "lms-results"
+        ],
+        "summary": "List student results",
+        "description": "List graded results for a student.\n\nSTD: sees own results (student_id ignored, uses auth.user_id).\nPAR: must specify student_id, which must be a linked child.",
+        "operationId": "list_results_api_v1_results_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "student_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Student Id"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of grades and results",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/content-items": {
+      "get": {
+        "tags": [
+          "lms-content"
+        ],
+        "summary": "List content items",
+        "description": "List published content items.\n\nFilters by content_type, level_band, language.\nShows school-specific + platform-wide content (school_id IS NULL).",
+        "operationId": "list_content_items_api_v1_content_items_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "content_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Content Type"
+            }
+          },
+          {
+            "name": "level_band",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Level Band"
+            }
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of learning materials",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/content-items/{content_item_id}": {
+      "get": {
+        "tags": [
+          "lms-content"
+        ],
+        "summary": "Get content item details",
+        "description": "Get a content item by ID.\n\nOnly published items visible. School boundary or platform-wide.",
+        "operationId": "get_content_item_api_v1_content_items__content_item_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "content_item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Content Item Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Content item with assets",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/content-items/{content_item_id}/progress": {
+      "post": {
+        "tags": [
+          "lms-content"
+        ],
+        "summary": "Update content progress",
+        "description": "Update student progress on a content item.\n\nUpsert: creates or updates progress record.\nUnique per (student_id, content_item_id).",
+        "operationId": "update_content_progress_api_v1_content_items__content_item_id__progress_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "content_item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Content Item Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentProgressRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated progress record",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/activities": {
+      "get": {
+        "tags": [
+          "lms-activities"
+        ],
+        "summary": "List activities",
+        "description": "List available activities.\n\nShows school-specific + platform-wide activities.",
+        "operationId": "list_activities_api_v1_activities_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Type"
+            }
+          },
+          {
+            "name": "difficulty",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Difficulty"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of activities",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/activities/sessions": {
+      "post": {
+        "tags": [
+          "lms-activities"
+        ],
+        "summary": "Start activity session",
+        "description": "Start a new activity session.\n\nValidates:\n1. Activity exists (school or platform-wide)\n2. Creates session with incremented attempt_no",
+        "operationId": "create_activity_session_api_v1_activities_sessions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivitySessionCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created activity session",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/activities/sessions/{session_id}/complete": {
+      "post": {
+        "tags": [
+          "lms-activities"
+        ],
+        "summary": "Complete activity session",
+        "description": "Complete an activity session with optional score.\n\nValidates:\n1. Session exists and belongs to the student\n2. Session is in 'started' status\n3. Updates status to 'completed' and sets score",
+        "operationId": "complete_activity_session_api_v1_activities_sessions__session_id__complete_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivitySessionCompleteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Completed session with score",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assessments": {
+      "post": {
+        "tags": [
+          "lms-assessments"
+        ],
+        "summary": "Create an assessment",
+        "description": "Create a formal assessment for a class.\n\nValidates:\n1. Class exists and is in the same school\n2. TCH: must be assigned to the class (ABAC)",
+        "operationId": "create_assessment_api_v1_assessments_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssessmentCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created assessment record",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "lms-assessments"
+        ],
+        "summary": "List assessments",
+        "description": "List assessments. Optionally filtered by class_id and status.",
+        "operationId": "list_assessments_api_v1_assessments_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "class_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Class Id"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of assessments",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assessments/{assessment_id}/publish": {
+      "post": {
+        "tags": [
+          "lms-assessments"
+        ],
+        "summary": "Publish an assessment",
+        "description": "Publish an assessment (change status from draft to published).",
+        "operationId": "publish_assessment_api_v1_assessments__assessment_id__publish_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "assessment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Assessment Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Published assessment",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assessments/{assessment_id}/results": {
+      "post": {
+        "tags": [
+          "lms-assessments"
+        ],
+        "summary": "Submit assessment result",
+        "description": "Submit a result for an assessment (student self-report or auto-graded).\n\nValidates:\n1. Assessment exists and is published\n2. No duplicate result for same student+assessment (idempotent)",
+        "operationId": "submit_assessment_result_api_v1_assessments__assessment_id__results_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "assessment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Assessment Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssessmentResultSubmitRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Assessment result record",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/invoices": {
+      "get": {
+        "tags": [
+          "billing-invoices"
+        ],
+        "summary": "List invoices",
+        "description": "List invoices.\n\nPAR: sees own invoices only.\nADM: sees all invoices for the school.",
+        "operationId": "list_invoices_api_v1_invoices_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of invoices",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/invoices/{invoice_id}": {
+      "get": {
+        "tags": [
+          "billing-invoices"
+        ],
+        "summary": "Get invoice details",
+        "description": "Get invoice details by ID.",
+        "operationId": "get_invoice_api_v1_invoices__invoice_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "invoice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Invoice Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Invoice with line items",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payments/initiate": {
+      "post": {
+        "tags": [
+          "billing-payments"
+        ],
+        "summary": "Initiate a payment",
+        "description": "Initiate a payment attempt for an invoice.\n\nValidates:\n1. Invoice exists, is in same school, belongs to the parent\n2. Invoice is in pending status\n3. Idempotency via idempotency_key (returns existing if same key)",
+        "operationId": "initiate_payment_api_v1_payments_initiate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentInitiateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Payment attempt with provider redirect",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/payments/{attempt_id}": {
+      "get": {
+        "tags": [
+          "billing-payments"
+        ],
+        "summary": "Get payment status",
+        "description": "Get payment attempt status.",
+        "operationId": "get_payment_status_api_v1_payments__attempt_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "attempt_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Attempt Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment attempt status",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payments/webhook/provider": {
+      "post": {
+        "tags": [
+          "billing-payments"
+        ],
+        "summary": "Handle provider webhook",
+        "description": "Handle a webhook event from a payment provider.\n\nINV-BIL-WEBHOOK: duplicate provider_event_id = no-op (idempotent).\n\nFlow:\n1. Check for duplicate provider_event_id\n2. Find matching payment attempt (optional)\n3. Update payment attempt status if found\n4. Update invoice status if payment is finalized\n5. Store webhook event",
+        "operationId": "handle_provider_webhook_api_v1_payments_webhook_provider_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebhookEventRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook processing result",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/notifications": {
+      "get": {
+        "tags": [
+          "com-notifications"
+        ],
+        "summary": "List notifications",
+        "description": "List notifications.\n\nPAR: sees own notifications only (parent_id = user_id).\nTCH/ADM: sees all school notifications.",
+        "operationId": "list_notifications_api_v1_notifications_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of notifications",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/consents": {
+      "get": {
+        "tags": [
+          "com-consents"
+        ],
+        "summary": "List consent preferences",
+        "description": "List consent preferences.\n\nPAR: sees own consents only.\nADM: sees all school consents.",
+        "operationId": "list_consents_api_v1_consents_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of consent settings",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/consents/{consent_id}": {
+      "put": {
+        "tags": [
+          "com-consents"
+        ],
+        "summary": "Update consent preference",
+        "description": "Update a consent preference.\n\nPAR: can only update own consents.\nADM: can update any consent in the school.",
+        "operationId": "update_consent_api_v1_consents__consent_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "consent_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Consent Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsentUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated consent record",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/feed": {
+      "get": {
+        "tags": [
+          "com-feed"
+        ],
+        "summary": "List parent feed items",
+        "description": "List parent feed items.\n\nPAR only — sees their own feed items.\nOptionally filtered by student_id.\nOrdered by created_at descending (newest first).",
+        "operationId": "list_feed_api_v1_feed_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "student_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Student Id"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated activity feed",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/writing-attempts": {
+      "post": {
+        "tags": [
+          "ai"
+        ],
+        "summary": "Create writing attempt",
+        "description": "Submit text for AI-assisted writing feedback.\n\nGuardrails (G3):\n  - Input sanitized for PII (POL-G3-001)\n  - Opt-out checked (POL-G3-002)\n  - Output validated (POL-G3-003)\n  - Audit trail recorded",
+        "operationId": "create_writing_attempt_api_v1_writing_attempts_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WritingAttemptRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "AI writing feedback",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ai/preferences/opt-out": {
+      "post": {
+        "tags": [
+          "ai"
+        ],
+        "summary": "Update AI opt-out preference",
+        "description": "Update AI personalization opt-out preference.\n\nParents can opt out of AI personalization for their children.\nPer G3.3: POST /ai/preferences/opt-out is contractual in OpenAPI.\nIdempotent — upserts the preference.",
+        "operationId": "update_ai_opt_out_api_v1_ai_preferences_opt_out_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AIOptOutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Updated AI preferences",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/recommendations": {
+      "get": {
+        "tags": [
+          "ai"
+        ],
+        "summary": "Get learning recommendations",
+        "description": "Get personalized learning recommendations.\n\nGuardrails:\n  - Opt-out checked (POL-G3-002): returns empty if opted out\n  - Reason code mandatory on each recommendation (G3)",
+        "operationId": "get_recommendations_api_v1_recommendations_get",
+        "responses": {
+          "200": {
+            "description": "Personalized recommendations",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/kpis": {
+      "get": {
+        "tags": [
+          "ai"
+        ],
+        "summary": "Get school KPIs",
+        "description": "Get computed KPIs for the school (G1 catalog).\n\nReturns KPI-G1-001 through KPI-G1-006 for the specified period.\nADM, DIR, TCH roles can access.",
+        "operationId": "get_kpis_api_v1_kpis_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 90,
+              "minimum": 1,
+              "description": "Period in days",
+              "default": 7,
+              "title": "Period"
+            },
+            "description": "Period in days"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Key performance indicators",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/schema": {
+      "get": {
+        "tags": [
+          "ai"
+        ],
+        "summary": "Get analytics event schema",
+        "description": "Get the analytics event schema registry.\n\nReturns all known events with their schema versions and property whitelists.\nUsed for CI drift detection (S-146).",
+        "operationId": "get_event_schema_api_v1_events_schema_get",
+        "responses": {
+          "200": {
+            "description": "Event schema definition",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AIOptOutRequest": {
+        "properties": {
+          "opt_out": {
+            "type": "boolean",
+            "title": "Opt Out",
+            "description": "True to opt out, False to opt back in"
+          },
+          "target_user_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target User Id",
+            "description": "Child user ID (parent opting out for child). Null = self."
+          }
+        },
+        "type": "object",
+        "required": [
+          "opt_out"
+        ],
+        "title": "AIOptOutRequest",
+        "description": "POST /ai/preferences/opt-out — parent opts out of AI personalization."
+      },
+      "ActivitySessionCompleteRequest": {
+        "properties": {
+          "score": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "title": "ActivitySessionCompleteRequest"
+      },
+      "ActivitySessionCreateRequest": {
+        "properties": {
+          "activity_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Activity Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "activity_id"
+        ],
+        "title": "ActivitySessionCreateRequest"
+      },
+      "AssessmentCreateRequest": {
+        "properties": {
+          "class_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Class Id"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "due_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due At"
+          },
+          "window_end": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Window End"
+          },
+          "total_points": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Points",
+            "default": 0
+          },
+          "status": {
+            "type": "string",
+            "pattern": "^(draft|published|closed)$",
+            "title": "Status",
+            "default": "draft"
+          }
+        },
+        "type": "object",
+        "required": [
+          "class_id",
+          "title"
+        ],
+        "title": "AssessmentCreateRequest"
+      },
+      "AssessmentResultSubmitRequest": {
+        "properties": {
+          "assessment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Assessment Id"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "assessment_id"
+        ],
+        "title": "AssessmentResultSubmitRequest"
+      },
+      "AssignmentCreateRequest": {
+        "properties": {
+          "course_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Course Id"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "due_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due At"
+          },
+          "total_points": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Points",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "course_id",
+          "title"
+        ],
+        "title": "AssignmentCreateRequest"
+      },
+      "AttendanceRecordInput": {
+        "properties": {
+          "student_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Student Id"
+          },
+          "status": {
+            "type": "string",
+            "pattern": "^(present|absent|excused|late)$",
+            "title": "Status"
+          },
+          "absence_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Absence Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "student_id",
+          "status"
+        ],
+        "title": "AttendanceRecordInput"
+      },
+      "AttendanceSessionCreateRequest": {
+        "properties": {
+          "class_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Class Id"
+          },
+          "period_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Period Id"
+          },
+          "session_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Session Date"
+          },
+          "slot": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Slot"
+          },
+          "records": {
+            "items": {
+              "$ref": "#/components/schemas/AttendanceRecordInput"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Records"
+          }
+        },
+        "type": "object",
+        "required": [
+          "class_id",
+          "period_id",
+          "session_date",
+          "slot",
+          "records"
+        ],
+        "title": "AttendanceSessionCreateRequest"
+      },
+      "ChangePasswordRequest": {
+        "properties": {
+          "current_password": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Current Password",
+            "description": "Current password for verification"
+          },
+          "new_password": {
+            "type": "string",
+            "minLength": 12,
+            "title": "New Password",
+            "description": "New password (min 12 chars, Phase 2A policy)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "title": "ChangePasswordRequest"
+      },
+      "ConsentUpdateRequest": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "pattern": "^(opted_in|opted_out)$",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "ConsentUpdateRequest"
+      },
+      "ContentProgressRequest": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "pattern": "^(not_started|in_progress|completed)$",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "ContentProgressRequest"
+      },
+      "CourseCreateRequest": {
+        "properties": {
+          "class_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Class Id"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "status": {
+            "type": "string",
+            "pattern": "^(draft|published|archived)$",
+            "title": "Status",
+            "default": "draft"
+          }
+        },
+        "type": "object",
+        "required": [
+          "class_id",
+          "title"
+        ],
+        "title": "CourseCreateRequest"
+      },
+      "EmailVerifyRequest": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "school_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "School Id"
+          },
+          "otp": {
+            "type": "string",
+            "maxLength": 6,
+            "minLength": 6,
+            "title": "Otp",
+            "description": "6-digit email verification OTP"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "school_id",
+          "otp"
+        ],
+        "title": "EmailVerifyRequest"
+      },
+      "EnrollmentCreateRequest": {
+        "properties": {
+          "student_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Student Id"
+          },
+          "class_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Class Id"
+          },
+          "period_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Period Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "student_id",
+          "class_id",
+          "period_id"
+        ],
+        "title": "EnrollmentCreateRequest"
+      },
+      "GradeRequest": {
+        "properties": {
+          "score": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Score"
+          },
+          "feedback_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feedback Text"
+          },
+          "publish": {
+            "type": "boolean",
+            "title": "Publish",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "score"
+        ],
+        "title": "GradeRequest"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "InviteConsumeRequest": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 8,
+            "minLength": 8,
+            "title": "Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "title": "InviteConsumeRequest"
+      },
+      "InviteCreateRequest": {
+        "properties": {
+          "role_target": {
+            "type": "string",
+            "title": "Role Target",
+            "description": "Role code for the invited user (e.g. TCH, PAR, STD)"
+          },
+          "expires_in_hours": {
+            "type": "integer",
+            "maximum": 720.0,
+            "minimum": 1.0,
+            "title": "Expires In Hours",
+            "description": "Hours until code expires",
+            "default": 72
+          }
+        },
+        "type": "object",
+        "required": [
+          "role_target"
+        ],
+        "title": "InviteCreateRequest"
+      },
+      "InviteRevokeRequest": {
+        "properties": {
+          "invite_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Invite Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "invite_id"
+        ],
+        "title": "InviteRevokeRequest"
+      },
+      "JustificationCreateRequest": {
+        "properties": {
+          "attendance_record_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Attendance Record Id"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "attendance_record_id",
+          "reason"
+        ],
+        "title": "JustificationCreateRequest"
+      },
+      "JustificationReviewRequest": {
+        "properties": {
+          "decision": {
+            "type": "string",
+            "pattern": "^(justified|rejected)$",
+            "title": "Decision"
+          },
+          "rejection_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rejection Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "decision"
+        ],
+        "title": "JustificationReviewRequest"
+      },
+      "LoginRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Password"
+          },
+          "school_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "School Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password",
+          "school_id"
+        ],
+        "title": "LoginRequest"
+      },
+      "PaymentInitiateRequest": {
+        "properties": {
+          "invoice_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Invoice Id"
+          },
+          "idempotency_key": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Idempotency Key"
+          }
+        },
+        "type": "object",
+        "required": [
+          "invoice_id",
+          "idempotency_key"
+        ],
+        "title": "PaymentInitiateRequest"
+      },
+      "RecoveryRequestCreate": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "school_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "School Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "school_id"
+        ],
+        "title": "RecoveryRequestCreate"
+      },
+      "RecoveryResetRequest": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Request Id"
+          },
+          "new_password": {
+            "type": "string",
+            "minLength": 12,
+            "title": "New Password",
+            "description": "New password (min 12 chars, Phase 2A policy)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "request_id",
+          "new_password"
+        ],
+        "title": "RecoveryResetRequest"
+      },
+      "RecoveryVerifyRequest": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Request Id"
+          },
+          "otp": {
+            "type": "string",
+            "maxLength": 6,
+            "minLength": 6,
+            "title": "Otp",
+            "description": "6-digit OTP"
+          }
+        },
+        "type": "object",
+        "required": [
+          "request_id",
+          "otp"
+        ],
+        "title": "RecoveryVerifyRequest"
+      },
+      "SubmissionCreateRequest": {
+        "properties": {
+          "assignment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Assignment Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "assignment_id"
+        ],
+        "title": "SubmissionCreateRequest"
+      },
+      "TeacherAssignmentCreateRequest": {
+        "properties": {
+          "teacher_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Teacher Id"
+          },
+          "class_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Class Id"
+          },
+          "period_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Period Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "teacher_id",
+          "class_id",
+          "period_id"
+        ],
+        "title": "TeacherAssignmentCreateRequest"
+      },
+      "TwoFactorDisableRequest": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 8,
+            "minLength": 6,
+            "title": "Code",
+            "description": "TOTP code or backup code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "title": "TwoFactorDisableRequest"
+      },
+      "TwoFactorVerifyLoginRequest": {
+        "properties": {
+          "temp_token": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Temp Token",
+            "description": "Temporary token from login response"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 8,
+            "minLength": 6,
+            "title": "Code",
+            "description": "TOTP code or backup code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "temp_token",
+          "code"
+        ],
+        "title": "TwoFactorVerifyLoginRequest"
+      },
+      "TwoFactorVerifySetupRequest": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 6,
+            "minLength": 6,
+            "title": "Code",
+            "description": "6-digit TOTP code from authenticator app"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "title": "TwoFactorVerifySetupRequest"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WebhookEventRequest": {
+        "properties": {
+          "provider_event_id": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Provider Event Id"
+          },
+          "payment_attempt_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Attempt Id"
+          },
+          "event_type": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Event Type"
+          },
+          "status": {
+            "type": "string",
+            "pattern": "^(paid|failed|canceled)$",
+            "title": "Status"
+          },
+          "signature": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signature"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider_event_id",
+          "event_type",
+          "status"
+        ],
+        "title": "WebhookEventRequest"
+      },
+      "WritingAttemptRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 5000,
+            "minLength": 1,
+            "title": "Text"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(fr|ar|en)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "WritingAttemptRequest",
+        "description": "POST /writing-attempts — student writing assistance request."
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "auth",
+      "description": "Authentication — login, refresh, logout, profile, 2FA, email verification."
+    },
+    {
+      "name": "invitations",
+      "description": "Invitation codes — create, consume, and revoke codes for user onboarding."
+    },
+    {
+      "name": "recovery",
+      "description": "Account recovery — request OTP, verify, and reset password."
+    },
+    {
+      "name": "erp-classes",
+      "description": "ERP — School classes: read class details, capacity, academic year."
+    },
+    {
+      "name": "erp-enrollments",
+      "description": "ERP — Student enrollments: assign students to classes."
+    },
+    {
+      "name": "erp-class-assignments",
+      "description": "ERP — Teacher assignments: assign teachers to classes."
+    },
+    {
+      "name": "erp-attendance",
+      "description": "ERP — Attendance: mark sessions, absence justifications, reviews."
+    },
+    {
+      "name": "lms-courses",
+      "description": "LMS — Courses: create and list courses (teacher/admin)."
+    },
+    {
+      "name": "lms-assignments",
+      "description": "LMS — Assignments: create and list homework assignments."
+    },
+    {
+      "name": "lms-submissions",
+      "description": "LMS — Submissions: student work submissions and teacher grading."
+    },
+    {
+      "name": "lms-results",
+      "description": "LMS — Results: student grades and academic results."
+    },
+    {
+      "name": "lms-content",
+      "description": "LMS — Content: learning materials, assets, and progress tracking."
+    },
+    {
+      "name": "lms-activities",
+      "description": "LMS — Activities: interactive learning sessions and completion."
+    },
+    {
+      "name": "lms-assessments",
+      "description": "LMS — Assessments: exams, quizzes, publishing, and result submission."
+    },
+    {
+      "name": "billing-invoices",
+      "description": "Billing — Invoices: list and view school fee invoices."
+    },
+    {
+      "name": "billing-payments",
+      "description": "Billing — Payments: initiate payments, status, provider webhooks."
+    },
+    {
+      "name": "com-notifications",
+      "description": "COM — Notifications: in-app notification feed."
+    },
+    {
+      "name": "com-consents",
+      "description": "COM — Consents: manage communication and data-sharing preferences."
+    },
+    {
+      "name": "com-feed",
+      "description": "COM — Parent feed: aggregated activity feed for parents."
+    },
+    {
+      "name": "ai",
+      "description": "AI & Data — Writing assistance, recommendations, KPIs, event schema."
+    },
+    {
+      "name": "system",
+      "description": "System — Health check, version, and operational endpoints."
+    }
+  ]
+}

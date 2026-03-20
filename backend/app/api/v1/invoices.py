@@ -28,7 +28,7 @@ from app.models.billing import Invoice, InvoiceItem
 router = APIRouter(prefix="/invoices", tags=["billing-invoices"])
 
 
-@router.get("")
+@router.get("", summary="List invoices", response_description="Paginated list of invoices")
 async def list_invoices(
     status: str | None = Query(None),
     cursor: str | None = Query(None),
@@ -97,7 +97,7 @@ async def list_invoices(
     return list_response(items, next_cursor=next_cursor, has_more=has_more)
 
 
-@router.get("/{invoice_id}")
+@router.get("/{invoice_id}", summary="Get invoice details", response_description="Invoice with line items")
 async def get_invoice(
     invoice_id: uuid.UUID,
     auth: AuthContext = Depends(requires_permission("PERM-BIL:invoice:read")),

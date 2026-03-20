@@ -28,7 +28,7 @@ from app.models.erp import Class, Enrollment, TeacherAssignment
 router = APIRouter(prefix="/classes", tags=["erp-classes"])
 
 
-@router.get("/{class_id}")
+@router.get("/{class_id}", summary="Get class details", response_description="Class with capacity, level, academic year")
 async def get_class(
     class_id: uuid.UUID,
     auth: AuthContext = Depends(requires_permission("PERM-ERP:class:read")),

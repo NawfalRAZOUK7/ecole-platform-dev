@@ -34,7 +34,7 @@ def _get_client_ip(request: Request) -> str | None:
     return None
 
 
-@router.post("", status_code=201)
+@router.post("", status_code=201, summary="Assign teacher to class", response_description="Teacher assignment record")
 async def create_teacher_assignment(
     body: TeacherAssignmentCreateRequest,
     request: Request,

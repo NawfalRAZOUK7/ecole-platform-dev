@@ -64,7 +64,12 @@ router = APIRouter()
 
 
 # Health check (public, no auth)
-@router.get("/health")
+@router.get(
+    "/health",
+    tags=["system"],
+    summary="Health check",
+    response_description="Service status, version, and timestamp",
+)
 async def health_check():
     """Health check endpoint.
 

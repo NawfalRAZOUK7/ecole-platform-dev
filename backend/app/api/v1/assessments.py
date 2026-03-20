@@ -52,7 +52,7 @@ def _get_client_ip(request: Request) -> str | None:
 # ---------------------------------------------------------------------------
 # POST /assessments — Create assessment (TCH, ADM)
 # ---------------------------------------------------------------------------
-@router.post("", status_code=201)
+@router.post("", status_code=201, summary="Create an assessment", response_description="Created assessment record")
 async def create_assessment(
     body: AssessmentCreateRequest,
     request: Request,
@@ -123,7 +123,7 @@ async def create_assessment(
 # ---------------------------------------------------------------------------
 # GET /assessments — List assessments (STD, ADM, TCH)
 # ---------------------------------------------------------------------------
-@router.get("")
+@router.get("", summary="List assessments", response_description="Paginated list of assessments")
 async def list_assessments(
     class_id: uuid.UUID | None = Query(None),
     status: str | None = Query(None),
@@ -183,7 +183,7 @@ async def list_assessments(
 # ---------------------------------------------------------------------------
 # POST /assessments/{id}/publish — Publish assessment (TCH, ADM)
 # ---------------------------------------------------------------------------
-@router.post("/{assessment_id}/publish", status_code=200)
+@router.post("/{assessment_id}/publish", status_code=200, summary="Publish an assessment", response_description="Published assessment")
 async def publish_assessment(
     assessment_id: uuid.UUID,
     request: Request,
@@ -243,7 +243,7 @@ async def publish_assessment(
 # ---------------------------------------------------------------------------
 # POST /assessments/{id}/results — Submit assessment result (STD)
 # ---------------------------------------------------------------------------
-@router.post("/{assessment_id}/results", status_code=201)
+@router.post("/{assessment_id}/results", status_code=201, summary="Submit assessment result", response_description="Assessment result record")
 async def submit_assessment_result(
     assessment_id: uuid.UUID,
     body: AssessmentResultSubmitRequest,

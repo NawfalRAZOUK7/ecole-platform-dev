@@ -42,7 +42,7 @@ def _get_client_ip(request: Request) -> str | None:
     return None
 
 
-@router.post("", status_code=201)
+@router.post("", status_code=201, summary="Enroll student in class", response_description="Enrollment record")
 async def create_enrollment(
     body: EnrollmentCreateRequest,
     request: Request,

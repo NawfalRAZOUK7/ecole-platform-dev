@@ -39,7 +39,7 @@ def _get_client_ip(request: Request) -> str | None:
     return None
 
 
-@router.post("", status_code=201)
+@router.post("", status_code=201, summary="Create an assignment", response_description="Created assignment record")
 async def create_assignment(
     body: AssignmentCreateRequest,
     request: Request,
@@ -108,7 +108,7 @@ async def create_assignment(
     })
 
 
-@router.get("")
+@router.get("", summary="List assignments", response_description="Paginated list of assignments")
 async def list_assignments(
     course_id: uuid.UUID | None = Query(None),
     cursor: str | None = Query(None),

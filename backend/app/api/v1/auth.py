@@ -88,7 +88,7 @@ def _parse_device_name(user_agent: str | None) -> str | None:
 # ---------------------------------------------------------------------------
 # POST /auth/login (S-030) — Public
 # ---------------------------------------------------------------------------
-@router.post("/login")
+@router.post("/login", summary="Authenticate user", response_description="Access token or 2FA temp token")
 async def login(
     body: LoginRequest,
     request: Request,
@@ -158,7 +158,7 @@ async def login(
 # ---------------------------------------------------------------------------
 # POST /auth/refresh (S-031) — Public (uses refresh cookie)
 # ---------------------------------------------------------------------------
-@router.post("/refresh")
+@router.post("/refresh", summary="Refresh access token", response_description="New access token")
 async def refresh(
     request: Request,
     response: Response,
@@ -219,7 +219,7 @@ async def refresh(
 # ---------------------------------------------------------------------------
 # POST /auth/logout (S-032) — Protected
 # ---------------------------------------------------------------------------
-@router.post("/logout")
+@router.post("/logout", summary="Revoke current session", response_description="Empty success response")
 async def logout(
     request: Request,
     response: Response,
@@ -249,7 +249,7 @@ async def logout(
 # ---------------------------------------------------------------------------
 # GET /me (S-033) — Protected
 # ---------------------------------------------------------------------------
-@router.get("/me")
+@router.get("/me", summary="Get current user profile", response_description="User profile with permissions and memberships")
 async def me(
     auth: AuthContext = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -271,7 +271,7 @@ async def me(
 # ---------------------------------------------------------------------------
 # GET /auth/sessions (Phase 2A) — Protected
 # ---------------------------------------------------------------------------
-@router.get("/sessions")
+@router.get("/sessions", summary="List active sessions", response_description="List of active sessions with device info")
 async def list_sessions(
     auth: AuthContext = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -293,7 +293,7 @@ async def list_sessions(
 # ---------------------------------------------------------------------------
 # DELETE /auth/sessions/{session_id} (Phase 2A) — Protected
 # ---------------------------------------------------------------------------
-@router.delete("/sessions/{session_id}")
+@router.delete("/sessions/{session_id}", summary="Revoke a session", response_description="Session revocation confirmation")
 async def revoke_session(
     session_id: uuid.UUID,
     request: Request,
@@ -320,7 +320,7 @@ async def revoke_session(
 # ---------------------------------------------------------------------------
 # POST /auth/change-password (Phase 2A) — Protected
 # ---------------------------------------------------------------------------
-@router.post("/change-password")
+@router.post("/change-password", summary="Change password", response_description="Password change confirmation")
 async def change_password(
     body: ChangePasswordRequest,
     request: Request,
@@ -348,7 +348,7 @@ async def change_password(
 # ---------------------------------------------------------------------------
 # POST /auth/2fa/setup (Phase 2B) — Protected
 # ---------------------------------------------------------------------------
-@router.post("/2fa/setup")
+@router.post("/2fa/setup", summary="Start 2FA setup", response_description="TOTP secret and provisioning URI")
 async def two_factor_setup(
     request: Request,
     auth: AuthContext = Depends(get_current_user),
@@ -372,7 +372,7 @@ async def two_factor_setup(
 # ---------------------------------------------------------------------------
 # POST /auth/2fa/verify-setup (Phase 2B) — Protected
 # ---------------------------------------------------------------------------
-@router.post("/2fa/verify-setup")
+@router.post("/2fa/verify-setup", summary="Activate 2FA", response_description="Backup codes and confirmation")
 async def two_factor_verify_setup(
     body: TwoFactorVerifySetupRequest,
     request: Request,
@@ -397,7 +397,7 @@ async def two_factor_verify_setup(
 # ---------------------------------------------------------------------------
 # POST /auth/2fa/disable (Phase 2B) — Protected
 # ---------------------------------------------------------------------------
-@router.post("/2fa/disable")
+@router.post("/2fa/disable", summary="Disable 2FA", response_description="2FA deactivation confirmation")
 async def two_factor_disable(
     body: TwoFactorDisableRequest,
     request: Request,
@@ -419,7 +419,7 @@ async def two_factor_disable(
 # ---------------------------------------------------------------------------
 # POST /auth/2fa/verify (Phase 2B) — Public (uses temp_token)
 # ---------------------------------------------------------------------------
-@router.post("/2fa/verify")
+@router.post("/2fa/verify", summary="Verify 2FA code during login", response_description="Access token after successful 2FA")
 async def two_factor_verify_login(
     body: TwoFactorVerifyLoginRequest,
     request: Request,
@@ -471,7 +471,7 @@ async def two_factor_verify_login(
 # ---------------------------------------------------------------------------
 # POST /auth/verify-email (Phase 2B) — Public
 # ---------------------------------------------------------------------------
-@router.post("/verify-email")
+@router.post("/verify-email", summary="Verify email address", response_description="Email verification confirmation")
 async def verify_email(
     body: EmailVerifyRequest,
     request: Request,

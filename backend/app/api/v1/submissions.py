@@ -37,7 +37,7 @@ def _get_client_ip(request: Request) -> str | None:
 # ---------------------------------------------------------------------------
 # S-053: POST /submissions — Submit work (STD)
 # ---------------------------------------------------------------------------
-@router.post("", status_code=201)
+@router.post("", status_code=201, summary="Submit student work", response_description="Submission record")
 async def create_submission(
     body: SubmissionCreateRequest,
     request: Request,
@@ -126,7 +126,7 @@ async def create_submission(
 # ---------------------------------------------------------------------------
 # S-054: POST /submissions/{id}/grade — Grade a submission (TCH)
 # ---------------------------------------------------------------------------
-@router.post("/{submission_id}/grade", status_code=201)
+@router.post("/{submission_id}/grade", status_code=201, summary="Grade a submission", response_description="Updated submission with grade")
 async def grade_submission(
     submission_id: uuid.UUID,
     body: GradeRequest,

@@ -38,7 +38,7 @@ def _get_client_ip(request: Request) -> str | None:
 # ---------------------------------------------------------------------------
 # S-062: POST /payments/initiate — Initiate payment (PAR)
 # ---------------------------------------------------------------------------
-@router.post("/initiate", status_code=201)
+@router.post("/initiate", status_code=201, summary="Initiate a payment", response_description="Payment attempt with provider redirect")
 async def initiate_payment(
     body: PaymentInitiateRequest,
     request: Request,
@@ -133,7 +133,7 @@ async def initiate_payment(
 # ---------------------------------------------------------------------------
 # S-063: GET /payments/{attempt_id} — Get payment status (PAR, ADM)
 # ---------------------------------------------------------------------------
-@router.get("/{attempt_id}")
+@router.get("/{attempt_id}", summary="Get payment status", response_description="Payment attempt status")
 async def get_payment_status(
     attempt_id: uuid.UUID,
     auth: AuthContext = Depends(requires_permission("PERM-BIL:payment:read")),
@@ -167,7 +167,7 @@ async def get_payment_status(
 # ---------------------------------------------------------------------------
 # S-064: POST /payments/webhook/provider — Handle webhook (SYS)
 # ---------------------------------------------------------------------------
-@router.post("/webhook/provider", status_code=200)
+@router.post("/webhook/provider", status_code=200, summary="Handle provider webhook", response_description="Webhook processing result")
 async def handle_provider_webhook(
     body: WebhookEventRequest,
     request: Request,

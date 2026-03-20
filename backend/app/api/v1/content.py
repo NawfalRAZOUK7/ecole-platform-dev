@@ -42,7 +42,7 @@ def _get_client_ip(request: Request) -> str | None:
 # ---------------------------------------------------------------------------
 # S-056: GET /content-items — List content items (STD, PAR)
 # ---------------------------------------------------------------------------
-@router.get("")
+@router.get("", summary="List content items", response_description="Paginated list of learning materials")
 async def list_content_items(
     content_type: str | None = Query(None),
     level_band: str | None = Query(None),
@@ -104,7 +104,7 @@ async def list_content_items(
 # ---------------------------------------------------------------------------
 # S-056: GET /content-items/{id} — Get content item detail (STD, PAR)
 # ---------------------------------------------------------------------------
-@router.get("/{content_item_id}")
+@router.get("/{content_item_id}", summary="Get content item details", response_description="Content item with assets")
 async def get_content_item(
     content_item_id: uuid.UUID,
     auth: AuthContext = Depends(requires_permission("PERM-LMS:content:read")),
@@ -143,7 +143,7 @@ async def get_content_item(
 # ---------------------------------------------------------------------------
 # S-057: POST /content-items/{id}/progress — Track progress (STD)
 # ---------------------------------------------------------------------------
-@router.post("/{content_item_id}/progress", status_code=200)
+@router.post("/{content_item_id}/progress", status_code=200, summary="Update content progress", response_description="Updated progress record")
 async def update_content_progress(
     content_item_id: uuid.UUID,
     body: ContentProgressRequest,
