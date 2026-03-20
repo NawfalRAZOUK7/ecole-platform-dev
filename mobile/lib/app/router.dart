@@ -3,6 +3,7 @@
 /// Reference: DEC-E2-010 — Declarative routing with auth guards
 /// Routes redirect to /login if not authenticated.
 /// Role-based home redirect (PAR→/feed, STD→/content, etc.)
+/// Phase 5A: Added 2FA setup, password change, submission upload routes.
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -15,6 +16,9 @@ import 'package:ecole_platform/features/content/content_screen.dart';
 import 'package:ecole_platform/features/results/results_screen.dart';
 import 'package:ecole_platform/features/invoices/invoices_screen.dart';
 import 'package:ecole_platform/features/profile/profile_screen.dart';
+import 'package:ecole_platform/features/profile/two_factor_setup_screen.dart';
+import 'package:ecole_platform/features/profile/change_password_screen.dart';
+import 'package:ecole_platform/features/submissions/submission_upload_screen.dart';
 import 'package:ecole_platform/presentation/shell_screen.dart';
 
 /// Role-based redirect targets.
@@ -85,8 +89,30 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/profile',
             builder: (context, state) => const ProfileScreen(),
+            routes: [
+              GoRoute(
+                path: '2fa',
+                builder: (context, state) => const TwoFactorSetupScreen(),
+              ),
+              GoRoute(
+                path: 'password',
+                builder: (context, state) => const ChangePasswordScreen(),
+              ),
+            ],
           ),
         ],
+      ),
+
+      // Submission upload (outside shell — full screen)
+      GoRoute(
+        path: '/submissions/upload',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, String>?;
+          return SubmissionUploadScreen(
+            assignmentId: extra?['assignment_id'],
+            assignmentTitle: extra?['assignment_title'],
+          );
+        },
       ),
     ],
   );

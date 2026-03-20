@@ -268,4 +268,39 @@ class ApiClient {
     final respBody = resp.data as Map<String, dynamic>;
     return ApiResponse(data: respBody['data'] as Map<String, dynamic>);
   }
+
+  /// Upload files with multipart form data and progress tracking.
+  Future<ApiResponse<Map<String, dynamic>>> uploadFiles(
+    String path, {
+    required List<File> files,
+    Map<String, dynamic>? fields,
+    void Function(int sent, int total)? onProgress,
+  }) async {
+    final formData = FormData();
+
+    // Add fields
+    if (fields != null) {
+      for (final entry in fields.entries) {
+        formData.fields.add(MapEntry(entry.key, entry.value.toString()));
+      }
+    }
+
+    // Add files
+    for (final file in files) {
+      final fileName = file.path.split('/').last;
+      formData.files.add(MapEntry(
+        'files',
+        await MultipartFile.fromFile(file.path, filename: fileName),
+      ));
+    }
+
+    final resp = await _dio.post(
+      '$_apiBase$path',
+      data: formData,
+      onSendProgress: onProgress,
+    );
+
+    final body = resp.data as Map<String, dynamic>;
+    return ApiResponse(data: body['data'] as Map<String, dynamic>);
+  }
 }

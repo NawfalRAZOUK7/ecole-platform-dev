@@ -1,9 +1,11 @@
-/// Profile screen — user info, language, logout.
+/// Profile screen — user info, security settings, logout.
 ///
 /// Reference: UI-CMN-001 — Profile screen
+/// Phase 5A: 2FA setup navigation + biometric toggle switch.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:ecole_platform/features/auth/auth_provider.dart';
 
@@ -110,6 +112,52 @@ class ProfileScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
           ],
+
+          // ── Security section ──
+          Text(
+            'Sécurité',
+            style: theme.textTheme.titleSmall
+                ?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+
+          // 2FA setup
+          Card(
+            child: ListTile(
+              leading: Icon(Icons.security, color: theme.colorScheme.primary),
+              title: const Text('Authentification 2FA'),
+              subtitle: const Text('Configurer la double authentification'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/profile/2fa'),
+            ),
+          ),
+
+          // Biometric toggle
+          if (authState.biometricAvailable) ...[
+            Card(
+              child: SwitchListTile(
+                secondary:
+                    Icon(Icons.fingerprint, color: theme.colorScheme.primary),
+                title: const Text('Déverrouillage biométrique'),
+                subtitle: const Text('Empreinte digitale / Face ID'),
+                value: authState.biometricEnabled,
+                onChanged: (value) {
+                  ref.read(authProvider.notifier).setBiometricEnabled(value);
+                },
+              ),
+            ),
+          ],
+
+          // Change password
+          Card(
+            child: ListTile(
+              leading: Icon(Icons.lock_outline, color: theme.colorScheme.primary),
+              title: const Text('Changer le mot de passe'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/profile/password'),
+            ),
+          ),
+          const SizedBox(height: 24),
 
           // Logout button
           OutlinedButton.icon(

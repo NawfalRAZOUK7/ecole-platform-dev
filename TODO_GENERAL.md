@@ -493,16 +493,16 @@
 - [x] CSS styles — file-drop-zone, file-item, notif-badge, toast-container, toast
 
 ## Phase 5A — Push Notifications, Biometric Auth & 2FA Mobile
-- [ ] Configure Firebase (document google-services.json + GoogleService-Info.plist setup)
-- [ ] Deep-link routing: notification tap → correct screen
-- [ ] Notification permission request flow + badge count
-- [ ] Add `local_auth` package — biometric unlock (fingerprint/FaceID) after first login
-- [ ] Biometric fallback to password after 3 failures
-- [ ] **From 2B:** 2FA verification screen in login flow (TOTP input + backup code option)
-- [ ] **From 2B:** 2FA setup screen in profile (QR code, verify, save backup codes)
-- [ ] **From 3B:** File picker for submission upload (gallery, camera, documents) + progress indicator
-- [ ] **From 3C:** WebSocket client — connect on login, local notification on WS event, badge update
-- [ ] **From 2A:** Send device_name, user_agent on login for session tracking
+- [x] Configure Firebase (document google-services.json + GoogleService-Info.plist setup)
+- [x] Deep-link routing: notification tap → correct screen (PushNotificationService with route inference)
+- [x] Notification permission request flow + badge count (flutter_app_badger + flutter_local_notifications)
+- [x] Add `local_auth` package — biometric unlock (fingerprint/FaceID) after first login
+- [x] Biometric fallback to password after 3 failures (BiometricService.shouldFallbackToPassword)
+- [x] **From 2B:** 2FA verification screen in login flow (TOTP input + backup code option)
+- [x] **From 2B:** 2FA setup screen in profile (QR code, verify, save backup codes)
+- [x] **From 3B:** File picker for submission upload (gallery, camera, documents) + progress indicator
+- [x] **From 3C:** WebSocket client — connect on login, local notification on WS event, badge update
+- [x] **From 2A:** Send device_name, user_agent on login for session tracking (device_info_plus)
 
 ## Phase 5B — Admin/Teacher Mobile Screens & Search
 - [ ] **From 4A:** Admin dashboard screen, users screen, invitations screen, justification review screen
