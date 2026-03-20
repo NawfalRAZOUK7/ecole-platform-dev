@@ -22,6 +22,7 @@ from app.core.dependencies import (
     verify_teacher_assignment,
 )
 from app.core.exceptions import NotFoundError
+from app.core.filtering import FilterSpec, SortSpec, apply_filters, apply_sort, parse_filters, parse_sort
 from app.core.response import (
     clamp_page_size,
     decode_cursor,
@@ -29,6 +30,7 @@ from app.core.response import (
     list_response,
     success_response,
 )
+from app.core.search import apply_search, parse_search
 from app.models.erp import Class
 from app.models.lms import Course
 from app.schemas.lms import CourseCreateRequest
@@ -117,12 +119,18 @@ async def list_courses(
     class_id: uuid.UUID | None = Query(None),
     cursor: str | None = Query(None),
     limit: int | None = Query(None),
+    filters: FilterSpec = Depends(parse_filters),
+    sort: SortSpec = Depends(parse_sort),
+    search: str | None = Depends(parse_search),
     auth: AuthContext = Depends(requires_permission("PERM-LMS:course:publish")),
     db: AsyncSession = Depends(get_db),
 ):
-    """List courses, optionally filtered by class.
+    """List courses with filtering, sorting, and full-text search.
 
     TCH: only sees courses for assigned classes.
+    Filters: ?filter[status]=published&filter[title__like]=math
+    Sort: ?sort=-created_at,title
+    Search: ?search=mathematiques
     """
     page_size = clamp_page_size(limit)
 
@@ -140,12 +148,18 @@ async def list_courses(
         else:
             return list_response([], next_cursor=None, has_more=False)
 
+    # Phase 3D: filters, search, sort
+    query = apply_filters(query, Course, filters)
+    if search:
+        query = apply_search(query, Course, search)
+    query = apply_sort(query, Course, sort, default_column=Course.id)
+
     # Cursor pagination
     if cursor:
         last_id, _ = decode_cursor(cursor)
         query = query.where(Course.id > last_id)
 
-    query = query.order_by(Course.id).limit(page_size + 1)
+    query = query.limit(page_size + 1)
     result = await db.execute(query)
     courses = list(result.scalars().all())
 
@@ -167,4 +181,11 @@ async def list_courses(
     ]
 
     next_cursor = encode_cursor(courses[-1].id) if has_more and courses else None
-    return list_response(items, next_cursor=next_cursor, has_more=has_more)
+    return list_response(
+        items,
+        next_cursor=next_cursor,
+        has_more=has_more,
+        filters_applied=filters.as_dict() if filters.items else None,
+        sort_by=sort.as_list() if sort.fields else None,
+        search_term=search,
+    )

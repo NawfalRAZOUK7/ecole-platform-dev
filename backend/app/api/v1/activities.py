@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, requires_permission, verify_school_boundary
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
+from app.core.filtering import FilterSpec, SortSpec, apply_filters, apply_sort, parse_filters, parse_sort
 from app.core.response import (
     clamp_page_size,
     decode_cursor,
@@ -23,6 +24,7 @@ from app.core.response import (
     list_response,
     success_response,
 )
+from app.core.search import apply_search, parse_search
 from app.models.lms import Activity, ActivitySession
 from app.schemas.lms import ActivitySessionCompleteRequest, ActivitySessionCreateRequest
 from app.services.audit import AuditService
@@ -48,12 +50,18 @@ async def list_activities(
     difficulty: str | None = Query(None),
     cursor: str | None = Query(None),
     limit: int | None = Query(None),
+    filters: FilterSpec = Depends(parse_filters),
+    sort: SortSpec = Depends(parse_sort),
+    search: str | None = Depends(parse_search),
     auth: AuthContext = Depends(requires_permission("PERM-LMS:activity-session:create")),
     db: AsyncSession = Depends(get_db),
 ):
-    """List available activities.
+    """List available activities with filtering, sorting, and full-text search.
 
     Shows school-specific + platform-wide activities.
+    Filters: ?filter[type]=quiz&filter[difficulty]=easy
+    Sort: ?sort=-created_at
+    Search: ?search=multiplication
     """
     page_size = clamp_page_size(limit)
 
@@ -61,16 +69,23 @@ async def list_activities(
         (Activity.school_id == auth.school_id) | (Activity.school_id.is_(None))
     )
 
+    # Legacy explicit filters
     if activity_type:
         query = query.where(Activity.type == activity_type)
     if difficulty:
         query = query.where(Activity.difficulty == difficulty)
 
+    # Phase 3D
+    query = apply_filters(query, Activity, filters)
+    if search:
+        query = apply_search(query, Activity, search)
+    query = apply_sort(query, Activity, sort, default_column=Activity.id)
+
     if cursor:
         last_id, _ = decode_cursor(cursor)
         query = query.where(Activity.id > last_id)
 
-    query = query.order_by(Activity.id).limit(page_size + 1)
+    query = query.limit(page_size + 1)
     result = await db.execute(query)
     activities = list(result.scalars().all())
 
@@ -91,7 +106,14 @@ async def list_activities(
     ]
 
     next_cursor = encode_cursor(activities[-1].id) if has_more and activities else None
-    return list_response(items, next_cursor=next_cursor, has_more=has_more)
+    return list_response(
+        items,
+        next_cursor=next_cursor,
+        has_more=has_more,
+        filters_applied=filters.as_dict() if filters.items else None,
+        sort_by=sort.as_list() if sort.fields else None,
+        search_term=search,
+    )
 
 
 # ---------------------------------------------------------------------------

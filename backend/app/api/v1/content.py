@@ -20,6 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, requires_permission, verify_school_boundary
 from app.core.exceptions import AuthorizationError, NotFoundError
+from app.core.filtering import FilterSpec, SortSpec, apply_filters, apply_sort, parse_filters, parse_sort
 from app.core.response import (
     clamp_page_size,
     decode_cursor,
@@ -27,6 +28,7 @@ from app.core.response import (
     list_response,
     success_response,
 )
+from app.core.search import apply_search, parse_search
 from app.core.storage import storage, validate_file_size, validate_mime_type
 from app.models.lms import ContentItem, ContentItemAsset, ContentProgress
 from app.schemas.lms import ContentProgressRequest
@@ -54,13 +56,18 @@ async def list_content_items(
     language: str | None = Query(None),
     cursor: str | None = Query(None),
     limit: int | None = Query(None),
+    filters: FilterSpec = Depends(parse_filters),
+    sort: SortSpec = Depends(parse_sort),
+    search: str | None = Depends(parse_search),
     auth: AuthContext = Depends(requires_permission("PERM-LMS:content:read")),
     db: AsyncSession = Depends(get_db),
 ):
-    """List published content items.
+    """List published content items with filtering, sorting, and full-text search.
 
-    Filters by content_type, level_band, language.
-    Shows school-specific + platform-wide content (school_id IS NULL).
+    Filters: ?filter[content_type]=video&filter[level_band]=college
+    Sort: ?sort=-created_at
+    Search: ?search=mathematiques
+    Legacy params content_type, level_band, language still supported.
     """
     page_size = clamp_page_size(limit)
 
@@ -70,6 +77,7 @@ async def list_content_items(
         (ContentItem.school_id == auth.school_id) | (ContentItem.school_id.is_(None)),
     )
 
+    # Legacy explicit filters
     if content_type:
         query = query.where(ContentItem.content_type == content_type)
     if level_band:
@@ -77,11 +85,17 @@ async def list_content_items(
     if language:
         query = query.where(ContentItem.language == language)
 
+    # Phase 3D: generic filters, search, sort
+    query = apply_filters(query, ContentItem, filters)
+    if search:
+        query = apply_search(query, ContentItem, search)
+    query = apply_sort(query, ContentItem, sort, default_column=ContentItem.id)
+
     if cursor:
         last_id, _ = decode_cursor(cursor)
         query = query.where(ContentItem.id > last_id)
 
-    query = query.order_by(ContentItem.id).limit(page_size + 1)
+    query = query.limit(page_size + 1)
     result = await db.execute(query)
     items_list = list(result.scalars().all())
 
@@ -103,7 +117,14 @@ async def list_content_items(
     ]
 
     next_cursor = encode_cursor(items_list[-1].id) if has_more and items_list else None
-    return list_response(items, next_cursor=next_cursor, has_more=has_more)
+    return list_response(
+        items,
+        next_cursor=next_cursor,
+        has_more=has_more,
+        filters_applied=filters.as_dict() if filters.items else None,
+        sort_by=sort.as_list() if sort.fields else None,
+        search_term=search,
+    )
 
 
 # ---------------------------------------------------------------------------

@@ -25,6 +25,7 @@ from app.core.dependencies import (
     verify_teacher_assignment,
 )
 from app.core.exceptions import AuthorizationError, ConflictError, NotFoundError, ValidationError
+from app.core.filtering import FilterSpec, SortSpec, apply_filters, apply_sort, parse_filters, parse_sort
 from app.core.response import (
     clamp_page_size,
     decode_cursor,
@@ -32,6 +33,7 @@ from app.core.response import (
     list_response,
     success_response,
 )
+from app.core.search import apply_search, parse_search
 from app.models.erp import Class
 from app.models.lms import Assessment, AssessmentResult
 from app.schemas.lms import AssessmentCreateRequest, AssessmentResultSubmitRequest
@@ -129,10 +131,19 @@ async def list_assessments(
     status: str | None = Query(None),
     cursor: str | None = Query(None),
     limit: int | None = Query(None),
+    filters: FilterSpec = Depends(parse_filters),
+    sort: SortSpec = Depends(parse_sort),
+    search: str | None = Depends(parse_search),
     auth: AuthContext = Depends(requires_permission("PERM-LMS:assessment:read")),
     db: AsyncSession = Depends(get_db),
 ):
-    """List assessments. Optionally filtered by class_id and status."""
+    """List assessments with filtering, sorting, and full-text search.
+
+    Filters: ?filter[status]=published&filter[title__like]=exam
+    Sort: ?sort=-due_at
+    Search: ?search=final
+    Legacy params class_id, status still supported.
+    """
     page_size = clamp_page_size(limit)
 
     query = select(Assessment).join(Class).where(Class.school_id == auth.school_id)
@@ -150,11 +161,17 @@ async def list_assessments(
         else:
             return list_response([], next_cursor=None, has_more=False)
 
+    # Phase 3D
+    query = apply_filters(query, Assessment, filters)
+    if search:
+        query = apply_search(query, Assessment, search)
+    query = apply_sort(query, Assessment, sort, default_column=Assessment.id)
+
     if cursor:
         last_id, _ = decode_cursor(cursor)
         query = query.where(Assessment.id > last_id)
 
-    query = query.order_by(Assessment.id).limit(page_size + 1)
+    query = query.limit(page_size + 1)
     result = await db.execute(query)
     assessments = list(result.scalars().all())
 
@@ -177,7 +194,14 @@ async def list_assessments(
     ]
 
     next_cursor = encode_cursor(assessments[-1].id) if has_more and assessments else None
-    return list_response(items, next_cursor=next_cursor, has_more=has_more)
+    return list_response(
+        items,
+        next_cursor=next_cursor,
+        has_more=has_more,
+        filters_applied=filters.as_dict() if filters.items else None,
+        sort_by=sort.as_list() if sort.fields else None,
+        search_term=search,
+    )
 
 
 # ---------------------------------------------------------------------------

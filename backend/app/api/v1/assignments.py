@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, requires_permission, verify_school_boundary
 from app.core.exceptions import AuthorizationError, NotFoundError
+from app.core.filtering import FilterSpec, SortSpec, apply_filters, apply_sort, parse_filters, parse_sort
 from app.core.response import (
     clamp_page_size,
     decode_cursor,
@@ -23,6 +24,7 @@ from app.core.response import (
     list_response,
     success_response,
 )
+from app.core.search import apply_search, parse_search
 from app.models.lms import Assignment, Course
 from app.schemas.lms import AssignmentCreateRequest
 from app.services.audit import AuditService
@@ -113,10 +115,19 @@ async def list_assignments(
     course_id: uuid.UUID | None = Query(None),
     cursor: str | None = Query(None),
     limit: int | None = Query(None),
+    filters: FilterSpec = Depends(parse_filters),
+    sort: SortSpec = Depends(parse_sort),
+    search: str | None = Depends(parse_search),
     auth: AuthContext = Depends(requires_permission("PERM-LMS:assignment:create")),
     db: AsyncSession = Depends(get_db),
 ):
-    """List assignments, optionally filtered by course."""
+    """List assignments with filtering, sorting, and full-text search.
+
+    Filters: ?filter[title__like]=math&filter[total_points__gte]=10
+    Sort: ?sort=-due_at,title
+    Search: ?search=homework
+    Legacy param course_id still supported.
+    """
     page_size = clamp_page_size(limit)
 
     query = select(Assignment)
@@ -133,11 +144,17 @@ async def list_assignments(
         # Filter by teacher's courses in this school
         query = query.join(Course).where(Course.school_id == auth.school_id)
 
+    # Phase 3D
+    query = apply_filters(query, Assignment, filters)
+    if search:
+        query = apply_search(query, Assignment, search)
+    query = apply_sort(query, Assignment, sort, default_column=Assignment.id)
+
     if cursor:
         last_id, _ = decode_cursor(cursor)
         query = query.where(Assignment.id > last_id)
 
-    query = query.order_by(Assignment.id).limit(page_size + 1)
+    query = query.limit(page_size + 1)
     result = await db.execute(query)
     assignments = list(result.scalars().all())
 
@@ -159,4 +176,11 @@ async def list_assignments(
     ]
 
     next_cursor = encode_cursor(assignments[-1].id) if has_more and assignments else None
-    return list_response(items, next_cursor=next_cursor, has_more=has_more)
+    return list_response(
+        items,
+        next_cursor=next_cursor,
+        has_more=has_more,
+        filters_applied=filters.as_dict() if filters.items else None,
+        sort_by=sort.as_list() if sort.fields else None,
+        search_term=search,
+    )

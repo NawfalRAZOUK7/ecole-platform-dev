@@ -16,6 +16,7 @@ from sqlalchemy.orm import selectinload
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, requires_permission, verify_school_boundary
 from app.core.exceptions import NotFoundError
+from app.core.filtering import FilterSpec, SortSpec, apply_filters, apply_sort, parse_filters, parse_sort
 from app.core.response import (
     clamp_page_size,
     decode_cursor,
@@ -23,6 +24,7 @@ from app.core.response import (
     list_response,
     success_response,
 )
+from app.core.search import apply_search, parse_search
 from app.models.billing import Invoice, InvoiceItem
 
 router = APIRouter(prefix="/invoices", tags=["billing-invoices"])
@@ -33,13 +35,20 @@ async def list_invoices(
     status: str | None = Query(None),
     cursor: str | None = Query(None),
     limit: int | None = Query(None),
+    filters: FilterSpec = Depends(parse_filters),
+    sort: SortSpec = Depends(parse_sort),
+    search: str | None = Depends(parse_search),
     auth: AuthContext = Depends(requires_permission("PERM-BIL:invoice:read")),
     db: AsyncSession = Depends(get_db),
 ):
-    """List invoices.
+    """List invoices with filtering, sorting, and full-text search.
 
     PAR: sees own invoices only.
     ADM: sees all invoices for the school.
+    Filters: ?filter[status]=paid&filter[total_amount__gte]=100
+    Sort: ?sort=-issued_date
+    Search: ?search=tuition
+    Legacy param status still supported.
     """
     page_size = clamp_page_size(limit)
 
@@ -56,11 +65,17 @@ async def list_invoices(
     if status:
         query = query.where(Invoice.status == status)
 
+    # Phase 3D
+    query = apply_filters(query, Invoice, filters)
+    if search:
+        query = apply_search(query, Invoice, search)
+    query = apply_sort(query, Invoice, sort, default_column=Invoice.id)
+
     if cursor:
         last_id, _ = decode_cursor(cursor)
         query = query.where(Invoice.id > last_id)
 
-    query = query.order_by(Invoice.id).limit(page_size + 1)
+    query = query.limit(page_size + 1)
     result = await db.execute(query)
     invoices = list(result.scalars().unique().all())
 
@@ -94,7 +109,14 @@ async def list_invoices(
     ]
 
     next_cursor = encode_cursor(invoices[-1].id) if has_more and invoices else None
-    return list_response(items, next_cursor=next_cursor, has_more=has_more)
+    return list_response(
+        items,
+        next_cursor=next_cursor,
+        has_more=has_more,
+        filters_applied=filters.as_dict() if filters.items else None,
+        sort_by=sort.as_list() if sort.fields else None,
+        search_term=search,
+    )
 
 
 @router.get("/{invoice_id}", summary="Get invoice details", response_description="Invoice with line items")
