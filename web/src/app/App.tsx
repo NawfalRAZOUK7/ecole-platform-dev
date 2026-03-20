@@ -24,6 +24,12 @@ import { InvitationsPage } from '@/features/admin/InvitationsPage';
 import { AuditLogPage } from '@/features/admin/AuditLogPage';
 import { SchoolSettingsPage } from '@/features/admin/SchoolSettingsPage';
 import { JustificationReviewPage } from '@/features/admin/JustificationReviewPage';
+import { ClassesPage as TeacherClassesPage } from '@/features/teacher/ClassesPage';
+import { CoursesPage as TeacherCoursesPage } from '@/features/teacher/CoursesPage';
+import { AssignmentFormPage } from '@/features/teacher/AssignmentFormPage';
+import { SubmissionsPage as TeacherSubmissionsPage } from '@/features/teacher/SubmissionsPage';
+import { AttendancePage } from '@/features/teacher/AttendancePage';
+import { AssessmentFormPage } from '@/features/teacher/AssessmentFormPage';
 import { LoadingState } from '@/shared/ui/LoadingState';
 
 /** Redirect based on user role */
@@ -98,6 +104,56 @@ function App() {
           element={
             <ProtectedRoute roles={['ADM']}>
               <JustificationReviewPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Teacher routes (TCH) */}
+        <Route
+          path="/teacher"
+          element={
+            <ProtectedRoute roles={['TCH']}>
+              <TeacherClassesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teacher/courses"
+          element={
+            <ProtectedRoute roles={['TCH']}>
+              <TeacherCoursesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teacher/assignments"
+          element={
+            <ProtectedRoute roles={['TCH']}>
+              <AssignmentFormPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teacher/submissions"
+          element={
+            <ProtectedRoute roles={['TCH']}>
+              <TeacherSubmissionsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teacher/attendance"
+          element={
+            <ProtectedRoute roles={['TCH']}>
+              <AttendancePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teacher/assessments"
+          element={
+            <ProtectedRoute roles={['TCH']}>
+              <AssessmentFormPage />
             </ProtectedRoute>
           }
         />

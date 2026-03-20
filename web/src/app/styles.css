@@ -758,6 +758,60 @@ body {
   accent-color: var(--color-primary);
 }
 
+/* ── Teacher Dashboard ── */
+.teacher-classes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.teacher-class-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.teacher-class-header {
+  margin-bottom: 12px;
+}
+
+.teacher-class-code {
+  display: inline-block;
+  background: #eff6ff;
+  color: var(--color-primary);
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-inline-end: 8px;
+}
+
+.teacher-class-name {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.teacher-class-stats {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-bottom: 12px;
+}
+
+.teacher-roster {
+  border-top: 1px solid var(--color-border);
+  padding-top: 12px;
+}
+
+/* Status badge variants for teacher pages */
+.status-draft { color: var(--color-text-secondary); border-color: var(--color-border); }
+.status-published { color: var(--color-success); border-color: var(--color-success); }
+.status-archived { color: var(--color-text-secondary); border-color: var(--color-text-secondary); }
+.status-closed { color: var(--color-danger); border-color: var(--color-danger); }
+
 /* ── RTL Support ── */
 [dir="rtl"] .app-sidebar {
   border-inline-end: 1px solid var(--color-border);

@@ -110,6 +110,10 @@ OPENAPI_TAGS = [
         "description": "Admin — Dashboard, user management, audit logs, settings (ADM/DIR only).",
     },
     {
+        "name": "teacher",
+        "description": "Teacher — Classes, students, submissions, periods (TCH only).",
+    },
+    {
         "name": "websocket",
         "description": "WebSocket — Real-time event delivery for connected clients.",
     },

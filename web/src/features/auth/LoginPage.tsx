@@ -19,7 +19,7 @@ const DEFAULT_SCHOOL_ID = '00000000-0000-4000-8000-000000000001';
 const ROLE_REDIRECT: Record<string, string> = {
   PAR: '/feed',
   STD: '/content',
-  TCH: '/content',
+  TCH: '/teacher',
   ADM: '/admin',
   DIR: '/admin',
   SUP: '/notifications',
