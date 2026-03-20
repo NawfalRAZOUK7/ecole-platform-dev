@@ -253,6 +253,29 @@ async def grade_submission(
             assignment_title=assignment.title,
         )
 
+        # 8. Enqueue grade notification email (Phase 3E)
+        try:
+            from app.core.tasks import enqueue_email
+            from app.models.iam import User
+
+            student_result = await db.execute(
+                select(User).where(User.id == submission.student_id)
+            )
+            student = student_result.scalar_one_or_none()
+            if student and student.email:
+                await enqueue_email(
+                    to=student.email,
+                    template_name="grade_published",
+                    lang="fr",
+                    student_name=student.first_name or student.email,
+                    assignment_title=assignment.title,
+                    score=float(body.score),
+                    total_points=float(assignment.total_points),
+                    feedback=body.feedback_text,
+                )
+        except Exception:
+            pass  # Fire-and-forget — never block grading
+
     return success_response({
         "id": str(grade.id),
         "submission_id": str(grade.submission_id),

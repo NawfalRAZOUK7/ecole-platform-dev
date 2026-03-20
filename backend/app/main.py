@@ -18,6 +18,7 @@ from app.core.idempotency import IdempotencyMiddleware
 from app.core.metrics import register_metrics
 from app.core.middleware import register_middleware
 from app.core.rate_limit import RateLimitMiddleware
+from app.core.tasks import close_arq_pool
 from app.core.ws_manager import ws_manager
 
 # ---------------------------------------------------------------------------
@@ -120,7 +121,8 @@ async def lifespan(app: FastAPI):
     # Startup: initialize WebSocket manager with Redis Pub/Sub
     await ws_manager.startup()
     yield
-    # Shutdown: close all WebSocket connections and Redis Pub/Sub
+    # Shutdown: close ARQ pool and all WebSocket connections
+    await close_arq_pool()
     await ws_manager.shutdown()
 
 

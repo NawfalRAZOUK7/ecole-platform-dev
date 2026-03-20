@@ -50,6 +50,15 @@ class Settings(BaseSettings):
         "application/zip"
     )
 
+    # SMTP / Email (Phase 3E)
+    smtp_host: str = "localhost"
+    smtp_port: int = 1025  # Mailhog default for dev
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_use_tls: bool = False
+    smtp_from_email: str = "noreply@ecole-platform.ma"
+    smtp_from_name: str = "École Platform"
+
     # CORS
     cors_origins: str = "http://localhost:5173,http://localhost:3000"
 

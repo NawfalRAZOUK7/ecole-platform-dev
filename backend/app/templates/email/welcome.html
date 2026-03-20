@@ -1,0 +1,31 @@
+{% extends "email/base.html" %}
+{% block content %}
+{% if lang == 'ar' %}
+  <h2>مرحبا {{ user_name }}!</h2>
+  <p>تم إنشاء حسابك على منصة المدرسة بنجاح.</p>
+  <table class="info-table">
+    <tr><td>المدرسة</td><td>{{ school_name }}</td></tr>
+    <tr><td>البريد الإلكتروني</td><td>{{ email }}</td></tr>
+    <tr><td>الدور</td><td>{{ role }}</td></tr>
+  </table>
+  <p>يمكنك الآن تسجيل الدخول باستخدام بيانات الاعتماد الخاصة بك.</p>
+{% elif lang == 'fr' %}
+  <h2>Bienvenue {{ user_name }} !</h2>
+  <p>Votre compte sur &Eacute;cole Platform a &eacute;t&eacute; cr&eacute;&eacute; avec succ&egrave;s.</p>
+  <table class="info-table">
+    <tr><td>&Eacute;cole</td><td>{{ school_name }}</td></tr>
+    <tr><td>Email</td><td>{{ email }}</td></tr>
+    <tr><td>R&ocirc;le</td><td>{{ role }}</td></tr>
+  </table>
+  <p>Vous pouvez maintenant vous connecter avec vos identifiants.</p>
+{% else %}
+  <h2>Welcome {{ user_name }}!</h2>
+  <p>Your account on &Eacute;cole Platform has been created successfully.</p>
+  <table class="info-table">
+    <tr><td>School</td><td>{{ school_name }}</td></tr>
+    <tr><td>Email</td><td>{{ email }}</td></tr>
+    <tr><td>Role</td><td>{{ role }}</td></tr>
+  </table>
+  <p>You can now log in with your credentials.</p>
+{% endif %}
+{% endblock %}

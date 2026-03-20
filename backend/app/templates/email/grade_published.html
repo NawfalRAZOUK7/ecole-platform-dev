@@ -1,0 +1,34 @@
+{% extends "email/base.html" %}
+{% block content %}
+{% if lang == 'ar' %}
+  <h2>تم نشر درجة جديدة</h2>
+  <p>مرحبا {{ student_name }}،</p>
+  <p>تم نشر درجة جديدة لعملك:</p>
+  <table class="info-table">
+    <tr><td>الواجب</td><td>{{ assignment_title }}</td></tr>
+    <tr><td>الدرجة</td><td>{{ score }} / {{ total_points }}</td></tr>
+    {% if feedback %}<tr><td>ملاحظات</td><td>{{ feedback }}</td></tr>{% endif %}
+  </table>
+  <p>يمكنك الاطلاع على التفاصيل في قسم النتائج.</p>
+{% elif lang == 'fr' %}
+  <h2>Nouvelle note publi&eacute;e</h2>
+  <p>Bonjour {{ student_name }},</p>
+  <p>Une nouvelle note a &eacute;t&eacute; publi&eacute;e pour votre travail :</p>
+  <table class="info-table">
+    <tr><td>Devoir</td><td>{{ assignment_title }}</td></tr>
+    <tr><td>Note</td><td>{{ score }} / {{ total_points }}</td></tr>
+    {% if feedback %}<tr><td>Commentaire</td><td>{{ feedback }}</td></tr>{% endif %}
+  </table>
+  <p>Vous pouvez consulter les d&eacute;tails dans la section R&eacute;sultats.</p>
+{% else %}
+  <h2>New Grade Published</h2>
+  <p>Hello {{ student_name }},</p>
+  <p>A new grade has been published for your work:</p>
+  <table class="info-table">
+    <tr><td>Assignment</td><td>{{ assignment_title }}</td></tr>
+    <tr><td>Score</td><td>{{ score }} / {{ total_points }}</td></tr>
+    {% if feedback %}<tr><td>Feedback</td><td>{{ feedback }}</td></tr>{% endif %}
+  </table>
+  <p>You can view the details in the Results section.</p>
+{% endif %}
+{% endblock %}

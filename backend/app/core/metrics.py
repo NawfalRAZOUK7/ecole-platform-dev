@@ -197,6 +197,38 @@ LAST_BACKUP_TIMESTAMP = Gauge(
     registry=REGISTRY,
 )
 
+# ---------------------------------------------------------------------------
+# Background Task Metrics (Phase 3E)
+# ---------------------------------------------------------------------------
+TASK_ENQUEUED_COUNT = Counter(
+    "task_enqueued_total",
+    "Total tasks enqueued",
+    ["env", "task"],
+    registry=REGISTRY,
+)
+
+TASK_COMPLETED_COUNT = Counter(
+    "task_completed_total",
+    "Total tasks completed successfully",
+    ["env", "task"],
+    registry=REGISTRY,
+)
+
+TASK_FAILED_COUNT = Counter(
+    "task_failed_total",
+    "Total tasks that failed",
+    ["env", "task"],
+    registry=REGISTRY,
+)
+
+TASK_DURATION = Histogram(
+    "task_duration_seconds",
+    "Background task execution duration in seconds",
+    ["env", "task"],
+    buckets=(0.1, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0),
+    registry=REGISTRY,
+)
+
 
 # ---------------------------------------------------------------------------
 # Helper: normalize path to avoid cardinality explosion

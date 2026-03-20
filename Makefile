@@ -2,7 +2,7 @@
        staging-up staging-down prod-up prod-down monitoring-up monitoring-down \
        shell-db redis-cli backup restore docker-prune version \
        migrate-new migrate-down migrate-status test-cov lint-fix format web-install web-lint \
-       openapi openapi-check
+       openapi openapi-check worker worker-logs
 
 # ==================== Compose Files ====================
 COMPOSE_FILE = infra/docker-compose.dev.yml
@@ -121,6 +121,14 @@ openapi-check:
 
 shell:
 	$(DC) exec backend bash
+
+# ==================== Background Worker ====================
+
+worker:
+	$(DC) up -d --build worker
+
+worker-logs:
+	$(DC) logs -f worker
 
 # ==================== Database ====================
 

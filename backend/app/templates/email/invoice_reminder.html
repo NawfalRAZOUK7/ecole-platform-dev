@@ -1,0 +1,34 @@
+{% extends "email/base.html" %}
+{% block content %}
+{% if lang == 'ar' %}
+  <h2>تذكير بالفاتورة</h2>
+  <p>مرحبا {{ parent_name }}،</p>
+  <p>نود تذكيرك بأن لديك فاتورة مستحقة الدفع:</p>
+  <table class="info-table">
+    <tr><td>رقم الفاتورة</td><td>{{ invoice_id }}</td></tr>
+    <tr><td>المبلغ</td><td>{{ amount }} {{ currency }}</td></tr>
+    <tr><td>تاريخ الاستحقاق</td><td>{{ due_date }}</td></tr>
+  </table>
+  <p>يرجى تسوية هذه الفاتورة في أقرب وقت ممكن.</p>
+{% elif lang == 'fr' %}
+  <h2>Rappel de facture</h2>
+  <p>Bonjour {{ parent_name }},</p>
+  <p>Nous vous rappelons qu'une facture est en attente de paiement :</p>
+  <table class="info-table">
+    <tr><td>Facture</td><td>{{ invoice_id }}</td></tr>
+    <tr><td>Montant</td><td>{{ amount }} {{ currency }}</td></tr>
+    <tr><td>&Eacute;ch&eacute;ance</td><td>{{ due_date }}</td></tr>
+  </table>
+  <p>Merci de r&eacute;gler cette facture dans les meilleurs d&eacute;lais.</p>
+{% else %}
+  <h2>Invoice Reminder</h2>
+  <p>Hello {{ parent_name }},</p>
+  <p>This is a reminder that you have an outstanding invoice:</p>
+  <table class="info-table">
+    <tr><td>Invoice</td><td>{{ invoice_id }}</td></tr>
+    <tr><td>Amount</td><td>{{ amount }} {{ currency }}</td></tr>
+    <tr><td>Due date</td><td>{{ due_date }}</td></tr>
+  </table>
+  <p>Please settle this invoice at your earliest convenience.</p>
+{% endif %}
+{% endblock %}

@@ -852,13 +852,25 @@ class RecoveryService:
             otp_hash,
         )
 
-        # In dev: log the OTP (in production: send via email/SMS)
+        # Log OTP in dev + enqueue email (Phase 3E)
         logger.info(
             "Recovery OTP for %s (request %s): %s",
             email,
             recovery.id,
             otp,
         )
+        try:
+            from app.core.tasks import enqueue_email
+
+            await enqueue_email(
+                to=email,
+                template_name="otp",
+                lang="fr",
+                otp_code=otp,
+                expire_minutes=RECOVERY_EXPIRE_MINUTES,
+            )
+        except Exception:
+            logger.warning("Failed to enqueue OTP email for %s", email, exc_info=True)
 
         # Audit
         await self.audit.log_event(
