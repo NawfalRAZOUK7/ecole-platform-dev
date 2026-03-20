@@ -1391,6 +1391,120 @@
         }
       }
     },
+    "/api/v1/submissions/{submission_id}/files": {
+      "post": {
+        "tags": [
+          "lms-submissions"
+        ],
+        "summary": "Upload a submission file",
+        "description": "Upload a file to a submission.\n\nValidates:\n1. Submission exists and belongs to the student\n2. Submission is in draft/submitted status\n3. Max 5 files per submission\n4. MIME type whitelist + file size limit\n5. Computes SHA-256 checksum on write",
+        "operationId": "upload_submission_file_api_v1_submissions__submission_id__files_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "submission_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Submission Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_submission_file_api_v1_submissions__submission_id__files_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Uploaded file metadata",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/submissions/{submission_id}/files/{file_id}": {
+      "get": {
+        "tags": [
+          "lms-submissions"
+        ],
+        "summary": "Download a submission file",
+        "description": "Download a submission file.\n\nAccess: student who owns the submission, teacher assigned to the course, or admin.",
+        "operationId": "download_submission_file_api_v1_submissions__submission_id__files__file_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "submission_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Submission Id"
+            }
+          },
+          {
+            "name": "file_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "File Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File binary content",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/results": {
       "get": {
         "tags": [
@@ -1679,6 +1793,175 @@
         "responses": {
           "200": {
             "description": "Updated progress record",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/content-items/{content_item_id}/assets": {
+      "post": {
+        "tags": [
+          "lms-content"
+        ],
+        "summary": "Upload a content asset",
+        "description": "Upload a file asset to a content item.\n\nAccess: TCH (school-bound), ADM.\nValidates MIME whitelist, file size limit, computes SHA-256 checksum.",
+        "operationId": "upload_content_asset_api_v1_content_items__content_item_id__assets_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "content_item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Content Item Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_content_asset_api_v1_content_items__content_item_id__assets_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Uploaded asset metadata",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/content-items/{content_item_id}/assets/{asset_id}": {
+      "get": {
+        "tags": [
+          "lms-content"
+        ],
+        "summary": "Download a content asset",
+        "description": "Download a content item asset.\n\nAccess: all authenticated users with content-asset:read (STD, PAR, TCH, ADM).\nSchool boundary enforced for school-specific content.",
+        "operationId": "download_content_asset_api_v1_content_items__content_item_id__assets__asset_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "content_item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Content Item Id"
+            }
+          },
+          {
+            "name": "asset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Asset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File binary content",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "lms-content"
+        ],
+        "summary": "Delete a content asset",
+        "description": "Delete a content item asset.\n\nAccess: TCH (school-bound), ADM.\nRemoves from storage and database.",
+        "operationId": "delete_content_asset_api_v1_content_items__content_item_id__assets__asset_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "content_item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Content Item Id"
+            }
+          },
+          {
+            "name": "asset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Asset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deletion confirmation",
             "content": {
               "application/json": {
                 "schema": {}
@@ -3159,6 +3442,34 @@
           "records"
         ],
         "title": "AttendanceSessionCreateRequest"
+      },
+      "Body_upload_content_asset_api_v1_content_items__content_item_id__assets_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_content_asset_api_v1_content_items__content_item_id__assets_post"
+      },
+      "Body_upload_submission_file_api_v1_submissions__submission_id__files_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_submission_file_api_v1_submissions__submission_id__files_post"
       },
       "ChangePasswordRequest": {
         "properties": {

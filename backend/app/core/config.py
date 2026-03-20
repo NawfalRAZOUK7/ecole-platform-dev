@@ -29,6 +29,27 @@ class Settings(BaseSettings):
     # Rate limiting (Phase 2A)
     enable_strict_rate_limit: bool = False  # True in production/staging
 
+    # File uploads (Phase 3B)
+    upload_dir: str = "/app/uploads"
+    max_file_size_mb: int = 25
+    allowed_mime_types: str = (
+        "application/pdf,"
+        "application/msword,"
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document,"
+        "application/vnd.ms-excel,"
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,"
+        "application/vnd.ms-powerpoint,"
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation,"
+        "image/jpeg,"
+        "image/png,"
+        "image/gif,"
+        "image/webp,"
+        "video/mp4,"
+        "audio/mpeg,"
+        "text/plain,"
+        "application/zip"
+    )
+
     # CORS
     cors_origins: str = "http://localhost:5173,http://localhost:3000"
 

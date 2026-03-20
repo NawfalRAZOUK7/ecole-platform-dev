@@ -79,6 +79,7 @@ services:
       APP_ENV: development
       LOG_LEVEL: DEBUG
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:3000}
+      UPLOAD_DIR: /app/uploads
     ports:
       - "8000:8000"
     volumes:
@@ -87,6 +88,7 @@ services:
       - ../backend/tests:/app/tests
       - ../backend/scripts:/app/scripts
       - ../backend/docs:/app/docs
+      - upload_data:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -139,6 +141,7 @@ volumes:
   postgres_data:
   redis_data:
   web_node_modules:
+  upload_data:
 
 networks:
   ecole-network:

@@ -1,8 +1,10 @@
-"""Submission API endpoint: POST /submissions, POST /submissions/{id}/grade.
+"""Submission API endpoints: create, grade, file upload, file download.
 
 Reference:
   S-053 — POST /submissions (STD) — Submit work for an assignment
   S-054 — POST /submissions/{id}/grade (TCH) — Grade a submission
+  Phase 3B — POST /submissions/{id}/files — Upload submission file
+  Phase 3B — GET /submissions/{id}/files/{file_id} — Download submission file
 """
 
 from __future__ import annotations
@@ -10,15 +12,17 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, Request
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, Request, UploadFile
+from fastapi.responses import FileResponse
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, requires_permission, verify_school_boundary
 from app.core.exceptions import AuthorizationError, ConflictError, NotFoundError, ValidationError
 from app.core.response import success_response
-from app.models.lms import Assignment, Course, Grade, Submission
+from app.core.storage import storage, validate_file_size, validate_mime_type
+from app.models.lms import Assignment, Course, Grade, Submission, SubmissionFile
 from app.schemas.lms import GradeRequest, SubmissionCreateRequest
 from app.services.audit import AuditService
 
@@ -246,3 +250,194 @@ async def grade_submission(
         "feedback_text": grade.feedback_text,
         "published_at": grade.published_at.isoformat() if grade.published_at else None,
     })
+
+
+# ---------------------------------------------------------------------------
+# Phase 3B: POST /submissions/{id}/files — Upload submission file (STD)
+# ---------------------------------------------------------------------------
+MAX_FILES_PER_SUBMISSION = 5
+
+
+@router.post(
+    "/{submission_id}/files",
+    status_code=201,
+    summary="Upload a submission file",
+    response_description="Uploaded file metadata",
+)
+async def upload_submission_file(
+    submission_id: uuid.UUID,
+    file: UploadFile,
+    request: Request,
+    auth: AuthContext = Depends(requires_permission("PERM-LMS:submission-file:upload")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Upload a file to a submission.
+
+    Validates:
+    1. Submission exists and belongs to the student
+    2. Submission is in draft/submitted status
+    3. Max 5 files per submission
+    4. MIME type whitelist + file size limit
+    5. Computes SHA-256 checksum on write
+    """
+    audit = AuditService(db)
+
+    # 1. Validate submission
+    sub_result = await db.execute(
+        select(Submission).where(Submission.id == submission_id)
+    )
+    submission = sub_result.scalar_one_or_none()
+    if submission is None:
+        raise NotFoundError("Submission not found", error_code="ERR-LMS-404")
+
+    # Must be the student's own submission
+    if submission.student_id != auth.user_id:
+        raise NotFoundError("Submission not found", error_code="ERR-LMS-404")
+
+    # School boundary via assignment → course
+    assignment_result = await db.execute(
+        select(Assignment).where(Assignment.id == submission.assignment_id)
+    )
+    assignment = assignment_result.scalar_one_or_none()
+    if assignment is None:
+        raise NotFoundError("Assignment not found", error_code="ERR-LMS-404")
+    course_result = await db.execute(
+        select(Course).where(Course.id == assignment.course_id)
+    )
+    course = course_result.scalar_one_or_none()
+    if course is None:
+        raise NotFoundError("Course not found", error_code="ERR-LMS-404")
+    verify_school_boundary(course.school_id, auth)
+
+    # 2. Submission must be active
+    if submission.status not in ("draft", "submitted"):
+        raise ValidationError(
+            "Cannot upload files to a graded or returned submission",
+            error_code="ERR-LMS-422",
+        )
+
+    # 3. Max files check
+    count_result = await db.execute(
+        select(func.count()).where(SubmissionFile.submission_id == submission_id)
+    )
+    current_count = count_result.scalar() or 0
+    if current_count >= MAX_FILES_PER_SUBMISSION:
+        raise ValidationError(
+            f"Maximum of {MAX_FILES_PER_SUBMISSION} files per submission",
+            error_code="ERR-UPLOAD-422",
+        )
+
+    # 4. MIME validation
+    mime = file.content_type or "application/octet-stream"
+    validate_mime_type(mime)
+
+    # 5. Save file via storage backend
+    relative_path, checksum, file_size = await storage.save(
+        file.file,
+        file.filename or "upload",
+        subdirectory=f"submissions/{submission_id}",
+    )
+
+    # 6. Persist to submission_files table
+    sf = SubmissionFile(
+        submission_id=submission_id,
+        file_path=relative_path,
+        checksum=checksum,
+        mime_type=mime,
+        file_size=file_size,
+    )
+    db.add(sf)
+    await db.flush()
+
+    # 7. Audit
+    await audit.log_event(
+        school_id=auth.school_id,
+        actor_id=auth.user_id,
+        action_type="SUBMISSION_FILE_UPLOADED",
+        outcome="success",
+        target_type="submission_file",
+        target_id=sf.id,
+        entity_after={
+            "submission_id": str(submission_id),
+            "file_path": relative_path,
+            "mime_type": mime,
+            "file_size": file_size,
+            "checksum": checksum,
+        },
+        ip_address=_get_client_ip(request),
+    )
+
+    return success_response({
+        "id": str(sf.id),
+        "submission_id": str(sf.submission_id),
+        "file_path": sf.file_path,
+        "checksum": sf.checksum,
+        "mime_type": sf.mime_type,
+        "file_size": sf.file_size,
+    })
+
+
+# ---------------------------------------------------------------------------
+# Phase 3B: GET /submissions/{id}/files/{file_id} — Download file
+# ---------------------------------------------------------------------------
+@router.get(
+    "/{submission_id}/files/{file_id}",
+    summary="Download a submission file",
+    response_description="File binary content",
+)
+async def download_submission_file(
+    submission_id: uuid.UUID,
+    file_id: uuid.UUID,
+    auth: AuthContext = Depends(requires_permission("PERM-LMS:submission-file:read")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Download a submission file.
+
+    Access: student who owns the submission, teacher assigned to the course, or admin.
+    """
+    # 1. Validate submission file exists
+    sf_result = await db.execute(
+        select(SubmissionFile).where(
+            SubmissionFile.id == file_id,
+            SubmissionFile.submission_id == submission_id,
+        )
+    )
+    sf = sf_result.scalar_one_or_none()
+    if sf is None:
+        raise NotFoundError("File not found", error_code="ERR-UPLOAD-404")
+
+    # 2. Validate submission + school boundary
+    sub_result = await db.execute(
+        select(Submission).where(Submission.id == submission_id)
+    )
+    submission = sub_result.scalar_one_or_none()
+    if submission is None:
+        raise NotFoundError("Submission not found", error_code="ERR-LMS-404")
+
+    assignment_result = await db.execute(
+        select(Assignment).where(Assignment.id == submission.assignment_id)
+    )
+    assignment = assignment_result.scalar_one_or_none()
+    if assignment is None:
+        raise NotFoundError("Assignment not found", error_code="ERR-LMS-404")
+    course_result = await db.execute(
+        select(Course).where(Course.id == assignment.course_id)
+    )
+    course = course_result.scalar_one_or_none()
+    if course is None:
+        raise NotFoundError("Course not found", error_code="ERR-LMS-404")
+    verify_school_boundary(course.school_id, auth)
+
+    # 3. ABAC: student owns submission, or teacher owns course, or ADM
+    if auth.role == "STD" and submission.student_id != auth.user_id:
+        raise NotFoundError("File not found", error_code="ERR-UPLOAD-404")
+    if auth.role == "TCH" and course.teacher_id != auth.user_id:
+        raise NotFoundError("File not found", error_code="ERR-UPLOAD-404")
+
+    # 4. Serve file
+    abs_path = await storage.read(sf.file_path)
+    return FileResponse(
+        path=str(abs_path),
+        media_type=sf.mime_type or "application/octet-stream",
+        filename=abs_path.name,
+    )

@@ -3,19 +3,23 @@
 Reference:
   S-056 — GET /content-items, GET /content-items/{id} (STD, PAR)
   S-057 — POST /content-items/{id}/progress (STD)
+  Phase 3B — POST /content-items/{id}/assets — Upload asset (TCH, ADM)
+  Phase 3B — GET /content-items/{id}/assets/{asset_id} — Download asset
+  Phase 3B — DELETE /content-items/{id}/assets/{asset_id} — Delete asset (TCH owner, ADM)
 """
 
 from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Query, Request, UploadFile
+from fastapi.responses import FileResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, requires_permission, verify_school_boundary
-from app.core.exceptions import NotFoundError
+from app.core.exceptions import AuthorizationError, NotFoundError
 from app.core.response import (
     clamp_page_size,
     decode_cursor,
@@ -23,7 +27,8 @@ from app.core.response import (
     list_response,
     success_response,
 )
-from app.models.lms import ContentItem, ContentProgress
+from app.core.storage import storage, validate_file_size, validate_mime_type
+from app.models.lms import ContentItem, ContentItemAsset, ContentProgress
 from app.schemas.lms import ContentProgressRequest
 from app.services.audit import AuditService
 
@@ -212,3 +217,211 @@ async def update_content_progress(
         "content_item_id": str(progress.content_item_id),
         "status": progress.status,
     })
+
+
+# ---------------------------------------------------------------------------
+# Phase 3B: POST /content-items/{id}/assets — Upload asset (TCH, ADM)
+# ---------------------------------------------------------------------------
+@router.post(
+    "/{content_item_id}/assets",
+    status_code=201,
+    summary="Upload a content asset",
+    response_description="Uploaded asset metadata",
+)
+async def upload_content_asset(
+    content_item_id: uuid.UUID,
+    file: UploadFile,
+    request: Request,
+    auth: AuthContext = Depends(requires_permission("PERM-LMS:content-asset:upload")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Upload a file asset to a content item.
+
+    Access: TCH (school-bound), ADM.
+    Validates MIME whitelist, file size limit, computes SHA-256 checksum.
+    """
+    audit = AuditService(db)
+
+    # 1. Validate content item exists
+    ci_result = await db.execute(
+        select(ContentItem).where(ContentItem.id == content_item_id)
+    )
+    ci = ci_result.scalar_one_or_none()
+    if ci is None:
+        raise NotFoundError("Content item not found", error_code="ERR-LMS-404")
+
+    # School boundary (if school-specific)
+    if ci.school_id is not None:
+        verify_school_boundary(ci.school_id, auth)
+
+    # 2. MIME validation
+    mime = file.content_type or "application/octet-stream"
+    validate_mime_type(mime)
+
+    # 3. Save via storage backend
+    relative_path, checksum, file_size = await storage.save(
+        file.file,
+        file.filename or "asset",
+        subdirectory=f"content/{content_item_id}",
+    )
+
+    # 4. Persist to content_item_assets table
+    asset = ContentItemAsset(
+        content_item_id=content_item_id,
+        file_path=relative_path,
+        checksum=checksum,
+        mime_type=mime,
+        file_size=file_size,
+    )
+    db.add(asset)
+    await db.flush()
+
+    # 5. Audit
+    await audit.log_event(
+        school_id=auth.school_id,
+        actor_id=auth.user_id,
+        action_type="CONTENT_ASSET_UPLOADED",
+        outcome="success",
+        target_type="content_item_asset",
+        target_id=asset.id,
+        entity_after={
+            "content_item_id": str(content_item_id),
+            "file_path": relative_path,
+            "mime_type": mime,
+            "file_size": file_size,
+            "checksum": checksum,
+        },
+        ip_address=_get_client_ip(request),
+    )
+
+    return success_response({
+        "id": str(asset.id),
+        "content_item_id": str(asset.content_item_id),
+        "file_path": asset.file_path,
+        "checksum": asset.checksum,
+        "mime_type": asset.mime_type,
+        "file_size": asset.file_size,
+    })
+
+
+# ---------------------------------------------------------------------------
+# Phase 3B: GET /content-items/{id}/assets/{asset_id} — Download asset
+# ---------------------------------------------------------------------------
+@router.get(
+    "/{content_item_id}/assets/{asset_id}",
+    summary="Download a content asset",
+    response_description="File binary content",
+)
+async def download_content_asset(
+    content_item_id: uuid.UUID,
+    asset_id: uuid.UUID,
+    auth: AuthContext = Depends(requires_permission("PERM-LMS:content-asset:read")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Download a content item asset.
+
+    Access: all authenticated users with content-asset:read (STD, PAR, TCH, ADM).
+    School boundary enforced for school-specific content.
+    """
+    # 1. Validate asset exists
+    asset_result = await db.execute(
+        select(ContentItemAsset).where(
+            ContentItemAsset.id == asset_id,
+            ContentItemAsset.content_item_id == content_item_id,
+        )
+    )
+    asset = asset_result.scalar_one_or_none()
+    if asset is None:
+        raise NotFoundError("Asset not found", error_code="ERR-UPLOAD-404")
+
+    # 2. Validate content item + school boundary
+    ci_result = await db.execute(
+        select(ContentItem).where(ContentItem.id == content_item_id)
+    )
+    ci = ci_result.scalar_one_or_none()
+    if ci is None:
+        raise NotFoundError("Content item not found", error_code="ERR-LMS-404")
+
+    if ci.school_id is not None:
+        verify_school_boundary(ci.school_id, auth)
+
+    # 3. Serve file
+    abs_path = await storage.read(asset.file_path)
+    return FileResponse(
+        path=str(abs_path),
+        media_type=asset.mime_type or "application/octet-stream",
+        filename=abs_path.name,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Phase 3B: DELETE /content-items/{id}/assets/{asset_id} — Delete asset
+# ---------------------------------------------------------------------------
+@router.delete(
+    "/{content_item_id}/assets/{asset_id}",
+    status_code=200,
+    summary="Delete a content asset",
+    response_description="Deletion confirmation",
+)
+async def delete_content_asset(
+    content_item_id: uuid.UUID,
+    asset_id: uuid.UUID,
+    request: Request,
+    auth: AuthContext = Depends(requires_permission("PERM-LMS:content-asset:delete")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete a content item asset.
+
+    Access: TCH (school-bound), ADM.
+    Removes from storage and database.
+    """
+    audit = AuditService(db)
+
+    # 1. Validate asset exists
+    asset_result = await db.execute(
+        select(ContentItemAsset).where(
+            ContentItemAsset.id == asset_id,
+            ContentItemAsset.content_item_id == content_item_id,
+        )
+    )
+    asset = asset_result.scalar_one_or_none()
+    if asset is None:
+        raise NotFoundError("Asset not found", error_code="ERR-UPLOAD-404")
+
+    # 2. Validate content item + school boundary
+    ci_result = await db.execute(
+        select(ContentItem).where(ContentItem.id == content_item_id)
+    )
+    ci = ci_result.scalar_one_or_none()
+    if ci is None:
+        raise NotFoundError("Content item not found", error_code="ERR-LMS-404")
+
+    if ci.school_id is not None:
+        verify_school_boundary(ci.school_id, auth)
+
+    # 3. Delete from storage
+    await storage.delete(asset.file_path)
+
+    # 4. Delete from database
+    entity_before = {
+        "id": str(asset.id),
+        "file_path": asset.file_path,
+        "mime_type": asset.mime_type,
+        "file_size": asset.file_size,
+    }
+    await db.delete(asset)
+    await db.flush()
+
+    # 5. Audit
+    await audit.log_event(
+        school_id=auth.school_id,
+        actor_id=auth.user_id,
+        action_type="CONTENT_ASSET_DELETED",
+        outcome="success",
+        target_type="content_item_asset",
+        target_id=uuid.UUID(entity_before["id"]),
+        entity_before=entity_before,
+        ip_address=_get_client_ip(request),
+    )
+
+    return success_response({"deleted": True, "id": entity_before["id"]})

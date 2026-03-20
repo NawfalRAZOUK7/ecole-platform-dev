@@ -52,6 +52,11 @@ PERM_LMS_COURSE_PUBLISH = "PERM-LMS:course:publish"
 PERM_LMS_ASSIGNMENT_CREATE = "PERM-LMS:assignment:create"
 PERM_LMS_SUBMISSION_CREATE = "PERM-LMS:submission:create"
 PERM_LMS_SUBMISSION_GRADE = "PERM-LMS:submission:grade"
+PERM_LMS_SUBMISSION_FILE_UPLOAD = "PERM-LMS:submission-file:upload"
+PERM_LMS_SUBMISSION_FILE_READ = "PERM-LMS:submission-file:read"
+PERM_LMS_CONTENT_ASSET_UPLOAD = "PERM-LMS:content-asset:upload"
+PERM_LMS_CONTENT_ASSET_READ = "PERM-LMS:content-asset:read"
+PERM_LMS_CONTENT_ASSET_DELETE = "PERM-LMS:content-asset:delete"
 PERM_LMS_RESULT_READ = "PERM-LMS:result:read"
 PERM_LMS_CONTENT_READ = "PERM-LMS:content:read"
 PERM_LMS_CONTENT_PROGRESS_WRITE = "PERM-LMS:content-progress:write"
@@ -117,7 +122,11 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_ERP_ENROLLMENT_ASSIGN,
         PERM_ERP_ASSIGNMENT_UPDATE,
         PERM_ERP_ABSENCE_REVIEW,
-        # LMS — read + supervision
+        # LMS — read + supervision + file management
+        PERM_LMS_SUBMISSION_FILE_READ,
+        PERM_LMS_CONTENT_ASSET_UPLOAD,
+        PERM_LMS_CONTENT_ASSET_READ,
+        PERM_LMS_CONTENT_ASSET_DELETE,
         PERM_LMS_ASSESSMENT_CREATE,
         PERM_LMS_ASSESSMENT_READ,
         PERM_LMS_ASSESSMENT_PUBLISH,
@@ -163,11 +172,15 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # ERP — attendance mark
         PERM_ERP_CLASS_READ,
         PERM_ERP_ATTENDANCE_MARK,
-        # LMS — publish + grade
+        # LMS — publish + grade + files
         PERM_LMS_COURSE_PUBLISH,
         PERM_LMS_ASSIGNMENT_CREATE,
         PERM_LMS_SUBMISSION_GRADE,
+        PERM_LMS_SUBMISSION_FILE_READ,
         PERM_LMS_CONTENT_READ,
+        PERM_LMS_CONTENT_ASSET_UPLOAD,
+        PERM_LMS_CONTENT_ASSET_READ,
+        PERM_LMS_CONTENT_ASSET_DELETE,
         PERM_LMS_ASSESSMENT_CREATE,
         PERM_LMS_ASSESSMENT_READ,
         PERM_LMS_ASSESSMENT_PUBLISH,
@@ -192,9 +205,10 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IAM_RECOVERY_RESET,
         # ERP — justify absence
         PERM_ERP_ABSENCE_JUSTIFY,
-        # LMS — read child results
+        # LMS — read child results + content assets
         PERM_LMS_RESULT_READ,
         PERM_LMS_CONTENT_READ,
+        PERM_LMS_CONTENT_ASSET_READ,
         # Billing — invoice/payment
         PERM_BIL_INVOICE_READ,
         PERM_BIL_PAYMENT_INITIATE,
@@ -222,10 +236,13 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IAM_RECOVERY_REQUEST,
         PERM_IAM_RECOVERY_VERIFY,
         PERM_IAM_RECOVERY_RESET,
-        # LMS — submit + read progress
+        # LMS — submit + read progress + files
         PERM_LMS_SUBMISSION_CREATE,
+        PERM_LMS_SUBMISSION_FILE_UPLOAD,
+        PERM_LMS_SUBMISSION_FILE_READ,
         PERM_LMS_RESULT_READ,
         PERM_LMS_CONTENT_READ,
+        PERM_LMS_CONTENT_ASSET_READ,
         PERM_LMS_CONTENT_PROGRESS_WRITE,
         PERM_LMS_ACTIVITY_SESSION_CREATE,
         PERM_LMS_ACTIVITY_SESSION_COMPLETE,
