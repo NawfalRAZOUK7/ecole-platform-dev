@@ -19,7 +19,13 @@
     "invoices": "Factures",
     "activities": "Activites",
     "profile": "Mon profil",
-    "logout": "Deconnexion"
+    "logout": "Deconnexion",
+    "adminDashboard": "Tableau de bord",
+    "adminUsers": "Utilisateurs",
+    "adminInvitations": "Invitations",
+    "adminAudit": "Journal d'audit",
+    "adminJustifications": "Justificatifs",
+    "adminSettings": "Parametres"
   },
   "login": {
     "title": "Connexion",
@@ -111,6 +117,91 @@
     "not_found": "Ressource introuvable",
     "network": "Erreur reseau",
     "unknown": "Erreur inconnue"
+  },
+  "admin": {
+    "dashboard": {
+      "title": "Tableau de bord admin",
+      "users": "Utilisateurs",
+      "sessions": "Sessions actives",
+      "invitations": "Invitations actives",
+      "auditEvents": "Evenements d'audit (24h)",
+      "pendingJustifications": "Justificatifs en attente",
+      "usersByRole": "Utilisateurs par role"
+    },
+    "users": {
+      "title": "Gestion des utilisateurs",
+      "name": "Nom",
+      "email": "Email",
+      "role": "Role",
+      "status": "Statut",
+      "joined": "Inscription",
+      "actions": "Actions",
+      "searchPlaceholder": "Rechercher par nom ou email...",
+      "allRoles": "Tous les roles",
+      "allStatuses": "Tous les statuts",
+      "statusActive": "Actif",
+      "statusSuspended": "Suspendu",
+      "statusInactive": "Inactif",
+      "suspend": "Suspendre",
+      "activate": "Activer",
+      "empty": "Aucun utilisateur trouve"
+    },
+    "invitations": {
+      "title": "Codes d'invitation",
+      "create": "Creer une invitation",
+      "createNew": "Nouvelle invitation",
+      "generate": "Generer le code",
+      "codeLabel": "Code d'invitation (copiez maintenant, affiche une seule fois) :",
+      "revoke": "Revoquer",
+      "targetRole": "Role cible",
+      "status": "Statut",
+      "expiresAt": "Expiration",
+      "createdAt": "Creation",
+      "allStatuses": "Tous les statuts",
+      "statusActive": "Active",
+      "statusConsumed": "Utilisee",
+      "statusExpired": "Expiree",
+      "days": "jours",
+      "empty": "Aucun code d'invitation"
+    },
+    "audit": {
+      "title": "Journal d'audit",
+      "action": "Action",
+      "outcome": "Resultat",
+      "target": "Cible",
+      "ip": "Adresse IP",
+      "date": "Date",
+      "correlationId": "ID de correlation",
+      "actionType": "Type d'action",
+      "dateFrom": "Date de debut",
+      "dateTo": "Date de fin",
+      "empty": "Aucune entree d'audit"
+    },
+    "settings": {
+      "title": "Parametres de l'ecole",
+      "schoolName": "Nom de l'ecole",
+      "schoolNamePlaceholder": "Entrer le nom de l'ecole",
+      "schoolId": "Identifiant ecole",
+      "timezone": "Fuseau horaire",
+      "notificationPrefs": "Preferences de notification",
+      "notifEmail": "Notifications par email",
+      "notifPush": "Notifications push",
+      "notifSms": "Notifications SMS",
+      "saved": "Parametres enregistres"
+    },
+    "justifications": {
+      "title": "Examen des justificatifs d'absence",
+      "reason": "Motif",
+      "rejectionReason": "Motif de refus",
+      "rejectionPlaceholder": "Entrer le motif du refus...",
+      "approve": "Approuver",
+      "reject": "Refuser",
+      "statusPending": "En attente",
+      "statusJustified": "Justifie",
+      "statusRejected": "Refuse",
+      "allStatuses": "Tous les statuts",
+      "empty": "Aucun justificatif a examiner"
+    }
   },
   "roles": {
     "ADM": "Administrateur",

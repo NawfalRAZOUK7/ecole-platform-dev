@@ -20,8 +20,8 @@ const ROLE_REDIRECT: Record<string, string> = {
   PAR: '/feed',
   STD: '/content',
   TCH: '/content',
-  ADM: '/notifications',
-  DIR: '/notifications',
+  ADM: '/admin',
+  DIR: '/admin',
   SUP: '/notifications',
 };
 

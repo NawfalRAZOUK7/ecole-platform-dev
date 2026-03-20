@@ -18,6 +18,12 @@ import { ResultsPage } from '@/features/results/ResultsPage';
 import { InvoicesPage } from '@/features/invoices/InvoicesPage';
 import { ActivitiesPage } from '@/features/activities/ActivitiesPage';
 import { ProfilePage } from '@/features/profile/ProfilePage';
+import { DashboardPage } from '@/features/admin/DashboardPage';
+import { UsersPage } from '@/features/admin/UsersPage';
+import { InvitationsPage } from '@/features/admin/InvitationsPage';
+import { AuditLogPage } from '@/features/admin/AuditLogPage';
+import { SchoolSettingsPage } from '@/features/admin/SchoolSettingsPage';
+import { JustificationReviewPage } from '@/features/admin/JustificationReviewPage';
 import { LoadingState } from '@/shared/ui/LoadingState';
 
 /** Redirect based on user role */
@@ -46,6 +52,57 @@ function App() {
           </ProtectedRoute>
         }
       >
+        {/* Admin routes (ADM, DIR) */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute roles={['ADM', 'DIR']}>
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute roles={['ADM', 'DIR']}>
+              <UsersPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/invitations"
+          element={
+            <ProtectedRoute roles={['ADM']}>
+              <InvitationsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/audit"
+          element={
+            <ProtectedRoute roles={['ADM', 'DIR']}>
+              <AuditLogPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/settings"
+          element={
+            <ProtectedRoute roles={['ADM']}>
+              <SchoolSettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/justifications"
+          element={
+            <ProtectedRoute roles={['ADM']}>
+              <JustificationReviewPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Feature routes */}
         <Route
           path="/feed"
           element={

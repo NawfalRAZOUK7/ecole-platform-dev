@@ -18,6 +18,12 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
+  { to: '/admin', labelKey: 'nav.adminDashboard', icon: '⚙️', roles: ['ADM', 'DIR'] },
+  { to: '/admin/users', labelKey: 'nav.adminUsers', icon: '👥', roles: ['ADM', 'DIR'] },
+  { to: '/admin/invitations', labelKey: 'nav.adminInvitations', icon: '🎟️', roles: ['ADM'] },
+  { to: '/admin/audit', labelKey: 'nav.adminAudit', icon: '📋', roles: ['ADM', 'DIR'] },
+  { to: '/admin/justifications', labelKey: 'nav.adminJustifications', icon: '📝', roles: ['ADM'] },
+  { to: '/admin/settings', labelKey: 'nav.adminSettings', icon: '🏫', roles: ['ADM'] },
   { to: '/feed', labelKey: 'nav.feed', icon: '📰', roles: ['PAR'] },
   { to: '/notifications', labelKey: 'nav.notifications', icon: '🔔', roles: ['PAR', 'TCH', 'ADM', 'DIR'] },
   { to: '/content', labelKey: 'nav.content', icon: '📚', roles: ['STD', 'PAR', 'TCH', 'ADM'] },

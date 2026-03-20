@@ -19,7 +19,13 @@
     "invoices": "Invoices",
     "activities": "Activities",
     "profile": "My Profile",
-    "logout": "Logout"
+    "logout": "Logout",
+    "adminDashboard": "Dashboard",
+    "adminUsers": "Users",
+    "adminInvitations": "Invitations",
+    "adminAudit": "Audit Log",
+    "adminJustifications": "Justifications",
+    "adminSettings": "Settings"
   },
   "login": {
     "title": "Sign In",
@@ -111,6 +117,91 @@
     "not_found": "Resource not found",
     "network": "Network error",
     "unknown": "Unknown error"
+  },
+  "admin": {
+    "dashboard": {
+      "title": "Admin Dashboard",
+      "users": "Total Users",
+      "sessions": "Active Sessions",
+      "invitations": "Active Invitations",
+      "auditEvents": "Audit Events (24h)",
+      "pendingJustifications": "Pending Justifications",
+      "usersByRole": "Users by Role"
+    },
+    "users": {
+      "title": "User Management",
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "status": "Status",
+      "joined": "Joined",
+      "actions": "Actions",
+      "searchPlaceholder": "Search by name or email...",
+      "allRoles": "All roles",
+      "allStatuses": "All statuses",
+      "statusActive": "Active",
+      "statusSuspended": "Suspended",
+      "statusInactive": "Inactive",
+      "suspend": "Suspend",
+      "activate": "Activate",
+      "empty": "No users found"
+    },
+    "invitations": {
+      "title": "Invitation Codes",
+      "create": "Create Invitation",
+      "createNew": "Create New Invitation",
+      "generate": "Generate Code",
+      "codeLabel": "Invitation code (copy now, shown once):",
+      "revoke": "Revoke",
+      "targetRole": "Target Role",
+      "status": "Status",
+      "expiresAt": "Expires",
+      "createdAt": "Created",
+      "allStatuses": "All statuses",
+      "statusActive": "Active",
+      "statusConsumed": "Consumed",
+      "statusExpired": "Expired",
+      "days": "days",
+      "empty": "No invitation codes"
+    },
+    "audit": {
+      "title": "Audit Log",
+      "action": "Action",
+      "outcome": "Outcome",
+      "target": "Target",
+      "ip": "IP Address",
+      "date": "Date",
+      "correlationId": "Correlation ID",
+      "actionType": "Action type",
+      "dateFrom": "From date",
+      "dateTo": "To date",
+      "empty": "No audit entries"
+    },
+    "settings": {
+      "title": "School Settings",
+      "schoolName": "School Name",
+      "schoolNamePlaceholder": "Enter school name",
+      "schoolId": "School ID",
+      "timezone": "Timezone",
+      "notificationPrefs": "Notification Preferences",
+      "notifEmail": "Email notifications",
+      "notifPush": "Push notifications",
+      "notifSms": "SMS notifications",
+      "saved": "Settings saved"
+    },
+    "justifications": {
+      "title": "Absence Justification Review",
+      "reason": "Reason",
+      "rejectionReason": "Rejection reason",
+      "rejectionPlaceholder": "Enter reason for rejection...",
+      "approve": "Approve",
+      "reject": "Reject",
+      "statusPending": "Pending",
+      "statusJustified": "Justified",
+      "statusRejected": "Rejected",
+      "allStatuses": "All statuses",
+      "empty": "No justifications to review"
+    }
   },
   "roles": {
     "ADM": "Administrator",

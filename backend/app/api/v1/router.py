@@ -60,6 +60,9 @@ from app.api.v1.feed import router as feed_router
 # Phase 3C — WebSocket
 from app.api.v1.ws import router as ws_router
 
+# Phase 4A — Admin dashboard
+from app.api.v1.admin import router as admin_router
+
 # Phase 8 — AI & Data routers
 from app.api.v1.ai import router as ai_router
 
@@ -117,6 +120,9 @@ router.include_router(feed_router)
 
 # Mount sub-routers — Phase 3C WebSocket
 router.include_router(ws_router)
+
+# Mount sub-routers — Phase 4A Admin
+router.include_router(admin_router)
 
 # Mount sub-routers — Phase 8 AI & Data
 router.include_router(ai_router)

@@ -634,6 +634,130 @@ body {
   to { transform: rotate(360deg); }
 }
 
+/* ── Admin Dashboard ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 20px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.stat-card--warning {
+  border-color: var(--color-warning);
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--color-primary);
+  line-height: 1.2;
+}
+
+.stat-card--warning .stat-value {
+  color: var(--color-warning);
+}
+
+.stat-label {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+}
+
+.role-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.role-breakdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.role-count {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+/* ── Admin Filters ── */
+.filter-input {
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  font-size: 14px;
+  color: var(--color-text);
+  min-width: 200px;
+}
+
+.filter-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* ── Small buttons ── */
+.btn-sm {
+  padding: 4px 12px;
+  font-size: 12px;
+}
+
+/* ── Invitation code display ── */
+.code-display {
+  margin-top: 12px;
+  padding: 12px;
+  background: #eff6ff;
+  border: 2px dashed var(--color-primary);
+  border-radius: var(--radius);
+  text-align: center;
+}
+
+.invite-code {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--color-primary);
+  margin-top: 4px;
+  user-select: all;
+}
+
+/* ── Settings form ── */
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settings-form select {
+  width: 100%;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-primary);
+}
+
 /* ── RTL Support ── */
 [dir="rtl"] .app-sidebar {
   border-inline-end: 1px solid var(--color-border);

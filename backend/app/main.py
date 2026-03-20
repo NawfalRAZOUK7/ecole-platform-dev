@@ -106,6 +106,10 @@ OPENAPI_TAGS = [
         "description": "AI & Data — Writing assistance, recommendations, KPIs, event schema.",
     },
     {
+        "name": "admin",
+        "description": "Admin — Dashboard, user management, audit logs, settings (ADM/DIR only).",
+    },
+    {
         "name": "websocket",
         "description": "WebSocket — Real-time event delivery for connected clients.",
     },

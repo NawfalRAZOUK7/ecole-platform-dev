@@ -19,7 +19,13 @@
     "invoices": "الفواتير",
     "activities": "الأنشطة",
     "profile": "ملفي الشخصي",
-    "logout": "تسجيل الخروج"
+    "logout": "تسجيل الخروج",
+    "adminDashboard": "لوحة التحكم",
+    "adminUsers": "المستخدمون",
+    "adminInvitations": "الدعوات",
+    "adminAudit": "سجل المراجعة",
+    "adminJustifications": "المبررات",
+    "adminSettings": "الإعدادات"
   },
   "login": {
     "title": "تسجيل الدخول",
@@ -111,6 +117,91 @@
     "not_found": "المورد غير موجود",
     "network": "خطأ في الشبكة",
     "unknown": "خطأ غير معروف"
+  },
+  "admin": {
+    "dashboard": {
+      "title": "لوحة تحكم المدير",
+      "users": "المستخدمون",
+      "sessions": "الجلسات النشطة",
+      "invitations": "الدعوات النشطة",
+      "auditEvents": "أحداث المراجعة (24 ساعة)",
+      "pendingJustifications": "المبررات المعلقة",
+      "usersByRole": "المستخدمون حسب الدور"
+    },
+    "users": {
+      "title": "إدارة المستخدمين",
+      "name": "الاسم",
+      "email": "البريد الإلكتروني",
+      "role": "الدور",
+      "status": "الحالة",
+      "joined": "تاريخ الانضمام",
+      "actions": "الإجراءات",
+      "searchPlaceholder": "البحث بالاسم أو البريد الإلكتروني...",
+      "allRoles": "جميع الأدوار",
+      "allStatuses": "جميع الحالات",
+      "statusActive": "نشط",
+      "statusSuspended": "معلق",
+      "statusInactive": "غير نشط",
+      "suspend": "تعليق",
+      "activate": "تفعيل",
+      "empty": "لا يوجد مستخدمون"
+    },
+    "invitations": {
+      "title": "رموز الدعوة",
+      "create": "إنشاء دعوة",
+      "createNew": "دعوة جديدة",
+      "generate": "إنشاء الرمز",
+      "codeLabel": "رمز الدعوة (انسخه الآن، يظهر مرة واحدة فقط):",
+      "revoke": "إلغاء",
+      "targetRole": "الدور المستهدف",
+      "status": "الحالة",
+      "expiresAt": "تاريخ الانتهاء",
+      "createdAt": "تاريخ الإنشاء",
+      "allStatuses": "جميع الحالات",
+      "statusActive": "نشطة",
+      "statusConsumed": "مستخدمة",
+      "statusExpired": "منتهية",
+      "days": "أيام",
+      "empty": "لا توجد رموز دعوة"
+    },
+    "audit": {
+      "title": "سجل المراجعة",
+      "action": "الإجراء",
+      "outcome": "النتيجة",
+      "target": "الهدف",
+      "ip": "عنوان IP",
+      "date": "التاريخ",
+      "correlationId": "معرف الارتباط",
+      "actionType": "نوع الإجراء",
+      "dateFrom": "من تاريخ",
+      "dateTo": "إلى تاريخ",
+      "empty": "لا توجد سجلات مراجعة"
+    },
+    "settings": {
+      "title": "إعدادات المدرسة",
+      "schoolName": "اسم المدرسة",
+      "schoolNamePlaceholder": "أدخل اسم المدرسة",
+      "schoolId": "معرف المدرسة",
+      "timezone": "المنطقة الزمنية",
+      "notificationPrefs": "تفضيلات الإشعارات",
+      "notifEmail": "إشعارات البريد الإلكتروني",
+      "notifPush": "إشعارات الدفع",
+      "notifSms": "إشعارات الرسائل القصيرة",
+      "saved": "تم حفظ الإعدادات"
+    },
+    "justifications": {
+      "title": "مراجعة مبررات الغياب",
+      "reason": "السبب",
+      "rejectionReason": "سبب الرفض",
+      "rejectionPlaceholder": "أدخل سبب الرفض...",
+      "approve": "قبول",
+      "reject": "رفض",
+      "statusPending": "معلق",
+      "statusJustified": "مبرر",
+      "statusRejected": "مرفوض",
+      "allStatuses": "جميع الحالات",
+      "empty": "لا توجد مبررات للمراجعة"
+    }
   },
   "roles": {
     "ADM": "مدير",
