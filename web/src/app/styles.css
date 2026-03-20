@@ -812,6 +812,112 @@ body {
 .status-archived { color: var(--color-text-secondary); border-color: var(--color-text-secondary); }
 .status-closed { color: var(--color-danger); border-color: var(--color-danger); }
 
+/* ── File Upload ── */
+.file-drop-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.file-drop-zone:hover {
+  border-color: var(--color-primary);
+  background: #eff6ff;
+}
+
+.file-drop-zone--active {
+  border-color: var(--color-primary);
+  background: #eff6ff;
+}
+
+.file-drop-zone--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  margin-bottom: 4px;
+  background: var(--color-surface);
+}
+
+/* ── Notification Badge ── */
+.notif-badge {
+  background: var(--color-danger);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  margin-inline-start: auto;
+  min-width: 18px;
+  text-align: center;
+  line-height: 16px;
+}
+
+/* ── Toast Notifications ── */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  inset-inline-end: 24px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 360px;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--color-text);
+  color: #fff;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  font-size: 14px;
+  animation: slideInToast 0.3s ease-out;
+}
+
+@keyframes slideInToast {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0 4px;
+  margin-inline-start: auto;
+  line-height: 1;
+}
+
+.toast-close:hover {
+  color: #fff;
+}
+
+/* ── Form textarea ── */
+textarea.filter-input {
+  font-family: inherit;
+  line-height: 1.5;
+}
+
 /* ── RTL Support ── */
 [dir="rtl"] .app-sidebar {
   border-inline-end: 1px solid var(--color-border);

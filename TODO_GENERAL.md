@@ -476,15 +476,21 @@
 - [x] Teacher CSS styles (teacher-classes-grid, teacher-class-card, status badge variants)
 
 ## Phase 4C — CRUD Forms, 2FA UI & Cascade Integration
-- [ ] **From 2A:** SessionsPage.tsx — list active sessions with device info, revoke button
-- [ ] **From 2B:** TwoFactorPage.tsx — enable/disable 2FA, QR code, verify setup, backup codes
-- [ ] **From 2B:** LoginPage.tsx — handle `requires_2fa` response, TOTP input, backup code fallback
-- [ ] **From 3B:** Drag-drop file upload on submission page + teacher content upload
-- [ ] **From 3C:** WebSocketClient.ts — auto-connect, real-time notification toasts, badge count
-- [ ] **From 3D:** Search bar + filter dropdowns + sort toggle on list pages
-- [ ] Student submission form (select assignment, drag-drop files, submit)
-- [ ] Parent justification form (select child, date, reason, submit)
-- [ ] Profile edit form (name, phone, language, change password with policy feedback)
+- [x] **From 2A:** SessionsPage.tsx — list active sessions with device info, revoke button
+- [x] **From 2B:** TwoFactorPage.tsx — enable/disable 2FA, QR code, verify setup, backup codes
+- [x] **From 2B:** LoginPage.tsx — handle `requires_2fa` response, TOTP input, backup code fallback
+- [x] **From 2B:** AuthContext.tsx — `verify2fa()` + `cancel2fa()` + `twoFactorPending` state
+- [x] **From 3B:** Drag-drop FileUpload.tsx component (reusable, max files/size, validation)
+- [x] **From 3C:** WebSocketClient.ts — auto-connect, reconnect backoff, heartbeat
+- [x] **From 3C:** Layout.tsx — WebSocket integration, notification toasts, badge count
+- [x] **From 3D:** Search bar on ContentPage + NotificationsPage
+- [x] Student submission form (StudentSubmissionPage.tsx — select assignment, file upload, submit)
+- [x] Parent justification form (ParentJustificationPage.tsx — attendance record ID, reason, submit)
+- [x] Profile edit form (ProfilePage.tsx — password change with policy feedback, policy checklist)
+- [x] App.tsx routes for sessions, 2FA, submissions, justification pages
+- [x] Layout.tsx nav items for submissions (STD), justification (PAR), sessions, 2FA (all roles)
+- [x] i18n translations (en/fr/ar) — sessions, twoFactor, fileUpload, studentSubmission, justification, profile password, ws toasts
+- [x] CSS styles — file-drop-zone, file-item, notif-badge, toast-container, toast
 
 ## Phase 5A — Push Notifications, Biometric Auth & 2FA Mobile
 - [ ] Configure Firebase (document google-services.json + GoogleService-Info.plist setup)

@@ -31,7 +31,11 @@
     "teacherAssignments": "الواجبات",
     "teacherSubmissions": "التسليمات",
     "teacherAttendance": "الحضور",
-    "teacherAssessments": "التقييمات"
+    "teacherAssessments": "التقييمات",
+    "submissions": "تسليم العمل",
+    "justification": "تبرير الغياب",
+    "sessions": "الجلسات",
+    "twoFactor": "المصادقة الثنائية"
   },
   "login": {
     "title": "تسجيل الدخول",
@@ -44,6 +48,17 @@
       "invalid": "البريد الإلكتروني أو كلمة المرور غير صحيحة",
       "locked": "الحساب مقفل. حاول لاحقاً.",
       "generic": "خطأ في تسجيل الدخول"
+    },
+    "twoFactor": {
+      "title": "المصادقة الثنائية",
+      "instructions": "أدخل الرمز المكون من 6 أرقام من تطبيق المصادقة.",
+      "backupInstructions": "أدخل أحد رموز الاسترداد.",
+      "code": "رمز المصادقة",
+      "backupCode": "رمز الاسترداد",
+      "backupPlaceholder": "أدخل رمز الاسترداد",
+      "verify": "تحقق",
+      "useBackup": "استخدم رمز الاسترداد",
+      "useApp": "استخدم تطبيق المصادقة"
     }
   },
   "feed": {
@@ -53,11 +68,13 @@
   },
   "notifications": {
     "title": "الإشعارات",
-    "empty": "لا توجد إشعارات"
+    "empty": "لا توجد إشعارات",
+    "searchPlaceholder": "البحث في الإشعارات..."
   },
   "content": {
     "title": "مكتبة المحتويات",
     "empty": "لا يوجد محتوى متاح",
+    "searchPlaceholder": "البحث في المحتويات...",
     "type": "النوع",
     "level": "المستوى",
     "language": "اللغة",
@@ -106,12 +123,91 @@
   },
   "profile": {
     "title": "ملفي الشخصي",
+    "name": "الاسم الكامل",
     "role": "الدور",
     "school": "المدرسة",
     "email": "البريد الإلكتروني",
     "permissions": "الصلاحيات",
     "language": "اللغة",
-    "logout": "تسجيل الخروج"
+    "logout": "تسجيل الخروج",
+    "changePassword": "تغيير كلمة المرور",
+    "currentPassword": "كلمة المرور الحالية",
+    "newPassword": "كلمة المرور الجديدة",
+    "confirmPassword": "تأكيد كلمة المرور الجديدة",
+    "passwordMismatch": "كلمتا المرور غير متطابقتين",
+    "passwordPolicyFail": "كلمة المرور لا تستوفي المتطلبات",
+    "passwordChanged": "تم تغيير كلمة المرور بنجاح. تم إلغاء الجلسات الأخرى.",
+    "policy": {
+      "minLength": "12 حرفاً على الأقل",
+      "uppercase": "حرف كبير واحد على الأقل",
+      "lowercase": "حرف صغير واحد على الأقل",
+      "digit": "رقم واحد على الأقل",
+      "special": "رمز خاص واحد على الأقل"
+    }
+  },
+  "sessions": {
+    "title": "الجلسات النشطة",
+    "empty": "لا توجد جلسات نشطة",
+    "unknownDevice": "جهاز غير معروف",
+    "current": "الحالية",
+    "created": "أنشئت في",
+    "lastActive": "آخر نشاط",
+    "revoke": "إلغاء"
+  },
+  "twoFactor": {
+    "title": "المصادقة الثنائية",
+    "status": "الحالة",
+    "enabled": "مفعّلة",
+    "disabled": "معطّلة",
+    "enableBtn": "تفعيل المصادقة الثنائية",
+    "disableBtn": "تعطيل المصادقة الثنائية",
+    "scanQR": "مسح رمز QR",
+    "scanInstructions": "امسح رمز QR هذا بتطبيق المصادقة (Google Authenticator، Authy، إلخ.)",
+    "manualEntry": "مفتاح الإدخال اليدوي",
+    "enterCode": "رمز التحقق",
+    "verify": "تحقق",
+    "activated": "تم تفعيل المصادقة الثنائية!",
+    "backupInstructions": "احفظ رموز الاسترداد هذه في مكان آمن. كل رمز يمكن استخدامه مرة واحدة فقط.",
+    "downloadCodes": "تحميل الرموز",
+    "disableTitle": "تعطيل المصادقة الثنائية",
+    "disableInstructions": "أدخل رمز المصادقة أو رمز الاسترداد لتعطيل المصادقة الثنائية.",
+    "codePlaceholder": "الرمز أو رمز الاسترداد"
+  },
+  "studentSubmission": {
+    "title": "تسليم العمل",
+    "noAssignments": "لا توجد واجبات متاحة",
+    "selectAssignment": "الواجب",
+    "choosePlaceholder": "اختر واجباً...",
+    "dueAt": "الموعد النهائي",
+    "points": "النقاط",
+    "attachFiles": "إرفاق ملفات",
+    "uploading": "جاري رفع الملفات",
+    "submit": "تسليم",
+    "submitAnother": "تسليم آخر",
+    "success": "تم التسليم بنجاح!",
+    "successMessage": "تم تسليم عملك بنجاح."
+  },
+  "justification": {
+    "title": "تبرير الغياب",
+    "instructions": "قدّم تبريراً لغياب طفلك. أدخل معرف سجل الحضور والسبب.",
+    "attendanceRecordId": "معرف سجل الحضور",
+    "recordIdPlaceholder": "أدخل معرف سجل الحضور",
+    "reason": "السبب",
+    "reasonPlaceholder": "اشرح سبب الغياب...",
+    "submit": "تقديم التبرير",
+    "submitAnother": "تقديم آخر",
+    "success": "تم تقديم التبرير!",
+    "successMessage": "تم تقديم التبرير وهو قيد المراجعة."
+  },
+  "fileUpload": {
+    "dragDrop": "اسحب وأفلت الملفات هنا، أو انقر للاستعراض",
+    "maxSize": "الحد الأقصى {{max}} ميجابايت لكل ملف",
+    "maxFiles": "الحد الأقصى {{max}} ملفات",
+    "tooLarge": "{{name}} يتجاوز حد {{max}} ميجابايت"
+  },
+  "ws": {
+    "gradePublished": "تم نشر درجة جديدة",
+    "paymentUpdated": "تم تحديث حالة الدفع"
   },
   "errors": {
     "validation": "خطأ في التحقق",

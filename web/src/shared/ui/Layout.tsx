@@ -5,10 +5,12 @@
  * Shows navigation items based on user role (PAR, STD, TCH, ADM).
  */
 
+import { useCallback, useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/services/auth/AuthContext';
 import { LanguageSwitcher } from '@/shared/ui/LanguageSwitcher';
+import { wsClient, type WsEvent } from '@/services/ws/WebSocketClient';
 
 interface NavItem {
   to: string;
@@ -33,19 +35,62 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/feed', labelKey: 'nav.feed', icon: '📰', roles: ['PAR'] },
   { to: '/notifications', labelKey: 'nav.notifications', icon: '🔔', roles: ['PAR', 'TCH', 'ADM', 'DIR'] },
   { to: '/content', labelKey: 'nav.content', icon: '📚', roles: ['STD', 'PAR', 'TCH', 'ADM'] },
+  { to: '/submissions', labelKey: 'nav.submissions', icon: '📤', roles: ['STD'] },
   { to: '/results', labelKey: 'nav.results', icon: '📊', roles: ['STD', 'PAR'] },
+  { to: '/justification', labelKey: 'nav.justification', icon: '📋', roles: ['PAR'] },
   { to: '/invoices', labelKey: 'nav.invoices', icon: '💳', roles: ['PAR', 'ADM'] },
   { to: '/activities', labelKey: 'nav.activities', icon: '🎯', roles: ['STD', 'TCH', 'ADM'] },
   { to: '/profile', labelKey: 'nav.profile', icon: '👤', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR', 'SUP'] },
+  { to: '/profile/sessions', labelKey: 'nav.sessions', icon: '🔒', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR', 'SUP'] },
+  { to: '/profile/2fa', labelKey: 'nav.twoFactor', icon: '🛡️', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR', 'SUP'] },
 ];
+
+interface Toast {
+  id: number;
+  message: string;
+}
+
+let toastIdCounter = 0;
 
 export function Layout() {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [notifCount, setNotifCount] = useState(0);
+  const [toasts, setToasts] = useState<Toast[]>([]);
 
   const userRole = user?.role || '';
   const visibleItems = NAV_ITEMS.filter((item) => item.roles.includes(userRole));
+
+  const addToast = useCallback((message: string) => {
+    const id = ++toastIdCounter;
+    setToasts((prev) => [...prev, { id, message }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 5000);
+  }, []);
+
+  // WebSocket connect/disconnect on mount/unmount
+  useEffect(() => {
+    wsClient.connect();
+    const unsub = wsClient.subscribe((event: WsEvent) => {
+      if (event.event === 'notification_created') {
+        setNotifCount((c) => c + 1);
+        const subject = (event.data.subject as string) || t('notifications.title');
+        addToast(subject);
+      }
+      if (event.event === 'grade_published') {
+        addToast(t('ws.gradePublished'));
+      }
+      if (event.event === 'payment_updated') {
+        addToast(t('ws.paymentUpdated'));
+      }
+    });
+    return () => {
+      unsub();
+      wsClient.disconnect();
+    };
+  }, [addToast, t]);
 
   async function handleLogout() {
     await logout();
@@ -69,9 +114,15 @@ export function Layout() {
               className={({ isActive }) =>
                 `nav-link ${isActive ? 'nav-link--active' : ''}`
               }
+              onClick={() => {
+                if (item.to === '/notifications') setNotifCount(0);
+              }}
             >
               <span className="nav-icon">{item.icon}</span>
               <span className="nav-label">{t(item.labelKey)}</span>
+              {item.to === '/notifications' && notifCount > 0 && (
+                <span className="notif-badge">{notifCount > 99 ? '99+' : notifCount}</span>
+              )}
             </NavLink>
           ))}
         </nav>
@@ -91,6 +142,23 @@ export function Layout() {
       <main className="app-main">
         <Outlet />
       </main>
+
+      {/* Toast notifications */}
+      {toasts.length > 0 && (
+        <div className="toast-container">
+          {toasts.map((toast) => (
+            <div key={toast.id} className="toast">
+              <span>{toast.message}</span>
+              <button
+                className="toast-close"
+                onClick={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
+              >
+                &times;
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

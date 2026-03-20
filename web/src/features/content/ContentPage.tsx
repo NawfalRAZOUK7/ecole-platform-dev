@@ -35,6 +35,7 @@ export function ContentPage() {
   const [loadingMore, setLoadingMore] = useState(false);
 
   // Filters
+  const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [levelFilter, setLevelFilter] = useState('');
 
@@ -42,6 +43,7 @@ export function ContentPage() {
     try {
       const params: Record<string, string | number | undefined> = {};
       if (cursor) params.cursor = cursor;
+      if (search) params.search = search;
       if (typeFilter) params.content_type = typeFilter;
       if (levelFilter) params.level_tag = levelFilter;
 
@@ -57,7 +59,7 @@ export function ContentPage() {
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : t('app.error'));
     }
-  }, [t, typeFilter, levelFilter]);
+  }, [t, search, typeFilter, levelFilter]);
 
   useEffect(() => {
     setLoading(true);
@@ -77,8 +79,15 @@ export function ContentPage() {
     <div className="page">
       <h1 className="page-title">{t('content.title')}</h1>
 
-      {/* Filters */}
+      {/* Search + Filters */}
       <div className="filters-bar">
+        <input
+          type="search"
+          className="filter-input"
+          placeholder={t('content.searchPlaceholder')}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value)}

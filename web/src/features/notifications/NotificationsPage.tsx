@@ -32,11 +32,13 @@ export function NotificationsPage() {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [search, setSearch] = useState('');
 
   const fetchNotifications = useCallback(async (cursor?: string) => {
     try {
       const params: Record<string, string | number | undefined> = {};
       if (cursor) params.cursor = cursor;
+      if (search) params.search = search;
 
       const resp = await api.list<Notification>('/notifications', params);
       if (cursor) {
@@ -50,7 +52,7 @@ export function NotificationsPage() {
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : t('app.error'));
     }
-  }, [t]);
+  }, [t, search]);
 
   useEffect(() => {
     setLoading(true);
@@ -69,6 +71,17 @@ export function NotificationsPage() {
   return (
     <div className="page">
       <h1 className="page-title">{t('notifications.title')}</h1>
+
+      {/* Search */}
+      <div className="filters-bar">
+        <input
+          type="search"
+          className="filter-input"
+          placeholder={t('notifications.searchPlaceholder')}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
 
       <ErrorBanner error={error} onDismiss={() => setError(null)} onRetry={() => fetchNotifications()} />
 

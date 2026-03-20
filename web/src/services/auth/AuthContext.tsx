@@ -34,15 +34,23 @@ export interface UserProfile {
   }>;
 }
 
+interface TwoFactorPending {
+  tempToken: string;
+  email: string;
+}
+
 interface AuthState {
   user: UserProfile | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  twoFactorPending: TwoFactorPending | null;
 }
 
 interface AuthContextValue extends AuthState {
   login: (email: string, password: string, schoolId: string) => Promise<void>;
+  verify2fa: (code: string) => Promise<void>;
+  cancel2fa: () => void;
   logout: () => Promise<void>;
   clearError: () => void;
 }
@@ -67,6 +75,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isAuthenticated: false,
     isLoading: true, // start loading to check for existing session
     error: null,
+    twoFactorPending: null,
   });
 
   // Try to restore session on mount (via refresh token cookie)
@@ -137,7 +146,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   const login = useCallback(async (email: string, password: string, schoolId: string) => {
-    setState((s) => ({ ...s, isLoading: true, error: null }));
+    setState((s) => ({ ...s, isLoading: true, error: null, twoFactorPending: null }));
 
     try {
       const loginResp = await fetch('/api/v1/auth/login', {
@@ -152,6 +161,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (!loginResp.ok) {
         const errMsg = loginBody?.error?.message || 'Login failed';
         setState((s) => ({ ...s, isLoading: false, error: errMsg }));
+        return;
+      }
+
+      // Handle 2FA required response
+      if (loginBody.data?.requires_2fa) {
+        setState((s) => ({
+          ...s,
+          isLoading: false,
+          twoFactorPending: {
+            tempToken: loginBody.data.temp_token,
+            email,
+          },
+        }));
         return;
       }
 
@@ -170,6 +192,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         isAuthenticated: true,
         isLoading: false,
         error: null,
+        twoFactorPending: null,
       });
     } catch (err) {
       const msg = err instanceof ApiClientError
@@ -177,6 +200,57 @@ export function AuthProvider({ children }: AuthProviderProps) {
         : 'Login failed';
       setState((s) => ({ ...s, isLoading: false, error: msg }));
     }
+  }, []);
+
+  const verify2fa = useCallback(async (code: string) => {
+    if (!state.twoFactorPending) return;
+    setState((s) => ({ ...s, isLoading: true, error: null }));
+
+    try {
+      const resp = await fetch('/api/v1/auth/2fa/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          temp_token: state.twoFactorPending.tempToken,
+          code,
+        }),
+      });
+
+      const body = await resp.json();
+
+      if (!resp.ok) {
+        const errMsg = body?.error?.message || 'Verification failed';
+        setState((s) => ({ ...s, isLoading: false, error: errMsg }));
+        return;
+      }
+
+      const token = body.data?.access_token;
+      if (!token) {
+        setState((s) => ({ ...s, isLoading: false, error: 'No access token received' }));
+        return;
+      }
+
+      setAccessToken(token);
+
+      const profileResp = await api.get<UserProfile>('/auth/me');
+      setState({
+        user: profileResp.data,
+        isAuthenticated: true,
+        isLoading: false,
+        error: null,
+        twoFactorPending: null,
+      });
+    } catch (err) {
+      const msg = err instanceof ApiClientError
+        ? err.apiError.message
+        : 'Verification failed';
+      setState((s) => ({ ...s, isLoading: false, error: msg }));
+    }
+  }, [state.twoFactorPending]);
+
+  const cancel2fa = useCallback(() => {
+    setState((s) => ({ ...s, twoFactorPending: null, error: null }));
   }, []);
 
   const logout = useCallback(async () => {
@@ -191,6 +265,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         isAuthenticated: false,
         isLoading: false,
         error: null,
+        twoFactorPending: null,
       });
     }
   }, []);
@@ -203,10 +278,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     () => ({
       ...state,
       login,
+      verify2fa,
+      cancel2fa,
       logout,
       clearError,
     }),
-    [state, login, logout, clearError]
+    [state, login, verify2fa, cancel2fa, logout, clearError]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -31,7 +31,11 @@
     "teacherAssignments": "Devoirs",
     "teacherSubmissions": "Soumissions",
     "teacherAttendance": "Presence",
-    "teacherAssessments": "Evaluations"
+    "teacherAssessments": "Evaluations",
+    "submissions": "Soumettre un travail",
+    "justification": "Justifier une absence",
+    "sessions": "Sessions",
+    "twoFactor": "Double authentification"
   },
   "login": {
     "title": "Connexion",
@@ -44,6 +48,17 @@
       "invalid": "Email ou mot de passe incorrect",
       "locked": "Compte verrouille. Reessayez plus tard.",
       "generic": "Erreur de connexion"
+    },
+    "twoFactor": {
+      "title": "Authentification a deux facteurs",
+      "instructions": "Entrez le code a 6 chiffres de votre application d'authentification.",
+      "backupInstructions": "Entrez un de vos codes de secours.",
+      "code": "Code d'authentification",
+      "backupCode": "Code de secours",
+      "backupPlaceholder": "Entrer le code de secours",
+      "verify": "Verifier",
+      "useBackup": "Utiliser un code de secours",
+      "useApp": "Utiliser l'application"
     }
   },
   "feed": {
@@ -53,11 +68,13 @@
   },
   "notifications": {
     "title": "Notifications",
-    "empty": "Aucune notification"
+    "empty": "Aucune notification",
+    "searchPlaceholder": "Rechercher dans les notifications..."
   },
   "content": {
     "title": "Bibliotheque de contenus",
     "empty": "Aucun contenu disponible",
+    "searchPlaceholder": "Rechercher du contenu...",
     "type": "Type",
     "level": "Niveau",
     "language": "Langue",
@@ -106,12 +123,91 @@
   },
   "profile": {
     "title": "Mon profil",
+    "name": "Nom complet",
     "role": "Role",
     "school": "Ecole",
     "email": "Email",
     "permissions": "Permissions",
     "language": "Langue",
-    "logout": "Se deconnecter"
+    "logout": "Se deconnecter",
+    "changePassword": "Changer le mot de passe",
+    "currentPassword": "Mot de passe actuel",
+    "newPassword": "Nouveau mot de passe",
+    "confirmPassword": "Confirmer le nouveau mot de passe",
+    "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "passwordPolicyFail": "Le mot de passe ne respecte pas les exigences",
+    "passwordChanged": "Mot de passe modifie avec succes. Les autres sessions ont ete revoquees.",
+    "policy": {
+      "minLength": "Au moins 12 caracteres",
+      "uppercase": "Au moins une lettre majuscule",
+      "lowercase": "Au moins une lettre minuscule",
+      "digit": "Au moins un chiffre",
+      "special": "Au moins un caractere special"
+    }
+  },
+  "sessions": {
+    "title": "Sessions actives",
+    "empty": "Aucune session active",
+    "unknownDevice": "Appareil inconnu",
+    "current": "Actuelle",
+    "created": "Creee le",
+    "lastActive": "Derniere activite",
+    "revoke": "Revoquer"
+  },
+  "twoFactor": {
+    "title": "Authentification a deux facteurs",
+    "status": "Statut",
+    "enabled": "Active",
+    "disabled": "Desactive",
+    "enableBtn": "Activer la 2FA",
+    "disableBtn": "Desactiver la 2FA",
+    "scanQR": "Scanner le QR Code",
+    "scanInstructions": "Scannez ce QR code avec votre application d'authentification (Google Authenticator, Authy, etc.)",
+    "manualEntry": "Cle de saisie manuelle",
+    "enterCode": "Code de verification",
+    "verify": "Verifier",
+    "activated": "2FA activee !",
+    "backupInstructions": "Enregistrez ces codes de secours dans un endroit sur. Chaque code ne peut etre utilise qu'une seule fois.",
+    "downloadCodes": "Telecharger les codes",
+    "disableTitle": "Desactiver la double authentification",
+    "disableInstructions": "Entrez votre code d'authentification ou un code de secours pour desactiver la 2FA.",
+    "codePlaceholder": "Code ou code de secours"
+  },
+  "studentSubmission": {
+    "title": "Soumettre un travail",
+    "noAssignments": "Aucun devoir disponible",
+    "selectAssignment": "Devoir",
+    "choosePlaceholder": "Selectionner un devoir...",
+    "dueAt": "Date limite",
+    "points": "Points",
+    "attachFiles": "Joindre des fichiers",
+    "uploading": "Envoi des fichiers",
+    "submit": "Soumettre",
+    "submitAnother": "Soumettre un autre",
+    "success": "Soumission reussie !",
+    "successMessage": "Votre travail a ete soumis avec succes."
+  },
+  "justification": {
+    "title": "Justifier une absence",
+    "instructions": "Soumettez un justificatif pour l'absence de votre enfant. Entrez l'identifiant de la presence et le motif.",
+    "attendanceRecordId": "Identifiant de presence",
+    "recordIdPlaceholder": "Entrer l'identifiant de la presence",
+    "reason": "Motif",
+    "reasonPlaceholder": "Expliquez le motif de l'absence...",
+    "submit": "Soumettre le justificatif",
+    "submitAnother": "Soumettre un autre",
+    "success": "Justificatif soumis !",
+    "successMessage": "Votre justificatif a ete soumis et est en attente d'examen."
+  },
+  "fileUpload": {
+    "dragDrop": "Glissez-deposez vos fichiers ici, ou cliquez pour parcourir",
+    "maxSize": "Max {{max}} Mo par fichier",
+    "maxFiles": "Maximum {{max}} fichiers autorises",
+    "tooLarge": "{{name}} depasse la limite de {{max}} Mo"
+  },
+  "ws": {
+    "gradePublished": "Une nouvelle note a ete publiee",
+    "paymentUpdated": "Le statut d'un paiement a ete mis a jour"
   },
   "errors": {
     "validation": "Erreur de validation",

@@ -18,6 +18,10 @@ import { ResultsPage } from '@/features/results/ResultsPage';
 import { InvoicesPage } from '@/features/invoices/InvoicesPage';
 import { ActivitiesPage } from '@/features/activities/ActivitiesPage';
 import { ProfilePage } from '@/features/profile/ProfilePage';
+import { SessionsPage } from '@/features/profile/SessionsPage';
+import { TwoFactorPage } from '@/features/profile/TwoFactorPage';
+import { StudentSubmissionPage } from '@/features/submissions/StudentSubmissionPage';
+import { ParentJustificationPage } from '@/features/attendance/ParentJustificationPage';
 import { DashboardPage } from '@/features/admin/DashboardPage';
 import { UsersPage } from '@/features/admin/UsersPage';
 import { InvitationsPage } from '@/features/admin/InvitationsPage';
@@ -208,6 +212,24 @@ function App() {
           }
         />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/profile/sessions" element={<SessionsPage />} />
+        <Route path="/profile/2fa" element={<TwoFactorPage />} />
+        <Route
+          path="/submissions"
+          element={
+            <ProtectedRoute roles={['STD']}>
+              <StudentSubmissionPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/justification"
+          element={
+            <ProtectedRoute roles={['PAR']}>
+              <ParentJustificationPage />
+            </ProtectedRoute>
+          }
+        />
       </Route>
 
       {/* Root redirect */}

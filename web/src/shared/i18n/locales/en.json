@@ -31,7 +31,11 @@
     "teacherAssignments": "Assignments",
     "teacherSubmissions": "Submissions",
     "teacherAttendance": "Attendance",
-    "teacherAssessments": "Assessments"
+    "teacherAssessments": "Assessments",
+    "submissions": "Submit Work",
+    "justification": "Justify Absence",
+    "sessions": "Sessions",
+    "twoFactor": "Two-Factor Auth"
   },
   "login": {
     "title": "Sign In",
@@ -44,6 +48,17 @@
       "invalid": "Invalid email or password",
       "locked": "Account locked. Try again later.",
       "generic": "Login error"
+    },
+    "twoFactor": {
+      "title": "Two-Factor Authentication",
+      "instructions": "Enter the 6-digit code from your authenticator app.",
+      "backupInstructions": "Enter one of your backup codes.",
+      "code": "Authentication Code",
+      "backupCode": "Backup Code",
+      "backupPlaceholder": "Enter backup code",
+      "verify": "Verify",
+      "useBackup": "Use backup code",
+      "useApp": "Use authenticator app"
     }
   },
   "feed": {
@@ -53,11 +68,13 @@
   },
   "notifications": {
     "title": "Notifications",
-    "empty": "No notifications"
+    "empty": "No notifications",
+    "searchPlaceholder": "Search notifications..."
   },
   "content": {
     "title": "Content Library",
     "empty": "No content available",
+    "searchPlaceholder": "Search content...",
     "type": "Type",
     "level": "Level",
     "language": "Language",
@@ -106,12 +123,91 @@
   },
   "profile": {
     "title": "My Profile",
+    "name": "Full Name",
     "role": "Role",
     "school": "School",
     "email": "Email",
     "permissions": "Permissions",
     "language": "Language",
-    "logout": "Sign Out"
+    "logout": "Sign Out",
+    "changePassword": "Change Password",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm New Password",
+    "passwordMismatch": "Passwords do not match",
+    "passwordPolicyFail": "Password does not meet the requirements",
+    "passwordChanged": "Password changed successfully. Other sessions have been revoked.",
+    "policy": {
+      "minLength": "At least 12 characters",
+      "uppercase": "At least one uppercase letter",
+      "lowercase": "At least one lowercase letter",
+      "digit": "At least one digit",
+      "special": "At least one special character"
+    }
+  },
+  "sessions": {
+    "title": "Active Sessions",
+    "empty": "No active sessions",
+    "unknownDevice": "Unknown device",
+    "current": "Current",
+    "created": "Created",
+    "lastActive": "Last active",
+    "revoke": "Revoke"
+  },
+  "twoFactor": {
+    "title": "Two-Factor Authentication",
+    "status": "Status",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "enableBtn": "Enable 2FA",
+    "disableBtn": "Disable 2FA",
+    "scanQR": "Scan QR Code",
+    "scanInstructions": "Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)",
+    "manualEntry": "Manual entry key",
+    "enterCode": "Verification Code",
+    "verify": "Verify",
+    "activated": "2FA Activated!",
+    "backupInstructions": "Save these backup codes in a safe place. Each code can be used once if you lose access to your authenticator app.",
+    "downloadCodes": "Download Codes",
+    "disableTitle": "Disable Two-Factor Authentication",
+    "disableInstructions": "Enter your authenticator code or a backup code to disable 2FA.",
+    "codePlaceholder": "Code or backup code"
+  },
+  "studentSubmission": {
+    "title": "Submit Work",
+    "noAssignments": "No assignments available",
+    "selectAssignment": "Assignment",
+    "choosePlaceholder": "Select an assignment...",
+    "dueAt": "Due",
+    "points": "Points",
+    "attachFiles": "Attach Files",
+    "uploading": "Uploading files",
+    "submit": "Submit",
+    "submitAnother": "Submit Another",
+    "success": "Submission Successful!",
+    "successMessage": "Your work has been submitted successfully."
+  },
+  "justification": {
+    "title": "Justify Absence",
+    "instructions": "Submit a justification for your child's absence. Enter the attendance record ID and the reason.",
+    "attendanceRecordId": "Attendance Record ID",
+    "recordIdPlaceholder": "Enter the attendance record ID",
+    "reason": "Reason",
+    "reasonPlaceholder": "Explain the reason for the absence...",
+    "submit": "Submit Justification",
+    "submitAnother": "Submit Another",
+    "success": "Justification Submitted!",
+    "successMessage": "Your justification has been submitted and is pending review."
+  },
+  "fileUpload": {
+    "dragDrop": "Drag & drop files here, or click to browse",
+    "maxSize": "Max {{max}} MB per file",
+    "maxFiles": "Maximum {{max}} files allowed",
+    "tooLarge": "{{name}} exceeds {{max}} MB limit"
+  },
+  "ws": {
+    "gradePublished": "A new grade has been published",
+    "paymentUpdated": "A payment status has been updated"
   },
   "errors": {
     "validation": "Validation error",
