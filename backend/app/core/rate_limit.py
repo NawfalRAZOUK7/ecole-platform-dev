@@ -32,6 +32,8 @@ logger = logging.getLogger(__name__)
 AUTH_PATHS = {
     "/api/v1/auth/login",
     "/api/v1/auth/refresh",
+    "/api/v1/auth/2fa/verify",
+    "/api/v1/auth/verify-email",
     "/api/v1/recovery/request",
     "/api/v1/recovery/verify",
     "/api/v1/recovery/reset",

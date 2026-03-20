@@ -1,10 +1,11 @@
-"""Auth API endpoints: login, refresh, logout, me, sessions, change-password.
+"""Auth API endpoints: login, refresh, logout, me, sessions, change-password, 2FA, email verification.
 
 Reference: S-030 through S-033 — Auth endpoints
 Phase 2A: Session management (list, revoke), password change, device info on login.
+Phase 2B: TOTP 2FA (setup, verify-setup, disable, verify-login), email verification.
 Pipeline: Router -> Service -> Repository (Pack D2)
-Public endpoints: login, refresh (no auth required)
-Protected endpoints: logout, me, sessions, change-password (require valid access token)
+Public endpoints: login, refresh, 2fa/verify, verify-email (no auth required)
+Protected endpoints: logout, me, sessions, change-password, 2fa/setup, 2fa/verify-setup, 2fa/disable
 """
 
 from __future__ import annotations
@@ -19,8 +20,15 @@ from app.core.database import get_db
 from app.core.dependencies import AuthContext, get_current_user
 from app.core.redis import get_redis
 from app.core.response import success_response
-from app.schemas.auth import ChangePasswordRequest, LoginRequest
-from app.services.auth import AuthService
+from app.schemas.auth import (
+    ChangePasswordRequest,
+    EmailVerifyRequest,
+    LoginRequest,
+    TwoFactorDisableRequest,
+    TwoFactorVerifyLoginRequest,
+    TwoFactorVerifySetupRequest,
+)
+from app.services.auth import AuthService, EmailVerificationService, TwoFactorService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -105,6 +113,16 @@ async def login(
         user_agent=user_agent,
         device_name=_parse_device_name(user_agent),
     )
+
+    # Phase 2B: If 2FA is required, return temp_token instead of full tokens
+    if result.get("requires_2fa"):
+        return success_response(
+            {
+                "requires_2fa": True,
+                "temp_token": result["temp_token"],
+                "message": result["message"],
+            }
+        )
 
     # Set refresh token cookie (HttpOnly, Secure, SameSite=Lax)
     response.set_cookie(
@@ -322,6 +340,150 @@ async def change_password(
         current_password=body.current_password,
         new_password=body.new_password,
         current_session_id=auth.session_id,
+        ip_address=_get_client_ip(request),
+    )
+    return success_response(result)
+
+
+# ---------------------------------------------------------------------------
+# POST /auth/2fa/setup (Phase 2B) — Protected
+# ---------------------------------------------------------------------------
+@router.post("/2fa/setup")
+async def two_factor_setup(
+    request: Request,
+    auth: AuthContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    redis: aioredis.Redis = Depends(get_redis),
+):
+    """Generate a new TOTP secret and QR code provisioning URI.
+
+    Returns the secret and URI for the authenticator app.
+    2FA is not yet active — call /auth/2fa/verify-setup with a valid code to activate.
+    """
+    service = TwoFactorService(db, redis)
+    result = await service.setup(
+        user_id=auth.user_id,
+        school_id=auth.school_id,
+        ip_address=_get_client_ip(request),
+    )
+    return success_response(result)
+
+
+# ---------------------------------------------------------------------------
+# POST /auth/2fa/verify-setup (Phase 2B) — Protected
+# ---------------------------------------------------------------------------
+@router.post("/2fa/verify-setup")
+async def two_factor_verify_setup(
+    body: TwoFactorVerifySetupRequest,
+    request: Request,
+    auth: AuthContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    redis: aioredis.Redis = Depends(get_redis),
+):
+    """Verify first TOTP code to activate 2FA.
+
+    Returns 10 single-use backup codes (shown once, store securely).
+    """
+    service = TwoFactorService(db, redis)
+    result = await service.verify_setup(
+        user_id=auth.user_id,
+        school_id=auth.school_id,
+        code=body.code,
+        ip_address=_get_client_ip(request),
+    )
+    return success_response(result)
+
+
+# ---------------------------------------------------------------------------
+# POST /auth/2fa/disable (Phase 2B) — Protected
+# ---------------------------------------------------------------------------
+@router.post("/2fa/disable")
+async def two_factor_disable(
+    body: TwoFactorDisableRequest,
+    request: Request,
+    auth: AuthContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    redis: aioredis.Redis = Depends(get_redis),
+):
+    """Disable 2FA. Requires a valid TOTP code or backup code."""
+    service = TwoFactorService(db, redis)
+    result = await service.disable(
+        user_id=auth.user_id,
+        school_id=auth.school_id,
+        code=body.code,
+        ip_address=_get_client_ip(request),
+    )
+    return success_response(result)
+
+
+# ---------------------------------------------------------------------------
+# POST /auth/2fa/verify (Phase 2B) — Public (uses temp_token)
+# ---------------------------------------------------------------------------
+@router.post("/2fa/verify")
+async def two_factor_verify_login(
+    body: TwoFactorVerifyLoginRequest,
+    request: Request,
+    response: Response,
+    db: AsyncSession = Depends(get_db),
+    redis: aioredis.Redis = Depends(get_redis),
+):
+    """Verify TOTP code during login flow.
+
+    Called after login returns requires_2fa=true.
+    Accepts temp_token + TOTP code (or backup code) and returns full tokens.
+    """
+    service = TwoFactorService(db, redis)
+    result = await service.verify_login(
+        temp_token=body.temp_token,
+        code=body.code,
+        ip_address=_get_client_ip(request),
+    )
+
+    # Set cookies (same as normal login)
+    response.set_cookie(
+        key="refresh_token",
+        value=result["refresh_token"],
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        path="/api/v1/auth",
+        max_age=7 * 24 * 3600,
+    )
+    response.set_cookie(
+        key="csrf_token",
+        value=result["csrf_token"],
+        httponly=False,
+        secure=True,
+        samesite="lax",
+        path="/api/v1/auth",
+        max_age=7 * 24 * 3600,
+    )
+
+    return success_response(
+        {
+            "access_token": result["access_token"],
+            "token_type": result["token_type"],
+            "expires_in": result["expires_in"],
+        }
+    )
+
+
+# ---------------------------------------------------------------------------
+# POST /auth/verify-email (Phase 2B) — Public
+# ---------------------------------------------------------------------------
+@router.post("/verify-email")
+async def verify_email(
+    body: EmailVerifyRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    redis: aioredis.Redis = Depends(get_redis),
+):
+    """Verify email address via OTP sent during invite consumption."""
+    service = EmailVerificationService(db, redis)
+    result = await service.verify_email(
+        user_id=body.user_id,
+        school_id=body.school_id,
+        otp=body.otp,
         ip_address=_get_client_ip(request),
     )
     return success_response(result)

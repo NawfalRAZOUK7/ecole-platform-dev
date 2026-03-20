@@ -1,6 +1,7 @@
 """Pydantic schemas for auth endpoints.
 
 Reference: S-030 through S-033, S-040, S-041 — Auth, invitation, and recovery flows.
+Phase 2B: TOTP 2FA schemas (setup, verify, disable) and email verification.
 """
 
 from __future__ import annotations
@@ -103,3 +104,28 @@ class RecoveryResetRequest(BaseModel):
 class ChangePasswordRequest(BaseModel):
     current_password: str = Field(..., min_length=1, description="Current password for verification")
     new_password: str = Field(..., min_length=12, description="New password (min 12 chars, Phase 2A policy)")
+
+
+# ---------------------------------------------------------------------------
+# Two-Factor Authentication — TOTP (Phase 2B)
+# ---------------------------------------------------------------------------
+class TwoFactorVerifySetupRequest(BaseModel):
+    code: str = Field(..., min_length=6, max_length=6, description="6-digit TOTP code from authenticator app")
+
+
+class TwoFactorDisableRequest(BaseModel):
+    code: str = Field(..., min_length=6, max_length=8, description="TOTP code or backup code")
+
+
+class TwoFactorVerifyLoginRequest(BaseModel):
+    temp_token: str = Field(..., min_length=1, description="Temporary token from login response")
+    code: str = Field(..., min_length=6, max_length=8, description="TOTP code or backup code")
+
+
+# ---------------------------------------------------------------------------
+# Email verification (Phase 2B)
+# ---------------------------------------------------------------------------
+class EmailVerifyRequest(BaseModel):
+    user_id: UUID
+    school_id: UUID
+    otp: str = Field(..., min_length=6, max_length=6, description="6-digit email verification OTP")

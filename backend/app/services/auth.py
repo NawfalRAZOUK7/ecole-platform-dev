@@ -1,12 +1,14 @@
-"""Auth business logic — login, refresh, logout, me.
+"""Auth business logic — login, refresh, logout, me, 2FA, email verification.
 
 Reference: S-030 through S-033, Pack D6 — Security Pipeline
+Phase 2B: TOTP 2FA (setup, verify-setup, disable, verify-login), email verification
 Layer: Service (called by Router, uses Repository/DB directly for MVP)
 """
 
 from __future__ import annotations
 
 import hashlib
+import json
 import logging
 import secrets
 import uuid
@@ -24,6 +26,7 @@ from app.core.exceptions import (
     ConflictError,
     NotFoundError,
     RateLimitError,
+    ValidationError,
 )
 from app.core.middleware import get_correlation_id
 from app.core.permissions import get_permissions_for_role
@@ -55,6 +58,12 @@ RECOVERY_MAX_ATTEMPTS = 5
 RECOVERY_LOCK_MINUTES = 30
 RECOVERY_EXPIRE_MINUTES = 15
 OTP_LENGTH = 6
+
+# 2FA temp token TTL (5 minutes to enter TOTP code after password check)
+TOTP_TEMP_TOKEN_TTL = 300
+
+# Email verification OTP TTL
+EMAIL_VERIFY_EXPIRE_MINUTES = 30
 
 
 class AuthService:
@@ -165,7 +174,45 @@ class AuthService:
                 error_code="ERR-IAM-404",
             )
 
-        # 5. Create session record (Phase 2A: include device info)
+        # 5. Phase 2B — Check if 2FA is enabled
+        role = membership.role_code
+        if user.totp_enabled:
+            # Generate a temp token and store context in Redis
+            temp_token = secrets.token_urlsafe(48)
+            temp_data = json.dumps({
+                "user_id": str(user.id),
+                "school_id": str(school_id),
+                "role": role,
+                "source": source,
+                "ip_address": ip_address,
+                "user_agent": user_agent,
+                "device_name": device_name,
+            })
+            await self.redis.setex(
+                f"2fa_temp:{temp_token}",
+                TOTP_TEMP_TOKEN_TTL,
+                temp_data,
+            )
+
+            # Clear rate limit on successful password check
+            await self.redis.delete(rate_key)
+
+            # Audit
+            await self.audit.log_event(
+                school_id=school_id,
+                actor_id=user.id,
+                action_type="AUTH_2FA_REQUIRED",
+                outcome="pending",
+                ip_address=ip_address,
+            )
+
+            return {
+                "requires_2fa": True,
+                "temp_token": temp_token,
+                "message": "Two-factor authentication required. Please provide your TOTP code.",
+            }
+
+        # 6. Create session record (Phase 2A: include device info)
         cid = get_correlation_id()
         session = Session(
             user_id=user.id,
@@ -179,30 +226,29 @@ class AuthService:
         self.db.add(session)
         await self.db.flush()  # Get session.id
 
-        # 6. Generate tokens
-        role = membership.role_code
+        # 7. Generate tokens
         access_token = create_access_token(user.id, role, school_id, session.id)
         refresh_token, refresh_jti = create_refresh_token(user.id, school_id, session.id)
         csrf_token = create_csrf_token()
 
-        # 7. Store refresh JTI in Redis for rotation tracking
+        # 8. Store refresh JTI in Redis for rotation tracking
         await self.redis.setex(
             f"refresh_jti:{session.id}",
             settings.refresh_token_expire_days * 86400,  # TTL in seconds
             refresh_jti,
         )
 
-        # 8. Store CSRF token in Redis
+        # 9. Store CSRF token in Redis
         await self.redis.setex(
             f"csrf:{session.id}",
             settings.refresh_token_expire_days * 86400,
             csrf_token,
         )
 
-        # 9. Clear rate limit on successful login
+        # 10. Clear rate limit on successful login
         await self.redis.delete(rate_key)
 
-        # 10. Audit event
+        # 11. Audit event
         await self.audit.log_event(
             school_id=school_id,
             actor_id=user.id,
@@ -985,3 +1031,414 @@ class RecoveryService:
         )
 
         return {"message": "Password reset successfully"}
+
+
+class TwoFactorService:
+    """Handles TOTP 2FA operations: setup, verify-setup, disable, verify-login (Phase 2B)."""
+
+    def __init__(self, db: AsyncSession, redis: aioredis.Redis) -> None:
+        self.db = db
+        self.redis = redis
+        self.audit = AuditService(db)
+
+    # ------------------------------------------------------------------
+    # 2FA Setup — generate TOTP secret + QR code URI
+    # ------------------------------------------------------------------
+    async def setup(
+        self,
+        user_id: uuid.UUID,
+        school_id: uuid.UUID,
+        ip_address: str | None = None,
+    ) -> dict[str, Any]:
+        """Generate a new TOTP secret and provisioning URI for the user.
+
+        Returns the secret + QR URI. 2FA is NOT yet active — user must call
+        verify-setup with a valid code to activate.
+        Raises ConflictError if 2FA is already enabled.
+        """
+        from app.core.totp import generate_totp_secret, get_provisioning_uri
+
+        result = await self.db.execute(select(User).where(User.id == user_id))
+        user = result.scalar_one_or_none()
+        if user is None:
+            raise NotFoundError("User not found", error_code="ERR-IAM-404")
+
+        if user.totp_enabled:
+            raise ConflictError(
+                "Two-factor authentication is already enabled",
+                error_code="ERR-2FA-CONFLICT",
+            )
+
+        # Generate new secret (overwrite any pending setup)
+        secret = generate_totp_secret()
+        user.totp_secret = secret
+        user.totp_enabled = False
+        user.totp_verified_at = None
+        user.backup_codes = None
+        await self.db.flush()
+
+        provisioning_uri = get_provisioning_uri(secret, user.email)
+
+        await self.audit.log_event(
+            school_id=school_id,
+            actor_id=user_id,
+            action_type="2FA_SETUP_STARTED",
+            outcome="success",
+            target_type="user",
+            target_id=user_id,
+            ip_address=ip_address,
+        )
+
+        return {
+            "secret": secret,
+            "provisioning_uri": provisioning_uri,
+            "message": "Scan the QR code with your authenticator app, then verify with a code.",
+        }
+
+    # ------------------------------------------------------------------
+    # 2FA Verify Setup — activate 2FA after valid code + generate backup codes
+    # ------------------------------------------------------------------
+    async def verify_setup(
+        self,
+        user_id: uuid.UUID,
+        school_id: uuid.UUID,
+        code: str,
+        ip_address: str | None = None,
+    ) -> dict[str, Any]:
+        """Verify a TOTP code to activate 2FA. Returns backup codes.
+
+        This is the second step of setup: user scans QR, enters the code,
+        and if valid, 2FA is activated and 10 backup codes are generated.
+        """
+        from app.core.totp import (
+            generate_backup_codes,
+            hash_backup_codes,
+            verify_totp_code,
+        )
+
+        result = await self.db.execute(select(User).where(User.id == user_id))
+        user = result.scalar_one_or_none()
+        if user is None:
+            raise NotFoundError("User not found", error_code="ERR-IAM-404")
+
+        if user.totp_enabled:
+            raise ConflictError(
+                "Two-factor authentication is already enabled",
+                error_code="ERR-2FA-CONFLICT",
+            )
+
+        if not user.totp_secret:
+            raise ValidationError(
+                "No 2FA setup in progress. Call /auth/2fa/setup first.",
+                error_code="ERR-2FA-NO-SETUP",
+            )
+
+        # Verify the TOTP code against the pending secret
+        if not verify_totp_code(user.totp_secret, code):
+            raise AuthenticationError(
+                "Invalid TOTP code",
+                error_code="ERR-2FA-INVALID",
+            )
+
+        # Generate backup codes
+        plain_codes = generate_backup_codes()
+        hashed_codes = hash_backup_codes(plain_codes)
+
+        # Activate 2FA
+        user.totp_enabled = True
+        user.totp_verified_at = datetime.now(timezone.utc)
+        user.backup_codes = json.dumps(hashed_codes)
+        await self.db.flush()
+
+        await self.audit.log_event(
+            school_id=school_id,
+            actor_id=user_id,
+            action_type="2FA_ENABLED",
+            outcome="success",
+            target_type="user",
+            target_id=user_id,
+            ip_address=ip_address,
+        )
+
+        return {
+            "message": "Two-factor authentication enabled successfully.",
+            "backup_codes": plain_codes,
+        }
+
+    # ------------------------------------------------------------------
+    # 2FA Disable — deactivate 2FA (requires current TOTP or backup code)
+    # ------------------------------------------------------------------
+    async def disable(
+        self,
+        user_id: uuid.UUID,
+        school_id: uuid.UUID,
+        code: str,
+        ip_address: str | None = None,
+    ) -> dict[str, Any]:
+        """Disable 2FA. Requires a valid TOTP code or backup code."""
+        from app.core.totp import verify_backup_code, verify_totp_code
+
+        result = await self.db.execute(select(User).where(User.id == user_id))
+        user = result.scalar_one_or_none()
+        if user is None:
+            raise NotFoundError("User not found", error_code="ERR-IAM-404")
+
+        if not user.totp_enabled:
+            raise ConflictError(
+                "Two-factor authentication is not enabled",
+                error_code="ERR-2FA-CONFLICT",
+            )
+
+        # Try TOTP code first, then backup code
+        valid = False
+        if len(code) == 6 and code.isdigit():
+            valid = verify_totp_code(user.totp_secret, code)
+
+        if not valid:
+            # Try backup code
+            hashed_codes = json.loads(user.backup_codes) if user.backup_codes else []
+            idx = verify_backup_code(code, hashed_codes)
+            if idx is not None:
+                valid = True
+                # Consume the backup code
+                hashed_codes.pop(idx)
+                user.backup_codes = json.dumps(hashed_codes)
+
+        if not valid:
+            raise AuthenticationError(
+                "Invalid TOTP code or backup code",
+                error_code="ERR-2FA-INVALID",
+            )
+
+        # Disable 2FA — clear all TOTP fields
+        user.totp_secret = None
+        user.totp_enabled = False
+        user.totp_verified_at = None
+        user.backup_codes = None
+        await self.db.flush()
+
+        await self.audit.log_event(
+            school_id=school_id,
+            actor_id=user_id,
+            action_type="2FA_DISABLED",
+            outcome="success",
+            target_type="user",
+            target_id=user_id,
+            ip_address=ip_address,
+        )
+
+        return {"message": "Two-factor authentication disabled successfully."}
+
+    # ------------------------------------------------------------------
+    # 2FA Verify Login — complete login after TOTP verification
+    # ------------------------------------------------------------------
+    async def verify_login(
+        self,
+        temp_token: str,
+        code: str,
+        ip_address: str | None = None,
+    ) -> dict[str, Any]:
+        """Verify TOTP code during login flow and issue full tokens.
+
+        Called after password check when user has totp_enabled=True.
+        Uses the temp_token from Redis to retrieve login context.
+        """
+        from app.core.totp import verify_backup_code, verify_totp_code
+
+        # 1. Retrieve temp token data from Redis
+        temp_data_raw = await self.redis.get(f"2fa_temp:{temp_token}")
+        if temp_data_raw is None:
+            raise AuthenticationError(
+                "Invalid or expired 2FA token",
+                error_code="ERR-2FA-EXPIRED",
+            )
+
+        temp_data = json.loads(temp_data_raw)
+        user_id = uuid.UUID(temp_data["user_id"])
+        school_id = uuid.UUID(temp_data["school_id"])
+        role = temp_data["role"]
+        source = temp_data.get("source", "web")
+        stored_ip = temp_data.get("ip_address")
+        user_agent = temp_data.get("user_agent")
+        device_name = temp_data.get("device_name")
+
+        # 2. Load user
+        result = await self.db.execute(select(User).where(User.id == user_id))
+        user = result.scalar_one_or_none()
+        if user is None or not user.totp_enabled:
+            raise AuthenticationError(
+                "Invalid 2FA state",
+                error_code="ERR-2FA-INVALID",
+            )
+
+        # 3. Verify TOTP code or backup code
+        valid = False
+        used_backup = False
+        if len(code) == 6 and code.isdigit():
+            valid = verify_totp_code(user.totp_secret, code)
+
+        if not valid:
+            hashed_codes = json.loads(user.backup_codes) if user.backup_codes else []
+            idx = verify_backup_code(code, hashed_codes)
+            if idx is not None:
+                valid = True
+                used_backup = True
+                # Consume the backup code
+                hashed_codes.pop(idx)
+                user.backup_codes = json.dumps(hashed_codes)
+                await self.db.flush()
+
+        if not valid:
+            raise AuthenticationError(
+                "Invalid TOTP code or backup code",
+                error_code="ERR-2FA-INVALID",
+            )
+
+        # 4. Consume temp token (single use)
+        await self.redis.delete(f"2fa_temp:{temp_token}")
+
+        # 5. Create session (same logic as normal login)
+        cid = get_correlation_id()
+        session = Session(
+            user_id=user.id,
+            school_id=school_id,
+            source=source,
+            correlation_id=uuid.UUID(cid) if cid else None,
+            user_agent=user_agent[:500] if user_agent else None,
+            ip_address=stored_ip[:45] if stored_ip else None,
+            device_name=device_name[:200] if device_name else None,
+        )
+        self.db.add(session)
+        await self.db.flush()
+
+        # 6. Generate tokens
+        access_token = create_access_token(user.id, role, school_id, session.id)
+        refresh_token, refresh_jti = create_refresh_token(user.id, school_id, session.id)
+        csrf_token = create_csrf_token()
+
+        ttl = settings.refresh_token_expire_days * 86400
+        await self.redis.setex(f"refresh_jti:{session.id}", ttl, refresh_jti)
+        await self.redis.setex(f"csrf:{session.id}", ttl, csrf_token)
+
+        # 7. Audit
+        action = "AUTH_2FA_VERIFIED_BACKUP" if used_backup else "AUTH_2FA_VERIFIED"
+        await self.audit.log_event(
+            school_id=school_id,
+            actor_id=user.id,
+            action_type=action,
+            outcome="success",
+            target_type="session",
+            target_id=session.id,
+            ip_address=ip_address,
+        )
+
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "csrf_token": csrf_token,
+            "token_type": "bearer",
+            "expires_in": settings.access_token_expire_minutes * 60,
+            "session_id": session.id,
+        }
+
+
+class EmailVerificationService:
+    """Handles email verification via OTP sent during invite consumption (Phase 2B)."""
+
+    def __init__(self, db: AsyncSession, redis: aioredis.Redis) -> None:
+        self.db = db
+        self.redis = redis
+        self.audit = AuditService(db)
+
+    async def send_verification_otp(
+        self,
+        user_id: uuid.UUID,
+        school_id: uuid.UUID,
+        email: str,
+        ip_address: str | None = None,
+    ) -> dict[str, Any]:
+        """Generate and store an email verification OTP.
+
+        In dev: logs OTP. In production: would send via email.
+        Called automatically during invite consumption.
+        """
+        otp = "".join([str(secrets.randbelow(10)) for _ in range(OTP_LENGTH)])
+        otp_hash = hashlib.sha256(otp.encode()).hexdigest()
+
+        await self.redis.setex(
+            f"email_verify_otp:{user_id}:{school_id}",
+            EMAIL_VERIFY_EXPIRE_MINUTES * 60,
+            otp_hash,
+        )
+
+        logger.info(
+            "Email verification OTP for %s (user %s): %s",
+            email,
+            user_id,
+            otp,
+        )
+
+        await self.audit.log_event(
+            school_id=school_id,
+            actor_id=user_id,
+            action_type="EMAIL_VERIFY_OTP_SENT",
+            outcome="success",
+            target_type="user",
+            target_id=user_id,
+            ip_address=ip_address,
+        )
+
+        return {"message": "Verification email sent."}
+
+    async def verify_email(
+        self,
+        user_id: uuid.UUID,
+        school_id: uuid.UUID,
+        otp: str,
+        ip_address: str | None = None,
+    ) -> dict[str, Any]:
+        """Verify email via OTP. Sets email_verified_at on success."""
+        # Load user
+        result = await self.db.execute(
+            select(User).where(User.id == user_id, User.school_id == school_id)
+        )
+        user = result.scalar_one_or_none()
+        if user is None:
+            raise NotFoundError("User not found", error_code="ERR-IAM-404")
+
+        if user.email_verified_at is not None:
+            return {"message": "Email already verified."}
+
+        # Verify OTP
+        stored_hash = await self.redis.get(f"email_verify_otp:{user_id}:{school_id}")
+        if stored_hash is None:
+            raise AuthenticationError(
+                "Verification OTP has expired. Request a new one.",
+                error_code="ERR-VERIFY-EXPIRED",
+            )
+
+        otp_hash = hashlib.sha256(otp.encode()).hexdigest()
+        if otp_hash != stored_hash:
+            raise AuthenticationError(
+                "Invalid verification OTP",
+                error_code="ERR-VERIFY-INVALID",
+            )
+
+        # Mark email as verified
+        user.email_verified_at = datetime.now(timezone.utc)
+        await self.db.flush()
+
+        # Cleanup
+        await self.redis.delete(f"email_verify_otp:{user_id}:{school_id}")
+
+        await self.audit.log_event(
+            school_id=school_id,
+            actor_id=user_id,
+            action_type="EMAIL_VERIFIED",
+            outcome="success",
+            target_type="user",
+            target_id=user_id,
+            ip_address=ip_address,
+        )
+
+        return {"message": "Email verified successfully."}

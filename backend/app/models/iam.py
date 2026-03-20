@@ -2,6 +2,7 @@
 
 Reference: Pack C4 (Data Model — IAM section), Sprint 1 stories S-014, S-021.
 Phase 1A: parent_child_links table for explicit parent-child relationships.
+Phase 2B: TOTP 2FA columns + email verification on User model.
 Migration group: G1-IAM (no dependencies).
 """
 
@@ -10,6 +11,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
+    Boolean,
     DateTime,
     ForeignKey,
     Index,
@@ -81,6 +83,19 @@ class User(TimestampMixin, Base):
         String(20), nullable=False, default=UserStatus.ACTIVE.value
     )
     school_id: Mapped[uuid.UUID] = mapped_column(nullable=False, index=True)
+
+    # Phase 2B — TOTP two-factor authentication
+    totp_secret: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    totp_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    totp_verified_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    backup_codes: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # Phase 2B — Email verification
+    email_verified_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Relationships
     memberships: Mapped[list["Membership"]] = relationship(

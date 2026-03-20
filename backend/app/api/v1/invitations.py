@@ -1,6 +1,7 @@
 """Invitation code API endpoints: create, consume, revoke.
 
 Reference: S-040 — Invitation code endpoints
+Phase 2B: Hook invite consumption to send email verification OTP.
 - POST /invites/create  — Role: ADM (PERM-IAM:invite:create)
 - POST /invites/consume — Role: Authenticated user (PERM-IAM:invite:consume)
 - POST /invites/revoke  — Role: ADM (PERM-IAM:invite:revoke)
@@ -17,7 +18,7 @@ from app.core.dependencies import AuthContext, requires_permission
 from app.core.redis import get_redis
 from app.core.response import success_response
 from app.schemas.auth import InviteConsumeRequest, InviteCreateRequest, InviteRevokeRequest
-from app.services.auth import InvitationService
+from app.services.auth import EmailVerificationService, InvitationService
 
 router = APIRouter(prefix="/invites", tags=["invitations"])
 
@@ -79,6 +80,26 @@ async def consume_invite(
         school_id=auth.school_id,
         ip_address=_get_client_ip(request),
     )
+
+    # Phase 2B: Send email verification OTP on successful consumption
+    if result.get("membership_id"):
+        from sqlalchemy import select
+        from app.models.iam import User
+
+        user_result = await db.execute(
+            select(User).where(User.id == auth.user_id)
+        )
+        user = user_result.scalar_one_or_none()
+        if user and user.email_verified_at is None:
+            email_service = EmailVerificationService(db, redis)
+            await email_service.send_verification_otp(
+                user_id=auth.user_id,
+                school_id=auth.school_id,
+                email=user.email,
+                ip_address=_get_client_ip(request),
+            )
+            result["email_verification_required"] = True
+
     return success_response(result)
 
 
