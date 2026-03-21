@@ -521,14 +521,14 @@
 - [x] Security tests: CSRF, XSS, SQL injection, auth bypass, scope masking, password policy, role escalation
 - [x] All E2E + load + security tests in CI pipeline
 
-## Phase 7A — Production Environment & TLS
-- [ ] Complete docker-compose.prod.yml (all services, resource limits, managed DB/Redis URLs)
-- [ ] Create `nginx-prod.conf` — TLS, HSTS, CSP, X-Frame-Options, gzip, rate limiting
-- [ ] Create `infra/scripts/deploy.sh` — zero-downtime deploy with rollback
-- [ ] Create `infra/scripts/ssl-renew.sh` — Let's Encrypt cert renewal
-- [ ] Docker secrets for JWT_SECRET_KEY, DB password, SMTP password
-- [ ] Create `infra/scripts/healthcheck.sh` — comprehensive health (API, DB, Redis, disk, cert)
-- [ ] Document deployment in `infra/DEPLOYMENT.md`
+## Phase 7A — Production Environment & TLS ✅
+- [x] Complete docker-compose.prod.yml (all services, resource limits, managed DB/Redis URLs, ARQ worker, certbot)
+- [x] Enhance `nginx-prod.conf` — TLS, HSTS, CSP, X-Frame-Options, gzip, rate limiting, WebSocket support
+- [x] Create `infra/scripts/deploy.sh` — zero-downtime deploy with rollback
+- [x] Create `infra/scripts/ssl-renew.sh` — Let's Encrypt cert renewal (obtain/renew/status)
+- [x] Docker secrets for JWT_SECRET_KEY, DB password, SMTP password
+- [x] Create `infra/scripts/healthcheck.sh` — comprehensive health (API, DB, Redis, disk, cert, containers)
+- [x] Document deployment in `infra/DEPLOYMENT.md`
 
 ## Phase 8A — GDPR Compliance & Analytics Dashboard
 - [ ] `GET /users/{id}/data-export` — export all user data as JSON (ADM or self)

@@ -1,17 +1,24 @@
 # Production Environment — École Platform
 #
-# Reference: Phase 0A — Infrastructure Production Hardening
+# Reference: Phase 0A + Phase 7A — Infrastructure Production Hardening
 #
 # Prerequisites:
 #   1. Create .env.prod with all required vars (see .env.example)
 #   2. Place TLS certs in ./certs/ (fullchain.pem, privkey.pem)
+#      OR run ssl-renew.sh to obtain certs from Let's Encrypt
 #   3. Create Docker secrets files in ./secrets/:
-#        echo "your-jwt-secret" > infra/secrets/jwt_secret_key.txt
+#        openssl rand -hex 32 > infra/secrets/jwt_secret_key.txt
 #        echo "your-db-password" > infra/secrets/db_password.txt
 #        echo "your-smtp-password" > infra/secrets/smtp_password.txt
 #
 # Usage:
 #   docker compose -f infra/docker-compose.prod.yml --env-file .env.prod up -d
+#
+# Zero-downtime deploy:
+#   ./infra/scripts/deploy.sh
+#
+# Health check:
+#   ./infra/scripts/healthcheck.sh
 #
 # URLs (per F1):
 #   API: https://api.ecole-platform.example/api/v1
@@ -243,6 +250,79 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+
+  # ==================== ARQ Background Worker (Production) ====================
+  worker:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: ecole-prod-worker
+    command: ["python", "-m", "arq", "app.worker.WorkerSettings"]
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://ecole:ecole@postgres:5432/ecole_platform}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      JWT_SECRET_KEY_FILE: /run/secrets/jwt_secret_key
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      APP_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL:-WARNING}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD_FILE: /run/secrets/smtp_password
+      S3_ENDPOINT: ${S3_ENDPOINT}
+      S3_BUCKET: ${S3_BUCKET:-ecole-uploads}
+      S3_REGION: ${S3_REGION:-auto}
+      TZ: ${TZ:-Africa/Casablanca}
+    secrets:
+      - jwt_secret_key
+      - smtp_password
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ecole-prod-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+        reservations:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ==================== Certbot (Let's Encrypt) ====================
+  # Runs once to obtain/renew certs, then exits.
+  # Automated renewal via infra/scripts/ssl-renew.sh (cron).
+  certbot:
+    image: certbot/certbot:latest
+    container_name: ecole-prod-certbot
+    volumes:
+      - ./certs:/etc/letsencrypt
+      - certbot_webroot:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done'"
+    networks:
+      - ecole-prod-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+          cpus: "0.25"
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+    profiles:
+      - certbot
 
 # ==================== Docker Secrets ====================
 # In Docker Swarm: use `docker secret create`
