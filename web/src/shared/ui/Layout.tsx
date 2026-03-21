@@ -26,6 +26,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/admin/audit', labelKey: 'nav.adminAudit', icon: '📋', roles: ['ADM', 'DIR'] },
   { to: '/admin/justifications', labelKey: 'nav.adminJustifications', icon: '📝', roles: ['ADM'] },
   { to: '/admin/analytics', labelKey: 'nav.adminAnalytics', icon: '📈', roles: ['ADM', 'DIR'] },
+  { to: '/admin/batch-register', labelKey: 'nav.adminBatchRegister', icon: '📋', roles: ['ADM'] },
   { to: '/admin/settings', labelKey: 'nav.adminSettings', icon: '🏫', roles: ['ADM'] },
   { to: '/teacher', labelKey: 'nav.teacherClasses', icon: '🏫', roles: ['TCH'] },
   { to: '/teacher/courses', labelKey: 'nav.teacherCourses', icon: '📖', roles: ['TCH'] },

@@ -578,17 +578,17 @@
 - [ ] Integration tests: register PAR (with target_student_id → auto-link), register STD, register TCH
 
 ## Phase 4D — Registration & Profile UI (Web)
-- [ ] `RegisterPage.tsx` — multi-step: code input → role detected → personal info → role-specific fields → OTP
-- [ ] Step 1: enter code → validate → show role + school name
-- [ ] Step 2: email, full_name, phone, password (with policy checklist)
-- [ ] Step 3: role-specific fields (date_of_birth for STD, relationship_type for PAR, subject for TCH)
-- [ ] Step 4: email verification OTP input
-- [ ] Route `/register` + "Register" link on LoginPage
-- [ ] Profile edit: student section (student_number, date_of_birth, class_level)
-- [ ] Profile edit: parent section (relationship_type, CIN, address, profession, emergency_phone)
-- [ ] Profile edit: teacher section (employee_id, subject_specialty, qualification)
-- [ ] `BatchRegisterPage.tsx` — admin CSV upload for bulk registration
-- [ ] i18n translations (fr/ar/en) for all registration + profile fields
+- [x] `RegisterPage.tsx` — multi-step: code input → role detected → personal info → role-specific fields → OTP
+- [x] Step 1: enter code → validate → show role + school name
+- [x] Step 2: email, full_name, phone, password (with policy checklist)
+- [x] Step 3: role-specific fields (date_of_birth for STD, relationship_type for PAR, subject for TCH)
+- [x] Step 4: email verification OTP input
+- [x] Route `/register` + "Register" link on LoginPage
+- [x] Profile edit: student section (student_number, date_of_birth, class_level)
+- [x] Profile edit: parent section (relationship_type, CIN, address, profession, emergency_phone)
+- [x] Profile edit: teacher section (employee_id, subject_specialty, qualification)
+- [x] `BatchRegisterPage.tsx` — admin CSV upload for bulk registration
+- [x] i18n translations (fr/ar/en) for all registration + profile fields
 
 ## Phase 5C — Registration & Profile Mobile
 - [ ] `register_screen.dart` — stepper flow (code → info → role fields → OTP)

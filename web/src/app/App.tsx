@@ -29,6 +29,8 @@ import { AuditLogPage } from '@/features/admin/AuditLogPage';
 import { SchoolSettingsPage } from '@/features/admin/SchoolSettingsPage';
 import { JustificationReviewPage } from '@/features/admin/JustificationReviewPage';
 import { AnalyticsPage } from '@/features/admin/AnalyticsPage';
+import { BatchRegisterPage } from '@/features/admin/BatchRegisterPage';
+import { RegisterPage } from '@/features/auth/RegisterPage';
 import { ClassesPage as TeacherClassesPage } from '@/features/teacher/ClassesPage';
 import { CoursesPage as TeacherCoursesPage } from '@/features/teacher/CoursesPage';
 import { AssignmentFormPage } from '@/features/teacher/AssignmentFormPage';
@@ -54,6 +56,7 @@ function App() {
     <Routes>
       {/* Public routes */}
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
 
       {/* Protected routes with layout */}
       <Route
@@ -117,6 +120,14 @@ function App() {
           element={
             <ProtectedRoute roles={['ADM', 'DIR']}>
               <AnalyticsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/batch-register"
+          element={
+            <ProtectedRoute roles={['ADM']}>
+              <BatchRegisterPage />
             </ProtectedRoute>
           }
         />

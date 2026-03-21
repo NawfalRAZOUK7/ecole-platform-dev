@@ -3,10 +3,12 @@
  *
  * Reference: S-081 — Profile / /me page
  * Phase 4C (from 2A) — Password change with policy feedback
+ * Phase 4D — Role-specific profile sections (student, parent, teacher)
  * Calls POST /auth/change-password with current + new password.
+ * Calls GET/PUT /me/profile for role-specific profile fields.
  */
 
-import { useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/services/auth/AuthContext';
@@ -36,6 +38,63 @@ export function ProfilePage() {
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
+
+  // Phase 4D — Role-specific profile state
+  const [profileData, setProfileData] = useState<Record<string, any> | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [profileSuccess, setProfileSuccess] = useState(false);
+  const [showProfileEdit, setShowProfileEdit] = useState(false);
+  const [profileForm, setProfileForm] = useState<Record<string, string>>({});
+
+  const fetchProfile = useCallback(async () => {
+    if (!user) return;
+    setProfileLoading(true);
+    try {
+      const res = await api.get<Record<string, any>>('/me/profile');
+      setProfileData(res.data);
+      // Init form from profile data
+      const p = res.data.student_profile || res.data.parent_profile || res.data.teacher_profile || {};
+      const form: Record<string, string> = {};
+      for (const [k, v] of Object.entries(p)) {
+        if (v !== null && v !== undefined && typeof v !== 'object') form[k] = String(v);
+      }
+      setProfileForm(form);
+    } catch {
+      // Profile may not exist yet — that's OK
+    } finally {
+      setProfileLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => { fetchProfile(); }, [fetchProfile]);
+
+  async function handleProfileSave(e: FormEvent) {
+    e.preventDefault();
+    setProfileError(null);
+    setProfileSuccess(false);
+    setProfileLoading(true);
+    try {
+      const body: Record<string, string | null> = {};
+      for (const [k, v] of Object.entries(profileForm)) {
+        if (!['id', 'user_id', 'school_id', 'created_at', 'updated_at'].includes(k)) {
+          body[k] = v || null;
+        }
+      }
+      await api.put('/me/profile', body);
+      setProfileSuccess(true);
+      await fetchProfile();
+      setShowProfileEdit(false);
+    } catch (err) {
+      setProfileError(err instanceof ApiClientError ? err.message : t('app.error'));
+    } finally {
+      setProfileLoading(false);
+    }
+  }
+
+  function updateProfileField(key: string, value: string) {
+    setProfileForm((prev) => ({ ...prev, [key]: value }));
+  }
 
   async function handleLogout() {
     await logout();
@@ -129,6 +188,140 @@ export function ProfilePage() {
             <LanguageSwitcher />
           </div>
         </div>
+
+        {/* Phase 4D — Role-Specific Profile Section */}
+        {user.role && ['STD', 'PAR', 'TCH'].includes(user.role) && (
+          <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 16, marginTop: 16 }}>
+            <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>
+              {user.role === 'STD' && t('register.studentSection')}
+              {user.role === 'PAR' && t('register.parentSection')}
+              {user.role === 'TCH' && t('register.teacherSection')}
+            </h3>
+
+            <ErrorBanner error={profileError} onDismiss={() => setProfileError(null)} />
+            {profileSuccess && (
+              <div style={{ padding: 12, background: '#ecfdf5', border: '1px solid var(--color-success)', borderRadius: 'var(--radius)', marginBottom: 12, fontSize: 14, color: 'var(--color-success)' }}>
+                {t('register.profileSaved')}
+              </div>
+            )}
+
+            {!showProfileEdit ? (
+              <div>
+                {/* Display current profile fields */}
+                {user.role === 'STD' && profileData?.student_profile && (
+                  <div className="profile-fields">
+                    <div className="profile-field"><label>{t('register.studentNumber')}</label><span>{profileData.student_profile.student_number || '—'}</span></div>
+                    <div className="profile-field"><label>{t('register.dateOfBirth')}</label><span>{profileData.student_profile.date_of_birth || '—'}</span></div>
+                    <div className="profile-field"><label>{t('register.classLevel')}</label><span>{profileData.student_profile.class_level || '—'}</span></div>
+                    <div className="profile-field"><label>{t('register.nationality')}</label><span>{profileData.student_profile.nationality || '—'}</span></div>
+                  </div>
+                )}
+                {user.role === 'PAR' && profileData?.parent_profile && (
+                  <div className="profile-fields">
+                    <div className="profile-field"><label>{t('register.relationshipType')}</label><span>{profileData.parent_profile.relationship_type || '—'}</span></div>
+                    <div className="profile-field"><label>{t('register.cin')}</label><span>{profileData.parent_profile.cin_number || '—'}</span></div>
+                    <div className="profile-field"><label>{t('register.address')}</label><span>{profileData.parent_profile.address || '—'}</span></div>
+                    <div className="profile-field"><label>{t('register.profession')}</label><span>{profileData.parent_profile.profession || '—'}</span></div>
+                    <div className="profile-field"><label>{t('register.emergencyPhone')}</label><span>{profileData.parent_profile.emergency_phone || '—'}</span></div>
+                  </div>
+                )}
+                {user.role === 'TCH' && profileData?.teacher_profile && (
+                  <div className="profile-fields">
+                    <div className="profile-field"><label>{t('register.employeeId')}</label><span>{profileData.teacher_profile.employee_id || '—'}</span></div>
+                    <div className="profile-field"><label>{t('register.subjectSpecialty')}</label><span>{profileData.teacher_profile.subject_specialty || '—'}</span></div>
+                    <div className="profile-field"><label>{t('register.qualification')}</label><span>{profileData.teacher_profile.qualification || '—'}</span></div>
+                  </div>
+                )}
+                {!profileData?.student_profile && !profileData?.parent_profile && !profileData?.teacher_profile && !profileLoading && (
+                  <p style={{ fontSize: 14, color: 'var(--color-text-secondary)' }}>{t('register.noProfile')}</p>
+                )}
+                <button className="btn btn-secondary" onClick={() => setShowProfileEdit(true)} style={{ marginTop: 8 }}>
+                  {t('register.editProfile')}
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleProfileSave}>
+                {/* Student edit form */}
+                {user.role === 'STD' && (
+                  <>
+                    <div className="form-field" style={{ marginBottom: 12 }}>
+                      <label>{t('register.studentNumber')}</label>
+                      <input type="text" className="filter-input" value={profileForm.student_number || ''} disabled style={{ width: '100%', background: 'var(--color-surface)' }} />
+                    </div>
+                    <div className="form-field" style={{ marginBottom: 12 }}>
+                      <label>{t('register.dateOfBirth')}</label>
+                      <input type="date" className="filter-input" value={profileForm.date_of_birth || ''} onChange={(e) => updateProfileField('date_of_birth', e.target.value)} style={{ width: '100%' }} />
+                    </div>
+                    <div className="form-field" style={{ marginBottom: 12 }}>
+                      <label>{t('register.classLevel')}</label>
+                      <input type="text" className="filter-input" value={profileForm.class_level || ''} onChange={(e) => updateProfileField('class_level', e.target.value)} style={{ width: '100%' }} />
+                    </div>
+                    <div className="form-field" style={{ marginBottom: 12 }}>
+                      <label>{t('register.nationality')}</label>
+                      <input type="text" className="filter-input" value={profileForm.nationality || ''} onChange={(e) => updateProfileField('nationality', e.target.value)} style={{ width: '100%' }} />
+                    </div>
+                  </>
+                )}
+                {/* Parent edit form */}
+                {user.role === 'PAR' && (
+                  <>
+                    <div className="form-field" style={{ marginBottom: 12 }}>
+                      <label>{t('register.relationshipType')}</label>
+                      <select className="filter-select" value={profileForm.relationship_type || ''} onChange={(e) => updateProfileField('relationship_type', e.target.value)} style={{ width: '100%' }}>
+                        <option value="">—</option>
+                        <option value="father">{t('register.relationship_father')}</option>
+                        <option value="mother">{t('register.relationship_mother')}</option>
+                        <option value="guardian">{t('register.relationship_guardian')}</option>
+                        <option value="other">{t('register.relationship_other')}</option>
+                      </select>
+                    </div>
+                    <div className="form-field" style={{ marginBottom: 12 }}>
+                      <label>{t('register.cin')}</label>
+                      <input type="text" className="filter-input" value={profileForm.cin_number || ''} onChange={(e) => updateProfileField('cin_number', e.target.value)} style={{ width: '100%' }} />
+                    </div>
+                    <div className="form-field" style={{ marginBottom: 12 }}>
+                      <label>{t('register.address')}</label>
+                      <textarea className="filter-input" value={profileForm.address || ''} onChange={(e) => updateProfileField('address', e.target.value)} style={{ width: '100%', minHeight: 60 }} />
+                    </div>
+                    <div className="form-field" style={{ marginBottom: 12 }}>
+                      <label>{t('register.profession')}</label>
+                      <input type="text" className="filter-input" value={profileForm.profession || ''} onChange={(e) => updateProfileField('profession', e.target.value)} style={{ width: '100%' }} />
+                    </div>
+                    <div className="form-field" style={{ marginBottom: 12 }}>
+                      <label>{t('register.emergencyPhone')}</label>
+                      <input type="tel" className="filter-input" value={profileForm.emergency_phone || ''} onChange={(e) => updateProfileField('emergency_phone', e.target.value)} style={{ width: '100%' }} />
+                    </div>
+                  </>
+                )}
+                {/* Teacher edit form */}
+                {user.role === 'TCH' && (
+                  <>
+                    <div className="form-field" style={{ marginBottom: 12 }}>
+                      <label>{t('register.employeeId')}</label>
+                      <input type="text" className="filter-input" value={profileForm.employee_id || ''} disabled style={{ width: '100%', background: 'var(--color-surface)' }} />
+                    </div>
+                    <div className="form-field" style={{ marginBottom: 12 }}>
+                      <label>{t('register.subjectSpecialty')}</label>
+                      <input type="text" className="filter-input" value={profileForm.subject_specialty || ''} onChange={(e) => updateProfileField('subject_specialty', e.target.value)} style={{ width: '100%' }} />
+                    </div>
+                    <div className="form-field" style={{ marginBottom: 12 }}>
+                      <label>{t('register.qualification')}</label>
+                      <input type="text" className="filter-input" value={profileForm.qualification || ''} onChange={(e) => updateProfileField('qualification', e.target.value)} style={{ width: '100%' }} />
+                    </div>
+                  </>
+                )}
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button type="submit" className="btn btn-primary" disabled={profileLoading}>
+                    {profileLoading ? t('app.loading') : t('app.save')}
+                  </button>
+                  <button type="button" className="btn btn-secondary" onClick={() => { setShowProfileEdit(false); setProfileError(null); setProfileSuccess(false); }}>
+                    {t('app.cancel')}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
 
         {/* Password Change Section */}
         <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 16, marginTop: 16 }}>

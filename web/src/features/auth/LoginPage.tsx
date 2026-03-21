@@ -7,7 +7,7 @@
  */
 
 import { useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/services/auth/AuthContext';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
@@ -210,6 +210,12 @@ export function LoginPage() {
           >
             {isLoading ? t('login.loading') : t('login.submit')}
           </button>
+
+          <div style={{ textAlign: 'center', marginTop: 12 }}>
+            <Link to="/register" style={{ color: 'var(--color-primary)', fontSize: 14 }}>
+              {t('register.hasCode')}
+            </Link>
+          </div>
         </form>
       </div>
     </div>
