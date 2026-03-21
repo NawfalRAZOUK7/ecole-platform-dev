@@ -510,16 +510,16 @@
 - [x] **From 3D:** Search bar + filter chips + sort toggle on mobile list screens (SearchFilterBar widget)
 - [x] Role-based shell navigation (show admin/teacher tabs by role)
 
-## Phase 6A — E2E Tests, Load Testing & Security Audit
-- [ ] Install Playwright: `npm install -D @playwright/test`
-- [ ] E2E J1: Login → feed → notification → logout
-- [ ] E2E J2: Teacher login → create assignment → verify list
-- [ ] E2E J3: Student login → submit file → verify submissions
-- [ ] E2E J4: Admin login → create invitation → verify → revoke
-- [ ] E2E J5: Login with 2FA → TOTP verification flow
-- [ ] k6 load tests: 100 concurrent logins, 500 GET requests, 50 file uploads, 200 WS connections
-- [ ] Security tests: CSRF, XSS, SQL injection, auth bypass, scope masking
-- [ ] All E2E + load + security tests in CI pipeline
+## Phase 6A — E2E Tests, Load Testing & Security Audit ✅
+- [x] Install Playwright: `npm install -D @playwright/test`
+- [x] E2E J1: Login → feed → notification → logout
+- [x] E2E J2: Teacher login → create assignment → verify list
+- [x] E2E J3: Student login → submit file → verify submissions
+- [x] E2E J4: Admin login → create invitation → verify → revoke
+- [x] E2E J5: Login with 2FA → TOTP verification flow
+- [x] k6 load tests: 100 concurrent logins, 500 GET requests, 50 file uploads, 200 WS connections
+- [x] Security tests: CSRF, XSS, SQL injection, auth bypass, scope masking, password policy, role escalation
+- [x] All E2E + load + security tests in CI pipeline
 
 ## Phase 7A — Production Environment & TLS
 - [ ] Complete docker-compose.prod.yml (all services, resource limits, managed DB/Redis URLs)
