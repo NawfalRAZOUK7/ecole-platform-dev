@@ -563,18 +563,18 @@
 - [ ] Integration tests for profile CRUD
 
 ## Phase 2C — Registration with Invitation Code
-- [ ] Create `POST /auth/register` — public endpoint (no auth required)
-- [ ] Input: code, email, full_name, phone, password, profile_data (role-specific)
-- [ ] Validate code (not expired, not consumed, not revoked)
-- [ ] Create user + membership + role-specific profile in one transaction
-- [ ] If code has target_student_id + role=PAR → auto-create parent_child_link
-- [ ] Enforce password policy (Phase 2A)
-- [ ] Send email verification OTP (Phase 2B)
-- [ ] Return JWT tokens (logged in immediately)
-- [ ] Rate limiting on /auth/register (5/15min)
-- [ ] Validate email not already registered for that school
-- [ ] Audit trail: user.register event
-- [ ] `POST /admin/register-batch` — CSV upload for bulk account creation
+- [x] Create `POST /auth/register` — public endpoint (no auth required)
+- [x] Input: code, email, full_name, phone, password, profile_data (role-specific)
+- [x] Validate code (not expired, not consumed, not revoked)
+- [x] Create user + membership + role-specific profile in one transaction
+- [x] If code has target_student_id + role=PAR → auto-create parent_child_link
+- [x] Enforce password policy (Phase 2A)
+- [x] Send email verification OTP (Phase 2B)
+- [x] Return JWT tokens (logged in immediately)
+- [x] Rate limiting on /auth/register (5/15min)
+- [x] Validate email not already registered for that school
+- [x] Audit trail: user.register event
+- [x] `POST /admin/register-batch` — bulk account creation endpoint
 - [ ] Integration tests: register PAR (with target_student_id → auto-link), register STD, register TCH
 
 ## Phase 4D — Registration & Profile UI (Web)

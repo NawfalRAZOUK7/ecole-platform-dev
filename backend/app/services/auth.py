@@ -42,9 +42,14 @@ from app.models.iam import (
     AccountRecoveryRequest,
     InvitationCode,
     Membership,
+    ParentChildLink,
+    ParentProfile,
     Session,
+    StudentProfile,
+    TeacherProfile,
     User,
 )
+from app.core.password_policy import password_validator
 from app.services.audit import AuditService
 
 logger = logging.getLogger(__name__)
@@ -266,6 +271,197 @@ class AuthService:
             "token_type": "bearer",
             "expires_in": settings.access_token_expire_minutes * 60,
             "session_id": session.id,
+        }
+
+    # ------------------------------------------------------------------
+    # Register with invitation code (Phase 2C)
+    # ------------------------------------------------------------------
+    async def register(
+        self,
+        code: str,
+        email: str,
+        full_name: str,
+        password: str,
+        phone: str | None = None,
+        profile_data: dict | None = None,
+        source: str = "web",
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+        device_name: str | None = None,
+    ) -> dict[str, Any]:
+        """Register a new user with an invitation code.
+
+        Validates code, enforces password policy, creates user + membership +
+        role-specific profile in a single transaction. Auto-creates parent_child_link
+        if code has target_student_id and role is PAR.
+        Returns JWT tokens so the user is logged in immediately.
+        """
+        profile_data = profile_data or {}
+
+        # 1. Validate invitation code
+        code_hash = hashlib.sha256(code.encode()).hexdigest()
+        result = await self.db.execute(
+            select(InvitationCode).where(InvitationCode.code_hash == code_hash)
+        )
+        invite = result.scalar_one_or_none()
+
+        if invite is None:
+            raise NotFoundError("Invalid invitation code", error_code="ERR-IAM-404")
+
+        if invite.expires_at and invite.expires_at < datetime.now(timezone.utc):
+            raise AuthenticationError(
+                "Invitation code has expired",
+                error_code="ERR-IAM-EXPIRED",
+            )
+
+        if invite.consumed_by is not None:
+            raise ConflictError(
+                "Invitation code has already been used",
+                error_code="ERR-IAM-CONFLICT",
+            )
+
+        school_id = invite.school_id
+        role = invite.role_target
+
+        # 2. Check email uniqueness within this school
+        existing = await self.db.execute(
+            select(User).where(User.email == email, User.school_id == school_id)
+        )
+        if existing.scalar_one_or_none() is not None:
+            raise ConflictError(
+                "An account with this email already exists for this school",
+                error_code="ERR-IAM-CONFLICT",
+            )
+
+        # 3. Enforce password policy
+        password_validator.validate(password, email=email, full_name=full_name)
+
+        # 4. Create user
+        user = User(
+            email=email,
+            full_name=full_name,
+            phone=phone,
+            password_hash=hash_password(password),
+            status="active",
+            school_id=school_id,
+        )
+        self.db.add(user)
+        await self.db.flush()
+
+        # 5. Create membership
+        membership = Membership(
+            user_id=user.id,
+            school_id=school_id,
+            role_code=role,
+            status="active",
+        )
+        self.db.add(membership)
+        await self.db.flush()
+
+        # 6. Create role-specific profile
+        if role == "STD":
+            profile = StudentProfile(
+                user_id=user.id,
+                school_id=school_id,
+                student_number=profile_data.get("student_number"),
+                date_of_birth=profile_data.get("date_of_birth"),
+                gender=profile_data.get("gender"),
+                class_level=profile_data.get("class_level"),
+                nationality=profile_data.get("nationality"),
+                guardian_notes=profile_data.get("guardian_notes"),
+            )
+            self.db.add(profile)
+        elif role == "PAR":
+            profile = ParentProfile(
+                user_id=user.id,
+                school_id=school_id,
+                relationship_type=profile_data.get("relationship_type"),
+                cin_number=profile_data.get("cin_number"),
+                address=profile_data.get("address"),
+                profession=profile_data.get("profession"),
+                emergency_phone=profile_data.get("emergency_phone"),
+            )
+            self.db.add(profile)
+        elif role == "TCH":
+            profile = TeacherProfile(
+                user_id=user.id,
+                school_id=school_id,
+                employee_id=profile_data.get("employee_id"),
+                subject_specialty=profile_data.get("subject_specialty"),
+                qualification=profile_data.get("qualification"),
+                hire_date=profile_data.get("hire_date"),
+            )
+            self.db.add(profile)
+        await self.db.flush()
+
+        # 7. Auto-create parent_child_link if code has target_student_id
+        if role == "PAR" and invite.target_student_id:
+            link = ParentChildLink(
+                parent_user_id=user.id,
+                child_user_id=invite.target_student_id,
+                school_id=school_id,
+                status="active",
+                linked_at=datetime.now(timezone.utc),
+                linked_by=invite.issuer_user_id,
+            )
+            self.db.add(link)
+            await self.db.flush()
+
+        # 8. Consume the invitation code
+        invite.consumed_by = user.id
+        invite.consumed_at = datetime.now(timezone.utc)
+
+        # 9. Create session and generate tokens
+        cid = get_correlation_id()
+        session = Session(
+            user_id=user.id,
+            school_id=school_id,
+            source=source,
+            correlation_id=uuid.UUID(cid) if cid else None,
+            user_agent=user_agent[:500] if user_agent else None,
+            ip_address=ip_address[:45] if ip_address else None,
+            device_name=device_name[:200] if device_name else None,
+        )
+        self.db.add(session)
+        await self.db.flush()
+
+        access_token = create_access_token(user.id, role, school_id, session.id)
+        refresh_token, refresh_jti = create_refresh_token(user.id, school_id, session.id)
+        csrf_token = create_csrf_token()
+
+        # Store refresh JTI and CSRF in Redis
+        await self.redis.setex(
+            f"refresh_jti:{session.id}",
+            settings.refresh_token_expire_days * 86400,
+            refresh_jti,
+        )
+        await self.redis.setex(
+            f"csrf:{session.id}",
+            settings.refresh_token_expire_days * 86400,
+            csrf_token,
+        )
+
+        # 10. Audit event
+        await self.audit.log_event(
+            school_id=school_id,
+            actor_id=user.id,
+            action_type="USER_REGISTERED",
+            outcome="success",
+            target_type="user",
+            target_id=user.id,
+            ip_address=ip_address,
+        )
+
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "csrf_token": csrf_token,
+            "token_type": "bearer",
+            "expires_in": settings.access_token_expire_minutes * 60,
+            "user_id": user.id,
+            "school_id": school_id,
+            "role": role,
+            "email_verification_required": True,
         }
 
     # ------------------------------------------------------------------

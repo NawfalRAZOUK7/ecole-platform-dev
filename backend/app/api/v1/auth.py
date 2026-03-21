@@ -24,6 +24,7 @@ from app.schemas.auth import (
     ChangePasswordRequest,
     EmailVerifyRequest,
     LoginRequest,
+    RegisterRequest,
     TwoFactorDisableRequest,
     TwoFactorVerifyLoginRequest,
     TwoFactorVerifySetupRequest,
@@ -151,6 +152,86 @@ async def login(
             "access_token": result["access_token"],
             "token_type": result["token_type"],
             "expires_in": result["expires_in"],
+        }
+    )
+
+
+# ---------------------------------------------------------------------------
+# POST /auth/register (Phase 2C) — Public
+# ---------------------------------------------------------------------------
+@router.post("/register", status_code=201, summary="Register with invitation code", response_description="JWT tokens + user info")
+async def register(
+    body: RegisterRequest,
+    request: Request,
+    response: Response,
+    db: AsyncSession = Depends(get_db),
+    redis: aioredis.Redis = Depends(get_redis),
+):
+    """Register a new account using an invitation code.
+
+    Creates user + membership + role-specific profile in one transaction.
+    Returns JWT tokens so the user is logged in immediately.
+    Rate limited: 5 registrations per 15 minutes per IP (auth category).
+    """
+    user_agent = request.headers.get("User-Agent")
+    service = AuthService(db, redis)
+    result = await service.register(
+        code=body.code,
+        email=body.email,
+        full_name=body.full_name,
+        password=body.password,
+        phone=body.phone,
+        profile_data=body.profile_data,
+        source="web",
+        ip_address=_get_client_ip(request),
+        user_agent=user_agent,
+        device_name=_parse_device_name(user_agent),
+    )
+
+    # Send email verification OTP
+    from app.services.auth import EmailVerificationService
+
+    email_service = EmailVerificationService(db, redis)
+    await email_service.send_verification_otp(
+        user_id=result["user_id"],
+        school_id=result["school_id"],
+        email=body.email,
+        ip_address=_get_client_ip(request),
+    )
+
+    await db.commit()
+
+    # Set refresh token cookie (same pattern as login)
+    response.set_cookie(
+        key="refresh_token",
+        value=result["refresh_token"],
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        path="/api/v1/auth",
+        max_age=7 * 24 * 3600,
+    )
+
+    # Set CSRF cookie
+    response.set_cookie(
+        key="csrf_token",
+        value=result["csrf_token"],
+        httponly=False,
+        secure=True,
+        samesite="lax",
+        path="/api/v1/auth",
+        max_age=7 * 24 * 3600,
+    )
+
+    return success_response(
+        {
+            "access_token": result["access_token"],
+            "token_type": result["token_type"],
+            "expires_in": result["expires_in"],
+            "user_id": str(result["user_id"]),
+            "school_id": str(result["school_id"]),
+            "role": result["role"],
+            "email_verification_required": result["email_verification_required"],
         }
     )
 

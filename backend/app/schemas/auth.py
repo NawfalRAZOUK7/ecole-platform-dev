@@ -2,11 +2,13 @@
 
 Reference: S-030 through S-033, S-040, S-041 — Auth, invitation, and recovery flows.
 Phase 2B: TOTP 2FA schemas (setup, verify, disable) and email verification.
+Phase 2C: Registration with invitation code.
 """
 
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, Field
@@ -129,3 +131,30 @@ class EmailVerifyRequest(BaseModel):
     user_id: UUID
     school_id: UUID
     otp: str = Field(..., min_length=6, max_length=6, description="6-digit email verification OTP")
+
+
+# ---------------------------------------------------------------------------
+# Registration with invitation code (Phase 2C)
+# ---------------------------------------------------------------------------
+class RegisterRequest(BaseModel):
+    code: str = Field(..., min_length=8, max_length=8, description="8-char invitation code")
+    email: EmailStr
+    full_name: str = Field(..., min_length=1, max_length=200)
+    phone: str | None = Field(None, max_length=20)
+    password: str = Field(..., min_length=12, description="Password (min 12 chars, Phase 2A policy)")
+    profile_data: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Role-specific profile fields (e.g. date_of_birth for STD, relationship_type for PAR)",
+    )
+
+
+class BatchRegisterItem(BaseModel):
+    email: EmailStr
+    full_name: str = Field(..., min_length=1, max_length=200)
+    role: str = Field(..., description="Role code: STD, PAR, TCH")
+    phone: str | None = Field(None, max_length=20)
+    class_code: str | None = Field(None, description="Class code for auto-enrollment (optional)")
+
+
+class BatchRegisterRequest(BaseModel):
+    users: list[BatchRegisterItem] = Field(..., min_length=1, max_length=100)

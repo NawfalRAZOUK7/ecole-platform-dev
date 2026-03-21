@@ -15,11 +15,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, requires_permission, verify_school_boundary
-from app.core.exceptions import NotFoundError, ValidationError
+from app.core.exceptions import ConflictError, NotFoundError, ValidationError
+from app.core.password_policy import password_validator
 from app.core.response import list_response, success_response
+from app.core.security import hash_password
 from app.models.audit import AuditLog
 from app.models.erp import AbsenceJustification
 from app.models.iam import InvitationCode, Membership, Session, User
+from app.schemas.auth import BatchRegisterRequest
 from app.services.audit import AuditService
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -503,3 +506,116 @@ async def list_justifications(
 
     next_cursor = rows[-1].created_at.isoformat() if has_more and rows else None
     return list_response(data, next_cursor=next_cursor, has_more=has_more)
+
+
+# ---------------------------------------------------------------------------
+# POST /admin/register-batch — Bulk create accounts (Phase 2C)
+# ---------------------------------------------------------------------------
+@router.post("/register-batch", status_code=201, summary="Bulk register users")
+async def register_batch(
+    body: BatchRegisterRequest,
+    request: Request,
+    auth: AuthContext = Depends(requires_permission(ADMIN_PERM)),
+    db: AsyncSession = Depends(get_db),
+):
+    """Bulk-create user accounts from a list.
+
+    For each entry: creates user with a generated password, membership, and
+    invitation code (consumed immediately). Skips entries where email already exists.
+    Returns created accounts with their temporary passwords.
+    """
+    import secrets
+    import hashlib
+    from datetime import datetime, timezone
+
+    audit = AuditService(db)
+    school_id = auth.school_id
+    results: list[dict] = []
+    errors: list[dict] = []
+
+    for item in body.users:
+        # Check email uniqueness
+        existing = await db.execute(
+            select(User).where(User.email == item.email, User.school_id == school_id)
+        )
+        if existing.scalar_one_or_none() is not None:
+            errors.append({
+                "email": item.email,
+                "error": "Email already exists for this school",
+            })
+            continue
+
+        # Validate role
+        if item.role not in ("STD", "PAR", "TCH", "ADM", "DIR"):
+            errors.append({
+                "email": item.email,
+                "error": f"Invalid role: {item.role}",
+            })
+            continue
+
+        # Generate temporary password (16 chars, meets policy)
+        temp_password = secrets.token_urlsafe(12) + "A1!"
+
+        # Create user
+        user = User(
+            email=item.email,
+            full_name=item.full_name,
+            phone=item.phone,
+            password_hash=hash_password(temp_password),
+            status="active",
+            school_id=school_id,
+        )
+        db.add(user)
+        await db.flush()
+
+        # Create membership
+        membership = Membership(
+            user_id=user.id,
+            school_id=school_id,
+            role_code=item.role,
+            status="active",
+        )
+        db.add(membership)
+
+        # Create a consumed invitation code for audit trail
+        code = secrets.token_hex(4).upper()
+        code_hash = hashlib.sha256(code.encode()).hexdigest()
+        invite = InvitationCode(
+            school_id=school_id,
+            issuer_user_id=auth.user_id,
+            code_hash=code_hash,
+            role_target=item.role,
+            consumed_by=user.id,
+            consumed_at=datetime.now(timezone.utc),
+            expires_at=datetime.now(timezone.utc),
+        )
+        db.add(invite)
+        await db.flush()
+
+        # Audit
+        await audit.log_event(
+            school_id=school_id,
+            actor_id=auth.user_id,
+            action_type="USER_BATCH_REGISTERED",
+            outcome="success",
+            target_type="user",
+            target_id=user.id,
+            ip_address=_get_client_ip(request),
+        )
+
+        results.append({
+            "user_id": str(user.id),
+            "email": item.email,
+            "full_name": item.full_name,
+            "role": item.role,
+            "temp_password": temp_password,
+        })
+
+    await db.commit()
+
+    return success_response({
+        "created": results,
+        "errors": errors,
+        "total_created": len(results),
+        "total_errors": len(errors),
+    })

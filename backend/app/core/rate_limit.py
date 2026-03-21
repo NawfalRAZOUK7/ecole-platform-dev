@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 # Auth endpoints: strict (5 per 15 min)
 AUTH_PATHS = {
     "/api/v1/auth/login",
+    "/api/v1/auth/register",
     "/api/v1/auth/refresh",
     "/api/v1/auth/2fa/verify",
     "/api/v1/auth/verify-email",
