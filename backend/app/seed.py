@@ -37,7 +37,10 @@ from app.models.iam import (
     InvitationCode,
     Membership,
     ParentChildLink,
+    ParentProfile,
     Session,
+    StudentProfile,
+    TeacherProfile,
     User,
 )
 from app.models.lms import (
@@ -109,7 +112,9 @@ async def clear_all(session: AsyncSession) -> None:
             "assessments, assignments, courses, justification_reviews, "
             "absence_justifications, attendance_records, attendance_sessions, "
             "teacher_assignments, enrollments, classes, periods, academic_years, "
-            "writing_attempts, ai_preferences, parent_child_links, "
+            "writing_attempts, ai_preferences, "
+            "student_profiles, parent_profiles, teacher_profiles, "
+            "parent_child_links, "
             "account_recovery_requests, invitation_codes, sessions, memberships, "
             "users CASCADE"
         )
@@ -580,6 +585,84 @@ async def seed_audit(session: AsyncSession) -> None:
     print("  [Audit] 3 audit log entries")
 
 
+async def seed_profiles(session: AsyncSession) -> None:
+    """Seed role-specific profiles for all test users (Phase 1B)."""
+    student_profiles = [
+        StudentProfile(
+            user_id=STUDENT_1_ID,
+            school_id=SCHOOL_ID,
+            student_number="STD-2025-001",
+            date_of_birth=date(2013, 5, 15),
+            gender="male",
+            class_level="6eme",
+            nationality="Marocaine",
+        ),
+        StudentProfile(
+            user_id=STUDENT_2_ID,
+            school_id=SCHOOL_ID,
+            student_number="STD-2025-002",
+            date_of_birth=date(2013, 8, 22),
+            gender="female",
+            class_level="6eme",
+            nationality="Marocaine",
+        ),
+        StudentProfile(
+            user_id=STUDENT_3_ID,
+            school_id=SCHOOL_ID,
+            student_number="STD-2025-003",
+            date_of_birth=date(2013, 11, 3),
+            gender="male",
+            class_level="6eme",
+            nationality="Marocaine",
+        ),
+    ]
+    session.add_all(student_profiles)
+
+    parent_profiles = [
+        ParentProfile(
+            user_id=PARENT_1_ID,
+            school_id=SCHOOL_ID,
+            relationship_type="father",
+            cin_number="AB123456",
+            address="12 Rue des Orangers, Casablanca",
+            profession="Ingenieur",
+            emergency_phone="+212612345678",
+        ),
+        ParentProfile(
+            user_id=PARENT_2_ID,
+            school_id=SCHOOL_ID,
+            relationship_type="mother",
+            cin_number="CD789012",
+            address="45 Avenue Mohammed V, Casablanca",
+            profession="Medecin",
+            emergency_phone="+212698765432",
+        ),
+    ]
+    session.add_all(parent_profiles)
+
+    teacher_profiles = [
+        TeacherProfile(
+            user_id=TEACHER_1_ID,
+            school_id=SCHOOL_ID,
+            employee_id="TCH-2020-001",
+            subject_specialty="Mathematiques",
+            qualification="Licence en Mathematiques",
+            hire_date=date(2020, 9, 1),
+        ),
+        TeacherProfile(
+            user_id=TEACHER_2_ID,
+            school_id=SCHOOL_ID,
+            employee_id="TCH-2021-002",
+            subject_specialty="Francais",
+            qualification="Master en Lettres Francaises",
+            hire_date=date(2021, 9, 1),
+        ),
+    ]
+    session.add_all(teacher_profiles)
+    await session.flush()
+    print("  [IAM] 3 student profiles, 2 parent profiles, 2 teacher profiles")
+
+
 async def seed_parent_child_links(session: AsyncSession) -> None:
     """Seed parent-child links — explicit parent-student relationships (Phase 1A)."""
     links = [
@@ -627,6 +710,7 @@ async def main() -> None:
 
         print("\nSeeding domains:")
         await seed_iam(session)
+        await seed_profiles(session)
         await seed_parent_child_links(session)
         await seed_erp(session)
         await seed_lms(session)

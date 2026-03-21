@@ -12,9 +12,11 @@ from datetime import datetime
 
 from sqlalchemy import (
     Boolean,
+    Date,
     DateTime,
     ForeignKey,
     Index,
+    Integer,
     String,
     Text,
     UniqueConstraint,
@@ -59,6 +61,19 @@ class RecoveryStatus(str, enum.Enum):
 class LinkStatus(str, enum.Enum):
     ACTIVE = "active"
     REVOKED = "revoked"
+
+
+class Gender(str, enum.Enum):
+    MALE = "male"
+    FEMALE = "female"
+    OTHER = "other"
+
+
+class RelationshipType(str, enum.Enum):
+    FATHER = "father"
+    MOTHER = "mother"
+    GUARDIAN = "guardian"
+    OTHER = "other"
 
 
 # ---------------------------------------------------------------------------
@@ -208,12 +223,20 @@ class InvitationCode(TimestampMixin, Base):
         DateTime(timezone=True), nullable=False
     )
 
+    # Phase 1B — optional pre-linked student for parent invitations
+    target_student_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+
     # Relationships
     issuer: Mapped["User | None"] = relationship(
         foreign_keys=[issuer_user_id]
     )
     consumer: Mapped["User | None"] = relationship(
         foreign_keys=[consumed_by]
+    )
+    target_student: Mapped["User | None"] = relationship(
+        foreign_keys=[target_student_id]
     )
 
     __table_args__ = (
@@ -289,4 +312,94 @@ class ParentChildLink(TimestampMixin, Base):
         ),
         Index("idx_parent_child_links_parent", "parent_user_id", "school_id"),
         Index("idx_parent_child_links_child", "child_user_id"),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Phase 1B — Role-Specific Profile Tables
+# ---------------------------------------------------------------------------
+
+
+class StudentProfile(TimestampMixin, Base):
+    """Extended profile for students (STD role).
+
+    One-to-one with User. student_number is unique per school.
+    """
+
+    __tablename__ = "student_profiles"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True
+    )
+    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    student_number: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    date_of_birth: Mapped[datetime | None] = mapped_column(Date, nullable=True)
+    gender: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    class_level: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    nationality: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    guardian_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # Relationships
+    user: Mapped["User"] = relationship(foreign_keys=[user_id])
+
+    __table_args__ = (
+        UniqueConstraint(
+            "student_number", "school_id",
+            name="uq_student_profiles_number_school",
+        ),
+        Index("idx_student_profiles_user", "user_id"),
+        Index("idx_student_profiles_school", "school_id"),
+    )
+
+
+class ParentProfile(TimestampMixin, Base):
+    """Extended profile for parents (PAR role).
+
+    One-to-one with User. Stores Moroccan-specific fields (CIN).
+    """
+
+    __tablename__ = "parent_profiles"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True
+    )
+    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    relationship_type: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    cin_number: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    address: Mapped[str | None] = mapped_column(Text, nullable=True)
+    profession: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    emergency_phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
+
+    # Relationships
+    user: Mapped["User"] = relationship(foreign_keys=[user_id])
+
+    __table_args__ = (
+        Index("idx_parent_profiles_user", "user_id"),
+        Index("idx_parent_profiles_school", "school_id"),
+    )
+
+
+class TeacherProfile(TimestampMixin, Base):
+    """Extended profile for teachers (TCH role).
+
+    One-to-one with User. Stores employment and qualification info.
+    """
+
+    __tablename__ = "teacher_profiles"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True
+    )
+    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    employee_id: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    subject_specialty: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    qualification: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    hire_date: Mapped[datetime | None] = mapped_column(Date, nullable=True)
+
+    # Relationships
+    user: Mapped["User"] = relationship(foreign_keys=[user_id])
+
+    __table_args__ = (
+        Index("idx_teacher_profiles_user", "user_id"),
+        Index("idx_teacher_profiles_school", "school_id"),
     )

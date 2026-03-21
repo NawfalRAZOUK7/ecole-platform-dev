@@ -538,3 +538,255 @@
 - [x] `features/admin/AnalyticsPage.tsx` — KPI dashboard with recharts (adoption, usage, auth errors, latency, incidents, conversion)
 - [x] Date range selector (7d, 30d, 90d) + auto-refresh every 5 minutes
 - [x] Background task: `refresh_kpi_views` (daily at 03:30 UTC, refreshes mv_kpi_daily)
+
+---
+
+# NEW PHASES — Registration, Profiles & Cascade (Not Yet Started)
+
+> All previous phases (0→8 and 0A→8A) are already completed. Do NOT redo them.
+> Run these 4 new phases in order: **1B → 2C → 4D → 5C**
+
+---
+
+## Phase 1B — Role-Specific Profile Tables
+- [x] Create `student_profiles` table (user_id FK unique, school_id, student_number unique/school, date_of_birth, gender, class_level, nationality, guardian_notes)
+- [x] Create `parent_profiles` table (user_id FK unique, school_id, relationship_type FATHER/MOTHER/GUARDIAN/OTHER, cin_number, address, profession, emergency_phone)
+- [x] Create `teacher_profiles` table (user_id FK unique, school_id, employee_id, subject_specialty, qualification, hire_date)
+- [x] SQLAlchemy models: StudentProfile, ParentProfile, TeacherProfile in models/iam.py
+- [x] Alembic migration for all 3 profile tables
+- [x] Pydantic schemas for each profile (create, update, response)
+- [x] `GET /me/profile` — returns user + role-specific profile data
+- [x] `PUT /me/profile` — update role-specific fields
+- [x] `GET /admin/users/{id}/profile` — admin reads any user's profile
+- [x] Enhance invitation codes: add optional `target_student_id` field
+- [x] Seed data includes profiles for all test users
+- [ ] Integration tests for profile CRUD
+
+## Phase 2C — Registration with Invitation Code
+- [ ] Create `POST /auth/register` — public endpoint (no auth required)
+- [ ] Input: code, email, full_name, phone, password, profile_data (role-specific)
+- [ ] Validate code (not expired, not consumed, not revoked)
+- [ ] Create user + membership + role-specific profile in one transaction
+- [ ] If code has target_student_id + role=PAR → auto-create parent_child_link
+- [ ] Enforce password policy (Phase 2A)
+- [ ] Send email verification OTP (Phase 2B)
+- [ ] Return JWT tokens (logged in immediately)
+- [ ] Rate limiting on /auth/register (5/15min)
+- [ ] Validate email not already registered for that school
+- [ ] Audit trail: user.register event
+- [ ] `POST /admin/register-batch` — CSV upload for bulk account creation
+- [ ] Integration tests: register PAR (with target_student_id → auto-link), register STD, register TCH
+
+## Phase 4D — Registration & Profile UI (Web)
+- [ ] `RegisterPage.tsx` — multi-step: code input → role detected → personal info → role-specific fields → OTP
+- [ ] Step 1: enter code → validate → show role + school name
+- [ ] Step 2: email, full_name, phone, password (with policy checklist)
+- [ ] Step 3: role-specific fields (date_of_birth for STD, relationship_type for PAR, subject for TCH)
+- [ ] Step 4: email verification OTP input
+- [ ] Route `/register` + "Register" link on LoginPage
+- [ ] Profile edit: student section (student_number, date_of_birth, class_level)
+- [ ] Profile edit: parent section (relationship_type, CIN, address, profession, emergency_phone)
+- [ ] Profile edit: teacher section (employee_id, subject_specialty, qualification)
+- [ ] `BatchRegisterPage.tsx` — admin CSV upload for bulk registration
+- [ ] i18n translations (fr/ar/en) for all registration + profile fields
+
+## Phase 5C — Registration & Profile Mobile
+- [ ] `register_screen.dart` — stepper flow (code → info → role fields → OTP)
+- [ ] Role-specific profile sections on profile screen
+- [ ] "Register" button on login screen
+- [ ] i18n for all new fields (fr/ar/en)
+
+---
+
+# NEW PHASES — Content Library, Quiz Engine & CMS (Not Yet Started)
+
+> All previous phases (0→8, 0A→8A, 1B→5C) must be completed first.
+> Run these 6 new phases in order: **9A → 9B → 9C → 10A → 10B → 10C**
+
+---
+
+## Phase 9A — CONTENT_MGR Role + Content Library Backend
+- [ ] Add `CONTENT_MGR` role to `core/permissions.py` (platform-wide, not school-scoped)
+- [ ] New permissions: `PERM_CONTENT_CREATE`, `PERM_CONTENT_PUBLISH`, `PERM_CONTENT_MANAGE`, `PERM_CONTENT_DELETE`, `PERM_CONTENT_ANALYTICS`, `PERM_CONTENT_REVIEW`
+- [ ] Add `subject` field (String 50) to `ContentItem` model
+- [ ] Add `created_by` field (FK to users) to `ContentItem` model
+- [ ] Add `description` field (Text) to `ContentItem` model
+- [ ] Add `thumbnail_path` field (String 500) to `ContentItem` model
+- [ ] Add `origin` field (String 20, default PLATFORM) to `ContentItem` — values: PLATFORM, PROMOTED
+- [ ] Add `original_content_id` field (FK to content_items, nullable) — links promoted content to original
+- [ ] Create `class_content_assignments` table (teacher_id, class_id, content_item_id, school_id, assigned_at, notes)
+- [ ] Create `content_submissions` table (content_item_id, submitted_by, school_id, status: PENDING/UNDER_REVIEW/APPROVED/REJECTED, reviewed_by, review_notes, promoted_content_id)
+- [ ] Add `reward_points` field (Integer, default 0) to `teacher_profiles`
+- [ ] SQLAlchemy models: `ClassContentAssignment`, `ContentSubmission`
+- [ ] CMS endpoints: `POST /cms/content`, `GET /cms/content`, `PUT /cms/content/{id}`, `DELETE /cms/content/{id}`
+- [ ] Review queue endpoints: `GET /cms/submissions`, `POST /cms/submissions/{id}/review` (approve/reject)
+- [ ] Approve workflow: create platform copy + award points + notify teacher
+- [ ] Reject workflow: send notification with feedback to teacher
+- [ ] Teacher endpoints: `GET /content/library`, `POST /content/assign`, `DELETE /content/assign/{id}`
+- [ ] Teacher promotion endpoints: `POST /content/submit-for-review`, `GET /content/my-submissions`
+- [ ] Student endpoint: `GET /classes/{id}/content`
+- [ ] Audit trail on all CMS + submission operations
+- [ ] Seed data: platform content + sample teacher submission
+
+## Phase 9B — Quiz Engine Backend
+- [ ] Create `quizzes` table (school_id nullable, created_by, title, subject, level_band, difficulty, time_limit, max_attempts, shuffle, status)
+- [ ] Create `quiz_questions` table (quiz_id, question_type: MCQ/TRUE_FALSE/FILL_IN/DRAG_DROP/MATCHING, question_text, options JSONB, correct_answer JSONB, points, order, explanation)
+- [ ] Create `quiz_attempts` table (quiz_id, student_id, attempt_no, started_at, completed_at, score, max_score, status)
+- [ ] Create `quiz_responses` table (attempt_id, question_id, student_answer JSONB, is_correct, points_earned, answered_at)
+- [ ] SQLAlchemy models: `Quiz`, `QuizQuestion`, `QuizAttempt`, `QuizResponse`
+- [ ] Auto-grading service (`services/quiz_grading.py`) for all 5 question types
+- [ ] Quiz CRUD endpoints: create, list, get, update, publish
+- [ ] Student endpoints: start attempt, submit response, submit attempt, view results
+- [ ] Analytics endpoint: `GET /quizzes/{id}/analytics` (class performance stats)
+- [ ] Add `exercise_type` field to `Assignment` (STANDARD/PRINTABLE_PDF/QUIZ)
+- [ ] Add `quiz_id` field (FK nullable) to `Assignment`
+- [ ] Audit trail on all quiz operations
+- [ ] Seed data: sample quizzes with mixed question types
+
+## Phase 9C — PDF Exercise Workflow Backend
+- [ ] Add `exercise_pdf_path` field (String 500) to `Assignment` model
+- [ ] Alembic migration for new field
+- [ ] Update `POST /assignments` — require PDF upload when exercise_type=PRINTABLE_PDF
+- [ ] `GET /assignments/{id}/exercise-pdf` — download printable exercise PDF
+- [ ] Submission validation: require file upload for PRINTABLE_PDF assignments
+- [ ] Add `file_type_hint` field to `SubmissionFile` (SOLUTION_SCAN/SOLUTION_PHOTO/DOCUMENT)
+- [ ] Teacher inline preview of uploaded solution files
+- [ ] Audit trail for PDF exercise operations
+
+## Phase 10A — CMS Dashboard (Web)
+- [ ] CMS route group `/cms/*` with separate layout + CONTENT_MGR role guard
+- [ ] `ContentListPage.tsx` — list platform content with filters (type, level, subject, language, status, origin)
+- [ ] `ContentUploadPage.tsx` — upload form with progress bar (video/PDF/audio + metadata)
+- [ ] `ContentEditPage.tsx` — edit metadata, replace files, publish/archive
+- [ ] `ReviewQueuePage.tsx` — list teacher submissions (filter by status/subject/level/school)
+- [ ] Review detail view: content preview + teacher info + approve/reject actions
+- [ ] Approve action: creates platform copy + awards points + notifies teacher
+- [ ] Reject action: requires feedback text + notifies teacher
+- [ ] Pending submissions badge/counter on sidebar
+- [ ] `QuizBuilderPage.tsx` — create/edit quizzes with all 5 question types
+- [ ] Question editors: MCQ, True/False, Fill-in, Drag&Drop, Matching
+- [ ] Quiz preview mode (see as student)
+- [ ] `AnalyticsPage.tsx` — content usage stats + teacher contribution stats
+- [ ] Bulk upload support
+- [ ] i18n (fr/ar/en)
+
+## Phase 10B — Teacher Content Library + Quiz Player (Web)
+- [ ] `ContentLibraryPage.tsx` — teacher browses platform + school content, assigns to class
+- [ ] Teacher: upload school-scoped content
+- [ ] "Submit to Platform Library" button on teacher's own content → creates submission for CONTENT_MGR review
+- [ ] "My Submissions" tab showing submission statuses + CONTENT_MGR feedback
+- [ ] Show reward points balance in teacher profile
+- [ ] `QuizBuilderPage.tsx` — teacher creates class-specific quizzes
+- [ ] Teacher: assign platform quizzes to class
+- [ ] `ContentPage.tsx` — student views assigned content (video/PDF/audio players)
+- [ ] Student content progress tracking (started/completed)
+- [ ] `QuizPlayerPage.tsx` — student takes quiz (all 5 question types, timer, navigation)
+- [ ] Quiz results screen with score + explanations
+- [ ] PDF exercise: download button + upload solution flow
+- [ ] Parent dashboard: quiz results alongside assignment grades
+- [ ] i18n (fr/ar/en)
+
+## Phase 10C — Content Library + Quiz Player (Mobile)
+- [ ] `content_library_screen.dart` — teacher browses + assigns content
+- [ ] Teacher: upload from phone (camera/gallery/file picker)
+- [ ] `content_screen.dart` — student views content (video/PDF/audio players)
+- [ ] `quiz_player_screen.dart` — swipe-through questions, all 5 input types
+- [ ] Quiz timer, progress dots, results screen
+- [ ] PDF exercise: download + camera capture for solution upload
+- [ ] Parent: quiz results in child dashboard
+- [ ] Offline: cache quiz questions, sync answers when online
+- [ ] i18n (fr/ar/en)
+
+---
+
+# NEW PHASES — Missing V1 Features: Timetable, Billing, Messaging, Progress, Toggles (Not Yet Started)
+
+> All previous phases (0→8, 0A→8A, 1B→5C, 9A→10C) must be completed first.
+> Run these 8 new phases in order: **11A → 11B → 11C → 11D → 11E → 12A → 12B → 12C**
+
+---
+
+## Phase 11A — Timetable / Schedule Management Backend
+- [ ] Create `timetable_slots` table (school_id, class_id, academic_year_id, day_of_week, start_time, end_time, subject, teacher_id, room, is_recurring, effective_from/until)
+- [ ] Create `timetable_exceptions` table (timetable_slot_id, exception_date, exception_type: CANCELED/SUBSTITUTED/ROOM_CHANGED, substitute_teacher_id, reason)
+- [ ] SQLAlchemy models: `TimetableSlot`, `TimetableException`
+- [ ] Timetable CRUD endpoints: POST/GET/PUT/DELETE /timetable/slots
+- [ ] Weekly view endpoints: GET /timetable/class/{id}/weekly, /teacher/{id}/weekly, /me/weekly
+- [ ] Exception endpoints: POST/GET /timetable/exceptions
+- [ ] Overlap validation (no double-booking class or teacher)
+- [ ] Audit trail + seed data
+
+## Phase 11B — Billing Enhancements Backend
+- [ ] Create `fee_structures` table (school_id, academic_year_id, name, amount, currency, frequency, due_day, applies_to_level, status)
+- [ ] Create `fee_assignments` table (fee_structure_id, student_id, school_id, discount_percent, discount_reason, status)
+- [ ] Add retry fields to `PaymentAttempt` (retry_count, next_retry_at, last_retry_error)
+- [ ] Add reminder fields to `Invoice` (reminder_sent_at, reminder_count)
+- [ ] Payment retry service: ARQ task retries failed payments (3x, exponential backoff)
+- [ ] Overdue reminder service: ARQ task sends reminders daily (respects consent, max 3)
+- [ ] Fee structure CRUD endpoints + bulk assignment + invoice generation
+- [ ] Audit trail + seed data
+
+## Phase 11C — Messaging & Communication Backend
+- [ ] Create `conversations` table (school_id, type: DIRECT/GROUP, created_by, subject)
+- [ ] Create `conversation_participants` table (conversation_id, user_id, role_in_conversation)
+- [ ] Create `messages` table (conversation_id, sender_id, body, sent_at, edited_at)
+- [ ] Create `message_read_receipts` table (message_id, user_id, read_at)
+- [ ] Create `announcements` table (school_id, author_id, title, body, target_roles JSONB, target_class_ids JSONB, status: DRAFT/PUBLISHED/ARCHIVED)
+- [ ] SMS fallback service (abstract SMSProvider, stub implementation, sends on email failure + consent)
+- [ ] Messaging endpoints: conversations CRUD, send/list messages, read receipts
+- [ ] ABAC: parents↔teachers of their children only
+- [ ] Announcements endpoints: CRUD + publish (sends notifications)
+- [ ] WebSocket push for new messages + announcements
+- [ ] Audit trail on all operations
+
+## Phase 11D — Student Progress Visualization Backend
+- [ ] Progress aggregation service: grade trends, content completion, activity scores, attendance rates
+- [ ] `GET /progress/student/{id}` — full student dashboard data
+- [ ] `GET /progress/class/{id}` — class summary (teacher/admin)
+- [ ] `GET /progress/me` — student shortcut
+- [ ] `GET /progress/children` — parent's children overview
+- [ ] Response format: chart-ready (labels + datasets arrays)
+- [ ] Redis caching (15-min TTL) on aggregated data
+- [ ] ABAC enforcement on all endpoints
+
+## Phase 11E — Feature Toggles
+- [ ] Create `feature_toggles` table (feature_key unique, enabled_globally, enabled_school_ids JSONB, enabled_role_codes JSONB)
+- [ ] `core/feature_flags.py` — is_feature_enabled() + Redis cache (1-min TTL)
+- [ ] `RequiresFeature(key)` dependency guard for endpoints
+- [ ] Toggle CRUD endpoints (SYS/CONTENT_MGR)
+- [ ] `GET /features/active` — returns active features for current user (frontend conditional rendering)
+- [ ] Pre-create toggles: content_library, quiz_engine, pdf_exercises, messaging, announcements, timetable
+- [ ] Audit trail on toggle changes
+
+## Phase 12A — Timetable + Billing + Messaging UI (Web)
+- [ ] `TimetablePage.tsx` — weekly grid (Mon-Sat, time slots as rows, color-coded by subject)
+- [ ] ADM: add/edit/delete slots, create exceptions (cancel, substitute)
+- [ ] Teacher/student/parent timetable views (read-only)
+- [ ] `FeeStructuresPage.tsx` — CRUD for fee structures (ADM)
+- [ ] `FeeAssignmentsPage.tsx` — assign fees to students/classes, apply discounts
+- [ ] `GenerateInvoicesPage.tsx` — generate invoices from fee structures
+- [ ] Extend InvoicesPage with overdue indicators + retry status
+- [ ] `ConversationsPage.tsx` — inbox-style conversation list
+- [ ] `ChatPage.tsx` — message thread with read receipts (blue ticks), real-time via WebSocket
+- [ ] Unread message count badge on navigation
+- [ ] `AnnouncementsPage.tsx` — list + create/publish (ADM/DIR)
+- [ ] i18n (fr/ar/en)
+
+## Phase 12B — Timetable + Billing + Messaging (Mobile)
+- [ ] `timetable_screen.dart` — weekly grid (swipe days on phone, full week on tablet)
+- [ ] `conversations_screen.dart` — inbox with unread badges
+- [ ] `chat_screen.dart` — chat bubbles, real-time, read receipts
+- [ ] Push notification → deep link to conversation on new message
+- [ ] `announcements_screen.dart` — list with push notification for new announcements
+- [ ] Update InvoicesScreen with overdue indicators + retry status
+- [ ] Offline cache for conversations + announcements
+- [ ] i18n (fr/ar/en)
+
+## Phase 12C — Student Progress Dashboard (Web + Mobile)
+- [ ] `ProgressDashboardPage.tsx` — student progress with 4 charts (grade trend, content completion, activity scores, attendance)
+- [ ] Parent dashboard: progress summary per child + drill-down
+- [ ] `ClassProgressPage.tsx` — teacher class-wide averages + per-student breakdown
+- [ ] `progress_screen.dart` — mobile progress with fl_chart (swipe between tabs)
+- [ ] Parent mobile: child progress cards
+- [ ] Charts render with real aggregated data from 11D endpoints
+- [ ] i18n (fr/ar/en)
