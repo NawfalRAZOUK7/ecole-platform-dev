@@ -28,6 +28,7 @@ import { InvitationsPage } from '@/features/admin/InvitationsPage';
 import { AuditLogPage } from '@/features/admin/AuditLogPage';
 import { SchoolSettingsPage } from '@/features/admin/SchoolSettingsPage';
 import { JustificationReviewPage } from '@/features/admin/JustificationReviewPage';
+import { AnalyticsPage } from '@/features/admin/AnalyticsPage';
 import { ClassesPage as TeacherClassesPage } from '@/features/teacher/ClassesPage';
 import { CoursesPage as TeacherCoursesPage } from '@/features/teacher/CoursesPage';
 import { AssignmentFormPage } from '@/features/teacher/AssignmentFormPage';
@@ -108,6 +109,14 @@ function App() {
           element={
             <ProtectedRoute roles={['ADM']}>
               <JustificationReviewPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/analytics"
+          element={
+            <ProtectedRoute roles={['ADM', 'DIR']}>
+              <AnalyticsPage />
             </ProtectedRoute>
           }
         />

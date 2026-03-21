@@ -35,7 +35,8 @@
     "submissions": "تسليم العمل",
     "justification": "تبرير الغياب",
     "sessions": "الجلسات",
-    "twoFactor": "المصادقة الثنائية"
+    "twoFactor": "المصادقة الثنائية",
+    "adminAnalytics": "التحليلات"
   },
   "login": {
     "title": "تسجيل الدخول",
@@ -399,6 +400,20 @@
       "statusClosed": "مغلق",
       "publish": "نشر"
     }
+  },
+  "analytics": {
+    "title": "لوحة التحليلات",
+    "adoption": "معدل التبني",
+    "usage": "استخدام المسارات الحرجة",
+    "authErrors": "معدل أخطاء المصادقة",
+    "latency": "زمن استجابة API p95",
+    "incidents": "الحوادث",
+    "conversion": "تحويل الدعوات",
+    "trendTitle": "اتجاهات المؤشرات",
+    "breakdownTitle": "توزيع المؤشرات",
+    "autoRefresh": "تحديث تلقائي كل 5 دقائق",
+    "lastUpdated": "آخر تحديث",
+    "prometheusSource": "Prometheus"
   },
   "roles": {
     "ADM": "مدير",

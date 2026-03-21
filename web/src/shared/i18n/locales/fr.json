@@ -35,7 +35,8 @@
     "submissions": "Soumettre un travail",
     "justification": "Justifier une absence",
     "sessions": "Sessions",
-    "twoFactor": "Double authentification"
+    "twoFactor": "Double authentification",
+    "adminAnalytics": "Analytique"
   },
   "login": {
     "title": "Connexion",
@@ -399,6 +400,20 @@
       "statusClosed": "Clos",
       "publish": "Publier"
     }
+  },
+  "analytics": {
+    "title": "Tableau de bord analytique",
+    "adoption": "Taux d'adoption",
+    "usage": "Usage parcours critiques",
+    "authErrors": "Taux erreurs auth",
+    "latency": "Latence API p95",
+    "incidents": "Incidents",
+    "conversion": "Conversion invitations",
+    "trendTitle": "Tendances KPI",
+    "breakdownTitle": "Repartition KPI",
+    "autoRefresh": "Actualisation auto toutes les 5 min",
+    "lastUpdated": "Derniere maj",
+    "prometheusSource": "Prometheus"
   },
   "roles": {
     "ADM": "Administrateur",

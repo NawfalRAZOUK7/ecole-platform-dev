@@ -69,6 +69,9 @@ from app.api.v1.teacher import router as teacher_router
 # Phase 8 — AI & Data routers
 from app.api.v1.ai import router as ai_router
 
+# Phase 8A — GDPR compliance
+from app.api.v1.gdpr import router as gdpr_router
+
 router = APIRouter()
 
 
@@ -132,3 +135,6 @@ router.include_router(teacher_router)
 
 # Mount sub-routers — Phase 8 AI & Data
 router.include_router(ai_router)
+
+# Mount sub-routers — Phase 8A GDPR
+router.include_router(gdpr_router)

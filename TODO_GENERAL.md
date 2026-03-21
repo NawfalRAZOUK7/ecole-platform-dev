@@ -530,11 +530,11 @@
 - [x] Create `infra/scripts/healthcheck.sh` — comprehensive health (API, DB, Redis, disk, cert, containers)
 - [x] Document deployment in `infra/DEPLOYMENT.md`
 
-## Phase 8A — GDPR Compliance & Analytics Dashboard
-- [ ] `GET /users/{id}/data-export` — export all user data as JSON (ADM or self)
-- [ ] `POST /users/{id}/data-deletion` — anonymize PII, keep audit structure (ADM only)
-- [ ] `GET /users/{id}/consent-log` — full consent change history
-- [ ] Audit trail on all GDPR actions
-- [ ] `features/admin/AnalyticsPage.tsx` — KPI dashboard with recharts (adoption, usage, auth errors, latency)
-- [ ] Date range selector (7d, 30d, 90d) + auto-refresh
-- [ ] Background task: `refresh_kpi_views` (daily refresh of mv_kpi_daily)
+## Phase 8A — GDPR Compliance & Analytics Dashboard ✅
+- [x] `GET /users/{id}/data-export` — export all user data as JSON (ADM or self)
+- [x] `POST /users/{id}/data-deletion` — anonymize PII, keep audit structure (ADM only)
+- [x] `GET /users/{id}/consent-log` — full consent change history
+- [x] Audit trail on all GDPR actions (GDPR_DATA_EXPORT, GDPR_DATA_DELETION, GDPR_CONSENT_LOG_ACCESS)
+- [x] `features/admin/AnalyticsPage.tsx` — KPI dashboard with recharts (adoption, usage, auth errors, latency, incidents, conversion)
+- [x] Date range selector (7d, 30d, 90d) + auto-refresh every 5 minutes
+- [x] Background task: `refresh_kpi_views` (daily at 03:30 UTC, refreshes mv_kpi_daily)

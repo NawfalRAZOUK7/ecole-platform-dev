@@ -239,6 +239,100 @@ async def task_send_notification_digest(ctx: dict) -> int:
 
 
 # ---------------------------------------------------------------------------
+# Task: refresh_kpi_views (Phase 8A)
+# ---------------------------------------------------------------------------
+async def task_refresh_kpi_views(ctx: dict) -> bool:
+    """Refresh materialized KPI views daily.
+
+    Refreshes mv_kpi_daily materialized view for fast KPI dashboard reads.
+    Falls back to computing KPIs for all schools if the view doesn't exist yet.
+    """
+    from app.core.metrics import TASK_COMPLETED_COUNT, TASK_DURATION, TASK_FAILED_COUNT
+
+    start = time.perf_counter()
+    try:
+        from sqlalchemy import text
+
+        from app.core.database import async_session
+
+        async with async_session() as db:
+            # Try refreshing materialized view
+            try:
+                await db.execute(text("REFRESH MATERIALIZED VIEW CONCURRENTLY mv_kpi_daily"))
+                await db.commit()
+                logger.info("Refreshed mv_kpi_daily materialized view")
+            except Exception as mv_err:
+                await db.rollback()
+                # View may not exist yet — create it
+                logger.warning(
+                    "mv_kpi_daily refresh failed (%s), attempting to create view",
+                    mv_err,
+                )
+                try:
+                    await db.execute(text("""
+                        CREATE MATERIALIZED VIEW IF NOT EXISTS mv_kpi_daily AS
+                        SELECT
+                            s.school_id,
+                            current_date AS computed_date,
+                            -- KPI-G1-001: adoption (active users / total users)
+                            COUNT(DISTINCT CASE
+                                WHEN sess.created_at >= current_date - interval '7 days'
+                                THEN sess.user_id
+                            END) AS active_users_7d,
+                            COUNT(DISTINCT u.id) AS total_users,
+                            -- KPI-G1-003: auth error rate
+                            COUNT(CASE
+                                WHEN a.action_type IN ('AUTH_LOGIN_FAILED', 'AUTH_REFRESH_FAILED')
+                                AND a.created_at >= current_date - interval '1 day'
+                                THEN 1
+                            END) AS auth_errors_24h,
+                            COUNT(CASE
+                                WHEN a.action_type IN ('AUTH_LOGIN', 'AUTH_REFRESH', 'AUTH_LOGOUT',
+                                    'AUTH_LOGIN_FAILED', 'AUTH_REFRESH_FAILED')
+                                AND a.created_at >= current_date - interval '1 day'
+                                THEN 1
+                            END) AS auth_total_24h,
+                            -- KPI-G1-006: invitation conversion
+                            COUNT(CASE
+                                WHEN i.created_at >= current_date - interval '7 days'
+                                THEN 1
+                            END) AS invites_created_7d,
+                            COUNT(CASE
+                                WHEN i.created_at >= current_date - interval '7 days'
+                                AND i.consumed_at IS NOT NULL
+                                THEN 1
+                            END) AS invites_consumed_7d
+                        FROM (SELECT DISTINCT school_id FROM users) s
+                        LEFT JOIN users u ON u.school_id = s.school_id AND u.status = 'active'
+                        LEFT JOIN sessions sess ON sess.school_id = s.school_id
+                        LEFT JOIN audit_logs a ON a.school_id = s.school_id
+                        LEFT JOIN invitation_codes i ON i.school_id = s.school_id
+                        GROUP BY s.school_id
+                    """))
+                    await db.execute(text(
+                        "CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_kpi_daily_school "
+                        "ON mv_kpi_daily (school_id)"
+                    ))
+                    await db.commit()
+                    logger.info("Created mv_kpi_daily materialized view")
+                except Exception as create_err:
+                    await db.rollback()
+                    logger.error("Failed to create mv_kpi_daily: %s", create_err)
+                    raise
+
+        duration = time.perf_counter() - start
+        TASK_DURATION.labels(env=settings.app_env, task="refresh_kpi_views").observe(duration)
+        TASK_COMPLETED_COUNT.labels(env=settings.app_env, task="refresh_kpi_views").inc()
+        return True
+    except Exception:
+        duration = time.perf_counter() - start
+        TASK_DURATION.labels(env=settings.app_env, task="refresh_kpi_views").observe(duration)
+        TASK_FAILED_COUNT.labels(env=settings.app_env, task="refresh_kpi_views").inc()
+        logger.exception("task_refresh_kpi_views failed")
+        return False
+
+
+# ---------------------------------------------------------------------------
 # Enqueue helpers — fire-and-forget from API endpoints
 # ---------------------------------------------------------------------------
 _arq_pool: ArqRedis | None = None
@@ -322,6 +416,7 @@ class WorkerSettings:
         task_cleanup_expired_sessions,
         task_cleanup_expired_cache,
         task_send_notification_digest,
+        task_refresh_kpi_views,
     ]
 
     # Cron jobs
@@ -330,6 +425,8 @@ class WorkerSettings:
         cron(task_cleanup_expired_sessions, hour=3, minute=0),
         # Cleanup expired cache keys daily at 03:15 UTC
         cron(task_cleanup_expired_cache, hour=3, minute=15),
+        # Refresh KPI materialized views daily at 03:30 UTC (Phase 8A)
+        cron(task_refresh_kpi_views, hour=3, minute=30),
         # Send notification digest daily at 07:00 UTC (8:00 Morocco time)
         cron(task_send_notification_digest, hour=7, minute=0),
     ]

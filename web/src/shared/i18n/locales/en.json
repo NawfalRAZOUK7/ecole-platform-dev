@@ -35,7 +35,8 @@
     "submissions": "Submit Work",
     "justification": "Justify Absence",
     "sessions": "Sessions",
-    "twoFactor": "Two-Factor Auth"
+    "twoFactor": "Two-Factor Auth",
+    "adminAnalytics": "Analytics"
   },
   "login": {
     "title": "Sign In",
@@ -399,6 +400,20 @@
       "statusClosed": "Closed",
       "publish": "Publish"
     }
+  },
+  "analytics": {
+    "title": "Analytics Dashboard",
+    "adoption": "Adoption Rate",
+    "usage": "Critical Path Usage",
+    "authErrors": "Auth Error Rate",
+    "latency": "API Latency p95",
+    "incidents": "Incidents",
+    "conversion": "Invitation Conversion",
+    "trendTitle": "KPI Trends",
+    "breakdownTitle": "KPI Breakdown",
+    "autoRefresh": "Auto-refreshes every 5 minutes",
+    "lastUpdated": "Last updated",
+    "prometheusSource": "Prometheus"
   },
   "roles": {
     "ADM": "Administrator",
