@@ -62,6 +62,69 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<RegisterResult> register({
+    required String code,
+    required String email,
+    required String fullName,
+    String? phone,
+    required String password,
+    Map<String, String> profileData = const {},
+  }) async {
+    final body = <String, dynamic>{
+      'code': code,
+      'email': email,
+      'full_name': fullName,
+      'password': password,
+      'profile_data': profileData,
+    };
+    if (phone != null && phone.isNotEmpty) body['phone'] = phone;
+
+    final resp = await _api.post('/auth/register', body: body, skipAuth: true);
+
+    final accessToken = resp.data['access_token'] as String;
+    _api.setAccessToken(accessToken);
+
+    final refreshToken = resp.data['refresh_token'] as String?;
+    if (refreshToken != null) {
+      await _tokenStorage.saveRefreshToken(refreshToken);
+    }
+
+    return RegisterResult(
+      accessToken: accessToken,
+      userId: resp.data['user_id'] as String,
+      schoolId: resp.data['school_id'] as String,
+      role: resp.data['role'] as String,
+      emailVerificationRequired:
+          resp.data['email_verification_required'] as bool? ?? false,
+    );
+  }
+
+  @override
+  Future<void> verifyEmail({
+    required String userId,
+    required String schoolId,
+    required String otp,
+  }) async {
+    await _api.post('/auth/verify-email', body: {
+      'user_id': userId,
+      'school_id': schoolId,
+      'otp': otp,
+    });
+  }
+
+  @override
+  Future<Map<String, dynamic>> getProfile() async {
+    final resp = await _api.get('/me/profile');
+    return resp.data;
+  }
+
+  @override
+  Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> data) async {
+    final resp = await _api.put('/me/profile', body: data);
+    return resp.data;
+  }
+
+  @override
   Future<String> verify2fa(String tempToken, String code) async {
     final resp = await _api.post(
       '/auth/2fa/verify',

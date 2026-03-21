@@ -11,6 +11,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:ecole_platform/features/auth/auth_provider.dart';
 import 'package:ecole_platform/features/auth/login_screen.dart';
+import 'package:ecole_platform/features/auth/register_screen.dart';
 import 'package:ecole_platform/features/feed/feed_screen.dart';
 import 'package:ecole_platform/features/notifications/notifications_screen.dart';
 import 'package:ecole_platform/features/content/content_screen.dart';
@@ -48,16 +49,17 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final isAuthenticated = authState.isAuthenticated;
       final isLoading = authState.isLoading;
-      final isLoginPage = state.matchedLocation == '/login';
+      final loc = state.matchedLocation;
+      final isPublicPage = loc == '/login' || loc == '/register';
 
       // Still loading — don't redirect
       if (isLoading) return null;
 
-      // Not authenticated + not on login → go to login
-      if (!isAuthenticated && !isLoginPage) return '/login';
+      // Not authenticated + not on public page → go to login
+      if (!isAuthenticated && !isPublicPage) return '/login';
 
-      // Authenticated + on login → redirect to role home
-      if (isAuthenticated && isLoginPage) {
+      // Authenticated + on public page → redirect to role home
+      if (isAuthenticated && isPublicPage) {
         final role = authState.user?.role ?? '';
         return _roleRedirects[role] ?? '/profile';
       }
@@ -69,6 +71,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginScreen(),
+      ),
+
+      // Register (no shell) — Phase 5C
+      GoRoute(
+        path: '/register',
+        builder: (context, state) => const RegisterScreen(),
       ),
 
       // Shell with bottom navigation

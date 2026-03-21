@@ -591,10 +591,10 @@
 - [x] i18n translations (fr/ar/en) for all registration + profile fields
 
 ## Phase 5C — Registration & Profile Mobile
-- [ ] `register_screen.dart` — stepper flow (code → info → role fields → OTP)
-- [ ] Role-specific profile sections on profile screen
-- [ ] "Register" button on login screen
-- [ ] i18n for all new fields (fr/ar/en)
+- [x] `register_screen.dart` — stepper flow (code → info → role fields → OTP)
+- [x] Role-specific profile sections on profile screen
+- [x] "Register" button on login screen
+- [x] i18n for all new fields (fr/ar/en)
 
 ---
 

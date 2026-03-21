@@ -39,6 +39,23 @@ class TwoFactorVerifyResult {
   });
 }
 
+/// Registration result — token + user info for immediate login.
+class RegisterResult {
+  final String accessToken;
+  final String userId;
+  final String schoolId;
+  final String role;
+  final bool emailVerificationRequired;
+
+  const RegisterResult({
+    required this.accessToken,
+    required this.userId,
+    required this.schoolId,
+    required this.role,
+    required this.emailVerificationRequired,
+  });
+}
+
 abstract class AuthRepository {
   /// Login with email, password, and school ID.
   /// Returns [LoginResult] which may require 2FA verification.
@@ -48,6 +65,23 @@ abstract class AuthRepository {
     String schoolId, {
     String? deviceName,
     String? userAgent,
+  });
+
+  /// Register with invitation code.
+  Future<RegisterResult> register({
+    required String code,
+    required String email,
+    required String fullName,
+    String? phone,
+    required String password,
+    Map<String, String> profileData,
+  });
+
+  /// Verify email OTP after registration.
+  Future<void> verifyEmail({
+    required String userId,
+    required String schoolId,
+    required String otp,
   });
 
   /// Verify 2FA code during login flow.
@@ -62,6 +96,12 @@ abstract class AuthRepository {
 
   /// Fetch current user profile.
   Future<User> getMe();
+
+  /// Fetch role-specific profile data.
+  Future<Map<String, dynamic>> getProfile();
+
+  /// Update role-specific profile data.
+  Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> data);
 
   /// Start 2FA setup — returns provisioning URI + secret.
   Future<TwoFactorSetupData> setup2fa();

@@ -5,6 +5,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'auth_provider.dart';
 
@@ -341,6 +342,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           )
                         : const Text('Se connecter',
                             style: TextStyle(fontSize: 16)),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Register link (Phase 5C)
+                  Center(
+                    child: TextButton(
+                      onPressed: () => context.go('/register'),
+                      child: const Text(
+                        'Vous avez un code d\'invitation ? Inscrivez-vous',
+                      ),
+                    ),
                   ),
                 ],
               ),
