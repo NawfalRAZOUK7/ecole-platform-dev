@@ -560,7 +560,7 @@
 - [x] `GET /admin/users/{id}/profile` — admin reads any user's profile
 - [x] Enhance invitation codes: add optional `target_student_id` field
 - [x] Seed data includes profiles for all test users
-- [ ] Integration tests for profile CRUD
+- [x] Integration tests for profile CRUD
 
 ## Phase 2C — Registration with Invitation Code
 - [x] Create `POST /auth/register` — public endpoint (no auth required)
@@ -575,7 +575,7 @@
 - [x] Validate email not already registered for that school
 - [x] Audit trail: user.register event
 - [x] `POST /admin/register-batch` — bulk account creation endpoint
-- [ ] Integration tests: register PAR (with target_student_id → auto-link), register STD, register TCH
+- [x] Integration tests: register PAR (with target_student_id → auto-link), register STD, register TCH
 
 ## Phase 4D — Registration & Profile UI (Web)
 - [x] `RegisterPage.tsx` — multi-step: code input → role detected → personal info → role-specific fields → OTP
