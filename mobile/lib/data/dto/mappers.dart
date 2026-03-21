@@ -9,6 +9,8 @@ import 'package:ecole_platform/domain/entities/notification_item.dart';
 import 'package:ecole_platform/domain/entities/content_item.dart';
 import 'package:ecole_platform/domain/entities/result.dart';
 import 'package:ecole_platform/domain/entities/invoice.dart';
+import 'package:ecole_platform/domain/entities/admin.dart';
+import 'package:ecole_platform/domain/entities/teacher.dart';
 
 // ── User ──
 
@@ -121,5 +123,127 @@ InvoiceItem invoiceItemFromJson(Map<String, dynamic> json) {
     amount: (json['amount'] as num).toDouble(),
     unitPrice: (json['unit_price'] as num).toDouble(),
     quantity: json['quantity'] as int,
+  );
+}
+
+// ── Admin ──
+
+DashboardStats dashboardStatsFromJson(Map<String, dynamic> json) {
+  final rolesMap = <String, int>{};
+  final roles = json['users_by_role'] as Map<String, dynamic>? ?? {};
+  for (final entry in roles.entries) {
+    rolesMap[entry.key] = (entry.value as num).toInt();
+  }
+  return DashboardStats(
+    totalUsers: json['total_users'] as int? ?? 0,
+    activeSessions: json['active_sessions'] as int? ?? 0,
+    activeInvitations: json['active_invitations'] as int? ?? 0,
+    auditEvents24h: json['audit_events_24h'] as int? ?? 0,
+    pendingJustifications: json['pending_justifications'] as int? ?? 0,
+    usersByRole: rolesMap,
+  );
+}
+
+ManagedUser managedUserFromJson(Map<String, dynamic> json) {
+  return ManagedUser(
+    id: json['id'] as String,
+    email: json['email'] as String,
+    fullName: json['full_name'] as String,
+    status: json['status'] as String? ?? 'active',
+    role: json['role'] as String,
+    createdAt: json['created_at'] as String,
+    emailVerified: json['email_verified'] as bool? ?? false,
+    totpEnabled: json['totp_enabled'] as bool? ?? false,
+  );
+}
+
+Invitation invitationFromJson(Map<String, dynamic> json) {
+  return Invitation(
+    id: json['id'] as String,
+    roleTarget: json['role_target'] as String,
+    status: json['status'] as String,
+    expiresAt: json['expires_at'] as String,
+    createdAt: json['created_at'] as String,
+    issuerUserId: json['issuer_user_id'] as String?,
+    consumedAt: json['consumed_at'] as String?,
+    consumedBy: json['consumed_by'] as String?,
+  );
+}
+
+Justification justificationFromJson(Map<String, dynamic> json) {
+  return Justification(
+    id: json['id'] as String,
+    attendanceRecordId: json['attendance_record_id'] as String,
+    parentId: json['parent_id'] as String,
+    status: json['status'] as String,
+    reason: json['reason'] as String? ?? '',
+    rejectionReason: json['rejection_reason'] as String?,
+    createdAt: json['created_at'] as String,
+  );
+}
+
+// ── Teacher ──
+
+ClassInfo classInfoFromJson(Map<String, dynamic> json) {
+  return ClassInfo(
+    id: json['id'] as String,
+    code: json['code'] as String? ?? '',
+    name: json['name'] as String,
+    studentCount: json['student_count'] as int? ?? 0,
+    courseCount: json['course_count'] as int? ?? 0,
+  );
+}
+
+StudentInfo studentInfoFromJson(Map<String, dynamic> json) {
+  return StudentInfo(
+    id: json['id'] as String,
+    fullName: json['full_name'] as String,
+    email: json['email'] as String,
+    enrollmentStatus: json['enrollment_status'] as String? ?? 'active',
+  );
+}
+
+Course courseFromJson(Map<String, dynamic> json) {
+  return Course(
+    id: json['id'] as String,
+    classId: json['class_id'] as String,
+    title: json['title'] as String,
+    description: json['description'] as String?,
+    status: json['status'] as String? ?? 'draft',
+  );
+}
+
+Assignment assignmentFromJson(Map<String, dynamic> json) {
+  return Assignment(
+    id: json['id'] as String,
+    courseId: json['course_id'] as String,
+    title: json['title'] as String,
+    description: json['description'] as String?,
+    dueAt: json['due_at'] as String?,
+    totalPoints: json['total_points'] as int? ?? 20,
+  );
+}
+
+Submission submissionFromJson(Map<String, dynamic> json) {
+  final grade = json['grade'] as Map<String, dynamic>?;
+  return Submission(
+    id: json['id'] as String,
+    assignmentId: json['assignment_id'] as String,
+    assignmentTitle: json['assignment_title'] as String?,
+    assignmentTotalPoints: json['assignment_total_points'] as int?,
+    studentId: json['student_id'] as String,
+    studentName: json['student_name'] as String?,
+    status: json['status'] as String? ?? 'submitted',
+    submittedAt: json['submitted_at'] as String?,
+    score: (grade?['score'] as num?)?.toDouble() ?? (json['score'] as num?)?.toDouble(),
+    feedbackText: grade?['feedback_text'] as String? ?? json['feedback_text'] as String?,
+    publishedAt: grade?['published_at'] as String? ?? json['published_at'] as String?,
+  );
+}
+
+Period periodFromJson(Map<String, dynamic> json) {
+  return Period(
+    id: json['id'] as String,
+    name: json['name'] as String? ?? json['id'] as String,
   );
 }

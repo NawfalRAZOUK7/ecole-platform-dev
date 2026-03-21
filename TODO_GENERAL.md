@@ -505,10 +505,10 @@
 - [x] **From 2A:** Send device_name, user_agent on login for session tracking (device_info_plus)
 
 ## Phase 5B — Admin/Teacher Mobile Screens & Search
-- [ ] **From 4A:** Admin dashboard screen, users screen, invitations screen, justification review screen
-- [ ] **From 4B:** Classes screen, assignment form, submissions/grading, attendance marking
-- [ ] **From 3D:** Search bar + filter chips + sort toggle on mobile list screens
-- [ ] Role-based shell navigation (show admin/teacher tabs by role)
+- [x] **From 4A:** Admin dashboard screen, users screen, invitations screen, justification review screen
+- [x] **From 4B:** Classes screen, assignment form, submissions/grading, attendance marking
+- [x] **From 3D:** Search bar + filter chips + sort toggle on mobile list screens (SearchFilterBar widget)
+- [x] Role-based shell navigation (show admin/teacher tabs by role)
 
 ## Phase 6A — E2E Tests, Load Testing & Security Audit
 - [ ] Install Playwright: `npm install -D @playwright/test`

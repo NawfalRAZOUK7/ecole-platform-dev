@@ -1,11 +1,13 @@
-/// Notifications screen — list with pull-to-refresh.
+/// Notifications screen — list with search and pull-to-refresh.
 ///
 /// Reference: S-097, UI-PAR-004
+/// Phase 5B: Added search bar.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import 'package:ecole_platform/shared/widgets/search_filter_bar.dart';
 import 'notifications_provider.dart';
 
 class NotificationsScreen extends ConsumerWidget {
@@ -18,7 +20,17 @@ class NotificationsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Notifications')),
-      body: _buildBody(context, ref, state, theme),
+      body: Column(
+        children: [
+          SearchFilterBar(
+            searchHint: 'Rechercher une notification...',
+            searchValue: state.search,
+            onSearchChanged: (v) =>
+                ref.read(notificationsProvider.notifier).setSearch(v),
+          ),
+          Expanded(child: _buildBody(context, ref, state, theme)),
+        ],
+      ),
     );
   }
 
@@ -46,7 +58,8 @@ class NotificationsScreen extends ConsumerWidget {
       );
     }
 
-    if (state.items.isEmpty) {
+    final items = state.filteredItems;
+    if (items.isEmpty) {
       return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -63,10 +76,10 @@ class NotificationsScreen extends ConsumerWidget {
       onRefresh: () => ref.read(notificationsProvider.notifier).refresh(),
       child: ListView.separated(
         padding: const EdgeInsets.all(16),
-        itemCount: state.items.length,
+        itemCount: items.length,
         separatorBuilder: (_, __) => const Divider(height: 1),
         itemBuilder: (context, index) {
-          final notif = state.items[index];
+          final notif = items[index];
           return ListTile(
             leading: CircleAvatar(
               backgroundColor: theme.colorScheme.primaryContainer,

@@ -1,6 +1,7 @@
 /// Notifications state management — Riverpod provider.
 ///
 /// Reference: S-097 — Notification list with cache
+/// Phase 5B: Added search support.
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ecole_platform/app/providers.dart';
@@ -13,6 +14,7 @@ class NotificationsState {
   final String? error;
   final String? nextCursor;
   final bool hasMore;
+  final String search;
 
   const NotificationsState({
     this.items = const [],
@@ -21,7 +23,18 @@ class NotificationsState {
     this.error,
     this.nextCursor,
     this.hasMore = false,
+    this.search = '',
   });
+
+  List<NotificationItem> get filteredItems {
+    if (search.isEmpty) return items;
+    final q = search.toLowerCase();
+    return items
+        .where((n) =>
+            n.title.toLowerCase().contains(q) ||
+            (n.body?.toLowerCase().contains(q) ?? false))
+        .toList();
+  }
 }
 
 class NotificationsNotifier extends StateNotifier<NotificationsState> {
@@ -32,7 +45,7 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
   }
 
   Future<void> load() async {
-    state = const NotificationsState(isLoading: true);
+    state = NotificationsState(isLoading: true, search: state.search);
     try {
       final repo = _ref.read(notificationRepositoryProvider);
       final result = await repo.getNotifications();
@@ -40,9 +53,10 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
         items: result.items,
         nextCursor: result.nextCursor,
         hasMore: result.hasMore,
+        search: state.search,
       );
     } catch (e) {
-      state = NotificationsState(error: e.toString());
+      state = NotificationsState(error: e.toString(), search: state.search);
     }
   }
 
@@ -53,6 +67,7 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
       isLoadingMore: true,
       nextCursor: state.nextCursor,
       hasMore: state.hasMore,
+      search: state.search,
     );
     try {
       final repo = _ref.read(notificationRepositoryProvider);
@@ -61,10 +76,24 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
         items: [...state.items, ...result.items],
         nextCursor: result.nextCursor,
         hasMore: result.hasMore,
+        search: state.search,
       );
     } catch (e) {
-      state = NotificationsState(items: state.items, error: e.toString());
+      state = NotificationsState(
+        items: state.items,
+        error: e.toString(),
+        search: state.search,
+      );
     }
+  }
+
+  void setSearch(String value) {
+    state = NotificationsState(
+      items: state.items,
+      nextCursor: state.nextCursor,
+      hasMore: state.hasMore,
+      search: value,
+    );
   }
 
   Future<void> refresh() async {

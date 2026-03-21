@@ -3,6 +3,7 @@
 /// Reference: DEC-E2-002 — Riverpod state management
 /// 3-layer dependency chain: Providers → Repositories → API/Cache
 /// Phase 5A: Added biometricService, wsClient, local notifications providers.
+/// Phase 5B: Added admin + teacher repository providers.
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,12 +18,16 @@ import 'package:ecole_platform/data/repositories_impl/notification_repository_im
 import 'package:ecole_platform/data/repositories_impl/content_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/result_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/invoice_repository_impl.dart';
+import 'package:ecole_platform/data/repositories_impl/admin_repository_impl.dart';
+import 'package:ecole_platform/data/repositories_impl/teacher_repository_impl.dart';
 import 'package:ecole_platform/domain/repositories/auth_repository.dart';
 import 'package:ecole_platform/domain/repositories/feed_repository.dart';
 import 'package:ecole_platform/domain/repositories/notification_repository.dart';
 import 'package:ecole_platform/domain/repositories/content_repository.dart';
 import 'package:ecole_platform/domain/repositories/result_repository.dart';
 import 'package:ecole_platform/domain/repositories/invoice_repository.dart';
+import 'package:ecole_platform/domain/repositories/admin_repository.dart';
+import 'package:ecole_platform/domain/repositories/teacher_repository.dart';
 import 'package:ecole_platform/features/auth/biometric_service.dart';
 import 'package:ecole_platform/shared/secure_storage.dart';
 import 'package:ecole_platform/shared/push_notifications.dart';
@@ -37,8 +42,6 @@ final apiClientProvider = Provider<ApiClient>((ref) {
   final storage = ref.watch(secureStorageProvider);
   return ApiClient(
     tokenStorage: storage,
-    // In dev, Vite proxy or direct backend.
-    // In prod, the actual API URL.
     baseUrl: 'http://localhost:8000',
   );
 });
@@ -115,5 +118,17 @@ final invoiceRepositoryProvider = Provider<InvoiceRepository>((ref) {
   return InvoiceRepositoryImpl(
     api: ref.watch(apiClientProvider),
     cache: ref.watch(cacheStoreProvider),
+  );
+});
+
+final adminRepositoryProvider = Provider<AdminRepository>((ref) {
+  return AdminRepositoryImpl(
+    api: ref.watch(apiClientProvider),
+  );
+});
+
+final teacherRepositoryProvider = Provider<TeacherRepository>((ref) {
+  return TeacherRepositoryImpl(
+    api: ref.watch(apiClientProvider),
   );
 });

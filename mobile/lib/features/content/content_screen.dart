@@ -1,10 +1,12 @@
-/// Content library screen — browse content with filters.
+/// Content library screen — browse content with search, filters, sort.
 ///
 /// Reference: S-098, UI-STD-003
+/// Phase 5B: Added search bar + sort toggle.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:ecole_platform/shared/widgets/search_filter_bar.dart';
 import 'content_provider.dart';
 
 class ContentScreen extends ConsumerWidget {
@@ -19,57 +21,41 @@ class ContentScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Bibliothèque')),
       body: Column(
         children: [
-          // Filters bar
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    initialValue: state.typeFilter,
-                    decoration: const InputDecoration(
-                      labelText: 'Type',
-                      border: OutlineInputBorder(),
-                      contentPadding:
-                          EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: null, child: Text('Tous')),
-                      DropdownMenuItem(value: 'video', child: Text('Vidéo')),
-                      DropdownMenuItem(
-                          value: 'document', child: Text('Document')),
-                      DropdownMenuItem(value: 'quiz', child: Text('Quiz')),
-                    ],
-                    onChanged: (v) =>
-                        ref.read(contentProvider.notifier).setTypeFilter(v),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    initialValue: state.levelFilter,
-                    decoration: const InputDecoration(
-                      labelText: 'Niveau',
-                      border: OutlineInputBorder(),
-                      contentPadding:
-                          EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: null, child: Text('Tous')),
-                      DropdownMenuItem(
-                          value: 'beginner', child: Text('Débutant')),
-                      DropdownMenuItem(
-                          value: 'intermediate',
-                          child: Text('Intermédiaire')),
-                      DropdownMenuItem(
-                          value: 'advanced', child: Text('Avancé')),
-                    ],
-                    onChanged: (v) =>
-                        ref.read(contentProvider.notifier).setLevelFilter(v),
-                  ),
-                ),
+          // Search + filter bar
+          SearchFilterBar(
+            searchHint: 'Rechercher du contenu...',
+            searchValue: state.search,
+            onSearchChanged: (v) =>
+                ref.read(contentProvider.notifier).setSearch(v),
+            filters: {
+              'Type': const [
+                FilterOption(label: 'Tous', value: null),
+                FilterOption(label: 'Vidéo', value: 'video'),
+                FilterOption(label: 'Document', value: 'document'),
+                FilterOption(label: 'Quiz', value: 'quiz'),
               ],
-            ),
+              'Niveau': const [
+                FilterOption(label: 'Tous', value: null),
+                FilterOption(label: 'Débutant', value: 'beginner'),
+                FilterOption(label: 'Intermédiaire', value: 'intermediate'),
+                FilterOption(label: 'Avancé', value: 'advanced'),
+              ],
+            },
+            filterValues: {
+              'Type': state.typeFilter,
+              'Niveau': state.levelFilter,
+            },
+            onFilterChanged: (key, value) {
+              if (key == 'Type') {
+                ref.read(contentProvider.notifier).setTypeFilter(value);
+              } else {
+                ref.read(contentProvider.notifier).setLevelFilter(value);
+              }
+            },
+            showSort: true,
+            sortAscending: state.sortAscending,
+            onSortToggle: () =>
+                ref.read(contentProvider.notifier).toggleSort(),
           ),
 
           // Content list
@@ -103,7 +89,8 @@ class ContentScreen extends ConsumerWidget {
       );
     }
 
-    if (state.items.isEmpty) {
+    final items = state.filteredItems;
+    if (items.isEmpty) {
       return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -120,9 +107,9 @@ class ContentScreen extends ConsumerWidget {
       onRefresh: () => ref.read(contentProvider.notifier).refresh(),
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: state.items.length,
+        itemCount: items.length,
         itemBuilder: (context, index) {
-          final item = state.items[index];
+          final item = items[index];
           return Card(
             margin: const EdgeInsets.only(bottom: 12),
             child: ListTile(

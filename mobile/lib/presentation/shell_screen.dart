@@ -1,6 +1,7 @@
 /// Shell screen — bottom navigation bar for main app sections.
 ///
 /// Reference: DEC-E2-010 — Navigation with role-based tabs
+/// Phase 5B: Added admin + teacher tabs.
 /// Shows tabs based on user role.
 
 import 'package:flutter/material.dart';
@@ -24,12 +25,19 @@ class _NavItem {
 }
 
 const _allNavItems = [
+  // Admin tabs
+  _NavItem(route: '/admin/dashboard', icon: Icons.dashboard, label: 'Dashboard', roles: ['ADM', 'DIR']),
+  _NavItem(route: '/admin/users', icon: Icons.people, label: 'Utilisateurs', roles: ['ADM']),
+  // Teacher tabs
+  _NavItem(route: '/teacher/classes', icon: Icons.class_, label: 'Classes', roles: ['TCH']),
+  _NavItem(route: '/teacher/submissions', icon: Icons.grading, label: 'Notes', roles: ['TCH']),
+  // Common tabs
   _NavItem(route: '/feed', icon: Icons.newspaper, label: 'Feed', roles: ['PAR']),
-  _NavItem(route: '/notifications', icon: Icons.notifications, label: 'Notifications', roles: ['PAR', 'TCH', 'ADM', 'DIR']),
-  _NavItem(route: '/content', icon: Icons.library_books, label: 'Content', roles: ['STD', 'PAR', 'TCH', 'ADM']),
-  _NavItem(route: '/results', icon: Icons.assessment, label: 'Results', roles: ['STD', 'PAR']),
-  _NavItem(route: '/invoices', icon: Icons.receipt_long, label: 'Invoices', roles: ['PAR', 'ADM']),
-  _NavItem(route: '/profile', icon: Icons.person, label: 'Profile', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR', 'SUP']),
+  _NavItem(route: '/notifications', icon: Icons.notifications, label: 'Notifs', roles: ['PAR', 'TCH', 'ADM', 'DIR']),
+  _NavItem(route: '/content', icon: Icons.library_books, label: 'Contenu', roles: ['STD', 'PAR', 'TCH', 'ADM']),
+  _NavItem(route: '/results', icon: Icons.assessment, label: 'Résultats', roles: ['STD', 'PAR']),
+  _NavItem(route: '/invoices', icon: Icons.receipt_long, label: 'Factures', roles: ['PAR', 'ADM']),
+  _NavItem(route: '/profile', icon: Icons.person, label: 'Profil', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR', 'SUP']),
 ];
 
 class ShellScreen extends ConsumerWidget {

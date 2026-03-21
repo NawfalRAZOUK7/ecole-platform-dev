@@ -4,6 +4,7 @@
 /// Routes redirect to /login if not authenticated.
 /// Role-based home redirect (PAR→/feed, STD→/content, etc.)
 /// Phase 5A: Added 2FA setup, password change, submission upload routes.
+/// Phase 5B: Added admin + teacher routes.
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -19,15 +20,23 @@ import 'package:ecole_platform/features/profile/profile_screen.dart';
 import 'package:ecole_platform/features/profile/two_factor_setup_screen.dart';
 import 'package:ecole_platform/features/profile/change_password_screen.dart';
 import 'package:ecole_platform/features/submissions/submission_upload_screen.dart';
+import 'package:ecole_platform/features/admin/admin_dashboard_screen.dart';
+import 'package:ecole_platform/features/admin/users_screen.dart';
+import 'package:ecole_platform/features/admin/invitations_screen.dart';
+import 'package:ecole_platform/features/admin/justification_review_screen.dart';
+import 'package:ecole_platform/features/teacher/classes_screen.dart';
+import 'package:ecole_platform/features/teacher/assignment_form_screen.dart';
+import 'package:ecole_platform/features/teacher/submissions_screen.dart';
+import 'package:ecole_platform/features/teacher/attendance_screen.dart';
 import 'package:ecole_platform/presentation/shell_screen.dart';
 
 /// Role-based redirect targets.
 const _roleRedirects = <String, String>{
   'PAR': '/feed',
   'STD': '/content',
-  'TCH': '/content',
-  'ADM': '/notifications',
-  'DIR': '/notifications',
+  'TCH': '/teacher/classes',
+  'ADM': '/admin/dashboard',
+  'DIR': '/admin/dashboard',
   'SUP': '/notifications',
 };
 
@@ -66,6 +75,44 @@ final routerProvider = Provider<GoRouter>((ref) {
       ShellRoute(
         builder: (context, state, child) => ShellScreen(child: child),
         routes: [
+          // ── Admin routes ──
+          GoRoute(
+            path: '/admin/dashboard',
+            builder: (context, state) => const AdminDashboardScreen(),
+          ),
+          GoRoute(
+            path: '/admin/users',
+            builder: (context, state) => const UsersScreen(),
+          ),
+          GoRoute(
+            path: '/admin/invitations',
+            builder: (context, state) => const InvitationsScreen(),
+          ),
+          GoRoute(
+            path: '/admin/justifications',
+            builder: (context, state) => const JustificationReviewScreen(),
+          ),
+
+          // ── Teacher routes ──
+          GoRoute(
+            path: '/teacher/classes',
+            builder: (context, state) => const ClassesScreen(),
+          ),
+          GoRoute(
+            path: '/teacher/assignments',
+            builder: (context, state) => const AssignmentFormScreen(),
+          ),
+          GoRoute(
+            path: '/teacher/submissions',
+            builder: (context, state) =>
+                const SubmissionsScreen(),
+          ),
+          GoRoute(
+            path: '/teacher/attendance',
+            builder: (context, state) => const AttendanceScreen(),
+          ),
+
+          // ── Common routes ──
           GoRoute(
             path: '/feed',
             builder: (context, state) => const FeedScreen(),

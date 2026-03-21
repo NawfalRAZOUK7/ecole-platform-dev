@@ -1,6 +1,9 @@
 /// Content state management — Riverpod provider.
 ///
 /// Reference: S-098 — Content library with offline access
+/// Phase 5B: Added search + sort support.
+
+import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ecole_platform/app/providers.dart';
@@ -15,6 +18,8 @@ class ContentState {
   final bool hasMore;
   final String? typeFilter;
   final String? levelFilter;
+  final String search;
+  final bool sortAscending;
 
   const ContentState({
     this.items = const [],
@@ -25,14 +30,39 @@ class ContentState {
     this.hasMore = false,
     this.typeFilter,
     this.levelFilter,
+    this.search = '',
+    this.sortAscending = true,
   });
+
+  List<ContentItem> get filteredItems {
+    var result = items;
+    if (search.isNotEmpty) {
+      final q = search.toLowerCase();
+      result = result
+          .where((i) => i.title.toLowerCase().contains(q))
+          .toList();
+    }
+    if (sortAscending) {
+      result.sort((a, b) => a.title.compareTo(b.title));
+    } else {
+      result.sort((a, b) => b.title.compareTo(a.title));
+    }
+    return result;
+  }
 }
 
 class ContentNotifier extends StateNotifier<ContentState> {
   final Ref _ref;
+  Timer? _debounce;
 
   ContentNotifier(this._ref) : super(const ContentState(isLoading: true)) {
     load();
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
   }
 
   Future<void> load() async {
@@ -40,6 +70,8 @@ class ContentNotifier extends StateNotifier<ContentState> {
       isLoading: true,
       typeFilter: state.typeFilter,
       levelFilter: state.levelFilter,
+      search: state.search,
+      sortAscending: state.sortAscending,
     );
     try {
       final repo = _ref.read(contentRepositoryProvider);
@@ -53,12 +85,16 @@ class ContentNotifier extends StateNotifier<ContentState> {
         hasMore: result.hasMore,
         typeFilter: state.typeFilter,
         levelFilter: state.levelFilter,
+        search: state.search,
+        sortAscending: state.sortAscending,
       );
     } catch (e) {
       state = ContentState(
         error: e.toString(),
         typeFilter: state.typeFilter,
         levelFilter: state.levelFilter,
+        search: state.search,
+        sortAscending: state.sortAscending,
       );
     }
   }
@@ -72,6 +108,8 @@ class ContentNotifier extends StateNotifier<ContentState> {
       hasMore: state.hasMore,
       typeFilter: state.typeFilter,
       levelFilter: state.levelFilter,
+      search: state.search,
+      sortAscending: state.sortAscending,
     );
     try {
       final repo = _ref.read(contentRepositoryProvider);
@@ -86,6 +124,8 @@ class ContentNotifier extends StateNotifier<ContentState> {
         hasMore: result.hasMore,
         typeFilter: state.typeFilter,
         levelFilter: state.levelFilter,
+        search: state.search,
+        sortAscending: state.sortAscending,
       );
     } catch (e) {
       state = ContentState(
@@ -93,18 +133,54 @@ class ContentNotifier extends StateNotifier<ContentState> {
         error: e.toString(),
         typeFilter: state.typeFilter,
         levelFilter: state.levelFilter,
+        search: state.search,
+        sortAscending: state.sortAscending,
       );
     }
   }
 
   void setTypeFilter(String? type) {
-    state = ContentState(typeFilter: type, levelFilter: state.levelFilter);
+    state = ContentState(
+      typeFilter: type,
+      levelFilter: state.levelFilter,
+      search: state.search,
+      sortAscending: state.sortAscending,
+    );
     load();
   }
 
   void setLevelFilter(String? level) {
-    state = ContentState(typeFilter: state.typeFilter, levelFilter: level);
+    state = ContentState(
+      typeFilter: state.typeFilter,
+      levelFilter: level,
+      search: state.search,
+      sortAscending: state.sortAscending,
+    );
     load();
+  }
+
+  void setSearch(String value) {
+    state = ContentState(
+      items: state.items,
+      typeFilter: state.typeFilter,
+      levelFilter: state.levelFilter,
+      search: value,
+      sortAscending: state.sortAscending,
+      nextCursor: state.nextCursor,
+      hasMore: state.hasMore,
+    );
+  }
+
+  void toggleSort() {
+    state = ContentState(
+      items: state.items,
+      typeFilter: state.typeFilter,
+      levelFilter: state.levelFilter,
+      search: state.search,
+      sortAscending: !state.sortAscending,
+      nextCursor: state.nextCursor,
+      hasMore: state.hasMore,
+    );
   }
 
   Future<void> refresh() async {
