@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import async_session, engine
 from app.models.audit import AuditLog
-from app.models.billing import Invoice, InvoiceItem, PaymentAttempt
+from app.models.billing import FeeAssignment, FeeStructure, Invoice, InvoiceItem, PaymentAttempt
 from app.models.com import (
     ConsentPreference,
     Notification,
@@ -116,6 +116,11 @@ SLOT_MATH_6A_WED_ID = uuid.UUID("50000000-0000-4000-8000-000000000003")
 SLOT_FR_6A_THU_ID = uuid.UUID("50000000-0000-4000-8000-000000000004")
 SLOT_MATH_6B_TUE_ID = uuid.UUID("50000000-0000-4000-8000-000000000005")
 SLOT_FR_6B_TUE_ID = uuid.UUID("50000000-0000-4000-8000-000000000006")
+
+# Phase 11B — Fee Structures
+FEE_SCOLARITE_ID = uuid.UUID("60000000-0000-4000-8000-000000000001")
+FEE_TRANSPORT_ID = uuid.UUID("60000000-0000-4000-8000-000000000002")
+FEE_CANTINE_ID = uuid.UUID("60000000-0000-4000-8000-000000000003")
 
 # Billing
 INVOICE_1_ID = uuid.UUID("40000000-0000-4000-8000-000000000001")
@@ -1131,6 +1136,83 @@ async def seed_timetable(session: AsyncSession) -> None:
     print("  [Timetable] 6 slots (2 classes), 1 exception (canceled)")
 
 
+async def seed_fees(session: AsyncSession) -> None:
+    """Seed fee structures and assignments (Phase 11B).
+
+    Creates realistic Moroccan school fees:
+    - Scolarité: annual tuition 15,000 MAD
+    - Transport: monthly transport 500 MAD
+    - Cantine: trimestrial cafeteria 1,200 MAD
+    Assigns scolarité to all 3 students, transport to student 1+2 with 20% sibling discount for student 2.
+    """
+    fee_scolarite = FeeStructure(
+        id=FEE_SCOLARITE_ID,
+        school_id=SCHOOL_ID,
+        academic_year_id=YEAR_ID,
+        name="Frais de scolarité — 6ème année",
+        amount=15000.00,
+        currency="MAD",
+        frequency="ANNUAL",
+        due_day=1,
+        applies_to_level="6",
+        status="ACTIVE",
+    )
+    fee_transport = FeeStructure(
+        id=FEE_TRANSPORT_ID,
+        school_id=SCHOOL_ID,
+        academic_year_id=YEAR_ID,
+        name="Frais de transport scolaire",
+        amount=500.00,
+        currency="MAD",
+        frequency="MONTHLY",
+        due_day=5,
+        applies_to_level=None,
+        status="ACTIVE",
+    )
+    fee_cantine = FeeStructure(
+        id=FEE_CANTINE_ID,
+        school_id=SCHOOL_ID,
+        academic_year_id=YEAR_ID,
+        name="Frais de cantine",
+        amount=1200.00,
+        currency="MAD",
+        frequency="TRIMESTRIAL",
+        due_day=10,
+        applies_to_level=None,
+        status="ACTIVE",
+    )
+    session.add_all([fee_scolarite, fee_transport, fee_cantine])
+    await session.flush()
+
+    # Assignments
+    assignments = [
+        # All 3 students get tuition
+        FeeAssignment(fee_structure_id=FEE_SCOLARITE_ID, student_id=STUDENT_1_ID, school_id=SCHOOL_ID, status="ACTIVE"),
+        FeeAssignment(fee_structure_id=FEE_SCOLARITE_ID, student_id=STUDENT_2_ID, school_id=SCHOOL_ID, status="ACTIVE"),
+        FeeAssignment(fee_structure_id=FEE_SCOLARITE_ID, student_id=STUDENT_3_ID, school_id=SCHOOL_ID, status="ACTIVE"),
+        # Students 1+2 get transport
+        FeeAssignment(fee_structure_id=FEE_TRANSPORT_ID, student_id=STUDENT_1_ID, school_id=SCHOOL_ID, status="ACTIVE"),
+        FeeAssignment(
+            fee_structure_id=FEE_TRANSPORT_ID,
+            student_id=STUDENT_2_ID,
+            school_id=SCHOOL_ID,
+            discount_percent=20.0,
+            discount_reason="Remise fratrie — 2ème enfant",
+            status="ACTIVE",
+        ),
+        # Student 3 exempted from cantine
+        FeeAssignment(
+            fee_structure_id=FEE_CANTINE_ID,
+            student_id=STUDENT_3_ID,
+            school_id=SCHOOL_ID,
+            status="EXEMPTED",
+        ),
+    ]
+    session.add_all(assignments)
+    await session.flush()
+    print("  [Fees] 3 fee structures, 6 assignments (1 with discount, 1 exempted)")
+
+
 async def main() -> None:
     print("=" * 60)
     print("Ecole Platform — Seeding development database")
@@ -1152,6 +1234,7 @@ async def main() -> None:
         await seed_cms(session)
         await seed_quizzes(session)
         await seed_timetable(session)
+        await seed_fees(session)
 
         await session.commit()
 

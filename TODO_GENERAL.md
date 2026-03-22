@@ -767,15 +767,20 @@
 - [x] RBAC permissions: PERM-ERP:timetable:{create,read,update,delete}, PERM-ERP:timetable-exception:{create,read}
 - [x] Pydantic schemas: slot create/bulk/update/response, exception create/response, weekly view
 
-## Phase 11B — Billing Enhancements Backend
-- [ ] Create `fee_structures` table (school_id, academic_year_id, name, amount, currency, frequency, due_day, applies_to_level, status)
-- [ ] Create `fee_assignments` table (fee_structure_id, student_id, school_id, discount_percent, discount_reason, status)
-- [ ] Add retry fields to `PaymentAttempt` (retry_count, next_retry_at, last_retry_error)
-- [ ] Add reminder fields to `Invoice` (reminder_sent_at, reminder_count)
-- [ ] Payment retry service: ARQ task retries failed payments (3x, exponential backoff)
-- [ ] Overdue reminder service: ARQ task sends reminders daily (respects consent, max 3)
-- [ ] Fee structure CRUD endpoints + bulk assignment + invoice generation
-- [ ] Audit trail + seed data
+## Phase 11B — Billing Enhancements Backend ✅
+- [x] Create `fee_structures` table (school_id, academic_year_id, name, amount, currency, frequency, due_day, applies_to_level, status) — in `models/billing.py`
+- [x] Create `fee_assignments` table (fee_structure_id, student_id, school_id, discount_percent, discount_reason, status) — unique per (fee, student)
+- [x] Add retry fields to `PaymentAttempt` (retry_count, next_retry_at, last_retry_error)
+- [x] Add reminder fields to `Invoice` (reminder_sent_at, reminder_count, fee_structure_id)
+- [x] Payment retry service: ARQ task `retry_failed_payments` runs hourly, 3 retries with exponential backoff (1h, 6h, 24h) — `services/payment_retry.py`
+- [x] Overdue reminder service: ARQ task `send_overdue_reminders` runs daily at 09:00 UTC, emails parents for invoices overdue >7 days (max 3 reminders, respects consent) — `services/overdue_reminders.py`
+- [x] Fee CRUD endpoints: POST/GET/PUT /billing/fee-structures — `api/v1/billing.py`
+- [x] Fee assignment endpoints: POST /billing/fee-assignments, POST /billing/fee-assignments/bulk, GET /billing/fee-assignments
+- [x] Invoice generation: POST /billing/generate-invoices (from fee structures, auto-calculates discounts, maps students to parents)
+- [x] Webhook handler updated to schedule retry on payment failure
+- [x] RBAC: PERM-BIL:fee:{create,read,update,assign}, PERM-BIL:invoice:generate (ADM full, PAR read)
+- [x] Alembic migration G15 — `b9c0d1e2f3a4_g15_fee_structures_billing_enhancements.py`
+- [x] Audit trail on all fee/invoice operations + seed data (3 fee structures, 6 assignments)
 
 ## Phase 11C — Messaging & Communication Backend
 - [ ] Create `conversations` table (school_id, type: DIRECT/GROUP, created_by, subject)

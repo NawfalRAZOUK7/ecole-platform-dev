@@ -240,6 +240,12 @@ async def handle_provider_webhook(
         elif body.status == "failed":
             payment_attempt.status = "failed"
             payment_attempt.finalized_at = now
+            # Phase 11B: Schedule retry for failed payment
+            try:
+                from app.services.payment_retry import schedule_retry_for_failed_payment
+                await schedule_retry_for_failed_payment(payment_attempt.id, db)
+            except Exception:
+                pass  # Retry scheduling is best-effort
         elif body.status == "canceled":
             payment_attempt.status = "canceled"
             payment_attempt.finalized_at = now

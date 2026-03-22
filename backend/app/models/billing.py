@@ -1,7 +1,8 @@
-"""Billing domain models — Invoices, payments, proofs, webhooks.
+"""Billing domain models — Invoices, payments, proofs, webhooks, fee structures.
 
 Reference: Pack C4 (Data Model — Billing section), Sprint 1 story S-018.
 Migration group: G5-Billing (depends on G1-IAM, G2-ERP for user/period FKs).
+Phase 11B: Added FeeStructure, FeeAssignment models; retry + reminder fields.
 """
 
 import enum
@@ -18,6 +19,7 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -50,6 +52,27 @@ class WebhookEventStatus(str, enum.Enum):
     ERROR = "error"
 
 
+class FeeFrequency(str, enum.Enum):
+    """Fee payment frequency (Phase 11B)."""
+    MONTHLY = "MONTHLY"
+    TRIMESTRIAL = "TRIMESTRIAL"
+    ANNUAL = "ANNUAL"
+    ONE_TIME = "ONE_TIME"
+
+
+class FeeStructureStatus(str, enum.Enum):
+    """Fee structure status (Phase 11B)."""
+    ACTIVE = "ACTIVE"
+    ARCHIVED = "ARCHIVED"
+
+
+class FeeAssignmentStatus(str, enum.Enum):
+    """Fee assignment status (Phase 11B)."""
+    ACTIVE = "ACTIVE"
+    EXEMPTED = "EXEMPTED"
+    ARCHIVED = "ARCHIVED"
+
+
 # ---------------------------------------------------------------------------
 # Models
 # ---------------------------------------------------------------------------
@@ -78,6 +101,17 @@ class Invoice(TimestampMixin, Base):
     )
     issued_date: Mapped[date] = mapped_column(Date, nullable=False)
     due_date: Mapped[date] = mapped_column(Date, nullable=False)
+    # Phase 11B: Overdue reminder tracking
+    reminder_sent_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    reminder_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0
+    )
+    # Phase 11B: Optional link to fee structure that generated this invoice
+    fee_structure_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("fee_structures.id", ondelete="SET NULL"), nullable=True
+    )
 
     # Relationships
     items: Mapped[list["InvoiceItem"]] = relationship(
@@ -90,6 +124,7 @@ class Invoice(TimestampMixin, Base):
     __table_args__ = (
         CheckConstraint("total_amount >= 0", name="ck_invoices_total_amount"),
         CheckConstraint("due_date >= issued_date", name="ck_invoices_due_after_issued"),
+        CheckConstraint("reminder_count >= 0", name="ck_invoices_reminder_count"),
         Index(
             "idx_invoices_parent_status_period",
             "parent_id",
@@ -97,6 +132,7 @@ class Invoice(TimestampMixin, Base):
             "period_id",
         ),
         Index("idx_invoices_school_status", "school_id", "status"),
+        Index("idx_invoices_due_date_status", "due_date", "status"),
     )
 
 
@@ -146,6 +182,14 @@ class PaymentAttempt(TimestampMixin, Base):
     finalized_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    # Phase 11B: Retry tracking
+    retry_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0
+    )
+    next_retry_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    last_retry_error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationships
     invoice: Mapped["Invoice"] = relationship(back_populates="payment_attempts")
@@ -227,4 +271,109 @@ class ProviderWebhookEvent(TimestampMixin, Base):
             "school_id",
             "provider_event_received_at",
         ),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Fee Structures & Assignments (Phase 11B)
+# ---------------------------------------------------------------------------
+
+
+class FeeStructure(TimestampMixin, Base):
+    """Fee structure — defines a recurring or one-time fee for a school.
+
+    Examples: "Frais de scolarité 1ère année" (ANNUAL, 15000 MAD),
+              "Frais de transport" (MONTHLY, 500 MAD).
+    """
+
+    __tablename__ = "fee_structures"
+
+    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    academic_year_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("academic_years.id", ondelete="CASCADE"), nullable=False
+    )
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    currency: Mapped[str] = mapped_column(
+        String(3), nullable=False, default="MAD"
+    )
+    frequency: Mapped[str] = mapped_column(
+        String(20), nullable=False, default=FeeFrequency.ANNUAL.value
+    )
+    due_day: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    applies_to_level: Mapped[str | None] = mapped_column(
+        String(50), nullable=True
+    )
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default=FeeStructureStatus.ACTIVE.value
+    )
+
+    # Relationships
+    assignments: Mapped[list["FeeAssignment"]] = relationship(
+        back_populates="fee_structure", cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (
+        CheckConstraint("amount > 0", name="ck_fee_structures_amount"),
+        CheckConstraint(
+            "due_day >= 1 AND due_day <= 28",
+            name="ck_fee_structures_due_day",
+        ),
+        CheckConstraint(
+            "frequency IN ('MONTHLY', 'TRIMESTRIAL', 'ANNUAL', 'ONE_TIME')",
+            name="ck_fee_structures_frequency",
+        ),
+        CheckConstraint(
+            "status IN ('ACTIVE', 'ARCHIVED')",
+            name="ck_fee_structures_status",
+        ),
+        Index("idx_fee_structures_school", "school_id"),
+        Index("idx_fee_structures_school_year", "school_id", "academic_year_id"),
+    )
+
+
+class FeeAssignment(TimestampMixin, Base):
+    """Assignment of a fee structure to a specific student.
+
+    Supports optional discount (percent-based with reason).
+    Unique per (fee_structure_id, student_id).
+    """
+
+    __tablename__ = "fee_assignments"
+
+    fee_structure_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("fee_structures.id", ondelete="CASCADE"), nullable=False
+    )
+    student_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    discount_percent: Mapped[float | None] = mapped_column(
+        Numeric(5, 2), nullable=True
+    )
+    discount_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default=FeeAssignmentStatus.ACTIVE.value
+    )
+
+    # Relationships
+    fee_structure: Mapped["FeeStructure"] = relationship(
+        back_populates="assignments"
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "fee_structure_id", "student_id",
+            name="uq_fee_assignments_fee_student",
+        ),
+        CheckConstraint(
+            "discount_percent IS NULL OR (discount_percent >= 0 AND discount_percent <= 100)",
+            name="ck_fee_assignments_discount",
+        ),
+        CheckConstraint(
+            "status IN ('ACTIVE', 'EXEMPTED', 'ARCHIVED')",
+            name="ck_fee_assignments_status",
+        ),
+        Index("idx_fee_assignments_school", "school_id"),
+        Index("idx_fee_assignments_student", "student_id"),
     )

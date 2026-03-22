@@ -23,6 +23,7 @@ Routes:
   /consents/*                   — Consent preferences (COM)
   /feed/*                       — Parent feed (COM)
   /timetable/*                  — Timetable slots + exceptions (ERP, Phase 11A)
+  /billing/*                    — Fee structures, assignments, invoice generation (Phase 11B)
 """
 
 from datetime import datetime, timezone
@@ -85,6 +86,9 @@ from app.api.v1.quizzes import router as quizzes_router
 
 # Phase 11A — Timetable
 from app.api.v1.timetable import router as timetable_router
+
+# Phase 11B — Billing Enhancements
+from app.api.v1.billing import router as billing_router
 
 router = APIRouter()
 
@@ -165,3 +169,6 @@ router.include_router(quizzes_router)
 
 # Mount sub-routers — Phase 11A Timetable
 router.include_router(timetable_router)
+
+# Mount sub-routers — Phase 11B Billing Enhancements
+router.include_router(billing_router)

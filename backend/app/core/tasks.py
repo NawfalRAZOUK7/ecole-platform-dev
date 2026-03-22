@@ -1,11 +1,14 @@
 """ARQ background task worker — task registry and worker settings.
 
 Reference: Phase 3E — Background Tasks & Email Notifications
+Phase 11B: Added payment retry and overdue reminder tasks.
 Tasks:
   - send_email — dispatch email via SMTP (called from enqueue helpers)
   - cleanup_expired_sessions — remove revoked/expired sessions from DB
   - cleanup_expired_cache — flush expired Redis keys (recovery OTPs, etc.)
   - send_notification_digest — daily digest of unread notifications
+  - retry_failed_payments — retry failed payments with exponential backoff (Phase 11B)
+  - send_overdue_reminders — send email reminders for overdue invoices (Phase 11B)
 
 Usage:
     # Enqueue a task from anywhere in the app:
@@ -333,6 +336,67 @@ async def task_refresh_kpi_views(ctx: dict) -> bool:
 
 
 # ---------------------------------------------------------------------------
+# Task: retry_failed_payments (Phase 11B)
+# ---------------------------------------------------------------------------
+async def task_retry_failed_payments(ctx: dict) -> int:
+    """Retry failed payment attempts with exponential backoff.
+
+    Runs hourly. Retries up to 3 times: 1h, 6h, 24h.
+    On final failure: marks invoice as failed, notifies parent.
+    """
+    from app.core.metrics import TASK_COMPLETED_COUNT, TASK_DURATION, TASK_FAILED_COUNT
+
+    start = time.perf_counter()
+    try:
+        from app.services.payment_retry import retry_failed_payments
+
+        count = await retry_failed_payments()
+
+        duration = time.perf_counter() - start
+        TASK_DURATION.labels(env=settings.app_env, task="retry_failed_payments").observe(duration)
+        TASK_COMPLETED_COUNT.labels(env=settings.app_env, task="retry_failed_payments").inc()
+        logger.info("Retried %d failed payments", count)
+        return count
+    except Exception:
+        duration = time.perf_counter() - start
+        TASK_DURATION.labels(env=settings.app_env, task="retry_failed_payments").observe(duration)
+        TASK_FAILED_COUNT.labels(env=settings.app_env, task="retry_failed_payments").inc()
+        logger.exception("task_retry_failed_payments failed")
+        return 0
+
+
+# ---------------------------------------------------------------------------
+# Task: send_overdue_reminders (Phase 11B)
+# ---------------------------------------------------------------------------
+async def task_send_overdue_reminders(ctx: dict) -> int:
+    """Send email reminders for overdue invoices.
+
+    Runs daily at 09:00 UTC (10:00 Morocco time).
+    Sends to parents for invoices overdue > 7 days.
+    Respects consent preferences, max 3 reminders per invoice.
+    """
+    from app.core.metrics import TASK_COMPLETED_COUNT, TASK_DURATION, TASK_FAILED_COUNT
+
+    start = time.perf_counter()
+    try:
+        from app.services.overdue_reminders import send_overdue_reminders
+
+        count = await send_overdue_reminders()
+
+        duration = time.perf_counter() - start
+        TASK_DURATION.labels(env=settings.app_env, task="send_overdue_reminders").observe(duration)
+        TASK_COMPLETED_COUNT.labels(env=settings.app_env, task="send_overdue_reminders").inc()
+        logger.info("Sent %d overdue reminders", count)
+        return count
+    except Exception:
+        duration = time.perf_counter() - start
+        TASK_DURATION.labels(env=settings.app_env, task="send_overdue_reminders").observe(duration)
+        TASK_FAILED_COUNT.labels(env=settings.app_env, task="send_overdue_reminders").inc()
+        logger.exception("task_send_overdue_reminders failed")
+        return 0
+
+
+# ---------------------------------------------------------------------------
 # Enqueue helpers — fire-and-forget from API endpoints
 # ---------------------------------------------------------------------------
 _arq_pool: ArqRedis | None = None
@@ -417,6 +481,8 @@ class WorkerSettings:
         task_cleanup_expired_cache,
         task_send_notification_digest,
         task_refresh_kpi_views,
+        task_retry_failed_payments,
+        task_send_overdue_reminders,
     ]
 
     # Cron jobs
@@ -429,6 +495,10 @@ class WorkerSettings:
         cron(task_refresh_kpi_views, hour=3, minute=30),
         # Send notification digest daily at 07:00 UTC (8:00 Morocco time)
         cron(task_send_notification_digest, hour=7, minute=0),
+        # Phase 11B: Retry failed payments every hour
+        cron(task_retry_failed_payments, minute=30),
+        # Phase 11B: Send overdue reminders daily at 09:00 UTC (10:00 Morocco time)
+        cron(task_send_overdue_reminders, hour=9, minute=0),
     ]
 
     # Worker config

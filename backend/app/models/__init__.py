@@ -57,6 +57,8 @@ from app.models.com import (
 
 # G5 — Billing
 from app.models.billing import (
+    FeeAssignment,
+    FeeStructure,
     Invoice,
     InvoiceItem,
     PaymentAttempt,
@@ -115,6 +117,8 @@ __all__ = [
     "NotificationDelivery",
     "ParentFeedItem",
     # Billing
+    "FeeStructure",
+    "FeeAssignment",
     "Invoice",
     "InvoiceItem",
     "PaymentAttempt",

@@ -1,7 +1,8 @@
 """Email service — SMTP dispatch with Jinja2 locale-aware templates.
 
 Reference: Phase 3E — Background Tasks & Email Notifications
-Templates: welcome, otp, invoice_reminder, grade_published (fr/ar/en)
+Phase 11B: Added payment_failed template subject.
+Templates: welcome, otp, invoice_reminder, grade_published, payment_failed (fr/ar/en)
 
 Usage:
     from app.services.email import email_service
@@ -58,6 +59,11 @@ SUBJECTS: dict[str, dict[str, str]] = {
         "fr": "Nouvelle note publiée",
         "ar": "تم نشر درجة جديدة",
         "en": "New grade published",
+    },
+    "payment_failed": {
+        "fr": "Échec de paiement — action requise",
+        "ar": "فشل الدفع — إجراء مطلوب",
+        "en": "Payment failed — action required",
     },
 }
 

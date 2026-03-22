@@ -86,6 +86,13 @@ PERM_BIL_PAYMENT_READ = "PERM-BIL:payment:read"
 PERM_BIL_PAYMENT_RECONCILE = "PERM-BIL:payment:reconcile"
 PERM_BIL_PROOF_READ = "PERM-BIL:proof:read"
 
+# Billing — Fee Structures (Phase 11B)
+PERM_BIL_FEE_CREATE = "PERM-BIL:fee:create"
+PERM_BIL_FEE_READ = "PERM-BIL:fee:read"
+PERM_BIL_FEE_UPDATE = "PERM-BIL:fee:update"
+PERM_BIL_FEE_ASSIGN = "PERM-BIL:fee:assign"
+PERM_BIL_INVOICE_GENERATE = "PERM-BIL:invoice:generate"
+
 # COM
 PERM_COM_CONSENT_UPDATE = "PERM-COM:consent:update"
 PERM_COM_NOTIFICATION_READ = "PERM-COM:notification:read"
@@ -170,10 +177,15 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_LMS_ASSESSMENT_CREATE,
         PERM_LMS_ASSESSMENT_READ,
         PERM_LMS_ASSESSMENT_PUBLISH,
-        # Billing — read global
+        # Billing — read global + fee management (Phase 11B)
         PERM_BIL_INVOICE_READ,
         PERM_BIL_PAYMENT_READ,
         PERM_BIL_PROOF_READ,
+        PERM_BIL_FEE_CREATE,
+        PERM_BIL_FEE_READ,
+        PERM_BIL_FEE_UPDATE,
+        PERM_BIL_FEE_ASSIGN,
+        PERM_BIL_INVOICE_GENERATE,
         # COM — config
         PERM_COM_CONSENT_UPDATE,
         PERM_COM_NOTIFICATION_READ,
@@ -269,11 +281,12 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_LMS_RESULT_READ,
         PERM_LMS_CONTENT_READ,
         PERM_LMS_CONTENT_ASSET_READ,
-        # Billing — invoice/payment
+        # Billing — invoice/payment + fee read (Phase 11B)
         PERM_BIL_INVOICE_READ,
         PERM_BIL_PAYMENT_INITIATE,
         PERM_BIL_PAYMENT_READ,
         PERM_BIL_PROOF_READ,
+        PERM_BIL_FEE_READ,
         # COM — consent + feed
         PERM_COM_CONSENT_UPDATE,
         PERM_COM_NOTIFICATION_READ,
