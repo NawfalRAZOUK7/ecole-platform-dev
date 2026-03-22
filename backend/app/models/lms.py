@@ -10,6 +10,7 @@ from datetime import datetime
 
 from sqlalchemy import (
     BigInteger,
+    Boolean,
     CheckConstraint,
     DateTime,
     ForeignKey,
@@ -20,6 +21,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base, TimestampMixin
@@ -123,6 +125,13 @@ class Assignment(TimestampMixin, Base):
         DateTime(timezone=True), nullable=True
     )
     total_points: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    # Phase 9B — exercise type + quiz link
+    exercise_type: Mapped[str] = mapped_column(
+        String(20), nullable=False, default=ExerciseType.STANDARD.value
+    )
+    quiz_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("quizzes.id", ondelete="SET NULL"), nullable=True
+    )
 
     # Relationships
     course: Mapped["Course"] = relationship(back_populates="assignments")
@@ -133,6 +142,7 @@ class Assignment(TimestampMixin, Base):
     __table_args__ = (
         CheckConstraint("total_points >= 0", name="ck_assignments_total_points"),
         Index("idx_assignments_course_due", "course_id", "due_at"),
+        Index("idx_assignments_quiz", "quiz_id"),
     )
 
 
@@ -279,6 +289,32 @@ class AssessmentResult(TimestampMixin, Base):
             name="uq_assessment_results_assessment_student",
         ),
     )
+
+
+class QuizStatus(str, enum.Enum):
+    DRAFT = "draft"
+    PUBLISHED = "published"
+    ARCHIVED = "archived"
+
+
+class QuestionType(str, enum.Enum):
+    MCQ = "MCQ"
+    TRUE_FALSE = "TRUE_FALSE"
+    FILL_IN = "FILL_IN"
+    DRAG_DROP = "DRAG_DROP"
+    MATCHING = "MATCHING"
+
+
+class QuizAttemptStatus(str, enum.Enum):
+    STARTED = "STARTED"
+    COMPLETED = "COMPLETED"
+    TIMED_OUT = "TIMED_OUT"
+
+
+class ExerciseType(str, enum.Enum):
+    STANDARD = "STANDARD"
+    PRINTABLE_PDF = "PRINTABLE_PDF"
+    QUIZ = "QUIZ"
 
 
 class ContentOrigin(str, enum.Enum):
@@ -507,4 +543,149 @@ class ContentSubmission(TimestampMixin, Base):
         Index("idx_content_submissions_status", "status"),
         Index("idx_content_submissions_submitted_by", "submitted_by"),
         Index("idx_content_submissions_school", "school_id"),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Phase 9B — Quiz Engine Models
+# ---------------------------------------------------------------------------
+
+
+class Quiz(TimestampMixin, Base):
+    """Quiz — created by CONTENT_MGR (platform-wide) or TCH (school-scoped).
+
+    school_id=NULL means platform-wide (visible to all schools).
+    """
+
+    __tablename__ = "quizzes"
+
+    school_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True)
+    created_by: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    title: Mapped[str] = mapped_column(String(300), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    subject: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    level_band: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    difficulty: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    time_limit_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    max_attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    shuffle_questions: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default=QuizStatus.DRAFT.value
+    )
+
+    # Relationships
+    questions: Mapped[list["QuizQuestion"]] = relationship(
+        back_populates="quiz", cascade="all, delete-orphan",
+        order_by="QuizQuestion.order",
+    )
+    attempts: Mapped[list["QuizAttempt"]] = relationship(
+        back_populates="quiz", cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (
+        Index("idx_quizzes_school_status", "school_id", "status"),
+        Index("idx_quizzes_created_by", "created_by"),
+        Index("idx_quizzes_subject", "subject"),
+    )
+
+
+class QuizQuestion(TimestampMixin, Base):
+    """Question within a quiz. Supports 5 types with JSONB options/answers."""
+
+    __tablename__ = "quiz_questions"
+
+    quiz_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("quizzes.id", ondelete="CASCADE"), nullable=False
+    )
+    question_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    question_text: Mapped[str] = mapped_column(Text, nullable=False)
+    question_media_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    options: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    correct_answer: Mapped[dict | list] = mapped_column(JSONB, nullable=False)
+    points: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    explanation: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # Relationships
+    quiz: Mapped["Quiz"] = relationship(back_populates="questions")
+    responses: Mapped[list["QuizResponse"]] = relationship(
+        back_populates="question", cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (
+        CheckConstraint("points >= 0", name="ck_quiz_questions_points"),
+        Index("idx_quiz_questions_quiz_order", "quiz_id", "order"),
+    )
+
+
+class QuizAttempt(TimestampMixin, Base):
+    """Student attempt at a quiz. Unique per (quiz, student, attempt_no)."""
+
+    __tablename__ = "quiz_attempts"
+
+    quiz_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("quizzes.id", ondelete="CASCADE"), nullable=False
+    )
+    student_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    attempt_no: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=datetime.utcnow
+    )
+    completed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    score: Mapped[float | None] = mapped_column(Numeric(8, 2), nullable=True)
+    max_score: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default=QuizAttemptStatus.STARTED.value
+    )
+
+    # Relationships
+    quiz: Mapped["Quiz"] = relationship(back_populates="attempts")
+    responses: Mapped[list["QuizResponse"]] = relationship(
+        back_populates="attempt", cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "quiz_id", "student_id", "attempt_no",
+            name="uq_quiz_attempts_quiz_student_attempt",
+        ),
+        Index("idx_quiz_attempts_student", "student_id"),
+        Index("idx_quiz_attempts_quiz_status", "quiz_id", "status"),
+    )
+
+
+class QuizResponse(TimestampMixin, Base):
+    """Student response to a single quiz question within an attempt."""
+
+    __tablename__ = "quiz_responses"
+
+    attempt_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("quiz_attempts.id", ondelete="CASCADE"), nullable=False
+    )
+    question_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("quiz_questions.id", ondelete="CASCADE"), nullable=False
+    )
+    student_answer: Mapped[dict | list | None] = mapped_column(JSONB, nullable=True)
+    is_correct: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    points_earned: Mapped[float | None] = mapped_column(Numeric(8, 2), nullable=True)
+    answered_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=datetime.utcnow
+    )
+
+    # Relationships
+    attempt: Mapped["QuizAttempt"] = relationship(back_populates="responses")
+    question: Mapped["QuizQuestion"] = relationship(back_populates="responses")
+
+    __table_args__ = (
+        UniqueConstraint(
+            "attempt_id", "question_id",
+            name="uq_quiz_responses_attempt_question",
+        ),
+        Index("idx_quiz_responses_attempt", "attempt_id"),
     )

@@ -673,20 +673,20 @@
 - [x] Routers registered in `api/v1/router.py`
 - [x] Alembic migration — N/A: permissions are runtime (ROLE_PERMISSIONS dict)
 
-## Phase 9B — Quiz Engine Backend
-- [ ] Create `quizzes` table (school_id nullable, created_by, title, subject, level_band, difficulty, time_limit, max_attempts, shuffle, status)
-- [ ] Create `quiz_questions` table (quiz_id, question_type: MCQ/TRUE_FALSE/FILL_IN/DRAG_DROP/MATCHING, question_text, options JSONB, correct_answer JSONB, points, order, explanation)
-- [ ] Create `quiz_attempts` table (quiz_id, student_id, attempt_no, started_at, completed_at, score, max_score, status)
-- [ ] Create `quiz_responses` table (attempt_id, question_id, student_answer JSONB, is_correct, points_earned, answered_at)
-- [ ] SQLAlchemy models: `Quiz`, `QuizQuestion`, `QuizAttempt`, `QuizResponse`
-- [ ] Auto-grading service (`services/quiz_grading.py`) for all 5 question types
-- [ ] Quiz CRUD endpoints: create, list, get, update, publish
-- [ ] Student endpoints: start attempt, submit response, submit attempt, view results
-- [ ] Analytics endpoint: `GET /quizzes/{id}/analytics` (class performance stats)
-- [ ] Add `exercise_type` field to `Assignment` (STANDARD/PRINTABLE_PDF/QUIZ)
-- [ ] Add `quiz_id` field (FK nullable) to `Assignment`
-- [ ] Audit trail on all quiz operations
-- [ ] Seed data: sample quizzes with mixed question types
+## Phase 9B — Quiz Engine Backend ✅
+- [x] Create `quizzes` table (school_id nullable, created_by, title, subject, level_band, difficulty, time_limit, max_attempts, shuffle, status)
+- [x] Create `quiz_questions` table (quiz_id, question_type: MCQ/TRUE_FALSE/FILL_IN/DRAG_DROP/MATCHING, question_text, options JSONB, correct_answer JSONB, points, order, explanation)
+- [x] Create `quiz_attempts` table (quiz_id, student_id, attempt_no, started_at, completed_at, score, max_score, status)
+- [x] Create `quiz_responses` table (attempt_id, question_id, student_answer JSONB, is_correct, points_earned, answered_at)
+- [x] SQLAlchemy models: `Quiz`, `QuizQuestion`, `QuizAttempt`, `QuizResponse`
+- [x] Auto-grading service (`services/quiz_grading.py`) for all 5 question types
+- [x] Quiz CRUD endpoints: create, list, get, update, publish
+- [x] Student endpoints: start attempt, submit response, submit attempt, view results
+- [x] Analytics endpoint: `GET /quizzes/{id}/analytics` (class performance stats)
+- [x] Add `exercise_type` field to `Assignment` (STANDARD/PRINTABLE_PDF/QUIZ)
+- [x] Add `quiz_id` field (FK nullable) to `Assignment`
+- [x] Audit trail on all quiz operations
+- [x] Seed data: sample quizzes with mixed question types
 
 ## Phase 9C — PDF Exercise Workflow Backend
 - [ ] Add `exercise_pdf_path` field (String 500) to `Assignment` model

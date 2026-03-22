@@ -55,6 +55,10 @@ from app.models.lms import (
     ContentSubmission,
     Course,
     Grade,
+    Quiz,
+    QuizAttempt,
+    QuizQuestion,
+    QuizResponse,
     Submission,
 )
 
@@ -98,6 +102,10 @@ PLATFORM_CONTENT_3_ID = uuid.UUID("30000000-0000-4000-8000-000000000012")
 PLATFORM_CONTENT_4_ID = uuid.UUID("30000000-0000-4000-8000-000000000013")
 PLATFORM_CONTENT_5_ID = uuid.UUID("30000000-0000-4000-8000-000000000014")
 PLATFORM_CONTENT_6_ID = uuid.UUID("30000000-0000-4000-8000-000000000015")
+
+# Phase 9B — Quizzes
+QUIZ_MATH_ID = uuid.UUID("30000000-0000-4000-8000-000000000020")
+QUIZ_FR_ID = uuid.UUID("30000000-0000-4000-8000-000000000021")
 
 # Billing
 INVOICE_1_ID = uuid.UUID("40000000-0000-4000-8000-000000000001")
@@ -848,6 +856,144 @@ async def seed_cms(session: AsyncSession) -> None:
     print("  [CMS] 6 platform content, 1 teacher content, 1 submission, 1 class assignment")
 
 
+async def seed_quizzes(session: AsyncSession) -> None:
+    """Seed sample quizzes with questions — Phase 9B."""
+
+    # ── Quiz 1: Math fractions (platform-wide, by CONTENT_MGR) ──
+    quiz_math = Quiz(
+        id=QUIZ_MATH_ID,
+        school_id=None,  # platform-wide
+        created_by=CONTENT_MGR_ID,
+        title="Quiz - Les fractions (6ème)",
+        description="Quiz de révision sur les fractions pour le niveau 6ème.",
+        subject="math",
+        level_band="6eme",
+        difficulty="MEDIUM",
+        time_limit_minutes=15,
+        max_attempts=3,
+        shuffle_questions=True,
+        status="published",
+    )
+    session.add(quiz_math)
+
+    math_questions = [
+        QuizQuestion(
+            quiz_id=QUIZ_MATH_ID,
+            question_type="MCQ",
+            question_text="Quelle fraction est équivalente à 2/4 ?",
+            options=[
+                {"id": "a", "text": "1/2"},
+                {"id": "b", "text": "3/4"},
+                {"id": "c", "text": "2/3"},
+                {"id": "d", "text": "1/4"},
+            ],
+            correct_answer=["a"],
+            points=2,
+            order=0,
+            explanation="2/4 simplifié = 1/2 (on divise numérateur et dénominateur par 2).",
+        ),
+        QuizQuestion(
+            quiz_id=QUIZ_MATH_ID,
+            question_type="TRUE_FALSE",
+            question_text="3/5 est supérieur à 1/2.",
+            correct_answer=True,
+            points=1,
+            order=1,
+            explanation="3/5 = 0.6 et 1/2 = 0.5, donc 3/5 > 1/2.",
+        ),
+        QuizQuestion(
+            quiz_id=QUIZ_MATH_ID,
+            question_type="FILL_IN",
+            question_text="Combien font 1/4 + 1/4 ? (écrire sous forme de fraction simplifiée)",
+            correct_answer=["1/2", "2/4"],
+            points=2,
+            order=2,
+            explanation="1/4 + 1/4 = 2/4 = 1/2.",
+        ),
+        QuizQuestion(
+            quiz_id=QUIZ_MATH_ID,
+            question_type="MATCHING",
+            question_text="Associez chaque fraction à sa valeur décimale.",
+            options={
+                "left": [
+                    {"id": "l1", "text": "1/2"},
+                    {"id": "l2", "text": "1/4"},
+                    {"id": "l3", "text": "3/4"},
+                ],
+                "right": [
+                    {"id": "r1", "text": "0.25"},
+                    {"id": "r2", "text": "0.5"},
+                    {"id": "r3", "text": "0.75"},
+                ],
+            },
+            correct_answer={"l1": "r2", "l2": "r1", "l3": "r3"},
+            points=3,
+            order=3,
+            explanation="1/2=0.5, 1/4=0.25, 3/4=0.75.",
+        ),
+    ]
+    for q in math_questions:
+        session.add(q)
+
+    # ── Quiz 2: French grammar (school-scoped, by teacher) ──
+    quiz_fr = Quiz(
+        id=QUIZ_FR_ID,
+        school_id=SCHOOL_ID,
+        created_by=TEACHER_1_ID,
+        title="Quiz - Les accords du participe passé",
+        description="Vérifiez vos connaissances sur les accords du participe passé.",
+        subject="french",
+        level_band="6eme",
+        difficulty="EASY",
+        time_limit_minutes=10,
+        max_attempts=2,
+        shuffle_questions=False,
+        status="published",
+    )
+    session.add(quiz_fr)
+
+    fr_questions = [
+        QuizQuestion(
+            quiz_id=QUIZ_FR_ID,
+            question_type="MCQ",
+            question_text="Dans la phrase « Les fleurs que j'ai ___ sont belles », quel est le bon accord ?",
+            options=[
+                {"id": "a", "text": "cueilli"},
+                {"id": "b", "text": "cueillis"},
+                {"id": "c", "text": "cueillies"},
+                {"id": "d", "text": "cueillie"},
+            ],
+            correct_answer=["c"],
+            points=2,
+            order=0,
+            explanation="Le COD 'les fleurs' (féminin pluriel) est placé avant l'auxiliaire avoir → accord.",
+        ),
+        QuizQuestion(
+            quiz_id=QUIZ_FR_ID,
+            question_type="TRUE_FALSE",
+            question_text="Avec l'auxiliaire être, le participe passé s'accorde toujours avec le sujet.",
+            correct_answer=True,
+            points=1,
+            order=1,
+            explanation="Avec être, le participe passé s'accorde en genre et en nombre avec le sujet.",
+        ),
+        QuizQuestion(
+            quiz_id=QUIZ_FR_ID,
+            question_type="FILL_IN",
+            question_text="Complétez : « Elle est ___ tôt ce matin. » (partir)",
+            correct_answer=["partie"],
+            points=2,
+            order=2,
+            explanation="Auxiliaire être + sujet féminin singulier → partie.",
+        ),
+    ]
+    for q in fr_questions:
+        session.add(q)
+
+    await session.flush()
+    print("  [Quiz] 2 quizzes (7 questions total), both published")
+
+
 async def main() -> None:
     print("=" * 60)
     print("Ecole Platform — Seeding development database")
@@ -867,6 +1013,7 @@ async def main() -> None:
         await seed_billing(session)
         await seed_audit(session)
         await seed_cms(session)
+        await seed_quizzes(session)
 
         await session.commit()
 

@@ -102,6 +102,14 @@ PERM_CMS_CONTENT_REVIEW = "PERM-CMS:content:review"
 PERM_CMS_CONTENT_ASSIGN = "PERM-CMS:content:assign"
 PERM_CMS_CONTENT_SUBMIT = "PERM-CMS:content:submit"
 
+# Quiz (Phase 9B — Quiz Engine)
+PERM_QUIZ_CREATE = "PERM-QUIZ:quiz:create"
+PERM_QUIZ_READ = "PERM-QUIZ:quiz:read"
+PERM_QUIZ_MANAGE = "PERM-QUIZ:quiz:manage"
+PERM_QUIZ_PUBLISH = "PERM-QUIZ:quiz:publish"
+PERM_QUIZ_ATTEMPT = "PERM-QUIZ:quiz:attempt"
+PERM_QUIZ_ANALYTICS = "PERM-QUIZ:quiz:analytics"
+
 # Support
 PERM_SUP_GRANT_REQUEST = "PERM-SUP:grant:request"
 PERM_SUP_GRANT_APPROVE = "PERM-SUP:grant:approve"
@@ -205,6 +213,12 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # CMS — assign content to class + submit for review
         PERM_CMS_CONTENT_ASSIGN,
         PERM_CMS_CONTENT_SUBMIT,
+        # Quiz — create, manage, publish school-scoped quizzes
+        PERM_QUIZ_CREATE,
+        PERM_QUIZ_READ,
+        PERM_QUIZ_MANAGE,
+        PERM_QUIZ_PUBLISH,
+        PERM_QUIZ_ANALYTICS,
         # COM — messaging (P1)
         PERM_COM_NOTIFICATION_READ,
         PERM_COM_MESSAGE_SEND,
@@ -269,6 +283,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_LMS_ACTIVITY_SESSION_COMPLETE,
         PERM_LMS_ASSESSMENT_READ,
         PERM_LMS_ASSESSMENT_SUBMIT,
+        # Quiz — attempt + read
+        PERM_QUIZ_ATTEMPT,
+        PERM_QUIZ_READ,
         # COM — read notifications
         PERM_COM_NOTIFICATION_READ,
         # IA (P1)
@@ -318,6 +335,12 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_LMS_CONTENT_ASSET_UPLOAD,
         PERM_LMS_CONTENT_ASSET_READ,
         PERM_LMS_CONTENT_ASSET_DELETE,
+        # Quiz — full management for platform-wide quizzes
+        PERM_QUIZ_CREATE,
+        PERM_QUIZ_READ,
+        PERM_QUIZ_MANAGE,
+        PERM_QUIZ_PUBLISH,
+        PERM_QUIZ_ANALYTICS,
         # COM — notifications
         PERM_COM_NOTIFICATION_READ,
     },
