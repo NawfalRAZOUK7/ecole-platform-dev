@@ -5,6 +5,7 @@
 /// Role-based home redirect (PAR→/feed, STD→/content, etc.)
 /// Phase 5A: Added 2FA setup, password change, submission upload routes.
 /// Phase 5B: Added admin + teacher routes.
+/// Phase 10C: Added content library, student content, quiz player routes.
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -29,13 +30,16 @@ import 'package:ecole_platform/features/teacher/classes_screen.dart';
 import 'package:ecole_platform/features/teacher/assignment_form_screen.dart';
 import 'package:ecole_platform/features/teacher/submissions_screen.dart';
 import 'package:ecole_platform/features/teacher/attendance_screen.dart';
+import 'package:ecole_platform/features/teacher/content_library_screen.dart';
+import 'package:ecole_platform/features/student/student_content_screen.dart';
+import 'package:ecole_platform/features/student/quiz_player_screen.dart';
 import 'package:ecole_platform/features/family/my_children_screen.dart';
 import 'package:ecole_platform/presentation/shell_screen.dart';
 
 /// Role-based redirect targets.
 const _roleRedirects = <String, String>{
   'PAR': '/feed',
-  'STD': '/content',
+  'STD': '/student/content',
   'TCH': '/teacher/classes',
   'ADM': '/admin/dashboard',
   'DIR': '/admin/dashboard',
@@ -120,11 +124,26 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/teacher/attendance',
             builder: (context, state) => const AttendanceScreen(),
           ),
+          // Phase 10C: Teacher content library
+          GoRoute(
+            path: '/teacher/content-library',
+            builder: (context, state) => const ContentLibraryScreen(),
+          ),
 
           // ── Parent routes ──
           GoRoute(
             path: '/family',
             builder: (context, state) => const MyChildrenScreen(),
+          ),
+
+          // ── Student routes (Phase 10C) ──
+          GoRoute(
+            path: '/student/content',
+            builder: (context, state) => const StudentContentScreen(),
+          ),
+          GoRoute(
+            path: '/student/quizzes',
+            builder: (context, state) => const QuizPlayerScreen(),
           ),
 
           // ── Common routes ──
@@ -166,6 +185,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
 
       // Submission upload (outside shell — full screen)
+      // Phase 10C: extended with exercise_type + has_exercise_pdf
       GoRoute(
         path: '/submissions/upload',
         builder: (context, state) {
@@ -173,6 +193,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           return SubmissionUploadScreen(
             assignmentId: extra?['assignment_id'],
             assignmentTitle: extra?['assignment_title'],
+            exerciseType: extra?['exercise_type'],
+            hasExercisePdf: extra?['has_exercise_pdf'] == 'true',
           );
         },
       ),

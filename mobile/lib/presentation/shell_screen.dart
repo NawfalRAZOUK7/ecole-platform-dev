@@ -2,6 +2,7 @@
 ///
 /// Reference: DEC-E2-010 — Navigation with role-based tabs
 /// Phase 5B: Added admin + teacher tabs.
+/// Phase 10C: Added content library, student content, quiz player tabs.
 /// Shows tabs based on user role.
 
 import 'package:flutter/material.dart';
@@ -30,13 +31,17 @@ const _allNavItems = [
   _NavItem(route: '/admin/users', icon: Icons.people, label: 'Utilisateurs', roles: ['ADM']),
   // Teacher tabs
   _NavItem(route: '/teacher/classes', icon: Icons.class_, label: 'Classes', roles: ['TCH']),
+  _NavItem(route: '/teacher/content-library', icon: Icons.library_books, label: 'Bibliothèque', roles: ['TCH']),
   _NavItem(route: '/teacher/submissions', icon: Icons.grading, label: 'Notes', roles: ['TCH']),
   // Parent tabs
   _NavItem(route: '/family', icon: Icons.family_restroom, label: 'Enfants', roles: ['PAR']),
+  // Student tabs (Phase 10C)
+  _NavItem(route: '/student/content', icon: Icons.library_books, label: 'Contenu', roles: ['STD']),
+  _NavItem(route: '/student/quizzes', icon: Icons.quiz, label: 'Quiz', roles: ['STD']),
   // Common tabs
   _NavItem(route: '/feed', icon: Icons.newspaper, label: 'Feed', roles: ['PAR']),
   _NavItem(route: '/notifications', icon: Icons.notifications, label: 'Notifs', roles: ['PAR', 'TCH', 'ADM', 'DIR']),
-  _NavItem(route: '/content', icon: Icons.library_books, label: 'Contenu', roles: ['STD', 'PAR', 'TCH', 'ADM']),
+  _NavItem(route: '/content', icon: Icons.library_books, label: 'Contenu', roles: ['PAR', 'ADM']),
   _NavItem(route: '/results', icon: Icons.assessment, label: 'Résultats', roles: ['STD', 'PAR']),
   _NavItem(route: '/invoices', icon: Icons.receipt_long, label: 'Factures', roles: ['PAR', 'ADM']),
   _NavItem(route: '/profile', icon: Icons.person, label: 'Profil', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR', 'SUP']),

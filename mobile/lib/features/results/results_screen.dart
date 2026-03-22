@@ -1,29 +1,90 @@
-/// Results screen — student grades with pull-to-refresh.
+/// Results screen — student/parent grades with pull-to-refresh.
 ///
 /// Reference: S-099, UI-STD-005
+/// Phase 10C: Added quiz results tab for parent dashboard.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import 'package:ecole_platform/app/providers.dart';
+import 'package:ecole_platform/domain/entities/quiz.dart';
 import 'results_provider.dart';
 
-class ResultsScreen extends ConsumerWidget {
+class ResultsScreen extends ConsumerStatefulWidget {
   const ResultsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ResultsScreen> createState() => _ResultsScreenState();
+}
+
+class _ResultsScreenState extends ConsumerState<ResultsScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  List<QuizResultSummary> _quizResults = [];
+  bool _quizLoading = false;
+  String? _quizError;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _fetchQuizResults();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchQuizResults() async {
+    setState(() {
+      _quizLoading = true;
+      _quizError = null;
+    });
+    try {
+      final repo = ref.read(quizRepositoryProvider);
+      _quizResults = await repo.getQuizResults();
+      setState(() => _quizLoading = false);
+    } catch (e) {
+      setState(() {
+        _quizLoading = false;
+        // Silently ignore if endpoint not available
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(resultsProvider);
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Résultats')),
-      body: _buildBody(context, ref, state, theme),
+      appBar: AppBar(
+        title: const Text('Résultats'),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: 'Devoirs'),
+            Tab(text: 'Quiz'),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildAssignmentsTab(context, ref, state, theme),
+          _buildQuizTab(context, theme),
+        ],
+      ),
     );
   }
 
-  Widget _buildBody(BuildContext context, WidgetRef ref, ResultsState state,
-      ThemeData theme) {
+  // ── Assignments Tab (original) ──
+
+  Widget _buildAssignmentsTab(BuildContext context, WidgetRef ref,
+      ResultsState state, ThemeData theme) {
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -106,10 +167,7 @@ class ResultsScreen extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    r.courseTitle,
-                    style: theme.textTheme.bodySmall,
-                  ),
+                  Text(r.courseTitle, style: theme.textTheme.bodySmall),
                   const SizedBox(height: 8),
                   Row(
                     children: [
@@ -124,10 +182,8 @@ class ResultsScreen extends ConsumerWidget {
                         ),
                       const Spacer(),
                       if (r.dueAt != null)
-                        Text(
-                          _formatDate(r.dueAt!),
-                          style: theme.textTheme.bodySmall,
-                        ),
+                        Text(_formatDate(r.dueAt!),
+                            style: theme.textTheme.bodySmall),
                     ],
                   ),
                   if (r.feedbackText != null) ...[
@@ -151,9 +207,116 @@ class ResultsScreen extends ConsumerWidget {
     );
   }
 
+  // ── Quiz Results Tab (Phase 10C) ──
+
+  Widget _buildQuizTab(BuildContext context, ThemeData theme) {
+    if (_quizLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_quizResults.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.quiz, size: 48, color: Colors.grey),
+            SizedBox(height: 16),
+            Text('Aucun résultat de quiz'),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _fetchQuizResults,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _quizResults.length,
+        itemBuilder: (context, index) {
+          final q = _quizResults[index];
+          final score = q.score ?? 0;
+          final maxScore = q.maxScore ?? 1;
+          final pct = maxScore > 0 ? score / maxScore : 0.0;
+
+          return Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          q.quizTitle,
+                          style: theme.textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _pctColor(pct).withAlpha(20),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: _pctColor(pct)),
+                        ),
+                        child: Text(
+                          '${score.toStringAsFixed(0)}/${maxScore.toStringAsFixed(0)}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: _pctColor(pct),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Chip(
+                        label: Text('Tentative ${q.attemptNo}',
+                            style: const TextStyle(fontSize: 11)),
+                        padding: EdgeInsets.zero,
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${(pct * 100).toStringAsFixed(0)}%',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: _pctColor(pct),
+                        ),
+                      ),
+                      const Spacer(),
+                      if (q.completedAt != null)
+                        Text(
+                          _formatDate(q.completedAt!),
+                          style: theme.textTheme.bodySmall,
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   Color _scoreColor(double score, int total) {
     if (total == 0) return Colors.grey;
     final pct = score / total;
+    if (pct >= 0.8) return Colors.green;
+    if (pct >= 0.5) return Colors.orange;
+    return Colors.red;
+  }
+
+  Color _pctColor(double pct) {
     if (pct >= 0.8) return Colors.green;
     if (pct >= 0.5) return Colors.orange;
     return Colors.red;

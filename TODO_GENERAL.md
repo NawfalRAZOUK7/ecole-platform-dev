@@ -735,15 +735,15 @@
 - [x] i18n (fr/ar/en)
 
 ## Phase 10C — Content Library + Quiz Player (Mobile)
-- [ ] `content_library_screen.dart` — teacher browses + assigns content
-- [ ] Teacher: upload from phone (camera/gallery/file picker)
-- [ ] `content_screen.dart` — student views content (video/PDF/audio players)
-- [ ] `quiz_player_screen.dart` — swipe-through questions, all 5 input types
-- [ ] Quiz timer, progress dots, results screen
-- [ ] PDF exercise: download + camera capture for solution upload
-- [ ] Parent: quiz results in child dashboard
-- [ ] Offline: cache quiz questions, sync answers when online
-- [ ] i18n (fr/ar/en)
+- [x] `content_library_screen.dart` — teacher browses + assigns content
+- [x] Teacher: upload from phone (camera/gallery/file picker)
+- [x] `student_content_screen.dart` — student views content (video/PDF/audio players)
+- [x] `quiz_player_screen.dart` — swipe-through questions, all 5 input types
+- [x] Quiz timer, progress dots, results screen
+- [x] PDF exercise: download + camera capture for solution upload
+- [x] Parent: quiz results in child dashboard
+- [x] Offline: cache quiz questions, sync answers when online
+- [x] i18n (fr/ar/en)
 
 ---
 

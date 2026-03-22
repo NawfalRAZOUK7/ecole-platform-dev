@@ -3,6 +3,7 @@
 /// Reference: UI-CMN-001 — Profile screen
 /// Phase 5A: 2FA setup navigation + biometric toggle switch.
 /// Phase 5C: Role-specific profile sections (student/parent/teacher).
+/// Phase 10C: Teacher reward points display.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -479,6 +480,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 _profileRow('Spécialité', teacher['subject_specialty']),
               if (teacher['qualification'] != null)
                 _profileRow('Qualification', teacher['qualification']),
+              // Phase 10C: Reward points
+              _profileRow(
+                'Points de récompense',
+                '${teacher['reward_points'] ?? 0}',
+              ),
             ],
           ],
         ),
