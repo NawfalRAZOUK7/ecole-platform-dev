@@ -702,21 +702,21 @@
 - [x] Seed data: PRINTABLE_PDF assignment example
 
 ## Phase 10A — CMS Dashboard (Web)
-- [ ] CMS route group `/cms/*` with separate layout + CONTENT_MGR role guard
-- [ ] `ContentListPage.tsx` — list platform content with filters (type, level, subject, language, status, origin)
-- [ ] `ContentUploadPage.tsx` — upload form with progress bar (video/PDF/audio + metadata)
-- [ ] `ContentEditPage.tsx` — edit metadata, replace files, publish/archive
-- [ ] `ReviewQueuePage.tsx` — list teacher submissions (filter by status/subject/level/school)
-- [ ] Review detail view: content preview + teacher info + approve/reject actions
-- [ ] Approve action: creates platform copy + awards points + notifies teacher
-- [ ] Reject action: requires feedback text + notifies teacher
-- [ ] Pending submissions badge/counter on sidebar
-- [ ] `QuizBuilderPage.tsx` — create/edit quizzes with all 5 question types
-- [ ] Question editors: MCQ, True/False, Fill-in, Drag&Drop, Matching
-- [ ] Quiz preview mode (see as student)
-- [ ] `AnalyticsPage.tsx` — content usage stats + teacher contribution stats
-- [ ] Bulk upload support
-- [ ] i18n (fr/ar/en)
+- [x] CMS route group `/cms/*` with separate layout + CONTENT_MGR role guard
+- [x] `ContentListPage.tsx` — list platform content with filters (type, level, subject, language, status, origin)
+- [x] `ContentUploadPage.tsx` — upload form with progress bar (video/PDF/audio + metadata)
+- [x] `ContentEditPage.tsx` — edit metadata, replace files, publish/archive
+- [x] `ReviewQueuePage.tsx` — list teacher submissions (filter by status/subject/level/school)
+- [x] Review detail view: content preview + teacher info + approve/reject actions
+- [x] Approve action: creates platform copy + awards points + notifies teacher
+- [x] Reject action: requires feedback text + notifies teacher
+- [x] Pending submissions badge/counter on sidebar
+- [x] `QuizBuilderPage.tsx` — create/edit quizzes with all 5 question types
+- [x] Question editors: MCQ, True/False, Fill-in, Drag&Drop, Matching
+- [x] Quiz preview mode (see as student)
+- [x] `AnalyticsPage.tsx` — content usage stats + teacher contribution stats
+- [x] Bulk upload support
+- [x] i18n (fr/ar/en)
 
 ## Phase 10B — Teacher Content Library + Quiz Player (Web)
 - [ ] `ContentLibraryPage.tsx` — teacher browses platform + school content, assigns to class

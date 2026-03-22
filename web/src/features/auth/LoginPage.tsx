@@ -24,6 +24,7 @@ const ROLE_REDIRECT: Record<string, string> = {
   ADM: '/admin',
   DIR: '/admin',
   SUP: '/notifications',
+  CONTENT_MGR: '/cms',
 };
 
 export function LoginPage() {

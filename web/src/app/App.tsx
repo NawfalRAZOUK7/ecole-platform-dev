@@ -39,6 +39,13 @@ import { SubmissionsPage as TeacherSubmissionsPage } from '@/features/teacher/Su
 import { AttendancePage } from '@/features/teacher/AttendancePage';
 import { AssessmentFormPage } from '@/features/teacher/AssessmentFormPage';
 import { LoadingState } from '@/shared/ui/LoadingState';
+import { CmsLayout } from '@/features/cms/CmsLayout';
+import { CmsContentListPage } from '@/features/cms/ContentListPage';
+import { CmsContentUploadPage } from '@/features/cms/ContentUploadPage';
+import { CmsContentEditPage } from '@/features/cms/ContentEditPage';
+import { CmsReviewQueuePage } from '@/features/cms/ReviewQueuePage';
+import { CmsQuizBuilderPage } from '@/features/cms/QuizBuilderPage';
+import { CmsAnalyticsPage } from '@/features/cms/AnalyticsPage';
 
 /** Redirect based on user role */
 function RoleRedirect() {
@@ -259,6 +266,23 @@ function App() {
             </ProtectedRoute>
           }
         />
+      </Route>
+
+      {/* CMS routes (CONTENT_MGR) — separate layout */}
+      <Route
+        element={
+          <ProtectedRoute roles={['CONTENT_MGR']}>
+            <CmsLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/cms" element={<CmsContentListPage />} />
+        <Route path="/cms/upload" element={<CmsContentUploadPage />} />
+        <Route path="/cms/content/:contentId/edit" element={<CmsContentEditPage />} />
+        <Route path="/cms/review" element={<CmsReviewQueuePage />} />
+        <Route path="/cms/quizzes" element={<CmsQuizBuilderPage />} />
+        <Route path="/cms/quizzes/:quizId/edit" element={<CmsQuizBuilderPage />} />
+        <Route path="/cms/analytics" element={<CmsAnalyticsPage />} />
       </Route>
 
       {/* Root redirect */}
