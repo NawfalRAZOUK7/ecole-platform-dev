@@ -9,7 +9,7 @@
  */
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/services/auth/AuthContext';
 import { LanguageSwitcher } from '@/shared/ui/LanguageSwitcher';
@@ -47,6 +47,33 @@ export function ProfilePage() {
   const [showProfileEdit, setShowProfileEdit] = useState(false);
   const [profileForm, setProfileForm] = useState<Record<string, string>>({});
 
+  // Phase 4D-patch: My Children state (PAR only)
+  interface ChildEntry {
+    user_id: string;
+    full_name: string;
+    email: string;
+    link_id: string;
+    linked_at: string | null;
+    student_profile: {
+      class_level: string | null;
+      date_of_birth: string | null;
+      student_number: string | null;
+      nationality: string | null;
+    } | null;
+  }
+  const [children, setChildren] = useState<ChildEntry[]>([]);
+  const [childrenLoading, setChildrenLoading] = useState(false);
+
+  const fetchChildren = useCallback(async () => {
+    if (!user || user.role !== 'PAR') return;
+    setChildrenLoading(true);
+    try {
+      const res = await api.get<ChildEntry[]>('/me/children');
+      setChildren(res.data);
+    } catch { /* Parent may have no children linked */ }
+    finally { setChildrenLoading(false); }
+  }, [user]);
+
   const fetchProfile = useCallback(async () => {
     if (!user) return;
     setProfileLoading(true);
@@ -68,6 +95,7 @@ export function ProfilePage() {
   }, [user]);
 
   useEffect(() => { fetchProfile(); }, [fetchProfile]);
+  useEffect(() => { fetchChildren(); }, [fetchChildren]);
 
   async function handleProfileSave(e: FormEvent) {
     e.preventDefault();
@@ -319,6 +347,53 @@ export function ProfilePage() {
                   </button>
                 </div>
               </form>
+            )}
+          </div>
+        )}
+
+        {/* Phase 4D-patch: My Children Section (PAR only) */}
+        {user.role === 'PAR' && (
+          <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 16, marginTop: 16 }}>
+            <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>
+              {t('profile.myChildren.title')}
+            </h3>
+            {childrenLoading ? (
+              <p style={{ fontSize: 14, color: 'var(--color-text-secondary)' }}>{t('app.loading')}</p>
+            ) : children.length === 0 ? (
+              <p style={{ fontSize: 14, color: 'var(--color-text-secondary)' }}>{t('profile.myChildren.empty')}</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {children.map((child) => (
+                  <Link
+                    key={child.user_id}
+                    to="/results"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      padding: '12px 16px',
+                      background: 'var(--color-surface)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 'var(--radius)',
+                      textDecoration: 'none',
+                      color: 'inherit',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <span style={{ fontSize: 28 }}>👧</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600, fontSize: 14 }}>{child.full_name}</div>
+                      <div style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{child.email}</div>
+                      {child.student_profile?.class_level && (
+                        <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 2 }}>
+                          {t('register.classLevel')}: {child.student_profile.class_level}
+                        </div>
+                      )}
+                    </div>
+                    <span style={{ fontSize: 18, color: 'var(--color-text-secondary)' }}>›</span>
+                  </Link>
+                ))}
+              </div>
             )}
           </div>
         )}

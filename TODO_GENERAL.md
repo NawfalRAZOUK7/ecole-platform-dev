@@ -613,19 +613,19 @@
 - [x] Integration test: `DELETE /admin/parent-child-links/{id}` (revoke + verify status)
 - [x] Integration test: `GET /me/children` (parent sees children, non-parent rejected, RBAC)
 - [x] Integration test: RBAC — student/teacher/parent cannot access admin parent-child link endpoints
-- [ ] Alembic migration if new permission codes added
+- [x] ~~Alembic migration if new permission codes added~~ — N/A: permissions are runtime (ROLE_PERMISSIONS dict), not DB rows
 - [x] Permission codes added to ROLE_PERMISSIONS dict (runtime, no seed needed)
 
 ## Phase 4D-patch — Parent-Child Link UI (Web Patch)
 > PATCH: 4D was already run before 2D. This adds ONLY the parent-child link UI.
-- [ ] `ParentChildLinksPage.tsx` — admin page to list/create/revoke parent-child links
-- [ ] "Link Parent to Student" form with parent + student dropdowns → `POST /admin/parent-child-links`
-- [ ] "Revoke" button per row → confirmation → `DELETE /admin/parent-child-links/{id}`
-- [ ] Add page to admin sidebar navigation
-- [ ] Invitation form: when role=PAR, show optional "Pre-link to student" dropdown → `target_student_id`
-- [ ] Parent "My Children" card on dashboard/profile → `GET /me/children`
-- [ ] Click child → navigate to child's grades/attendance
-- [ ] i18n for all new UI text (fr/ar/en)
+- [x] `ParentChildLinksPage.tsx` — admin page to list/create/revoke parent-child links
+- [x] "Link Parent to Student" form with parent + student dropdowns → `POST /admin/parent-child-links`
+- [x] "Revoke" button per row → confirmation → `DELETE /admin/parent-child-links/{id}`
+- [x] Add page to admin sidebar navigation (`/admin/family-links`)
+- [x] Invitation form: when role=PAR, show optional "Pre-link to student" dropdown → `target_student_id`
+- [x] Parent "My Children" card on profile page → `GET /me/children`
+- [x] Click child → navigate to child's results page
+- [x] i18n for all new UI text (fr/ar/en)
 
 ## Phase 5C-patch — "My Children" Screen (Mobile Patch)
 > PATCH: 5C was already run before 2D. This adds ONLY the "My Children" feature.

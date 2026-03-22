@@ -37,7 +37,8 @@
     "sessions": "Sessions",
     "twoFactor": "Double authentification",
     "adminAnalytics": "Analytique",
-    "adminBatchRegister": "Inscription en masse"
+    "adminBatchRegister": "Inscription en masse",
+    "adminFamilyLinks": "Liens familiaux"
   },
   "login": {
     "title": "Connexion",
@@ -139,6 +140,10 @@
     "passwordMismatch": "Les mots de passe ne correspondent pas",
     "passwordPolicyFail": "Le mot de passe ne respecte pas les exigences",
     "passwordChanged": "Mot de passe modifie avec succes. Les autres sessions ont ete revoquees.",
+    "myChildren": {
+      "title": "Mes enfants",
+      "empty": "Aucun enfant lie a votre compte"
+    },
     "policy": {
       "minLength": "Au moins 12 caracteres",
       "uppercase": "Au moins une lettre majuscule",
@@ -266,7 +271,9 @@
       "statusConsumed": "Utilisee",
       "statusExpired": "Expiree",
       "days": "jours",
-      "empty": "Aucun code d'invitation"
+      "empty": "Aucun code d'invitation",
+      "prelinkStudent": "Pre-lier a un eleve (optionnel)",
+      "searchStudent": "Rechercher un eleve..."
     },
     "audit": {
       "title": "Journal d'audit",
@@ -292,6 +299,26 @@
       "notifPush": "Notifications push",
       "notifSms": "Notifications SMS",
       "saved": "Parametres enregistres"
+    },
+    "parentChildLinks": {
+      "title": "Liens parent-enfant",
+      "create": "Lier un parent",
+      "createNew": "Nouveau lien parent-enfant",
+      "selectParent": "Selectionner un parent",
+      "searchParent": "Rechercher un parent (nom ou email)...",
+      "selectStudent": "Selectionner un eleve",
+      "searchStudent": "Rechercher un eleve (nom ou email)...",
+      "linkBtn": "Creer le lien",
+      "parent": "Parent",
+      "student": "Eleve",
+      "status": "Statut",
+      "linkedAt": "Date de liaison",
+      "allStatuses": "Tous les statuts",
+      "statusActive": "Actif",
+      "statusRevoked": "Revoque",
+      "revoke": "Revoquer",
+      "confirmRevoke": "Etes-vous sur de vouloir revoquer ce lien parent-enfant ?",
+      "empty": "Aucun lien parent-enfant"
     },
     "justifications": {
       "title": "Examen des justificatifs d'absence",

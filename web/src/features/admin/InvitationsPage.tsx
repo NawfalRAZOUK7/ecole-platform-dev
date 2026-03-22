@@ -39,6 +39,11 @@ export function InvitationsPage() {
   const [createdCode, setCreatedCode] = useState<string | null>(null);
   const [revoking, setRevoking] = useState<string | null>(null);
 
+  // Phase 4D-patch: target student for PAR invitations
+  const [targetStudentSearch, setTargetStudentSearch] = useState('');
+  const [targetStudentResults, setTargetStudentResults] = useState<{ id: string; full_name: string; email: string }[]>([]);
+  const [selectedTargetStudent, setSelectedTargetStudent] = useState<{ id: string; full_name: string; email: string } | null>(null);
+
   const fetchInvitations = useCallback(async (cursor?: string) => {
     try {
       const params: Record<string, string | number | undefined> = {};
@@ -64,15 +69,47 @@ export function InvitationsPage() {
     fetchInvitations().finally(() => setLoading(false));
   }, [fetchInvitations]);
 
+  // Phase 4D-patch: search students for pre-link when role=PAR
+  useEffect(() => {
+    if (createRole !== 'PAR' || targetStudentSearch.length < 2) {
+      setTargetStudentResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const resp = await api.list<{ id: string; full_name: string; email: string }>('/admin/users', {
+          search: targetStudentSearch,
+          role: 'STD',
+        });
+        setTargetStudentResults(resp.data);
+      } catch { /* ignore */ }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [targetStudentSearch, createRole]);
+
+  // Clear target student when role changes away from PAR
+  useEffect(() => {
+    if (createRole !== 'PAR') {
+      setSelectedTargetStudent(null);
+      setTargetStudentSearch('');
+    }
+  }, [createRole]);
+
   async function handleCreate() {
     setCreating(true);
     setCreatedCode(null);
     try {
-      const resp = await api.post<{ code: string }>('/invites/create', {
+      const body: Record<string, unknown> = {
         role_target: createRole,
         expires_in_hours: createHours,
-      });
+      };
+      if (createRole === 'PAR' && selectedTargetStudent) {
+        body.target_student_id = selectedTargetStudent.id;
+      }
+      const resp = await api.post<{ code: string }>('/invites/create', body);
       setCreatedCode(resp.data.code);
+      setSelectedTargetStudent(null);
+      setTargetStudentSearch('');
       fetchInvitations();
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : t('app.error'));
@@ -135,6 +172,46 @@ export function InvitationsPage() {
               {creating ? t('app.loading') : t('admin.invitations.generate')}
             </button>
           </div>
+          {/* Phase 4D-patch: Pre-link to student when role=PAR */}
+          {createRole === 'PAR' && (
+            <div style={{ marginTop: 12 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4, color: 'var(--color-text-secondary)' }}>
+                {t('admin.invitations.prelinkStudent')}
+              </label>
+              {selectedTargetStudent ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', fontSize: 13 }}>
+                  <span>{selectedTargetStudent.full_name} ({selectedTargetStudent.email})</span>
+                  <button className="btn btn-sm" onClick={() => { setSelectedTargetStudent(null); setTargetStudentSearch(''); }} style={{ marginLeft: 'auto', fontSize: 11, padding: '2px 6px' }}>&times;</button>
+                </div>
+              ) : (
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="text"
+                    className="filter-input"
+                    placeholder={t('admin.invitations.searchStudent')}
+                    value={targetStudentSearch}
+                    onChange={(e) => setTargetStudentSearch(e.target.value)}
+                    style={{ width: '100%' }}
+                  />
+                  {targetStudentResults.length > 0 && (
+                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', maxHeight: 180, overflowY: 'auto', zIndex: 10 }}>
+                      {targetStudentResults.map((u) => (
+                        <div
+                          key={u.id}
+                          onClick={() => { setSelectedTargetStudent(u); setTargetStudentResults([]); setTargetStudentSearch(''); }}
+                          style={{ padding: '6px 10px', cursor: 'pointer', fontSize: 13, borderBottom: '1px solid var(--color-border)' }}
+                          onMouseOver={(e) => (e.currentTarget.style.background = 'var(--color-surface)')}
+                          onMouseOut={(e) => (e.currentTarget.style.background = 'transparent')}
+                        >
+                          {u.full_name} — {u.email}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
           {createdCode && (
             <div className="code-display">
               <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{t('admin.invitations.codeLabel')}</span>

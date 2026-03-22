@@ -30,6 +30,7 @@ import { SchoolSettingsPage } from '@/features/admin/SchoolSettingsPage';
 import { JustificationReviewPage } from '@/features/admin/JustificationReviewPage';
 import { AnalyticsPage } from '@/features/admin/AnalyticsPage';
 import { BatchRegisterPage } from '@/features/admin/BatchRegisterPage';
+import { ParentChildLinksPage } from '@/features/admin/ParentChildLinksPage';
 import { RegisterPage } from '@/features/auth/RegisterPage';
 import { ClassesPage as TeacherClassesPage } from '@/features/teacher/ClassesPage';
 import { CoursesPage as TeacherCoursesPage } from '@/features/teacher/CoursesPage';
@@ -128,6 +129,14 @@ function App() {
           element={
             <ProtectedRoute roles={['ADM']}>
               <BatchRegisterPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/family-links"
+          element={
+            <ProtectedRoute roles={['ADM']}>
+              <ParentChildLinksPage />
             </ProtectedRoute>
           }
         />

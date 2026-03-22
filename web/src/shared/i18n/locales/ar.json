@@ -37,7 +37,8 @@
     "sessions": "الجلسات",
     "twoFactor": "المصادقة الثنائية",
     "adminAnalytics": "التحليلات",
-    "adminBatchRegister": "تسجيل جماعي"
+    "adminBatchRegister": "تسجيل جماعي",
+    "adminFamilyLinks": "الروابط العائلية"
   },
   "login": {
     "title": "تسجيل الدخول",
@@ -139,6 +140,10 @@
     "passwordMismatch": "كلمتا المرور غير متطابقتين",
     "passwordPolicyFail": "كلمة المرور لا تستوفي المتطلبات",
     "passwordChanged": "تم تغيير كلمة المرور بنجاح. تم إلغاء الجلسات الأخرى.",
+    "myChildren": {
+      "title": "أطفالي",
+      "empty": "لا يوجد أطفال مرتبطون بحسابك"
+    },
     "policy": {
       "minLength": "12 حرفاً على الأقل",
       "uppercase": "حرف كبير واحد على الأقل",
@@ -266,7 +271,9 @@
       "statusConsumed": "مستخدمة",
       "statusExpired": "منتهية",
       "days": "أيام",
-      "empty": "لا توجد رموز دعوة"
+      "empty": "لا توجد رموز دعوة",
+      "prelinkStudent": "ربط مسبق بتلميذ (اختياري)",
+      "searchStudent": "البحث عن تلميذ..."
     },
     "audit": {
       "title": "سجل المراجعة",
@@ -292,6 +299,26 @@
       "notifPush": "إشعارات الدفع",
       "notifSms": "إشعارات الرسائل القصيرة",
       "saved": "تم حفظ الإعدادات"
+    },
+    "parentChildLinks": {
+      "title": "روابط ولي الأمر والتلميذ",
+      "create": "ربط ولي أمر",
+      "createNew": "رابط جديد ولي أمر-تلميذ",
+      "selectParent": "اختر ولي أمر",
+      "searchParent": "البحث عن ولي أمر (الاسم أو البريد)...",
+      "selectStudent": "اختر تلميذ",
+      "searchStudent": "البحث عن تلميذ (الاسم أو البريد)...",
+      "linkBtn": "إنشاء الرابط",
+      "parent": "ولي الأمر",
+      "student": "التلميذ",
+      "status": "الحالة",
+      "linkedAt": "تاريخ الربط",
+      "allStatuses": "جميع الحالات",
+      "statusActive": "نشط",
+      "statusRevoked": "ملغى",
+      "revoke": "إلغاء",
+      "confirmRevoke": "هل أنت متأكد من إلغاء رابط ولي الأمر والتلميذ هذا؟",
+      "empty": "لا توجد روابط ولي أمر-تلميذ"
     },
     "justifications": {
       "title": "مراجعة مبررات الغياب",

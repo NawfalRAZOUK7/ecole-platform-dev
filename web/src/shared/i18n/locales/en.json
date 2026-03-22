@@ -37,7 +37,8 @@
     "sessions": "Sessions",
     "twoFactor": "Two-Factor Auth",
     "adminAnalytics": "Analytics",
-    "adminBatchRegister": "Bulk Register"
+    "adminBatchRegister": "Bulk Register",
+    "adminFamilyLinks": "Family Links"
   },
   "login": {
     "title": "Sign In",
@@ -139,6 +140,10 @@
     "passwordMismatch": "Passwords do not match",
     "passwordPolicyFail": "Password does not meet the requirements",
     "passwordChanged": "Password changed successfully. Other sessions have been revoked.",
+    "myChildren": {
+      "title": "My Children",
+      "empty": "No children linked to your account"
+    },
     "policy": {
       "minLength": "At least 12 characters",
       "uppercase": "At least one uppercase letter",
@@ -266,7 +271,9 @@
       "statusConsumed": "Consumed",
       "statusExpired": "Expired",
       "days": "days",
-      "empty": "No invitation codes"
+      "empty": "No invitation codes",
+      "prelinkStudent": "Pre-link to student (optional)",
+      "searchStudent": "Search for a student..."
     },
     "audit": {
       "title": "Audit Log",
@@ -292,6 +299,26 @@
       "notifPush": "Push notifications",
       "notifSms": "SMS notifications",
       "saved": "Settings saved"
+    },
+    "parentChildLinks": {
+      "title": "Parent-Child Links",
+      "create": "Link a Parent",
+      "createNew": "New Parent-Child Link",
+      "selectParent": "Select a parent",
+      "searchParent": "Search for a parent (name or email)...",
+      "selectStudent": "Select a student",
+      "searchStudent": "Search for a student (name or email)...",
+      "linkBtn": "Create Link",
+      "parent": "Parent",
+      "student": "Student",
+      "status": "Status",
+      "linkedAt": "Linked At",
+      "allStatuses": "All statuses",
+      "statusActive": "Active",
+      "statusRevoked": "Revoked",
+      "revoke": "Revoke",
+      "confirmRevoke": "Are you sure you want to revoke this parent-child link?",
+      "empty": "No parent-child links"
     },
     "justifications": {
       "title": "Absence Justification Review",
