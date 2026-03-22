@@ -5,6 +5,7 @@
 
 import 'package:ecole_platform/data/api/api_client.dart';
 import 'package:ecole_platform/data/dto/mappers.dart';
+import 'package:ecole_platform/domain/entities/child_link.dart';
 import 'package:ecole_platform/domain/entities/user.dart';
 import 'package:ecole_platform/domain/repositories/auth_repository.dart';
 import 'package:ecole_platform/shared/secure_storage.dart';
@@ -205,5 +206,22 @@ class AuthRepositoryImpl implements AuthRepository {
       'current_password': currentPassword,
       'new_password': newPassword,
     });
+  }
+
+  @override
+  Future<List<ChildLink>> getChildren() async {
+    final resp = await _api.get('/me/children');
+    final list = resp.data['children'] as List<dynamic>? ?? resp.data as List<dynamic>;
+    return list.map((item) {
+      final m = item as Map<String, dynamic>;
+      return ChildLink(
+        userId: m['user_id'] as String,
+        fullName: m['full_name'] as String,
+        email: m['email'] as String?,
+        linkId: m['link_id'] as String,
+        linkedAt: m['linked_at'] as String?,
+        studentProfile: m['student_profile'] as Map<String, dynamic>?,
+      );
+    }).toList();
   }
 }

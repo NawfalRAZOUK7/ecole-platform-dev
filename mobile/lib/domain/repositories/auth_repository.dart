@@ -2,6 +2,7 @@
 ///
 /// Reference: DEC-E2-001 — Data layer MUST NOT contain UI logic.
 /// Phase 5A: Added 2FA verify, device info on login.
+import '../entities/child_link.dart';
 import '../entities/user.dart';
 
 /// Login result — either a token or a 2FA challenge.
@@ -114,4 +115,7 @@ abstract class AuthRepository {
 
   /// Change password.
   Future<void> changePassword(String currentPassword, String newPassword);
+
+  /// Fetch linked children (PAR role only).
+  Future<List<ChildLink>> getChildren();
 }

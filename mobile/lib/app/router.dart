@@ -29,6 +29,7 @@ import 'package:ecole_platform/features/teacher/classes_screen.dart';
 import 'package:ecole_platform/features/teacher/assignment_form_screen.dart';
 import 'package:ecole_platform/features/teacher/submissions_screen.dart';
 import 'package:ecole_platform/features/teacher/attendance_screen.dart';
+import 'package:ecole_platform/features/family/my_children_screen.dart';
 import 'package:ecole_platform/presentation/shell_screen.dart';
 
 /// Role-based redirect targets.
@@ -118,6 +119,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/teacher/attendance',
             builder: (context, state) => const AttendanceScreen(),
+          ),
+
+          // ── Parent routes ──
+          GoRoute(
+            path: '/family',
+            builder: (context, state) => const MyChildrenScreen(),
           ),
 
           // ── Common routes ──

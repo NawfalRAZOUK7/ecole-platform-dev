@@ -629,10 +629,13 @@
 
 ## Phase 5C-patch — "My Children" Screen (Mobile Patch)
 > PATCH: 5C was already run before 2D. This adds ONLY the "My Children" feature.
-- [ ] `my_children_screen.dart` — list linked children (name, class_level, school) via `GET /me/children`
-- [ ] Tap child → navigate to child's grades/attendance
-- [ ] Add "My Children" entry in parent's bottom nav or drawer (only visible for PAR role)
-- [ ] i18n for all new text (fr/ar/en)
+- [x] `my_children_screen.dart` — list linked children (name, class_level, school) via `GET /me/children`
+- [x] Tap child → navigate to child's grades/attendance (/results)
+- [x] Add "My Children" entry in parent's bottom nav (only visible for PAR role)
+- [x] i18n for all new text — N/A: mobile uses hardcoded French strings (no l10n framework)
+- [x] ChildLink entity + getChildren() in AuthRepository interface & impl
+- [x] MyChildrenNotifier (StateNotifier) + myChildrenProvider
+- [x] GoRoute `/family` added to router.dart
 
 ---
 

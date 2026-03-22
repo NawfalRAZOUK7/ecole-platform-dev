@@ -31,6 +31,8 @@ const _allNavItems = [
   // Teacher tabs
   _NavItem(route: '/teacher/classes', icon: Icons.class_, label: 'Classes', roles: ['TCH']),
   _NavItem(route: '/teacher/submissions', icon: Icons.grading, label: 'Notes', roles: ['TCH']),
+  // Parent tabs
+  _NavItem(route: '/family', icon: Icons.family_restroom, label: 'Enfants', roles: ['PAR']),
   // Common tabs
   _NavItem(route: '/feed', icon: Icons.newspaper, label: 'Feed', roles: ['PAR']),
   _NavItem(route: '/notifications', icon: Icons.notifications, label: 'Notifs', roles: ['PAR', 'TCH', 'ADM', 'DIR']),
