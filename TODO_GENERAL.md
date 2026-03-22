@@ -754,15 +754,18 @@
 
 ---
 
-## Phase 11A — Timetable / Schedule Management Backend
-- [ ] Create `timetable_slots` table (school_id, class_id, academic_year_id, day_of_week, start_time, end_time, subject, teacher_id, room, is_recurring, effective_from/until)
-- [ ] Create `timetable_exceptions` table (timetable_slot_id, exception_date, exception_type: CANCELED/SUBSTITUTED/ROOM_CHANGED, substitute_teacher_id, reason)
-- [ ] SQLAlchemy models: `TimetableSlot`, `TimetableException`
-- [ ] Timetable CRUD endpoints: POST/GET/PUT/DELETE /timetable/slots
-- [ ] Weekly view endpoints: GET /timetable/class/{id}/weekly, /teacher/{id}/weekly, /me/weekly
-- [ ] Exception endpoints: POST/GET /timetable/exceptions
-- [ ] Overlap validation (no double-booking class or teacher)
-- [ ] Audit trail + seed data
+## Phase 11A — Timetable / Schedule Management Backend ✅
+- [x] Create `timetable_slots` table (school_id, class_id, academic_year_id, day_of_week, start_time, end_time, subject, teacher_id, room, is_recurring, effective_from/until)
+- [x] Create `timetable_exceptions` table (timetable_slot_id, exception_date, exception_type: CANCELED/SUBSTITUTED/ROOM_CHANGED, substitute_teacher_id, reason)
+- [x] SQLAlchemy models: `TimetableSlot`, `TimetableException` — in `models/erp.py`
+- [x] Timetable CRUD endpoints: POST/GET/PUT/DELETE /timetable/slots — in `api/v1/timetable.py`
+- [x] Weekly view endpoints: GET /timetable/class/{id}/weekly, /teacher/{id}/weekly, /me/weekly
+- [x] Exception endpoints: POST/GET /timetable/exceptions
+- [x] Overlap validation (no double-booking class or teacher at same day/time)
+- [x] Audit trail on all timetable operations + seed data (6 slots, 1 exception)
+- [x] Alembic migration G14 — `a8b9c0d1e2f3_g14_timetable_slots_exceptions.py`
+- [x] RBAC permissions: PERM-ERP:timetable:{create,read,update,delete}, PERM-ERP:timetable-exception:{create,read}
+- [x] Pydantic schemas: slot create/bulk/update/response, exception create/response, weekly view
 
 ## Phase 11B — Billing Enhancements Backend
 - [ ] Create `fee_structures` table (school_id, academic_year_id, name, amount, currency, frequency, due_day, applies_to_level, status)

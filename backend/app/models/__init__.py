@@ -27,6 +27,8 @@ from app.models.erp import (
     JustificationReview,
     Period,
     TeacherAssignment,
+    TimetableException,
+    TimetableSlot,
 )
 
 # G3 — LMS
@@ -92,6 +94,8 @@ __all__ = [
     "AttendanceRecord",
     "AbsenceJustification",
     "JustificationReview",
+    "TimetableSlot",
+    "TimetableException",
     # LMS
     "Course",
     "Assignment",

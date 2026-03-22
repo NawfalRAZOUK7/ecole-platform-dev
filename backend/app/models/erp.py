@@ -1,14 +1,16 @@
-"""ERP domain models — Academic years, periods, classes, enrollments, attendance.
+"""ERP domain models — Academic years, periods, classes, enrollments, attendance, timetable.
 
 Reference: Pack C4 (Data Model — ERP section), Sprint 1 story S-015.
 Migration group: G2-ERP (depends on G1-IAM for user FKs).
+Phase 11A: Added TimetableSlot, TimetableException models.
 """
 
 import enum
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, time
 
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     Date,
     DateTime,
@@ -17,6 +19,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    Time,
     UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -51,6 +54,13 @@ class JustificationStatus(str, enum.Enum):
     PENDING = "pending"
     JUSTIFIED = "justified"
     REJECTED = "rejected"
+
+
+class ExceptionType(str, enum.Enum):
+    """Timetable exception types (Phase 11A)."""
+    CANCELED = "CANCELED"
+    SUBSTITUTED = "SUBSTITUTED"
+    ROOM_CHANGED = "ROOM_CHANGED"
 
 
 # ---------------------------------------------------------------------------
@@ -328,4 +338,99 @@ class JustificationReview(TimestampMixin, Base):
     # Relationships
     justification: Mapped["AbsenceJustification"] = relationship(
         back_populates="reviews"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Timetable (Phase 11A)
+# ---------------------------------------------------------------------------
+
+
+class TimetableSlot(TimestampMixin, Base):
+    """Recurring timetable slot — one class period per week.
+
+    INV-ERP-TIMETABLE-TIME: end_time > start_time
+    INV-ERP-TIMETABLE-DAY: day_of_week in 0..6 (Mon=0, Sun=6)
+    Unique constraint: (class_id, day_of_week, start_time, academic_year_id)
+    Overlap validation enforced at application level.
+    """
+
+    __tablename__ = "timetable_slots"
+
+    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    class_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("classes.id", ondelete="CASCADE"), nullable=False
+    )
+    academic_year_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("academic_years.id", ondelete="CASCADE"), nullable=False
+    )
+    day_of_week: Mapped[int] = mapped_column(Integer, nullable=False)
+    start_time: Mapped[time] = mapped_column(Time, nullable=False)
+    end_time: Mapped[time] = mapped_column(Time, nullable=False)
+    subject: Mapped[str] = mapped_column(String(200), nullable=False)
+    teacher_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    room: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    is_recurring: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    effective_from: Mapped[date | None] = mapped_column(Date, nullable=True)
+    effective_until: Mapped[date | None] = mapped_column(Date, nullable=True)
+
+    # Relationships
+    exceptions: Mapped[list["TimetableException"]] = relationship(
+        back_populates="timetable_slot", cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (
+        CheckConstraint("end_time > start_time", name="ck_timetable_slots_times"),
+        CheckConstraint(
+            "day_of_week >= 0 AND day_of_week <= 6",
+            name="ck_timetable_slots_day_of_week",
+        ),
+        UniqueConstraint(
+            "class_id", "day_of_week", "start_time", "academic_year_id",
+            name="uq_timetable_slots_class_day_time_year",
+        ),
+        Index("idx_timetable_slots_school", "school_id"),
+        Index("idx_timetable_slots_class_year", "class_id", "academic_year_id"),
+        Index("idx_timetable_slots_teacher", "teacher_id"),
+    )
+
+
+class TimetableException(TimestampMixin, Base):
+    """Exception to a recurring timetable slot (cancel, substitute, room change).
+
+    One exception per slot per date.
+    """
+
+    __tablename__ = "timetable_exceptions"
+
+    timetable_slot_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("timetable_slots.id", ondelete="CASCADE"), nullable=False
+    )
+    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    exception_date: Mapped[date] = mapped_column(Date, nullable=False)
+    exception_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    substitute_teacher_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    new_room: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # Relationships
+    timetable_slot: Mapped["TimetableSlot"] = relationship(
+        back_populates="exceptions"
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "exception_type IN ('CANCELED', 'SUBSTITUTED', 'ROOM_CHANGED')",
+            name="ck_timetable_exceptions_type",
+        ),
+        UniqueConstraint(
+            "timetable_slot_id", "exception_date",
+            name="uq_timetable_exceptions_slot_date",
+        ),
+        Index("idx_timetable_exceptions_school", "school_id"),
+        Index("idx_timetable_exceptions_date", "exception_date"),
     )

@@ -51,6 +51,14 @@ PERM_ERP_ATTENDANCE_MARK = "PERM-ERP:attendance:mark"
 PERM_ERP_ABSENCE_JUSTIFY = "PERM-ERP:absence:justify"
 PERM_ERP_ABSENCE_REVIEW = "PERM-ERP:absence:review"
 
+# ERP — Timetable (Phase 11A)
+PERM_ERP_TIMETABLE_CREATE = "PERM-ERP:timetable:create"
+PERM_ERP_TIMETABLE_READ = "PERM-ERP:timetable:read"
+PERM_ERP_TIMETABLE_UPDATE = "PERM-ERP:timetable:update"
+PERM_ERP_TIMETABLE_DELETE = "PERM-ERP:timetable:delete"
+PERM_ERP_TIMETABLE_EXCEPTION_CREATE = "PERM-ERP:timetable-exception:create"
+PERM_ERP_TIMETABLE_EXCEPTION_READ = "PERM-ERP:timetable-exception:read"
+
 # LMS
 PERM_LMS_COURSE_PUBLISH = "PERM-LMS:course:publish"
 PERM_LMS_ASSIGNMENT_CREATE = "PERM-LMS:assignment:create"
@@ -147,6 +155,13 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_ERP_ENROLLMENT_ASSIGN,
         PERM_ERP_ASSIGNMENT_UPDATE,
         PERM_ERP_ABSENCE_REVIEW,
+        # ERP — Timetable (Phase 11A)
+        PERM_ERP_TIMETABLE_CREATE,
+        PERM_ERP_TIMETABLE_READ,
+        PERM_ERP_TIMETABLE_UPDATE,
+        PERM_ERP_TIMETABLE_DELETE,
+        PERM_ERP_TIMETABLE_EXCEPTION_CREATE,
+        PERM_ERP_TIMETABLE_EXCEPTION_READ,
         # LMS — read + supervision + file management
         PERM_LMS_SUBMISSION_FILE_READ,
         PERM_LMS_CONTENT_ASSET_UPLOAD,
@@ -179,6 +194,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IAM_PARENT_LINK_READ,
         # ERP — validate periods
         PERM_ERP_CLASS_READ,
+        # ERP — Timetable (Phase 11A)
+        PERM_ERP_TIMETABLE_READ,
+        PERM_ERP_TIMETABLE_EXCEPTION_READ,
         # LMS — read analytics
         PERM_LMS_ASSESSMENT_READ,
         # COM — read
@@ -198,6 +216,10 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # ERP — attendance mark
         PERM_ERP_CLASS_READ,
         PERM_ERP_ATTENDANCE_MARK,
+        # ERP — Timetable (Phase 11A)
+        PERM_ERP_TIMETABLE_READ,
+        PERM_ERP_TIMETABLE_EXCEPTION_CREATE,
+        PERM_ERP_TIMETABLE_EXCEPTION_READ,
         # LMS — publish + grade + files
         PERM_LMS_COURSE_PUBLISH,
         PERM_LMS_ASSIGNMENT_CREATE,
@@ -240,6 +262,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IAM_RECOVERY_RESET,
         # ERP — justify absence
         PERM_ERP_ABSENCE_JUSTIFY,
+        # ERP — Timetable (Phase 11A)
+        PERM_ERP_TIMETABLE_READ,
+        PERM_ERP_TIMETABLE_EXCEPTION_READ,
         # LMS — read child results + content assets
         PERM_LMS_RESULT_READ,
         PERM_LMS_CONTENT_READ,
@@ -271,6 +296,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IAM_RECOVERY_REQUEST,
         PERM_IAM_RECOVERY_VERIFY,
         PERM_IAM_RECOVERY_RESET,
+        # ERP — Timetable (Phase 11A)
+        PERM_ERP_TIMETABLE_READ,
+        PERM_ERP_TIMETABLE_EXCEPTION_READ,
         # LMS — submit + read progress + files
         PERM_LMS_SUBMISSION_CREATE,
         PERM_LMS_SUBMISSION_FILE_UPLOAD,

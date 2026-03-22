@@ -22,6 +22,7 @@ Routes:
   /notifications/*              — Notifications (COM)
   /consents/*                   — Consent preferences (COM)
   /feed/*                       — Parent feed (COM)
+  /timetable/*                  — Timetable slots + exceptions (ERP, Phase 11A)
 """
 
 from datetime import datetime, timezone
@@ -81,6 +82,9 @@ from app.api.v1.content_library import router as content_library_router
 
 # Phase 9B — Quiz Engine
 from app.api.v1.quizzes import router as quizzes_router
+
+# Phase 11A — Timetable
+from app.api.v1.timetable import router as timetable_router
 
 router = APIRouter()
 
@@ -158,3 +162,6 @@ router.include_router(content_library_router)
 
 # Mount sub-routers — Phase 9B Quiz Engine
 router.include_router(quizzes_router)
+
+# Mount sub-routers — Phase 11A Timetable
+router.include_router(timetable_router)

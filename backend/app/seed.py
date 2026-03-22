@@ -31,6 +31,8 @@ from app.models.erp import (
     Enrollment,
     Period,
     TeacherAssignment,
+    TimetableException,
+    TimetableSlot,
 )
 from app.models.iam import (
     AccountRecoveryRequest,
@@ -106,6 +108,14 @@ PLATFORM_CONTENT_6_ID = uuid.UUID("30000000-0000-4000-8000-000000000015")
 # Phase 9B — Quizzes
 QUIZ_MATH_ID = uuid.UUID("30000000-0000-4000-8000-000000000020")
 QUIZ_FR_ID = uuid.UUID("30000000-0000-4000-8000-000000000021")
+
+# Phase 11A — Timetable
+SLOT_MATH_6A_MON_ID = uuid.UUID("50000000-0000-4000-8000-000000000001")
+SLOT_FR_6A_MON_ID = uuid.UUID("50000000-0000-4000-8000-000000000002")
+SLOT_MATH_6A_WED_ID = uuid.UUID("50000000-0000-4000-8000-000000000003")
+SLOT_FR_6A_THU_ID = uuid.UUID("50000000-0000-4000-8000-000000000004")
+SLOT_MATH_6B_TUE_ID = uuid.UUID("50000000-0000-4000-8000-000000000005")
+SLOT_FR_6B_TUE_ID = uuid.UUID("50000000-0000-4000-8000-000000000006")
 
 # Billing
 INVOICE_1_ID = uuid.UUID("40000000-0000-4000-8000-000000000001")
@@ -1009,6 +1019,118 @@ async def seed_quizzes(session: AsyncSession) -> None:
     print("  [Quiz] 2 quizzes (7 questions total), both published")
 
 
+async def seed_timetable(session: AsyncSession) -> None:
+    """Seed timetable domain: slots + exceptions (Phase 11A).
+
+    Creates a realistic Moroccan school schedule:
+    - Class 6A: Math (Mon 08:00-09:00, Wed 10:00-11:00), French (Mon 10:00-11:00, Thu 08:00-09:00)
+    - Class 6B: Math (Tue 08:00-09:00), French (Tue 10:00-11:00)
+    Plus one exception: Math 6A on Wed is CANCELED for a school event.
+    """
+    from datetime import time
+
+    slots = [
+        # Class 6A — Math Monday 08:00-09:00
+        TimetableSlot(
+            id=SLOT_MATH_6A_MON_ID,
+            school_id=SCHOOL_ID,
+            class_id=CLASS_6A_ID,
+            academic_year_id=YEAR_ID,
+            day_of_week=0,  # Monday
+            start_time=time(8, 0),
+            end_time=time(9, 0),
+            subject="Mathématiques",
+            teacher_id=TEACHER_1_ID,
+            room="Salle 101",
+            is_recurring=True,
+        ),
+        # Class 6A — French Monday 10:00-11:00
+        TimetableSlot(
+            id=SLOT_FR_6A_MON_ID,
+            school_id=SCHOOL_ID,
+            class_id=CLASS_6A_ID,
+            academic_year_id=YEAR_ID,
+            day_of_week=0,  # Monday
+            start_time=time(10, 0),
+            end_time=time(11, 0),
+            subject="Français",
+            teacher_id=TEACHER_2_ID,
+            room="Salle 102",
+            is_recurring=True,
+        ),
+        # Class 6A — Math Wednesday 10:00-11:00
+        TimetableSlot(
+            id=SLOT_MATH_6A_WED_ID,
+            school_id=SCHOOL_ID,
+            class_id=CLASS_6A_ID,
+            academic_year_id=YEAR_ID,
+            day_of_week=2,  # Wednesday
+            start_time=time(10, 0),
+            end_time=time(11, 0),
+            subject="Mathématiques",
+            teacher_id=TEACHER_1_ID,
+            room="Salle 101",
+            is_recurring=True,
+        ),
+        # Class 6A — French Thursday 08:00-09:00
+        TimetableSlot(
+            id=SLOT_FR_6A_THU_ID,
+            school_id=SCHOOL_ID,
+            class_id=CLASS_6A_ID,
+            academic_year_id=YEAR_ID,
+            day_of_week=3,  # Thursday
+            start_time=time(8, 0),
+            end_time=time(9, 0),
+            subject="Français",
+            teacher_id=TEACHER_2_ID,
+            room="Salle 102",
+            is_recurring=True,
+        ),
+        # Class 6B — Math Tuesday 08:00-09:00
+        TimetableSlot(
+            id=SLOT_MATH_6B_TUE_ID,
+            school_id=SCHOOL_ID,
+            class_id=CLASS_6B_ID,
+            academic_year_id=YEAR_ID,
+            day_of_week=1,  # Tuesday
+            start_time=time(8, 0),
+            end_time=time(9, 0),
+            subject="Mathématiques",
+            teacher_id=TEACHER_1_ID,
+            room="Salle 201",
+            is_recurring=True,
+        ),
+        # Class 6B — French Tuesday 10:00-11:00
+        TimetableSlot(
+            id=SLOT_FR_6B_TUE_ID,
+            school_id=SCHOOL_ID,
+            class_id=CLASS_6B_ID,
+            academic_year_id=YEAR_ID,
+            day_of_week=1,  # Tuesday
+            start_time=time(10, 0),
+            end_time=time(11, 0),
+            subject="Français",
+            teacher_id=TEACHER_2_ID,
+            room="Salle 202",
+            is_recurring=True,
+        ),
+    ]
+    session.add_all(slots)
+    await session.flush()
+
+    # One exception: Math 6A Wednesday canceled for school event
+    exception = TimetableException(
+        timetable_slot_id=SLOT_MATH_6A_WED_ID,
+        school_id=SCHOOL_ID,
+        exception_date=date(2026, 3, 25),
+        exception_type="CANCELED",
+        reason="Journée portes ouvertes",
+    )
+    session.add(exception)
+    await session.flush()
+    print("  [Timetable] 6 slots (2 classes), 1 exception (canceled)")
+
+
 async def main() -> None:
     print("=" * 60)
     print("Ecole Platform — Seeding development database")
@@ -1029,6 +1151,7 @@ async def main() -> None:
         await seed_audit(session)
         await seed_cms(session)
         await seed_quizzes(session)
+        await seed_timetable(session)
 
         await session.commit()
 
