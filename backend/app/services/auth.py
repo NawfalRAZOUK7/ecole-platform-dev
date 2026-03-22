@@ -831,13 +831,40 @@ class InvitationService:
         issuer_user_id: uuid.UUID,
         role_target: str,
         expires_in_hours: int = 72,
+        target_student_id: uuid.UUID | None = None,
         ip_address: str | None = None,
     ) -> dict[str, Any]:
         """Create a new invitation code.
 
         Generates an 8-char alphanumeric code, hashes it with SHA-256 before storage.
         Returns the plaintext code (shown once, never stored).
+        If target_student_id is provided (PAR invites), validates the student exists
+        in the same school and persists the link target on the invitation.
         """
+        # Validate target_student_id if provided
+        if target_student_id is not None:
+            if role_target != "PAR":
+                from app.core.exceptions import ValidationError
+                raise ValidationError(
+                    "target_student_id is only valid for PAR invitations",
+                    error_code="ERR-VAL-001",
+                )
+            # Check student exists in the same school with STD role
+            student_result = await self.db.execute(
+                select(User).join(Membership).where(
+                    User.id == target_student_id,
+                    User.school_id == school_id,
+                    Membership.role_code == "STD",
+                    Membership.school_id == school_id,
+                )
+            )
+            if student_result.scalar_one_or_none() is None:
+                from app.core.exceptions import NotFoundError
+                raise NotFoundError(
+                    "Target student not found in this school",
+                    error_code="ERR-RES-404",
+                )
+
         # Generate 8-char code
         code = secrets.token_hex(4).upper()  # 8 hex chars
 
@@ -852,6 +879,7 @@ class InvitationService:
             code_hash=code_hash,
             role_target=role_target,
             expires_at=expires_at,
+            target_student_id=target_student_id,
         )
         self.db.add(invite)
         await self.db.flush()

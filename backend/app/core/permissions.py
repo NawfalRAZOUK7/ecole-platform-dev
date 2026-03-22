@@ -38,6 +38,9 @@ PERM_IAM_INVITE_REVOKE = "PERM-IAM:invite:revoke"
 PERM_IAM_RECOVERY_REQUEST = "PERM-IAM:recovery:request"
 PERM_IAM_RECOVERY_VERIFY = "PERM-IAM:recovery:verify"
 PERM_IAM_RECOVERY_RESET = "PERM-IAM:recovery:reset"
+PERM_IAM_PARENT_LINK_CREATE = "PERM-IAM:parent-link:create"
+PERM_IAM_PARENT_LINK_READ = "PERM-IAM:parent-link:read"
+PERM_IAM_PARENT_LINK_DELETE = "PERM-IAM:parent-link:delete"
 
 # ERP
 PERM_ERP_CLASS_READ = "PERM-ERP:class:read"
@@ -117,6 +120,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IAM_RECOVERY_REQUEST,
         PERM_IAM_RECOVERY_VERIFY,
         PERM_IAM_RECOVERY_RESET,
+        PERM_IAM_PARENT_LINK_CREATE,
+        PERM_IAM_PARENT_LINK_READ,
+        PERM_IAM_PARENT_LINK_DELETE,
         # ERP — full admin
         PERM_ERP_CLASS_READ,
         PERM_ERP_ENROLLMENT_ASSIGN,
@@ -151,6 +157,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IAM_RECOVERY_REQUEST,
         PERM_IAM_RECOVERY_VERIFY,
         PERM_IAM_RECOVERY_RESET,
+        PERM_IAM_PARENT_LINK_READ,
         # ERP — validate periods
         PERM_ERP_CLASS_READ,
         # LMS — read analytics

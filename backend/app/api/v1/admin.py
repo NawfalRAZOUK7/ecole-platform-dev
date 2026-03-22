@@ -21,7 +21,7 @@ from app.core.response import list_response, success_response
 from app.core.security import hash_password
 from app.models.audit import AuditLog
 from app.models.erp import AbsenceJustification
-from app.models.iam import InvitationCode, Membership, Session, User
+from app.models.iam import InvitationCode, Membership, ParentChildLink, Session, User
 from app.schemas.auth import BatchRegisterRequest
 from app.services.audit import AuditService
 
@@ -588,9 +588,33 @@ async def register_batch(
             consumed_by=user.id,
             consumed_at=datetime.now(timezone.utc),
             expires_at=datetime.now(timezone.utc),
+            target_student_id=item.target_student_id if item.role == "PAR" else None,
         )
         db.add(invite)
         await db.flush()
+
+        # Phase 2D: Auto-create parent-child link for PAR with target_student_id
+        if item.role == "PAR" and item.target_student_id:
+            # Validate student exists in the same school
+            std_check = await db.execute(
+                select(User).join(Membership).where(
+                    User.id == item.target_student_id,
+                    User.school_id == school_id,
+                    Membership.role_code == "STD",
+                    Membership.school_id == school_id,
+                )
+            )
+            if std_check.scalar_one_or_none() is not None:
+                link = ParentChildLink(
+                    parent_user_id=user.id,
+                    child_user_id=item.target_student_id,
+                    school_id=school_id,
+                    status="active",
+                    linked_at=datetime.now(timezone.utc),
+                    linked_by=auth.user_id,
+                )
+                db.add(link)
+                await db.flush()
 
         # Audit
         await audit.log_event(
@@ -618,4 +642,191 @@ async def register_batch(
         "errors": errors,
         "total_created": len(results),
         "total_errors": len(errors),
+    })
+
+
+# ---------------------------------------------------------------------------
+# POST /admin/parent-child-links — Manually link parent ↔ student (Phase 2D)
+# ---------------------------------------------------------------------------
+@router.post("/parent-child-links", status_code=201, summary="Create parent-child link")
+async def create_parent_child_link(
+    request: Request,
+    parent_user_id: uuid.UUID = Query(..., description="Parent user ID"),
+    child_user_id: uuid.UUID = Query(..., description="Student user ID"),
+    auth: AuthContext = Depends(requires_permission("PERM-IAM:parent-link:create")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Admin manually links a parent to a student within the same school."""
+    school_id = auth.school_id
+
+    # Validate parent exists with PAR role in this school
+    par_result = await db.execute(
+        select(User).join(Membership).where(
+            User.id == parent_user_id,
+            User.school_id == school_id,
+            Membership.role_code == "PAR",
+            Membership.school_id == school_id,
+        )
+    )
+    if par_result.scalar_one_or_none() is None:
+        raise NotFoundError("Parent user not found in this school", error_code="ERR-RES-404")
+
+    # Validate student exists with STD role in this school
+    std_result = await db.execute(
+        select(User).join(Membership).where(
+            User.id == child_user_id,
+            User.school_id == school_id,
+            Membership.role_code == "STD",
+            Membership.school_id == school_id,
+        )
+    )
+    if std_result.scalar_one_or_none() is None:
+        raise NotFoundError("Student user not found in this school", error_code="ERR-RES-404")
+
+    # Check for existing active link
+    existing = await db.execute(
+        select(ParentChildLink).where(
+            ParentChildLink.parent_user_id == parent_user_id,
+            ParentChildLink.child_user_id == child_user_id,
+            ParentChildLink.school_id == school_id,
+            ParentChildLink.status == "active",
+        )
+    )
+    if existing.scalar_one_or_none() is not None:
+        raise ConflictError("Parent-child link already exists", error_code="ERR-CONFLICT-001")
+
+    link = ParentChildLink(
+        parent_user_id=parent_user_id,
+        child_user_id=child_user_id,
+        school_id=school_id,
+        status="active",
+        linked_at=datetime.now(timezone.utc),
+        linked_by=auth.user_id,
+    )
+    db.add(link)
+
+    audit = AuditService(db)
+    await audit.log_event(
+        school_id=school_id,
+        actor_id=auth.user_id,
+        action_type="PARENT_CHILD_LINKED",
+        outcome="success",
+        target_type="parent_child_link",
+        target_id=link.id,
+        ip_address=_get_client_ip(request),
+    )
+
+    await db.commit()
+
+    return success_response({
+        "id": str(link.id),
+        "parent_user_id": str(link.parent_user_id),
+        "child_user_id": str(link.child_user_id),
+        "school_id": str(link.school_id),
+        "status": link.status,
+        "linked_at": link.linked_at.isoformat(),
+        "linked_by": str(link.linked_by),
+    })
+
+
+# ---------------------------------------------------------------------------
+# GET /admin/parent-child-links — List links (filtered, cursor-paginated) (Phase 2D)
+# ---------------------------------------------------------------------------
+@router.get("/parent-child-links", summary="List parent-child links")
+async def list_parent_child_links(
+    parent_id: uuid.UUID | None = Query(None, description="Filter by parent user ID"),
+    student_id: uuid.UUID | None = Query(None, description="Filter by student user ID"),
+    status: str | None = Query(None, description="Filter by status (active, revoked)"),
+    cursor: str | None = Query(None, description="Cursor for pagination (linked_at ISO)"),
+    limit: int = Query(20, ge=1, le=100),
+    auth: AuthContext = Depends(requires_permission("PERM-IAM:parent-link:read")),
+    db: AsyncSession = Depends(get_db),
+):
+    """List parent-child links within the admin's school, with optional filters."""
+    school_id = auth.school_id
+
+    query = select(ParentChildLink).where(ParentChildLink.school_id == school_id)
+
+    if parent_id is not None:
+        query = query.where(ParentChildLink.parent_user_id == parent_id)
+    if student_id is not None:
+        query = query.where(ParentChildLink.child_user_id == student_id)
+    if status is not None:
+        query = query.where(ParentChildLink.status == status)
+
+    if cursor:
+        cursor_dt = datetime.fromisoformat(cursor)
+        query = query.where(ParentChildLink.linked_at < cursor_dt)
+
+    query = query.order_by(ParentChildLink.linked_at.desc()).limit(limit + 1)
+
+    result = await db.execute(query)
+    rows = list(result.scalars().all())
+
+    has_more = len(rows) > limit
+    if has_more:
+        rows = rows[:limit]
+
+    data = [
+        {
+            "id": str(link.id),
+            "parent_user_id": str(link.parent_user_id),
+            "child_user_id": str(link.child_user_id),
+            "school_id": str(link.school_id),
+            "status": link.status,
+            "linked_at": link.linked_at.isoformat() if link.linked_at else None,
+            "linked_by": str(link.linked_by) if link.linked_by else None,
+        }
+        for link in rows
+    ]
+
+    next_cursor = rows[-1].linked_at.isoformat() if has_more and rows else None
+    return list_response(data, next_cursor=next_cursor, has_more=has_more)
+
+
+# ---------------------------------------------------------------------------
+# DELETE /admin/parent-child-links/{link_id} — Revoke link (Phase 2D)
+# ---------------------------------------------------------------------------
+@router.delete("/parent-child-links/{link_id}", summary="Revoke parent-child link")
+async def revoke_parent_child_link(
+    link_id: uuid.UUID,
+    request: Request,
+    auth: AuthContext = Depends(requires_permission("PERM-IAM:parent-link:delete")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Soft-revoke a parent-child link (sets status to 'revoked')."""
+    school_id = auth.school_id
+
+    result = await db.execute(
+        select(ParentChildLink).where(
+            ParentChildLink.id == link_id,
+            ParentChildLink.school_id == school_id,
+        )
+    )
+    link = result.scalar_one_or_none()
+    if link is None:
+        raise NotFoundError("Parent-child link not found", error_code="ERR-RES-404")
+
+    if link.status == "revoked":
+        return success_response({"message": "Link already revoked", "id": str(link.id)})
+
+    link.status = "revoked"
+
+    audit = AuditService(db)
+    await audit.log_event(
+        school_id=school_id,
+        actor_id=auth.user_id,
+        action_type="PARENT_CHILD_UNLINKED",
+        outcome="success",
+        target_type="parent_child_link",
+        target_id=link.id,
+        ip_address=_get_client_ip(request),
+    )
+
+    await db.commit()
+
+    return success_response({
+        "id": str(link.id),
+        "status": link.status,
+        "message": "Parent-child link revoked",
     })

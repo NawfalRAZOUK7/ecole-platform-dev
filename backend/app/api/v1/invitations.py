@@ -53,6 +53,7 @@ async def create_invite(
         issuer_user_id=auth.user_id,
         role_target=body.role_target,
         expires_in_hours=body.expires_in_hours,
+        target_student_id=body.target_student_id,
         ip_address=_get_client_ip(request),
     )
     return success_response(result)

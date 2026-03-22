@@ -22,6 +22,7 @@ from app.core.exceptions import NotFoundError, ValidationError
 from app.core.response import success_response
 from app.models.iam import (
     Membership,
+    ParentChildLink,
     ParentProfile,
     StudentProfile,
     TeacherProfile,
@@ -236,3 +237,67 @@ async def admin_get_user_profile(
 
     data = await _get_user_with_profile(db, user_id, auth.school_id, target_role)
     return success_response(data)
+
+
+# ---------------------------------------------------------------------------
+# GET /me/children — Parent sees linked children (Phase 2D)
+# ---------------------------------------------------------------------------
+@router.get("/me/children", summary="List parent's linked children")
+async def get_my_children(
+    auth: AuthContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return the list of children linked to the authenticated parent.
+
+    Only accessible by users with PAR role. Returns basic child info + student profile.
+    """
+    if auth.role != "PAR":
+        raise ValidationError(
+            "Only parents can access this endpoint",
+            error_code="ERR-VAL-001",
+        )
+
+    # Fetch active links
+    links_result = await db.execute(
+        select(ParentChildLink).where(
+            ParentChildLink.parent_user_id == auth.user_id,
+            ParentChildLink.school_id == auth.school_id,
+            ParentChildLink.status == "active",
+        ).order_by(ParentChildLink.linked_at.desc())
+    )
+    links = list(links_result.scalars().all())
+
+    children = []
+    for link in links:
+        # Fetch child user
+        user_result = await db.execute(
+            select(User).where(User.id == link.child_user_id)
+        )
+        child = user_result.scalar_one_or_none()
+        if child is None:
+            continue
+
+        # Fetch student profile
+        profile_result = await db.execute(
+            select(StudentProfile).where(
+                StudentProfile.user_id == link.child_user_id,
+                StudentProfile.school_id == auth.school_id,
+            )
+        )
+        profile = profile_result.scalar_one_or_none()
+
+        children.append({
+            "user_id": str(child.id),
+            "full_name": child.full_name,
+            "email": child.email,
+            "link_id": str(link.id),
+            "linked_at": link.linked_at.isoformat() if link.linked_at else None,
+            "student_profile": {
+                "class_level": profile.class_level if profile else None,
+                "date_of_birth": str(profile.date_of_birth) if profile and profile.date_of_birth else None,
+                "student_number": profile.student_number if profile else None,
+                "nationality": profile.nationality if profile else None,
+            } if profile else None,
+        })
+
+    return success_response(children)

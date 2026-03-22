@@ -544,7 +544,7 @@
 # NEW PHASES — Registration, Profiles & Cascade (Not Yet Started)
 
 > All previous phases (0→8 and 0A→8A) are already completed. Do NOT redo them.
-> Run these 4 new phases in order: **1B → 2C → 4D → 5C**
+> **Phases 1B, 2C, 4D, 5C are already completed.** Run remaining 3 phases: **2D → 4D-patch → 5C-patch**
 
 ---
 
@@ -595,6 +595,44 @@
 - [x] Role-specific profile sections on profile screen
 - [x] "Register" button on login screen
 - [x] i18n for all new fields (fr/ar/en)
+
+## Phase 2D — Parent-Child Link Management & Invitation Schema Fix
+- [x] Add `target_student_id: UUID | None` to `InviteCreateRequest` schema
+- [x] Update `InvitationService.create_invite()` to accept and persist `target_student_id`
+- [x] Validate `target_student_id` is a STD user in the same school
+- [x] Update `POST /invites/create` endpoint to pass `target_student_id` through
+- [x] `POST /admin/parent-child-links` — admin manually links parent ↔ student (validate same school, correct roles, no duplicate)
+- [x] `GET /admin/parent-child-links?parent_id=X&student_id=X` — list links filtered, paginated
+- [x] `DELETE /admin/parent-child-links/{link_id}` — revoke link (set status="revoked")
+- [x] Add PERM-IAM:parent-link:create, :read, :delete permission codes + assign to ADM role (+ read to DIR)
+- [x] `GET /me/children` — parent endpoint to see linked children (id, full_name, class_level)
+- [x] Add `target_student_id` to `BatchRegisterItem` schema for PAR batch creation with auto-link
+- [x] Integration test: create invite with `target_student_id` → register parent → verify auto-link
+- [x] Integration test: `POST /admin/parent-child-links` (success, duplicate, wrong school, wrong role)
+- [x] Integration test: `GET /admin/parent-child-links` filtered by parent and by student
+- [x] Integration test: `DELETE /admin/parent-child-links/{id}` (revoke + verify status)
+- [x] Integration test: `GET /me/children` (parent sees children, non-parent rejected, RBAC)
+- [x] Integration test: RBAC — student/teacher/parent cannot access admin parent-child link endpoints
+- [ ] Alembic migration if new permission codes added
+- [x] Permission codes added to ROLE_PERMISSIONS dict (runtime, no seed needed)
+
+## Phase 4D-patch — Parent-Child Link UI (Web Patch)
+> PATCH: 4D was already run before 2D. This adds ONLY the parent-child link UI.
+- [ ] `ParentChildLinksPage.tsx` — admin page to list/create/revoke parent-child links
+- [ ] "Link Parent to Student" form with parent + student dropdowns → `POST /admin/parent-child-links`
+- [ ] "Revoke" button per row → confirmation → `DELETE /admin/parent-child-links/{id}`
+- [ ] Add page to admin sidebar navigation
+- [ ] Invitation form: when role=PAR, show optional "Pre-link to student" dropdown → `target_student_id`
+- [ ] Parent "My Children" card on dashboard/profile → `GET /me/children`
+- [ ] Click child → navigate to child's grades/attendance
+- [ ] i18n for all new UI text (fr/ar/en)
+
+## Phase 5C-patch — "My Children" Screen (Mobile Patch)
+> PATCH: 5C was already run before 2D. This adds ONLY the "My Children" feature.
+- [ ] `my_children_screen.dart` — list linked children (name, class_level, school) via `GET /me/children`
+- [ ] Tap child → navigate to child's grades/attendance
+- [ ] Add "My Children" entry in parent's bottom nav or drawer (only visible for PAR role)
+- [ ] i18n for all new text (fr/ar/en)
 
 ---
 

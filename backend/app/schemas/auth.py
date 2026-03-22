@@ -60,6 +60,7 @@ class MeData(BaseModel):
 class InviteCreateRequest(BaseModel):
     role_target: str = Field(..., description="Role code for the invited user (e.g. TCH, PAR, STD)")
     expires_in_hours: int = Field(default=72, ge=1, le=720, description="Hours until code expires")
+    target_student_id: UUID | None = Field(None, description="Student user ID to auto-link when a PAR registers with this code")
 
 
 class InviteCreateData(BaseModel):
@@ -154,6 +155,7 @@ class BatchRegisterItem(BaseModel):
     role: str = Field(..., description="Role code: STD, PAR, TCH")
     phone: str | None = Field(None, max_length=20)
     class_code: str | None = Field(None, description="Class code for auto-enrollment (optional)")
+    target_student_id: UUID | None = Field(None, description="Student user ID to auto-link for PAR role")
 
 
 class BatchRegisterRequest(BaseModel):
