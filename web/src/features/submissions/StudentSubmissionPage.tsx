@@ -2,7 +2,9 @@
  * Student submission page — select assignment, upload files, submit.
  *
  * Reference: Phase 4C (from 3B) — Student submission with file upload
+ * Phase 10B — PDF exercise workflow: download exercise PDF, upload solution scan/photo.
  * Flow: Select assignment → Create submission (POST /submissions) → Upload files → Done.
+ * PRINTABLE_PDF: Download exercise → Upload solution → Finalize (POST /submissions/{id}/submit).
  */
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
@@ -19,6 +21,8 @@ interface AssignmentOption {
   course_id: string;
   due_at: string | null;
   total_points: number;
+  exercise_type?: string;
+  exercise_pdf_path?: string | null;
 }
 
 type SubmitStep = 'select' | 'uploading' | 'done';
@@ -65,9 +69,15 @@ export function StudentSubmissionPage() {
       const submissionId = resp.data.id;
 
       // 2. Upload files one by one
+      const isPrintablePdf = selectedAssignment?.exercise_type === 'PRINTABLE_PDF';
       for (let i = 0; i < files.length; i++) {
         const formData = new FormData();
         formData.append('file', files[i]);
+        // Phase 10B: add file_type_hint for PRINTABLE_PDF submissions
+        if (isPrintablePdf) {
+          const hint = files[i].type?.startsWith('image/') ? 'SOLUTION_PHOTO' : 'SOLUTION_SCAN';
+          formData.append('file_type_hint', hint);
+        }
 
         const token = getAccessToken();
         const headers: Record<string, string> = {};
@@ -80,6 +90,11 @@ export function StudentSubmissionPage() {
           body: formData,
         });
         setUploadProgress(i + 1);
+      }
+
+      // Phase 10B: finalize PRINTABLE_PDF draft submission
+      if (isPrintablePdf) {
+        await api.post(`/submissions/${submissionId}/submit`);
       }
 
       setStep('done');
@@ -154,6 +169,11 @@ export function StudentSubmissionPage() {
                 {selectedAssignment && (
                   <div style={{ marginBottom: 16, padding: 12, background: 'var(--color-bg)', borderRadius: 'var(--radius)', fontSize: 13 }}>
                     <div><strong>{selectedAssignment.title}</strong></div>
+                    {selectedAssignment.exercise_type && selectedAssignment.exercise_type !== 'STANDARD' && (
+                      <div style={{ color: 'var(--color-primary)', marginTop: 4, fontWeight: 600 }}>
+                        {t(`studentSubmission.exerciseType_${selectedAssignment.exercise_type}`, selectedAssignment.exercise_type)}
+                      </div>
+                    )}
                     {selectedAssignment.due_at && (
                       <div style={{ color: 'var(--color-text-secondary)', marginTop: 4 }}>
                         {t('studentSubmission.dueAt')}: {new Date(selectedAssignment.due_at).toLocaleString()}
@@ -162,6 +182,45 @@ export function StudentSubmissionPage() {
                     <div style={{ color: 'var(--color-text-secondary)', marginTop: 2 }}>
                       {t('studentSubmission.points')}: {selectedAssignment.total_points}
                     </div>
+                  </div>
+                )}
+
+                {/* Phase 10B: PDF exercise download */}
+                {selectedAssignment?.exercise_type === 'PRINTABLE_PDF' && selectedAssignment.exercise_pdf_path && (
+                  <div style={{ marginBottom: 16, padding: 12, background: 'var(--color-bg)', borderRadius: 'var(--radius)', border: '1px solid var(--color-primary)' }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
+                      {t('studentSubmission.pdfExercise')}
+                    </div>
+                    <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', margin: '0 0 8px' }}>
+                      {t('studentSubmission.pdfInstructions')}
+                    </p>
+                    <a
+                      href={`/api/v1/assignments/${selectedAssignment.id}/exercise-pdf`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-primary"
+                      style={{ fontSize: 12, textDecoration: 'none', display: 'inline-block' }}
+                      onClick={(e) => {
+                        // Attach auth header via fetch download
+                        e.preventDefault();
+                        const token = getAccessToken();
+                        fetch(`/api/v1/assignments/${selectedAssignment.id}/exercise-pdf`, {
+                          headers: token ? { Authorization: `Bearer ${token}` } : {},
+                          credentials: 'include',
+                        })
+                          .then((r) => r.blob())
+                          .then((blob) => {
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `exercise_${selectedAssignment.id}.pdf`;
+                            a.click();
+                            URL.revokeObjectURL(url);
+                          });
+                      }}
+                    >
+                      {t('studentSubmission.downloadPdf')}
+                    </a>
                   </div>
                 )}
 

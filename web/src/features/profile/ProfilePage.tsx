@@ -258,6 +258,13 @@ export function ProfilePage() {
                     <div className="profile-field"><label>{t('register.employeeId')}</label><span>{profileData.teacher_profile.employee_id || '—'}</span></div>
                     <div className="profile-field"><label>{t('register.subjectSpecialty')}</label><span>{profileData.teacher_profile.subject_specialty || '—'}</span></div>
                     <div className="profile-field"><label>{t('register.qualification')}</label><span>{profileData.teacher_profile.qualification || '—'}</span></div>
+                    {/* Phase 10B — reward points from content promotion */}
+                    <div className="profile-field">
+                      <label>{t('profile.rewardPoints')}</label>
+                      <span style={{ fontWeight: 700, color: 'var(--color-primary)' }}>
+                        {profileData.teacher_profile.reward_points ?? 0}
+                      </span>
+                    </div>
                   </div>
                 )}
                 {!profileData?.student_profile && !profileData?.parent_profile && !profileData?.teacher_profile && !profileLoading && (

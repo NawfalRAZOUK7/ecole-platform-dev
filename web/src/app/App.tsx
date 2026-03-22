@@ -38,6 +38,10 @@ import { AssignmentFormPage } from '@/features/teacher/AssignmentFormPage';
 import { SubmissionsPage as TeacherSubmissionsPage } from '@/features/teacher/SubmissionsPage';
 import { AttendancePage } from '@/features/teacher/AttendancePage';
 import { AssessmentFormPage } from '@/features/teacher/AssessmentFormPage';
+import { ContentLibraryPage } from '@/features/teacher/ContentLibraryPage';
+import { QuizManagerPage } from '@/features/teacher/QuizManagerPage';
+import { ContentViewPage } from '@/features/student/ContentViewPage';
+import { QuizPlayerPage } from '@/features/student/QuizPlayerPage';
 import { LoadingState } from '@/shared/ui/LoadingState';
 import { CmsLayout } from '@/features/cms/CmsLayout';
 import { CmsContentListPage } from '@/features/cms/ContentListPage';
@@ -194,6 +198,40 @@ function App() {
           element={
             <ProtectedRoute roles={['TCH']}>
               <AssessmentFormPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teacher/content-library"
+          element={
+            <ProtectedRoute roles={['TCH']}>
+              <ContentLibraryPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teacher/quizzes"
+          element={
+            <ProtectedRoute roles={['TCH']}>
+              <QuizManagerPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Student routes */}
+        <Route
+          path="/student/content"
+          element={
+            <ProtectedRoute roles={['STD']}>
+              <ContentViewPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/quizzes"
+          element={
+            <ProtectedRoute roles={['STD']}>
+              <QuizPlayerPage />
             </ProtectedRoute>
           }
         />

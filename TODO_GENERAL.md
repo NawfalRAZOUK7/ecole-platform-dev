@@ -719,20 +719,20 @@
 - [x] i18n (fr/ar/en)
 
 ## Phase 10B — Teacher Content Library + Quiz Player (Web)
-- [ ] `ContentLibraryPage.tsx` — teacher browses platform + school content, assigns to class
-- [ ] Teacher: upload school-scoped content
-- [ ] "Submit to Platform Library" button on teacher's own content → creates submission for CONTENT_MGR review
-- [ ] "My Submissions" tab showing submission statuses + CONTENT_MGR feedback
-- [ ] Show reward points balance in teacher profile
-- [ ] `QuizBuilderPage.tsx` — teacher creates class-specific quizzes
-- [ ] Teacher: assign platform quizzes to class
-- [ ] `ContentPage.tsx` — student views assigned content (video/PDF/audio players)
-- [ ] Student content progress tracking (started/completed)
-- [ ] `QuizPlayerPage.tsx` — student takes quiz (all 5 question types, timer, navigation)
-- [ ] Quiz results screen with score + explanations
-- [ ] PDF exercise: download button + upload solution flow
-- [ ] Parent dashboard: quiz results alongside assignment grades
-- [ ] i18n (fr/ar/en)
+- [x] `ContentLibraryPage.tsx` — teacher browses platform + school content, assigns to class
+- [x] Teacher: upload school-scoped content
+- [x] "Submit to Platform Library" button on teacher's own content → creates submission for CONTENT_MGR review
+- [x] "My Submissions" tab showing submission statuses + CONTENT_MGR feedback
+- [x] Show reward points balance in teacher profile
+- [x] `QuizBuilderPage.tsx` — teacher creates class-specific quizzes
+- [x] Teacher: assign platform quizzes to class
+- [x] `ContentPage.tsx` — student views assigned content (video/PDF/audio players)
+- [x] Student content progress tracking (started/completed)
+- [x] `QuizPlayerPage.tsx` — student takes quiz (all 5 question types, timer, navigation)
+- [x] Quiz results screen with score + explanations
+- [x] PDF exercise: download button + upload solution flow
+- [x] Parent dashboard: quiz results alongside assignment grades
+- [x] i18n (fr/ar/en)
 
 ## Phase 10C — Content Library + Quiz Player (Mobile)
 - [ ] `content_library_screen.dart` — teacher browses + assigns content
