@@ -1,7 +1,8 @@
-"""COM domain models — Consent, notifications, deliveries, parent feed.
+"""COM domain models — Consent, notifications, deliveries, parent feed, messaging, announcements.
 
 Reference: Pack C4 (Data Model — COM section), Sprint 1 story S-017.
 Migration group: G4-COM (depends on G1-IAM for user FKs).
+Phase 11C: Added Conversation, ConversationParticipant, Message, MessageReadReceipt, Announcement.
 """
 
 import enum
@@ -9,6 +10,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
+    Boolean,
     DateTime,
     ForeignKey,
     Index,
@@ -16,6 +18,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base, TimestampMixin
@@ -49,6 +52,25 @@ class DeliveryStatus(str, enum.Enum):
     FAILED = "failed"
     FALLBACK = "fallback"
     SUPPRESSED = "suppressed"
+
+
+class ConversationType(str, enum.Enum):
+    """Phase 11C: Conversation type."""
+    DIRECT = "DIRECT"
+    GROUP = "GROUP"
+
+
+class ParticipantRole(str, enum.Enum):
+    """Phase 11C: Role in conversation."""
+    INITIATOR = "INITIATOR"
+    PARTICIPANT = "PARTICIPANT"
+
+
+class AnnouncementStatus(str, enum.Enum):
+    """Phase 11C: Announcement status."""
+    DRAFT = "DRAFT"
+    PUBLISHED = "PUBLISHED"
+    ARCHIVED = "ARCHIVED"
 
 
 # ---------------------------------------------------------------------------
@@ -170,4 +192,169 @@ class ParentFeedItem(TimestampMixin, Base):
             "parent_id",
             "created_at",
         ),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Messaging (Phase 11C)
+# ---------------------------------------------------------------------------
+
+
+class Conversation(TimestampMixin, Base):
+    """Parent-teacher conversation (direct or group).
+
+    ABAC enforced at API level: parents can only message teachers
+    of their children's classes, and vice versa.
+    """
+
+    __tablename__ = "conversations"
+
+    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    type: Mapped[str] = mapped_column(
+        String(20), nullable=False, default=ConversationType.DIRECT.value
+    )
+    created_by: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    subject: Mapped[str | None] = mapped_column(String(300), nullable=True)
+
+    # Relationships
+    participants: Mapped[list["ConversationParticipant"]] = relationship(
+        back_populates="conversation", cascade="all, delete-orphan"
+    )
+    messages: Mapped[list["Message"]] = relationship(
+        back_populates="conversation", cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (
+        Index("idx_conversations_school", "school_id"),
+        Index("idx_conversations_created_by", "created_by"),
+    )
+
+
+class ConversationParticipant(TimestampMixin, Base):
+    """Participant in a conversation."""
+
+    __tablename__ = "conversation_participants"
+
+    conversation_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    role_in_conversation: Mapped[str] = mapped_column(
+        String(20), nullable=False, default=ParticipantRole.PARTICIPANT.value
+    )
+    joined_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    muted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+    # Relationships
+    conversation: Mapped["Conversation"] = relationship(
+        back_populates="participants"
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "conversation_id", "user_id",
+            name="uq_conversation_participants_conv_user",
+        ),
+        Index("idx_conv_participants_user", "user_id"),
+    )
+
+
+class Message(TimestampMixin, Base):
+    """Message within a conversation."""
+
+    __tablename__ = "messages"
+
+    conversation_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False
+    )
+    sender_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    sent_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    edited_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    # Relationships
+    conversation: Mapped["Conversation"] = relationship(
+        back_populates="messages"
+    )
+    read_receipts: Mapped[list["MessageReadReceipt"]] = relationship(
+        back_populates="message", cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (
+        Index("idx_messages_conv_sent", "conversation_id", "sent_at"),
+        Index("idx_messages_sender", "sender_id"),
+    )
+
+
+class MessageReadReceipt(TimestampMixin, Base):
+    """Read receipt for a message — tracks who read when."""
+
+    __tablename__ = "message_read_receipts"
+
+    message_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("messages.id", ondelete="CASCADE"), nullable=False
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    read_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+
+    # Relationships
+    message: Mapped["Message"] = relationship(back_populates="read_receipts")
+
+    __table_args__ = (
+        UniqueConstraint(
+            "message_id", "user_id",
+            name="uq_message_read_receipts_msg_user",
+        ),
+        Index("idx_read_receipts_user", "user_id"),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Announcements (Phase 11C)
+# ---------------------------------------------------------------------------
+
+
+class Announcement(TimestampMixin, Base):
+    """School-wide or targeted announcement from admin/director.
+
+    target_roles: JSONB array of role codes — e.g. ["PAR", "STD"]
+    target_class_ids: JSONB array of class UUIDs — NULL means all classes
+    """
+
+    __tablename__ = "announcements"
+
+    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    author_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    title: Mapped[str] = mapped_column(String(300), nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    target_roles: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
+    target_class_ids: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+    published_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default=AnnouncementStatus.DRAFT.value
+    )
+
+    __table_args__ = (
+        Index("idx_announcements_school_status", "school_id", "status"),
+        Index("idx_announcements_author", "author_id"),
     )

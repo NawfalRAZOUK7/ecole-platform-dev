@@ -782,18 +782,18 @@
 - [x] Alembic migration G15 — `b9c0d1e2f3a4_g15_fee_structures_billing_enhancements.py`
 - [x] Audit trail on all fee/invoice operations + seed data (3 fee structures, 6 assignments)
 
-## Phase 11C — Messaging & Communication Backend
-- [ ] Create `conversations` table (school_id, type: DIRECT/GROUP, created_by, subject)
-- [ ] Create `conversation_participants` table (conversation_id, user_id, role_in_conversation)
-- [ ] Create `messages` table (conversation_id, sender_id, body, sent_at, edited_at)
-- [ ] Create `message_read_receipts` table (message_id, user_id, read_at)
-- [ ] Create `announcements` table (school_id, author_id, title, body, target_roles JSONB, target_class_ids JSONB, status: DRAFT/PUBLISHED/ARCHIVED)
-- [ ] SMS fallback service (abstract SMSProvider, stub implementation, sends on email failure + consent)
-- [ ] Messaging endpoints: conversations CRUD, send/list messages, read receipts
-- [ ] ABAC: parents↔teachers of their children only
-- [ ] Announcements endpoints: CRUD + publish (sends notifications)
-- [ ] WebSocket push for new messages + announcements
-- [ ] Audit trail on all operations
+## Phase 11C — Messaging & Communication Backend ✅
+- [x] Create `conversations` table (school_id, type: DIRECT/GROUP, created_by, subject)
+- [x] Create `conversation_participants` table (conversation_id, user_id, role_in_conversation)
+- [x] Create `messages` table (conversation_id, sender_id, body, sent_at, edited_at)
+- [x] Create `message_read_receipts` table (message_id, user_id, read_at)
+- [x] Create `announcements` table (school_id, author_id, title, body, target_roles JSONB, target_class_ids JSONB, status: DRAFT/PUBLISHED/ARCHIVED)
+- [x] SMS fallback service (abstract SMSProvider, stub implementation, sends on email failure + consent)
+- [x] Messaging endpoints: conversations CRUD, send/list messages, read receipts
+- [x] ABAC: parents↔teachers of their children only
+- [x] Announcements endpoints: CRUD + publish (sends notifications)
+- [x] WebSocket push for new messages + announcements
+- [x] Audit trail on all operations
 
 ## Phase 11D — Student Progress Visualization Backend
 - [ ] Progress aggregation service: grade trends, content completion, activity scores, attendance rates

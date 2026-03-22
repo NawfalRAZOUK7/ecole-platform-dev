@@ -105,3 +105,38 @@ async def publish_payment_updated(
         "status": status,
         "invoice_id": str(invoice_id) if invoice_id else None,
     })
+
+
+# ---------------------------------------------------------------------------
+# Messaging events (Phase 11C)
+# ---------------------------------------------------------------------------
+async def publish_message_created(
+    recipient_id: uuid.UUID,
+    conversation_id: uuid.UUID,
+    message_id: uuid.UUID,
+    sender_id: uuid.UUID,
+    body: str,
+    sent_at: str,
+) -> None:
+    """Push a message:created event to a conversation participant."""
+    await publish_event(recipient_id, "message:created", {
+        "conversation_id": str(conversation_id),
+        "message_id": str(message_id),
+        "sender_id": str(sender_id),
+        "body": body[:200],  # Preview only
+        "sent_at": sent_at,
+    })
+
+
+async def publish_announcement_published(
+    recipient_id: uuid.UUID,
+    announcement_id: uuid.UUID,
+    title: str,
+    author_id: uuid.UUID,
+) -> None:
+    """Push an announcement:published event to a targeted user."""
+    await publish_event(recipient_id, "announcement:published", {
+        "announcement_id": str(announcement_id),
+        "title": title,
+        "author_id": str(author_id),
+    })

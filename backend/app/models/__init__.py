@@ -49,7 +49,12 @@ from app.models.lms import (
 
 # G4 — COM
 from app.models.com import (
+    Announcement,
     ConsentPreference,
+    Conversation,
+    ConversationParticipant,
+    Message,
+    MessageReadReceipt,
     Notification,
     NotificationDelivery,
     ParentFeedItem,
@@ -116,6 +121,11 @@ __all__ = [
     "Notification",
     "NotificationDelivery",
     "ParentFeedItem",
+    "Conversation",
+    "ConversationParticipant",
+    "Message",
+    "MessageReadReceipt",
+    "Announcement",
     # Billing
     "FeeStructure",
     "FeeAssignment",

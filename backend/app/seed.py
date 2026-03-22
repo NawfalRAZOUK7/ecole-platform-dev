@@ -18,7 +18,12 @@ from app.core.database import async_session, engine
 from app.models.audit import AuditLog
 from app.models.billing import FeeAssignment, FeeStructure, Invoice, InvoiceItem, PaymentAttempt
 from app.models.com import (
+    Announcement,
     ConsentPreference,
+    Conversation,
+    ConversationParticipant,
+    Message,
+    MessageReadReceipt,
     Notification,
     NotificationDelivery,
     ParentFeedItem,
@@ -122,6 +127,12 @@ FEE_SCOLARITE_ID = uuid.UUID("60000000-0000-4000-8000-000000000001")
 FEE_TRANSPORT_ID = uuid.UUID("60000000-0000-4000-8000-000000000002")
 FEE_CANTINE_ID = uuid.UUID("60000000-0000-4000-8000-000000000003")
 
+# Phase 11C — Messaging & Announcements
+CONV_1_ID = uuid.UUID("70000000-0000-4000-8000-000000000001")
+CONV_2_ID = uuid.UUID("70000000-0000-4000-8000-000000000002")
+ANN_1_ID = uuid.UUID("70000000-0000-4000-8000-000000000010")
+ANN_2_ID = uuid.UUID("70000000-0000-4000-8000-000000000011")
+
 # Billing
 INVOICE_1_ID = uuid.UUID("40000000-0000-4000-8000-000000000001")
 
@@ -139,7 +150,10 @@ async def clear_all(session: AsyncSession) -> None:
     await session.execute(
         text(
             "TRUNCATE TABLE audit_logs, provider_webhook_events, payment_proofs, "
-            "payment_attempts, invoice_items, invoices, parent_feed_items, "
+            "payment_attempts, invoice_items, invoices, "
+            "announcements, message_read_receipts, messages, "
+            "conversation_participants, conversations, "
+            "parent_feed_items, "
             "notification_deliveries, notifications, consent_preferences, "
             "activity_sessions, activities, "
             "content_submissions, class_content_assignments, "
@@ -557,6 +571,151 @@ async def seed_com(session: AsyncSession) -> None:
     session.add(feed)
     await session.flush()
     print("  [COM] 1 consent, 1 notification+delivery, 1 feed item")
+
+
+async def seed_messaging(session: AsyncSession) -> None:
+    """Seed messaging & announcements (Phase 11C).
+
+    Creates:
+    - 2 conversations (parent↔teacher direct, group with admin)
+    - 4 messages across conversations
+    - 1 read receipt
+    - 2 announcements (1 published, 1 draft)
+    """
+    now = _now()
+
+    # Conversation 1: Parent 1 ↔ Teacher 1 (direct — about student grades)
+    conv1 = Conversation(
+        id=CONV_1_ID,
+        school_id=SCHOOL_ID,
+        type="DIRECT",
+        created_by=PARENT_1_ID,
+        subject="Question sur les notes de Yassine",
+    )
+    session.add(conv1)
+    await session.flush()
+
+    session.add_all([
+        ConversationParticipant(
+            conversation_id=CONV_1_ID,
+            user_id=PARENT_1_ID,
+            role_in_conversation="INITIATOR",
+            joined_at=now,
+            muted=False,
+        ),
+        ConversationParticipant(
+            conversation_id=CONV_1_ID,
+            user_id=TEACHER_1_ID,
+            role_in_conversation="PARTICIPANT",
+            joined_at=now,
+            muted=False,
+        ),
+    ])
+    await session.flush()
+
+    msg1 = Message(
+        conversation_id=CONV_1_ID,
+        sender_id=PARENT_1_ID,
+        body="Bonjour M. Kettani, je souhaite discuter des résultats de Yassine en mathématiques.",
+        sent_at=now,
+    )
+    msg2 = Message(
+        conversation_id=CONV_1_ID,
+        sender_id=TEACHER_1_ID,
+        body="Bonjour M. Alaoui, Yassine fait de bons progrès. Son dernier contrôle était excellent (17.5/20).",
+        sent_at=now + timedelta(minutes=15),
+    )
+    session.add_all([msg1, msg2])
+    await session.flush()
+
+    # Read receipt: Parent 1 read teacher's reply
+    receipt = MessageReadReceipt(
+        message_id=msg2.id,
+        user_id=PARENT_1_ID,
+        read_at=now + timedelta(minutes=30),
+    )
+    session.add(receipt)
+
+    # Conversation 2: Group conversation — Admin + Teacher 1 + Teacher 2
+    conv2 = Conversation(
+        id=CONV_2_ID,
+        school_id=SCHOOL_ID,
+        type="GROUP",
+        created_by=ADMIN_ID,
+        subject="Réunion pédagogique — préparation examens",
+    )
+    session.add(conv2)
+    await session.flush()
+
+    session.add_all([
+        ConversationParticipant(
+            conversation_id=CONV_2_ID,
+            user_id=ADMIN_ID,
+            role_in_conversation="INITIATOR",
+            joined_at=now,
+            muted=False,
+        ),
+        ConversationParticipant(
+            conversation_id=CONV_2_ID,
+            user_id=TEACHER_1_ID,
+            role_in_conversation="PARTICIPANT",
+            joined_at=now,
+            muted=False,
+        ),
+        ConversationParticipant(
+            conversation_id=CONV_2_ID,
+            user_id=TEACHER_2_ID,
+            role_in_conversation="PARTICIPANT",
+            joined_at=now,
+            muted=False,
+        ),
+    ])
+    await session.flush()
+
+    msg3 = Message(
+        conversation_id=CONV_2_ID,
+        sender_id=ADMIN_ID,
+        body="Bonjour à tous, merci de préparer les sujets d'examens pour le 15 avril.",
+        sent_at=now,
+    )
+    msg4 = Message(
+        conversation_id=CONV_2_ID,
+        sender_id=TEACHER_1_ID,
+        body="Bien reçu, je prépare le sujet de mathématiques pour la semaine prochaine.",
+        sent_at=now + timedelta(minutes=10),
+    )
+    session.add_all([msg3, msg4])
+    await session.flush()
+
+    # Announcement 1: Published — school event
+    ann1 = Announcement(
+        id=ANN_1_ID,
+        school_id=SCHOOL_ID,
+        author_id=ADMIN_ID,
+        title="Journée portes ouvertes — 25 mars 2026",
+        body="Chers parents et élèves, nous vous invitons à la journée portes ouvertes de l'école le 25 mars 2026 de 9h à 16h. Des ateliers, expositions et démonstrations seront organisés.",
+        target_roles=["PAR", "STD"],
+        target_class_ids=None,
+        published_at=now,
+        status="PUBLISHED",
+    )
+    session.add(ann1)
+
+    # Announcement 2: Draft — exam schedule
+    ann2 = Announcement(
+        id=ANN_2_ID,
+        school_id=SCHOOL_ID,
+        author_id=DIRECTOR_ID,
+        title="Calendrier des examens du 2ème semestre",
+        body="Le calendrier des examens du deuxième semestre sera communiqué prochainement. Les examens débuteront le 15 avril 2026.",
+        target_roles=["PAR", "STD", "TCH"],
+        target_class_ids=None,
+        status="DRAFT",
+    )
+    session.add(ann2)
+    await session.flush()
+
+    print("  [Messaging] 2 conversations (4 messages, 1 read receipt), 2 announcements (1 published, 1 draft)")
 
 
 async def seed_billing(session: AsyncSession) -> None:
@@ -1229,6 +1388,7 @@ async def main() -> None:
         await seed_erp(session)
         await seed_lms(session)
         await seed_com(session)
+        await seed_messaging(session)
         await seed_billing(session)
         await seed_audit(session)
         await seed_cms(session)

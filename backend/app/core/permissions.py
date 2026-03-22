@@ -98,6 +98,13 @@ PERM_COM_CONSENT_UPDATE = "PERM-COM:consent:update"
 PERM_COM_NOTIFICATION_READ = "PERM-COM:notification:read"
 PERM_COM_MESSAGE_SEND = "PERM-COM:message:send"
 
+# COM — Messaging & Announcements (Phase 11C)
+PERM_COM_CONVERSATION_CREATE = "PERM-COM:conversation:create"
+PERM_COM_CONVERSATION_READ = "PERM-COM:conversation:read"
+PERM_COM_ANNOUNCEMENT_CREATE = "PERM-COM:announcement:create"
+PERM_COM_ANNOUNCEMENT_READ = "PERM-COM:announcement:read"
+PERM_COM_ANNOUNCEMENT_PUBLISH = "PERM-COM:announcement:publish"
+
 # IA (P1 — included for completeness)
 PERM_IA_REQUEST_CREATE = "PERM-IA:request:create"
 PERM_IA_REQUEST_READ = "PERM-IA:request:read"
@@ -186,9 +193,14 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_BIL_FEE_UPDATE,
         PERM_BIL_FEE_ASSIGN,
         PERM_BIL_INVOICE_GENERATE,
-        # COM — config
+        # COM — config + messaging + announcements (Phase 11C)
         PERM_COM_CONSENT_UPDATE,
         PERM_COM_NOTIFICATION_READ,
+        PERM_COM_CONVERSATION_CREATE,
+        PERM_COM_CONVERSATION_READ,
+        PERM_COM_ANNOUNCEMENT_CREATE,
+        PERM_COM_ANNOUNCEMENT_READ,
+        PERM_COM_ANNOUNCEMENT_PUBLISH,
         # Support
         PERM_SUP_GRANT_APPROVE,
         PERM_SUP_GRANT_REVOKE,
@@ -211,8 +223,12 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_ERP_TIMETABLE_EXCEPTION_READ,
         # LMS — read analytics
         PERM_LMS_ASSESSMENT_READ,
-        # COM — read
+        # COM — read + announcements (Phase 11C)
         PERM_COM_NOTIFICATION_READ,
+        PERM_COM_CONVERSATION_READ,
+        PERM_COM_ANNOUNCEMENT_CREATE,
+        PERM_COM_ANNOUNCEMENT_READ,
+        PERM_COM_ANNOUNCEMENT_PUBLISH,
     },
     TCH: {
         # IAM — login/recovery
@@ -253,9 +269,12 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_QUIZ_MANAGE,
         PERM_QUIZ_PUBLISH,
         PERM_QUIZ_ANALYTICS,
-        # COM — messaging (P1)
+        # COM — messaging (P1) + conversations (Phase 11C)
         PERM_COM_NOTIFICATION_READ,
         PERM_COM_MESSAGE_SEND,
+        PERM_COM_CONVERSATION_CREATE,
+        PERM_COM_CONVERSATION_READ,
+        PERM_COM_ANNOUNCEMENT_READ,
         # IA (P1)
         PERM_IA_REQUEST_CREATE,
         PERM_IA_REQUEST_READ,
@@ -287,10 +306,13 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_BIL_PAYMENT_READ,
         PERM_BIL_PROOF_READ,
         PERM_BIL_FEE_READ,
-        # COM — consent + feed
+        # COM — consent + feed + messaging + announcements (Phase 11C)
         PERM_COM_CONSENT_UPDATE,
         PERM_COM_NOTIFICATION_READ,
         PERM_COM_MESSAGE_SEND,
+        PERM_COM_CONVERSATION_CREATE,
+        PERM_COM_CONVERSATION_READ,
+        PERM_COM_ANNOUNCEMENT_READ,
         # IA (P1)
         PERM_IA_REQUEST_CREATE,
         PERM_IA_REQUEST_READ,
@@ -327,8 +349,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # Quiz — attempt + read
         PERM_QUIZ_ATTEMPT,
         PERM_QUIZ_READ,
-        # COM — read notifications
+        # COM — read notifications + announcements (Phase 11C)
         PERM_COM_NOTIFICATION_READ,
+        PERM_COM_ANNOUNCEMENT_READ,
         # IA (P1)
         PERM_IA_WRITING_ATTEMPT_CREATE,
         PERM_IA_WRITING_ATTEMPT_REVIEW,
