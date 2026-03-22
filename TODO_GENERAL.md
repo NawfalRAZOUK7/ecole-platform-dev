@@ -688,15 +688,18 @@
 - [x] Audit trail on all quiz operations
 - [x] Seed data: sample quizzes with mixed question types
 
-## Phase 9C — PDF Exercise Workflow Backend
-- [ ] Add `exercise_pdf_path` field (String 500) to `Assignment` model
-- [ ] Alembic migration for new field
-- [ ] Update `POST /assignments` — require PDF upload when exercise_type=PRINTABLE_PDF
-- [ ] `GET /assignments/{id}/exercise-pdf` — download printable exercise PDF
-- [ ] Submission validation: require file upload for PRINTABLE_PDF assignments
-- [ ] Add `file_type_hint` field to `SubmissionFile` (SOLUTION_SCAN/SOLUTION_PHOTO/DOCUMENT)
-- [ ] Teacher inline preview of uploaded solution files
-- [ ] Audit trail for PDF exercise operations
+## Phase 9C — PDF Exercise Workflow Backend ✅
+- [x] Add `exercise_pdf_path` field (String 500) to `Assignment` model
+- [x] Alembic migration for new field (`a1b2c3d4e5f6`)
+- [x] Update `POST /assignments` — support exercise_type + quiz_id fields
+- [x] `POST /assignments/{id}/exercise-pdf` — upload exercise PDF (TCH)
+- [x] `GET /assignments/{id}/exercise-pdf` — download printable exercise PDF (TCH + enrolled STD)
+- [x] Submission validation: PRINTABLE_PDF submissions start as draft, require file upload to finalize
+- [x] `POST /submissions/{id}/submit` — finalize draft submission (validates file count for PDF exercises)
+- [x] Add `file_type_hint` field to `SubmissionFile` (SOLUTION_SCAN/SOLUTION_PHOTO/DOCUMENT)
+- [x] `GET /submissions/{id}/preview` — teacher inline preview of uploaded solution files
+- [x] Audit trail for PDF exercise operations (upload, finalize, preview)
+- [x] Seed data: PRINTABLE_PDF assignment example
 
 ## Phase 10A — CMS Dashboard (Web)
 - [ ] CMS route group `/cms/*` with separate layout + CONTENT_MGR role guard

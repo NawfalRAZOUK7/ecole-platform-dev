@@ -132,6 +132,10 @@ class Assignment(TimestampMixin, Base):
     quiz_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("quizzes.id", ondelete="SET NULL"), nullable=True
     )
+    # Phase 9C — PDF exercise workflow
+    exercise_pdf_path: Mapped[str | None] = mapped_column(
+        String(500), nullable=True
+    )
 
     # Relationships
     course: Mapped["Course"] = relationship(back_populates="assignments")
@@ -200,6 +204,8 @@ class SubmissionFile(TimestampMixin, Base):
     checksum: Mapped[str | None] = mapped_column(String(128), nullable=True)
     mime_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
     file_size: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    # Phase 9C — hints for frontend display (SOLUTION_SCAN, SOLUTION_PHOTO, DOCUMENT)
+    file_type_hint: Mapped[str | None] = mapped_column(String(30), nullable=True)
 
     # Relationships
     submission: Mapped["Submission"] = relationship(back_populates="files")

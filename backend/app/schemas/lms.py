@@ -40,6 +40,12 @@ class AssignmentCreateRequest(BaseModel):
     description: str | None = None
     due_at: datetime | None = None
     total_points: int = Field(default=0, ge=0)
+    # Phase 9B
+    exercise_type: str = Field(
+        default="STANDARD", pattern="^(STANDARD|PRINTABLE_PDF|QUIZ)$"
+    )
+    quiz_id: uuid.UUID | None = None
+    # Phase 9C — exercise_pdf_path is set server-side from file upload, not in body
 
 
 class AssignmentResponse(BaseModel):
@@ -50,6 +56,9 @@ class AssignmentResponse(BaseModel):
     description: str | None = None
     due_at: str | None = None
     total_points: int
+    exercise_type: str = "STANDARD"
+    quiz_id: str | None = None
+    exercise_pdf_path: str | None = None
 
 
 # ---------------------------------------------------------------------------

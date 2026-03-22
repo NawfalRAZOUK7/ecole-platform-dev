@@ -12,7 +12,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, Request, UploadFile
+from fastapi import APIRouter, Depends, Form, Query, Request, UploadFile
 from fastapi.responses import FileResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -93,13 +93,17 @@ async def create_submission(
             "submitted_at": existing.submitted_at.isoformat() if existing.submitted_at else None,
         })
 
-    # 4. Create submission (status=submitted immediately)
+    # 4. Create submission
+    # PRINTABLE_PDF assignments start as draft so student can upload solution files first
     now = datetime.now(timezone.utc)
+    is_pdf_exercise = assignment.exercise_type == "PRINTABLE_PDF"
+    initial_status = "draft" if is_pdf_exercise else "submitted"
+
     submission = Submission(
         assignment_id=body.assignment_id,
         student_id=auth.user_id,
-        status="submitted",
-        submitted_at=now,
+        status=initial_status,
+        submitted_at=None if is_pdf_exercise else now,
     )
     db.add(submission)
     await db.flush()
@@ -114,7 +118,7 @@ async def create_submission(
         target_id=submission.id,
         entity_after={
             "assignment_id": str(body.assignment_id),
-            "status": "submitted",
+            "status": initial_status,
         },
         ip_address=_get_client_ip(request),
     )
@@ -302,6 +306,7 @@ async def upload_submission_file(
     submission_id: uuid.UUID,
     file: UploadFile,
     request: Request,
+    file_type_hint: str | None = Form(None),
     auth: AuthContext = Depends(requires_permission("PERM-LMS:submission-file:upload")),
     db: AsyncSession = Depends(get_db),
 ):
@@ -361,29 +366,38 @@ async def upload_submission_file(
             error_code="ERR-UPLOAD-422",
         )
 
-    # 4. MIME validation
+    # 4. Validate file_type_hint if provided
+    valid_hints = {"SOLUTION_SCAN", "SOLUTION_PHOTO", "DOCUMENT"}
+    if file_type_hint and file_type_hint not in valid_hints:
+        raise ValidationError(
+            f"file_type_hint must be one of: {', '.join(sorted(valid_hints))}",
+            error_code="ERR-LMS-422",
+        )
+
+    # 5. MIME validation
     mime = file.content_type or "application/octet-stream"
     validate_mime_type(mime)
 
-    # 5. Save file via storage backend
+    # 6. Save file via storage backend
     relative_path, checksum, file_size = await storage.save(
         file.file,
         file.filename or "upload",
         subdirectory=f"submissions/{submission_id}",
     )
 
-    # 6. Persist to submission_files table
+    # 7. Persist to submission_files table
     sf = SubmissionFile(
         submission_id=submission_id,
         file_path=relative_path,
         checksum=checksum,
         mime_type=mime,
         file_size=file_size,
+        file_type_hint=file_type_hint,
     )
     db.add(sf)
     await db.flush()
 
-    # 7. Audit
+    # 8. Audit
     await audit.log_event(
         school_id=auth.school_id,
         actor_id=auth.user_id,
@@ -397,6 +411,7 @@ async def upload_submission_file(
             "mime_type": mime,
             "file_size": file_size,
             "checksum": checksum,
+            "file_type_hint": file_type_hint,
         },
         ip_address=_get_client_ip(request),
     )
@@ -408,6 +423,7 @@ async def upload_submission_file(
         "checksum": sf.checksum,
         "mime_type": sf.mime_type,
         "file_size": sf.file_size,
+        "file_type_hint": sf.file_type_hint,
     })
 
 
@@ -475,3 +491,174 @@ async def download_submission_file(
         media_type=sf.mime_type or "application/octet-stream",
         filename=abs_path.name,
     )
+
+
+# ---------------------------------------------------------------------------
+# Phase 9C: POST /submissions/{id}/submit — Finalize a draft submission (STD)
+# ---------------------------------------------------------------------------
+@router.post(
+    "/{submission_id}/submit",
+    summary="Finalize and submit a draft submission",
+    response_description="Updated submission",
+)
+async def finalize_submission(
+    submission_id: uuid.UUID,
+    request: Request,
+    auth: AuthContext = Depends(requires_permission("PERM-LMS:submission:create")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Finalize a draft submission (transition draft → submitted).
+
+    For PRINTABLE_PDF assignments, validates that at least one file has been uploaded.
+    """
+    audit = AuditService(db)
+
+    # 1. Load submission
+    sub_result = await db.execute(
+        select(Submission).where(Submission.id == submission_id)
+    )
+    submission = sub_result.scalar_one_or_none()
+    if submission is None:
+        raise NotFoundError("Submission not found", error_code="ERR-LMS-404")
+
+    if submission.student_id != auth.user_id:
+        raise NotFoundError("Submission not found", error_code="ERR-LMS-404")
+
+    if submission.status != "draft":
+        raise ValidationError(
+            "Only draft submissions can be finalized",
+            error_code="ERR-LMS-422",
+        )
+
+    # 2. Load assignment to check exercise_type
+    assignment_result = await db.execute(
+        select(Assignment).where(Assignment.id == submission.assignment_id)
+    )
+    assignment = assignment_result.scalar_one_or_none()
+    if assignment is None:
+        raise NotFoundError("Assignment not found", error_code="ERR-LMS-404")
+
+    course_result = await db.execute(
+        select(Course).where(Course.id == assignment.course_id)
+    )
+    course = course_result.scalar_one_or_none()
+    if course is None:
+        raise NotFoundError("Course not found", error_code="ERR-LMS-404")
+    verify_school_boundary(course.school_id, auth)
+
+    # 3. PRINTABLE_PDF: require at least one uploaded file
+    if assignment.exercise_type == "PRINTABLE_PDF":
+        file_count_result = await db.execute(
+            select(func.count()).where(SubmissionFile.submission_id == submission_id)
+        )
+        file_count = file_count_result.scalar() or 0
+        if file_count == 0:
+            raise ValidationError(
+                "PRINTABLE_PDF submissions require at least one uploaded solution file",
+                error_code="ERR-LMS-422",
+            )
+
+    # 4. Transition to submitted
+    now = datetime.now(timezone.utc)
+    submission.status = "submitted"
+    submission.submitted_at = now
+    await db.flush()
+
+    # 5. Audit
+    await audit.log_event(
+        school_id=auth.school_id,
+        actor_id=auth.user_id,
+        action_type="SUBMISSION_FINALIZED",
+        outcome="success",
+        target_type="submission",
+        target_id=submission.id,
+        entity_after={
+            "assignment_id": str(submission.assignment_id),
+            "status": "submitted",
+            "exercise_type": assignment.exercise_type,
+        },
+        ip_address=_get_client_ip(request),
+    )
+
+    return success_response({
+        "id": str(submission.id),
+        "assignment_id": str(submission.assignment_id),
+        "student_id": str(submission.student_id),
+        "status": submission.status,
+        "submitted_at": submission.submitted_at.isoformat(),
+    })
+
+
+# ---------------------------------------------------------------------------
+# Phase 9C: GET /submissions/{id}/preview — Teacher inline preview of files
+# ---------------------------------------------------------------------------
+@router.get(
+    "/{submission_id}/preview",
+    summary="Preview submission files (teacher)",
+    response_description="List of files with preview metadata",
+)
+async def preview_submission_files(
+    submission_id: uuid.UUID,
+    auth: AuthContext = Depends(requires_permission("PERM-LMS:submission:grade")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Teacher inline preview: list submission files with metadata for rendering.
+
+    Returns file list with mime_type, file_type_hint, and download URL path
+    so the frontend can render inline previews for images/PDFs.
+    """
+    # 1. Load submission
+    sub_result = await db.execute(
+        select(Submission).where(Submission.id == submission_id)
+    )
+    submission = sub_result.scalar_one_or_none()
+    if submission is None:
+        raise NotFoundError("Submission not found", error_code="ERR-LMS-404")
+
+    # 2. Verify teacher owns the course
+    assignment_result = await db.execute(
+        select(Assignment).where(Assignment.id == submission.assignment_id)
+    )
+    assignment = assignment_result.scalar_one_or_none()
+    if assignment is None:
+        raise NotFoundError("Assignment not found", error_code="ERR-LMS-404")
+
+    course_result = await db.execute(
+        select(Course).where(Course.id == assignment.course_id)
+    )
+    course = course_result.scalar_one_or_none()
+    if course is None:
+        raise NotFoundError("Course not found", error_code="ERR-LMS-404")
+    verify_school_boundary(course.school_id, auth)
+
+    if auth.role == "TCH" and course.teacher_id != auth.user_id:
+        raise NotFoundError("Submission not found", error_code="ERR-LMS-404")
+
+    # 3. Load files
+    files_result = await db.execute(
+        select(SubmissionFile).where(SubmissionFile.submission_id == submission_id)
+    )
+    files = list(files_result.scalars().all())
+
+    items = []
+    for f in files:
+        is_previewable = (f.mime_type or "").startswith("image/") or f.mime_type == "application/pdf"
+        items.append({
+            "id": str(f.id),
+            "file_path": f.file_path,
+            "mime_type": f.mime_type,
+            "file_size": f.file_size,
+            "file_type_hint": f.file_type_hint,
+            "checksum": f.checksum,
+            "is_previewable": is_previewable,
+            "download_url": f"/api/v1/submissions/{submission_id}/files/{f.id}",
+        })
+
+    return success_response({
+        "submission_id": str(submission_id),
+        "assignment_id": str(submission.assignment_id),
+        "student_id": str(submission.student_id),
+        "status": submission.status,
+        "exercise_type": assignment.exercise_type,
+        "files": items,
+    })

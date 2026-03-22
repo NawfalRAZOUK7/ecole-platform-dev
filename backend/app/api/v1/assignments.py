@@ -1,6 +1,7 @@
-"""Assignment API endpoint: POST /assignments.
+"""Assignment API endpoints.
 
 Reference: S-052 — Create assignment (TCH).
+Phase 9C — PDF exercise workflow: upload exercise PDF, student download.
 Role: TCH (PERM-LMS:assignment:create)
 Validates: course exists, teacher owns the course, school boundary.
 """
@@ -9,13 +10,14 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Depends, Query, Request
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, File, Form, Query, Request, UploadFile
+from fastapi.responses import FileResponse
+from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, requires_permission, verify_school_boundary
-from app.core.exceptions import AuthorizationError, NotFoundError
+from app.core.exceptions import AuthorizationError, NotFoundError, ValidationError
 from app.core.filtering import FilterSpec, SortSpec, apply_filters, apply_sort, parse_filters, parse_sort
 from app.core.response import (
     clamp_page_size,
@@ -25,6 +27,8 @@ from app.core.response import (
     success_response,
 )
 from app.core.search import apply_search, parse_search
+from app.core.storage import storage, validate_file_size, validate_mime_type
+from app.models.erp import Enrollment
 from app.models.lms import Assignment, Course
 from app.schemas.lms import AssignmentCreateRequest
 from app.services.audit import AuditService
@@ -39,6 +43,22 @@ def _get_client_ip(request: Request) -> str | None:
     if request.client:
         return request.client.host
     return None
+
+
+def _assignment_to_dict(a: Assignment) -> dict:
+    """Serialize assignment to dict."""
+    return {
+        "id": str(a.id),
+        "course_id": str(a.course_id),
+        "teacher_id": str(a.teacher_id),
+        "title": a.title,
+        "description": a.description,
+        "due_at": a.due_at.isoformat() if a.due_at else None,
+        "total_points": a.total_points,
+        "exercise_type": a.exercise_type,
+        "quiz_id": str(a.quiz_id) if a.quiz_id else None,
+        "exercise_pdf_path": a.exercise_pdf_path,
+    }
 
 
 @router.post("", status_code=201, summary="Create an assignment", response_description="Created assignment record")
@@ -79,6 +99,8 @@ async def create_assignment(
         description=body.description,
         due_at=body.due_at,
         total_points=body.total_points,
+        exercise_type=body.exercise_type,
+        quiz_id=body.quiz_id,
     )
     db.add(assignment)
     await db.flush()
@@ -95,19 +117,12 @@ async def create_assignment(
             "course_id": str(body.course_id),
             "title": body.title,
             "total_points": body.total_points,
+            "exercise_type": body.exercise_type,
         },
         ip_address=_get_client_ip(request),
     )
 
-    return success_response({
-        "id": str(assignment.id),
-        "course_id": str(assignment.course_id),
-        "teacher_id": str(assignment.teacher_id),
-        "title": assignment.title,
-        "description": assignment.description,
-        "due_at": assignment.due_at.isoformat() if assignment.due_at else None,
-        "total_points": assignment.total_points,
-    })
+    return success_response(_assignment_to_dict(assignment))
 
 
 @router.get("", summary="List assignments", response_description="Paginated list of assignments")
@@ -162,18 +177,7 @@ async def list_assignments(
     if has_more:
         assignments = assignments[:page_size]
 
-    items = [
-        {
-            "id": str(a.id),
-            "course_id": str(a.course_id),
-            "teacher_id": str(a.teacher_id),
-            "title": a.title,
-            "description": a.description,
-            "due_at": a.due_at.isoformat() if a.due_at else None,
-            "total_points": a.total_points,
-        }
-        for a in assignments
-    ]
+    items = [_assignment_to_dict(a) for a in assignments]
 
     next_cursor = encode_cursor(assignments[-1].id) if has_more and assignments else None
     return list_response(
@@ -183,4 +187,157 @@ async def list_assignments(
         filters_applied=filters.as_dict() if filters.items else None,
         sort_by=sort.as_list() if sort.fields else None,
         search_term=search,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Phase 9C: POST /assignments/{id}/exercise-pdf — Upload exercise PDF (TCH)
+# ---------------------------------------------------------------------------
+@router.post(
+    "/{assignment_id}/exercise-pdf",
+    status_code=201,
+    summary="Upload exercise PDF for a PRINTABLE_PDF assignment",
+)
+async def upload_exercise_pdf(
+    assignment_id: uuid.UUID,
+    file: UploadFile = File(...),
+    request: Request = None,
+    auth: AuthContext = Depends(requires_permission("PERM-LMS:assignment:create")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Upload or replace the exercise PDF for a PRINTABLE_PDF assignment.
+
+    Validates:
+    1. Assignment exists, teacher owns it
+    2. exercise_type must be PRINTABLE_PDF
+    3. File must be application/pdf
+    """
+    audit = AuditService(db)
+
+    # 1. Load assignment + course
+    result = await db.execute(select(Assignment).where(Assignment.id == assignment_id))
+    assignment = result.scalar_one_or_none()
+    if assignment is None:
+        raise NotFoundError("Assignment not found", error_code="ERR-LMS-404")
+
+    course_result = await db.execute(select(Course).where(Course.id == assignment.course_id))
+    course = course_result.scalar_one_or_none()
+    if course is None:
+        raise NotFoundError("Course not found", error_code="ERR-LMS-404")
+    verify_school_boundary(course.school_id, auth)
+
+    if course.teacher_id != auth.user_id:
+        raise AuthorizationError(
+            "You can only upload PDFs for your own assignments",
+            error_code="ERR-AUTHZ-001",
+        )
+
+    # 2. Must be PRINTABLE_PDF type
+    if assignment.exercise_type != "PRINTABLE_PDF":
+        raise ValidationError(
+            "Exercise PDF upload is only allowed for PRINTABLE_PDF assignments",
+            error_code="ERR-LMS-422",
+        )
+
+    # 3. Validate PDF MIME
+    mime = file.content_type or "application/octet-stream"
+    if mime != "application/pdf":
+        raise ValidationError(
+            "Only PDF files are accepted for exercise upload",
+            error_code="ERR-UPLOAD-415",
+        )
+
+    # 4. Delete old PDF if replacing
+    if assignment.exercise_pdf_path:
+        await storage.delete(assignment.exercise_pdf_path)
+
+    # 5. Save new PDF
+    relative_path, checksum, file_size = await storage.save(
+        file.file,
+        file.filename or "exercise.pdf",
+        subdirectory=f"exercises/{assignment_id}",
+    )
+
+    assignment.exercise_pdf_path = relative_path
+    await db.flush()
+
+    # 6. Audit
+    await audit.log_event(
+        school_id=auth.school_id,
+        actor_id=auth.user_id,
+        action_type="EXERCISE_PDF_UPLOADED",
+        outcome="success",
+        target_type="assignment",
+        target_id=assignment.id,
+        entity_after={
+            "exercise_pdf_path": relative_path,
+            "checksum": checksum,
+            "file_size": file_size,
+        },
+        ip_address=_get_client_ip(request),
+    )
+
+    return success_response({
+        "id": str(assignment.id),
+        "exercise_pdf_path": relative_path,
+        "checksum": checksum,
+        "file_size": file_size,
+    })
+
+
+# ---------------------------------------------------------------------------
+# Phase 9C: GET /assignments/{id}/exercise-pdf — Download exercise PDF
+# ---------------------------------------------------------------------------
+@router.get(
+    "/{assignment_id}/exercise-pdf",
+    summary="Download the exercise PDF",
+    response_description="PDF file binary",
+)
+async def download_exercise_pdf(
+    assignment_id: uuid.UUID,
+    auth: AuthContext = Depends(requires_permission("PERM-LMS:assignment:create")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Download the printable exercise PDF.
+
+    Access: teacher who owns the course, or student enrolled in the class.
+    """
+    # 1. Load assignment + course
+    result = await db.execute(select(Assignment).where(Assignment.id == assignment_id))
+    assignment = result.scalar_one_or_none()
+    if assignment is None:
+        raise NotFoundError("Assignment not found", error_code="ERR-LMS-404")
+
+    if not assignment.exercise_pdf_path:
+        raise NotFoundError("No exercise PDF attached", error_code="ERR-LMS-404")
+
+    course_result = await db.execute(select(Course).where(Course.id == assignment.course_id))
+    course = course_result.scalar_one_or_none()
+    if course is None:
+        raise NotFoundError("Course not found", error_code="ERR-LMS-404")
+    verify_school_boundary(course.school_id, auth)
+
+    # 2. Access control: teacher owns course OR student enrolled in the class
+    if auth.role == "TCH":
+        if course.teacher_id != auth.user_id:
+            raise NotFoundError("Assignment not found", error_code="ERR-LMS-404")
+    elif auth.role == "STD":
+        enrolled = await db.execute(
+            select(
+                exists().where(
+                    Enrollment.student_id == auth.user_id,
+                    Enrollment.class_id == course.class_id,
+                    Enrollment.status == "active",
+                )
+            )
+        )
+        if not enrolled.scalar():
+            raise NotFoundError("Assignment not found", error_code="ERR-LMS-404")
+
+    # 3. Serve file
+    abs_path = await storage.read(assignment.exercise_pdf_path)
+    return FileResponse(
+        path=str(abs_path),
+        media_type="application/pdf",
+        filename=f"exercise_{assignment_id}.pdf",
     )

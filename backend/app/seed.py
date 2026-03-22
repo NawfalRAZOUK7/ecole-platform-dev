@@ -477,7 +477,22 @@ async def seed_lms(session: AsyncSession) -> None:
     )
     session.add(act_session)
     await session.flush()
-    print("  [LMS] 2 courses, 1 assignment, 1 submission+grade, 1 assessment+result, 1 content+progress, 1 activity+session")
+
+    # Phase 9C — PRINTABLE_PDF assignment (exercise PDF path is placeholder, file not on disk)
+    pdf_assign = Assignment(
+        course_id=COURSE_MATH_ID,
+        teacher_id=TEACHER_1_ID,
+        title="Exercice imprimable - Equations",
+        description="Imprimez le PDF, résolvez les exercices sur papier, puis scannez/photographiez votre copie.",
+        due_at=_now() + timedelta(days=10),
+        total_points=15,
+        exercise_type="PRINTABLE_PDF",
+        exercise_pdf_path="exercises/sample_equations.pdf",
+    )
+    session.add(pdf_assign)
+    await session.flush()
+
+    print("  [LMS] 2 courses, 2 assignments (1 STANDARD + 1 PRINTABLE_PDF), 1 submission+grade, 1 assessment+result, 1 content+progress, 1 activity+session")
 
 
 async def seed_com(session: AsyncSession) -> None:
