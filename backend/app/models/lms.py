@@ -281,10 +281,23 @@ class AssessmentResult(TimestampMixin, Base):
     )
 
 
+class ContentOrigin(str, enum.Enum):
+    PLATFORM = "PLATFORM"
+    PROMOTED = "PROMOTED"
+
+
+class ContentSubmissionStatus(str, enum.Enum):
+    PENDING = "PENDING"
+    UNDER_REVIEW = "UNDER_REVIEW"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+
+
 class ContentItem(TimestampMixin, Base):
     """Educational content item (video, document, interactive).
 
     school_id nullable for shared/platform-wide content.
+    Phase 9A: added subject, created_by, description, thumbnail_path, origin, original_content_id.
     """
 
     __tablename__ = "content_items"
@@ -296,6 +309,19 @@ class ContentItem(TimestampMixin, Base):
     language: Mapped[str | None] = mapped_column(String(10), nullable=True)
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default=ContentItemStatus.DRAFT.value
+    )
+    # Phase 9A fields
+    subject: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    created_by: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    thumbnail_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    origin: Mapped[str] = mapped_column(
+        String(20), nullable=False, default=ContentOrigin.PLATFORM.value
+    )
+    original_content_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("content_items.id", ondelete="SET NULL"), nullable=True
     )
 
     # Relationships
@@ -310,6 +336,9 @@ class ContentItem(TimestampMixin, Base):
             "level_band",
             "language",
         ),
+        Index("idx_content_items_subject", "subject"),
+        Index("idx_content_items_origin", "origin"),
+        Index("idx_content_items_created_by", "created_by"),
     )
 
 
@@ -399,4 +428,83 @@ class ActivitySession(TimestampMixin, Base):
 
     __table_args__ = (
         Index("idx_activity_sessions_student_activity", "student_id", "activity_id"),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Phase 9A — Content Library Models
+# ---------------------------------------------------------------------------
+
+
+class ClassContentAssignment(TimestampMixin, Base):
+    """Teacher assigns platform/school content to a class.
+
+    Unique per (class_id, content_item_id) — no duplicate assignments.
+    """
+
+    __tablename__ = "class_content_assignments"
+
+    teacher_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    class_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("classes.id", ondelete="CASCADE"), nullable=False
+    )
+    content_item_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("content_items.id", ondelete="CASCADE"), nullable=False
+    )
+    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    assigned_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=datetime.utcnow
+    )
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint(
+            "class_id", "content_item_id",
+            name="uq_class_content_assignments_class_content",
+        ),
+        Index("idx_class_content_assignments_teacher", "teacher_id"),
+        Index("idx_class_content_assignments_class", "class_id"),
+        Index("idx_class_content_assignments_school", "school_id"),
+    )
+
+
+class ContentSubmission(TimestampMixin, Base):
+    """Teacher submits school-scoped content for platform promotion review.
+
+    Workflow: PENDING → UNDER_REVIEW → APPROVED/REJECTED
+    On approval, promoted_content_id links to the platform copy.
+    """
+
+    __tablename__ = "content_submissions"
+
+    content_item_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("content_items.id", ondelete="CASCADE"), nullable=False
+    )
+    submitted_by: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default=ContentSubmissionStatus.PENDING.value
+    )
+    submitted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=datetime.utcnow
+    )
+    reviewed_by: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    reviewed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    review_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    promoted_content_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("content_items.id", ondelete="SET NULL"), nullable=True
+    )
+
+    __table_args__ = (
+        Index("idx_content_submissions_status", "status"),
+        Index("idx_content_submissions_submitted_by", "submitted_by"),
+        Index("idx_content_submissions_school", "school_id"),
     )

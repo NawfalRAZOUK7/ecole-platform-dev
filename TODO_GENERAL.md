@@ -647,27 +647,31 @@
 ---
 
 ## Phase 9A — CONTENT_MGR Role + Content Library Backend
-- [ ] Add `CONTENT_MGR` role to `core/permissions.py` (platform-wide, not school-scoped)
-- [ ] New permissions: `PERM_CONTENT_CREATE`, `PERM_CONTENT_PUBLISH`, `PERM_CONTENT_MANAGE`, `PERM_CONTENT_DELETE`, `PERM_CONTENT_ANALYTICS`, `PERM_CONTENT_REVIEW`
-- [ ] Add `subject` field (String 50) to `ContentItem` model
-- [ ] Add `created_by` field (FK to users) to `ContentItem` model
-- [ ] Add `description` field (Text) to `ContentItem` model
-- [ ] Add `thumbnail_path` field (String 500) to `ContentItem` model
-- [ ] Add `origin` field (String 20, default PLATFORM) to `ContentItem` — values: PLATFORM, PROMOTED
-- [ ] Add `original_content_id` field (FK to content_items, nullable) — links promoted content to original
-- [ ] Create `class_content_assignments` table (teacher_id, class_id, content_item_id, school_id, assigned_at, notes)
-- [ ] Create `content_submissions` table (content_item_id, submitted_by, school_id, status: PENDING/UNDER_REVIEW/APPROVED/REJECTED, reviewed_by, review_notes, promoted_content_id)
-- [ ] Add `reward_points` field (Integer, default 0) to `teacher_profiles`
-- [ ] SQLAlchemy models: `ClassContentAssignment`, `ContentSubmission`
-- [ ] CMS endpoints: `POST /cms/content`, `GET /cms/content`, `PUT /cms/content/{id}`, `DELETE /cms/content/{id}`
-- [ ] Review queue endpoints: `GET /cms/submissions`, `POST /cms/submissions/{id}/review` (approve/reject)
-- [ ] Approve workflow: create platform copy + award points + notify teacher
-- [ ] Reject workflow: send notification with feedback to teacher
-- [ ] Teacher endpoints: `GET /content/library`, `POST /content/assign`, `DELETE /content/assign/{id}`
-- [ ] Teacher promotion endpoints: `POST /content/submit-for-review`, `GET /content/my-submissions`
-- [ ] Student endpoint: `GET /classes/{id}/content`
-- [ ] Audit trail on all CMS + submission operations
-- [ ] Seed data: platform content + sample teacher submission
+- [x] Add `CONTENT_MGR` role to `core/permissions.py` (platform-wide, not school-scoped)
+- [x] New permissions: `PERM_CMS_CONTENT_CREATE`, `PERM_CMS_CONTENT_PUBLISH`, `PERM_CMS_CONTENT_MANAGE`, `PERM_CMS_CONTENT_DELETE`, `PERM_CMS_CONTENT_ANALYTICS`, `PERM_CMS_CONTENT_REVIEW`, `PERM_CMS_CONTENT_ASSIGN`, `PERM_CMS_CONTENT_SUBMIT`
+- [x] Add `subject` field (String 50) to `ContentItem` model
+- [x] Add `created_by` field (FK to users) to `ContentItem` model
+- [x] Add `description` field (Text) to `ContentItem` model
+- [x] Add `thumbnail_path` field (String 500) to `ContentItem` model
+- [x] Add `origin` field (String 20, default PLATFORM) to `ContentItem` — values: PLATFORM, PROMOTED
+- [x] Add `original_content_id` field (FK to content_items, nullable) — links promoted content to original
+- [x] Create `class_content_assignments` table (teacher_id, class_id, content_item_id, school_id, assigned_at, notes)
+- [x] Create `content_submissions` table (content_item_id, submitted_by, school_id, status: PENDING/UNDER_REVIEW/APPROVED/REJECTED, reviewed_by, review_notes, promoted_content_id)
+- [x] Add `reward_points` field (Integer, default 0) to `teacher_profiles`
+- [x] SQLAlchemy models: `ClassContentAssignment`, `ContentSubmission`
+- [x] CMS endpoints: `POST /cms/content`, `GET /cms/content`, `PUT /cms/content/{id}`, `DELETE /cms/content/{id}`
+- [x] Review queue endpoints: `GET /cms/submissions`, `POST /cms/submissions/{id}/review` (approve/reject)
+- [x] Approve workflow: create platform copy + award points + notify teacher
+- [x] Reject workflow: send notification with feedback to teacher
+- [x] Teacher endpoints: `GET /content/library`, `POST /content/assign`, `DELETE /content/assign/{id}`
+- [x] Teacher promotion endpoints: `POST /content/submit-for-review`, `GET /content/my-submissions`
+- [x] Student endpoint: `GET /classes/{class_id}/content`
+- [x] Audit trail on all CMS + submission operations
+- [x] Seed data: 6 platform content items (2 videos, 2 PDFs, 2 audios) + 1 teacher submission + 1 class assignment + CONTENT_MGR user
+- [x] `CONTENT_MGR` added to `RoleCode` enum in `models/iam.py`
+- [x] Pydantic schemas: `schemas/cms.py`
+- [x] Routers registered in `api/v1/router.py`
+- [x] Alembic migration — N/A: permissions are runtime (ROLE_PERMISSIONS dict)
 
 ## Phase 9B — Quiz Engine Backend
 - [ ] Create `quizzes` table (school_id nullable, created_by, title, subject, level_band, difficulty, time_limit, max_attempts, shuffle, status)

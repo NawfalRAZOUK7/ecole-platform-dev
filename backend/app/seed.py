@@ -49,8 +49,10 @@ from app.models.lms import (
     Assessment,
     AssessmentResult,
     Assignment,
+    ClassContentAssignment,
     ContentItem,
     ContentProgress,
+    ContentSubmission,
     Course,
     Grade,
     Submission,
@@ -72,6 +74,7 @@ STUDENT_1_ID = uuid.UUID("10000000-0000-4000-8000-000000000007")
 STUDENT_2_ID = uuid.UUID("10000000-0000-4000-8000-000000000008")
 STUDENT_3_ID = uuid.UUID("10000000-0000-4000-8000-000000000009")
 SUPERADMIN_ID = uuid.UUID("10000000-0000-4000-8000-00000000000a")
+CONTENT_MGR_ID = uuid.UUID("10000000-0000-4000-8000-00000000000b")
 
 # ERP
 YEAR_ID = uuid.UUID("20000000-0000-4000-8000-000000000001")
@@ -87,6 +90,14 @@ ASSIGN_1_ID = uuid.UUID("30000000-0000-4000-8000-000000000003")
 ASSESS_1_ID = uuid.UUID("30000000-0000-4000-8000-000000000004")
 CONTENT_1_ID = uuid.UUID("30000000-0000-4000-8000-000000000005")
 ACTIVITY_1_ID = uuid.UUID("30000000-0000-4000-8000-000000000006")
+
+# Phase 9A — Platform content
+PLATFORM_CONTENT_1_ID = uuid.UUID("30000000-0000-4000-8000-000000000010")
+PLATFORM_CONTENT_2_ID = uuid.UUID("30000000-0000-4000-8000-000000000011")
+PLATFORM_CONTENT_3_ID = uuid.UUID("30000000-0000-4000-8000-000000000012")
+PLATFORM_CONTENT_4_ID = uuid.UUID("30000000-0000-4000-8000-000000000013")
+PLATFORM_CONTENT_5_ID = uuid.UUID("30000000-0000-4000-8000-000000000014")
+PLATFORM_CONTENT_6_ID = uuid.UUID("30000000-0000-4000-8000-000000000015")
 
 # Billing
 INVOICE_1_ID = uuid.UUID("40000000-0000-4000-8000-000000000001")
@@ -107,7 +118,9 @@ async def clear_all(session: AsyncSession) -> None:
             "TRUNCATE TABLE audit_logs, provider_webhook_events, payment_proofs, "
             "payment_attempts, invoice_items, invoices, parent_feed_items, "
             "notification_deliveries, notifications, consent_preferences, "
-            "activity_sessions, activities, content_progress, content_item_assets, "
+            "activity_sessions, activities, "
+            "content_submissions, class_content_assignments, "
+            "content_progress, content_item_assets, "
             "content_items, grades, submission_files, submissions, assessment_results, "
             "assessments, assignments, courses, justification_reviews, "
             "absence_justifications, attendance_records, attendance_sessions, "
@@ -207,6 +220,14 @@ async def seed_iam(session: AsyncSession) -> None:
             status="active",
             school_id=SCHOOL_ID,
         ),
+        User(
+            id=CONTENT_MGR_ID,
+            email="cms@ecole-platform.ma",
+            full_name="Nadia Cherkaoui",
+            password_hash=_hash("content123"),
+            status="active",
+            school_id=SCHOOL_ID,
+        ),
     ]
     session.add_all(users)
     await session.flush()
@@ -222,6 +243,7 @@ async def seed_iam(session: AsyncSession) -> None:
         Membership(user_id=STUDENT_2_ID, school_id=SCHOOL_ID, role_code="STD", status="active"),
         Membership(user_id=STUDENT_3_ID, school_id=SCHOOL_ID, role_code="STD", status="active"),
         Membership(user_id=SUPERADMIN_ID, school_id=SCHOOL_ID, role_code="SUP", status="active"),
+        Membership(user_id=CONTENT_MGR_ID, school_id=SCHOOL_ID, role_code="CONTENT_MGR", status="active"),
     ]
     session.add_all(memberships)
 
@@ -235,7 +257,7 @@ async def seed_iam(session: AsyncSession) -> None:
         )
     )
     await session.flush()
-    print("  [IAM] 10 users, 10 memberships, 1 session")
+    print("  [IAM] 11 users, 11 memberships, 1 session")
 
 
 async def seed_erp(session: AsyncSession) -> None:
@@ -699,6 +721,133 @@ async def seed_parent_child_links(session: AsyncSession) -> None:
     print("  [IAM] 3 parent-child links (2 parents -> 3 students)")
 
 
+async def seed_cms(session: AsyncSession) -> None:
+    """Seed CMS domain: platform-wide content, class assignment, teacher submission (Phase 9A)."""
+    # Platform-wide content (school_id=NULL) — 2 videos, 2 PDFs, 2 audios
+    platform_content = [
+        ContentItem(
+            id=PLATFORM_CONTENT_1_ID,
+            school_id=None,
+            title="Les fractions - Cours complet",
+            content_type="video",
+            level_band="6eme",
+            language="fr",
+            subject="math",
+            description="Cours complet sur les fractions pour le niveau 6eme. Couvre les operations de base et les simplifications.",
+            status="published",
+            origin="PLATFORM",
+            created_by=CONTENT_MGR_ID,
+        ),
+        ContentItem(
+            id=PLATFORM_CONTENT_2_ID,
+            school_id=None,
+            title="La conjugaison au present",
+            content_type="video",
+            level_band="6eme",
+            language="fr",
+            subject="french",
+            description="Video pedagogique sur la conjugaison des verbes du premier, deuxieme et troisieme groupe au present de l'indicatif.",
+            status="published",
+            origin="PLATFORM",
+            created_by=CONTENT_MGR_ID,
+        ),
+        ContentItem(
+            id=PLATFORM_CONTENT_3_ID,
+            school_id=None,
+            title="Exercices de geometrie - Triangles",
+            content_type="pdf",
+            level_band="6eme",
+            language="fr",
+            subject="math",
+            description="Fiche d'exercices sur les triangles: classification, proprietes, construction.",
+            status="published",
+            origin="PLATFORM",
+            created_by=CONTENT_MGR_ID,
+        ),
+        ContentItem(
+            id=PLATFORM_CONTENT_4_ID,
+            school_id=None,
+            title="Lecture - Le Petit Prince (extraits)",
+            content_type="pdf",
+            level_band="6eme",
+            language="fr",
+            subject="french",
+            description="Extraits selectionnes du Petit Prince avec questions de comprehension.",
+            status="published",
+            origin="PLATFORM",
+            created_by=CONTENT_MGR_ID,
+        ),
+        ContentItem(
+            id=PLATFORM_CONTENT_5_ID,
+            school_id=None,
+            title="Comptines arabes - L'alphabet",
+            content_type="audio",
+            level_band="primaire",
+            language="ar",
+            subject="arabic",
+            description="Comptines pour apprendre l'alphabet arabe de maniere ludique.",
+            status="published",
+            origin="PLATFORM",
+            created_by=CONTENT_MGR_ID,
+        ),
+        ContentItem(
+            id=PLATFORM_CONTENT_6_ID,
+            school_id=None,
+            title="Ecoute - Les saisons",
+            content_type="audio",
+            level_band="6eme",
+            language="fr",
+            subject="science",
+            description="Document audio sur les saisons, les equinoxes et les solstices.",
+            status="published",
+            origin="PLATFORM",
+            created_by=CONTENT_MGR_ID,
+        ),
+    ]
+    session.add_all(platform_content)
+    await session.flush()
+
+    # Teacher's school-scoped content (used for submission)
+    teacher_content = ContentItem(
+        school_id=SCHOOL_ID,
+        title="Exercices supplementaires - Fractions",
+        content_type="pdf",
+        level_band="6eme",
+        language="fr",
+        subject="math",
+        description="Exercices supplementaires crees par le prof. Kettani pour les 6eme A.",
+        status="published",
+        origin="PLATFORM",
+        created_by=TEACHER_1_ID,
+    )
+    session.add(teacher_content)
+    await session.flush()
+
+    # Teacher submits content for platform promotion
+    submission = ContentSubmission(
+        content_item_id=teacher_content.id,
+        submitted_by=TEACHER_1_ID,
+        school_id=SCHOOL_ID,
+        status="PENDING",
+        submitted_at=_now(),
+    )
+    session.add(submission)
+
+    # Assign platform content to class 6A
+    assignment = ClassContentAssignment(
+        teacher_id=TEACHER_1_ID,
+        class_id=CLASS_6A_ID,
+        content_item_id=PLATFORM_CONTENT_1_ID,
+        school_id=SCHOOL_ID,
+        assigned_at=_now(),
+        notes="A regarder avant le controle de vendredi",
+    )
+    session.add(assignment)
+    await session.flush()
+
+    print("  [CMS] 6 platform content, 1 teacher content, 1 submission, 1 class assignment")
+
+
 async def main() -> None:
     print("=" * 60)
     print("Ecole Platform — Seeding development database")
@@ -717,6 +866,7 @@ async def main() -> None:
         await seed_com(session)
         await seed_billing(session)
         await seed_audit(session)
+        await seed_cms(session)
 
         await session.commit()
 
@@ -730,6 +880,7 @@ async def main() -> None:
     print("  Parent:     parent.alaoui@gmail.com / parent123")
     print("  Student:    yassine.alaoui@ecole-benani.ma / student123")
     print("  Superadmin: superadmin@ecole-platform.ma / superadmin123")
+    print("  CMS:        cms@ecole-platform.ma / content123")
 
 
 if __name__ == "__main__":

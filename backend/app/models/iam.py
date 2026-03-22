@@ -45,6 +45,7 @@ class RoleCode(str, enum.Enum):
     STD = "STD"  # Student
     SUP = "SUP"  # Super-admin (platform ops)
     SYS = "SYS"  # System account
+    CONTENT_MGR = "CONTENT_MGR"  # Platform-wide content manager
 
 
 class MembershipStatus(str, enum.Enum):
@@ -395,6 +396,7 @@ class TeacherProfile(TimestampMixin, Base):
     subject_specialty: Mapped[str | None] = mapped_column(String(200), nullable=True)
     qualification: Mapped[str | None] = mapped_column(String(200), nullable=True)
     hire_date: Mapped[datetime | None] = mapped_column(Date, nullable=True)
+    reward_points: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     # Relationships
     user: Mapped["User"] = relationship(foreign_keys=[user_id])

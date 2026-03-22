@@ -75,6 +75,10 @@ from app.api.v1.gdpr import router as gdpr_router
 # Phase 1B — Role-specific profiles
 from app.api.v1.profiles import router as profiles_router
 
+# Phase 9A — CMS + Content Library
+from app.api.v1.cms import router as cms_router
+from app.api.v1.content_library import router as content_library_router
+
 router = APIRouter()
 
 
@@ -144,3 +148,7 @@ router.include_router(gdpr_router)
 
 # Mount sub-routers — Phase 1B Profiles
 router.include_router(profiles_router)
+
+# Mount sub-routers — Phase 9A CMS + Content Library
+router.include_router(cms_router)
+router.include_router(content_library_router)

@@ -20,6 +20,7 @@ PAR = "PAR"
 STD = "STD"
 SUP = "SUP"
 SYS = "SYS"
+CONTENT_MGR = "CONTENT_MGR"  # Platform-wide content manager (not school-scoped)
 PUBLIC = "PUBLIC"  # pseudo-role for unauthenticated entry endpoints
 
 # ---------------------------------------------------------------------------
@@ -90,6 +91,16 @@ PERM_IA_REQUEST_OVERRIDE = "PERM-IA:request:override"
 PERM_IA_WRITING_ATTEMPT_CREATE = "PERM-IA:writing-attempt:create"
 PERM_IA_WRITING_ATTEMPT_REVIEW = "PERM-IA:writing-attempt:review"
 PERM_IA_RECOMMENDATION_READ = "PERM-IA:recommendation:read"
+
+# CMS (Phase 9A — Content Library)
+PERM_CMS_CONTENT_CREATE = "PERM-CMS:content:create"
+PERM_CMS_CONTENT_PUBLISH = "PERM-CMS:content:publish"
+PERM_CMS_CONTENT_MANAGE = "PERM-CMS:content:manage"
+PERM_CMS_CONTENT_DELETE = "PERM-CMS:content:delete"
+PERM_CMS_CONTENT_ANALYTICS = "PERM-CMS:content:analytics"
+PERM_CMS_CONTENT_REVIEW = "PERM-CMS:content:review"
+PERM_CMS_CONTENT_ASSIGN = "PERM-CMS:content:assign"
+PERM_CMS_CONTENT_SUBMIT = "PERM-CMS:content:submit"
 
 # Support
 PERM_SUP_GRANT_REQUEST = "PERM-SUP:grant:request"
@@ -191,6 +202,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_LMS_ASSESSMENT_CREATE,
         PERM_LMS_ASSESSMENT_READ,
         PERM_LMS_ASSESSMENT_PUBLISH,
+        # CMS — assign content to class + submit for review
+        PERM_CMS_CONTENT_ASSIGN,
+        PERM_CMS_CONTENT_SUBMIT,
         # COM — messaging (P1)
         PERM_COM_NOTIFICATION_READ,
         PERM_COM_MESSAGE_SEND,
@@ -281,6 +295,31 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # Service account — jobs + webhooks
         PERM_BIL_PAYMENT_RECONCILE,
         PERM_IA_WRITING_ATTEMPT_REVIEW,
+    },
+    CONTENT_MGR: {
+        # IAM — login/recovery
+        PERM_IAM_SESSION_CREATE,
+        PERM_IAM_SESSION_REFRESH,
+        PERM_IAM_SESSION_REVOKE,
+        PERM_IAM_SESSION_LIST,
+        PERM_IAM_PASSWORD_CHANGE,
+        PERM_IAM_RECOVERY_REQUEST,
+        PERM_IAM_RECOVERY_VERIFY,
+        PERM_IAM_RECOVERY_RESET,
+        # CMS — full content management + review
+        PERM_CMS_CONTENT_CREATE,
+        PERM_CMS_CONTENT_PUBLISH,
+        PERM_CMS_CONTENT_MANAGE,
+        PERM_CMS_CONTENT_DELETE,
+        PERM_CMS_CONTENT_ANALYTICS,
+        PERM_CMS_CONTENT_REVIEW,
+        # LMS — read content
+        PERM_LMS_CONTENT_READ,
+        PERM_LMS_CONTENT_ASSET_UPLOAD,
+        PERM_LMS_CONTENT_ASSET_READ,
+        PERM_LMS_CONTENT_ASSET_DELETE,
+        # COM — notifications
+        PERM_COM_NOTIFICATION_READ,
     },
 }
 
