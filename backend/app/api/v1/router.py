@@ -26,6 +26,7 @@ Routes:
   /billing/*                    — Fee structures, assignments, invoice generation (Phase 11B)
   /messages/*                   — Conversations + messaging (Phase 11C)
   /announcements/*              — Announcements CRUD + publish (Phase 11C)
+  /progress/*                   — Student progress visualization (Phase 11D)
 """
 
 from datetime import datetime, timezone
@@ -95,6 +96,9 @@ from app.api.v1.billing import router as billing_router
 # Phase 11C — Messaging & Announcements
 from app.api.v1.messaging import router as messaging_router
 from app.api.v1.announcements import router as announcements_router
+
+# Phase 11D — Student Progress
+from app.api.v1.progress import router as progress_router
 
 router = APIRouter()
 
@@ -182,3 +186,6 @@ router.include_router(billing_router)
 # Mount sub-routers — Phase 11C Messaging & Announcements
 router.include_router(messaging_router)
 router.include_router(announcements_router)
+
+# Mount sub-routers — Phase 11D Student Progress
+router.include_router(progress_router)

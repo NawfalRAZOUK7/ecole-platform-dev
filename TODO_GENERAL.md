@@ -795,15 +795,15 @@
 - [x] WebSocket push for new messages + announcements
 - [x] Audit trail on all operations
 
-## Phase 11D — Student Progress Visualization Backend
-- [ ] Progress aggregation service: grade trends, content completion, activity scores, attendance rates
-- [ ] `GET /progress/student/{id}` — full student dashboard data
-- [ ] `GET /progress/class/{id}` — class summary (teacher/admin)
-- [ ] `GET /progress/me` — student shortcut
-- [ ] `GET /progress/children` — parent's children overview
-- [ ] Response format: chart-ready (labels + datasets arrays)
-- [ ] Redis caching (15-min TTL) on aggregated data
-- [ ] ABAC enforcement on all endpoints
+## Phase 11D — Student Progress Visualization Backend ✅
+- [x] Progress aggregation service: grade trends, content completion, activity scores, attendance rates
+- [x] `GET /progress/student/{id}` — full student dashboard data
+- [x] `GET /progress/class/{id}` — class summary (teacher/admin)
+- [x] `GET /progress/me` — student shortcut
+- [x] `GET /progress/children` — parent's children overview
+- [x] Response format: chart-ready (labels + datasets arrays)
+- [x] Redis caching (15-min TTL) on aggregated data
+- [x] ABAC enforcement on all endpoints
 
 ## Phase 11E — Feature Toggles
 - [ ] Create `feature_toggles` table (feature_key unique, enabled_globally, enabled_school_ids JSONB, enabled_role_codes JSONB)

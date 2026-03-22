@@ -98,6 +98,10 @@ PERM_COM_CONSENT_UPDATE = "PERM-COM:consent:update"
 PERM_COM_NOTIFICATION_READ = "PERM-COM:notification:read"
 PERM_COM_MESSAGE_SEND = "PERM-COM:message:send"
 
+# Progress (Phase 11D)
+PERM_PROGRESS_READ = "PERM-LMS:progress:read"
+PERM_PROGRESS_CLASS_READ = "PERM-LMS:progress:class-read"
+
 # COM — Messaging & Announcements (Phase 11C)
 PERM_COM_CONVERSATION_CREATE = "PERM-COM:conversation:create"
 PERM_COM_CONVERSATION_READ = "PERM-COM:conversation:read"
@@ -193,6 +197,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_BIL_FEE_UPDATE,
         PERM_BIL_FEE_ASSIGN,
         PERM_BIL_INVOICE_GENERATE,
+        # Progress (Phase 11D)
+        PERM_PROGRESS_READ,
+        PERM_PROGRESS_CLASS_READ,
         # COM — config + messaging + announcements (Phase 11C)
         PERM_COM_CONSENT_UPDATE,
         PERM_COM_NOTIFICATION_READ,
@@ -223,6 +230,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_ERP_TIMETABLE_EXCEPTION_READ,
         # LMS — read analytics
         PERM_LMS_ASSESSMENT_READ,
+        # Progress (Phase 11D)
+        PERM_PROGRESS_READ,
+        PERM_PROGRESS_CLASS_READ,
         # COM — read + announcements (Phase 11C)
         PERM_COM_NOTIFICATION_READ,
         PERM_COM_CONVERSATION_READ,
@@ -269,6 +279,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_QUIZ_MANAGE,
         PERM_QUIZ_PUBLISH,
         PERM_QUIZ_ANALYTICS,
+        # Progress (Phase 11D)
+        PERM_PROGRESS_READ,
+        PERM_PROGRESS_CLASS_READ,
         # COM — messaging (P1) + conversations (Phase 11C)
         PERM_COM_NOTIFICATION_READ,
         PERM_COM_MESSAGE_SEND,
@@ -306,6 +319,8 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_BIL_PAYMENT_READ,
         PERM_BIL_PROOF_READ,
         PERM_BIL_FEE_READ,
+        # Progress (Phase 11D)
+        PERM_PROGRESS_READ,
         # COM — consent + feed + messaging + announcements (Phase 11C)
         PERM_COM_CONSENT_UPDATE,
         PERM_COM_NOTIFICATION_READ,
@@ -349,6 +364,8 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # Quiz — attempt + read
         PERM_QUIZ_ATTEMPT,
         PERM_QUIZ_READ,
+        # Progress (Phase 11D)
+        PERM_PROGRESS_READ,
         # COM — read notifications + announcements (Phase 11C)
         PERM_COM_NOTIFICATION_READ,
         PERM_COM_ANNOUNCEMENT_READ,
