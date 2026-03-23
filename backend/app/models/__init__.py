@@ -80,6 +80,9 @@ from app.models.ai import (
     WritingAttempt,
 )
 
+# G8 — Feature Toggles
+from app.models.feature import FeatureToggle
+
 __all__ = [
     # IAM
     "User",
@@ -139,4 +142,6 @@ __all__ = [
     # AI
     "WritingAttempt",
     "AIPreference",
+    # Feature Toggles
+    "FeatureToggle",
 ]

@@ -136,6 +136,9 @@ PERM_QUIZ_PUBLISH = "PERM-QUIZ:quiz:publish"
 PERM_QUIZ_ATTEMPT = "PERM-QUIZ:quiz:attempt"
 PERM_QUIZ_ANALYTICS = "PERM-QUIZ:quiz:analytics"
 
+# Feature Toggles (Phase 11E)
+PERM_SYS_FEATURE_MANAGE = "PERM-SYS:feature:manage"
+
 # Support
 PERM_SUP_GRANT_REQUEST = "PERM-SUP:grant:request"
 PERM_SUP_GRANT_APPROVE = "PERM-SUP:grant:approve"
@@ -393,6 +396,8 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # Service account — jobs + webhooks
         PERM_BIL_PAYMENT_RECONCILE,
         PERM_IA_WRITING_ATTEMPT_REVIEW,
+        # Feature toggles (Phase 11E)
+        PERM_SYS_FEATURE_MANAGE,
     },
     CONTENT_MGR: {
         # IAM — login/recovery
@@ -424,6 +429,8 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_QUIZ_ANALYTICS,
         # COM — notifications
         PERM_COM_NOTIFICATION_READ,
+        # Feature toggles (Phase 11E)
+        PERM_SYS_FEATURE_MANAGE,
     },
 }
 

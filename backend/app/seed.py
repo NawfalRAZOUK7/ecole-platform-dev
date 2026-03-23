@@ -39,6 +39,7 @@ from app.models.erp import (
     TimetableException,
     TimetableSlot,
 )
+from app.models.feature import FeatureToggle
 from app.models.iam import (
     AccountRecoveryRequest,
     InvitationCode,
@@ -149,7 +150,8 @@ async def clear_all(session: AsyncSession) -> None:
     """Truncate all tables (CASCADE) to allow re-seeding."""
     await session.execute(
         text(
-            "TRUNCATE TABLE audit_logs, provider_webhook_events, payment_proofs, "
+            "TRUNCATE TABLE feature_toggles, "
+            "audit_logs, provider_webhook_events, payment_proofs, "
             "payment_attempts, invoice_items, invoices, "
             "announcements, message_read_receipts, messages, "
             "conversation_participants, conversations, "
@@ -1372,6 +1374,63 @@ async def seed_fees(session: AsyncSession) -> None:
     print("  [Fees] 3 fee structures, 6 assignments (1 with discount, 1 exempted)")
 
 
+async def seed_feature_toggles(session: AsyncSession) -> None:
+    """Seed feature toggles — 6 default features (Phase 11E)."""
+    toggles = [
+        FeatureToggle(
+            feature_key="content_library",
+            display_name="Content Library",
+            description="Platform-wide content library (CMS) for reusable learning resources",
+            enabled_globally=False,
+            enabled_school_ids=[str(SCHOOL_ID)],
+            enabled_role_codes=["ADM", "TCH", "CONTENT_MGR"],
+        ),
+        FeatureToggle(
+            feature_key="quiz_engine",
+            display_name="Quiz Engine",
+            description="Interactive quiz creation and attempt engine",
+            enabled_globally=False,
+            enabled_school_ids=[str(SCHOOL_ID)],
+            enabled_role_codes=["ADM", "TCH", "STD", "CONTENT_MGR"],
+        ),
+        FeatureToggle(
+            feature_key="pdf_exercises",
+            display_name="PDF Exercises",
+            description="PDF exercise generation and submission workflow",
+            enabled_globally=False,
+            enabled_school_ids=[],
+            enabled_role_codes=["ADM", "TCH"],
+        ),
+        FeatureToggle(
+            feature_key="messaging",
+            display_name="Messaging",
+            description="Parent-teacher direct and group messaging",
+            enabled_globally=True,
+            enabled_school_ids=[],
+            enabled_role_codes=[],
+        ),
+        FeatureToggle(
+            feature_key="announcements",
+            display_name="Announcements",
+            description="School-wide announcement publish and targeting",
+            enabled_globally=True,
+            enabled_school_ids=[],
+            enabled_role_codes=[],
+        ),
+        FeatureToggle(
+            feature_key="timetable",
+            display_name="Timetable",
+            description="Weekly timetable management with exceptions",
+            enabled_globally=False,
+            enabled_school_ids=[str(SCHOOL_ID)],
+            enabled_role_codes=[],
+        ),
+    ]
+    session.add_all(toggles)
+    await session.flush()
+    print("  [Features] 6 feature toggles (messaging + announcements globally enabled)")
+
+
 async def main() -> None:
     print("=" * 60)
     print("Ecole Platform — Seeding development database")
@@ -1395,6 +1454,7 @@ async def main() -> None:
         await seed_quizzes(session)
         await seed_timetable(session)
         await seed_fees(session)
+        await seed_feature_toggles(session)
 
         await session.commit()
 

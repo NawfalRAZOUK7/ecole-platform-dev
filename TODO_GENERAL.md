@@ -806,13 +806,13 @@
 - [x] ABAC enforcement on all endpoints
 
 ## Phase 11E — Feature Toggles
-- [ ] Create `feature_toggles` table (feature_key unique, enabled_globally, enabled_school_ids JSONB, enabled_role_codes JSONB)
-- [ ] `core/feature_flags.py` — is_feature_enabled() + Redis cache (1-min TTL)
-- [ ] `RequiresFeature(key)` dependency guard for endpoints
-- [ ] Toggle CRUD endpoints (SYS/CONTENT_MGR)
-- [ ] `GET /features/active` — returns active features for current user (frontend conditional rendering)
-- [ ] Pre-create toggles: content_library, quiz_engine, pdf_exercises, messaging, announcements, timetable
-- [ ] Audit trail on toggle changes
+- [x] Create `feature_toggles` table (feature_key unique, enabled_globally, enabled_school_ids JSONB, enabled_role_codes JSONB)
+- [x] `core/feature_flags.py` — is_feature_enabled() + Redis cache (1-min TTL)
+- [x] `RequiresFeature(key)` dependency guard for endpoints
+- [x] Toggle CRUD endpoints (SYS/CONTENT_MGR)
+- [x] `GET /features/active` — returns active features for current user (frontend conditional rendering)
+- [x] Pre-create toggles: content_library, quiz_engine, pdf_exercises, messaging, announcements, timetable
+- [x] Audit trail on toggle changes
 
 ## Phase 12A — Timetable + Billing + Messaging UI (Web)
 - [ ] `TimetablePage.tsx` — weekly grid (Mon-Sat, time slots as rows, color-coded by subject)
