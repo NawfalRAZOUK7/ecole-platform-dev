@@ -9,22 +9,14 @@ from __future__ import annotations
 
 
 from fastapi import APIRouter, Depends, Request
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import (
-    AuthContext,
-    requires_permission,
-    verify_school_boundary,
-)
-from app.core.exceptions import NotFoundError
+from app.core.dependencies import AuthContext, requires_permission
 from app.core.response import success_response
 from app.core.request_utils import get_client_ip
-from app.models.erp import Class, Period, TeacherAssignment
-from app.models.iam import User
 from app.schemas.erp import TeacherAssignmentCreateRequest
-from app.services.audit import AuditService
+from app.services.erp import ERPService
 
 router = APIRouter(prefix="/class-assignments", tags=["erp-class-assignments"])
 
@@ -50,82 +42,10 @@ async def create_teacher_assignment(
     3. Period exists and is in the same school
     4. No duplicate assignment (idempotent if same tuple exists)
     """
-    audit = AuditService(db)
-
-    # 1. Validate teacher exists + school boundary
-    teacher_result = await db.execute(select(User).where(User.id == body.teacher_id))
-    teacher = teacher_result.scalar_one_or_none()
-    if teacher is None:
-        raise NotFoundError("Teacher not found", error_code="ERR-ERP-404")
-    verify_school_boundary(teacher.school_id, auth)
-
-    # 2. Validate class exists + school boundary
-    class_result = await db.execute(select(Class).where(Class.id == body.class_id))
-    cls = class_result.scalar_one_or_none()
-    if cls is None:
-        raise NotFoundError("Class not found", error_code="ERR-ERP-404")
-    verify_school_boundary(cls.school_id, auth)
-
-    # 3. Validate period exists + school boundary
-    period_result = await db.execute(select(Period).where(Period.id == body.period_id))
-    period = period_result.scalar_one_or_none()
-    if period is None:
-        raise NotFoundError("Period not found", error_code="ERR-ERP-404")
-    verify_school_boundary(period.school_id, auth)
-
-    # 4. Idempotency: check if assignment already exists
-    existing_result = await db.execute(
-        select(TeacherAssignment).where(
-            TeacherAssignment.teacher_id == body.teacher_id,
-            TeacherAssignment.class_id == body.class_id,
-            TeacherAssignment.period_id == body.period_id,
-            TeacherAssignment.school_id == auth.school_id,
-        )
-    )
-    existing = existing_result.scalar_one_or_none()
-    if existing is not None:
-        return success_response(
-            {
-                "id": str(existing.id),
-                "teacher_id": str(existing.teacher_id),
-                "class_id": str(existing.class_id),
-                "period_id": str(existing.period_id),
-                "school_id": str(existing.school_id),
-            }
-        )
-
-    # 5. Create assignment
-    assignment = TeacherAssignment(
-        teacher_id=body.teacher_id,
-        class_id=body.class_id,
-        period_id=body.period_id,
-        school_id=auth.school_id,
-    )
-    db.add(assignment)
-    await db.flush()
-
-    # 6. Audit
-    await audit.log_event(
-        school_id=auth.school_id,
-        actor_id=auth.user_id,
-        action_type="TEACHER_ASSIGNED",
-        outcome="success",
-        target_type="teacher_assignment",
-        target_id=assignment.id,
-        entity_after={
-            "teacher_id": str(body.teacher_id),
-            "class_id": str(body.class_id),
-            "period_id": str(body.period_id),
-        },
+    service = ERPService(db)
+    result = await service.create_teacher_assignment(
+        body=body,
+        auth=auth,
         ip_address=get_client_ip(request),
     )
-
-    return success_response(
-        {
-            "id": str(assignment.id),
-            "teacher_id": str(assignment.teacher_id),
-            "class_id": str(assignment.class_id),
-            "period_id": str(assignment.period_id),
-            "school_id": str(assignment.school_id),
-        }
-    )
+    return success_response(result)

@@ -48,12 +48,12 @@
 - [ ] **Review & commit myself**: `refactor(backend): extract BillingRepository, standardize billing RBAC`
 
 ### Batch 3 — ERP (Classes, Attendance, Timetable)
-- [ ] Create `backend/app/repositories/erp.py` (ERPRepository)
-- [ ] Refactor `api/v1/classes.py`, `attendance.py` (387 lines), `timetable.py` (874 lines)
-- [ ] Refactor `api/v1/enrollments.py`, `class_assignments.py`
-- [ ] Create `services/erp.py` if not exists
-- [ ] RBAC: Standardize all ERP permission checks
-- [ ] Verify: no SQL in routers
+- [x] Create `backend/app/repositories/erp.py` (ERPRepository)
+- [x] Refactor `api/v1/classes.py`, `attendance.py` (387 lines), `timetable.py` (874 lines)
+- [x] Refactor `api/v1/enrollments.py`, `class_assignments.py`
+- [x] Create `services/erp.py` if not exists
+- [x] RBAC: Standardize all ERP permission checks
+- [x] Verify: no SQL in routers
 - [ ] **Review & commit myself**: `refactor(backend): extract ERPRepository, standardize ERP RBAC`
 
 ### Batch 4 — LMS (Content, Assignments, Quizzes)
