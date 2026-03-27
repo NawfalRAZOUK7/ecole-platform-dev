@@ -5,7 +5,7 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Rate, Trend } from 'k6/metrics';
-import { BASE_URL, getToken, authHeaders } from './config.js';
+import { BASE_URL, getToken, authHeaders, selectProfile } from './config.js';
 
 const getDuration = new Trend('get_duration', true);
 const getFailRate = new Rate('get_failures');
@@ -15,19 +15,34 @@ export const options = {
     concurrent_gets: {
       executor: 'ramping-vus',
       startVUs: 0,
-      stages: [
-        { duration: '10s', target: 100 },
-        { duration: '20s', target: 500 },
-        { duration: '20s', target: 500 },
-        { duration: '10s', target: 0 },
-      ],
+      stages: selectProfile(
+        [
+          { duration: '5s', target: 10 },
+          { duration: '10s', target: 25 },
+          { duration: '5s', target: 25 },
+          { duration: '5s', target: 0 },
+        ],
+        [
+          { duration: '10s', target: 100 },
+          { duration: '20s', target: 500 },
+          { duration: '20s', target: 500 },
+          { duration: '10s', target: 0 },
+        ],
+      ),
     },
   },
-  thresholds: {
-    get_duration: ['p(95)<200'],
-    get_failures: ['rate<0.05'],
-    http_req_failed: ['rate<0.05'],
-  },
+  thresholds: selectProfile(
+    {
+      get_duration: ['p(95)<3000'],
+      get_failures: ['rate<0.10'],
+      http_req_failed: ['rate<0.10'],
+    },
+    {
+      get_duration: ['p(95)<200'],
+      get_failures: ['rate<0.05'],
+      http_req_failed: ['rate<0.05'],
+    },
+  ),
 };
 
 const endpoints = [

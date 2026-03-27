@@ -7,6 +7,8 @@ Seed data must be loaded before running tests (make seed).
 from __future__ import annotations
 
 
+import os
+
 import httpx
 import pytest
 import pytest_asyncio
@@ -22,7 +24,7 @@ PARENT_PASSWORD = "parent123"
 STUDENT_EMAIL = "yassine.alaoui@ecole-benani.ma"
 STUDENT_PASSWORD = "student123"
 
-BASE_URL = "http://localhost:8000/api/v1"
+BASE_URL = os.getenv("BASE_URL", "http://localhost:8000/api/v1")
 
 
 @pytest.fixture

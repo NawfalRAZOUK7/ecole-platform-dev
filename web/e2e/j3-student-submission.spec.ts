@@ -4,15 +4,30 @@
 
 import { test, expect } from '@playwright/test';
 import { login } from './helpers';
-import path from 'path';
 import fs from 'fs';
+import os from 'os';
+import path from 'path';
+
+let submissionFixtureDir = '';
+let submissionFixturePath = '';
 
 test.describe('J3 — Student submission journey', () => {
   test.beforeAll(async () => {
     // Create a dummy file for upload
-    const dir = path.join(__dirname, 'fixtures');
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(path.join(dir, 'test-submission.txt'), 'E2E test submission content');
+    submissionFixtureDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'ecole-e2e-submission-'),
+    );
+    submissionFixturePath = path.join(
+      submissionFixtureDir,
+      'test-submission.txt',
+    );
+    fs.writeFileSync(submissionFixturePath, 'E2E test submission content');
+  });
+
+  test.afterAll(async () => {
+    if (submissionFixtureDir) {
+      fs.rmSync(submissionFixtureDir, { recursive: true, force: true });
+    }
   });
 
   test('login → navigate to submissions → upload file', async ({ page }) => {
@@ -40,9 +55,7 @@ test.describe('J3 — Student submission journey', () => {
       // 6. Upload a file if file input is present
       const fileInput = page.locator('input[type="file"]').first();
       if (await fileInput.isVisible({ timeout: 3_000 }).catch(() => false)) {
-        await fileInput.setInputFiles(
-          path.join(__dirname, 'fixtures', 'test-submission.txt'),
-        );
+        await fileInput.setInputFiles(submissionFixturePath);
 
         // Submit the form
         const submitBtn = page.locator(

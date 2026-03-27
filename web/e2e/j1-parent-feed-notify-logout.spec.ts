@@ -12,12 +12,12 @@ test.describe('J1 — Parent journey', () => {
 
     // 2. Should land on /feed (PAR default)
     await expect(page).toHaveURL(/\/feed/);
-    await expectPageTitle(page, 'Fil');
+    await expectPageTitle(page, /fil|news feed/i);
 
     // 3. Navigate to notifications
     await page.locator('a[href="/notifications"]').click();
     await expect(page).toHaveURL(/\/notifications/);
-    await expectPageTitle(page, 'Notification');
+    await expectPageTitle(page, /notification/i);
 
     // 4. Logout
     await logout(page);

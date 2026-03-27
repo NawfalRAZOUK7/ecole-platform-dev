@@ -51,7 +51,7 @@ export async function logout(page: Page): Promise<void> {
  */
 export async function expectPageTitle(
   page: Page,
-  text: string,
+  text: string | RegExp,
 ): Promise<void> {
   await expect(page.locator('.page-title').first()).toContainText(text, {
     timeout: 5_000,

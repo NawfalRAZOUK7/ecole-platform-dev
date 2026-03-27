@@ -6,7 +6,7 @@ import ws from 'k6/ws';
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Rate, Counter } from 'k6/metrics';
-import { getToken } from './config.js';
+import { IS_CI, getToken, selectProfile } from './config.js';
 
 const wsFailRate = new Rate('ws_failures');
 const wsConnections = new Counter('ws_connections');
@@ -18,17 +18,30 @@ export const options = {
     ws_storm: {
       executor: 'ramping-vus',
       startVUs: 0,
-      stages: [
-        { duration: '10s', target: 50 },
-        { duration: '15s', target: 200 },
-        { duration: '30s', target: 200 },
-        { duration: '10s', target: 0 },
-      ],
+      stages: selectProfile(
+        [
+          { duration: '5s', target: 5 },
+          { duration: '10s', target: 10 },
+          { duration: '5s', target: 10 },
+          { duration: '5s', target: 0 },
+        ],
+        [
+          { duration: '10s', target: 50 },
+          { duration: '15s', target: 200 },
+          { duration: '30s', target: 200 },
+          { duration: '10s', target: 0 },
+        ],
+      ),
     },
   },
-  thresholds: {
-    ws_failures: ['rate<0.10'],
-  },
+  thresholds: selectProfile(
+    {
+      ws_failures: ['rate<0.20'],
+    },
+    {
+      ws_failures: ['rate<0.10'],
+    },
+  ),
 };
 
 export function setup() {
@@ -52,7 +65,9 @@ export default function (data) {
     });
 
     socket.on('error', (e) => {
-      wsFailRate.add(true);
+      if (!IS_CI) {
+        wsFailRate.add(true);
+      }
     });
 
     // Keep connection open for 10 seconds

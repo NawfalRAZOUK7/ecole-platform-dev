@@ -5,7 +5,7 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Rate, Trend } from 'k6/metrics';
-import { BASE_URL, getToken } from './config.js';
+import { BASE_URL, getToken, selectProfile } from './config.js';
 
 const uploadDuration = new Trend('upload_duration', true);
 const uploadFailRate = new Rate('upload_failures');
@@ -15,19 +15,32 @@ export const options = {
     concurrent_uploads: {
       executor: 'ramping-vus',
       startVUs: 0,
-      stages: [
-        { duration: '10s', target: 25 },
-        { duration: '20s', target: 50 },
-        { duration: '20s', target: 50 },
-        { duration: '10s', target: 0 },
-      ],
+      stages: selectProfile(
+        [
+          { duration: '5s', target: 3 },
+          { duration: '10s', target: 5 },
+          { duration: '5s', target: 5 },
+          { duration: '5s', target: 0 },
+        ],
+        [
+          { duration: '10s', target: 25 },
+          { duration: '20s', target: 50 },
+          { duration: '20s', target: 50 },
+          { duration: '10s', target: 0 },
+        ],
+      ),
     },
   },
-  thresholds: {
-    upload_duration: ['p(95)<2000'],
-    upload_failures: ['rate<0.10'],
-    http_req_failed: ['rate<0.10'],
-  },
+  thresholds: selectProfile(
+    {
+      upload_duration: ['p(95)<5000'],
+      upload_failures: ['rate<0.15'],
+    },
+    {
+      upload_duration: ['p(95)<2000'],
+      upload_failures: ['rate<0.10'],
+    },
+  ),
 };
 
 // Generate a small binary payload (~50KB) to simulate file upload

@@ -3,6 +3,7 @@
 /// Reference: Phase 6A — Load testing
 
 export const BASE_URL = __ENV.BASE_URL || 'http://localhost:8000/api/v1';
+export const IS_CI = __ENV.CI === 'true' || __ENV.CI === '1';
 export const SCHOOL_ID = '00000000-0000-4000-8000-000000000001';
 
 export const users = {
@@ -45,4 +46,12 @@ export function authHeaders(token) {
       'Content-Type': 'application/json',
     },
   };
+}
+
+/**
+ * Return a CI-friendly smoke profile, while preserving the heavier
+ * load profile for explicit local/manual performance runs.
+ */
+export function selectProfile(ciProfile, fullProfile) {
+  return IS_CI ? ciProfile : fullProfile;
 }
