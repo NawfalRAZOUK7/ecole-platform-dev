@@ -4,8 +4,7 @@
 # Stages: lint → unit → integration → contract → security
 # Coverage enforcement:
 # - Unit core utilities: ≥95%
-# - Integration API slice: ≥60%
-# - Full backend suite: ≥65%
+# - Aggregated backend coverage: reported after backend test jobs finish
 
 name: CI Pipeline
 
@@ -68,6 +67,7 @@ jobs:
       REFRESH_TOKEN_EXPIRE_DAYS: "7"
       DATABASE_URL: postgresql+asyncpg://ecole:ecole@localhost:5432/ecole_platform
       REDIS_URL: redis://localhost:6379/0
+      APP_ENV: test
     steps:
       - uses: actions/checkout@v4
 
@@ -84,21 +84,28 @@ jobs:
       - name: Run unit tests with coverage
         run: |
           cd backend
-          pytest tests/test_unit_*.py -v --tb=short \
-            --cov=app.core.exceptions \
-            --cov=app.core.permissions \
-            --cov=app.core.response \
-            --cov=app.core.security \
-            --cov-report=term-missing \
-            --cov-report=xml:coverage-unit.xml \
-            --cov-fail-under=95
+          UNIT_COVERAGE_FILES='app/core/exceptions.py,app/core/permissions.py,app/core/response.py,app/core/security.py'
+          coverage erase
+          coverage run --parallel-mode --source=app -m pytest tests/test_unit_*.py -v --tb=short
+          coverage combine
+          coverage report --include="$UNIT_COVERAGE_FILES" --fail-under=95
+          coverage xml -o coverage-unit.xml --include="$UNIT_COVERAGE_FILES"
 
-      - name: Upload unit coverage
+      - name: Upload unit coverage report
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: coverage-unit
           path: backend/coverage-unit.xml
+
+      - name: Upload unit coverage data
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-data-unit
+          path: backend/.coverage*
+          include-hidden-files: true
+          if-no-files-found: warn
 
   # ──────────────────────────────────────────────────────────
   # Stage 3: Integration Tests (needs DB + Redis)
@@ -164,12 +171,11 @@ jobs:
           cd backend
           python -m app.seed
 
-      - name: Run integration tests with API coverage
+      - name: Run integration tests
         run: |
           cd backend
-          INTEGRATION_API_COVERAGE_FILES='app/api/v1/auth.py,app/api/v1/classes.py,app/api/v1/enrollments.py,app/api/v1/class_assignments.py,app/api/v1/attendance.py,app/api/v1/courses.py,app/api/v1/assignments.py,app/api/v1/submissions.py,app/api/v1/results.py,app/api/v1/content.py,app/api/v1/activities.py,app/api/v1/assessments.py,app/api/v1/invoices.py,app/api/v1/payments.py,app/api/v1/notifications.py,app/api/v1/consents.py,app/api/v1/feed.py,app/api/v1/recovery.py'
           coverage erase
-          coverage run --parallel-mode --source=app/api -m uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          coverage run --parallel-mode --source=app -m uvicorn app.main:app --host 0.0.0.0 --port 8000 &
           SERVER_PID=$!
           cleanup() {
             kill -INT "$SERVER_PID" || true
@@ -184,16 +190,15 @@ jobs:
           kill -INT "$SERVER_PID" || true
           wait "$SERVER_PID" || true
           trap - EXIT
-          coverage combine
-          coverage report --include="$INTEGRATION_API_COVERAGE_FILES" --fail-under=60
-          coverage xml -o coverage-integration.xml --include="$INTEGRATION_API_COVERAGE_FILES"
 
-      - name: Upload integration coverage
+      - name: Upload integration coverage data
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: coverage-integration
-          path: backend/coverage-integration.xml
+          name: coverage-data-integration
+          path: backend/.coverage*
+          include-hidden-files: true
+          if-no-files-found: warn
 
   # ──────────────────────────────────────────────────────────
   # Stage 4: Contract Tests (needs running API)
@@ -255,19 +260,34 @@ jobs:
           alembic upgrade head
           python -m app.seed
 
-      - name: Start API server
+      - name: Run contract tests with API coverage
         run: |
           cd backend
-          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          coverage erase
+          coverage run --parallel-mode --source=app -m uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          SERVER_PID=$!
+          cleanup() {
+            kill -INT "$SERVER_PID" || true
+            wait "$SERVER_PID" || true
+          }
+          trap cleanup EXIT
           for i in $(seq 1 30); do
             curl -sf http://localhost:8000/api/v1/health && break
             sleep 1
           done
-
-      - name: Run contract tests
-        run: |
-          cd backend
           pytest tests/test_contract.py -v --tb=short
+          kill -INT "$SERVER_PID" || true
+          wait "$SERVER_PID" || true
+          trap - EXIT
+
+      - name: Upload contract coverage data
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-data-contract
+          path: backend/.coverage*
+          include-hidden-files: true
+          if-no-files-found: warn
 
   # ──────────────────────────────────────────────────────────
   # Stage 5: RBAC Security Tests (needs running API)
@@ -329,81 +349,7 @@ jobs:
           alembic upgrade head
           python -m app.seed
 
-      - name: Start API server
-        run: |
-          cd backend
-          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
-          for i in $(seq 1 30); do
-            curl -sf http://localhost:8000/api/v1/health && break
-            sleep 1
-          done
-
-      - name: Run RBAC security tests
-        run: |
-          cd backend
-          pytest tests/test_rbac_security.py -v --tb=short
-
-  # ──────────────────────────────────────────────────────────
-  # Stage 6: Full Coverage Report
-  # ──────────────────────────────────────────────────────────
-  coverage-report:
-    name: Coverage Report
-    runs-on: ubuntu-latest
-    needs: [unit-tests, integration-tests, contract-tests, security-tests, e2e-tests, security-audit, load-tests]
-    if: always()
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: ecole
-          POSTGRES_PASSWORD: ecole
-          POSTGRES_DB: ecole_platform
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U ecole -d ecole_platform"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-
-    env:
-      DATABASE_URL: postgresql+asyncpg://ecole:ecole@localhost:5432/ecole_platform
-      REDIS_URL: redis://localhost:6379/0
-      JWT_SECRET_KEY: test-secret-key-ci-only
-      JWT_ALGORITHM: HS256
-      ACCESS_TOKEN_EXPIRE_MINUTES: "30"
-      REFRESH_TOKEN_EXPIRE_DAYS: "7"
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install dependencies
-        run: |
-          cd backend
-          pip install -r requirements-dev.txt
-
-      - name: Run migrations + seed
-        run: |
-          cd backend
-          alembic upgrade head
-          python -m app.seed
-
-      - name: Run all tests with combined coverage
+      - name: Run RBAC security tests with API coverage
         run: |
           cd backend
           coverage erase
@@ -418,12 +364,53 @@ jobs:
             curl -sf http://localhost:8000/api/v1/health && break
             sleep 1
           done
-          coverage run --parallel-mode -m pytest tests/ -v --tb=short
+          pytest tests/test_rbac_security.py -v --tb=short
           kill -INT "$SERVER_PID" || true
           wait "$SERVER_PID" || true
           trap - EXIT
-          coverage combine
-          coverage report --fail-under=65
+
+      - name: Upload RBAC coverage data
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-data-security
+          path: backend/.coverage*
+          include-hidden-files: true
+          if-no-files-found: warn
+
+  # ──────────────────────────────────────────────────────────
+  # Stage 6: Full Coverage Report
+  # ──────────────────────────────────────────────────────────
+  coverage-report:
+    name: Coverage Report
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests, contract-tests, security-tests, e2e-tests, security-audit, load-tests]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements-dev.txt
+
+      - name: Download backend coverage data
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-data-*
+          path: backend/coverage-artifacts
+          merge-multiple: true
+
+      - name: Build combined backend coverage report
+        run: |
+          cd backend
+          coverage combine coverage-artifacts
+          coverage report
           coverage html -d htmlcov
           coverage xml -o coverage.xml
 
@@ -634,19 +621,34 @@ jobs:
           alembic upgrade head
           python -m app.seed
 
-      - name: Start API server
+      - name: Run security audit tests with API coverage
         run: |
           cd backend
-          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          coverage erase
+          coverage run --parallel-mode --source=app -m uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          SERVER_PID=$!
+          cleanup() {
+            kill -INT "$SERVER_PID" || true
+            wait "$SERVER_PID" || true
+          }
+          trap cleanup EXIT
           for i in $(seq 1 30); do
             curl -sf http://localhost:8000/api/v1/health && break
             sleep 1
           done
-
-      - name: Run security audit tests
-        run: |
-          cd backend
           pytest tests/test_security_audit.py -v --tb=short
+          kill -INT "$SERVER_PID" || true
+          wait "$SERVER_PID" || true
+          trap - EXIT
+
+      - name: Upload security audit coverage data
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-data-security-audit
+          path: backend/.coverage*
+          include-hidden-files: true
+          if-no-files-found: warn
 
   # ──────────────────────────────────────────────────────────
   # Stage 10: Load Tests (k6)

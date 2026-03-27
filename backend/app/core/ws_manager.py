@@ -43,6 +43,7 @@ class ConnectionManager:
         self._connections: dict[uuid.UUID, list[WebSocket]] = defaultdict(list)
         # Redis pub/sub subscriber connection (separate from the main client)
         self._pubsub: redis.client.PubSub | None = None
+        self._subscribed_channels: set[str] = set()
         self._subscriber_task: asyncio.Task | None = None
         self._redis: redis.Redis | None = None
         self._running = False
@@ -90,6 +91,7 @@ class ConnectionManager:
                 await self._pubsub.close()
             except Exception:
                 pass
+        self._subscribed_channels.clear()
 
         if self._redis:
             try:
@@ -126,9 +128,10 @@ class ConnectionManager:
 
         # Subscribe to user's channel in Redis
         channel = f"ws:user:{user_id}"
-        if self._pubsub and self._running:
+        if self._pubsub and self._running and channel not in self._subscribed_channels:
             try:
                 await self._pubsub.subscribe(channel)
+                self._subscribed_channels.add(channel)
             except Exception:
                 logger.warning("Failed to subscribe to Redis channel %s", channel)
 
@@ -144,11 +147,13 @@ class ConnectionManager:
         if not connections:
             self._connections.pop(user_id, None)
             channel = f"ws:user:{user_id}"
-            if self._pubsub and self._running:
+            if self._pubsub and self._running and channel in self._subscribed_channels:
                 try:
                     await self._pubsub.unsubscribe(channel)
                 except Exception:
                     pass
+                finally:
+                    self._subscribed_channels.discard(channel)
 
         logger.info(
             "WS disconnected: user=%s (remaining=%d)", user_id, len(connections)
@@ -195,8 +200,8 @@ class ConnectionManager:
         """Background task: read messages from Redis Pub/Sub and deliver locally."""
         while self._running:
             try:
-                if self._pubsub is None:
-                    await asyncio.sleep(1)
+                if self._pubsub is None or not self._subscribed_channels:
+                    await asyncio.sleep(0.1)
                     continue
 
                 message = await self._pubsub.get_message(
@@ -218,6 +223,12 @@ class ConnectionManager:
 
             except asyncio.CancelledError:
                 break
+            except RuntimeError as exc:
+                if "pubsub connection not set" in str(exc):
+                    await asyncio.sleep(0.1)
+                    continue
+                logger.exception("Error in WS subscriber loop")
+                await asyncio.sleep(1)
             except Exception:
                 logger.exception("Error in WS subscriber loop")
                 await asyncio.sleep(1)
