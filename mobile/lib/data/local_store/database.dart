@@ -8,7 +8,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 const String _dbName = 'ecole_platform.db';
-const int _dbVersion = 2;
+const int _dbVersion = 3;
 
 class AppDatabase {
   static Database? _database;
@@ -43,6 +43,21 @@ class AppDatabase {
           await db.execute('''
             CREATE INDEX IF NOT EXISTS idx_cached_notifications_updated
             ON cached_notifications(updated_at)
+          ''');
+        }
+        if (oldVersion < 3) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS cached_reports (
+              report_job_id TEXT PRIMARY KEY,
+              payload TEXT NOT NULL,
+              file_path TEXT,
+              created_at INTEGER NOT NULL,
+              updated_at INTEGER NOT NULL
+            )
+          ''');
+          await db.execute('''
+            CREATE INDEX IF NOT EXISTS idx_cached_reports_updated
+            ON cached_reports(updated_at)
           ''');
         }
       },
@@ -96,6 +111,21 @@ class AppDatabase {
     await db.execute('''
       CREATE INDEX idx_cached_notifications_updated
       ON cached_notifications(updated_at)
+    ''');
+
+    await db.execute('''
+      CREATE TABLE cached_reports (
+        report_job_id TEXT PRIMARY KEY,
+        payload TEXT NOT NULL,
+        file_path TEXT,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE INDEX idx_cached_reports_updated
+      ON cached_reports(updated_at)
     ''');
   }
 

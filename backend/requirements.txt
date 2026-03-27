@@ -18,3 +18,5 @@ arq==0.26.*
 aiosmtplib==3.0.*
 jinja2==3.1.*
 firebase-admin==6.6.*
+weasyprint==64.1
+openpyxl==3.1.*

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" {% if is_rtl %}dir="rtl"{% endif %}>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @page {
+      size: A4;
+      margin: 18mm 14mm;
+    }
+    body {
+      font-family: "Noto Sans", "Arial", sans-serif;
+      color: #1f2937;
+      font-size: 12px;
+      line-height: 1.45;
+      {% if is_rtl %}direction: rtl;{% endif %}
+    }
+    h1, h2, h3 {
+      margin: 0 0 10px;
+      color: #0f3d66;
+    }
+    h1 {
+      font-size: 22px;
+    }
+    h2 {
+      font-size: 16px;
+      margin-top: 18px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid #dbe7f2;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+    .meta {
+      color: #6b7280;
+      font-size: 11px;
+    }
+    .cards {
+      display: flex;
+      gap: 10px;
+      margin: 12px 0 18px;
+    }
+    .card {
+      flex: 1;
+      background: #f7fafc;
+      border: 1px solid #dbe7f2;
+      border-radius: 8px;
+      padding: 10px;
+    }
+    .card-label {
+      color: #64748b;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+    }
+    .card-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+    th, td {
+      border: 1px solid #dbe7f2;
+      padding: 7px 8px;
+      vertical-align: top;
+      text-align: {% if is_rtl %}right{% else %}left{% endif %};
+    }
+    th {
+      background: #eff6ff;
+      color: #0f3d66;
+      font-weight: 700;
+    }
+    .list {
+      margin: 8px 0 0;
+      padding: 0 0 0 18px;
+    }
+    {% if is_rtl %}
+    .list {
+      padding: 0 18px 0 0;
+    }
+    {% endif %}
+    .muted {
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>{{ report_title }}</h1>
+      <div class="meta">{{ period }}</div>
+    </div>
+    <div class="meta">{{ generated_at }}</div>
+  </div>
+  {% block content %}{% endblock %}
+</body>
+</html>

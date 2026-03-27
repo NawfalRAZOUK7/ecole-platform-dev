@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import logging
 import time
+import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -461,6 +462,132 @@ async def task_send_overdue_reminders(ctx: dict) -> int:
 
 
 # ---------------------------------------------------------------------------
+# Task: generate_report (Phase 14)
+# ---------------------------------------------------------------------------
+async def task_generate_report(ctx: dict, job_id: str) -> bool:
+    """Generate a queued PDF report job."""
+    from app.core.metrics import (
+        REPORT_GENERATION_COUNT,
+        REPORT_GENERATION_DURATION,
+        TASK_COMPLETED_COUNT,
+        TASK_DURATION,
+        TASK_FAILED_COUNT,
+    )
+
+    start = time.perf_counter()
+    job_type = "unknown"
+    try:
+        from app.core.database import async_session
+        from app.models.reporting import ReportJobStatus
+        from app.services.reports import ReportsService
+
+        async with async_session() as db:
+            service = ReportsService(db)
+            job = await service.generate_report_job(uuid.UUID(job_id))
+            await db.commit()
+
+        duration = time.perf_counter() - start
+        TASK_DURATION.labels(env=settings.app_env, task="generate_report").observe(
+            duration
+        )
+
+        if job is None:
+            REPORT_GENERATION_DURATION.labels(
+                env=settings.app_env,
+                report_type=job_type,
+            ).observe(duration)
+            REPORT_GENERATION_COUNT.labels(
+                env=settings.app_env,
+                report_type=job_type,
+                status="not_found",
+            ).inc()
+            TASK_FAILED_COUNT.labels(env=settings.app_env, task="generate_report").inc()
+            return False
+
+        job_type = job.type
+        REPORT_GENERATION_DURATION.labels(
+            env=settings.app_env,
+            report_type=job_type,
+        ).observe(duration)
+        REPORT_GENERATION_COUNT.labels(
+            env=settings.app_env,
+            report_type=job_type,
+            status=job.status,
+        ).inc()
+
+        if job.status == ReportJobStatus.READY.value:
+            TASK_COMPLETED_COUNT.labels(
+                env=settings.app_env,
+                task="generate_report",
+            ).inc()
+            logger.info("Generated report %s (%s)", job.id, job.type)
+            return True
+
+        TASK_FAILED_COUNT.labels(env=settings.app_env, task="generate_report").inc()
+        logger.warning("Report generation failed for job %s", job.id)
+        return False
+    except Exception:
+        duration = time.perf_counter() - start
+        REPORT_GENERATION_DURATION.labels(
+            env=settings.app_env,
+            report_type=job_type,
+        ).observe(duration)
+        REPORT_GENERATION_COUNT.labels(
+            env=settings.app_env,
+            report_type=job_type,
+            status="error",
+        ).inc()
+        TASK_DURATION.labels(env=settings.app_env, task="generate_report").observe(
+            duration
+        )
+        TASK_FAILED_COUNT.labels(env=settings.app_env, task="generate_report").inc()
+        logger.exception("task_generate_report failed for %s", job_id)
+        return False
+
+
+# ---------------------------------------------------------------------------
+# Task: cleanup_expired_reports (Phase 14)
+# ---------------------------------------------------------------------------
+async def task_cleanup_expired_reports(ctx: dict) -> int:
+    """Delete expired report files and clear their file references."""
+    from app.core.metrics import TASK_COMPLETED_COUNT, TASK_DURATION, TASK_FAILED_COUNT
+
+    start = time.perf_counter()
+    try:
+        from app.core.database import async_session
+        from app.services.reports import ReportsService
+
+        async with async_session() as db:
+            service = ReportsService(db)
+            count = await service.cleanup_expired_reports()
+            await db.commit()
+
+        duration = time.perf_counter() - start
+        TASK_DURATION.labels(
+            env=settings.app_env,
+            task="cleanup_expired_reports",
+        ).observe(duration)
+        TASK_COMPLETED_COUNT.labels(
+            env=settings.app_env,
+            task="cleanup_expired_reports",
+        ).inc()
+        logger.info("Cleaned up %d expired report files", count)
+        return count
+    except Exception:
+        duration = time.perf_counter() - start
+        TASK_DURATION.labels(
+            env=settings.app_env,
+            task="cleanup_expired_reports",
+        ).observe(duration)
+        TASK_FAILED_COUNT.labels(
+            env=settings.app_env,
+            task="cleanup_expired_reports",
+        ).inc()
+        logger.exception("task_cleanup_expired_reports failed")
+        return 0
+
+
+# ---------------------------------------------------------------------------
 # Enqueue helpers — fire-and-forget from API endpoints
 # ---------------------------------------------------------------------------
 _arq_pool: ArqRedis | None = None
@@ -547,6 +674,8 @@ class WorkerSettings:
         task_refresh_kpi_views,
         task_retry_failed_payments,
         task_send_overdue_reminders,
+        task_generate_report,
+        task_cleanup_expired_reports,
     ]
 
     # Cron jobs
@@ -557,6 +686,8 @@ class WorkerSettings:
         cron(task_cleanup_expired_cache, hour=3, minute=15),
         # Refresh KPI materialized views daily at 03:30 UTC (Phase 8A)
         cron(task_refresh_kpi_views, hour=3, minute=30),
+        # Cleanup expired report files daily at 04:00 UTC (Phase 14)
+        cron(task_cleanup_expired_reports, hour=4, minute=0),
     ]
 
     if settings.app_env in ("staging", "production"):

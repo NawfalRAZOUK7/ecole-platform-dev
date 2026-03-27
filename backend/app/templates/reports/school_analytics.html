@@ -1,0 +1,65 @@
+{% extends "reports/base.html" %}
+{% block content %}
+<div class="cards">
+  {% for metric in snapshot.overview.metrics %}
+  <div class="card">
+    <div class="card-label">{{ metric.label }}</div>
+    <div class="card-value">{{ metric.value.current }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+<h2>{% if lang == 'ar' %}التسجيل حسب القسم{% elif lang == 'en' %}Enrollment by Class{% else %}Inscriptions par classe{% endif %}</h2>
+<table>
+  <thead>
+    <tr>
+      <th>{% if lang == 'ar' %}القسم{% elif lang == 'en' %}Class{% else %}Classe{% endif %}</th>
+      <th>{% if lang == 'ar' %}عدد التلاميذ{% elif lang == 'en' %}Students{% else %}Élèves{% endif %}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in snapshot.enrollment_by_class %}
+    <tr>
+      <td>{{ row.class_code }}</td>
+      <td>{{ row.student_count }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h2>{% if lang == 'ar' %}توزيع النقاط{% elif lang == 'en' %}Grade Distribution{% else %}Distribution des notes{% endif %}</h2>
+<table>
+  <thead>
+    <tr>
+      <th>{% if lang == 'ar' %}الفئة{% elif lang == 'en' %}Bucket{% else %}Tranche{% endif %}</th>
+      <th>{% if lang == 'ar' %}العدد{% elif lang == 'en' %}Count{% else %}Nombre{% endif %}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for bucket in snapshot.grades.distribution %}
+    <tr>
+      <td>{{ bucket.label }}</td>
+      <td>{{ bucket.count }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h2>{% if lang == 'ar' %}الحضور الأسبوعي{% elif lang == 'en' %}Weekly Attendance{% else %}Présence hebdomadaire{% endif %}</h2>
+<table>
+  <thead>
+    <tr>
+      <th>{% if lang == 'ar' %}الفترة{% elif lang == 'en' %}Period{% else %}Période{% endif %}</th>
+      <th>{% if lang == 'ar' %}النسبة{% elif lang == 'en' %}Rate{% else %}Taux{% endif %}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in snapshot.attendance.series %}
+    <tr>
+      <td>{{ item.label }}</td>
+      <td>{{ item.value }}%</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

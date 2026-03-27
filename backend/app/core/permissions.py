@@ -140,6 +140,12 @@ PERM_QUIZ_ANALYTICS = "PERM-QUIZ:quiz:analytics"
 # Feature Toggles (Phase 11E)
 PERM_SYS_FEATURE_MANAGE = "PERM-SYS:feature:manage"
 
+# Reporting & Analytics (Phase 14)
+PERM_REP_REPORT_GENERATE = "PERM-REP:report:generate"
+PERM_REP_REPORT_READ = "PERM-REP:report:read"
+PERM_REP_ANALYTICS_READ = "PERM-REP:analytics:read"
+PERM_REP_EXPORT_CREATE = "PERM-REP:export:create"
+
 # Support
 PERM_SUP_GRANT_REQUEST = "PERM-SUP:grant:request"
 PERM_SUP_GRANT_APPROVE = "PERM-SUP:grant:approve"
@@ -204,6 +210,11 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # Progress (Phase 11D)
         PERM_PROGRESS_READ,
         PERM_PROGRESS_CLASS_READ,
+        # Reporting & Analytics (Phase 14)
+        PERM_REP_REPORT_GENERATE,
+        PERM_REP_REPORT_READ,
+        PERM_REP_ANALYTICS_READ,
+        PERM_REP_EXPORT_CREATE,
         # COM — config + messaging + announcements (Phase 11C)
         PERM_COM_CONSENT_UPDATE,
         PERM_COM_NOTIFICATION_READ,
@@ -238,6 +249,11 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # Progress (Phase 11D)
         PERM_PROGRESS_READ,
         PERM_PROGRESS_CLASS_READ,
+        # Reporting & Analytics (Phase 14)
+        PERM_REP_REPORT_GENERATE,
+        PERM_REP_REPORT_READ,
+        PERM_REP_ANALYTICS_READ,
+        PERM_REP_EXPORT_CREATE,
         # COM — read + announcements (Phase 11C)
         PERM_COM_NOTIFICATION_READ,
         PERM_COM_CONVERSATION_READ,
@@ -287,6 +303,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # Progress (Phase 11D)
         PERM_PROGRESS_READ,
         PERM_PROGRESS_CLASS_READ,
+        # Reporting (Phase 14)
+        PERM_REP_REPORT_GENERATE,
+        PERM_REP_REPORT_READ,
         # COM — messaging (P1) + conversations (Phase 11C)
         PERM_COM_NOTIFICATION_READ,
         PERM_COM_MESSAGE_SEND,
@@ -326,6 +345,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_BIL_FEE_READ,
         # Progress (Phase 11D)
         PERM_PROGRESS_READ,
+        # Reporting (Phase 14)
+        PERM_REP_REPORT_GENERATE,
+        PERM_REP_REPORT_READ,
         # COM — consent + feed + messaging + announcements (Phase 11C)
         PERM_COM_CONSENT_UPDATE,
         PERM_COM_NOTIFICATION_READ,
@@ -371,6 +393,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_QUIZ_READ,
         # Progress (Phase 11D)
         PERM_PROGRESS_READ,
+        # Reporting (Phase 14)
+        PERM_REP_REPORT_GENERATE,
+        PERM_REP_REPORT_READ,
         # COM — read notifications + announcements (Phase 11C)
         PERM_COM_NOTIFICATION_READ,
         PERM_COM_ANNOUNCEMENT_READ,

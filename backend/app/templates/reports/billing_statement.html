@@ -1,0 +1,49 @@
+{% extends "reports/base.html" %}
+{% block content %}
+<h2>{{ parent.full_name }}</h2>
+<p class="muted">{{ parent.email }}</p>
+
+<div class="cards">
+  <div class="card">
+    <div class="card-label">{% if lang == 'ar' %}الفواتير{% elif lang == 'en' %}Invoices{% else %}Factures{% endif %}</div>
+    <div class="card-value">{{ summary.invoice_count }}</div>
+  </div>
+  <div class="card">
+    <div class="card-label">{% if lang == 'ar' %}المبلغ المفوتر{% elif lang == 'en' %}Invoiced{% else %}Montant facturé{% endif %}</div>
+    <div class="card-value">{{ summary.total_invoiced }} {{ summary.currency }}</div>
+  </div>
+  <div class="card">
+    <div class="card-label">{% if lang == 'ar' %}الرصيد المستحق{% elif lang == 'en' %}Outstanding{% else %}Solde restant{% endif %}</div>
+    <div class="card-value">{{ summary.outstanding_balance }} {{ summary.currency }}</div>
+  </div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>{% if lang == 'ar' %}الفاتورة{% elif lang == 'en' %}Invoice{% else %}Facture{% endif %}</th>
+      <th>{% if lang == 'ar' %}الحالة{% elif lang == 'en' %}Status{% else %}Statut{% endif %}</th>
+      <th>{% if lang == 'ar' %}التواريخ{% elif lang == 'en' %}Dates{% else %}Dates{% endif %}</th>
+      <th>{% if lang == 'ar' %}المبلغ{% elif lang == 'en' %}Amount{% else %}Montant{% endif %}</th>
+      <th>{% if lang == 'ar' %}الدفعات{% elif lang == 'en' %}Payments{% else %}Paiements{% endif %}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for invoice in invoices %}
+    <tr>
+      <td>{{ invoice.id }}</td>
+      <td>{{ invoice.status }}</td>
+      <td>{{ invoice.issued_date }} → {{ invoice.due_date }}</td>
+      <td>{{ invoice.amount }} {{ invoice.currency }}</td>
+      <td>
+        <ul class="list">
+          {% for payment in invoice.payments %}
+          <li>{{ payment.status }}{% if payment.finalized_at %} — {{ payment.finalized_at }}{% endif %}</li>
+          {% endfor %}
+        </ul>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

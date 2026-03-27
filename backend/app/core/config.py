@@ -69,6 +69,10 @@ class Settings(BaseSettings):
     push_retry_max_attempts: int = 3
     push_retry_base_delay_seconds: int = 1
     web_app_base_url: str = "http://localhost:5173"
+    report_storage_subdirectory: str = "reports"
+    report_download_ttl_hours: int = 24
+    report_cache_ttl_hours: int = 1
+    analytics_cache_ttl_seconds: int = 300
 
     # CORS
     cors_origins: str = "http://localhost:5173,http://localhost:3000"

@@ -47,6 +47,7 @@
     "messages": "Messages",
     "announcements": "Announcements",
     "notificationSettings": "Notification Settings",
+    "reports": "Reports",
     "adminFeeStructures": "Fee Structures",
     "adminFeeAssignments": "Fee Assignments",
     "adminGenerateInvoices": "Generate Invoices",
@@ -526,17 +527,105 @@
   },
   "analytics": {
     "title": "Analytics Dashboard",
-    "adoption": "Adoption Rate",
-    "usage": "Critical Path Usage",
-    "authErrors": "Auth Error Rate",
-    "latency": "API Latency p95",
-    "incidents": "Incidents",
-    "conversion": "Invitation Conversion",
-    "trendTitle": "KPI Trends",
-    "breakdownTitle": "KPI Breakdown",
-    "autoRefresh": "Auto-refreshes every 5 minutes",
-    "lastUpdated": "Last updated",
-    "prometheusSource": "Prometheus"
+    "subtitle": "Track attendance, grades, billing, and engagement with cached school-wide KPIs.",
+    "presets": {
+      "this_week": "This week",
+      "this_month": "This month",
+      "this_period": "Last 30 days",
+      "custom": "Custom"
+    },
+    "compare": "Compare with previous period",
+    "from": "From",
+    "to": "To",
+    "kpis": {
+      "activeUsers": "Active users",
+      "attendanceRate": "Attendance rate",
+      "averageGrade": "Average grade",
+      "collectionRate": "Collection rate"
+    },
+    "charts": {
+      "attendance": "Attendance trend",
+      "attendanceHint": "Daily, weekly, or monthly attendance rates across the selected range.",
+      "grades": "Grade distribution",
+      "gradesHint": "Histogram of published grades, optionally filtered by subject.",
+      "billing": "Billing waterfall",
+      "billingHint": "From invoiced totals to paid amounts and current outstanding balance.",
+      "engagement": "Engagement funnel",
+      "engagementHint": "Registered, active, and engaged users across the platform."
+    },
+    "buckets": {
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly"
+    },
+    "stages": {
+      "invoiced": "Invoiced",
+      "paid": "Paid",
+      "outstanding": "Outstanding"
+    },
+    "subjectPlaceholder": "Filter by subject",
+    "exportPng": "PNG",
+    "exportDataTitle": "Export data",
+    "exportDataSubtitle": "Download the currently selected analytics dataset as CSV or XLSX.",
+    "exportEntities": {
+      "students": "Students",
+      "grades": "Grades",
+      "attendance": "Attendance",
+      "invoices": "Invoices",
+      "payments": "Payments"
+    }
+  },
+  "reports": {
+    "title": "Reports",
+    "subtitle": "Generate PDF reports, monitor background jobs, and re-download completed files.",
+    "progressTitle": "Report generation in progress",
+    "progressMessage": "{{count}} report job(s) are still running in the background.",
+    "generateTitle": "Generate report",
+    "fields": {
+      "type": "Report type",
+      "language": "Language",
+      "period": "Period",
+      "class": "Class",
+      "student": "Student",
+      "parent": "Parent",
+      "from": "From",
+      "to": "To"
+    },
+    "anyPeriod": "Any period",
+    "selectClass": "Select a class",
+    "selectStudent": "Select a student",
+    "selectParent": "Select a parent",
+    "comparePrevious": "Include previous-period comparison",
+    "generate": "Generate report",
+    "generating": "Generating...",
+    "historyTitle": "Report history",
+    "historySubtitle": "Recent report jobs for your account and role scope.",
+    "allTypes": "All report types",
+    "allStatuses": "All statuses",
+    "noHistory": "No report jobs yet",
+    "cached": "Cached version reused",
+    "download": "Download",
+    "loadMore": "Load more",
+    "table": {
+      "report": "Report",
+      "scope": "Scope",
+      "status": "Status",
+      "createdAt": "Created",
+      "actions": "Actions"
+    },
+    "types": {
+      "student_report_card": "Student report card",
+      "class_summary": "Class summary",
+      "attendance_report": "Attendance report",
+      "billing_statement": "Billing statement",
+      "school_analytics": "School analytics"
+    },
+    "status": {
+      "pending": "Pending",
+      "generating": "Generating",
+      "ready": "Ready",
+      "failed": "Failed"
+    }
   },
   "register": {
     "title": "Create Account",

@@ -14,6 +14,7 @@ import 'package:ecole_platform/data/api/ws_client.dart';
 import 'package:ecole_platform/data/local_store/cache_store.dart';
 import 'package:ecole_platform/data/local_store/notifications_store.dart';
 import 'package:ecole_platform/data/local_store/offline_queue.dart';
+import 'package:ecole_platform/data/local_store/reports_store.dart';
 import 'package:ecole_platform/data/repositories_impl/auth_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/feed_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/notification_repository_impl.dart';
@@ -21,6 +22,7 @@ import 'package:ecole_platform/data/repositories_impl/content_repository_impl.da
 import 'package:ecole_platform/data/repositories_impl/result_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/invoice_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/admin_repository_impl.dart';
+import 'package:ecole_platform/data/repositories_impl/reporting_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/teacher_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/content_library_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/quiz_repository_impl.dart';
@@ -31,6 +33,7 @@ import 'package:ecole_platform/domain/repositories/content_repository.dart';
 import 'package:ecole_platform/domain/repositories/result_repository.dart';
 import 'package:ecole_platform/domain/repositories/invoice_repository.dart';
 import 'package:ecole_platform/domain/repositories/admin_repository.dart';
+import 'package:ecole_platform/domain/repositories/reporting_repository.dart';
 import 'package:ecole_platform/domain/repositories/teacher_repository.dart';
 import 'package:ecole_platform/domain/repositories/content_library_repository.dart';
 import 'package:ecole_platform/domain/repositories/quiz_repository.dart';
@@ -63,6 +66,10 @@ final offlineQueueProvider = Provider<OfflineQueue>((ref) {
 
 final notificationsStoreProvider = Provider<NotificationsStore>((ref) {
   return NotificationsStore();
+});
+
+final reportsStoreProvider = Provider<ReportsStore>((ref) {
+  return ReportsStore();
 });
 
 /// Shared local notifications plugin — used by push + WS.
@@ -148,6 +155,13 @@ final adminRepositoryProvider = Provider<AdminRepository>((ref) {
   );
 });
 
+final reportingRepositoryProvider = Provider<ReportingRepository>((ref) {
+  return ReportingRepositoryImpl(
+    api: ref.watch(apiClientProvider),
+    reportsStore: ref.watch(reportsStoreProvider),
+  );
+});
+
 final teacherRepositoryProvider = Provider<TeacherRepository>((ref) {
   return TeacherRepositoryImpl(
     api: ref.watch(apiClientProvider),
@@ -156,7 +170,8 @@ final teacherRepositoryProvider = Provider<TeacherRepository>((ref) {
 
 // Phase 10C: Content library + quiz repositories
 
-final contentLibraryRepositoryProvider = Provider<ContentLibraryRepository>((ref) {
+final contentLibraryRepositoryProvider =
+    Provider<ContentLibraryRepository>((ref) {
   return ContentLibraryRepositoryImpl(
     api: ref.watch(apiClientProvider),
     cache: ref.watch(cacheStoreProvider),

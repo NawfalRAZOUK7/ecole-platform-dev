@@ -679,6 +679,24 @@ body {
 .status-graded { color: var(--color-success); border-color: var(--color-success); }
 .status-pending { color: var(--color-warning); border-color: var(--color-warning); }
 .status-late { color: var(--color-danger); border-color: var(--color-danger); }
+.status-generating { color: #7c3aed; border-color: #7c3aed; }
+.status-ready { color: var(--color-success); border-color: var(--color-success); }
+.status-failed { color: var(--color-danger); border-color: var(--color-danger); }
+
+.table-hint {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.table-hint--danger {
+  color: var(--color-danger);
+}
+
+.table-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
 
 .letter-grade {
   font-weight: 600;
@@ -770,6 +788,11 @@ body {
 
 .btn-primary:hover:not(:disabled) {
   background: var(--color-primary-hover);
+}
+
+.btn-sm {
+  padding: 6px 10px;
+  font-size: 12px;
 }
 
 .btn-secondary {
@@ -872,6 +895,23 @@ body {
   opacity: 0.7;
 }
 
+.form-field select {
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: 15px;
+  color: var(--color-text);
+  background: var(--color-surface);
+}
+
+.form-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
 .login-submit {
   margin-top: 8px;
   padding: 12px;
@@ -892,6 +932,139 @@ body {
 .login-submit:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* ── Reports & Analytics ── */
+.reports-grid,
+.analytics-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.reports-grid {
+  grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+  align-items: start;
+}
+
+.report-highlight {
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #eff6ff, #eef2ff);
+}
+
+.report-highlight p {
+  margin-top: 6px;
+  color: var(--color-text-secondary);
+}
+
+.report-form-card,
+.chart-card,
+.analytics-export-card {
+  display: grid;
+  gap: 16px;
+}
+
+.report-form-card__header,
+.chart-card__header,
+.report-history__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.report-form-card__header h2,
+.chart-card__header h2,
+.report-history__header h2 {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.chart-card__header p,
+.report-history__header p {
+  color: var(--color-text-secondary);
+}
+
+.report-form {
+  display: grid;
+  gap: 14px;
+}
+
+.report-form-card__actions,
+.report-load-more {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.report-table__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.analytics-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.analytics-toolbar__group,
+.analytics-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.analytics-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.analytics-kpi-card {
+  display: grid;
+  gap: 8px;
+}
+
+.analytics-kpi-card__label {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.analytics-kpi-card__value {
+  font-size: 30px;
+  line-height: 1;
+}
+
+.analytics-kpi-card__delta {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.delta-positive {
+  color: var(--color-success);
+}
+
+.delta-negative {
+  color: var(--color-danger);
+}
+
+.delta-flat {
+  color: var(--color-text-secondary);
+}
+
+.analytics-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 16px;
+}
+
+.analytics-subject-filter {
+  min-width: 180px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
 }
 
 /* ── Spinner ── */
@@ -1471,6 +1644,18 @@ textarea.filter-input {
   }
 
   .filters-bar {
+    flex-direction: column;
+  }
+
+  .reports-grid,
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .report-form-card__header,
+  .chart-card__header,
+  .report-history__header,
+  .analytics-toolbar {
     flex-direction: column;
   }
 

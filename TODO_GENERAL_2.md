@@ -54,39 +54,39 @@
 ## Phase 14 — Reports & Analytics
 
 ### 14A — Backend
-- [ ] PDF generation service (WeasyPrint)
-- [ ] Report templates: student report card, class summary, attendance, billing
-- [ ] Bilingual PDF support (fr/ar with RTL)
-- [ ] Async report generation (POST /reports/generate → job_id)
-- [ ] Report status tracking + signed URL download
-- [ ] CSV streaming export endpoint
-- [ ] XLSX export via openpyxl
-- [ ] Analytics API: overview, attendance trends, grade distributions, billing, engagement
-- [ ] Redis caching for analytics (5min TTL)
-- [ ] Date range filtering with comparison periods
-- [ ] Database migrations: report_jobs, data_exports
-- [ ] Report file cleanup task (24h expiry)
+- [x] PDF generation service (WeasyPrint)
+- [x] Report templates: student report card, class summary, attendance, billing
+- [x] Bilingual PDF support (fr/ar with RTL)
+- [x] Async report generation (POST /reports/generate → job_id)
+- [x] Report status tracking + signed URL download
+- [x] CSV streaming export endpoint
+- [x] XLSX export via openpyxl
+- [x] Analytics API: overview, attendance trends, grade distributions, billing, engagement
+- [x] Redis caching for analytics (5min TTL)
+- [x] Date range filtering with comparison periods
+- [x] Database migrations: report_jobs, data_exports
+- [x] Report file cleanup task (24h expiry)
 
 ### 14B — Web Frontend
-- [ ] `/reports` page with type selector + parameter form
-- [ ] Generate → progress → download flow
-- [ ] Report history table
-- [ ] Analytics dashboard (ADM/DIR): KPI cards, trend charts, distribution charts
-- [ ] Date range picker with presets + comparison mode
-- [ ] Export buttons (PNG chart, CSV/XLSX data)
+- [x] `/reports` page with type selector + parameter form
+- [x] Generate → progress → download flow
+- [x] Report history table
+- [x] Analytics dashboard (ADM/DIR): KPI cards, trend charts, distribution charts
+- [x] Date range picker with presets + comparison mode
+- [x] Export buttons (PNG chart, CSV/XLSX data)
 
 ### 14C — Mobile
-- [ ] `ReportsScreen` with role-filtered report types
-- [ ] Generate → notification → download/share flow
-- [ ] PDF viewer + share sheet
-- [ ] `AnalyticsSummaryScreen` (ADM/DIR) with sparklines
-- [ ] Offline cache for last 5 reports
+- [x] `ReportsScreen` with role-filtered report types
+- [x] Generate → notification → download/share flow
+- [x] PDF viewer + share sheet
+- [x] `AnalyticsSummaryScreen` (ADM/DIR) with sparklines
+- [x] Offline cache for last 5 reports
 
 ### 14D — Tests
-- [ ] Postman collection: report generation + analytics endpoints
-- [ ] PDF output validation tests
-- [ ] CSV/XLSX field accuracy tests
-- [ ] Analytics query accuracy vs raw SQL
+- [x] Postman collection: report generation + analytics endpoints
+- [x] PDF output validation tests
+- [x] CSV/XLSX field accuracy tests
+- [x] Analytics query accuracy vs raw SQL
 - [ ] Performance: report generation < 30s for 40-student class
 
 ---

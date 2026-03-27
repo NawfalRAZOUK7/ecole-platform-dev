@@ -14,6 +14,7 @@ import { ProtectedRoute } from '@/features/auth/ProtectedRoute';
 import { FeedPage } from '@/features/feed/FeedPage';
 import { NotificationsPage } from '@/features/notifications/NotificationsPage';
 import { NotificationSettingsPage } from '@/features/notifications/NotificationSettingsPage';
+import { ReportsPage } from '@/features/reports/ReportsPage';
 import { ContentPage } from '@/features/content/ContentPage';
 import { ResultsPage } from '@/features/results/ResultsPage';
 import { InvoicesPage } from '@/features/invoices/InvoicesPage';
@@ -29,7 +30,6 @@ import { InvitationsPage } from '@/features/admin/InvitationsPage';
 import { AuditLogPage } from '@/features/admin/AuditLogPage';
 import { SchoolSettingsPage } from '@/features/admin/SchoolSettingsPage';
 import { JustificationReviewPage } from '@/features/admin/JustificationReviewPage';
-import { AnalyticsPage } from '@/features/admin/AnalyticsPage';
 import { BatchRegisterPage } from '@/features/admin/BatchRegisterPage';
 import { ParentChildLinksPage } from '@/features/admin/ParentChildLinksPage';
 import { RegisterPage } from '@/features/auth/RegisterPage';
@@ -61,6 +61,7 @@ import { AnnouncementsPage } from '@/features/announcements/AnnouncementsPage';
 import { ProgressDashboardPage } from '@/features/progress/ProgressDashboardPage';
 import { ParentProgressPage } from '@/features/progress/ParentProgressPage';
 import { ClassProgressPage } from '@/features/teacher/ClassProgressPage';
+import { AnalyticsDashboardPage } from '@/features/analytics/AnalyticsDashboardPage';
 
 /** Redirect based on user role */
 function RoleRedirect() {
@@ -142,7 +143,15 @@ function App() {
           path="/admin/analytics"
           element={
             <ProtectedRoute roles={['ADM', 'DIR']}>
-              <AnalyticsPage />
+              <AnalyticsDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/analytics"
+          element={
+            <ProtectedRoute roles={['ADM', 'DIR']}>
+              <AnalyticsDashboardPage />
             </ProtectedRoute>
           }
         />
@@ -349,6 +358,14 @@ function App() {
           element={
             <ProtectedRoute roles={['PAR', 'TCH', 'ADM', 'DIR', 'STD']}>
               <NotificationsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reports"
+          element={
+            <ProtectedRoute roles={['PAR', 'TCH', 'ADM', 'DIR', 'STD']}>
+              <ReportsPage />
             </ProtectedRoute>
           }
         />

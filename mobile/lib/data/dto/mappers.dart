@@ -11,6 +11,7 @@ import 'package:ecole_platform/domain/entities/content_item.dart';
 import 'package:ecole_platform/domain/entities/result.dart';
 import 'package:ecole_platform/domain/entities/invoice.dart';
 import 'package:ecole_platform/domain/entities/admin.dart';
+import 'package:ecole_platform/domain/entities/reporting.dart';
 import 'package:ecole_platform/domain/entities/teacher.dart';
 
 // ── User ──
@@ -93,6 +94,157 @@ RegisteredDevice registeredDeviceFromJson(Map<String, dynamic> json) {
     deviceName: json['device_name'] as String?,
     tokenPreview: json['token_preview'] as String? ?? '',
     lastActiveAt: json['last_active_at'] as String? ?? '',
+  );
+}
+
+// ── Reporting ──
+
+ReportOptionItem reportOptionFromJson(
+  Map<String, dynamic> json, {
+  String primaryKey = 'label',
+  List<String> secondaryKeys = const ['name', 'code', 'email'],
+}) {
+  String? secondary;
+  for (final key in secondaryKeys) {
+    final value = json[key]?.toString();
+    if (value != null && value.isNotEmpty && value != json[primaryKey]?.toString()) {
+      secondary = value;
+      break;
+    }
+  }
+
+  return ReportOptionItem(
+    id: json['id'] as String,
+    label: json[primaryKey]?.toString() ??
+        json['full_name']?.toString() ??
+        json['name']?.toString() ??
+        json['code']?.toString() ??
+        json['email']?.toString() ??
+        json['id'].toString(),
+    secondary: secondary,
+  );
+}
+
+ReportJob reportJobFromJson(Map<String, dynamic> json) {
+  return ReportJob(
+    id: json['id'] as String,
+    type: json['type'] as String,
+    status: json['status'] as String,
+    parameters: Map<String, dynamic>.from(
+      json['parameters'] as Map<String, dynamic>? ?? const {},
+    ),
+    createdAt: json['created_at'] as String,
+    completedAt: json['completed_at'] as String?,
+    expiresAt: json['expires_at'] as String?,
+    errorMessage: json['error_message'] as String?,
+    downloadUrl: json['download_url'] as String?,
+    cacheHit: json['cache_hit'] as bool? ?? false,
+    localFilePath: json['local_file_path'] as String?,
+  );
+}
+
+AnalyticsMetric analyticsMetricFromJson(Map<String, dynamic> json) {
+  return AnalyticsMetric(
+    current: (json['current'] as num?)?.toDouble() ?? 0,
+    previous: (json['previous'] as num?)?.toDouble(),
+    changePercent: (json['change_percent'] as num?)?.toDouble(),
+    trend: json['trend'] as String? ?? 'flat',
+  );
+}
+
+AnalyticsSeriesPoint analyticsSeriesPointFromJson(Map<String, dynamic> json) {
+  return AnalyticsSeriesPoint(
+    label: json['label'] as String? ?? '',
+    value: (json['value'] as num?)?.toDouble() ?? 0,
+    extra: Map<String, dynamic>.from(
+      json['extra'] as Map<String, dynamic>? ?? const {},
+    ),
+  );
+}
+
+AnalyticsOverview analyticsOverviewFromJson(Map<String, dynamic> json) {
+  final metrics = <String, AnalyticsMetric>{};
+  final items = (json['metrics'] as List<dynamic>? ?? const [])
+      .cast<Map<String, dynamic>>();
+  for (final item in items) {
+    metrics[item['key'] as String] =
+        analyticsMetricFromJson(item['value'] as Map<String, dynamic>);
+  }
+  return AnalyticsOverview(metrics: metrics);
+}
+
+AttendanceAnalytics attendanceAnalyticsFromJson(Map<String, dynamic> json) {
+  final summary = json['summary'] as Map<String, dynamic>? ?? const {};
+  return AttendanceAnalytics(
+    rate: analyticsMetricFromJson(
+      summary['rate'] as Map<String, dynamic>? ?? const {},
+    ),
+    totalRecords: summary['total_records'] as int? ?? 0,
+    series: (json['series'] as List<dynamic>? ?? const [])
+        .cast<Map<String, dynamic>>()
+        .map(analyticsSeriesPointFromJson)
+        .toList(),
+  );
+}
+
+GradesAnalytics gradesAnalyticsFromJson(Map<String, dynamic> json) {
+  final summary = json['summary'] as Map<String, dynamic>? ?? const {};
+  return GradesAnalytics(
+    average: analyticsMetricFromJson(
+      summary['average'] as Map<String, dynamic>? ?? const {},
+    ),
+    count: summary['count'] as int? ?? 0,
+    distribution: (json['distribution'] as List<dynamic>? ?? const [])
+        .cast<Map<String, dynamic>>()
+        .map((item) => AnalyticsBucket(
+              label: item['label'] as String? ?? '',
+              count: item['count'] as int? ?? 0,
+            ))
+        .toList(),
+  );
+}
+
+BillingAnalytics billingAnalyticsFromJson(Map<String, dynamic> json) {
+  final summary = json['summary'] as Map<String, dynamic>? ?? const {};
+  return BillingAnalytics(
+    invoiced: (summary['invoiced'] as num?)?.toDouble() ?? 0,
+    paid: (summary['paid'] as num?)?.toDouble() ?? 0,
+    outstanding: (summary['outstanding'] as num?)?.toDouble() ?? 0,
+    collectionRate: analyticsMetricFromJson(
+      summary['collection_rate'] as Map<String, dynamic>? ?? const {},
+    ),
+    series: (json['series'] as List<dynamic>? ?? const [])
+        .cast<Map<String, dynamic>>()
+        .map(analyticsSeriesPointFromJson)
+        .toList(),
+  );
+}
+
+EngagementAnalytics engagementAnalyticsFromJson(Map<String, dynamic> json) {
+  final summary = json['summary'] as Map<String, dynamic>? ?? const {};
+  return EngagementAnalytics(
+    registeredUsers: summary['registered_users'] as int? ?? 0,
+    dau: summary['dau'] as int? ?? 0,
+    mau: summary['mau'] as int? ?? 0,
+    activeUsers: analyticsMetricFromJson(
+      summary['active_users'] as Map<String, dynamic>? ?? const {},
+    ),
+    engagedUsers: summary['engaged_users'] as int? ?? 0,
+    funnel: (json['funnel'] as List<dynamic>? ?? const [])
+        .cast<Map<String, dynamic>>()
+        .map((item) => FunnelStage(
+              label: item['label'] as String? ?? '',
+              value: item['value'] as int? ?? 0,
+            ))
+        .toList(),
+    featureAdoption: (json['feature_adoption'] as List<dynamic>? ?? const [])
+        .cast<Map<String, dynamic>>()
+        .map((item) => FeatureAdoptionMetric(
+              feature: item['feature'] as String? ?? '',
+              users: item['users'] as int? ?? 0,
+              adoptionRate: (item['adoption_rate'] as num?)?.toDouble() ?? 0,
+            ))
+        .toList(),
   );
 }
 

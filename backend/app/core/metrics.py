@@ -230,6 +230,24 @@ TASK_DURATION = Histogram(
     registry=REGISTRY,
 )
 
+# ---------------------------------------------------------------------------
+# Report Generation Metrics (Phase 14)
+# ---------------------------------------------------------------------------
+REPORT_GENERATION_COUNT = Counter(
+    "report_generation_count",
+    "Total report generation attempts",
+    ["env", "report_type", "status"],
+    registry=REGISTRY,
+)
+
+REPORT_GENERATION_DURATION = Histogram(
+    "report_generation_duration_seconds",
+    "Report generation duration in seconds",
+    ["env", "report_type"],
+    buckets=(0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 20.0, 30.0, 60.0),
+    registry=REGISTRY,
+)
+
 
 class _CollectorNameProxy:
     """Expose a stable public metric name without mutating the registered collector."""

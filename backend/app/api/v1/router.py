@@ -106,6 +106,11 @@ from app.api.v1.progress import router as progress_router
 # Phase 11E — Feature Toggles
 from app.api.v1.features import router as features_router
 
+# Phase 14 — Reports & Analytics
+from app.api.v1.analytics import router as analytics_router
+from app.api.v1.exports import router as exports_router
+from app.api.v1.reports import router as reports_router
+
 router = APIRouter()
 
 
@@ -200,3 +205,8 @@ router.include_router(progress_router)
 
 # Mount sub-routers — Phase 11E Feature Toggles
 router.include_router(features_router)
+
+# Mount sub-routers — Phase 14 Reports & Analytics
+router.include_router(reports_router)
+router.include_router(exports_router)
+router.include_router(analytics_router)

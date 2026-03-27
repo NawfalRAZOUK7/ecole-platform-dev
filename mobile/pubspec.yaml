@@ -29,6 +29,8 @@ dependencies:
   web_socket_channel: ^3.0.2
   flutter_local_notifications: ^18.0.1
   flutter_app_badger: ^1.5.0
+  open_filex: ^4.5.0
+  share_plus: ^10.1.2
 
 dev_dependencies:
   flutter_test:

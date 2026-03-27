@@ -47,6 +47,7 @@
     "messages": "الرسائل",
     "announcements": "الإعلانات",
     "notificationSettings": "إعدادات الإشعارات",
+    "reports": "التقارير",
     "adminFeeStructures": "هيكل الرسوم",
     "adminFeeAssignments": "تخصيص الرسوم",
     "adminGenerateInvoices": "إنشاء الفواتير",
@@ -526,17 +527,105 @@
   },
   "analytics": {
     "title": "لوحة التحليلات",
-    "adoption": "معدل التبني",
-    "usage": "استخدام المسارات الحرجة",
-    "authErrors": "معدل أخطاء المصادقة",
-    "latency": "زمن استجابة API p95",
-    "incidents": "الحوادث",
-    "conversion": "تحويل الدعوات",
-    "trendTitle": "اتجاهات المؤشرات",
-    "breakdownTitle": "توزيع المؤشرات",
-    "autoRefresh": "تحديث تلقائي كل 5 دقائق",
-    "lastUpdated": "آخر تحديث",
-    "prometheusSource": "Prometheus"
+    "subtitle": "تابع الحضور والنتائج والفوترة والتفاعل عبر مؤشرات مدرسية مخزنة مؤقتا.",
+    "presets": {
+      "this_week": "هذا الأسبوع",
+      "this_month": "هذا الشهر",
+      "this_period": "آخر 30 يوما",
+      "custom": "مخصص"
+    },
+    "compare": "المقارنة مع الفترة السابقة",
+    "from": "من",
+    "to": "إلى",
+    "kpis": {
+      "activeUsers": "المستخدمون النشطون",
+      "attendanceRate": "معدل الحضور",
+      "averageGrade": "متوسط النتائج",
+      "collectionRate": "معدل التحصيل"
+    },
+    "charts": {
+      "attendance": "اتجاه الحضور",
+      "attendanceHint": "معدلات الحضور اليومية أو الأسبوعية أو الشهرية خلال النطاق المحدد.",
+      "grades": "توزيع النتائج",
+      "gradesHint": "مخطط يوضح النتائج المنشورة مع إمكانية التصفية حسب المادة.",
+      "billing": "شلال الفوترة",
+      "billingHint": "من إجمالي الفواتير إلى المدفوع ثم الرصيد المتبقي.",
+      "engagement": "قمع التفاعل",
+      "engagementHint": "المستخدمون المسجلون ثم النشطون ثم المتفاعلون."
+    },
+    "buckets": {
+      "daily": "يومي",
+      "weekly": "أسبوعي",
+      "monthly": "شهري"
+    },
+    "stages": {
+      "invoiced": "المفوترة",
+      "paid": "المدفوعة",
+      "outstanding": "المتبقي"
+    },
+    "subjectPlaceholder": "تصفية حسب المادة",
+    "exportPng": "PNG",
+    "exportDataTitle": "تصدير البيانات",
+    "exportDataSubtitle": "نزّل مجموعة البيانات الحالية بصيغة CSV أو XLSX.",
+    "exportEntities": {
+      "students": "التلاميذ",
+      "grades": "النتائج",
+      "attendance": "الحضور",
+      "invoices": "الفواتير",
+      "payments": "المدفوعات"
+    }
+  },
+  "reports": {
+    "title": "التقارير",
+    "subtitle": "أنشئ ملفات PDF وتابع مهام الخلفية وأعد تنزيل الملفات الجاهزة.",
+    "progressTitle": "إنشاء التقرير جار",
+    "progressMessage": "هناك {{count}} مهمة تقرير لا تزال قيد التنفيذ في الخلفية.",
+    "generateTitle": "إنشاء تقرير",
+    "fields": {
+      "type": "نوع التقرير",
+      "language": "اللغة",
+      "period": "الفترة",
+      "class": "القسم",
+      "student": "التلميذ",
+      "parent": "ولي الأمر",
+      "from": "من",
+      "to": "إلى"
+    },
+    "anyPeriod": "أي فترة",
+    "selectClass": "اختر قسما",
+    "selectStudent": "اختر تلميذا",
+    "selectParent": "اختر ولي أمر",
+    "comparePrevious": "إضافة مقارنة بالفترة السابقة",
+    "generate": "إنشاء التقرير",
+    "generating": "جار الإنشاء...",
+    "historyTitle": "سجل التقارير",
+    "historySubtitle": "أحدث المهام الخاصة بحسابك ونطاق دورك.",
+    "allTypes": "كل أنواع التقارير",
+    "allStatuses": "كل الحالات",
+    "noHistory": "لا توجد تقارير بعد",
+    "cached": "تمت إعادة استخدام نسخة مخزنة مؤقتا",
+    "download": "تنزيل",
+    "loadMore": "تحميل المزيد",
+    "table": {
+      "report": "التقرير",
+      "scope": "النطاق",
+      "status": "الحالة",
+      "createdAt": "تاريخ الإنشاء",
+      "actions": "الإجراءات"
+    },
+    "types": {
+      "student_report_card": "كشف نقاط التلميذ",
+      "class_summary": "ملخص القسم",
+      "attendance_report": "تقرير الحضور",
+      "billing_statement": "كشف الفوترة",
+      "school_analytics": "تحليلات المؤسسة"
+    },
+    "status": {
+      "pending": "قيد الانتظار",
+      "generating": "جار الإنشاء",
+      "ready": "جاهز",
+      "failed": "فشل"
+    }
   },
   "register": {
     "title": "إنشاء حساب",

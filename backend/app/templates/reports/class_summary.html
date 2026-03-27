@@ -1,0 +1,52 @@
+{% extends "reports/base.html" %}
+{% block content %}
+<h2>{{ class.code }} — {{ class.name }}</h2>
+
+<div class="cards">
+  <div class="card">
+    <div class="card-label">{% if lang == 'ar' %}عدد التلاميذ{% elif lang == 'en' %}Students{% else %}Élèves{% endif %}</div>
+    <div class="card-value">{{ summary.student_count }}</div>
+  </div>
+  <div class="card">
+    <div class="card-label">{% if lang == 'ar' %}معدل القسم{% elif lang == 'en' %}Class Average{% else %}Moyenne de classe{% endif %}</div>
+    <div class="card-value">{{ summary.class_average }}</div>
+  </div>
+  <div class="card">
+    <div class="card-label">{% if lang == 'ar' %}معدل الحضور{% elif lang == 'en' %}Attendance{% else %}Présence moyenne{% endif %}</div>
+    <div class="card-value">{{ summary.attendance_average }}%</div>
+  </div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>{% if lang == 'ar' %}التلميذ{% elif lang == 'en' %}Student{% else %}Élève{% endif %}</th>
+      <th>{% if lang == 'ar' %}المعدل{% elif lang == 'en' %}Average Grade{% else %}Moyenne{% endif %}</th>
+      <th>{% if lang == 'ar' %}الحضور{% elif lang == 'en' %}Attendance{% else %}Présence{% endif %}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for student in students %}
+    <tr>
+      <td>{{ student.student_name }}</td>
+      <td>{{ student.average_grade }}</td>
+      <td>{{ student.attendance_rate }}%</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h2>{% if lang == 'ar' %}أفضل النتائج{% elif lang == 'en' %}Top Performers{% else %}Top performers{% endif %}</h2>
+<ul class="list">
+  {% for item in summary.top_performers %}
+  <li>{{ item.student_name }} — {{ item.average_grade }}</li>
+  {% endfor %}
+</ul>
+
+<h2>{% if lang == 'ar' %}نتائج تحتاج دعما{% elif lang == 'en' %}Students Requiring Support{% else %}Élèves à soutenir{% endif %}</h2>
+<ul class="list">
+  {% for item in summary.bottom_performers %}
+  <li>{{ item.student_name }} — {{ item.average_grade }}</li>
+  {% endfor %}
+</ul>
+{% endblock %}

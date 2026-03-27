@@ -85,6 +85,12 @@ from app.models.ai import (
 # G8 — Feature Toggles
 from app.models.feature import FeatureToggle
 
+# G9 — Reporting
+from app.models.reporting import (
+    DataExport,
+    ReportJob,
+)
+
 __all__ = [
     # IAM
     "User",
@@ -148,4 +154,7 @@ __all__ = [
     "AIPreference",
     # Feature Toggles
     "FeatureToggle",
+    # Reporting
+    "ReportJob",
+    "DataExport",
 ]

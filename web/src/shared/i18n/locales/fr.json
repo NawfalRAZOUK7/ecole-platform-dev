@@ -47,6 +47,7 @@
     "messages": "Messages",
     "announcements": "Annonces",
     "notificationSettings": "Preferences notifications",
+    "reports": "Rapports",
     "adminFeeStructures": "Frais scolaires",
     "adminFeeAssignments": "Attribution des frais",
     "adminGenerateInvoices": "Generer des factures",
@@ -526,17 +527,105 @@
   },
   "analytics": {
     "title": "Tableau de bord analytique",
-    "adoption": "Taux d'adoption",
-    "usage": "Usage parcours critiques",
-    "authErrors": "Taux erreurs auth",
-    "latency": "Latence API p95",
-    "incidents": "Incidents",
-    "conversion": "Conversion invitations",
-    "trendTitle": "Tendances KPI",
-    "breakdownTitle": "Repartition KPI",
-    "autoRefresh": "Actualisation auto toutes les 5 min",
-    "lastUpdated": "Derniere maj",
-    "prometheusSource": "Prometheus"
+    "subtitle": "Suivez la presence, les notes, la facturation et l'engagement avec des KPI ecole mis en cache.",
+    "presets": {
+      "this_week": "Cette semaine",
+      "this_month": "Ce mois",
+      "this_period": "30 derniers jours",
+      "custom": "Personnalise"
+    },
+    "compare": "Comparer avec la periode precedente",
+    "from": "Du",
+    "to": "Au",
+    "kpis": {
+      "activeUsers": "Utilisateurs actifs",
+      "attendanceRate": "Taux de presence",
+      "averageGrade": "Moyenne generale",
+      "collectionRate": "Taux d'encaissement"
+    },
+    "charts": {
+      "attendance": "Tendance de presence",
+      "attendanceHint": "Taux de presence journalier, hebdomadaire ou mensuel sur la plage selectionnee.",
+      "grades": "Distribution des notes",
+      "gradesHint": "Histogramme des notes publiees, avec filtre facultatif par matiere.",
+      "billing": "Cascade de facturation",
+      "billingHint": "Du total facture aux montants payes puis au solde restant.",
+      "engagement": "Tunnel d'engagement",
+      "engagementHint": "Utilisateurs inscrits, actifs et engages sur la plateforme."
+    },
+    "buckets": {
+      "daily": "Jour",
+      "weekly": "Semaine",
+      "monthly": "Mois"
+    },
+    "stages": {
+      "invoiced": "Facture",
+      "paid": "Encaisse",
+      "outstanding": "Restant"
+    },
+    "subjectPlaceholder": "Filtrer par matiere",
+    "exportPng": "PNG",
+    "exportDataTitle": "Exporter les donnees",
+    "exportDataSubtitle": "Telechargez l'ensemble analytique courant en CSV ou XLSX.",
+    "exportEntities": {
+      "students": "Eleves",
+      "grades": "Notes",
+      "attendance": "Presence",
+      "invoices": "Factures",
+      "payments": "Paiements"
+    }
+  },
+  "reports": {
+    "title": "Rapports",
+    "subtitle": "Generez des PDF, suivez les jobs en arriere-plan et retelchargez les fichiers termines.",
+    "progressTitle": "Generation en cours",
+    "progressMessage": "{{count}} job(s) de rapport sont encore en cours en arriere-plan.",
+    "generateTitle": "Generer un rapport",
+    "fields": {
+      "type": "Type de rapport",
+      "language": "Langue",
+      "period": "Periode",
+      "class": "Classe",
+      "student": "Eleve",
+      "parent": "Parent",
+      "from": "Du",
+      "to": "Au"
+    },
+    "anyPeriod": "Toute periode",
+    "selectClass": "Selectionner une classe",
+    "selectStudent": "Selectionner un eleve",
+    "selectParent": "Selectionner un parent",
+    "comparePrevious": "Inclure la comparaison avec la periode precedente",
+    "generate": "Generer le rapport",
+    "generating": "Generation...",
+    "historyTitle": "Historique des rapports",
+    "historySubtitle": "Jobs recents pour votre compte et votre perimetre de role.",
+    "allTypes": "Tous les types",
+    "allStatuses": "Tous les statuts",
+    "noHistory": "Aucun rapport pour le moment",
+    "cached": "Version mise en cache reutilisee",
+    "download": "Telecharger",
+    "loadMore": "Charger plus",
+    "table": {
+      "report": "Rapport",
+      "scope": "Perimetre",
+      "status": "Statut",
+      "createdAt": "Cree le",
+      "actions": "Actions"
+    },
+    "types": {
+      "student_report_card": "Bulletin eleve",
+      "class_summary": "Synthese de classe",
+      "attendance_report": "Rapport de presence",
+      "billing_statement": "Releve de facturation",
+      "school_analytics": "Analyse ecole"
+    },
+    "status": {
+      "pending": "En attente",
+      "generating": "En cours",
+      "ready": "Pret",
+      "failed": "Echec"
+    }
   },
   "register": {
     "title": "Creer un compte",

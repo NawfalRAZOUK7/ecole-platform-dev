@@ -41,6 +41,8 @@ import 'package:ecole_platform/features/messages/chat_screen.dart';
 import 'package:ecole_platform/features/messages/announcements_screen.dart';
 import 'package:ecole_platform/features/progress/progress_screen.dart';
 import 'package:ecole_platform/features/progress/parent_progress_screen.dart';
+import 'package:ecole_platform/features/reports/reports_screen.dart';
+import 'package:ecole_platform/features/analytics/analytics_summary_screen.dart';
 import 'package:ecole_platform/presentation/shell_screen.dart';
 
 /// Role-based redirect targets.
@@ -112,6 +114,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/admin/justifications',
             builder: (context, state) => const JustificationReviewScreen(),
           ),
+          GoRoute(
+            path: '/analytics',
+            builder: (context, state) => const AnalyticsSummaryScreen(),
+          ),
 
           // ── Teacher routes ──
           GoRoute(
@@ -124,8 +130,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/teacher/submissions',
-            builder: (context, state) =>
-                const SubmissionsScreen(),
+            builder: (context, state) => const SubmissionsScreen(),
           ),
           GoRoute(
             path: '/teacher/attendance',
@@ -197,6 +202,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/notifications',
             builder: (context, state) => const NotificationsScreen(),
+          ),
+          GoRoute(
+            path: '/reports',
+            builder: (context, state) => const ReportsScreen(),
           ),
           GoRoute(
             path: '/settings/notifications',

@@ -1,0 +1,63 @@
+{% extends "reports/base.html" %}
+{% block content %}
+<h2>{% if lang == 'ar' %}معلومات التلميذ{% elif lang == 'en' %}Student{% else %}Élève{% endif %}</h2>
+<p><strong>{{ student.full_name }}</strong> <span class="muted">({{ student.email }})</span></p>
+
+<div class="cards">
+  <div class="card">
+    <div class="card-label">{% if lang == 'ar' %}المعدل{% elif lang == 'en' %}Average{% else %}Moyenne{% endif %}</div>
+    <div class="card-value">{{ summary.average_grade }}</div>
+  </div>
+  <div class="card">
+    <div class="card-label">{% if lang == 'ar' %}نسبة الحضور{% elif lang == 'en' %}Attendance{% else %}Présence{% endif %}</div>
+    <div class="card-value">{{ summary.attendance_rate }}%</div>
+  </div>
+  <div class="card">
+    <div class="card-label">{% if lang == 'ar' %}الواجبات{% elif lang == 'en' %}Assignments{% else %}Travaux notés{% endif %}</div>
+    <div class="card-value">{{ summary.assignment_count }}</div>
+  </div>
+</div>
+
+<h2>{% if lang == 'ar' %}النتائج حسب المادة{% elif lang == 'en' %}Grades by Subject{% else %}Résultats par matière{% endif %}</h2>
+<table>
+  <thead>
+    <tr>
+      <th>{% if lang == 'ar' %}المادة{% elif lang == 'en' %}Subject{% else %}Matière{% endif %}</th>
+      <th>{% if lang == 'ar' %}المعدل{% elif lang == 'en' %}Average{% else %}Moyenne{% endif %}</th>
+      <th>{% if lang == 'ar' %}الواجبات{% elif lang == 'en' %}Assignments{% else %}Évaluations{% endif %}</th>
+      <th>{% if lang == 'ar' %}تعليقات المدرس{% elif lang == 'en' %}Teacher Comments{% else %}Commentaires{% endif %}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in subject_rows %}
+    <tr>
+      <td>{{ row.subject }}</td>
+      <td>{{ row.average }}</td>
+      <td>
+        <ul class="list">
+          {% for item in row.assignments %}
+          <li>{{ item.title }}: {{ item.score }}/{{ item.total_points }}</li>
+          {% endfor %}
+        </ul>
+      </td>
+      <td>
+        <ul class="list">
+          {% for comment in row.comments %}
+          <li>{{ comment }}</li>
+          {% endfor %}
+        </ul>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% if summary.teacher_comments %}
+<h2>{% if lang == 'ar' %}ملخص الفترة{% elif lang == 'en' %}Period Summary{% else %}Synthèse de la période{% endif %}</h2>
+<ul class="list">
+  {% for comment in summary.teacher_comments %}
+  <li>{{ comment }}</li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

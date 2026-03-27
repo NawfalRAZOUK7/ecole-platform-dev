@@ -1,0 +1,47 @@
+{% extends "reports/base.html" %}
+{% block content %}
+<h2>{{ class.code }} — {{ class.name }}</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>{% if lang == 'ar' %}التلميذ{% elif lang == 'en' %}Student{% else %}Élève{% endif %}</th>
+      <th>{% if lang == 'ar' %}الحصص{% elif lang == 'en' %}Sessions{% else %}Séances{% endif %}</th>
+      <th>{% if lang == 'ar' %}غياب{% elif lang == 'en' %}Absences{% else %}Absences{% endif %}</th>
+      <th>{% if lang == 'ar' %}مُبرر{% elif lang == 'en' %}Justified{% else %}Justifiées{% endif %}</th>
+      <th>{% if lang == 'ar' %}غير مُبرر{% elif lang == 'en' %}Unjustified{% else %}Non justifiées{% endif %}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in students %}
+    <tr>
+      <td>{{ row.student_name }}</td>
+      <td>{{ row.total_records }}</td>
+      <td>{{ row.absences }}</td>
+      <td>{{ row.justified }}</td>
+      <td>{{ row.unjustified }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h2>{% if lang == 'ar' %}اتجاهات الغياب{% elif lang == 'en' %}Absence Trends{% else %}Tendances d'absence{% endif %}</h2>
+<table>
+  <thead>
+    <tr>
+      <th>{% if lang == 'ar' %}التاريخ{% elif lang == 'en' %}Date{% else %}Date{% endif %}</th>
+      <th>{% if lang == 'ar' %}غياب{% elif lang == 'en' %}Absent{% else %}Absents{% endif %}</th>
+      <th>{% if lang == 'ar' %}معذور{% elif lang == 'en' %}Excused{% else %}Excusés{% endif %}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in trends %}
+    <tr>
+      <td>{{ item.label }}</td>
+      <td>{{ item.absent }}</td>
+      <td>{{ item.excused }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

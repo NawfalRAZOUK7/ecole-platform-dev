@@ -153,7 +153,8 @@ class ApiClient {
       // Extract API error
       final errorBody = e.response?.data;
       if (errorBody is Map<String, dynamic> && errorBody.containsKey('error')) {
-        final apiError = ApiError.fromJson(errorBody['error'] as Map<String, dynamic>);
+        final apiError =
+            ApiError.fromJson(errorBody['error'] as Map<String, dynamic>);
 
         // Retry on retryable errors with exponential backoff + jitter
         if (apiError.retryable && retryCount < _maxRetries) {
@@ -169,12 +170,14 @@ class ApiClient {
         throw ApiClientError(statusCode ?? 500, apiError);
       }
 
-      throw ApiClientError(statusCode ?? 500, ApiError(
-        code: 'ERR-NET-000',
-        message: e.message ?? 'Network error',
-        category: 'network',
-        retryable: true,
-      ));
+      throw ApiClientError(
+          statusCode ?? 500,
+          ApiError(
+            code: 'ERR-NET-000',
+            message: e.message ?? 'Network error',
+            category: 'network',
+            retryable: true,
+          ));
     }
   }
 
@@ -244,8 +247,7 @@ class ApiClient {
       {Map<String, dynamic>? params}) async {
     final resp = await _request('GET', path, queryParameters: params);
     final body = resp.data as Map<String, dynamic>;
-    final items = (body['data'] as List<dynamic>)
-        .cast<Map<String, dynamic>>();
+    final items = (body['data'] as List<dynamic>).cast<Map<String, dynamic>>();
     final meta = body['meta'] as Map<String, dynamic>?;
     return ApiListResponse(
       data: items,
@@ -256,8 +258,7 @@ class ApiClient {
 
   Future<ApiResponse<Map<String, dynamic>>> post(String path,
       {dynamic body, bool skipAuth = false}) async {
-    final resp =
-        await _request('POST', path, data: body, skipAuth: skipAuth);
+    final resp = await _request('POST', path, data: body, skipAuth: skipAuth);
     final respBody = resp.data as Map<String, dynamic>;
     return ApiResponse(data: respBody['data'] as Map<String, dynamic>);
   }
@@ -280,6 +281,17 @@ class ApiClient {
     final resp = await _request('DELETE', path);
     final respBody = resp.data as Map<String, dynamic>;
     return ApiResponse(data: respBody['data'] as Map<String, dynamic>);
+  }
+
+  Future<File> download(String path, {required String savePath}) async {
+    final normalizedPath =
+        path.startsWith('$_apiBase/') ? path.substring(_apiBase.length) : path;
+    await _dio.download(
+      normalizedPath,
+      savePath,
+      options: Options(headers: _headers()),
+    );
+    return File(savePath);
   }
 
   /// Upload files with multipart form data and progress tracking.

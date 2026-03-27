@@ -29,31 +29,117 @@ class _NavItem {
 
 const _allNavItems = [
   // Admin tabs
-  _NavItem(route: '/admin/dashboard', icon: Icons.dashboard, labelKey: 'shell.dashboard', roles: ['ADM', 'DIR']),
-  _NavItem(route: '/admin/users', icon: Icons.people, labelKey: 'shell.users', roles: ['ADM', 'DIR']),
+  _NavItem(
+      route: '/admin/dashboard',
+      icon: Icons.dashboard,
+      labelKey: 'shell.dashboard',
+      roles: ['ADM', 'DIR']),
+  _NavItem(
+      route: '/admin/users',
+      icon: Icons.people,
+      labelKey: 'shell.users',
+      roles: ['ADM', 'DIR']),
+  _NavItem(
+      route: '/analytics',
+      icon: Icons.insights,
+      labelKey: 'shell.analytics',
+      roles: ['ADM', 'DIR']),
   // Teacher tabs
-  _NavItem(route: '/teacher/classes', icon: Icons.class_, labelKey: 'shell.classes', roles: ['TCH']),
-  _NavItem(route: '/teacher/content-library', icon: Icons.library_books, labelKey: 'shell.library', roles: ['TCH']),
-  _NavItem(route: '/teacher/submissions', icon: Icons.grading, labelKey: 'shell.grading', roles: ['TCH']),
+  _NavItem(
+      route: '/teacher/classes',
+      icon: Icons.class_,
+      labelKey: 'shell.classes',
+      roles: ['TCH']),
+  _NavItem(
+      route: '/teacher/content-library',
+      icon: Icons.library_books,
+      labelKey: 'shell.library',
+      roles: ['TCH']),
+  _NavItem(
+      route: '/teacher/submissions',
+      icon: Icons.grading,
+      labelKey: 'shell.grading',
+      roles: ['TCH']),
   // Parent tabs
-  _NavItem(route: '/family', icon: Icons.family_restroom, labelKey: 'shell.children', roles: ['PAR']),
+  _NavItem(
+      route: '/family',
+      icon: Icons.family_restroom,
+      labelKey: 'shell.children',
+      roles: ['PAR']),
   // Student tabs (Phase 10C)
-  _NavItem(route: '/student/content', icon: Icons.library_books, labelKey: 'shell.content', roles: ['STD']),
-  _NavItem(route: '/student/quizzes', icon: Icons.quiz, labelKey: 'shell.quiz', roles: ['STD']),
+  _NavItem(
+      route: '/student/content',
+      icon: Icons.library_books,
+      labelKey: 'shell.content',
+      roles: ['STD']),
+  _NavItem(
+      route: '/student/quizzes',
+      icon: Icons.quiz,
+      labelKey: 'shell.quiz',
+      roles: ['STD']),
   // Phase 12B tabs
-  _NavItem(route: '/timetable', icon: Icons.calendar_view_week, labelKey: 'shell.timetable', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR']),
-  _NavItem(route: '/messages', icon: Icons.chat, labelKey: 'shell.messages', roles: ['PAR', 'TCH', 'ADM', 'DIR']),
-  _NavItem(route: '/announcements', icon: Icons.campaign, labelKey: 'shell.announcements', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR']),
+  _NavItem(
+      route: '/timetable',
+      icon: Icons.calendar_view_week,
+      labelKey: 'shell.timetable',
+      roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR']),
+  _NavItem(
+      route: '/messages',
+      icon: Icons.chat,
+      labelKey: 'shell.messages',
+      roles: ['PAR', 'TCH', 'ADM', 'DIR']),
+  _NavItem(
+      route: '/announcements',
+      icon: Icons.campaign,
+      labelKey: 'shell.announcements',
+      roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR']),
   // Common tabs
-  _NavItem(route: '/feed', icon: Icons.newspaper, labelKey: 'shell.feed', roles: ['PAR']),
-  _NavItem(route: '/notifications', icon: Icons.notifications, labelKey: 'shell.notifications', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR']),
-  _NavItem(route: '/content', icon: Icons.library_books, labelKey: 'shell.content', roles: ['PAR', 'ADM']),
-  _NavItem(route: '/results', icon: Icons.assessment, labelKey: 'shell.results', roles: ['STD', 'PAR']),
+  _NavItem(
+      route: '/feed',
+      icon: Icons.newspaper,
+      labelKey: 'shell.feed',
+      roles: ['PAR']),
+  _NavItem(
+      route: '/notifications',
+      icon: Icons.notifications,
+      labelKey: 'shell.notifications',
+      roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR']),
+  _NavItem(
+      route: '/reports',
+      icon: Icons.picture_as_pdf_outlined,
+      labelKey: 'shell.reports',
+      roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR']),
+  _NavItem(
+      route: '/content',
+      icon: Icons.library_books,
+      labelKey: 'shell.content',
+      roles: ['PAR', 'ADM']),
+  _NavItem(
+      route: '/results',
+      icon: Icons.assessment,
+      labelKey: 'shell.results',
+      roles: ['STD', 'PAR']),
   // Phase 12C tabs
-  _NavItem(route: '/progress', icon: Icons.trending_up, labelKey: 'shell.progress', roles: ['STD']),
-  _NavItem(route: '/parent/progress', icon: Icons.trending_up, labelKey: 'shell.progress', roles: ['PAR']),
-  _NavItem(route: '/invoices', icon: Icons.receipt_long, labelKey: 'shell.invoices', roles: ['PAR', 'ADM']),
-  _NavItem(route: '/profile', icon: Icons.person, labelKey: 'shell.profile', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR', 'SUP']),
+  _NavItem(
+      route: '/progress',
+      icon: Icons.trending_up,
+      labelKey: 'shell.progress',
+      roles: ['STD']),
+  _NavItem(
+      route: '/parent/progress',
+      icon: Icons.trending_up,
+      labelKey: 'shell.progress',
+      roles: ['PAR']),
+  _NavItem(
+      route: '/invoices',
+      icon: Icons.receipt_long,
+      labelKey: 'shell.invoices',
+      roles: ['PAR', 'ADM']),
+  _NavItem(
+      route: '/profile',
+      icon: Icons.person,
+      labelKey: 'shell.profile',
+      roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR', 'SUP']),
 ];
 
 class ShellScreen extends ConsumerWidget {
@@ -67,9 +153,8 @@ class ShellScreen extends ConsumerWidget {
     final notificationsState = ref.watch(notificationsProvider);
     final t = AppLocalizations.of(ref);
     final userRole = authState.user?.role ?? '';
-    final visibleItems = _allNavItems
-        .where((item) => item.roles.contains(userRole))
-        .toList();
+    final visibleItems =
+        _allNavItems.where((item) => item.roles.contains(userRole)).toList();
 
     final currentLocation = GoRouterState.of(context).matchedLocation;
     final currentIndex = visibleItems.indexWhere(
