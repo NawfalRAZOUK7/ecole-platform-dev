@@ -89,7 +89,7 @@ export function ClassProgressPage() {
     (async () => {
       try {
         const resp = await api.list<ClassOption>('/teacher/classes');
-        const items = resp.data.data as unknown as ClassOption[];
+        const items = resp.data;
         setClasses(items);
         if (items.length > 0) setSelectedClass(items[0].id);
       } catch {
@@ -164,7 +164,7 @@ export function ClassProgressPage() {
       </div>
 
       {loading && <LoadingState />}
-      {error && <ErrorBanner message={error} onRetry={fetchClassProgress} />}
+      {error && <ErrorBanner error={error} onRetry={fetchClassProgress} />}
 
       {data && !loading && (
         <>

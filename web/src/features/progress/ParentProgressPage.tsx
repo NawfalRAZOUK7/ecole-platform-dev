@@ -92,7 +92,7 @@ export function ParentProgressPage() {
   }, [fetchChildren]);
 
   if (loading) return <LoadingState />;
-  if (error) return <ErrorBanner message={error} onRetry={fetchChildren} />;
+  if (error) return <ErrorBanner error={error} onRetry={fetchChildren} />;
   if (!data) return null;
 
   // Build comparison chart data

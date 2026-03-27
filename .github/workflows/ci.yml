@@ -82,10 +82,13 @@ jobs:
         run: |
           cd backend
           pytest tests/test_unit_*.py -v --tb=short \
-            --cov=app/core \
+            --cov=app.core.exceptions \
+            --cov=app.core.permissions \
+            --cov=app.core.response \
+            --cov=app.core.security \
             --cov-report=term-missing \
             --cov-report=xml:coverage-unit.xml \
-            --cov-fail-under=85
+            --cov-fail-under=95
 
       - name: Upload unit coverage
         uses: actions/upload-artifact@v4

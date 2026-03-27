@@ -243,10 +243,15 @@ export function AnalyticsPage() {
               <XAxis dataKey="name" />
               <YAxis unit="%" />
               <Tooltip
-                formatter={(value: number, _name: string, entry: { payload: { numerator: number; denominator: number } }) => [
-                  `${value}% (${entry.payload.numerator}/${entry.payload.denominator})`,
-                  '',
-                ]}
+                formatter={(value, _name, entry) => {
+                  const payload = entry?.payload as
+                    | { numerator?: number; denominator?: number }
+                    | undefined;
+                  return [
+                    `${value}% (${payload?.numerator ?? 0}/${payload?.denominator ?? 0})`,
+                    '',
+                  ];
+                }}
               />
               <Bar dataKey="value" fill="#2196F3" radius={[4, 4, 0, 0]} />
             </BarChart>

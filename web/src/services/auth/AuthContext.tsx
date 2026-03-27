@@ -26,6 +26,7 @@ export interface UserProfile {
   full_name: string;
   role: string;
   school_id: string;
+  totp_enabled?: boolean;
   permissions: string[];
   memberships: Array<{
     school_id: string;
@@ -131,6 +132,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             isAuthenticated: true,
             isLoading: false,
             error: null,
+            twoFactorPending: null,
           });
         }
       } catch {

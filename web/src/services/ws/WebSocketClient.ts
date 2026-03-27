@@ -16,6 +16,7 @@ export type WsEventType =
   | 'message_created'
   | 'announcement_published'
   | 'welcome'
+  | 'ping'
   | 'pong';
 
 export interface WsEvent {

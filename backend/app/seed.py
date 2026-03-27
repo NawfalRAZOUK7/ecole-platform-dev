@@ -11,7 +11,7 @@ import uuid
 from datetime import date, datetime, timedelta, timezone
 
 import bcrypt
-from sqlalchemy import text
+from sqlalchemy import inspect, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import async_session
@@ -150,28 +150,71 @@ def _hash(password: str) -> str:
 
 async def clear_all(session: AsyncSession) -> None:
     """Truncate all tables (CASCADE) to allow re-seeding."""
+    conn = await session.connection()
+
+    def _get_table_names(sync_conn) -> set[str]:
+        return set(inspect(sync_conn).get_table_names())
+
+    existing_tables = await conn.run_sync(_get_table_names)
+    tables_in_order = [
+        "feature_toggles",
+        "audit_logs",
+        "provider_webhook_events",
+        "payment_proofs",
+        "payment_attempts",
+        "invoice_items",
+        "invoices",
+        "announcements",
+        "message_read_receipts",
+        "messages",
+        "conversation_participants",
+        "conversations",
+        "parent_feed_items",
+        "notification_deliveries",
+        "notifications",
+        "consent_preferences",
+        "activity_sessions",
+        "activities",
+        "content_submissions",
+        "class_content_assignments",
+        "content_progress",
+        "content_item_assets",
+        "content_items",
+        "grades",
+        "submission_files",
+        "submissions",
+        "assessment_results",
+        "assessments",
+        "assignments",
+        "courses",
+        "justification_reviews",
+        "absence_justifications",
+        "attendance_records",
+        "attendance_sessions",
+        "teacher_assignments",
+        "enrollments",
+        "classes",
+        "periods",
+        "academic_years",
+        "writing_attempts",
+        "ai_preferences",
+        "student_profiles",
+        "parent_profiles",
+        "teacher_profiles",
+        "parent_child_links",
+        "account_recovery_requests",
+        "invitation_codes",
+        "sessions",
+        "memberships",
+        "users",
+    ]
+    present_tables = [table for table in tables_in_order if table in existing_tables]
+    if not present_tables:
+        await session.commit()
+        return
+
     await session.execute(
-        text(
-            "TRUNCATE TABLE feature_toggles, "
-            "audit_logs, provider_webhook_events, payment_proofs, "
-            "payment_attempts, invoice_items, invoices, "
-            "announcements, message_read_receipts, messages, "
-            "conversation_participants, conversations, "
-            "parent_feed_items, "
-            "notification_deliveries, notifications, consent_preferences, "
-            "activity_sessions, activities, "
-            "content_submissions, class_content_assignments, "
-            "content_progress, content_item_assets, "
-            "content_items, grades, submission_files, submissions, assessment_results, "
-            "assessments, assignments, courses, justification_reviews, "
-            "absence_justifications, attendance_records, attendance_sessions, "
-            "teacher_assignments, enrollments, classes, periods, academic_years, "
-            "writing_attempts, ai_preferences, "
-            "student_profiles, parent_profiles, teacher_profiles, "
-            "parent_child_links, "
-            "account_recovery_requests, invitation_codes, sessions, memberships, "
-            "users CASCADE"
-        )
+        text(f"TRUNCATE TABLE {', '.join(present_tables)} CASCADE")
     )
     await session.commit()
 
@@ -1104,14 +1147,21 @@ async def seed_cms(session: AsyncSession) -> None:
     await session.flush()
 
     # Teacher submits content for platform promotion
-    submission = ContentSubmission(
-        content_item_id=teacher_content.id,
-        submitted_by=TEACHER_1_ID,
-        school_id=SCHOOL_ID,
-        status="PENDING",
-        submitted_at=_now(),
-    )
-    session.add(submission)
+    conn = await session.connection()
+
+    def _has_content_submissions(sync_conn) -> bool:
+        return "content_submissions" in inspect(sync_conn).get_table_names()
+
+    has_content_submissions = await conn.run_sync(_has_content_submissions)
+    if has_content_submissions:
+        submission = ContentSubmission(
+            content_item_id=teacher_content.id,
+            submitted_by=TEACHER_1_ID,
+            school_id=SCHOOL_ID,
+            status="PENDING",
+            submitted_at=_now(),
+        )
+        session.add(submission)
 
     # Assign platform content to class 6A
     assignment = ClassContentAssignment(
@@ -1125,9 +1175,13 @@ async def seed_cms(session: AsyncSession) -> None:
     session.add(assignment)
     await session.flush()
 
-    print(
-        "  [CMS] 6 platform content, 1 teacher content, 1 submission, 1 class assignment"
-    )
+    cms_summary = "  [CMS] 6 platform content, 1 teacher content"
+    if has_content_submissions:
+        cms_summary += ", 1 submission"
+    else:
+        cms_summary += ", content submissions skipped (table not migrated)"
+    cms_summary += ", 1 class assignment"
+    print(cms_summary)
 
 
 async def seed_quizzes(session: AsyncSession) -> None:

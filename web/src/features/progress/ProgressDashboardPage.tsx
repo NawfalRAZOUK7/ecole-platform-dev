@@ -107,7 +107,7 @@ export function ProgressDashboardPage() {
   }, [fetchProgress]);
 
   if (loading) return <LoadingState />;
-  if (error) return <ErrorBanner message={error} onRetry={fetchProgress} />;
+  if (error) return <ErrorBanner error={error} onRetry={fetchProgress} />;
   if (!data) return null;
 
   // Transform chart data for recharts

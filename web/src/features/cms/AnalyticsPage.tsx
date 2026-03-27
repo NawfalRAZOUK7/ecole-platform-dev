@@ -82,14 +82,22 @@ export function CmsAnalyticsPage() {
         avg_review_time_hours: null,
       };
 
-      const contributorMap: Record<string, { name: string; count: number }> = {};
+      const contributorMap: Record<
+        string,
+        { submitter_name: string; count: number }
+      > = {};
       let totalReviewMs = 0;
       let reviewCount = 0;
 
       for (const sub of subs) {
         sStats.by_status[sub.status] = (sStats.by_status[sub.status] || 0) + 1;
         const key = sub.submitted_by;
-        if (!contributorMap[key]) contributorMap[key] = { name: sub.submitter_name || key, count: 0 };
+        if (!contributorMap[key]) {
+          contributorMap[key] = {
+            submitter_name: sub.submitter_name || key,
+            count: 0,
+          };
+        }
         contributorMap[key].count++;
 
         if (sub.reviewed_at && sub.submitted_at) {
@@ -209,7 +217,7 @@ export function CmsAnalyticsPage() {
               <tbody>
                 {submissionStats.top_contributors.map((c, i) => (
                   <tr key={i} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                    <td style={{ padding: '6px 0' }}>{c.name}</td>
+                    <td style={{ padding: '6px 0' }}>{c.submitter_name}</td>
                     <td style={{ padding: '6px 0', textAlign: 'right', fontWeight: 600 }}>{c.count}</td>
                   </tr>
                 ))}

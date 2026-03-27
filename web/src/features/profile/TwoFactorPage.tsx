@@ -30,7 +30,7 @@ export function TwoFactorPage() {
   const [disableCode, setDisableCode] = useState('');
 
   // Check if 2FA is already enabled (from user profile totp_enabled)
-  const is2faEnabled = (user as Record<string, unknown>)?.totp_enabled === true;
+  const is2faEnabled = user?.totp_enabled === true;
 
   async function handleStartSetup() {
     setLoading(true);
