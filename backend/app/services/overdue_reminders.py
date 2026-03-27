@@ -16,8 +16,6 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import select
-
 logger = logging.getLogger(__name__)
 
 MAX_REMINDERS = 3
@@ -32,9 +30,7 @@ async def send_overdue_reminders() -> int:
     """
     from app.core.database import async_session
     from app.core.tasks import enqueue_email
-    from app.models.billing import Invoice
-    from app.models.com import ConsentPreference
-    from app.models.iam import User
+    from app.repositories.billing import BillingRepository
     from app.services.audit import AuditService
 
     now = datetime.now(timezone.utc)
@@ -43,43 +39,25 @@ async def send_overdue_reminders() -> int:
     sent_count = 0
 
     async with async_session() as db:
-        # Find overdue pending invoices:
-        # - status = 'pending'
-        # - due_date < today - 7 days
-        # - reminder_count < MAX_REMINDERS
-        # - reminder_sent_at is NULL or > 3 days ago
-        query = select(Invoice).where(
-            Invoice.status == "pending",
-            Invoice.due_date < overdue_cutoff,
-            Invoice.reminder_count < MAX_REMINDERS,
-            (Invoice.reminder_sent_at.is_(None))
-            | (Invoice.reminder_sent_at < reminder_cooldown),
+        repo = BillingRepository(db)
+        invoices = await repo.get_overdue_invoices(
+            overdue_cutoff=overdue_cutoff,
+            reminder_cooldown=reminder_cooldown,
+            max_reminders=MAX_REMINDERS,
+            limit=500,
         )
-
-        result = await db.execute(query)
-        invoices = result.scalars().all()
 
         for invoice in invoices:
             audit = AuditService(db)
 
             try:
                 # Get parent
-                parent_result = await db.execute(
-                    select(User).where(User.id == invoice.parent_id)
-                )
-                parent = parent_result.scalar_one_or_none()
+                parent = await repo.get_user_by_id(invoice.parent_id)
                 if parent is None or not parent.email:
                     continue
 
                 # Check consent: topic="billing", channel="email"
-                consent_result = await db.execute(
-                    select(ConsentPreference).where(
-                        ConsentPreference.user_id == invoice.parent_id,
-                        ConsentPreference.topic == "billing",
-                        ConsentPreference.channel == "email",
-                    )
-                )
-                consent = consent_result.scalar_one_or_none()
+                consent = await repo.get_billing_email_consent(user_id=invoice.parent_id)
                 # If consent exists and is opted_out, skip
                 if consent and consent.status == "opted_out":
                     logger.info(
@@ -94,7 +72,11 @@ async def send_overdue_reminders() -> int:
                     to=parent.email,
                     template_name="invoice_reminder",
                     lang="fr",
-                    parent_name=parent.first_name or parent.email,
+                    parent_name=(
+                        getattr(parent, "first_name", None)
+                        or parent.full_name
+                        or parent.email
+                    ),
                     invoice_id=str(invoice.id),
                     amount=f"{float(invoice.total_amount):.2f}",
                     currency=invoice.currency,
@@ -104,6 +86,7 @@ async def send_overdue_reminders() -> int:
                 # Update invoice reminder tracking
                 invoice.reminder_count += 1
                 invoice.reminder_sent_at = now
+                await repo.save_invoice(invoice)
 
                 await audit.log_event(
                     school_id=invoice.school_id,

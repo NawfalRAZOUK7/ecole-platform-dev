@@ -38,13 +38,13 @@
 - [ ] **Review & commit myself**: `refactor(backend): extract AuthRepository and AuditRepository, standardize RBAC`
 
 ### Batch 2 — Billing & Payments
-- [ ] Create `backend/app/repositories/billing.py` (BillingRepository)
-- [ ] Refactor `services/payment_retry.py` → use BillingRepository
-- [ ] Refactor `services/overdue_reminders.py` → use BillingRepository
-- [ ] Refactor `api/v1/billing.py` (674 lines) → use BillingService
-- [ ] Refactor `api/v1/payments.py`, `invoices.py`
-- [ ] RBAC: Standardize all billing permission checks
-- [ ] Verify: no SQL in routers/services
+- [x] Create `backend/app/repositories/billing.py` (BillingRepository)
+- [x] Refactor `services/payment_retry.py` → use BillingRepository
+- [x] Refactor `services/overdue_reminders.py` → use BillingRepository
+- [x] Refactor `api/v1/billing.py` (674 lines) → use BillingService
+- [x] Refactor `api/v1/payments.py`, `invoices.py`
+- [x] RBAC: Standardize all billing permission checks
+- [x] Verify: no SQL in routers/services
 - [ ] **Review & commit myself**: `refactor(backend): extract BillingRepository, standardize billing RBAC`
 
 ### Batch 3 — ERP (Classes, Attendance, Timetable)

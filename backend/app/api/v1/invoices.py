@@ -9,34 +9,19 @@ from __future__ import annotations
 import uuid
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.core.database import get_db
-from app.core.dependencies import (
-    AuthContext,
-    requires_permission,
-    verify_school_boundary,
-)
-from app.core.exceptions import NotFoundError
+from app.core.dependencies import AuthContext, requires_permission
 from app.core.filtering import (
     FilterSpec,
     SortSpec,
-    apply_filters,
-    apply_sort,
     parse_filters,
     parse_sort,
 )
-from app.core.response import (
-    clamp_page_size,
-    decode_cursor,
-    encode_cursor,
-    list_response,
-    success_response,
-)
-from app.core.search import apply_search, parse_search
-from app.models.billing import Invoice
+from app.core.response import list_response, success_response
+from app.core.search import parse_search
+from app.services.billing import BillingService
 
 router = APIRouter(prefix="/invoices", tags=["billing-invoices"])
 
@@ -63,72 +48,23 @@ async def list_invoices(
     Search: ?search=tuition
     Legacy param status still supported.
     """
-    page_size = clamp_page_size(limit)
-
-    query = (
-        select(Invoice)
-        .options(selectinload(Invoice.items))
-        .where(Invoice.school_id == auth.school_id)
+    service = BillingService(db)
+    result = await service.list_invoices(
+        status=status,
+        cursor=cursor,
+        limit=limit,
+        filters=filters,
+        sort=sort,
+        search=search,
+        auth=auth,
     )
-
-    # PAR: filter to own invoices
-    if auth.role == "PAR":
-        query = query.where(Invoice.parent_id == auth.user_id)
-
-    if status:
-        query = query.where(Invoice.status == status)
-
-    # Phase 3D
-    query = apply_filters(query, Invoice, filters)
-    if search:
-        query = apply_search(query, Invoice, search)
-    query = apply_sort(query, Invoice, sort, default_column=Invoice.id)
-
-    if cursor:
-        last_id, _ = decode_cursor(cursor)
-        query = query.where(Invoice.id > last_id)
-
-    query = query.limit(page_size + 1)
-    result = await db.execute(query)
-    invoices = list(result.scalars().unique().all())
-
-    has_more = len(invoices) > page_size
-    if has_more:
-        invoices = invoices[:page_size]
-
-    items = [
-        {
-            "id": str(inv.id),
-            "school_id": str(inv.school_id),
-            "parent_id": str(inv.parent_id),
-            "period_id": str(inv.period_id) if inv.period_id else None,
-            "status": inv.status,
-            "total_amount": float(inv.total_amount),
-            "currency": inv.currency,
-            "issued_date": str(inv.issued_date),
-            "due_date": str(inv.due_date),
-            "items": [
-                {
-                    "id": str(item.id),
-                    "description": item.description,
-                    "amount": float(item.amount),
-                    "unit_price": float(item.unit_price),
-                    "quantity": item.quantity,
-                }
-                for item in inv.items
-            ],
-        }
-        for inv in invoices
-    ]
-
-    next_cursor = encode_cursor(invoices[-1].id) if has_more and invoices else None
     return list_response(
-        items,
-        next_cursor=next_cursor,
-        has_more=has_more,
-        filters_applied=filters.as_dict() if filters.items else None,
-        sort_by=sort.as_list() if sort.fields else None,
-        search_term=search,
+        result["items"],
+        next_cursor=result["next_cursor"],
+        has_more=result["has_more"],
+        filters_applied=result["filters_applied"],
+        sort_by=result["sort_by"],
+        search_term=result["search_term"],
     )
 
 
@@ -143,41 +79,9 @@ async def get_invoice(
     db: AsyncSession = Depends(get_db),
 ):
     """Get invoice details by ID."""
-    result = await db.execute(
-        select(Invoice)
-        .options(selectinload(Invoice.items))
-        .where(Invoice.id == invoice_id)
+    service = BillingService(db)
+    result = await service.get_invoice(
+        invoice_id=invoice_id,
+        auth=auth,
     )
-    inv = result.scalar_one_or_none()
-    if inv is None:
-        raise NotFoundError("Invoice not found", error_code="ERR-BIL-404")
-
-    verify_school_boundary(inv.school_id, auth)
-
-    # PAR can only see own invoices
-    if auth.role == "PAR" and inv.parent_id != auth.user_id:
-        raise NotFoundError("Invoice not found", error_code="ERR-BIL-404")
-
-    return success_response(
-        {
-            "id": str(inv.id),
-            "school_id": str(inv.school_id),
-            "parent_id": str(inv.parent_id),
-            "period_id": str(inv.period_id) if inv.period_id else None,
-            "status": inv.status,
-            "total_amount": float(inv.total_amount),
-            "currency": inv.currency,
-            "issued_date": str(inv.issued_date),
-            "due_date": str(inv.due_date),
-            "items": [
-                {
-                    "id": str(item.id),
-                    "description": item.description,
-                    "amount": float(item.amount),
-                    "unit_price": float(item.unit_price),
-                    "quantity": item.quantity,
-                }
-                for item in inv.items
-            ],
-        }
-    )
+    return success_response(result)

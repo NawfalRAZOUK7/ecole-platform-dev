@@ -15,8 +15,6 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import select
-
 logger = logging.getLogger(__name__)
 
 # Exponential backoff intervals (in hours) for retry attempts 1, 2, 3
@@ -30,25 +28,19 @@ async def retry_failed_payments() -> int:
     Returns the number of payments retried.
     """
     from app.core.database import async_session
-    from app.models.billing import Invoice, PaymentAttempt
+    from app.repositories.billing import BillingRepository
     from app.services.audit import AuditService
 
     now = datetime.now(timezone.utc)
     retried_count = 0
 
     async with async_session() as db:
-        # Find failed payments where:
-        # - retry_count < MAX_RETRIES
-        # - next_retry_at <= now (due for retry)
-        result = await db.execute(
-            select(PaymentAttempt).where(
-                PaymentAttempt.status == "failed",
-                PaymentAttempt.retry_count < MAX_RETRIES,
-                PaymentAttempt.next_retry_at.isnot(None),
-                PaymentAttempt.next_retry_at <= now,
-            )
+        repo = BillingRepository(db)
+        attempts = await repo.get_failed_attempts(
+            now=now,
+            max_retries=MAX_RETRIES,
+            limit=500,
         )
-        attempts = result.scalars().all()
 
         for attempt in attempts:
             audit = AuditService(db)
@@ -68,28 +60,26 @@ async def retry_failed_payments() -> int:
                     attempt.next_retry_at = None
 
                     # Mark invoice as failed
-                    inv_result = await db.execute(
-                        select(Invoice).where(Invoice.id == attempt.invoice_id)
-                    )
-                    invoice = inv_result.scalar_one_or_none()
+                    invoice = await repo.get_invoice_by_id(attempt.invoice_id)
                     if invoice and invoice.status == "pending":
                         invoice.status = "failed"
+                        await repo.save_invoice(invoice)
 
                     # Notify parent via email
                     try:
                         from app.core.tasks import enqueue_email
-                        from app.models.iam import User
 
-                        parent_result = await db.execute(
-                            select(User).where(User.id == attempt.parent_id)
-                        )
-                        parent = parent_result.scalar_one_or_none()
+                        parent = await repo.get_user_by_id(attempt.parent_id)
                         if parent and parent.email:
                             await enqueue_email(
                                 to=parent.email,
                                 template_name="invoice_reminder",
                                 lang="fr",
-                                parent_name=parent.first_name or parent.email,
+                                parent_name=(
+                                    getattr(parent, "first_name", None)
+                                    or parent.full_name
+                                    or parent.email
+                                ),
                                 invoice_id=str(attempt.invoice_id),
                                 amount=str(invoice.total_amount) if invoice else "N/A",
                                 currency=invoice.currency if invoice else "MAD",
@@ -138,6 +128,7 @@ async def retry_failed_payments() -> int:
                         },
                     )
 
+                await repo.save_payment(attempt)
                 retried_count += 1
 
             except Exception:
@@ -157,15 +148,14 @@ async def schedule_retry_for_failed_payment(
 
     Called from the webhook handler when a payment fails.
     """
-    from app.models.billing import PaymentAttempt
+    from app.repositories.billing import BillingRepository
 
-    result = await db.execute(
-        select(PaymentAttempt).where(PaymentAttempt.id == attempt_id)
-    )
-    attempt = result.scalar_one_or_none()
+    repo = BillingRepository(db)
+    attempt = await repo.get_payment_by_id(attempt_id)
     if attempt and attempt.retry_count < MAX_RETRIES:
         now = datetime.now(timezone.utc)
         attempt.next_retry_at = now + timedelta(hours=RETRY_BACKOFF_HOURS[0])
+        await repo.save_payment(attempt)
         logger.info(
             "Scheduled first retry for payment %s at %s",
             attempt.id,

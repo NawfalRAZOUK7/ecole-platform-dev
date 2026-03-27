@@ -3,6 +3,7 @@
 from app.repositories.base import BaseRepository
 from app.repositories.audit import AuditRepository
 from app.repositories.auth import AuthRepository
+from app.repositories.billing import BillingRepository
 from app.repositories.calendar import CalendarRepository
 from app.repositories.documents import DocumentsRepository
 from app.repositories.notifications import NotificationRepository
@@ -12,6 +13,7 @@ __all__ = [
     "BaseRepository",
     "AuditRepository",
     "AuthRepository",
+    "BillingRepository",
     "CalendarRepository",
     "DocumentsRepository",
     "NotificationRepository",
