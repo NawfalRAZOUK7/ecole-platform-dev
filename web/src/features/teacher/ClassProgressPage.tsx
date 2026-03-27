@@ -23,6 +23,7 @@ import { api, ApiClientError } from '@/services/api/client';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
 
+/** Per-student row in the class progress table. */
 interface StudentRow {
   student_id: string;
   student_name: string;
@@ -31,6 +32,7 @@ interface StudentRow {
   content_completion_rate: number;
 }
 
+/** Aggregate averages across all students in a class. */
 interface ClassAverages {
   grade_average: number;
   attendance_rate: number;
@@ -42,6 +44,7 @@ interface ChartDataset {
   data: number[];
 }
 
+/** Full class progress payload from `GET /progress/class/{classId}`. */
 interface ClassProgressData {
   class_id: string;
   class_name: string;
@@ -54,6 +57,7 @@ interface ClassProgressData {
   };
 }
 
+/** Minimal class descriptor used to populate the class selector dropdown. */
 interface ClassOption {
   id: string;
   name: string;
@@ -62,6 +66,17 @@ interface ClassOption {
 
 type SortKey = 'student_name' | 'grade_average' | 'attendance_rate' | 'content_completion_rate';
 
+/**
+ * Teacher class progress page.
+ *
+ * Displays class-wide averages, a per-student sortable table, and a grade
+ * comparison bar chart. The teacher selects a class from a dropdown populated
+ * via `GET /teacher/classes`.
+ *
+ * @remarks
+ * - Role: TCH only.
+ * - API: `GET /teacher/classes` (class list), `GET /progress/class/{classId}` (progress data).
+ */
 export function ClassProgressPage() {
   const { t } = useTranslation();
   const [classes, setClasses] = useState<ClassOption[]>([]);

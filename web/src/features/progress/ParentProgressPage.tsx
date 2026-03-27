@@ -22,12 +22,14 @@ import { api, ApiClientError } from '@/services/api/client';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
 
+/** Summary metrics for a single child, returned as part of the children overview. */
 interface ChildSummary {
   student_id: string;
   student_name: string;
   grade_average: number;
   attendance_rate: number;
   content_completion_rate: number;
+  /** Most recent graded assignment, if available. */
   latest_grade?: {
     score: number;
     assignment: string;
@@ -39,6 +41,7 @@ interface ChartDataset {
   data: number[];
 }
 
+/** Response payload from `GET /progress/children` containing all children summaries and comparison chart data. */
 interface ChildrenResponse {
   child_count: number;
   children: ChildSummary[];
@@ -52,6 +55,18 @@ interface ChildrenResponse {
 
 const BAR_COLORS = ['#2563eb', '#10b981', '#f59e0b'];
 
+/**
+ * Parent progress overview page.
+ *
+ * Shows a summary card per child with grade average, attendance rate, and
+ * content completion. Clicking a card navigates to the full progress dashboard
+ * for that child. When multiple children exist, a comparison bar chart is shown.
+ *
+ * @remarks
+ * - Role: PAR only.
+ * - API: `GET /progress/children`.
+ * - Drill-down navigates to `/progress?studentId={id}`.
+ */
 export function ParentProgressPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();

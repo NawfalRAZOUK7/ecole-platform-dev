@@ -1004,6 +1004,7 @@
     "studentCount": "Nombre d'élèves",
     "gradeComparison": "Comparaison des notes",
     "perStudent": "Par élève",
-    "studentName": "Nom de l'élève"
+    "studentName": "Nom de l'élève",
+    "assessmentResults": "Résultats des évaluations"
   }
 }

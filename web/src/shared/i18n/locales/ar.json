@@ -1004,6 +1004,7 @@
     "studentCount": "عدد الطلاب",
     "gradeComparison": "مقارنة الدرجات",
     "perStudent": "لكل طالب",
-    "studentName": "اسم الطالب"
+    "studentName": "اسم الطالب",
+    "assessmentResults": "نتائج التقييمات"
   }
 }

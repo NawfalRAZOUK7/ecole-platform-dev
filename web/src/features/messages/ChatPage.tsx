@@ -109,14 +109,30 @@ export function ChatPage() {
 
   async function handleSend() {
     if (!newMessage.trim() || !conversationId) return;
+    const text = newMessage.trim();
+    // Optimistic append
+    const tempId = `temp-${Date.now()}`;
+    const optimistic: Message = {
+      id: tempId,
+      conversation_id: conversationId,
+      sender_id: user?.id || '',
+      body: text,
+      sent_at: new Date().toISOString(),
+      edited_at: null,
+      created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, optimistic]);
+    setNewMessage('');
     setSending(true);
     try {
       const resp = await api.post<Message>(`/messages/conversations/${conversationId}/messages`, {
-        body: newMessage.trim(),
+        body: text,
       });
-      setMessages((prev) => [...prev, resp.data]);
-      setNewMessage('');
+      // Replace optimistic with server version
+      setMessages((prev) => prev.map((m) => m.id === tempId ? resp.data : m));
     } catch (err) {
+      // Remove optimistic on failure
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
       setError(err instanceof ApiClientError ? err.message : t('app.error'));
     } finally {
       setSending(false);

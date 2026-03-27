@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:ecole_platform/features/auth/auth_provider.dart';
 import 'package:ecole_platform/l10n/app_localizations.dart';
+import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/conversation.dart';
 import 'messages_provider.dart';
 
@@ -197,10 +198,52 @@ class _ConversationTile extends StatelessWidget {
         conversation.subject ?? _otherParticipant(),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontWeight: FontWeight.w600),
+        style: TextStyle(
+          fontWeight: conversation.unreadCount > 0 ? FontWeight.w800 : FontWeight.w600,
+        ),
       ),
-      subtitle: Text(subtitle, style: theme.textTheme.bodySmall),
-      trailing: Text(dateStr, style: theme.textTheme.bodySmall),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (conversation.lastMessageBody != null)
+            Text(
+              conversation.lastMessageBody!.length > 50
+                  ? '${conversation.lastMessageBody!.substring(0, 50)}...'
+                  : conversation.lastMessageBody!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: conversation.unreadCount > 0 ? FontWeight.w600 : null,
+              ),
+            ),
+          Text(subtitle, style: theme.textTheme.bodySmall?.copyWith(fontSize: 11)),
+        ],
+      ),
+      trailing: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(dateStr, style: theme.textTheme.bodySmall),
+          if (conversation.unreadCount > 0) ...[
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '${conversation.unreadCount}',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onPrimary,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
       onTap: onTap,
     );
   }

@@ -10,6 +10,8 @@ class Conversation {
   final String? subject;
   final List<Participant> participants;
   final String? lastMessageAt;
+  final String? lastMessageBody;
+  final int unreadCount;
   final String createdAt;
 
   const Conversation({
@@ -20,6 +22,8 @@ class Conversation {
     this.subject,
     required this.participants,
     this.lastMessageAt,
+    this.lastMessageBody,
+    this.unreadCount = 0,
     required this.createdAt,
   });
 
@@ -35,6 +39,8 @@ class Conversation {
               .toList() ??
           [],
       lastMessageAt: json['last_message_at'] as String?,
+      lastMessageBody: json['last_message_body'] as String?,
+      unreadCount: json['unread_count'] as int? ?? 0,
       createdAt: json['created_at'] as String,
     );
   }

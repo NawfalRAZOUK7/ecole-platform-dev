@@ -31,6 +31,8 @@ interface Conversation {
   subject: string | null;
   participants: Participant[];
   last_message_at: string | null;
+  last_message_body: string | null;
+  unread_count: number;
   created_at: string;
 }
 
@@ -127,10 +129,20 @@ export function ConversationsPage() {
               style={{ cursor: 'pointer' }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: 15 }}>
-                    {conv.subject || getOtherParticipant(conv)}
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontWeight: conv.unread_count > 0 ? 700 : 600, fontSize: 15 }}>
+                      {conv.subject || getOtherParticipant(conv)}
+                    </span>
+                    {conv.unread_count > 0 && (
+                      <span className="notif-badge">{conv.unread_count}</span>
+                    )}
                   </div>
+                  {conv.last_message_body && (
+                    <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 400 }}>
+                      {conv.last_message_body.length > 60 ? conv.last_message_body.slice(0, 60) + '...' : conv.last_message_body}
+                    </div>
+                  )}
                   <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 2 }}>
                     {conv.type === 'DIRECT' ? t('messages.direct') : t('messages.group')}
                     {' · '}

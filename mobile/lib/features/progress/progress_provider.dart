@@ -9,6 +9,7 @@ import 'package:ecole_platform/app/providers.dart';
 
 // ── Data models ──
 
+/// A single labeled series of numeric data points for chart rendering.
 class ChartDataset {
   final String label;
   final List<double> data;
@@ -22,6 +23,7 @@ class ChartDataset {
       );
 }
 
+/// Generic chart payload containing axis labels and one or more [ChartDataset]s.
 class ChartData {
   final List<String> labels;
   final List<ChartDataset> datasets;
@@ -36,6 +38,7 @@ class ChartData {
       );
 }
 
+/// Aggregate attendance statistics: total sessions, present count, and rate.
 class AttendanceSummary {
   final int total;
   final int present;
@@ -50,6 +53,7 @@ class AttendanceSummary {
       );
 }
 
+/// Aggregate content completion statistics: total items, completed count, and rate.
 class ContentSummary {
   final int total;
   final int completed;
@@ -63,6 +67,10 @@ class ContentSummary {
       );
 }
 
+/// Complete progress data for a single student, parsed from the API response.
+///
+/// Contains chart data for grade trends, content completion, activity scores,
+/// and attendance, along with their respective summary statistics.
 class StudentProgress {
   final String studentId;
   final String studentName;
@@ -106,6 +114,7 @@ class StudentProgress {
   }
 }
 
+/// Summary metrics for a single child, used in the parent overview screen.
 class ChildProgressSummary {
   final String studentId;
   final String studentName;
@@ -134,6 +143,7 @@ class ChildProgressSummary {
 
 // ── States ──
 
+/// Immutable state for the student progress screen (loading, data, or error).
 class ProgressState {
   final StudentProgress? progress;
   final bool isLoading;
@@ -141,6 +151,7 @@ class ProgressState {
   const ProgressState({this.progress, this.isLoading = false, this.error});
 }
 
+/// Immutable state for the parent children overview (loading, list, or error).
 class ChildrenProgressState {
   final List<ChildProgressSummary> children;
   final bool isLoading;
@@ -151,6 +162,10 @@ class ChildrenProgressState {
 
 // ── Notifiers ──
 
+/// Notifier that fetches and holds a single student's progress data.
+///
+/// API: `GET /progress/me` (when [studentId] is null) or
+/// `GET /progress/student/{studentId}` (parent drill-down).
 class ProgressNotifier extends StateNotifier<ProgressState> {
   final Ref _ref;
   final String? studentId;
@@ -160,6 +175,7 @@ class ProgressNotifier extends StateNotifier<ProgressState> {
     load();
   }
 
+  /// Fetches progress data from the API and updates state.
   Future<void> load() async {
     state = const ProgressState(isLoading: true);
     try {
@@ -176,6 +192,9 @@ class ProgressNotifier extends StateNotifier<ProgressState> {
   }
 }
 
+/// Notifier that fetches the parent's children progress overview.
+///
+/// API: `GET /progress/children`.
 class ChildrenProgressNotifier extends StateNotifier<ChildrenProgressState> {
   final Ref _ref;
 
@@ -184,6 +203,7 @@ class ChildrenProgressNotifier extends StateNotifier<ChildrenProgressState> {
     load();
   }
 
+  /// Fetches the children summary list from the API and updates state.
   Future<void> load() async {
     state = const ChildrenProgressState(isLoading: true);
     try {

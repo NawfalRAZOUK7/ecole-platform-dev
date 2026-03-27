@@ -29,25 +29,33 @@ import { useAuth } from '@/services/auth/AuthContext';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
 
+/** A single labeled series of numeric data points for chart rendering. */
 interface ChartDataset {
   label: string;
   data: number[];
 }
 
+/** Generic chart payload with axis labels and one or more datasets. */
 interface ChartData {
   labels: string[];
   datasets: ChartDataset[];
 }
 
+/** Attendance data including an overview with summary stats and a trend series. */
 interface AttendanceData {
   overview: ChartData & { summary: { total: number; present: number; attendance_rate: number } };
   trend: ChartData;
 }
 
+/** Content completion chart data with an aggregate summary (total, completed, rate). */
 interface ContentCompletion extends ChartData {
   summary: { total: number; completed: number; completion_rate: number };
 }
 
+/**
+ * Full progress payload returned by the API.
+ * Contains grade trends, content completion, activity scores, attendance, and assessment results.
+ */
 interface ProgressData {
   student_id: string;
   student_name: string;
@@ -61,6 +69,16 @@ interface ProgressData {
 const PIE_COLORS = ['#10b981', '#f59e0b', '#ef4444'];
 const DONUT_COLORS = ['#10b981', '#ef4444', '#3b82f6', '#f59e0b'];
 
+/**
+ * Student progress dashboard page with 5 chart panels.
+ *
+ * Displays grade trend (line), content completion (pie), activity scores (bar),
+ * attendance (donut), and assessment results (grouped bar).
+ *
+ * @remarks
+ * - Roles: STD (own progress), PAR (child progress via `?studentId` query param).
+ * - API: `GET /progress/me` or `GET /progress/student/{id}`.
+ */
 export function ProgressDashboardPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -115,8 +133,16 @@ export function ProgressDashboardPage() {
     value: data.attendance.overview.datasets[0]?.data[i] ?? 0,
   }));
 
+  const assessmentBarData = data.assessment_results.labels.map((label, i) => ({
+    name: label,
+    [data.assessment_results.datasets[0]?.label || 'score']: data.assessment_results.datasets[0]?.data[i] ?? 0,
+    [data.assessment_results.datasets[1]?.label || 'max']: data.assessment_results.datasets[1]?.data[i] ?? 0,
+  }));
+
   const gradeKey = data.grade_trends.datasets[0]?.label || 'avg';
   const activityKey = data.activity_scores.datasets[0]?.label || 'score';
+  const assessScoreKey = data.assessment_results.datasets[0]?.label || 'score';
+  const assessMaxKey = data.assessment_results.datasets[1]?.label || 'max';
 
   return (
     <div className="progress-dashboard">
@@ -241,6 +267,26 @@ export function ProgressDashboardPage() {
             {t('progress.attendanceRate')}: <strong>{data.attendance.overview.summary.attendance_rate.toFixed(1)}%</strong>
             {' '}({data.attendance.overview.summary.present}/{data.attendance.overview.summary.total})
           </div>
+        </div>
+
+        {/* Assessment Results Bar Chart */}
+        <div className="chart-card chart-card--wide">
+          <h3 className="chart-title">{t('progress.assessmentResults')}</h3>
+          {assessmentBarData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={assessmentBarData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" tick={{ fontSize: 10 }} angle={-20} textAnchor="end" height={50} />
+                <YAxis domain={[0, 'auto']} />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey={assessScoreKey} fill="#2563eb" radius={[4, 4, 0, 0]} />
+                <Bar dataKey={assessMaxKey} fill="#e5e7eb" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="chart-empty">{t('progress.noData')}</p>
+          )}
         </div>
       </div>
     </div>

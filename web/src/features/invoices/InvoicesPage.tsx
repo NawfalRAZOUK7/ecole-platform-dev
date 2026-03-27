@@ -66,7 +66,7 @@ export function InvoicesPage() {
     try {
       const params: Record<string, string | number | undefined> = {};
       if (cursor) params.cursor = cursor;
-      if (statusFilter) params.status = statusFilter;
+      if (statusFilter && statusFilter !== 'overdue') params.status = statusFilter;
 
       const resp = await api.list<Invoice>('/invoices', params);
       if (cursor) {
@@ -105,8 +105,9 @@ export function InvoicesPage() {
     }
   }
 
-  // Count overdue
+  // Count overdue + client-side filter
   const overdueCount = items.filter(isOverdue).length;
+  const displayedItems = statusFilter === 'overdue' ? items.filter(isOverdue) : items;
 
   if (loading) return <LoadingState />;
 
@@ -121,18 +122,36 @@ export function InvoicesPage() {
       )}
 
       <div className="filters-bar">
-        <select className="filter-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-          <option value="">{t('invoices.allStatuses')}</option>
-          <option value="pending">{t('invoices.statusLabels.pending')}</option>
-          <option value="paid">{t('invoices.statusLabels.paid')}</option>
-          <option value="failed">{t('invoices.statusLabels.failed')}</option>
-          <option value="canceled">{t('invoices.statusLabels.canceled')}</option>
-        </select>
+        <div className="filter-pills">
+          {[
+            { value: '', label: t('invoices.allStatuses') },
+            { value: 'pending', label: t('invoices.statusLabels.pending') },
+            { value: 'paid', label: t('invoices.statusLabels.paid') },
+            { value: 'failed', label: t('invoices.statusLabels.failed') },
+          ].map((f) => (
+            <button
+              key={f.value}
+              className={`filter-pill ${statusFilter === f.value ? 'filter-pill--active' : ''}`}
+              onClick={() => setStatusFilter(f.value)}
+            >
+              {f.label}
+              {f.value === '' && overdueCount > 0 ? '' : ''}
+            </button>
+          ))}
+          {overdueCount > 0 && (
+            <button
+              className={`filter-pill filter-pill--danger ${statusFilter === 'overdue' ? 'filter-pill--active' : ''}`}
+              onClick={() => setStatusFilter(statusFilter === 'overdue' ? '' : 'overdue')}
+            >
+              {t('invoices.overdue')} ({overdueCount})
+            </button>
+          )}
+        </div>
       </div>
 
       <ErrorBanner error={error} onDismiss={() => setError(null)} onRetry={() => fetchInvoices()} />
 
-      {items.length === 0 ? (
+      {displayedItems.length === 0 ? (
         <EmptyState message={t('invoices.empty')} icon="💳" />
       ) : (
         <>
@@ -149,7 +168,7 @@ export function InvoicesPage() {
                 </tr>
               </thead>
               <tbody>
-                {items.map((inv) => {
+                {displayedItems.map((inv) => {
                   const overdue = isOverdue(inv);
                   return (
                   <tr key={inv.id} className={overdue ? 'invoice-row--overdue' : ''}>

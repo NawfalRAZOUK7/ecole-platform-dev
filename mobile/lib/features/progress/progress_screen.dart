@@ -9,7 +9,16 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'progress_provider.dart';
 
+/// Student progress dashboard with 4 tabbed chart views (grades, content,
+/// activities, attendance) rendered using fl_chart.
+///
+/// When [studentId] is null the screen shows the authenticated student's own
+/// progress; when provided it shows the specified student's data (parent
+/// drill-down).
+///
+/// Roles: STD, PAR.
 class ProgressScreen extends ConsumerStatefulWidget {
+  /// Optional student ID for parent drill-down. Null means "my own progress".
   final String? studentId;
   const ProgressScreen({super.key, this.studentId});
 
@@ -85,20 +94,25 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
     final p = state.progress;
     if (p == null) return const SizedBox.shrink();
 
-    return TabBarView(
-      controller: _tabController,
-      children: [
-        _GradeTab(progress: p, t: t, theme: theme),
-        _ContentTab(progress: p, t: t, theme: theme),
-        _ActivityTab(progress: p, t: t, theme: theme),
-        _AttendanceTab(progress: p, t: t, theme: theme),
-      ],
+    return RefreshIndicator(
+      onRefresh: () =>
+          ref.read(progressProvider(widget.studentId).notifier).load(),
+      child: TabBarView(
+        controller: _tabController,
+        children: [
+          _GradeTab(progress: p, t: t, theme: theme),
+          _ContentTab(progress: p, t: t, theme: theme),
+          _ActivityTab(progress: p, t: t, theme: theme),
+          _AttendanceTab(progress: p, t: t, theme: theme),
+        ],
+      ),
     );
   }
 }
 
 // ── Grade Trend Tab (Line Chart) ──
 
+/// Displays a line chart of grade averages over time with a summary row.
 class _GradeTab extends StatelessWidget {
   final StudentProgress progress;
   final AppLocalizations t;
@@ -195,6 +209,7 @@ class _GradeTab extends StatelessWidget {
 
 // ── Content Completion Tab (Pie Chart) ──
 
+/// Displays a donut pie chart of content completion status with a legend.
 class _ContentTab extends StatelessWidget {
   final StudentProgress progress;
   final AppLocalizations t;
@@ -264,6 +279,7 @@ class _ContentTab extends StatelessWidget {
 
 // ── Activity Scores Tab (Bar Chart) ──
 
+/// Displays a vertical bar chart of activity scores by period.
 class _ActivityTab extends StatelessWidget {
   final StudentProgress progress;
   final AppLocalizations t;
@@ -340,6 +356,7 @@ class _ActivityTab extends StatelessWidget {
 
 // ── Attendance Tab (Donut Chart) ──
 
+/// Displays a donut chart of attendance breakdown with rate summary and legend.
 class _AttendanceTab extends StatelessWidget {
   final StudentProgress progress;
   final AppLocalizations t;

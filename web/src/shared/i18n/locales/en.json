@@ -1004,6 +1004,7 @@
     "studentCount": "Student Count",
     "gradeComparison": "Grade Comparison",
     "perStudent": "Per Student",
-    "studentName": "Student Name"
+    "studentName": "Student Name",
+    "assessmentResults": "Assessment Results"
   }
 }

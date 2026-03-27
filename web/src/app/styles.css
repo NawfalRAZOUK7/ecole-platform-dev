@@ -1205,6 +1205,45 @@ textarea.filter-input {
   }
 }
 
+/* ── Filter Pills (Phase 12C Enhancement) ── */
+
+.filter-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filter-pill {
+  padding: 6px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  background: var(--color-surface);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.filter-pill:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.filter-pill--active {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.filter-pill--danger {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.filter-pill--danger.filter-pill--active {
+  background: var(--color-danger);
+  color: white;
+}
+
 /* ── Progress Dashboard (Phase 12C) ── */
 
 .progress-dashboard,
@@ -1260,6 +1299,10 @@ textarea.filter-input {
   font-weight: 600;
   margin-bottom: 16px;
   color: var(--color-text);
+}
+
+.chart-card--wide {
+  grid-column: 1 / -1;
 }
 
 .chart-empty {

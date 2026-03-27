@@ -9,6 +9,12 @@ import 'package:go_router/go_router.dart';
 import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'progress_provider.dart';
 
+/// Parent progress overview screen showing a summary card per child.
+///
+/// Tapping a child card navigates to [ProgressScreen] with that child's ID.
+/// Data is fetched via [childrenProgressProvider] (`GET /progress/children`).
+///
+/// Role: PAR only.
 class ParentProgressScreen extends ConsumerWidget {
   const ParentProgressScreen({super.key});
 

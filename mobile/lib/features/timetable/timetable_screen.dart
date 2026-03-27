@@ -105,23 +105,39 @@ class TimetableScreen extends ConsumerWidget {
             ),
           ),
           Expanded(
-            child: PageView.builder(
-              itemCount: _days.length,
-              controller: PageController(
-                initialPage: _todayIndex(),
-              ),
-              itemBuilder: (context, index) {
-                final day = _days[index];
-                final slots = byDay[day] ?? [];
-                return _DayColumn(
-                  day: day,
-                  slots: slots,
-                  t: t,
-                );
-              },
-            ),
+            child: MediaQuery.of(context).size.width > 600
+                ? _buildTabletGrid(byDay, t)
+                : PageView.builder(
+                    itemCount: _days.length,
+                    controller: PageController(
+                      initialPage: _todayIndex(),
+                    ),
+                    itemBuilder: (context, index) {
+                      final day = _days[index];
+                      final slots = byDay[day] ?? [];
+                      return _DayColumn(
+                        day: day,
+                        slots: slots,
+                        t: t,
+                      );
+                    },
+                  ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTabletGrid(Map<int, List<TimetableSlot>> byDay, AppLocalizations t) {
+    return SingleChildScrollView(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: _days.map((day) {
+          final slots = byDay[day] ?? [];
+          return Expanded(
+            child: _DayColumn(day: day, slots: slots, t: t),
+          );
+        }).toList(),
       ),
     );
   }

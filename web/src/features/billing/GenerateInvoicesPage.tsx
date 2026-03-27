@@ -19,11 +19,6 @@ interface FeeStructure {
   status: string;
 }
 
-interface Period {
-  id: string;
-  name: string;
-}
-
 interface GenerateResult {
   generated: number;
   skipped: number;

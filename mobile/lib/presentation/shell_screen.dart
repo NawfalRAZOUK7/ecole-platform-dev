@@ -28,7 +28,7 @@ class _NavItem {
 const _allNavItems = [
   // Admin tabs
   _NavItem(route: '/admin/dashboard', icon: Icons.dashboard, label: 'Dashboard', roles: ['ADM', 'DIR']),
-  _NavItem(route: '/admin/users', icon: Icons.people, label: 'Utilisateurs', roles: ['ADM']),
+  _NavItem(route: '/admin/users', icon: Icons.people, label: 'Utilisateurs', roles: ['ADM', 'DIR']),
   // Teacher tabs
   _NavItem(route: '/teacher/classes', icon: Icons.class_, label: 'Classes', roles: ['TCH']),
   _NavItem(route: '/teacher/content-library', icon: Icons.library_books, label: 'Bibliothèque', roles: ['TCH']),
