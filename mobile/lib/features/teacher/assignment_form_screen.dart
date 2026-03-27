@@ -8,8 +8,6 @@ import 'package:intl/intl.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/teacher.dart';
-import 'package:ecole_platform/domain/repositories/feed_repository.dart';
-import 'package:ecole_platform/shared/widgets/search_filter_bar.dart';
 
 // ── State ──
 
@@ -220,7 +218,7 @@ class _AssignmentFormScreenState extends ConsumerState<AssignmentFormScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: DropdownButtonFormField<String>(
-                value: state.courseFilter,
+                initialValue: state.courseFilter,
                 decoration: const InputDecoration(
                   labelText: 'Filtrer par cours',
                   border: OutlineInputBorder(),
@@ -228,7 +226,8 @@ class _AssignmentFormScreenState extends ConsumerState<AssignmentFormScreen> {
                       EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 ),
                 items: [
-                  const DropdownMenuItem(value: null, child: Text('Tous les cours')),
+                  const DropdownMenuItem(
+                      value: null, child: Text('Tous les cours')),
                   ...state.courses.map((c) => DropdownMenuItem(
                         value: c.id,
                         child: Text(c.title),
@@ -256,7 +255,7 @@ class _AssignmentFormScreenState extends ConsumerState<AssignmentFormScreen> {
                               ?.copyWith(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
-                        value: _selectedCourseId,
+                        initialValue: _selectedCourseId,
                         decoration: const InputDecoration(
                           labelText: 'Cours *',
                           border: OutlineInputBorder(),
@@ -268,8 +267,7 @@ class _AssignmentFormScreenState extends ConsumerState<AssignmentFormScreen> {
                                 ))
                             .toList(),
                         validator: (v) => v == null ? 'Cours requis' : null,
-                        onChanged: (v) =>
-                            setState(() => _selectedCourseId = v),
+                        onChanged: (v) => setState(() => _selectedCourseId = v),
                       ),
                       const SizedBox(height: 12),
                       TextFormField(
@@ -354,8 +352,8 @@ class _AssignmentFormScreenState extends ConsumerState<AssignmentFormScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(state.error!,
-                    style: TextStyle(
-                        color: theme.colorScheme.onErrorContainer)),
+                    style:
+                        TextStyle(color: theme.colorScheme.onErrorContainer)),
               ),
             ),
 

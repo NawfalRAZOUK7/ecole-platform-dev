@@ -10,7 +10,6 @@ import 'package:go_router/go_router.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/data/api/api_client.dart';
-import 'package:ecole_platform/domain/repositories/auth_repository.dart';
 
 const _roleRedirects = <String, String>{
   'PAR': '/feed',
@@ -573,14 +572,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
         // Relationship type (parent)
         DropdownButtonFormField<String>(
-          value: _relationshipType.isEmpty ? null : _relationshipType,
+          initialValue: _relationshipType.isEmpty ? null : _relationshipType,
           decoration: const InputDecoration(
             labelText: 'Lien de parenté',
             prefixIcon: Icon(Icons.family_restroom),
             border: OutlineInputBorder(),
           ),
           items: [
-            const DropdownMenuItem(value: '', child: Text('Sélectionner (optionnel)')),
+            const DropdownMenuItem(
+                value: '', child: Text('Sélectionner (optionnel)')),
             ..._relationshipTypes.map((rt) => DropdownMenuItem(
                   value: rt,
                   child: Text(_relationshipLabels[rt] ?? rt),
@@ -616,9 +616,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           children: [
             Expanded(
               child: OutlinedButton(
-                onPressed: _loading
-                    ? null
-                    : () => setState(() => _step = _Step.info),
+                onPressed:
+                    _loading ? null : () => setState(() => _step = _Step.info),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
@@ -685,8 +684,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         ),
         const SizedBox(height: 16),
         FilledButton(
-          onPressed:
-              _loading || _otpController.text.length != 6 ? null : _handleOtpSubmit,
+          onPressed: _loading || _otpController.text.length != 6
+              ? null
+              : _handleOtpSubmit,
           style: FilledButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),
           ),

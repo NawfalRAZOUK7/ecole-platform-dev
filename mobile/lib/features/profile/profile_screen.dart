@@ -106,8 +106,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     _emergencyPhoneController.text =
         parent?['emergency_phone'] as String? ?? '';
     _subjectController.text = teacher?['subject_specialty'] as String? ?? '';
-    _qualificationController.text =
-        teacher?['qualification'] as String? ?? '';
+    _qualificationController.text = teacher?['qualification'] as String? ?? '';
   }
 
   Future<void> _saveProfile() async {
@@ -268,7 +267,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   const Icon(Icons.check_circle, color: Colors.green, size: 20),
                   const SizedBox(width: 8),
                   Text(_saveSuccess!,
-                      style: const TextStyle(color: Colors.green, fontSize: 13)),
+                      style:
+                          const TextStyle(color: Colors.green, fontSize: 13)),
                 ],
               ),
             ),
@@ -313,7 +313,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           // Change password
           Card(
             child: ListTile(
-              leading: Icon(Icons.lock_outline, color: theme.colorScheme.primary),
+              leading:
+                  Icon(Icons.lock_outline, color: theme.colorScheme.primary),
               title: const Text('Changer le mot de passe'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.push('/profile/password'),
@@ -325,8 +326,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           OutlinedButton.icon(
             onPressed: () => ref.read(authProvider.notifier).logout(),
             icon: const Icon(Icons.logout, color: Colors.red),
-            label: const Text('Déconnexion',
-                style: TextStyle(color: Colors.red)),
+            label:
+                const Text('Déconnexion', style: TextStyle(color: Colors.red)),
             style: OutlinedButton.styleFrom(
               side: const BorderSide(color: Colors.red),
               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -350,8 +351,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         padding: const EdgeInsets.symmetric(vertical: 16),
         child: Column(
           children: [
-            Text(_profileError!, style: TextStyle(color: theme.colorScheme.error)),
-            TextButton(onPressed: _fetchProfile, child: const Text('Réessayer')),
+            Text(_profileError!,
+                style: TextStyle(color: theme.colorScheme.error)),
+            TextButton(
+                onPressed: _fetchProfile, child: const Text('Réessayer')),
           ],
         ),
       );
@@ -407,12 +410,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ],
         ),
         const SizedBox(height: 8),
-
         if (_editing)
           _buildEditForm(role)
         else
           _buildViewForm(role, student, parent, teacher),
-
         const SizedBox(height: 24),
       ],
     );
@@ -466,8 +467,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ],
             if (role == 'PAR' && parent != null) ...[
               if (parent['relationship_type'] != null)
-                _profileRow('Lien de parenté',
-                    _relationshipLabels[parent['relationship_type']] ?? parent['relationship_type']),
+                _profileRow(
+                    'Lien de parenté',
+                    _relationshipLabels[parent['relationship_type']] ??
+                        parent['relationship_type']),
               if (parent['cin_number'] != null)
                 _profileRow('CIN', parent['cin_number']),
               if (parent['emergency_phone'] != null)
@@ -502,7 +505,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             width: 120,
             child: Text(label,
                 style: const TextStyle(
-                    fontSize: 13, color: Colors.grey, fontWeight: FontWeight.w500)),
+                    fontSize: 13,
+                    color: Colors.grey,
+                    fontWeight: FontWeight.w500)),
           ),
           Expanded(
             child: Text(value, style: const TextStyle(fontSize: 14)),
@@ -553,7 +558,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ],
             if (role == 'PAR') ...[
               DropdownButtonFormField<String>(
-                value: _relationshipType.isEmpty ? null : _relationshipType,
+                initialValue:
+                    _relationshipType.isEmpty ? null : _relationshipType,
                 decoration: const InputDecoration(
                   labelText: 'Lien de parenté',
                   prefixIcon: Icon(Icons.family_restroom),
@@ -567,8 +573,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         child: Text(_relationshipLabels[rt] ?? rt),
                       )),
                 ],
-                onChanged: (v) =>
-                    setState(() => _relationshipType = v ?? ''),
+                onChanged: (v) => setState(() => _relationshipType = v ?? ''),
               ),
               const SizedBox(height: 12),
               TextFormField(

@@ -75,17 +75,26 @@ class _LibraryNotifier extends StateNotifier<_LibraryState> {
   }
 
   void setTypeFilter(String? v) {
-    state = _LibraryState(typeFilter: v, levelFilter: state.levelFilter, originFilter: state.originFilter);
+    state = _LibraryState(
+        typeFilter: v,
+        levelFilter: state.levelFilter,
+        originFilter: state.originFilter);
     load();
   }
 
   void setLevelFilter(String? v) {
-    state = _LibraryState(typeFilter: state.typeFilter, levelFilter: v, originFilter: state.originFilter);
+    state = _LibraryState(
+        typeFilter: state.typeFilter,
+        levelFilter: v,
+        originFilter: state.originFilter);
     load();
   }
 
   void setOriginFilter(String? v) {
-    state = _LibraryState(typeFilter: state.typeFilter, levelFilter: state.levelFilter, originFilter: v);
+    state = _LibraryState(
+        typeFilter: state.typeFilter,
+        levelFilter: state.levelFilter,
+        originFilter: v);
     load();
   }
 }
@@ -197,8 +206,8 @@ class _BrowseTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildBrowseList(
-      BuildContext context, WidgetRef ref, _LibraryState state, ThemeData theme) {
+  Widget _buildBrowseList(BuildContext context, WidgetRef ref,
+      _LibraryState state, ThemeData theme) {
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -303,7 +312,7 @@ class _BrowseTab extends ConsumerWidget {
   Future<void> _showAssignDialog(
       BuildContext context, WidgetRef ref, LibraryItem item) async {
     final repo = ref.read(contentLibraryRepositoryProvider);
-    List<ClassInfo>? classes;
+    late final List<ClassInfo> classes;
     try {
       classes = await repo.getTeacherClasses();
     } catch (e) {
@@ -315,20 +324,22 @@ class _BrowseTab extends ConsumerWidget {
       return;
     }
 
-    if (!context.mounted || classes == null || classes.isEmpty) return;
+    if (!context.mounted || classes.isEmpty) return;
 
     final selectedClass = await showDialog<ClassInfo>(
       context: context,
       builder: (ctx) => SimpleDialog(
         title: Text('Assigner "${item.title}"'),
-        children: classes!.map((c) => SimpleDialogOption(
-          onPressed: () => Navigator.pop(ctx, c),
-          child: ListTile(
-            title: Text(c.name),
-            subtitle: Text('${c.studentCount} élèves'),
-            leading: const Icon(Icons.class_),
-          ),
-        )).toList(),
+        children: classes
+            .map((c) => SimpleDialogOption(
+                  onPressed: () => Navigator.pop(ctx, c),
+                  child: ListTile(
+                    title: Text(c.name),
+                    subtitle: Text('${c.studentCount} élèves'),
+                    leading: const Icon(Icons.class_),
+                  ),
+                ))
+            .toList(),
       ),
     );
 
@@ -359,7 +370,9 @@ class _BrowseTab extends ConsumerWidget {
   Future<void> _submitForReview(
       BuildContext context, WidgetRef ref, String contentId) async {
     try {
-      await ref.read(contentLibraryRepositoryProvider).submitForReview(contentId);
+      await ref
+          .read(contentLibraryRepositoryProvider)
+          .submitForReview(contentId);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -441,7 +454,16 @@ class _UploadTabState extends ConsumerState<_UploadTab> {
   Future<void> _pickFile() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['pdf', 'doc', 'docx', 'mp4', 'mp3', 'wav', 'jpg', 'png'],
+      allowedExtensions: [
+        'pdf',
+        'doc',
+        'docx',
+        'mp4',
+        'mp3',
+        'wav',
+        'jpg',
+        'png'
+      ],
     );
     if (result != null && result.files.single.path != null) {
       setState(() {
@@ -549,9 +571,13 @@ class _UploadTabState extends ConsumerState<_UploadTab> {
             ),
             child: Row(
               children: [
-                Icon(Icons.error_outline, color: theme.colorScheme.error, size: 20),
+                Icon(Icons.error_outline,
+                    color: theme.colorScheme.error, size: 20),
                 const SizedBox(width: 8),
-                Expanded(child: Text(_error!, style: TextStyle(color: theme.colorScheme.onErrorContainer))),
+                Expanded(
+                    child: Text(_error!,
+                        style: TextStyle(
+                            color: theme.colorScheme.onErrorContainer))),
                 IconButton(
                   icon: const Icon(Icons.close, size: 18),
                   onPressed: () => setState(() => _error = null),
@@ -574,7 +600,9 @@ class _UploadTabState extends ConsumerState<_UploadTab> {
               children: [
                 const Icon(Icons.check_circle, color: Colors.green, size: 20),
                 const SizedBox(width: 8),
-                Expanded(child: Text(_success!, style: const TextStyle(color: Colors.green))),
+                Expanded(
+                    child: Text(_success!,
+                        style: const TextStyle(color: Colors.green))),
               ],
             ),
           ),
@@ -607,7 +635,7 @@ class _UploadTabState extends ConsumerState<_UploadTab> {
 
         // Content type dropdown
         DropdownButtonFormField<String>(
-          value: _contentType,
+          initialValue: _contentType,
           decoration: const InputDecoration(
             labelText: 'Type de contenu',
             border: OutlineInputBorder(),
@@ -618,13 +646,14 @@ class _UploadTabState extends ConsumerState<_UploadTab> {
             DropdownMenuItem(value: 'AUDIO', child: Text('Audio')),
             DropdownMenuItem(value: 'INTERACTIVE', child: Text('Interactif')),
           ],
-          onChanged: _uploading ? null : (v) => setState(() => _contentType = v!),
+          onChanged:
+              _uploading ? null : (v) => setState(() => _contentType = v!),
         ),
         const SizedBox(height: 16),
 
         // Language
         DropdownButtonFormField<String>(
-          value: _language,
+          initialValue: _language,
           decoration: const InputDecoration(
             labelText: 'Langue',
             border: OutlineInputBorder(),
@@ -645,7 +674,9 @@ class _UploadTabState extends ConsumerState<_UploadTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Fichier *', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+                Text('Fichier *',
+                    style: theme.textTheme.titleSmall
+                        ?.copyWith(fontWeight: FontWeight.w600)),
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -674,7 +705,9 @@ class _UploadTabState extends ConsumerState<_UploadTab> {
                     children: [
                       const Icon(Icons.attach_file, size: 18),
                       const SizedBox(width: 4),
-                      Expanded(child: Text(_fileName!, overflow: TextOverflow.ellipsis)),
+                      Expanded(
+                          child: Text(_fileName!,
+                              overflow: TextOverflow.ellipsis)),
                       IconButton(
                         icon: const Icon(Icons.close, size: 18),
                         onPressed: _uploading
@@ -710,12 +743,15 @@ class _UploadTabState extends ConsumerState<_UploadTab> {
           onPressed: _uploading ? null : _upload,
           icon: _uploading
               ? const SizedBox(
-                  height: 16, width: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  height: 16,
+                  width: 16,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white),
                 )
               : const Icon(Icons.upload),
           label: Text(_uploading ? 'Envoi en cours...' : 'Téléverser'),
-          style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
+          style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16)),
         ),
       ],
     );
@@ -807,7 +843,8 @@ class _SubmissionsTabState extends ConsumerState<_SubmissionsTab> {
             const SizedBox(height: 16),
             Text(_error!),
             const SizedBox(height: 16),
-            FilledButton.tonal(onPressed: _fetch, child: const Text('Réessayer')),
+            FilledButton.tonal(
+                onPressed: _fetch, child: const Text('Réessayer')),
           ],
         ),
       );
@@ -886,7 +923,9 @@ class _StatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color),
       ),
-      child: Text(label, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+      child: Text(label,
+          style: TextStyle(
+              fontSize: 11, color: color, fontWeight: FontWeight.w600)),
     );
   }
 }

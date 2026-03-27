@@ -9,8 +9,6 @@ import 'package:intl/intl.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/admin.dart';
-import 'package:ecole_platform/domain/repositories/feed_repository.dart';
-import 'package:ecole_platform/shared/widgets/search_filter_bar.dart';
 
 // ── State ──
 
@@ -60,9 +58,7 @@ class _InvitationsState {
       statusFilter:
           clearStatusFilter ? null : (statusFilter ?? this.statusFilter),
       creating: creating ?? this.creating,
-      createdCode: clearCreatedCode
-          ? null
-          : (createdCode ?? this.createdCode),
+      createdCode: clearCreatedCode ? null : (createdCode ?? this.createdCode),
       revoking: revoking ?? this.revoking,
     );
   }
@@ -100,7 +96,8 @@ class _InvitationsNotifier extends StateNotifier<_InvitationsState> {
   }
 
   Future<void> createInvitation(String roleTarget, int expiresInHours) async {
-    state = state.copyWith(creating: true, clearError: true, clearCreatedCode: true);
+    state = state.copyWith(
+        creating: true, clearError: true, clearCreatedCode: true);
     try {
       final repo = _ref.read(adminRepositoryProvider);
       final invite = await repo.createInvitation(roleTarget, expiresInHours);
@@ -120,16 +117,16 @@ class _InvitationsNotifier extends StateNotifier<_InvitationsState> {
     } catch (e) {
       state = state.copyWith(error: e.toString());
     } finally {
-      state = state.copyWith(
-          revoking: {...state.revoking}..remove(inviteId));
+      state = state.copyWith(revoking: {...state.revoking}..remove(inviteId));
     }
   }
 
   Future<void> refresh() async => load();
 }
 
-final _invitationsProvider = StateNotifierProvider.autoDispose<
-    _InvitationsNotifier, _InvitationsState>((ref) {
+final _invitationsProvider =
+    StateNotifierProvider.autoDispose<_InvitationsNotifier, _InvitationsState>(
+        (ref) {
   return _InvitationsNotifier(ref);
 });
 
@@ -204,7 +201,7 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
                       children: [
                         Expanded(
                           child: DropdownButtonFormField<String>(
-                            value: _roleTarget,
+                            initialValue: _roleTarget,
                             decoration: const InputDecoration(
                               labelText: 'Rôle',
                               border: OutlineInputBorder(),
@@ -229,7 +226,7 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: DropdownButtonFormField<int>(
-                            value: _expiresInHours,
+                            initialValue: _expiresInHours,
                             decoration: const InputDecoration(
                               labelText: 'Expiration',
                               border: OutlineInputBorder(),
@@ -237,12 +234,9 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
                                   horizontal: 12, vertical: 8),
                             ),
                             items: const [
-                              DropdownMenuItem(
-                                  value: 24, child: Text('24h')),
-                              DropdownMenuItem(
-                                  value: 48, child: Text('48h')),
-                              DropdownMenuItem(
-                                  value: 72, child: Text('72h')),
+                              DropdownMenuItem(value: 24, child: Text('24h')),
+                              DropdownMenuItem(value: 48, child: Text('48h')),
+                              DropdownMenuItem(value: 72, child: Text('72h')),
                               DropdownMenuItem(
                                   value: 168, child: Text('7 jours')),
                             ],
@@ -261,8 +255,7 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
                           ? null
                           : () => ref
                               .read(_invitationsProvider.notifier)
-                              .createInvitation(
-                                  _roleTarget, _expiresInHours),
+                              .createInvitation(_roleTarget, _expiresInHours),
                       child: state.creating
                           ? const SizedBox(
                               height: 16,
@@ -295,11 +288,10 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
                             IconButton(
                               icon: const Icon(Icons.copy, size: 18),
                               onPressed: () {
-                                Clipboard.setData(ClipboardData(
-                                    text: state.createdCode!));
+                                Clipboard.setData(
+                                    ClipboardData(text: state.createdCode!));
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text('Code copié')),
+                                  const SnackBar(content: Text('Code copié')),
                                 );
                               },
                             ),
@@ -325,8 +317,8 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(state.error!,
-                    style: TextStyle(
-                        color: theme.colorScheme.onErrorContainer)),
+                    style:
+                        TextStyle(color: theme.colorScheme.onErrorContainer)),
               ),
             ),
 
@@ -470,8 +462,8 @@ class _InvStatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(label,
-          style:
-              TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w600)),
+          style: TextStyle(
+              fontSize: 10, color: color, fontWeight: FontWeight.w600)),
     );
   }
 }

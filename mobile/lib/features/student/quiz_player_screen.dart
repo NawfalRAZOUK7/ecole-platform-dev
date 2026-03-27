@@ -35,7 +35,6 @@ class _QuizPlayerScreenState extends ConsumerState<QuizPlayerScreen> {
   bool _loadingList = true;
 
   // Playing state
-  Quiz? _currentQuiz;
   List<Question> _questions = [];
   QuizAttempt? _attempt;
   int _currentIdx = 0;
@@ -100,7 +99,6 @@ class _QuizPlayerScreenState extends ConsumerState<QuizPlayerScreen> {
       final attempt = await repo.startAttempt(quiz.id);
 
       setState(() {
-        _currentQuiz = quiz;
         _questions = questions!;
         _attempt = attempt;
         _currentIdx = 0;
@@ -166,8 +164,7 @@ class _QuizPlayerScreenState extends ConsumerState<QuizPlayerScreen> {
 
     try {
       final repo = ref.read(quizRepositoryProvider);
-      await repo.submitResponse(_attempt!.id,
-          questionId: q.id, answer: answer);
+      await repo.submitResponse(_attempt!.id, questionId: q.id, answer: answer);
     } catch (_) {
       // Queue for offline
       final queue = ref.read(offlineQueueProvider);
@@ -211,7 +208,6 @@ class _QuizPlayerScreenState extends ConsumerState<QuizPlayerScreen> {
     _timer?.cancel();
     setState(() {
       _view = _View.list;
-      _currentQuiz = null;
       _questions = [];
       _attempt = null;
       _result = null;
@@ -238,8 +234,6 @@ class _QuizPlayerScreenState extends ConsumerState<QuizPlayerScreen> {
   // ══════════════════════════════════════════════════════════
 
   Widget _buildListView(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       appBar: AppBar(title: const Text('Quiz')),
       body: _loadingList
@@ -249,7 +243,8 @@ class _QuizPlayerScreenState extends ConsumerState<QuizPlayerScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                      const Icon(Icons.error_outline,
+                          size: 48, color: Colors.red),
                       const SizedBox(height: 16),
                       Text(_error!, textAlign: TextAlign.center),
                       const SizedBox(height: 16),
@@ -322,13 +317,17 @@ class _QuizPlayerScreenState extends ConsumerState<QuizPlayerScreen> {
                 children: [
                   Icon(Icons.timer,
                       size: 16,
-                      color: _secondsLeft < 60 ? Colors.red : theme.colorScheme.primary),
+                      color: _secondsLeft < 60
+                          ? Colors.red
+                          : theme.colorScheme.primary),
                   const SizedBox(width: 4),
                   Text(
                     '${(_secondsLeft ~/ 60).toString().padLeft(2, '0')}:${(_secondsLeft % 60).toString().padLeft(2, '0')}',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: _secondsLeft < 60 ? Colors.red : theme.colorScheme.primary,
+                      color: _secondsLeft < 60
+                          ? Colors.red
+                          : theme.colorScheme.primary,
                     ),
                   ),
                 ],
@@ -356,7 +355,8 @@ class _QuizPlayerScreenState extends ConsumerState<QuizPlayerScreen> {
                 children: [
                   // Points badge
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(12),
@@ -420,7 +420,8 @@ class _QuizPlayerScreenState extends ConsumerState<QuizPlayerScreen> {
                     onPressed: _submitting ? null : _submitAttempt,
                     icon: _submitting
                         ? const SizedBox(
-                            height: 16, width: 16,
+                            height: 16,
+                            width: 16,
                             child: CircularProgressIndicator(
                                 strokeWidth: 2, color: Colors.white),
                           )
@@ -516,9 +517,7 @@ class _QuizPlayerScreenState extends ConsumerState<QuizPlayerScreen> {
         children: [
           // Score summary
           Card(
-            color: passed
-                ? Colors.green.shade50
-                : Colors.red.shade50,
+            color: passed ? Colors.green.shade50 : Colors.red.shade50,
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -712,12 +711,10 @@ class _QuizCard extends StatelessWidget {
                     icon: Icons.help_outline,
                     label: '${quiz.questionCount} questions'),
                 _InfoChip(
-                    icon: Icons.star_outline,
-                    label: '${quiz.totalPoints} pts'),
+                    icon: Icons.star_outline, label: '${quiz.totalPoints} pts'),
                 if (quiz.timeLimitMinutes != null)
                   _InfoChip(
-                      icon: Icons.timer,
-                      label: '${quiz.timeLimitMinutes} min'),
+                      icon: Icons.timer, label: '${quiz.timeLimitMinutes} min'),
                 if (quiz.subject != null)
                   _InfoChip(icon: Icons.book, label: quiz.subject!),
               ],
@@ -729,7 +726,8 @@ class _QuizCard extends StatelessWidget {
                 onPressed: loading ? null : onStart,
                 icon: loading
                     ? const SizedBox(
-                        height: 16, width: 16,
+                        height: 16,
+                        width: 16,
                         child: CircularProgressIndicator(
                             strokeWidth: 2, color: Colors.white),
                       )
@@ -764,7 +762,8 @@ class _DifficultyBadge extends StatelessWidget {
         border: Border.all(color: color),
       ),
       child: Text(label,
-          style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+          style: TextStyle(
+              fontSize: 11, color: color, fontWeight: FontWeight.w600)),
     );
   }
 }
@@ -880,8 +879,12 @@ class _McqInput extends StatelessWidget {
 
     return Column(
       children: choices.map((choice) {
-        final label = choice is Map ? (choice['label'] ?? choice['text'] ?? '') as String : choice.toString();
-        final value = choice is Map ? (choice['value'] ?? choice['key'] ?? label) as String : choice.toString();
+        final label = choice is Map
+            ? (choice['label'] ?? choice['text'] ?? '') as String
+            : choice.toString();
+        final value = choice is Map
+            ? (choice['value'] ?? choice['key'] ?? label) as String
+            : choice.toString();
         final selected = answer == value;
 
         return GestureDetector(
@@ -905,12 +908,15 @@ class _McqInput extends StatelessWidget {
             child: Row(
               children: [
                 Icon(
-                  selected ? Icons.radio_button_checked : Icons.radio_button_off,
+                  selected
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_off,
                   color: selected ? theme.colorScheme.primary : Colors.grey,
                   size: 22,
                 ),
                 const SizedBox(width: 12),
-                Expanded(child: Text(label, style: const TextStyle(fontSize: 15))),
+                Expanded(
+                    child: Text(label, style: const TextStyle(fontSize: 15))),
               ],
             ),
           ),
@@ -933,18 +939,20 @@ class _TrueFalseInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Row(
       children: [
-        Expanded(child: _toggleCard(context, true, 'Vrai', Icons.check_circle_outline)),
+        Expanded(
+            child:
+                _toggleCard(context, true, 'Vrai', Icons.check_circle_outline)),
         const SizedBox(width: 16),
-        Expanded(child: _toggleCard(context, false, 'Faux', Icons.cancel_outlined)),
+        Expanded(
+            child: _toggleCard(context, false, 'Faux', Icons.cancel_outlined)),
       ],
     );
   }
 
-  Widget _toggleCard(BuildContext context, bool value, String label, IconData icon) {
+  Widget _toggleCard(
+      BuildContext context, bool value, String label, IconData icon) {
     final theme = Theme.of(context);
     final selected = answer == value;
 
@@ -1039,8 +1047,12 @@ class _DragDropInput extends StatelessWidget {
             style: theme.textTheme.bodySmall),
         const SizedBox(height: 12),
         ...zones.map((zone) {
-          final zoneName = zone is Map ? (zone['label'] ?? zone['id'] ?? '') as String : zone.toString();
-          final zoneId = zone is Map ? (zone['id'] ?? zone['label'] ?? '') as String : zone.toString();
+          final zoneName = zone is Map
+              ? (zone['label'] ?? zone['id'] ?? '') as String
+              : zone.toString();
+          final zoneId = zone is Map
+              ? (zone['id'] ?? zone['label'] ?? '') as String
+              : zone.toString();
 
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
@@ -1048,22 +1060,29 @@ class _DragDropInput extends StatelessWidget {
               children: [
                 Expanded(
                   flex: 2,
-                  child: Text(zoneName, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  child: Text(zoneName,
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   flex: 3,
                   child: DropdownButtonFormField<String>(
-                    value: answers[zoneId],
+                    initialValue: answers[zoneId],
                     decoration: InputDecoration(
                       border: const OutlineInputBorder(),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
                       hintText: 'Sélectionner...',
                       fillColor: theme.colorScheme.surface,
                     ),
                     items: items.map((item) {
-                      final label = item is Map ? (item['label'] ?? item['text'] ?? '') as String : item.toString();
-                      return DropdownMenuItem(value: label, child: Text(label, style: const TextStyle(fontSize: 13)));
+                      final label = item is Map
+                          ? (item['label'] ?? item['text'] ?? '') as String
+                          : item.toString();
+                      return DropdownMenuItem(
+                          value: label,
+                          child: Text(label,
+                              style: const TextStyle(fontSize: 13)));
                     }).toList(),
                     onChanged: (v) {
                       if (v != null) {
@@ -1109,8 +1128,12 @@ class _MatchingInput extends StatelessWidget {
             style: theme.textTheme.bodySmall),
         const SizedBox(height: 12),
         ...leftItems.map((left) {
-          final leftLabel = left is Map ? (left['label'] ?? left['text'] ?? '') as String : left.toString();
-          final leftId = left is Map ? (left['id'] ?? left['label'] ?? '') as String : left.toString();
+          final leftLabel = left is Map
+              ? (left['label'] ?? left['text'] ?? '') as String
+              : left.toString();
+          final leftId = left is Map
+              ? (left['id'] ?? left['label'] ?? '') as String
+              : left.toString();
 
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
@@ -1124,25 +1147,33 @@ class _MatchingInput extends StatelessWidget {
                       color: theme.colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Text(leftLabel, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    child: Text(leftLabel,
+                        style: const TextStyle(fontWeight: FontWeight.w600)),
                   ),
                 ),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 8),
-                  child: Icon(Icons.arrow_forward, size: 18, color: Colors.grey),
+                  child:
+                      Icon(Icons.arrow_forward, size: 18, color: Colors.grey),
                 ),
                 Expanded(
                   flex: 3,
                   child: DropdownButtonFormField<String>(
-                    value: answers[leftId],
+                    initialValue: answers[leftId],
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       hintText: 'Sélectionner...',
                     ),
                     items: rightItems.map((right) {
-                      final label = right is Map ? (right['label'] ?? right['text'] ?? '') as String : right.toString();
-                      return DropdownMenuItem(value: label, child: Text(label, style: const TextStyle(fontSize: 13)));
+                      final label = right is Map
+                          ? (right['label'] ?? right['text'] ?? '') as String
+                          : right.toString();
+                      return DropdownMenuItem(
+                          value: label,
+                          child: Text(label,
+                              style: const TextStyle(fontSize: 13)));
                     }).toList(),
                     onChanged: (v) {
                       if (v != null) {

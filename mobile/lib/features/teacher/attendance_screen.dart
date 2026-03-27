@@ -83,9 +83,8 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
       final students = await repo.getClassStudents(classId);
       setState(() {
         _students = students;
-        _records = students
-            .map((s) => AttendanceRecord(studentId: s.id))
-            .toList();
+        _records =
+            students.map((s) => AttendanceRecord(studentId: s.id)).toList();
         _loadingStudents = false;
       });
     } catch (e) {
@@ -98,7 +97,8 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
 
   Future<void> _submit() async {
     if (_selectedClassId == null || _selectedPeriodId == null) {
-      setState(() => _error = 'Veuillez sélectionner une classe et une période');
+      setState(
+          () => _error = 'Veuillez sélectionner une classe et une période');
       return;
     }
 
@@ -125,9 +125,8 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
         );
         // Reset student statuses
         setState(() {
-          _records = _students
-              .map((s) => AttendanceRecord(studentId: s.id))
-              .toList();
+          _records =
+              _students.map((s) => AttendanceRecord(studentId: s.id)).toList();
         });
       }
     } catch (e) {
@@ -185,7 +184,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                                 ?.copyWith(fontWeight: FontWeight.bold)),
                         const SizedBox(height: 12),
                         DropdownButtonFormField<String>(
-                          value: _selectedClassId,
+                          initialValue: _selectedClassId,
                           decoration: const InputDecoration(
                             labelText: 'Classe *',
                             border: OutlineInputBorder(),
@@ -203,7 +202,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                         ),
                         const SizedBox(height: 12),
                         DropdownButtonFormField<String>(
-                          value: _selectedPeriodId,
+                          initialValue: _selectedPeriodId,
                           decoration: const InputDecoration(
                             labelText: 'Période *',
                             border: OutlineInputBorder(),
@@ -230,8 +229,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                                     suffixIcon: Icon(Icons.calendar_today),
                                   ),
                                   child: Text(
-                                    DateFormat.yMMMd('fr')
-                                        .format(_sessionDate),
+                                    DateFormat.yMMMd('fr').format(_sessionDate),
                                   ),
                                 ),
                               ),
@@ -239,7 +237,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: DropdownButtonFormField<String>(
-                                value: _selectedSlot,
+                                initialValue: _selectedSlot,
                                 decoration: const InputDecoration(
                                   labelText: 'Créneau',
                                   border: OutlineInputBorder(),
@@ -247,8 +245,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                                 items: _slots
                                     .map((s) => DropdownMenuItem(
                                           value: s,
-                                          child: Text(
-                                              _slotLabels[s] ?? s),
+                                          child: Text(_slotLabels[s] ?? s),
                                         ))
                                     .toList(),
                                 onChanged: (v) {
@@ -348,8 +345,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                               showSelectedIcon: false,
                               style: ButtonStyle(
                                 visualDensity: VisualDensity.compact,
-                                tapTargetSize:
-                                    MaterialTapTargetSize.shrinkWrap,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
                             ),
                             if (record.status == 'absent') ...[
