@@ -1,0 +1,1375 @@
+openapi: 3.0.3
+info:
+  title: "École Platform API"
+  description: |
+    API de la plateforme École - solution de gestion scolaire pour les établissements marocains.
+    Couvre les phases 12A (emploi du temps & facturation), 12B (facturation & paiements) et 12C (messagerie, annonces & suivi).
+
+    Toutes les réponses de liste suivent le format :
+    ```json
+    { "data": [...], "meta": { "total": 100, "has_more": true, "next_cursor": "abc123" } }
+    ```
+    Toutes les réponses d'objet unique suivent le format :
+    ```json
+    { "data": { ... } }
+    ```
+
+    Les montants sont exprimés en centimes (champ `total_cents`). Les dates suivent le format ISO 8601.
+  version: "1.0.0"
+  contact:
+    name: "École Platform Team"
+
+servers:
+  - url: "{BASE_URL}"
+    description: "Serveur principal"
+    variables:
+      BASE_URL:
+        default: "http://localhost:8000/api/v1"
+
+tags:
+  - name: Auth
+    description: "Authentification et gestion des tokens JWT"
+  - name: Timetable
+    description: "Gestion de l'emploi du temps hebdomadaire"
+  - name: Billing
+    description: "Structures tarifaires, affectations et génération de factures"
+  - name: Invoices
+    description: "Consultation des factures et initiation des paiements"
+  - name: Messaging
+    description: "Messagerie interne entre utilisateurs"
+  - name: Announcements
+    description: "Annonces de l'établissement"
+  - name: Progress
+    description: "Suivi de la progression des élèves"
+
+security:
+  - BearerAuth: []
+
+paths:
+  # ──────────────────────────── Auth ────────────────────────────
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: "Connexion"
+      description: "Authentifie un utilisateur et retourne un access token et un refresh token."
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: "Adresse email de l'utilisateur"
+                  example: "directeur@ecole.ma"
+                password:
+                  type: string
+                  format: password
+                  description: "Mot de passe"
+                  example: "s3cur3P@ss"
+      responses:
+        "200":
+          description: "Connexion réussie"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/AuthTokens"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: "Rafraîchir le token"
+      description: "Génère un nouveau access token à partir d'un refresh token valide."
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token:
+                  type: string
+                  description: "Refresh token obtenu lors de la connexion"
+      responses:
+        "200":
+          description: "Token rafraîchi"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/AuthTokens"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  # ──────────────────────────── Timetable ────────────────────────────
+  /timetable/weekly:
+    get:
+      tags: [Timetable]
+      summary: "Emploi du temps hebdomadaire"
+      description: "Retourne les créneaux de la semaine spécifiée. Par défaut la semaine courante."
+      parameters:
+        - name: week_start
+          in: query
+          description: "Date de début de semaine (lundi), format ISO 8601 (YYYY-MM-DD)"
+          schema:
+            type: string
+            format: date
+            example: "2026-03-23"
+        - name: class_id
+          in: query
+          description: "Filtrer par identifiant de classe"
+          schema:
+            type: string
+            format: uuid
+        - name: teacher_id
+          in: query
+          description: "Filtrer par identifiant d'enseignant"
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: "Liste des créneaux"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TimetableSlot"
+                  meta:
+                    $ref: "#/components/schemas/ListMeta"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /timetable/slots:
+    post:
+      tags: [Timetable]
+      summary: "Créer un créneau (ADM)"
+      description: "Crée un nouveau créneau dans l'emploi du temps. Réservé aux administrateurs."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TimetableSlotCreate"
+      responses:
+        "201":
+          description: "Créneau créé"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/TimetableSlot"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ──────────────────────────── Billing ────────────────────────────
+  /billing/fee-structures:
+    get:
+      tags: [Billing]
+      summary: "Lister les structures tarifaires"
+      description: "Retourne la liste des structures tarifaires de l'établissement."
+      parameters:
+        - name: academic_year
+          in: query
+          description: "Année scolaire (ex: 2025-2026)"
+          schema:
+            type: string
+            example: "2025-2026"
+      responses:
+        "200":
+          description: "Liste des structures tarifaires"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/FeeStructure"
+                  meta:
+                    $ref: "#/components/schemas/ListMeta"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Billing]
+      summary: "Créer une structure tarifaire"
+      description: "Définit une nouvelle structure tarifaire (frais de scolarité, inscription, etc.)."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeeStructureCreate"
+      responses:
+        "201":
+          description: "Structure tarifaire créée"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/FeeStructure"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /billing/fee-assignments:
+    post:
+      tags: [Billing]
+      summary: "Affecter une structure tarifaire"
+      description: "Affecte une structure tarifaire à un ou plusieurs élèves ou classes."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeeAssignmentCreate"
+      responses:
+        "201":
+          description: "Affectation créée"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/FeeAssignment"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /billing/generate-invoices:
+    post:
+      tags: [Billing]
+      summary: "Générer les factures"
+      description: "Déclenche la génération de factures pour une période donnée selon les affectations tarifaires."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [billing_period]
+              properties:
+                billing_period:
+                  type: string
+                  description: "Période de facturation (ex: 2026-03)"
+                  example: "2026-03"
+                class_id:
+                  type: string
+                  format: uuid
+                  description: "Limiter la génération à une classe spécifique"
+                student_ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  description: "Limiter la génération à des élèves spécifiques"
+      responses:
+        "200":
+          description: "Factures générées"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      invoices_created:
+                        type: integer
+                        description: "Nombre de factures créées"
+                        example: 42
+                      total_amount_cents:
+                        type: integer
+                        description: "Montant total généré en centimes"
+                        example: 2100000
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ──────────────────────────── Invoices & Payments ────────────────────────────
+  /invoices:
+    get:
+      tags: [Invoices]
+      summary: "Lister les factures"
+      description: "Retourne les factures avec pagination par curseur et filtre par statut."
+      parameters:
+        - name: cursor
+          in: query
+          description: "Curseur de pagination (valeur de `meta.next_cursor`)"
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: "Nombre d'éléments par page"
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: status
+          in: query
+          description: "Filtrer par statut de facture"
+          schema:
+            type: string
+            enum: [pending, paid, overdue, cancelled]
+        - name: student_id
+          in: query
+          description: "Filtrer par identifiant d'élève"
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: "Liste de factures"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Invoice"
+                  meta:
+                    $ref: "#/components/schemas/ListMeta"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /payments/initiate:
+    post:
+      tags: [Invoices]
+      summary: "Initier un paiement"
+      description: "Initie un paiement pour une facture. Supporte la relance (retry) en cas d'échec précédent."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [invoice_id, payment_method]
+              properties:
+                invoice_id:
+                  type: string
+                  format: uuid
+                  description: "Identifiant de la facture à payer"
+                payment_method:
+                  type: string
+                  enum: [card, bank_transfer, cash]
+                  description: "Méthode de paiement"
+                amount_cents:
+                  type: integer
+                  description: "Montant en centimes (paiement partiel possible). Si omis, le solde restant."
+                retry:
+                  type: boolean
+                  default: false
+                  description: "Relance d'un paiement échoué précédemment"
+      responses:
+        "200":
+          description: "Paiement initié"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Payment"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ──────────────────────────── Messaging ────────────────────────────
+  /messages/conversations:
+    get:
+      tags: [Messaging]
+      summary: "Lister les conversations"
+      description: "Retourne les conversations de l'utilisateur connecté."
+      parameters:
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: "Liste des conversations"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Conversation"
+                  meta:
+                    $ref: "#/components/schemas/ListMeta"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Messaging]
+      summary: "Créer une conversation"
+      description: "Démarre une nouvelle conversation avec un ou plusieurs participants."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [participant_ids]
+              properties:
+                participant_ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  description: "Identifiants des participants"
+                  minItems: 1
+                subject:
+                  type: string
+                  description: "Sujet de la conversation"
+                  example: "Question sur les devoirs"
+                initial_message:
+                  type: string
+                  description: "Premier message de la conversation"
+      responses:
+        "201":
+          description: "Conversation créée"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Conversation"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /messages/conversations/{id}/messages:
+    get:
+      tags: [Messaging]
+      summary: "Lister les messages d'une conversation"
+      description: "Retourne les messages d'une conversation avec pagination par curseur."
+      parameters:
+        - $ref: "#/components/parameters/ConversationId"
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: "Liste des messages"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Message"
+                  meta:
+                    $ref: "#/components/schemas/ListMeta"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [Messaging]
+      summary: "Envoyer un message"
+      description: "Envoie un message dans une conversation existante."
+      parameters:
+        - $ref: "#/components/parameters/ConversationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties:
+                body:
+                  type: string
+                  description: "Contenu du message"
+                  example: "Bonjour, merci pour votre retour."
+                attachments:
+                  type: array
+                  items:
+                    type: string
+                    format: uri
+                  description: "URLs des pièces jointes"
+      responses:
+        "201":
+          description: "Message envoyé"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Message"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /messages/conversations/{id}/read:
+    post:
+      tags: [Messaging]
+      summary: "Marquer comme lu"
+      description: "Marque tous les messages de la conversation comme lus pour l'utilisateur connecté."
+      parameters:
+        - $ref: "#/components/parameters/ConversationId"
+      responses:
+        "200":
+          description: "Conversation marquée comme lue"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      read_at:
+                        type: string
+                        format: date-time
+                        description: "Horodatage de la lecture"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /messages/conversations/{id}/read-status:
+    get:
+      tags: [Messaging]
+      summary: "Statut de lecture"
+      description: "Retourne le statut de lecture de chaque participant dans la conversation."
+      parameters:
+        - $ref: "#/components/parameters/ConversationId"
+      responses:
+        "200":
+          description: "Statuts de lecture"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ReadStatus"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ──────────────────────────── Announcements ────────────────────────────
+  /announcements:
+    get:
+      tags: [Announcements]
+      summary: "Lister les annonces"
+      description: "Retourne les annonces visibles pour l'utilisateur connecté."
+      parameters:
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: audience
+          in: query
+          description: "Filtrer par audience cible"
+          schema:
+            type: string
+            enum: [all, teachers, parents, students]
+      responses:
+        "200":
+          description: "Liste des annonces"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Announcement"
+                  meta:
+                    $ref: "#/components/schemas/ListMeta"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Announcements]
+      summary: "Publier une annonce"
+      description: "Crée et publie une nouvelle annonce. Réservé aux administrateurs et enseignants."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnnouncementCreate"
+      responses:
+        "201":
+          description: "Annonce publiée"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Announcement"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ──────────────────────────── Progress ────────────────────────────
+  /progress/me:
+    get:
+      tags: [Progress]
+      summary: "Ma progression"
+      description: "Retourne la progression de l'élève connecté."
+      responses:
+        "200":
+          description: "Progression de l'élève"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/StudentProgress"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /progress/student/{id}:
+    get:
+      tags: [Progress]
+      summary: "Progression d'un élève"
+      description: "Retourne la progression d'un élève spécifique. Accessible aux enseignants et administrateurs."
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: "Identifiant de l'élève"
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: "Progression de l'élève"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/StudentProgress"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /progress/children:
+    get:
+      tags: [Progress]
+      summary: "Progression des enfants"
+      description: "Retourne la progression de tous les enfants du parent connecté."
+      responses:
+        "200":
+          description: "Progression des enfants"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/StudentProgress"
+                  meta:
+                    $ref: "#/components/schemas/ListMeta"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /progress/class/{id}:
+    get:
+      tags: [Progress]
+      summary: "Progression d'une classe"
+      description: "Retourne un résumé de la progression pour tous les élèves d'une classe. Accessible aux enseignants et administrateurs."
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: "Identifiant de la classe"
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: "Progression de la classe"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/StudentProgress"
+                  meta:
+                    $ref: "#/components/schemas/ListMeta"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+# ═══════════════════════════════════════════════════════════════════
+# Components
+# ═══════════════════════════════════════════════════════════════════
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "Token JWT obtenu via /auth/login"
+
+  parameters:
+    ConversationId:
+      name: id
+      in: path
+      required: true
+      description: "Identifiant de la conversation"
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    BadRequest:
+      description: "Requête invalide"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error:
+              code: "VALIDATION_ERROR"
+              message: "Les données fournies sont invalides."
+              details:
+                - field: "email"
+                  message: "Ce champ est requis."
+    Unauthorized:
+      description: "Non authentifié - token manquant ou expiré"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error:
+              code: "UNAUTHORIZED"
+              message: "Token d'authentification manquant ou invalide."
+    Forbidden:
+      description: "Accès refusé - permissions insuffisantes"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error:
+              code: "FORBIDDEN"
+              message: "Vous n'avez pas les permissions nécessaires."
+    NotFound:
+      description: "Ressource introuvable"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error:
+              code: "NOT_FOUND"
+              message: "La ressource demandée est introuvable."
+
+  schemas:
+    # ── Common ──
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              description: "Code d'erreur machine"
+            message:
+              type: string
+              description: "Message lisible"
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  message:
+                    type: string
+
+    ListMeta:
+      type: object
+      description: "Métadonnées de pagination"
+      properties:
+        total:
+          type: integer
+          description: "Nombre total d'éléments"
+          example: 142
+        has_more:
+          type: boolean
+          description: "Indique s'il reste des éléments après le curseur"
+          example: true
+        next_cursor:
+          type: string
+          nullable: true
+          description: "Curseur pour la page suivante (null si dernière page)"
+          example: "eyJpZCI6MTAwfQ=="
+
+    # ── Auth ──
+    AuthTokens:
+      type: object
+      properties:
+        access_token:
+          type: string
+          description: "Token JWT d'accès"
+        refresh_token:
+          type: string
+          description: "Token de rafraîchissement"
+        expires_in:
+          type: integer
+          description: "Durée de validité de l'access token en secondes"
+          example: 3600
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            email:
+              type: string
+              format: email
+            full_name:
+              type: string
+              example: "Ahmed Benali"
+            role:
+              type: string
+              enum: [admin, teacher, parent, student]
+              description: "Rôle de l'utilisateur"
+
+    # ── Timetable ──
+    TimetableSlot:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        day_of_week:
+          type: integer
+          minimum: 1
+          maximum: 7
+          description: "Jour de la semaine (1=lundi, 7=dimanche)"
+        start_time:
+          type: string
+          format: time
+          description: "Heure de début (HH:mm)"
+          example: "08:30"
+        end_time:
+          type: string
+          format: time
+          description: "Heure de fin (HH:mm)"
+          example: "10:00"
+        subject:
+          type: string
+          description: "Nom de la matière"
+          example: "Mathématiques"
+        teacher_id:
+          type: string
+          format: uuid
+        teacher_name:
+          type: string
+          example: "Mme Fatima Zahra"
+        class_id:
+          type: string
+          format: uuid
+        class_name:
+          type: string
+          example: "3ème A"
+        room:
+          type: string
+          description: "Salle de cours"
+          example: "Salle 12"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    TimetableSlotCreate:
+      type: object
+      required: [day_of_week, start_time, end_time, subject, teacher_id, class_id]
+      properties:
+        day_of_week:
+          type: integer
+          minimum: 1
+          maximum: 7
+          description: "Jour de la semaine (1=lundi)"
+        start_time:
+          type: string
+          format: time
+          example: "08:30"
+        end_time:
+          type: string
+          format: time
+          example: "10:00"
+        subject:
+          type: string
+          example: "Physique-Chimie"
+        teacher_id:
+          type: string
+          format: uuid
+        class_id:
+          type: string
+          format: uuid
+        room:
+          type: string
+          example: "Labo 2"
+
+    # ── Billing ──
+    FeeStructure:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          description: "Nom de la structure tarifaire"
+          example: "Frais de scolarité - Primaire"
+        description:
+          type: string
+          example: "Frais mensuels de scolarité pour le cycle primaire"
+        amount_cents:
+          type: integer
+          description: "Montant en centimes"
+          example: 250000
+        frequency:
+          type: string
+          enum: [once, monthly, trimesterly, yearly]
+          description: "Fréquence de facturation"
+        academic_year:
+          type: string
+          example: "2025-2026"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    FeeStructureCreate:
+      type: object
+      required: [name, amount_cents, frequency, academic_year]
+      properties:
+        name:
+          type: string
+          example: "Frais d'inscription"
+        description:
+          type: string
+        amount_cents:
+          type: integer
+          description: "Montant en centimes"
+          example: 150000
+        frequency:
+          type: string
+          enum: [once, monthly, trimesterly, yearly]
+        academic_year:
+          type: string
+          example: "2025-2026"
+
+    FeeAssignment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        fee_structure_id:
+          type: string
+          format: uuid
+        student_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        class_id:
+          type: string
+          format: uuid
+          nullable: true
+        assigned_at:
+          type: string
+          format: date-time
+
+    FeeAssignmentCreate:
+      type: object
+      required: [fee_structure_id]
+      properties:
+        fee_structure_id:
+          type: string
+          format: uuid
+        student_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: "Affecter à des élèves spécifiques"
+        class_id:
+          type: string
+          format: uuid
+          description: "Affecter à tous les élèves d'une classe"
+
+    # ── Invoices & Payments ──
+    Invoice:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        invoice_number:
+          type: string
+          description: "Numéro de facture"
+          example: "FAC-2026-0042"
+        student_id:
+          type: string
+          format: uuid
+        student_name:
+          type: string
+          example: "Youssef Alami"
+        total_cents:
+          type: integer
+          description: "Montant total en centimes"
+          example: 250000
+        paid_cents:
+          type: integer
+          description: "Montant déjà payé en centimes"
+          example: 0
+        status:
+          type: string
+          enum: [pending, paid, overdue, cancelled]
+          description: "Statut de la facture"
+        billing_period:
+          type: string
+          description: "Période de facturation"
+          example: "2026-03"
+        due_date:
+          type: string
+          format: date
+          description: "Date d'échéance"
+          example: "2026-04-15"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        invoice_id:
+          type: string
+          format: uuid
+        amount_cents:
+          type: integer
+          description: "Montant du paiement en centimes"
+          example: 250000
+        payment_method:
+          type: string
+          enum: [card, bank_transfer, cash]
+        status:
+          type: string
+          enum: [pending, processing, completed, failed]
+          description: "Statut du paiement"
+        created_at:
+          type: string
+          format: date-time
+
+    # ── Messaging ──
+    Conversation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        subject:
+          type: string
+          nullable: true
+          example: "Réunion parents-professeurs"
+        participants:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              full_name:
+                type: string
+              role:
+                type: string
+                enum: [admin, teacher, parent, student]
+        last_message:
+          type: object
+          nullable: true
+          properties:
+            body:
+              type: string
+            sent_at:
+              type: string
+              format: date-time
+            sender_name:
+              type: string
+        unread_count:
+          type: integer
+          description: "Nombre de messages non lus"
+          example: 3
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        conversation_id:
+          type: string
+          format: uuid
+        sender_id:
+          type: string
+          format: uuid
+        sender_name:
+          type: string
+          example: "M. Karim Idrissi"
+        body:
+          type: string
+          example: "La réunion est confirmée pour jeudi."
+        attachments:
+          type: array
+          items:
+            type: string
+            format: uri
+        sent_at:
+          type: string
+          format: date-time
+
+    ReadStatus:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        full_name:
+          type: string
+          example: "Mme Nadia Berrada"
+        last_read_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: "Horodatage de la dernière lecture (null si jamais lu)"
+
+    # ── Announcements ──
+    Announcement:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          example: "Vacances scolaires - Printemps 2026"
+        body:
+          type: string
+          example: "Les vacances de printemps auront lieu du 6 au 20 avril."
+        audience:
+          type: string
+          enum: [all, teachers, parents, students]
+          description: "Public cible"
+        author_id:
+          type: string
+          format: uuid
+        author_name:
+          type: string
+          example: "M. le Directeur"
+        published_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+    AnnouncementCreate:
+      type: object
+      required: [title, body, audience]
+      properties:
+        title:
+          type: string
+          example: "Journée portes ouvertes"
+        body:
+          type: string
+          example: "Nous organisons une journée portes ouvertes le samedi 4 avril."
+        audience:
+          type: string
+          enum: [all, teachers, parents, students]
+          description: "Public cible de l'annonce"
+
+    # ── Progress ──
+    StudentProgress:
+      type: object
+      properties:
+        student_id:
+          type: string
+          format: uuid
+        student_name:
+          type: string
+          example: "Salma El Fassi"
+        class_id:
+          type: string
+          format: uuid
+        class_name:
+          type: string
+          example: "4ème B"
+        overall_average:
+          type: number
+          format: float
+          description: "Moyenne générale sur 20"
+          example: 14.5
+        subjects:
+          type: array
+          items:
+            type: object
+            properties:
+              subject:
+                type: string
+                example: "Français"
+              average:
+                type: number
+                format: float
+                description: "Moyenne de la matière sur 20"
+                example: 15.0
+              grade_count:
+                type: integer
+                description: "Nombre de notes"
+                example: 6
+              latest_grade:
+                type: number
+                format: float
+                example: 16.0
+              latest_grade_date:
+                type: string
+                format: date
+                example: "2026-03-20"
+        attendance:
+          type: object
+          properties:
+            total_days:
+              type: integer
+              example: 120
+            present_days:
+              type: integer
+              example: 115
+            absent_days:
+              type: integer
+              example: 5
+            attendance_rate:
+              type: number
+              format: float
+              description: "Taux de présence en pourcentage"
+              example: 95.83
+        updated_at:
+          type: string
+          format: date-time
