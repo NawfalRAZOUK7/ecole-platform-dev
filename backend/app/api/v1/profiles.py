@@ -13,11 +13,12 @@ import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Request
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import AuthContext, get_current_user, requires_permission
+from app.core.dependencies import AuthContext, get_current_user, requires_role
 from app.core.exceptions import NotFoundError, ValidationError
 from app.core.response import success_response
 from app.models.iam import (
@@ -40,7 +41,7 @@ from app.services.audit import AuditService
 
 router = APIRouter(tags=["profiles"])
 
-ADMIN_PERM = "PERM-IAM:session:list"
+ADMIN_ROLES = ("ADM",)
 
 # Map role codes to profile model classes
 _ROLE_PROFILE_MAP = {
@@ -188,14 +189,14 @@ async def update_my_profile(
 
     # Audit trail
     audit = AuditService(db)
-    await audit.log(
+    await audit.log_event(
         school_id=auth.school_id,
         actor_id=auth.user_id,
-        action_type="profile.update",
+        action_type="PROFILE_UPDATED",
         target_type="profile",
         target_id=profile.id,
-        entity_before=entity_before,
-        entity_after=update_data,
+        entity_before=jsonable_encoder(entity_before),
+        entity_after=jsonable_encoder(update_data),
         outcome="success",
         ip_address=_get_client_ip(request),
     )
@@ -217,7 +218,7 @@ async def update_my_profile(
 )
 async def admin_get_user_profile(
     user_id: uuid.UUID,
-    auth: AuthContext = Depends(requires_permission(ADMIN_PERM)),
+    auth: AuthContext = Depends(requires_role(*ADMIN_ROLES)),
     db: AsyncSession = Depends(get_db),
 ):
     """Admin-only: read any user's combined profile (user + role-specific data).

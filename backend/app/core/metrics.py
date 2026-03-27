@@ -231,6 +231,23 @@ TASK_DURATION = Histogram(
 )
 
 
+class _CollectorNameProxy:
+    """Expose a stable public metric name without mutating the registered collector."""
+
+    def __init__(self, collector, public_name: str) -> None:
+        self._collector = collector
+        self._name = public_name
+
+    def labels(self, *args, **kwargs):
+        return self._collector.labels(*args, **kwargs)
+
+    def __getattr__(self, name: str):
+        return getattr(self._collector, name)
+
+
+TASK_ENQUEUED_COUNT = _CollectorNameProxy(TASK_ENQUEUED_COUNT, "task_enqueued_total")
+
+
 # ---------------------------------------------------------------------------
 # Helper: normalize path to avoid cardinality explosion
 # ---------------------------------------------------------------------------

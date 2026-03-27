@@ -14,7 +14,7 @@ from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import AuthContext, requires_permission
+from app.core.dependencies import AuthContext, requires_permission, requires_role
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.core.response import list_response, success_response
 from app.core.security import hash_password
@@ -26,8 +26,7 @@ from app.services.audit import AuditService
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
-# Admin requires at minimum session:list (both ADM and DIR have this)
-ADMIN_PERM = "PERM-IAM:session:list"
+ADMIN_ROLES = ("ADM", "DIR")
 
 
 def _get_client_ip(request: Request) -> str | None:
@@ -44,7 +43,7 @@ def _get_client_ip(request: Request) -> str | None:
 # ---------------------------------------------------------------------------
 @router.get("/dashboard", summary="Admin dashboard statistics")
 async def dashboard_stats(
-    auth: AuthContext = Depends(requires_permission(ADMIN_PERM)),
+    auth: AuthContext = Depends(requires_role(*ADMIN_ROLES)),
     db: AsyncSession = Depends(get_db),
 ):
     """Return summary counts for the admin dashboard: users, sessions, invitations, audit events."""
@@ -132,7 +131,7 @@ async def dashboard_stats(
 # ---------------------------------------------------------------------------
 @router.get("/users", summary="List users in school")
 async def list_users(
-    auth: AuthContext = Depends(requires_permission(ADMIN_PERM)),
+    auth: AuthContext = Depends(requires_role(*ADMIN_ROLES)),
     db: AsyncSession = Depends(get_db),
     search: str | None = Query(None, description="Search by name or email"),
     role: str | None = Query(None, description="Filter by role code"),
@@ -218,7 +217,7 @@ async def list_users(
 async def suspend_user(
     user_id: uuid.UUID,
     request: Request,
-    auth: AuthContext = Depends(requires_permission(ADMIN_PERM)),
+    auth: AuthContext = Depends(requires_role(*ADMIN_ROLES)),
     db: AsyncSession = Depends(get_db),
 ):
     """Suspend a user in the school. ADM only."""
@@ -261,7 +260,7 @@ async def suspend_user(
 async def activate_user(
     user_id: uuid.UUID,
     request: Request,
-    auth: AuthContext = Depends(requires_permission(ADMIN_PERM)),
+    auth: AuthContext = Depends(requires_role(*ADMIN_ROLES)),
     db: AsyncSession = Depends(get_db),
 ):
     """Activate a suspended user. ADM only."""
@@ -302,7 +301,7 @@ async def change_user_role(
     user_id: uuid.UUID,
     request: Request,
     role: str = Query(..., description="New role code"),
-    auth: AuthContext = Depends(requires_permission(ADMIN_PERM)),
+    auth: AuthContext = Depends(requires_role(*ADMIN_ROLES)),
     db: AsyncSession = Depends(get_db),
 ):
     """Change a user's role. ADM only. Valid roles: TCH, PAR, STD."""
@@ -360,7 +359,7 @@ async def change_user_role(
 # ---------------------------------------------------------------------------
 @router.get("/invitations", summary="List invitation codes")
 async def list_invitations(
-    auth: AuthContext = Depends(requires_permission(ADMIN_PERM)),
+    auth: AuthContext = Depends(requires_role(*ADMIN_ROLES)),
     db: AsyncSession = Depends(get_db),
     status: str | None = Query(None, description="Filter: active, consumed, expired"),
     cursor: str | None = Query(None),
@@ -427,7 +426,7 @@ async def list_invitations(
 # ---------------------------------------------------------------------------
 @router.get("/audit-logs", summary="List audit logs")
 async def list_audit_logs(
-    auth: AuthContext = Depends(requires_permission(ADMIN_PERM)),
+    auth: AuthContext = Depends(requires_role(*ADMIN_ROLES)),
     db: AsyncSession = Depends(get_db),
     action_type: str | None = Query(None),
     correlation_id: str | None = Query(None),
@@ -560,7 +559,7 @@ async def list_justifications(
 async def register_batch(
     body: BatchRegisterRequest,
     request: Request,
-    auth: AuthContext = Depends(requires_permission(ADMIN_PERM)),
+    auth: AuthContext = Depends(requires_role(*ADMIN_ROLES)),
     db: AsyncSession = Depends(get_db),
 ):
     """Bulk-create user accounts from a list.

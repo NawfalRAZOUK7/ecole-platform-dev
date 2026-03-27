@@ -266,12 +266,13 @@ class TestTaskFunctions:
 class TestTaskMetrics:
     @pytest.mark.asyncio
     async def test_metrics_increment_on_email_task(self):
+        from app.core.config import settings
         from app.core.metrics import TASK_COMPLETED_COUNT
         from app.core.tasks import task_send_email
 
         # Get baseline
         completed_before = TASK_COMPLETED_COUNT.labels(
-            env="development", task="send_email"
+            env=settings.app_env, task="send_email"
         )._value.get()
 
         with patch("aiosmtplib.send", new_callable=AsyncMock):
@@ -287,17 +288,18 @@ class TestTaskMetrics:
             )
 
         completed_after = TASK_COMPLETED_COUNT.labels(
-            env="development", task="send_email"
+            env=settings.app_env, task="send_email"
         )._value.get()
         assert completed_after == completed_before + 1
 
     @pytest.mark.asyncio
     async def test_metrics_increment_on_failure(self):
+        from app.core.config import settings
         from app.core.metrics import TASK_FAILED_COUNT
         from app.core.tasks import task_send_email
 
         failed_before = TASK_FAILED_COUNT.labels(
-            env="development", task="send_email"
+            env=settings.app_env, task="send_email"
         )._value.get()
 
         with patch(
@@ -315,7 +317,7 @@ class TestTaskMetrics:
             )
 
         failed_after = TASK_FAILED_COUNT.labels(
-            env="development", task="send_email"
+            env=settings.app_env, task="send_email"
         )._value.get()
         assert failed_after == failed_before + 1
 

@@ -50,6 +50,11 @@ from app.models.iam import (
     User,
 )
 from app.core.password_policy import password_validator
+from app.schemas.profile import (
+    ParentProfileUpdate,
+    StudentProfileUpdate,
+    TeacherProfileUpdate,
+)
 from app.services.audit import AuditService
 
 logger = logging.getLogger(__name__)
@@ -69,6 +74,17 @@ TOTP_TEMP_TOKEN_TTL = 300
 
 # Email verification OTP TTL
 EMAIL_VERIFY_EXPIRE_MINUTES = 30
+
+
+def _normalize_profile_data(role: str, profile_data: dict[str, Any]) -> dict[str, Any]:
+    """Coerce role-specific registration payloads through the profile schemas."""
+    if role == "STD":
+        return StudentProfileUpdate(**profile_data).model_dump(exclude_unset=True)
+    if role == "PAR":
+        return ParentProfileUpdate(**profile_data).model_dump(exclude_unset=True)
+    if role == "TCH":
+        return TeacherProfileUpdate(**profile_data).model_dump(exclude_unset=True)
+    return {}
 
 
 class AuthService:
@@ -300,8 +316,6 @@ class AuthService:
         if code has target_student_id and role is PAR.
         Returns JWT tokens so the user is logged in immediately.
         """
-        profile_data = profile_data or {}
-
         # 1. Validate invitation code
         code_hash = hashlib.sha256(code.encode()).hexdigest()
         result = await self.db.execute(
@@ -326,6 +340,10 @@ class AuthService:
 
         school_id = invite.school_id
         role = invite.role_target
+        profile_data = _normalize_profile_data(
+            role=role,
+            profile_data=profile_data or {},
+        )
 
         # 2. Check email uniqueness within this school
         existing = await self.db.execute(
@@ -367,33 +385,21 @@ class AuthService:
             profile = StudentProfile(
                 user_id=user.id,
                 school_id=school_id,
-                student_number=profile_data.get("student_number"),
-                date_of_birth=profile_data.get("date_of_birth"),
-                gender=profile_data.get("gender"),
-                class_level=profile_data.get("class_level"),
-                nationality=profile_data.get("nationality"),
-                guardian_notes=profile_data.get("guardian_notes"),
+                **profile_data,
             )
             self.db.add(profile)
         elif role == "PAR":
             profile = ParentProfile(
                 user_id=user.id,
                 school_id=school_id,
-                relationship_type=profile_data.get("relationship_type"),
-                cin_number=profile_data.get("cin_number"),
-                address=profile_data.get("address"),
-                profession=profile_data.get("profession"),
-                emergency_phone=profile_data.get("emergency_phone"),
+                **profile_data,
             )
             self.db.add(profile)
         elif role == "TCH":
             profile = TeacherProfile(
                 user_id=user.id,
                 school_id=school_id,
-                employee_id=profile_data.get("employee_id"),
-                subject_specialty=profile_data.get("subject_specialty"),
-                qualification=profile_data.get("qualification"),
-                hire_date=profile_data.get("hire_date"),
+                **profile_data,
             )
             self.db.add(profile)
         await self.db.flush()

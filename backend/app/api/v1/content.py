@@ -46,6 +46,7 @@ from app.schemas.lms import ContentProgressRequest
 from app.services.audit import AuditService
 
 router = APIRouter(prefix="/content-items", tags=["lms-content"])
+legacy_router = APIRouter(prefix="/content", tags=["lms-content"])
 
 
 def _get_client_ip(request: Request) -> str | None:
@@ -139,6 +140,38 @@ async def list_content_items(
         filters_applied=filters.as_dict() if filters.items else None,
         sort_by=sort.as_list() if sort.fields else None,
         search_term=search,
+    )
+
+
+@legacy_router.get(
+    "",
+    include_in_schema=False,
+    summary="Legacy content list alias",
+)
+async def legacy_list_content_items(
+    content_type: str | None = Query(None),
+    level_band: str | None = Query(None),
+    language: str | None = Query(None),
+    cursor: str | None = Query(None),
+    limit: int | None = Query(None),
+    filters: FilterSpec = Depends(parse_filters),
+    sort: SortSpec = Depends(parse_sort),
+    search: str | None = Depends(parse_search),
+    auth: AuthContext = Depends(requires_permission("PERM-LMS:content:read")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Backward-compatible alias for the old `/content` list endpoint."""
+    return await list_content_items(
+        content_type=content_type,
+        level_band=level_band,
+        language=language,
+        cursor=cursor,
+        limit=limit,
+        filters=filters,
+        sort=sort,
+        search=search,
+        auth=auth,
+        db=db,
     )
 
 

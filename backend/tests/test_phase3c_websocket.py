@@ -19,6 +19,7 @@ import httpx
 import pytest
 import websockets
 
+from app.core.config import settings
 from tests.conftest import (
     ADMIN_EMAIL,
     ADMIN_PASSWORD,
@@ -146,7 +147,7 @@ class TestWebSocketRealtime:
             # Since there's no dedicated endpoint, we test via the Redis channel
             import redis.asyncio as aioredis
 
-            r = aioredis.from_url("redis://localhost:6379/0", decode_responses=True)
+            r = aioredis.from_url(settings.redis_url, decode_responses=True)
             try:
                 test_event = json.dumps(
                     {

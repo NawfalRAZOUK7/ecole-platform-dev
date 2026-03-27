@@ -136,6 +136,33 @@ def requires_permission(*permissions: str) -> RequiresPermission:
     return RequiresPermission(*permissions)
 
 
+class RequiresRole:
+    """FastAPI dependency that restricts access to one or more role codes."""
+
+    def __init__(self, *roles: str) -> None:
+        self.allowed_roles = roles
+
+    async def __call__(
+        self,
+        auth: AuthContext = Depends(get_current_user),
+    ) -> AuthContext:
+        if auth.role not in self.allowed_roles:
+            raise AuthorizationError(
+                "Insufficient permissions",
+                error_code="ERR-AUTHZ-001",
+                details={
+                    "allowed_roles": list(self.allowed_roles),
+                    "role": auth.role,
+                },
+            )
+        return auth
+
+
+def requires_role(*roles: str) -> RequiresRole:
+    """Create a RequiresRole dependency for the given role codes."""
+    return RequiresRole(*roles)
+
+
 # ---------------------------------------------------------------------------
 # ABAC guard: school boundary (S-035)
 # ---------------------------------------------------------------------------

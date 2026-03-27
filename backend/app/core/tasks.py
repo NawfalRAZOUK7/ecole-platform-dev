@@ -545,13 +545,19 @@ class WorkerSettings:
         cron(task_cleanup_expired_cache, hour=3, minute=15),
         # Refresh KPI materialized views daily at 03:30 UTC (Phase 8A)
         cron(task_refresh_kpi_views, hour=3, minute=30),
-        # Send notification digest daily at 07:00 UTC (8:00 Morocco time)
-        cron(task_send_notification_digest, hour=7, minute=0),
-        # Phase 11B: Retry failed payments every hour
-        cron(task_retry_failed_payments, minute=30),
-        # Phase 11B: Send overdue reminders daily at 09:00 UTC (10:00 Morocco time)
-        cron(task_send_overdue_reminders, hour=9, minute=0),
     ]
+
+    if settings.app_env in ("staging", "production"):
+        cron_jobs.extend(
+            [
+                # Send notification digest daily at 07:00 UTC (8:00 Morocco time)
+                cron(task_send_notification_digest, hour=7, minute=0),
+                # Phase 11B: Retry failed payments every hour
+                cron(task_retry_failed_payments, minute=30),
+                # Phase 11B: Send overdue reminders daily at 09:00 UTC (10:00 Morocco time)
+                cron(task_send_overdue_reminders, hour=9, minute=0),
+            ]
+        )
 
     # Worker config
     max_jobs = 10

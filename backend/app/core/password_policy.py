@@ -53,6 +53,22 @@ def _load_common_passwords() -> set[str]:
     return _common_passwords
 
 
+def _is_common_password(password: str) -> bool:
+    """Detect exact and trivial common-password variants.
+
+    This catches values like `Password1234!` by normalizing case, removing
+    punctuation, and comparing the non-numeric root against the common list.
+    """
+    pwd = password.lower()
+    normalized = re.sub(r"[^a-z0-9]", "", pwd)
+    candidates = {
+        pwd,
+        normalized,
+        re.sub(r"\d+$", "", normalized),
+    }
+    return any(candidate and candidate in _common_passwords for candidate in candidates)
+
+
 # Pre-load on import
 _load_common_passwords()
 
@@ -137,7 +153,7 @@ class PasswordValidator:
             )
 
         # Rule 6: not a common password
-        if password.lower() in _common_passwords:
+        if _is_common_password(password):
             failures.append(
                 {
                     "rule": "common_password",
