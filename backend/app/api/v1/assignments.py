@@ -39,6 +39,7 @@ from app.core.response import (
 )
 from app.core.search import apply_search, parse_search
 from app.core.storage import storage
+from app.core.request_utils import get_client_ip
 from app.models.erp import Enrollment
 from app.models.lms import Assignment, Course
 from app.schemas.lms import AssignmentCreateRequest
@@ -46,14 +47,6 @@ from app.services.audit import AuditService
 
 router = APIRouter(prefix="/assignments", tags=["lms-assignments"])
 
-
-def _get_client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
 
 
 def _assignment_to_dict(a: Assignment) -> dict:
@@ -135,7 +128,7 @@ async def create_assignment(
             "total_points": body.total_points,
             "exercise_type": body.exercise_type,
         },
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(_assignment_to_dict(assignment))
@@ -296,7 +289,7 @@ async def upload_exercise_pdf(
             "checksum": checksum,
             "file_size": file_size,
         },
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(

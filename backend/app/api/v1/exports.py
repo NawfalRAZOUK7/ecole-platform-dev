@@ -12,19 +12,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, requires_permission
 from app.core.permissions import PERM_REP_EXPORT_CREATE
+from app.core.request_utils import get_client_ip
 from app.services.audit import AuditService
 from app.services.data_export import DataExportService
 
 router = APIRouter(prefix="/export", tags=["exports"])
 
-
-def _get_client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
 
 
 @router.get(
@@ -57,7 +50,7 @@ async def export_csv(
         target_id=export_log.id,
         outcome="success",
         entity_after={"entity": entity, "filters": parsed_filters, "row_count": export_log.row_count},
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
     headers = {
         "Content-Disposition": f'attachment; filename="{entity}.csv"',
@@ -108,7 +101,7 @@ async def export_xlsx(
         target_id=export_log.id,
         outcome="success",
         entity_after={"entity": entity, "filters": parsed_filters, "row_count": export_log.row_count},
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
     return FileResponse(
         xlsx_path,

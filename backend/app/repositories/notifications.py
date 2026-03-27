@@ -7,7 +7,6 @@ from datetime import datetime
 from typing import Iterable, Sequence
 
 from sqlalchemy import and_, delete, distinct, func, or_, select
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.response import decode_cursor, encode_cursor
@@ -19,13 +18,11 @@ from app.models.com import (
 )
 from app.models.erp import Enrollment, TeacherAssignment
 from app.models.iam import Membership, ParentChildLink, User
+from app.repositories.base import BaseRepository
 
 
-class NotificationRepository:
+class NotificationRepository(BaseRepository):
     """Data access for notification entities."""
-
-    def __init__(self, db: AsyncSession) -> None:
-        self.db = db
 
     async def list_notifications(
         self,
@@ -109,6 +106,11 @@ class NotificationRepository:
             .where(Notification.id == notification_id)
         )
         return result.scalar_one_or_none()
+
+    async def save_notification(self, notification: Notification) -> Notification:
+        self.db.add(notification)
+        await self.db.flush()
+        return notification
 
     async def count_unread(
         self,

@@ -21,6 +21,7 @@ from app.core.database import get_db
 from app.core.dependencies import AuthContext, requires_permission
 from app.core.exceptions import AuthorizationError, NotFoundError
 from app.core.response import success_response
+from app.core.request_utils import get_client_ip
 from app.models.audit import AuditLog
 from app.models.billing import Invoice
 from app.models.com import ConsentPreference, Notification
@@ -33,14 +34,6 @@ router = APIRouter(prefix="/users", tags=["gdpr"])
 # Permission: ADM can access any user, others can only access self
 ADMIN_ROLES = ("ADM", "DIR")
 
-
-def _get_client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
 
 
 def _anonymize(value: str) -> str:
@@ -274,7 +267,7 @@ async def data_export(
         outcome="success",
         target_type="user",
         target_id=user_id,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(
@@ -373,7 +366,7 @@ async def data_deletion(
         target_id=user_id,
         entity_before=entity_before,
         entity_after=entity_after,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(
@@ -457,7 +450,7 @@ async def consent_log(
         outcome="success",
         target_type="user",
         target_id=user_id,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(

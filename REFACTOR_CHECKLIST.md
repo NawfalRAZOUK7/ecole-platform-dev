@@ -19,12 +19,12 @@
 ## Phase 1: Backend 3-Tier Refactor (8 batches)
 
 ### Batch 0 — Shared Foundation
-- [ ] Create `backend/app/repositories/base.py` (BaseRepository class)
-- [ ] Create `backend/app/core/request_utils.py` (shared helpers)
-- [ ] Update existing 4 repositories to extend BaseRepository
-- [ ] Wire existing repositories to their services (notifications, calendar, documents, reports)
-- [ ] Replace all local `_get_client_ip()` / `_request_locale()` in routers with shared imports
-- [ ] Verify: no router defines local helper functions
+- [x] Create `backend/app/repositories/base.py` (BaseRepository class)
+- [x] Create `backend/app/core/request_utils.py` (shared helpers)
+- [x] Update existing 4 repositories to extend BaseRepository
+- [x] Wire existing repositories to their services (notifications, calendar, documents, reports)
+- [x] Replace all local `_get_client_ip()` / `_request_locale()` in routers with shared imports
+- [x] Verify: no router defines local helper functions
 - [ ] **Review & commit myself**: `refactor(backend): add BaseRepository and shared request utilities`
 
 ### Batch 1 — Auth & Audit

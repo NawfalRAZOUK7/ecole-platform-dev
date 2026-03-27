@@ -32,6 +32,7 @@ from app.core.dependencies import (
 )
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.core.response import list_response, success_response
+from app.core.request_utils import get_client_ip
 from app.models.erp import (
     AcademicYear,
     Class,
@@ -58,14 +59,6 @@ router = APIRouter(prefix="/timetable", tags=["erp-timetable"])
 # Helpers
 # ---------------------------------------------------------------------------
 
-
-def _get_client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
 
 
 def _slot_to_response(slot: TimetableSlot) -> dict:
@@ -272,7 +265,7 @@ async def create_timetable_slots(
             target_id=slot.id,
             outcome="success",
             entity_after=_slot_to_response(slot),
-            ip_address=_get_client_ip(request),
+            ip_address=get_client_ip(request),
         )
 
     await db.commit()
@@ -404,7 +397,7 @@ async def update_timetable_slot(
         outcome="success",
         entity_before=entity_before,
         entity_after=entity_after,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     await db.commit()
@@ -446,7 +439,7 @@ async def delete_timetable_slot(
         target_id=slot.id,
         outcome="success",
         entity_before=entity_before,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     await db.commit()
@@ -689,7 +682,7 @@ async def create_timetable_exception(
         target_id=exception.id,
         outcome="success",
         entity_after=resp,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     await db.commit()

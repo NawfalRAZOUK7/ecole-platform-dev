@@ -27,6 +27,7 @@ from app.core.dependencies import (
     verify_teacher_assignment,
 )
 from app.core.exceptions import NotFoundError, ValidationError
+from app.core.request_utils import get_client_ip
 from app.core.response import (
     clamp_page_size,
     decode_cursor,
@@ -40,14 +41,6 @@ from app.services.audit import AuditService
 
 router = APIRouter(tags=["content-library"])
 
-
-def _get_client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
 
 
 # ---------------------------------------------------------------------------
@@ -185,7 +178,7 @@ async def assign_content_to_class(
             "class_id": str(body.class_id),
             "content_item_id": str(body.content_item_id),
         },
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(
@@ -244,7 +237,7 @@ async def unassign_content(
         target_type="class_content_assignment",
         target_id=uuid.UUID(entity_before["id"]),
         entity_before=entity_before,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response({"deleted": True, "id": entity_before["id"]})
@@ -318,7 +311,7 @@ async def submit_for_review(
             "content_item_id": str(body.content_item_id),
             "status": "PENDING",
         },
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(

@@ -41,6 +41,7 @@ from app.core.response import (
 )
 from app.core.search import apply_search, parse_search
 from app.core.storage import storage, validate_mime_type
+from app.core.request_utils import get_client_ip
 from app.models.lms import ContentItem, ContentItemAsset, ContentProgress
 from app.schemas.lms import ContentProgressRequest
 from app.services.audit import AuditService
@@ -48,14 +49,6 @@ from app.services.audit import AuditService
 router = APIRouter(prefix="/content-items", tags=["lms-content"])
 legacy_router = APIRouter(prefix="/content", tags=["lms-content"])
 
-
-def _get_client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
 
 
 # ---------------------------------------------------------------------------
@@ -288,7 +281,7 @@ async def update_content_progress(
             "content_item_id": str(content_item_id),
             "status": body.status,
         },
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(
@@ -373,7 +366,7 @@ async def upload_content_asset(
             "file_size": file_size,
             "checksum": checksum,
         },
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(
@@ -505,7 +498,7 @@ async def delete_content_asset(
         target_type="content_item_asset",
         target_id=uuid.UUID(entity_before["id"]),
         entity_before=entity_before,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response({"deleted": True, "id": entity_before["id"]})

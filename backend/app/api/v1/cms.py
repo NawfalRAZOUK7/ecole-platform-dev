@@ -21,6 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, requires_permission
 from app.core.exceptions import NotFoundError, ValidationError
+from app.core.request_utils import get_client_ip
 from app.core.response import (
     clamp_page_size,
     decode_cursor,
@@ -40,14 +41,6 @@ from app.services.audit import AuditService
 
 router = APIRouter(prefix="/cms", tags=["cms"])
 
-
-def _get_client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
 
 
 def _content_to_dict(ci: ContentItem) -> dict:
@@ -105,7 +98,7 @@ async def create_cms_content(
         target_type="content_item",
         target_id=ci.id,
         entity_after=_content_to_dict(ci),
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(_content_to_dict(ci))
@@ -202,7 +195,7 @@ async def update_cms_content(
         target_id=ci.id,
         entity_before=entity_before,
         entity_after=_content_to_dict(ci),
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(_content_to_dict(ci))
@@ -244,7 +237,7 @@ async def delete_cms_content(
         target_id=ci.id,
         entity_before=entity_before,
         entity_after=_content_to_dict(ci),
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response({"deleted": True, "id": str(content_id)})
@@ -451,7 +444,7 @@ async def review_submission(
             if sub.promoted_content_id
             else None,
         },
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(

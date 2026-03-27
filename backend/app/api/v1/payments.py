@@ -23,6 +23,7 @@ from app.core.dependencies import (
 )
 from app.core.exceptions import ConflictError, NotFoundError
 from app.core.response import success_response
+from app.core.request_utils import get_client_ip
 from app.models.billing import Invoice, PaymentAttempt, ProviderWebhookEvent
 from app.schemas.billing import PaymentInitiateRequest, WebhookEventRequest
 from app.services.audit import AuditService
@@ -30,14 +31,6 @@ from app.services.realtime import publish_payment_updated
 
 router = APIRouter(prefix="/payments", tags=["billing-payments"])
 
-
-def _get_client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
 
 
 # ---------------------------------------------------------------------------
@@ -128,7 +121,7 @@ async def initiate_payment(
             "invoice_id": str(body.invoice_id),
             "idempotency_key": body.idempotency_key,
         },
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(
@@ -305,7 +298,7 @@ async def handle_provider_webhook(
             "event_type": body.event_type,
             "status": body.status,
         },
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(

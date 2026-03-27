@@ -20,6 +20,7 @@ from app.core.database import get_db
 from app.core.dependencies import AuthContext, get_current_user
 from app.core.redis import get_redis
 from app.core.response import success_response
+from app.core.request_utils import get_client_ip, parse_device_name
 from app.schemas.auth import (
     ChangePasswordRequest,
     EmailVerifyRequest,
@@ -32,58 +33,6 @@ from app.schemas.auth import (
 from app.services.auth import AuthService, EmailVerificationService, TwoFactorService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-
-
-def _get_client_ip(request: Request) -> str | None:
-    """Extract client IP from request (X-Forwarded-For or direct)."""
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
-
-
-def _parse_device_name(user_agent: str | None) -> str | None:
-    """Parse User-Agent string to extract a readable device name.
-
-    Phase 2A: Simple parser — extracts browser + OS from User-Agent.
-    Returns e.g. "Chrome on Windows", "Safari on macOS", "Mobile App (Flutter)".
-    """
-    if not user_agent:
-        return None
-
-    ua = user_agent.lower()
-
-    # Detect platform
-    if "flutter" in ua or "dart" in ua:
-        return "Mobile App (Flutter)"
-    if "android" in ua:
-        platform = "Android"
-    elif "iphone" in ua or "ipad" in ua:
-        platform = "iOS"
-    elif "macintosh" in ua or "mac os" in ua:
-        platform = "macOS"
-    elif "windows" in ua:
-        platform = "Windows"
-    elif "linux" in ua:
-        platform = "Linux"
-    else:
-        platform = "Unknown OS"
-
-    # Detect browser
-    if "edg/" in ua:
-        browser = "Edge"
-    elif "chrome" in ua and "safari" in ua:
-        browser = "Chrome"
-    elif "firefox" in ua:
-        browser = "Firefox"
-    elif "safari" in ua:
-        browser = "Safari"
-    else:
-        browser = "Unknown Browser"
-
-    return f"{browser} on {platform}"
 
 
 # ---------------------------------------------------------------------------
@@ -114,9 +63,9 @@ async def login(
         password=body.password,
         school_id=body.school_id,
         source="web",
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
         user_agent=user_agent,
-        device_name=_parse_device_name(user_agent),
+        device_name=parse_device_name(user_agent),
     )
 
     # Phase 2B: If 2FA is required, return temp_token instead of full tokens
@@ -192,9 +141,9 @@ async def register(
         phone=body.phone,
         profile_data=body.profile_data,
         source="web",
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
         user_agent=user_agent,
-        device_name=_parse_device_name(user_agent),
+        device_name=parse_device_name(user_agent),
     )
 
     # Send email verification OTP
@@ -205,7 +154,7 @@ async def register(
         user_id=result["user_id"],
         school_id=result["school_id"],
         email=body.email,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     await db.commit()
@@ -276,7 +225,7 @@ async def refresh(
     result = await service.refresh(
         refresh_token_str=refresh_token,
         csrf_token=x_csrf_token,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     # Rotate cookies
@@ -332,7 +281,7 @@ async def logout(
         session_id=auth.session_id,
         user_id=auth.user_id,
         school_id=auth.school_id,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     # Clear cookies (set expiry in the past)
@@ -420,7 +369,7 @@ async def revoke_session(
         actor_user_id=auth.user_id,
         actor_school_id=auth.school_id,
         actor_role=auth.role,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
     return success_response(result)
 
@@ -452,7 +401,7 @@ async def change_password(
         current_password=body.current_password,
         new_password=body.new_password,
         current_session_id=auth.session_id,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
     return success_response(result)
 
@@ -480,7 +429,7 @@ async def two_factor_setup(
     result = await service.setup(
         user_id=auth.user_id,
         school_id=auth.school_id,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
     return success_response(result)
 
@@ -509,7 +458,7 @@ async def two_factor_verify_setup(
         user_id=auth.user_id,
         school_id=auth.school_id,
         code=body.code,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
     return success_response(result)
 
@@ -535,7 +484,7 @@ async def two_factor_disable(
         user_id=auth.user_id,
         school_id=auth.school_id,
         code=body.code,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
     return success_response(result)
 
@@ -564,7 +513,7 @@ async def two_factor_verify_login(
     result = await service.verify_login(
         temp_token=body.temp_token,
         code=body.code,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     # Set cookies (same as normal login)
@@ -616,6 +565,6 @@ async def verify_email(
         user_id=body.user_id,
         school_id=body.school_id,
         otp=body.otp,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
     return success_response(result)

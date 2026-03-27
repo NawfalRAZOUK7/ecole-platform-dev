@@ -28,6 +28,7 @@ from app.core.dependencies import (
 )
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.core.response import list_response, success_response
+from app.core.request_utils import get_client_ip
 from app.models.billing import FeeAssignment, FeeStructure, Invoice, InvoiceItem
 from app.models.erp import AcademicYear, Class, Enrollment
 from app.models.iam import ParentChildLink, User
@@ -49,14 +50,6 @@ router = APIRouter(prefix="/billing", tags=["billing-fees"])
 # Helpers
 # ---------------------------------------------------------------------------
 
-
-def _get_client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
 
 
 def _fee_structure_to_response(fs: FeeStructure) -> dict:
@@ -145,7 +138,7 @@ async def create_fee_structure(
         target_id=fs.id,
         outcome="success",
         entity_after=resp,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     await db.commit()
@@ -242,7 +235,7 @@ async def update_fee_structure(
         outcome="success",
         entity_before=entity_before,
         entity_after=entity_after,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     await db.commit()
@@ -321,7 +314,7 @@ async def create_fee_assignment(
         target_id=fa.id,
         outcome="success",
         entity_after=resp,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     await db.commit()
@@ -452,7 +445,7 @@ async def bulk_create_fee_assignments(
             "created": len(created),
             "skipped": len(existing_ids),
         },
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     await db.commit()
@@ -660,7 +653,7 @@ async def generate_invoices(
             "skipped": skipped,
             "total_amount": total_generated_amount,
         },
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     await db.commit()

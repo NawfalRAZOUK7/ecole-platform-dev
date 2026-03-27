@@ -26,6 +26,7 @@ from app.core.dependencies import (
 from app.core.exceptions import AuthorizationError, NotFoundError, ValidationError
 from app.core.response import success_response
 from app.core.storage import storage, validate_mime_type
+from app.core.request_utils import get_client_ip
 from app.models.lms import Assignment, Course, Grade, Submission, SubmissionFile
 from app.schemas.lms import GradeRequest, SubmissionCreateRequest
 from app.services.audit import AuditService
@@ -33,14 +34,6 @@ from app.services.realtime import publish_grade_published
 
 router = APIRouter(prefix="/submissions", tags=["lms-submissions"])
 
-
-def _get_client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
 
 
 # ---------------------------------------------------------------------------
@@ -133,7 +126,7 @@ async def create_submission(
             "assignment_id": str(body.assignment_id),
             "status": initial_status,
         },
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(
@@ -266,7 +259,7 @@ async def grade_submission(
             "score": float(body.score),
             "published": body.publish,
         },
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     # 7. Real-time push (Phase 3C) — notify student when grade is published
@@ -439,7 +432,7 @@ async def upload_submission_file(
             "checksum": checksum,
             "file_type_hint": file_type_hint,
         },
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(
@@ -605,7 +598,7 @@ async def finalize_submission(
             "status": "submitted",
             "exercise_type": assignment.exercise_type,
         },
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(

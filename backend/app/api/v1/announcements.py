@@ -24,6 +24,7 @@ from app.core.dependencies import (
     verify_school_boundary,
 )
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
+from app.core.request_utils import get_client_ip
 from app.core.response import (
     clamp_page_size,
     decode_cursor,
@@ -43,18 +44,6 @@ from app.services.audit import AuditService
 from app.services.realtime import publish_announcement_published
 
 router = APIRouter(prefix="/announcements", tags=["announcements"])
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-def _get_client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
 
 
 def _announcement_to_response(a: Announcement) -> dict:
@@ -129,7 +118,7 @@ async def create_announcement(
         target_id=announcement.id,
         outcome="success",
         entity_after=resp,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     await db.commit()
@@ -257,7 +246,7 @@ async def update_announcement(
         outcome="success",
         entity_before=entity_before,
         entity_after=entity_after,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     await db.commit()
@@ -384,7 +373,7 @@ async def publish_announcement(
         outcome="success",
         entity_before=entity_before,
         entity_after={**entity_after, "notifications_sent": notif_count},
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     await db.commit()

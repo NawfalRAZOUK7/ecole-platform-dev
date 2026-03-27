@@ -24,6 +24,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, requires_permission
 from app.core.exceptions import NotFoundError, ValidationError
+from app.core.request_utils import get_client_ip
 from app.core.response import (
     clamp_page_size,
     decode_cursor,
@@ -42,14 +43,6 @@ from app.services.quiz_grading import grade_attempt
 
 router = APIRouter(tags=["quiz-engine"])
 
-
-def _get_client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
 
 
 def _quiz_to_dict(q: Quiz, questions: list | None = None) -> dict:
@@ -161,7 +154,7 @@ async def create_quiz(
         target_type="quiz",
         target_id=quiz.id,
         entity_after={"title": quiz.title, "question_count": len(questions)},
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     result = _quiz_to_dict(quiz, questions)
@@ -377,7 +370,7 @@ async def update_quiz(
         target_type="quiz",
         target_id=quiz.id,
         entity_after={"title": quiz.title},
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     d = _quiz_to_dict(quiz, questions)
@@ -430,7 +423,7 @@ async def publish_quiz(
         target_type="quiz",
         target_id=quiz.id,
         entity_after={"status": "published"},
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response({"id": str(quiz.id), "status": "published"})
@@ -512,7 +505,7 @@ async def start_attempt(
         target_type="quiz_attempt",
         target_id=attempt.id,
         entity_after={"quiz_id": str(quiz_id), "attempt_no": attempt.attempt_no},
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(_attempt_to_dict(attempt))
@@ -640,7 +633,7 @@ async def submit_attempt(
             "max_score": max_score,
             "status": "COMPLETED",
         },
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(_attempt_to_dict(attempt))

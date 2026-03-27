@@ -13,6 +13,7 @@ from app.core.database import get_db
 from app.core.dependencies import AuthContext, get_current_user, requires_permission
 from app.core.exceptions import AuthorizationError
 from app.core.response import clamp_page_size, list_response, success_response
+from app.core.request_utils import get_client_ip, request_locale
 from app.schemas.notifications import (
     DigestPreferenceRequest,
     NotificationBatchRequest,
@@ -26,22 +27,6 @@ from app.services.notification_hub import NotificationHubService
 router = APIRouter(prefix="/notifications", tags=["com-notifications"])
 
 
-def _get_client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
-
-
-def _request_locale(request: Request) -> str:
-    accept_language = request.headers.get("Accept-Language", "fr").lower()
-    if accept_language.startswith("ar"):
-        return "ar"
-    if accept_language.startswith("en"):
-        return "en"
-    return "fr"
 
 
 @router.get(
@@ -146,7 +131,7 @@ async def _update_preferences(
         outcome="success",
         entity_before={"preferences": before},
         entity_after={"preferences": after},
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
     return success_response({"user_id": str(auth.user_id), "preferences": after})
 
@@ -240,7 +225,7 @@ async def update_digest_preferences(
         outcome="success",
         entity_before={"digest_frequency": before},
         entity_after={"digest_frequency": after},
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
     return success_response(
         {
@@ -320,7 +305,7 @@ async def batch_notifications(
             "request": body.model_dump(mode="json"),
             "result": result,
         },
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
     return success_response(result)
 

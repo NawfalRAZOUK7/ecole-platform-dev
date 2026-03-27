@@ -36,20 +36,13 @@ from app.core.response import (
     success_response,
 )
 from app.core.search import apply_search, parse_search
+from app.core.request_utils import get_client_ip
 from app.models.lms import Activity, ActivitySession
 from app.schemas.lms import ActivitySessionCompleteRequest, ActivitySessionCreateRequest
 from app.services.audit import AuditService
 
 router = APIRouter(prefix="/activities", tags=["lms-activities"])
 
-
-def _get_client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
 
 
 # ---------------------------------------------------------------------------
@@ -198,7 +191,7 @@ async def create_activity_session(
             "activity_id": str(body.activity_id),
             "attempt_no": session.attempt_no,
         },
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(
@@ -278,7 +271,7 @@ async def complete_activity_session(
             "status": "completed",
             "score": float(body.score) if body.score is not None else None,
         },
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(

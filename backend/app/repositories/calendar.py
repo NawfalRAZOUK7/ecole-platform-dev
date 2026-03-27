@@ -7,7 +7,6 @@ from datetime import date, datetime
 from typing import Iterable
 
 from sqlalchemy import and_, func, or_, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.calendar import (
     Event,
@@ -18,11 +17,10 @@ from app.models.calendar import (
 )
 from app.models.erp import AcademicYear, Class, Enrollment, Period, TeacherAssignment
 from app.models.iam import Membership, ParentChildLink, User
+from app.repositories.base import BaseRepository
 
 
-class CalendarRepository:
-    def __init__(self, db: AsyncSession) -> None:
-        self.db = db
+class CalendarRepository(BaseRepository):
 
     async def get_event(self, event_id: uuid.UUID) -> Event | None:
         result = await self.db.execute(select(Event).where(Event.id == event_id))

@@ -7,9 +7,9 @@ from datetime import datetime
 from typing import Iterable
 
 from sqlalchemy import and_, func, or_, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.response import decode_cursor, encode_cursor
+from app.models.com import Notification
 from app.models.documents import (
     Document,
     Resource,
@@ -18,11 +18,10 @@ from app.models.documents import (
 )
 from app.models.erp import Enrollment, TeacherAssignment
 from app.models.iam import ParentChildLink, User
+from app.repositories.base import BaseRepository
 
 
-class DocumentsRepository:
-    def __init__(self, db: AsyncSession) -> None:
-        self.db = db
+class DocumentsRepository(BaseRepository):
 
     async def get_document(self, document_id: uuid.UUID) -> Document | None:
         result = await self.db.execute(
@@ -342,6 +341,19 @@ class DocumentsRepository:
             )
         )
         return list(result.scalars().all())
+
+    async def hard_delete_document(self, document: Document) -> None:
+        await self.db.delete(document)
+
+    async def notification_exists(
+        self,
+        *,
+        idempotency_key: str,
+    ) -> bool:
+        result = await self.db.execute(
+            select(Notification.id).where(Notification.idempotency_key == idempotency_key)
+        )
+        return result.scalar_one_or_none() is not None
 
     async def create_resource(self, resource: Resource) -> Resource:
         self.db.add(resource)

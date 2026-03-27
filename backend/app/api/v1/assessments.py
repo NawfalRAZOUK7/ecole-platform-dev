@@ -41,6 +41,7 @@ from app.core.response import (
     success_response,
 )
 from app.core.search import apply_search, parse_search
+from app.core.request_utils import get_client_ip
 from app.models.erp import Class
 from app.models.lms import Assessment, AssessmentResult
 from app.schemas.lms import AssessmentCreateRequest, AssessmentResultSubmitRequest
@@ -48,14 +49,6 @@ from app.services.audit import AuditService
 
 router = APIRouter(prefix="/assessments", tags=["lms-assessments"])
 
-
-def _get_client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
 
 
 # ---------------------------------------------------------------------------
@@ -119,7 +112,7 @@ async def create_assessment(
             "title": body.title,
             "status": body.status,
         },
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(
@@ -274,7 +267,7 @@ async def publish_assessment(
         target_type="assessment",
         target_id=assessment.id,
         entity_after={"status": "published"},
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(
@@ -382,7 +375,7 @@ async def submit_assessment_result(
             "assessment_id": str(assessment_id),
             "score": float(body.score) if body.score is not None else None,
         },
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(

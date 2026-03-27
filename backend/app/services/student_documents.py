@@ -8,7 +8,6 @@ from datetime import datetime, timedelta, timezone
 from typing import BinaryIO, Iterable
 
 from jose import JWTError, jwt
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -18,7 +17,7 @@ from app.core.metrics import (
     DOCUMENT_UPLOAD_COUNT,
     DOCUMENT_UPLOAD_SIZE_BYTES,
 )
-from app.models.com import Notification, NotificationCategory
+from app.models.com import NotificationCategory
 from app.models.documents import Document, DocumentCategory, StudentDocumentRequirement
 from app.models.iam import User
 from app.repositories.documents import DocumentsRepository
@@ -382,7 +381,7 @@ class StudentDocumentsService:
             raise NotFoundError("Document not found", error_code="ERR-DOC-404")
 
         if hard_delete:
-            await self.db.delete(document)
+            await self.repo.hard_delete_document(document)
             await self._delete_underlying_files_if_unused(document=document)
         else:
             document.deleted_at = _utc_now()
@@ -491,10 +490,7 @@ class StudentDocumentsService:
                 if document.expires_at
                 else f"document-expiry:{document.id}"
             )
-            existing = await self.db.execute(
-                select(Notification.id).where(Notification.idempotency_key == idempotency_key)
-            )
-            if existing.scalar_one_or_none() is not None:
+            if await self.repo.notification_exists(idempotency_key=idempotency_key):
                 continue
             await self.notification_hub.create_single_notification(
                 school_id=document.school_id,
@@ -521,7 +517,7 @@ class StudentDocumentsService:
         documents = await self.repo.list_deleted_documents(before=cutoff)
         deleted = 0
         for document in documents:
-            await self.db.delete(document)
+            await self.repo.hard_delete_document(document)
             await self._delete_underlying_files_if_unused(document=document)
             deleted += 1
         return deleted

@@ -6,61 +6,21 @@ import uuid
 
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import FileResponse
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, requires_permission
-from app.core.exceptions import AuthenticationError, ValidationError
+from app.core.exceptions import ValidationError
 from app.core.permissions import PERM_REP_REPORT_GENERATE, PERM_REP_REPORT_READ
+from app.core.request_utils import get_client_ip, optional_current_user
 from app.core.response import clamp_page_size, list_response, success_response
-from app.core.security import decode_access_token
 from app.core.storage import storage
 from app.core.tasks import enqueue_task
-from app.models.iam import Session
 from app.schemas.reports import ReportGenerateRequest
 from app.services.audit import AuditService
 from app.services.reports import ReportsService
 
 router = APIRouter(prefix="/reports", tags=["reports"])
-
-_bearer_scheme = HTTPBearer(auto_error=False)
-
-
-def _get_client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
-
-
-async def _optional_current_user(
-    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
-    db: AsyncSession = Depends(get_db),
-) -> AuthContext | None:
-    if credentials is None:
-        return None
-
-    payload = decode_access_token(credentials.credentials)
-    session_id = uuid.UUID(payload["session_id"])
-    session_result = await db.execute(
-        select(Session).where(Session.id == session_id, Session.revoke_at.is_(None))
-    )
-    if session_result.scalar_one_or_none() is None:
-        raise AuthenticationError(
-            "Session has been revoked",
-            error_code="ERR-IAM-401",
-        )
-    return AuthContext(
-        user_id=uuid.UUID(payload["sub"]),
-        role=payload["role"],
-        school_id=uuid.UUID(payload["school_id"]),
-        session_id=session_id,
-        permissions=set(),
-    )
 
 
 @router.post(
@@ -90,7 +50,7 @@ async def generate_report(
         target_id=uuid.UUID(payload["id"]),
         outcome="success",
         entity_after={"request": body.model_dump(mode="json"), "job": payload},
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
     await db.commit()
     if not cache_hit:
@@ -178,7 +138,7 @@ async def download_report(
     job_id: uuid.UUID,
     request: Request,
     token: str | None = Query(None),
-    auth: AuthContext | None = Depends(_optional_current_user),
+    auth: AuthContext | None = Depends(optional_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     service = ReportsService(db)
@@ -217,7 +177,7 @@ async def download_report(
         target_id=job.id,
         outcome="success",
         entity_after={"download_url": service.serialize_job(job).get("download_url")},
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
     filename = f"{job.type}_{job.id}.pdf"
     return FileResponse(

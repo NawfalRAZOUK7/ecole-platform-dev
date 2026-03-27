@@ -17,6 +17,7 @@ from app.core.database import get_db
 from app.core.dependencies import AuthContext, requires_permission
 from app.core.redis import get_redis
 from app.core.response import success_response
+from app.core.request_utils import get_client_ip
 from app.schemas.auth import (
     InviteConsumeRequest,
     InviteCreateRequest,
@@ -26,14 +27,6 @@ from app.services.auth import EmailVerificationService, InvitationService
 
 router = APIRouter(prefix="/invites", tags=["invitations"])
 
-
-def _get_client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
 
 
 # ---------------------------------------------------------------------------
@@ -63,7 +56,7 @@ async def create_invite(
         role_target=body.role_target,
         expires_in_hours=body.expires_in_hours,
         target_student_id=body.target_student_id,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
     return success_response(result)
 
@@ -92,7 +85,7 @@ async def consume_invite(
         code=body.code,
         user_id=auth.user_id,
         school_id=auth.school_id,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     # Phase 2B: Send email verification OTP on successful consumption
@@ -108,7 +101,7 @@ async def consume_invite(
                 user_id=auth.user_id,
                 school_id=auth.school_id,
                 email=user.email,
-                ip_address=_get_client_ip(request),
+                ip_address=get_client_ip(request),
             )
             result["email_verification_required"] = True
 
@@ -139,6 +132,6 @@ async def revoke_invite(
         invite_id=body.invite_id,
         school_id=auth.school_id,
         actor_id=auth.user_id,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
     return success_response(result)

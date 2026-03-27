@@ -18,6 +18,7 @@ from app.core.dependencies import AuthContext, requires_permission, requires_rol
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.core.response import list_response, success_response
 from app.core.security import hash_password
+from app.core.request_utils import get_client_ip
 from app.models.audit import AuditLog
 from app.models.erp import AbsenceJustification
 from app.models.iam import InvitationCode, Membership, ParentChildLink, Session, User
@@ -28,14 +29,6 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 
 ADMIN_ROLES = ("ADM", "DIR")
 
-
-def _get_client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
 
 
 # ---------------------------------------------------------------------------
@@ -248,7 +241,7 @@ async def suspend_user(
         outcome="success",
         target_type="user",
         target_id=user_id,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
     return success_response({"id": str(user_id), "status": "suspended"})
 
@@ -288,7 +281,7 @@ async def activate_user(
         outcome="success",
         target_type="user",
         target_id=user_id,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
     return success_response({"id": str(user_id), "status": "active"})
 
@@ -349,7 +342,7 @@ async def change_user_role(
         target_type="user",
         target_id=user_id,
         entity_after={"role": role},
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
     return success_response({"id": str(user_id), "role": role})
 
@@ -674,7 +667,7 @@ async def register_batch(
             outcome="success",
             target_type="user",
             target_id=user.id,
-            ip_address=_get_client_ip(request),
+            ip_address=get_client_ip(request),
         )
 
         results.append(
@@ -777,7 +770,7 @@ async def create_parent_child_link(
         outcome="success",
         target_type="parent_child_link",
         target_id=link.id,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     await db.commit()
@@ -888,7 +881,7 @@ async def revoke_parent_child_link(
         outcome="success",
         target_type="parent_child_link",
         target_id=link.id,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     await db.commit()

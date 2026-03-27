@@ -24,6 +24,7 @@ from app.core.dependencies import (
 from app.core.exceptions import ConflictError, NotFoundError
 from app.core.redis import get_redis
 from app.core.response import success_response
+from app.core.request_utils import get_client_ip
 from app.models.erp import Class, Enrollment, Period
 from app.models.iam import User
 from app.services.audit import AuditService
@@ -36,14 +37,6 @@ class EnrollmentCreateRequest(BaseModel):
     class_id: uuid.UUID
     period_id: uuid.UUID
 
-
-def _get_client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
 
 
 @router.post(
@@ -166,7 +159,7 @@ async def create_enrollment(
             "period_id": str(body.period_id),
             "status": "active",
         },
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(

@@ -122,6 +122,7 @@ class NotificationHubService:
     ) -> list[dict]:
         await self.ensure_default_preferences(school_id=school_id, user_id=user_id)
 
+        preferences: list[NotificationPreference] = []
         for item in items:
             pref = await self.repo.find_preference(
                 school_id=school_id,
@@ -136,11 +137,24 @@ class NotificationHubService:
                     channel=item.channel,
                     category=item.category,
                 )
-                self.db.add(pref)
             pref.enabled = item.enabled
             pref.digest_frequency = item.digest_frequency
-        await self.db.flush()
-        return await self.list_preferences(school_id=school_id, user_id=user_id)
+            preferences.append(pref)
+
+        updated = await self.repo.upsert_preferences(
+            school_id=school_id,
+            user_id=user_id,
+            preferences=preferences,
+        )
+        return [
+            NotificationPreferenceItem(
+                channel=pref.channel,
+                category=pref.category,
+                enabled=pref.enabled,
+                digest_frequency=pref.digest_frequency,
+            ).model_dump()
+            for pref in updated
+        ]
 
     async def unread_count(
         self,
@@ -178,7 +192,7 @@ class NotificationHubService:
             role=role,
         )
         notification.read_at = _utc_now() if read else None
-        await self.db.flush()
+        await self.repo.save_notification(notification)
         await self.invalidate_unread_count(notification.parent_id)
         return {
             "id": str(notification.id),
@@ -228,6 +242,7 @@ class NotificationHubService:
             await self.repo.hard_delete(notification)
         else:
             notification.deleted_at = _utc_now()
+            await self.repo.save_notification(notification)
         await self.invalidate_unread_count(notification.parent_id)
         return {
             "id": str(notification.id),

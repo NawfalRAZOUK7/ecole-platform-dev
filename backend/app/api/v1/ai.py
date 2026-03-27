@@ -20,6 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, requires_permission
 from app.core.response import success_response
+from app.core.request_utils import get_client_ip
 from app.models.ai import AIPreference, WritingAttempt
 from app.schemas.ai import (
     AIOptOutRequest,
@@ -36,14 +37,6 @@ from app.services.kpi import compute_all_kpis
 
 router = APIRouter(tags=["ai"])
 
-
-def _get_client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
 
 
 # ---------------------------------------------------------------------------
@@ -158,7 +151,7 @@ async def create_writing_attempt(
             "status": attempt.status,
             "prompt_id": attempt.prompt_id,
         },
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     # Analytics event
@@ -252,7 +245,7 @@ async def update_ai_opt_out(
         target_id=pref.id,
         entity_before={"opt_out": old_value} if old_value is not None else None,
         entity_after={"opt_out": body.opt_out, "target_user_id": str(target_user_id)},
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     # Analytics event (G3.3)

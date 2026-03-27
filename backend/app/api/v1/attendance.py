@@ -26,6 +26,7 @@ from app.core.dependencies import (
 )
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.core.response import success_response
+from app.core.request_utils import get_client_ip
 from app.models.erp import (
     AbsenceJustification,
     AttendanceRecord,
@@ -43,14 +44,6 @@ from app.services.audit import AuditService
 
 router = APIRouter(prefix="/attendance", tags=["erp-attendance"])
 
-
-def _get_client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
 
 
 # ---------------------------------------------------------------------------
@@ -164,7 +157,7 @@ async def create_attendance_session(
             "slot": body.slot,
             "record_count": len(body.records),
         },
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(
@@ -269,7 +262,7 @@ async def create_justification(
             "attendance_record_id": str(body.attendance_record_id),
             "reason": body.reason,
         },
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(
@@ -373,7 +366,7 @@ async def review_justification(
             "justification_id": str(justification_id),
             "decision": body.decision,
         },
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(

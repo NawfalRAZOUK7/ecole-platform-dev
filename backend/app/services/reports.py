@@ -14,23 +14,13 @@ from typing import Any
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from jose import JWTError, jwt
-from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.exceptions import AuthorizationError, NotFoundError, ValidationError
 from app.core.storage import storage
-from app.models.billing import Invoice, PaymentAttempt
-from app.models.erp import (
-    AbsenceJustification,
-    AttendanceRecord,
-    AttendanceSession,
-    Class,
-    Enrollment,
-    Period,
-)
+from app.models.erp import Class, Period
 from app.models.iam import User
-from app.models.lms import Assignment, Course, Grade, Submission
 from app.models.reporting import ReportJob, ReportJobStatus, ReportType
 from app.repositories.reports import ReportsRepository
 from app.schemas.reports import ReportGenerateRequest
@@ -309,7 +299,7 @@ class ReportsService:
 
         job.status = ReportJobStatus.GENERATING.value
         job.error_message = None
-        await self.db.flush()
+        await self.repo.save_report_job(job)
 
         try:
             context = await self._build_context(job)
@@ -326,13 +316,13 @@ class ReportsService:
             job.mime_type = "application/pdf"
             job.completed_at = _utc_now()
             job.expires_at = _utc_now() + timedelta(hours=settings.report_download_ttl_hours)
-            await self.db.flush()
+            await self.repo.save_report_job(job)
             await self._notify_report_ready(job)
         except Exception as exc:
             job.status = ReportJobStatus.FAILED.value
             job.error_message = str(exc)
             job.completed_at = _utc_now()
-            await self.db.flush()
+            await self.repo.save_report_job(job)
             await self._notify_report_failed(job)
 
         return job
@@ -344,8 +334,8 @@ class ReportsService:
             if job.file_path:
                 await storage.delete(job.file_path)
                 job.file_path = None
+                await self.repo.save_report_job(job)
                 cleaned += 1
-        await self.db.flush()
         return cleaned
 
     async def _resolve_parameters(
@@ -528,32 +518,17 @@ class ReportsService:
         from_date, to_date = self._resolve_window(job.parameters)
         from_dt, to_dt = _datetime_bounds(from_date, to_date)
 
-        grades_result = await self.db.execute(
-            select(
-                Course.title.label("subject"),
-                Assignment.title.label("assignment_title"),
-                Grade.score.label("score"),
-                Assignment.total_points.label("total_points"),
-                Grade.feedback_text.label("feedback"),
-                Grade.published_at.label("published_at"),
-            )
-            .select_from(Grade)
-            .join(Submission, Submission.id == Grade.submission_id)
-            .join(Assignment, Assignment.id == Submission.assignment_id)
-            .join(Course, Course.id == Assignment.course_id)
-            .where(
-                Course.school_id == job.school_id,
-                Submission.student_id == student_id,
-                Grade.created_at >= from_dt,
-                Grade.created_at < to_dt,
-            )
-            .order_by(Course.title.asc(), Grade.created_at.desc())
+        grade_rows = await self.repo.list_student_report_grade_rows(
+            school_id=job.school_id,
+            student_id=student_id,
+            from_dt=from_dt,
+            to_dt=to_dt,
         )
 
         subjects: dict[str, dict[str, Any]] = defaultdict(
             lambda: {"assignments": [], "scores": [], "comments": []}
         )
-        for row in grades_result:
+        for row in grade_rows:
             subjects[row.subject]["assignments"].append(
                 {
                     "title": row.assignment_title,
@@ -582,28 +557,14 @@ class ReportsService:
                 }
             )
 
-        attendance_result = await self.db.execute(
-            select(
-                func.count(AttendanceRecord.id).label("total"),
-                func.count().filter(AttendanceRecord.status == "present").label("present"),
-                func.count().filter(AttendanceRecord.status == "absent").label("absent"),
-                func.count().filter(AttendanceRecord.status == "excused").label("excused"),
-            )
-            .select_from(AttendanceRecord)
-            .join(
-                AttendanceSession,
-                AttendanceSession.id == AttendanceRecord.attendance_session_id,
-            )
-            .where(
-                AttendanceRecord.school_id == job.school_id,
-                AttendanceRecord.student_id == student_id,
-                AttendanceSession.session_date >= from_date,
-                AttendanceSession.session_date <= to_date,
+        total_records, present_records, _absent_records, _excused_records = (
+            await self.repo.get_student_report_attendance_summary(
+                school_id=job.school_id,
+                student_id=student_id,
+                from_date=from_date,
+                to_date=to_date,
             )
         )
-        attendance = attendance_result.one()
-        total_records = int(attendance.total or 0)
-        present_records = int(attendance.present or 0)
         attendance_rate = (present_records / total_records) * 100 if total_records else 0.0
 
         return {
@@ -638,58 +599,21 @@ class ReportsService:
         from_date, to_date = self._resolve_window(job.parameters)
         from_dt, to_dt = _datetime_bounds(from_date, to_date)
         student_ids = await self._class_student_ids(class_id, job)
-
-        users_result = await self.db.execute(
-            select(User.id, User.full_name).where(User.id.in_(student_ids))
+        student_names = await self.repo.list_user_names_by_ids(student_ids)
+        grade_map = await self.repo.list_class_student_grade_averages(
+            school_id=job.school_id,
+            class_id=class_id,
+            student_ids=student_ids,
+            from_dt=from_dt,
+            to_dt=to_dt,
         )
-        student_names = {row.id: row.full_name for row in users_result}
-
-        grades_result = await self.db.execute(
-            select(
-                Submission.student_id,
-                func.avg(Grade.score).label("average_grade"),
-            )
-            .select_from(Grade)
-            .join(Submission, Submission.id == Grade.submission_id)
-            .join(Assignment, Assignment.id == Submission.assignment_id)
-            .join(Course, Course.id == Assignment.course_id)
-            .where(
-                Course.school_id == job.school_id,
-                Course.class_id == class_id,
-                Submission.student_id.in_(student_ids),
-                Grade.created_at >= from_dt,
-                Grade.created_at < to_dt,
-            )
-            .group_by(Submission.student_id)
+        attendance_map = await self.repo.list_class_student_attendance_rates(
+            school_id=job.school_id,
+            class_id=class_id,
+            student_ids=student_ids,
+            from_date=from_date,
+            to_date=to_date,
         )
-        grade_map = {row.student_id: float(row.average_grade or 0) for row in grades_result}
-
-        attendance_result = await self.db.execute(
-            select(
-                AttendanceRecord.student_id,
-                func.count(AttendanceRecord.id).label("total"),
-                func.count().filter(AttendanceRecord.status == "present").label("present"),
-            )
-            .select_from(AttendanceRecord)
-            .join(
-                AttendanceSession,
-                AttendanceSession.id == AttendanceRecord.attendance_session_id,
-            )
-            .where(
-                AttendanceRecord.school_id == job.school_id,
-                AttendanceRecord.student_id.in_(student_ids),
-                AttendanceSession.class_id == class_id,
-                AttendanceSession.session_date >= from_date,
-                AttendanceSession.session_date <= to_date,
-            )
-            .group_by(AttendanceRecord.student_id)
-        )
-        attendance_map = {
-            row.student_id: round(((row.present or 0) / row.total) * 100, 2)
-            if row.total
-            else 0.0
-            for row in attendance_result
-        }
 
         rows = []
         for student_id in student_ids:
@@ -746,36 +670,13 @@ class ReportsService:
         from_date, to_date = self._resolve_window(job.parameters)
         student_ids = await self._class_student_ids(class_id, job)
 
-        users_result = await self.db.execute(
-            select(User.id, User.full_name).where(User.id.in_(student_ids))
-        )
-        student_names = {row.id: row.full_name for row in users_result}
-
-        summary_result = await self.db.execute(
-            select(
-                AttendanceRecord.student_id,
-                func.count(AttendanceRecord.id).label("total_records"),
-                func.count().filter(AttendanceRecord.status == "absent").label("absences"),
-                func.count().filter(AttendanceRecord.status == "excused").label("excused"),
-                func.count().filter(AbsenceJustification.status == "justified").label("justified"),
-            )
-            .select_from(AttendanceRecord)
-            .join(
-                AttendanceSession,
-                AttendanceSession.id == AttendanceRecord.attendance_session_id,
-            )
-            .outerjoin(
-                AbsenceJustification,
-                AbsenceJustification.attendance_record_id == AttendanceRecord.id,
-            )
-            .where(
-                AttendanceRecord.school_id == job.school_id,
-                AttendanceRecord.student_id.in_(student_ids),
-                AttendanceSession.class_id == class_id,
-                AttendanceSession.session_date >= from_date,
-                AttendanceSession.session_date <= to_date,
-            )
-            .group_by(AttendanceRecord.student_id)
+        student_names = await self.repo.list_user_names_by_ids(student_ids)
+        summary_rows = await self.repo.list_attendance_summary_rows(
+            school_id=job.school_id,
+            class_id=class_id,
+            student_ids=student_ids,
+            from_date=from_date,
+            to_date=to_date,
         )
 
         student_rows = [
@@ -788,28 +689,14 @@ class ReportsService:
                 "justified": int(row.justified or 0),
                 "unjustified": max(int(row.absences or 0) - int(row.justified or 0), 0),
             }
-            for row in summary_result
+            for row in summary_rows
         ]
 
-        trend_result = await self.db.execute(
-            select(
-                AttendanceSession.session_date,
-                func.count().filter(AttendanceRecord.status == "absent").label("absent"),
-                func.count().filter(AttendanceRecord.status == "excused").label("excused"),
-            )
-            .select_from(AttendanceRecord)
-            .join(
-                AttendanceSession,
-                AttendanceSession.id == AttendanceRecord.attendance_session_id,
-            )
-            .where(
-                AttendanceRecord.school_id == job.school_id,
-                AttendanceSession.class_id == class_id,
-                AttendanceSession.session_date >= from_date,
-                AttendanceSession.session_date <= to_date,
-            )
-            .group_by(AttendanceSession.session_date)
-            .order_by(AttendanceSession.session_date.asc())
+        trend_rows = await self.repo.list_attendance_trends(
+            school_id=job.school_id,
+            class_id=class_id,
+            from_date=from_date,
+            to_date=to_date,
         )
 
         return {
@@ -830,7 +717,7 @@ class ReportsService:
                     "absent": int(row.absent or 0),
                     "excused": int(row.excused or 0),
                 }
-                for row in trend_result
+                for row in trend_rows
             ],
         }
 
@@ -844,33 +731,26 @@ class ReportsService:
             raise NotFoundError("Parent not found", error_code="ERR-REPORT-404")
 
         from_date, to_date = self._resolve_window(job.parameters)
-        invoices_result = await self.db.execute(
-            select(Invoice).where(
-                Invoice.school_id == job.school_id,
-                Invoice.parent_id == parent_id,
-                Invoice.issued_date >= from_date,
-                Invoice.issued_date <= to_date,
-            )
+        invoices = await self.repo.list_invoices_for_parent(
+            school_id=job.school_id,
+            parent_id=parent_id,
+            from_date=from_date,
+            to_date=to_date,
         )
-        invoices = list(invoices_result.scalars().all())
         invoice_ids = [invoice.id for invoice in invoices]
 
         payments_map: dict[uuid.UUID, list[dict[str, Any]]] = defaultdict(list)
-        if invoice_ids:
-            payments_result = await self.db.execute(
-                select(PaymentAttempt).where(PaymentAttempt.invoice_id.in_(invoice_ids))
+        for payment in await self.repo.list_payment_attempts_for_invoice_ids(invoice_ids):
+            payments_map[payment.invoice_id].append(
+                {
+                    "id": str(payment.id),
+                    "status": payment.status,
+                    "retry_count": payment.retry_count,
+                    "finalized_at": payment.finalized_at.isoformat()
+                    if payment.finalized_at
+                    else None,
+                }
             )
-            for payment in payments_result.scalars().all():
-                payments_map[payment.invoice_id].append(
-                    {
-                        "id": str(payment.id),
-                        "status": payment.status,
-                        "retry_count": payment.retry_count,
-                        "finalized_at": payment.finalized_at.isoformat()
-                        if payment.finalized_at
-                        else None,
-                    }
-                )
 
         invoice_rows = []
         total_invoiced = 0.0
@@ -929,15 +809,13 @@ class ReportsService:
         }
 
     async def _class_student_ids(self, class_id: uuid.UUID, job: ReportJob) -> list[uuid.UUID]:
-        query = select(Enrollment.student_id).where(
-            Enrollment.class_id == class_id,
-            Enrollment.school_id == job.school_id,
-            Enrollment.status == "active",
+        return await self.repo.list_class_student_ids(
+            class_id=class_id,
+            school_id=job.school_id,
+            period_id=uuid.UUID(job.parameters["period_id"])
+            if job.parameters.get("period_id")
+            else None,
         )
-        if job.parameters.get("period_id"):
-            query = query.where(Enrollment.period_id == uuid.UUID(job.parameters["period_id"]))
-        result = await self.db.execute(query)
-        return list(dict.fromkeys(result.scalars().all()))
 
     def _resolve_window(self, parameters: dict[str, Any]) -> tuple[date, date]:
         from_date = (

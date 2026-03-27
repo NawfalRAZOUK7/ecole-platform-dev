@@ -29,6 +29,7 @@ from app.core.dependencies import (
     verify_school_boundary,
 )
 from app.core.exceptions import NotFoundError, ValidationError
+from app.core.request_utils import get_client_ip
 from app.core.response import (
     clamp_page_size,
     decode_cursor,
@@ -57,18 +58,6 @@ from app.services.audit import AuditService
 from app.services.realtime import publish_message_created
 
 router = APIRouter(prefix="/messages", tags=["messaging"])
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-def _get_client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
 
 
 def _conversation_to_response(
@@ -374,7 +363,7 @@ async def create_conversation(
         target_id=conv.id,
         outcome="success",
         entity_after=resp,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     await db.commit()
@@ -572,7 +561,7 @@ async def send_message(
         target_id=msg.id,
         outcome="success",
         entity_after=resp,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     await db.commit()

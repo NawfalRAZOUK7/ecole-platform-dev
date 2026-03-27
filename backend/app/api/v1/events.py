@@ -18,6 +18,7 @@ from app.core.permissions import (
     PERM_CAL_RSVP_RESPOND,
 )
 from app.core.response import list_response, success_response
+from app.core.request_utils import get_client_ip, request_locale
 from app.schemas.calendar import (
     CalendarOptionsResponse,
     EventCreateRequest,
@@ -33,22 +34,6 @@ from app.services.rsvp import RSVPService
 router = APIRouter(tags=["calendar"])
 
 
-def _get_client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
-
-
-def _request_locale(request: Request) -> str:
-    accept_language = request.headers.get("Accept-Language", "fr").lower()
-    if accept_language.startswith("ar"):
-        return "ar"
-    if accept_language.startswith("en"):
-        return "en"
-    return "fr"
 
 
 @router.get(
@@ -117,7 +102,7 @@ async def create_event(
         target_id=event.id,
         outcome="success",
         entity_after=payload,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
     await db.commit()
     return success_response(payload)
@@ -191,7 +176,7 @@ async def update_event(
         outcome="success",
         entity_before=before,
         entity_after=after,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
     await db.commit()
     return success_response(after)
@@ -229,7 +214,7 @@ async def delete_event(
         outcome="success",
         entity_before=before,
         entity_after={"deleted": True, "id": str(event.id)},
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
     await db.commit()
     return success_response({"deleted": True, "id": str(event.id)})
@@ -264,7 +249,7 @@ async def respond_to_event(
         target_id=event_id,
         outcome="success",
         entity_after=payload,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
     await db.commit()
     return success_response(payload)
@@ -341,7 +326,7 @@ async def update_reminder_preferences(
         outcome="success",
         entity_before={"preferences": before},
         entity_after={"preferences": after},
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
     await db.commit()
     return success_response({"preferences": after})
@@ -369,7 +354,7 @@ async def calendar_options(
             school_id=auth.school_id,
             role=auth.role,
             base_url=str(request.base_url),
-            lang=_request_locale(request),
+            lang=request_locale(request),
         ),
         reminder_preferences=await calendar.list_reminder_preferences(
             school_id=auth.school_id,

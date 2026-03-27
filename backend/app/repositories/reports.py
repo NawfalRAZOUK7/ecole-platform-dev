@@ -7,7 +7,6 @@ from datetime import date, datetime
 from typing import Any
 
 from sqlalchemy import and_, func, or_, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.response import decode_cursor, encode_cursor
 from app.models.audit import AuditLog
@@ -24,15 +23,18 @@ from app.models.erp import (
 from app.models.iam import Membership, ParentChildLink, Session, User
 from app.models.lms import Assignment, Course, Grade, Submission
 from app.models.reporting import DataExport, ReportJob
+from app.repositories.base import BaseRepository
 
 
-class ReportsRepository:
+class ReportsRepository(BaseRepository):
     """Persistence and query helpers for report jobs and exports."""
 
-    def __init__(self, db: AsyncSession) -> None:
-        self.db = db
-
     async def create_report_job(self, job: ReportJob) -> ReportJob:
+        self.db.add(job)
+        await self.db.flush()
+        return job
+
+    async def save_report_job(self, job: ReportJob) -> ReportJob:
         self.db.add(job)
         await self.db.flush()
         return job
@@ -302,6 +304,268 @@ class ReportsRepository:
         )
         return set(result.scalars().all())
 
+    async def list_class_student_ids(
+        self,
+        *,
+        class_id: uuid.UUID,
+        school_id: uuid.UUID,
+        period_id: uuid.UUID | None = None,
+    ) -> list[uuid.UUID]:
+        query = select(Enrollment.student_id).where(
+            Enrollment.class_id == class_id,
+            Enrollment.school_id == school_id,
+            Enrollment.status == "active",
+        )
+        if period_id:
+            query = query.where(Enrollment.period_id == period_id)
+        result = await self.db.execute(query)
+        return list(dict.fromkeys(result.scalars().all()))
+
+    async def list_user_names_by_ids(
+        self,
+        user_ids: list[uuid.UUID],
+    ) -> dict[uuid.UUID, str]:
+        if not user_ids:
+            return {}
+        result = await self.db.execute(select(User.id, User.full_name).where(User.id.in_(user_ids)))
+        return {row.id: row.full_name for row in result}
+
+    async def list_student_report_grade_rows(
+        self,
+        *,
+        school_id: uuid.UUID,
+        student_id: uuid.UUID,
+        from_dt: datetime,
+        to_dt: datetime,
+    ) -> list[Any]:
+        result = await self.db.execute(
+            select(
+                Course.title.label("subject"),
+                Assignment.title.label("assignment_title"),
+                Grade.score.label("score"),
+                Assignment.total_points.label("total_points"),
+                Grade.feedback_text.label("feedback"),
+                Grade.published_at.label("published_at"),
+            )
+            .select_from(Grade)
+            .join(Submission, Submission.id == Grade.submission_id)
+            .join(Assignment, Assignment.id == Submission.assignment_id)
+            .join(Course, Course.id == Assignment.course_id)
+            .where(
+                Course.school_id == school_id,
+                Submission.student_id == student_id,
+                Grade.created_at >= from_dt,
+                Grade.created_at < to_dt,
+            )
+            .order_by(Course.title.asc(), Grade.created_at.desc())
+        )
+        return list(result)
+
+    async def get_student_report_attendance_summary(
+        self,
+        *,
+        school_id: uuid.UUID,
+        student_id: uuid.UUID,
+        from_date: date,
+        to_date: date,
+    ) -> tuple[int, int, int, int]:
+        result = await self.db.execute(
+            select(
+                func.count(AttendanceRecord.id).label("total"),
+                func.count().filter(AttendanceRecord.status == "present").label("present"),
+                func.count().filter(AttendanceRecord.status == "absent").label("absent"),
+                func.count().filter(AttendanceRecord.status == "excused").label("excused"),
+            )
+            .select_from(AttendanceRecord)
+            .join(
+                AttendanceSession,
+                AttendanceSession.id == AttendanceRecord.attendance_session_id,
+            )
+            .where(
+                AttendanceRecord.school_id == school_id,
+                AttendanceRecord.student_id == student_id,
+                AttendanceSession.session_date >= from_date,
+                AttendanceSession.session_date <= to_date,
+            )
+        )
+        row = result.one()
+        return (
+            int(row.total or 0),
+            int(row.present or 0),
+            int(row.absent or 0),
+            int(row.excused or 0),
+        )
+
+    async def list_class_student_grade_averages(
+        self,
+        *,
+        school_id: uuid.UUID,
+        class_id: uuid.UUID,
+        student_ids: list[uuid.UUID],
+        from_dt: datetime,
+        to_dt: datetime,
+    ) -> dict[uuid.UUID, float]:
+        if not student_ids:
+            return {}
+        result = await self.db.execute(
+            select(
+                Submission.student_id,
+                func.avg(Grade.score).label("average_grade"),
+            )
+            .select_from(Grade)
+            .join(Submission, Submission.id == Grade.submission_id)
+            .join(Assignment, Assignment.id == Submission.assignment_id)
+            .join(Course, Course.id == Assignment.course_id)
+            .where(
+                Course.school_id == school_id,
+                Course.class_id == class_id,
+                Submission.student_id.in_(student_ids),
+                Grade.created_at >= from_dt,
+                Grade.created_at < to_dt,
+            )
+            .group_by(Submission.student_id)
+        )
+        return {
+            row.student_id: float(row.average_grade or 0)
+            for row in result
+        }
+
+    async def list_class_student_attendance_rates(
+        self,
+        *,
+        school_id: uuid.UUID,
+        class_id: uuid.UUID,
+        student_ids: list[uuid.UUID],
+        from_date: date,
+        to_date: date,
+    ) -> dict[uuid.UUID, float]:
+        if not student_ids:
+            return {}
+        result = await self.db.execute(
+            select(
+                AttendanceRecord.student_id,
+                func.count(AttendanceRecord.id).label("total"),
+                func.count().filter(AttendanceRecord.status == "present").label("present"),
+            )
+            .select_from(AttendanceRecord)
+            .join(
+                AttendanceSession,
+                AttendanceSession.id == AttendanceRecord.attendance_session_id,
+            )
+            .where(
+                AttendanceRecord.school_id == school_id,
+                AttendanceRecord.student_id.in_(student_ids),
+                AttendanceSession.class_id == class_id,
+                AttendanceSession.session_date >= from_date,
+                AttendanceSession.session_date <= to_date,
+            )
+            .group_by(AttendanceRecord.student_id)
+        )
+        return {
+            row.student_id: round(((row.present or 0) / row.total) * 100, 2)
+            if row.total
+            else 0.0
+            for row in result
+        }
+
+    async def list_attendance_summary_rows(
+        self,
+        *,
+        school_id: uuid.UUID,
+        class_id: uuid.UUID,
+        student_ids: list[uuid.UUID],
+        from_date: date,
+        to_date: date,
+    ) -> list[Any]:
+        if not student_ids:
+            return []
+        result = await self.db.execute(
+            select(
+                AttendanceRecord.student_id,
+                func.count(AttendanceRecord.id).label("total_records"),
+                func.count().filter(AttendanceRecord.status == "absent").label("absences"),
+                func.count().filter(AttendanceRecord.status == "excused").label("excused"),
+                func.count().filter(AbsenceJustification.status == "justified").label("justified"),
+            )
+            .select_from(AttendanceRecord)
+            .join(
+                AttendanceSession,
+                AttendanceSession.id == AttendanceRecord.attendance_session_id,
+            )
+            .outerjoin(
+                AbsenceJustification,
+                AbsenceJustification.attendance_record_id == AttendanceRecord.id,
+            )
+            .where(
+                AttendanceRecord.school_id == school_id,
+                AttendanceRecord.student_id.in_(student_ids),
+                AttendanceSession.class_id == class_id,
+                AttendanceSession.session_date >= from_date,
+                AttendanceSession.session_date <= to_date,
+            )
+            .group_by(AttendanceRecord.student_id)
+        )
+        return list(result)
+
+    async def list_attendance_trends(
+        self,
+        *,
+        school_id: uuid.UUID,
+        class_id: uuid.UUID,
+        from_date: date,
+        to_date: date,
+    ) -> list[Any]:
+        result = await self.db.execute(
+            select(
+                AttendanceSession.session_date,
+                func.count().filter(AttendanceRecord.status == "absent").label("absent"),
+                func.count().filter(AttendanceRecord.status == "excused").label("excused"),
+            )
+            .select_from(AttendanceRecord)
+            .join(
+                AttendanceSession,
+                AttendanceSession.id == AttendanceRecord.attendance_session_id,
+            )
+            .where(
+                AttendanceRecord.school_id == school_id,
+                AttendanceSession.class_id == class_id,
+                AttendanceSession.session_date >= from_date,
+                AttendanceSession.session_date <= to_date,
+            )
+            .group_by(AttendanceSession.session_date)
+            .order_by(AttendanceSession.session_date.asc())
+        )
+        return list(result)
+
+    async def list_invoices_for_parent(
+        self,
+        *,
+        school_id: uuid.UUID,
+        parent_id: uuid.UUID,
+        from_date: date,
+        to_date: date,
+    ) -> list[Invoice]:
+        result = await self.db.execute(
+            select(Invoice).where(
+                Invoice.school_id == school_id,
+                Invoice.parent_id == parent_id,
+                Invoice.issued_date >= from_date,
+                Invoice.issued_date <= to_date,
+            )
+        )
+        return list(result.scalars().all())
+
+    async def list_payment_attempts_for_invoice_ids(
+        self,
+        invoice_ids: list[uuid.UUID],
+    ) -> list[PaymentAttempt]:
+        if not invoice_ids:
+            return []
+        result = await self.db.execute(
+            select(PaymentAttempt).where(PaymentAttempt.invoice_id.in_(invoice_ids))
+        )
+        return list(result.scalars().all())
+
     async def count_export_rows(
         self,
         *,
@@ -570,11 +834,8 @@ class ReportsRepository:
         raise ValueError(f"Unsupported export entity: {entity}")
 
 
-class AnalyticsRepository:
+class AnalyticsRepository(BaseRepository):
     """Low-level analytics queries for the dashboard APIs."""
-
-    def __init__(self, db: AsyncSession) -> None:
-        self.db = db
 
     async def count_active_users(
         self,

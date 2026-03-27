@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.redis import get_redis
 from app.core.response import success_response
+from app.core.request_utils import get_client_ip
 from app.schemas.auth import (
     RecoveryRequestCreate,
     RecoveryResetRequest,
@@ -25,14 +26,6 @@ from app.services.auth import RecoveryService
 
 router = APIRouter(prefix="/recovery", tags=["recovery"])
 
-
-def _get_client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
 
 
 # ---------------------------------------------------------------------------
@@ -58,7 +51,7 @@ async def request_recovery(
     result = await service.request_recovery(
         email=body.email,
         school_id=body.school_id,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
     return success_response(result)
 
@@ -85,7 +78,7 @@ async def verify_recovery(
     result = await service.verify_otp(
         request_id=body.request_id,
         otp=body.otp,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
     return success_response(result)
 
@@ -113,6 +106,6 @@ async def reset_password(
     result = await service.reset_password(
         request_id=body.request_id,
         new_password=body.new_password,
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
     return success_response(result)

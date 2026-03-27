@@ -20,6 +20,7 @@ from app.core.dependencies import (
 )
 from app.core.exceptions import NotFoundError
 from app.core.response import success_response
+from app.core.request_utils import get_client_ip
 from app.models.erp import Class, Period, TeacherAssignment
 from app.models.iam import User
 from app.schemas.erp import TeacherAssignmentCreateRequest
@@ -27,14 +28,6 @@ from app.services.audit import AuditService
 
 router = APIRouter(prefix="/class-assignments", tags=["erp-class-assignments"])
 
-
-def _get_client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
 
 
 @router.post(
@@ -124,7 +117,7 @@ async def create_teacher_assignment(
             "class_id": str(body.class_id),
             "period_id": str(body.period_id),
         },
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(

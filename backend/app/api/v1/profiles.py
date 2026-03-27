@@ -21,6 +21,7 @@ from app.core.database import get_db
 from app.core.dependencies import AuthContext, get_current_user, requires_role
 from app.core.exceptions import NotFoundError, ValidationError
 from app.core.response import success_response
+from app.core.request_utils import get_client_ip
 from app.models.iam import (
     Membership,
     ParentChildLink,
@@ -50,14 +51,6 @@ _ROLE_PROFILE_MAP = {
     "PAR": ParentProfile,
 }
 
-
-def _get_client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
 
 
 async def _get_user_with_profile(
@@ -198,7 +191,7 @@ async def update_my_profile(
         entity_before=jsonable_encoder(entity_before),
         entity_after=jsonable_encoder(update_data),
         outcome="success",
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     await db.commit()

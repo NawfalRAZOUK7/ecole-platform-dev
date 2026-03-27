@@ -18,6 +18,7 @@ from app.core.dependencies import (
     verify_school_boundary,
 )
 from app.core.exceptions import NotFoundError
+from app.core.request_utils import get_client_ip
 from app.core.response import (
     clamp_page_size,
     decode_cursor,
@@ -31,14 +32,6 @@ from app.services.audit import AuditService
 
 router = APIRouter(prefix="/consents", tags=["com-consents"])
 
-
-def _get_client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
 
 
 @router.get(
@@ -146,7 +139,7 @@ async def update_consent(
         target_id=consent.id,
         entity_before={"status": old_status},
         entity_after={"status": body.status},
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(

@@ -38,6 +38,7 @@ from app.core.response import (
     success_response,
 )
 from app.core.search import apply_search, parse_search
+from app.core.request_utils import get_client_ip
 from app.models.erp import Class
 from app.models.lms import Course
 from app.schemas.lms import CourseCreateRequest
@@ -45,14 +46,6 @@ from app.services.audit import AuditService
 
 router = APIRouter(prefix="/courses", tags=["lms-courses"])
 
-
-def _get_client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return None
 
 
 @router.post(
@@ -112,7 +105,7 @@ async def create_course(
             "title": body.title,
             "status": body.status,
         },
-        ip_address=_get_client_ip(request),
+        ip_address=get_client_ip(request),
     )
 
     return success_response(
