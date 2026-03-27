@@ -839,10 +839,10 @@
 - [x] i18n (fr/ar/en)
 
 ## Phase 12C — Student Progress Dashboard (Web + Mobile)
-- [ ] `ProgressDashboardPage.tsx` — student progress with 4 charts (grade trend, content completion, activity scores, attendance)
-- [ ] Parent dashboard: progress summary per child + drill-down
-- [ ] `ClassProgressPage.tsx` — teacher class-wide averages + per-student breakdown
-- [ ] `progress_screen.dart` — mobile progress with fl_chart (swipe between tabs)
-- [ ] Parent mobile: child progress cards
-- [ ] Charts render with real aggregated data from 11D endpoints
-- [ ] i18n (fr/ar/en)
+- [x] `ProgressDashboardPage.tsx` — student progress with 4 charts (grade trend, content completion, activity scores, attendance)
+- [x] Parent dashboard: progress summary per child + drill-down
+- [x] `ClassProgressPage.tsx` — teacher class-wide averages + per-student breakdown
+- [x] `progress_screen.dart` — mobile progress with fl_chart (swipe between tabs)
+- [x] Parent mobile: child progress cards
+- [x] Charts render with real aggregated data from 11D endpoints
+- [x] i18n (fr/ar/en)

@@ -48,7 +48,10 @@
     "announcements": "Annonces",
     "adminFeeStructures": "Frais scolaires",
     "adminFeeAssignments": "Attribution des frais",
-    "adminGenerateInvoices": "Generer des factures"
+    "adminGenerateInvoices": "Generer des factures",
+    "teacherClassProgress": "Progrès de la classe",
+    "progress": "Mon progrès",
+    "parentProgress": "Progrès des enfants"
   },
   "login": {
     "title": "Connexion",
@@ -977,5 +980,30 @@
     "formBody": "Contenu",
     "bodyPlaceholder": "Redigez le contenu de l'annonce...",
     "targetRoles": "Roles cibles"
+  },
+  "progress": {
+    "title": "Tableau de bord",
+    "myProgress": "Mon progrès",
+    "parentTitle": "Progrès des enfants",
+    "classTitle": "Progrès de la classe",
+    "gradeTrend": "Tendance des notes",
+    "gradeAvg": "Moyenne",
+    "contentCompletion": "Contenu complété",
+    "contentRate": "Taux de complétion",
+    "activityScores": "Scores d'activités",
+    "attendance": "Présence",
+    "attendanceRate": "Taux de présence",
+    "noData": "Aucune donnée disponible",
+    "comparison": "Comparaison",
+    "latestGrade": "Dernière note",
+    "viewDetails": "Voir les détails",
+    "selectClass": "Sélectionner une classe",
+    "classGradeAvg": "Moyenne de la classe",
+    "classAttendance": "Présence de la classe",
+    "classContent": "Contenu complété",
+    "studentCount": "Nombre d'élèves",
+    "gradeComparison": "Comparaison des notes",
+    "perStudent": "Par élève",
+    "studentName": "Nom de l'élève"
   }
 }

@@ -47,6 +47,9 @@ const _allNavItems = [
   _NavItem(route: '/notifications', icon: Icons.notifications, label: 'Notifs', roles: ['PAR', 'TCH', 'ADM', 'DIR']),
   _NavItem(route: '/content', icon: Icons.library_books, label: 'Contenu', roles: ['PAR', 'ADM']),
   _NavItem(route: '/results', icon: Icons.assessment, label: 'Résultats', roles: ['STD', 'PAR']),
+  // Phase 12C tabs
+  _NavItem(route: '/progress', icon: Icons.trending_up, label: 'Progrès', roles: ['STD']),
+  _NavItem(route: '/parent/progress', icon: Icons.trending_up, label: 'Progrès', roles: ['PAR']),
   _NavItem(route: '/invoices', icon: Icons.receipt_long, label: 'Factures', roles: ['PAR', 'ADM']),
   _NavItem(route: '/profile', icon: Icons.person, label: 'Profil', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR', 'SUP']),
 ];

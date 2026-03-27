@@ -157,6 +157,22 @@ const Map<String, Map<String, String>> _translations = {
     'invoices.due': 'Échéance',
     'invoices.retry': 'Relancer le paiement',
 
+    // ── Progress (Phase 12C) ──
+    'progress.title': 'Mon progrès',
+    'progress.parentTitle': 'Progrès des enfants',
+    'progress.grades': 'Notes',
+    'progress.content': 'Contenu',
+    'progress.activities': 'Activités',
+    'progress.attendance': 'Présence',
+    'progress.gradeTrend': 'Tendance des notes',
+    'progress.gradeAvg': 'Moyenne',
+    'progress.contentCompletion': 'Contenu complété',
+    'progress.contentRate': 'Complétion',
+    'progress.activityScores': 'Scores d\'activités',
+    'progress.attendanceRate': 'Taux de présence',
+    'progress.noData': 'Aucune donnée',
+    'progress.noChildren': 'Aucun enfant lié',
+
     // ── Common ──
     'common.error': 'Erreur',
     'common.retry': 'Réessayer',
@@ -303,6 +319,22 @@ const Map<String, Map<String, String>> _translations = {
     'invoices.due': 'الاستحقاق',
     'invoices.retry': 'إعادة الدفع',
 
+    // ── Progress (Phase 12C) ──
+    'progress.title': 'تقدمي',
+    'progress.parentTitle': 'تقدم الأبناء',
+    'progress.grades': 'الدرجات',
+    'progress.content': 'المحتوى',
+    'progress.activities': 'الأنشطة',
+    'progress.attendance': 'الحضور',
+    'progress.gradeTrend': 'اتجاه الدرجات',
+    'progress.gradeAvg': 'المعدل',
+    'progress.contentCompletion': 'المحتوى المكتمل',
+    'progress.contentRate': 'نسبة الإكمال',
+    'progress.activityScores': 'درجات الأنشطة',
+    'progress.attendanceRate': 'نسبة الحضور',
+    'progress.noData': 'لا توجد بيانات',
+    'progress.noChildren': 'لا يوجد أبناء مرتبطين',
+
     // ── Common ──
     'common.error': 'خطأ',
     'common.retry': 'إعادة المحاولة',
@@ -448,6 +480,22 @@ const Map<String, Map<String, String>> _translations = {
     'invoices.issued': 'Issued',
     'invoices.due': 'Due',
     'invoices.retry': 'Retry payment',
+
+    // ── Progress (Phase 12C) ──
+    'progress.title': 'My Progress',
+    'progress.parentTitle': 'Children\'s Progress',
+    'progress.grades': 'Grades',
+    'progress.content': 'Content',
+    'progress.activities': 'Activities',
+    'progress.attendance': 'Attendance',
+    'progress.gradeTrend': 'Grade Trend',
+    'progress.gradeAvg': 'Average',
+    'progress.contentCompletion': 'Content Completion',
+    'progress.contentRate': 'Completion',
+    'progress.activityScores': 'Activity Scores',
+    'progress.attendanceRate': 'Attendance Rate',
+    'progress.noData': 'No data',
+    'progress.noChildren': 'No linked children',
 
     // ── Common ──
     'common.error': 'Error',

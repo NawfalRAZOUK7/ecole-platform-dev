@@ -38,6 +38,8 @@ import 'package:ecole_platform/features/timetable/timetable_screen.dart';
 import 'package:ecole_platform/features/messages/conversations_screen.dart';
 import 'package:ecole_platform/features/messages/chat_screen.dart';
 import 'package:ecole_platform/features/messages/announcements_screen.dart';
+import 'package:ecole_platform/features/progress/progress_screen.dart';
+import 'package:ecole_platform/features/progress/parent_progress_screen.dart';
 import 'package:ecole_platform/presentation/shell_screen.dart';
 
 /// Role-based redirect targets.
@@ -168,6 +170,22 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/announcements',
             builder: (context, state) => const AnnouncementsScreen(),
+          ),
+
+          // ── Phase 12C routes ──
+          GoRoute(
+            path: '/progress',
+            builder: (context, state) => const ProgressScreen(),
+          ),
+          GoRoute(
+            path: '/progress/:studentId',
+            builder: (context, state) => ProgressScreen(
+              studentId: state.pathParameters['studentId'],
+            ),
+          ),
+          GoRoute(
+            path: '/parent/progress',
+            builder: (context, state) => const ParentProgressScreen(),
           ),
 
           // ── Common routes ──

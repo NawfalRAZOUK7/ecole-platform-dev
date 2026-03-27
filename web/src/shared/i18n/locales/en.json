@@ -48,7 +48,10 @@
     "announcements": "Announcements",
     "adminFeeStructures": "Fee Structures",
     "adminFeeAssignments": "Fee Assignments",
-    "adminGenerateInvoices": "Generate Invoices"
+    "adminGenerateInvoices": "Generate Invoices",
+    "teacherClassProgress": "Class Progress",
+    "progress": "My Progress",
+    "parentProgress": "Children's Progress"
   },
   "login": {
     "title": "Sign In",
@@ -977,5 +980,30 @@
     "formBody": "Content",
     "bodyPlaceholder": "Write the announcement content...",
     "targetRoles": "Target Roles"
+  },
+  "progress": {
+    "title": "Progress Dashboard",
+    "myProgress": "My Progress",
+    "parentTitle": "Children's Progress",
+    "classTitle": "Class Progress",
+    "gradeTrend": "Grade Trend",
+    "gradeAvg": "Average",
+    "contentCompletion": "Content Completion",
+    "contentRate": "Completion Rate",
+    "activityScores": "Activity Scores",
+    "attendance": "Attendance",
+    "attendanceRate": "Attendance Rate",
+    "noData": "No data available",
+    "comparison": "Comparison",
+    "latestGrade": "Latest grade",
+    "viewDetails": "View details",
+    "selectClass": "Select a class",
+    "classGradeAvg": "Class Average",
+    "classAttendance": "Class Attendance",
+    "classContent": "Content Completed",
+    "studentCount": "Student Count",
+    "gradeComparison": "Grade Comparison",
+    "perStudent": "Per Student",
+    "studentName": "Student Name"
   }
 }

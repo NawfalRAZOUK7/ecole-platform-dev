@@ -57,6 +57,9 @@ import { GenerateInvoicesPage } from '@/features/billing/GenerateInvoicesPage';
 import { ConversationsPage } from '@/features/messages/ConversationsPage';
 import { ChatPage } from '@/features/messages/ChatPage';
 import { AnnouncementsPage } from '@/features/announcements/AnnouncementsPage';
+import { ProgressDashboardPage } from '@/features/progress/ProgressDashboardPage';
+import { ParentProgressPage } from '@/features/progress/ParentProgressPage';
+import { ClassProgressPage } from '@/features/teacher/ClassProgressPage';
 
 /** Redirect based on user role */
 function RoleRedirect() {
@@ -291,6 +294,32 @@ function App() {
           element={
             <ProtectedRoute roles={['PAR', 'TCH', 'ADM', 'DIR']}>
               <ChatPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Progress (Phase 12C) */}
+        <Route
+          path="/progress"
+          element={
+            <ProtectedRoute roles={['STD', 'PAR']}>
+              <ProgressDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/parent/progress"
+          element={
+            <ProtectedRoute roles={['PAR']}>
+              <ParentProgressPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teacher/class-progress"
+          element={
+            <ProtectedRoute roles={['TCH']}>
+              <ClassProgressPage />
             </ProtectedRoute>
           }
         />

@@ -48,7 +48,10 @@
     "announcements": "الإعلانات",
     "adminFeeStructures": "هيكل الرسوم",
     "adminFeeAssignments": "تخصيص الرسوم",
-    "adminGenerateInvoices": "إنشاء الفواتير"
+    "adminGenerateInvoices": "إنشاء الفواتير",
+    "teacherClassProgress": "تقدم الفصل",
+    "progress": "تقدمي",
+    "parentProgress": "تقدم الأبناء"
   },
   "login": {
     "title": "تسجيل الدخول",
@@ -977,5 +980,30 @@
     "formBody": "المحتوى",
     "bodyPlaceholder": "اكتب محتوى الإعلان...",
     "targetRoles": "الأدوار المستهدفة"
+  },
+  "progress": {
+    "title": "لوحة التقدم",
+    "myProgress": "تقدمي",
+    "parentTitle": "تقدم الأبناء",
+    "classTitle": "تقدم الفصل",
+    "gradeTrend": "اتجاه الدرجات",
+    "gradeAvg": "المعدل",
+    "contentCompletion": "المحتوى المكتمل",
+    "contentRate": "نسبة الإكمال",
+    "activityScores": "درجات الأنشطة",
+    "attendance": "الحضور",
+    "attendanceRate": "نسبة الحضور",
+    "noData": "لا توجد بيانات",
+    "comparison": "مقارنة",
+    "latestGrade": "آخر درجة",
+    "viewDetails": "عرض التفاصيل",
+    "selectClass": "اختر فصلاً",
+    "classGradeAvg": "معدل الفصل",
+    "classAttendance": "حضور الفصل",
+    "classContent": "المحتوى المكتمل",
+    "studentCount": "عدد الطلاب",
+    "gradeComparison": "مقارنة الدرجات",
+    "perStudent": "لكل طالب",
+    "studentName": "اسم الطالب"
   }
 }
