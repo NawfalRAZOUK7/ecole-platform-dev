@@ -14,6 +14,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Index,
+    Integer,
     String,
     Text,
     UniqueConstraint,
@@ -40,6 +41,7 @@ class ConsentScopeType(str, enum.Enum):
 
 
 class DeliveryChannel(str, enum.Enum):
+    IN_APP = "in_app"
     EMAIL = "email"
     SMS = "sms"
     PUSH = "push"
@@ -50,8 +52,38 @@ class DeliveryStatus(str, enum.Enum):
     SENT = "sent"
     DELIVERED = "delivered"
     FAILED = "failed"
+    CLICKED = "clicked"
+    OPENED = "opened"
+    BOUNCED = "bounced"
     FALLBACK = "fallback"
     SUPPRESSED = "suppressed"
+
+
+class NotificationCategory(str, enum.Enum):
+    ACADEMIC = "academic"
+    BILLING = "billing"
+    ATTENDANCE = "attendance"
+    SYSTEM = "system"
+    ANNOUNCEMENT = "announcement"
+
+
+class NotificationPriority(str, enum.Enum):
+    LOW = "low"
+    NORMAL = "normal"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+
+class DigestFrequency(str, enum.Enum):
+    OFF = "off"
+    DAILY = "daily"
+    WEEKLY = "weekly"
+
+
+class DevicePlatform(str, enum.Enum):
+    ANDROID = "android"
+    IOS = "ios"
+    WEB = "web"
 
 
 class ConversationType(str, enum.Enum):
@@ -131,8 +163,28 @@ class Notification(TimestampMixin, Base):
     idempotency_key: Mapped[str] = mapped_column(
         String(255), nullable=False, unique=True
     )
+    category: Mapped[str] = mapped_column(
+        String(30),
+        nullable=False,
+        default=NotificationCategory.SYSTEM.value,
+    )
+    priority: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        default=NotificationPriority.NORMAL.value,
+    )
     title: Mapped[str] = mapped_column(String(300), nullable=False)
     body: Mapped[str | None] = mapped_column(Text, nullable=True)
+    action_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    action_payload: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    read_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
 
     # Relationships
     deliveries: Mapped[list["NotificationDelivery"]] = relationship(
@@ -140,7 +192,80 @@ class Notification(TimestampMixin, Base):
     )
 
     __table_args__ = (
-        Index("idx_notifications_school_parent", "school_id", "parent_id"),
+        Index(
+            "idx_notifications_school_parent_created",
+            "school_id",
+            "parent_id",
+            "created_at",
+        ),
+        Index(
+            "idx_notifications_school_parent_read",
+            "school_id",
+            "parent_id",
+            "read_at",
+        ),
+        Index(
+            "idx_notifications_school_category_created",
+            "school_id",
+            "category",
+            "created_at",
+        ),
+    )
+
+    @property
+    def is_read(self) -> bool:
+        return self.read_at is not None
+
+
+class NotificationPreference(TimestampMixin, Base):
+    """Per-user notification preference by channel and category."""
+
+    __tablename__ = "notification_preferences"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    channel: Mapped[str] = mapped_column(String(20), nullable=False)
+    category: Mapped[str] = mapped_column(String(30), nullable=False)
+    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    digest_frequency: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        default=DigestFrequency.OFF.value,
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id",
+            "channel",
+            "category",
+            name="uq_notification_preferences_user_channel_category",
+        ),
+        Index("idx_notification_preferences_school_user", "school_id", "user_id"),
+    )
+
+
+class DeviceToken(TimestampMixin, Base):
+    """Registered mobile/web push token for a user."""
+
+    __tablename__ = "device_tokens"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    token: Mapped[str] = mapped_column(String(4096), nullable=False, unique=True)
+    platform: Mapped[str] = mapped_column(String(20), nullable=False)
+    device_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    last_active_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+    )
+
+    __table_args__ = (
+        Index("idx_device_tokens_school_user", "school_id", "user_id"),
+        Index("idx_device_tokens_last_active", "last_active_at"),
     )
 
 
@@ -157,6 +282,20 @@ class NotificationDelivery(TimestampMixin, Base):
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default=DeliveryStatus.QUEUED.value
     )
+    delivered_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    clicked_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    retry_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    provider_message_id: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+    last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationships
     notification: Mapped["Notification"] = relationship(back_populates="deliveries")
@@ -168,7 +307,12 @@ class NotificationDelivery(TimestampMixin, Base):
             "notification_id",
             "status",
         ),
+        Index("idx_deliveries_school_channel_status", "school_id", "channel", "status"),
     )
+
+    @property
+    def delivery_status(self) -> str:
+        return self.status
 
 
 class ParentFeedItem(TimestampMixin, Base):

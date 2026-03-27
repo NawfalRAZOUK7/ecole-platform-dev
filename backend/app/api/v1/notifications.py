@@ -1,110 +1,387 @@
-"""Notification API endpoint: GET /notifications.
-
-Reference: S-065 — List notifications (PAR, TCH).
-PAR sees own notifications. TCH sees school notifications.
-Phase 3D: filter, sort, full-text search support.
-"""
+"""Phase 13 notification center API."""
 
 from __future__ import annotations
 
+import uuid
+from datetime import datetime
 
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, Query, Request
+from fastapi.responses import HTMLResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import AuthContext, requires_permission
-from app.core.filtering import (
-    FilterSpec,
-    SortSpec,
-    apply_filters,
-    apply_sort,
-    parse_filters,
-    parse_sort,
+from app.core.dependencies import AuthContext, get_current_user, requires_permission
+from app.core.exceptions import AuthorizationError
+from app.core.response import clamp_page_size, list_response, success_response
+from app.schemas.notifications import (
+    DigestPreferenceRequest,
+    NotificationBatchRequest,
+    NotificationPreferencesUpdateRequest,
+    NotificationReadRequest,
 )
-from app.core.response import (
-    clamp_page_size,
-    decode_cursor,
-    encode_cursor,
-    list_response,
-)
-from app.core.search import apply_search, parse_search
-from app.models.com import Notification
+from app.services.audit import AuditService
+from app.services.email_digest import EmailDigestService
+from app.services.notification_hub import NotificationHubService
 
 router = APIRouter(prefix="/notifications", tags=["com-notifications"])
 
 
+def _get_client_ip(request: Request) -> str | None:
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    if request.client:
+        return request.client.host
+    return None
+
+
+def _request_locale(request: Request) -> str:
+    accept_language = request.headers.get("Accept-Language", "fr").lower()
+    if accept_language.startswith("ar"):
+        return "ar"
+    if accept_language.startswith("en"):
+        return "en"
+    return "fr"
+
+
 @router.get(
     "",
-    summary="List notifications",
-    response_description="Paginated list of notifications",
+    summary="Notification history",
+    response_description="Filtered notification history with cursor pagination",
 )
 async def list_notifications(
+    request: Request,
     cursor: str | None = Query(None),
     limit: int | None = Query(None),
-    filters: FilterSpec = Depends(parse_filters),
-    sort: SortSpec = Depends(parse_sort),
-    search: str | None = Depends(parse_search),
+    category: str | None = Query(None),
+    channel: str | None = Query(None),
+    read: bool | None = Query(None),
+    from_date: datetime | None = Query(None, alias="from"),
+    to_date: datetime | None = Query(None, alias="to"),
     auth: AuthContext = Depends(requires_permission("PERM-COM:notification:read")),
     db: AsyncSession = Depends(get_db),
 ):
-    """List notifications with filtering, sorting, and full-text search.
-
-    PAR: sees own notifications only (parent_id = user_id).
-    TCH/ADM: sees all school notifications.
-    Filters: ?filter[event_ref__like]=grade
-    Sort: ?sort=-created_at (default)
-    Search: ?search=bulletin
-    """
-    page_size = clamp_page_size(limit)
-
-    query = select(Notification).where(Notification.school_id == auth.school_id)
-
-    # PAR: filter to own notifications
-    if auth.role == "PAR":
-        query = query.where(Notification.parent_id == auth.user_id)
-
-    # Phase 3D: filters, search, sort
-    query = apply_filters(query, Notification, filters)
-    if search:
-        query = apply_search(query, Notification, search)
-    query = apply_sort(
-        query, Notification, sort, default_column=Notification.created_at.desc()
+    hub = NotificationHubService(db)
+    items, next_cursor, has_more = await hub.list_notifications(
+        school_id=auth.school_id,
+        user_id=auth.user_id,
+        role=auth.role,
+        category=category,
+        channel=channel,
+        read=read,
+        from_dt=from_date,
+        to_dt=to_date,
+        cursor=cursor,
+        limit=clamp_page_size(limit),
     )
+    return list_response(items, next_cursor=next_cursor, has_more=has_more)
 
-    if cursor:
-        last_id, _ = decode_cursor(cursor)
-        query = query.where(Notification.id > last_id)
 
-    query = query.limit(page_size + 1)
-    result = await db.execute(query)
-    notifications = list(result.scalars().all())
-
-    has_more = len(notifications) > page_size
-    if has_more:
-        notifications = notifications[:page_size]
-
-    items = [
+@router.get(
+    "/unread-count",
+    summary="Unread notification count",
+    response_description="Unread count with cache metadata",
+)
+async def unread_count(
+    auth: AuthContext = Depends(requires_permission("PERM-COM:notification:read")),
+    db: AsyncSession = Depends(get_db),
+):
+    hub = NotificationHubService(db)
+    count, cached = await hub.unread_count(
+        school_id=auth.school_id,
+        user_id=auth.user_id,
+        role=auth.role,
+    )
+    return success_response(
         {
-            "id": str(n.id),
-            "school_id": str(n.school_id),
-            "parent_id": str(n.parent_id),
-            "event_ref": n.event_ref,
-            "title": n.title,
-            "body": n.body,
-            "created_at": n.created_at.isoformat() if n.created_at else None,
+            "unread_count": count,
+            "cached": cached,
+            "cache_ttl_seconds": 30,
         }
-        for n in notifications
-    ]
-
-    next_cursor = (
-        encode_cursor(notifications[-1].id) if has_more and notifications else None
     )
-    return list_response(
-        items,
-        next_cursor=next_cursor,
-        has_more=has_more,
-        filters_applied=filters.as_dict() if filters.items else None,
-        sort_by=sort.as_list() if sort.fields else None,
-        search_term=search,
+
+
+@router.get(
+    "/preferences",
+    summary="Get notification preferences",
+    response_description="Per-channel and per-category preferences",
+)
+async def get_preferences(
+    auth: AuthContext = Depends(requires_permission("PERM-COM:notification:read")),
+    db: AsyncSession = Depends(get_db),
+):
+    hub = NotificationHubService(db)
+    preferences = await hub.list_preferences(
+        school_id=auth.school_id,
+        user_id=auth.user_id,
+    )
+    return success_response(
+        {
+            "user_id": str(auth.user_id),
+            "preferences": preferences,
+        }
+    )
+
+
+async def _update_preferences(
+    body: NotificationPreferencesUpdateRequest,
+    request: Request,
+    auth: AuthContext,
+    db: AsyncSession,
+):
+    hub = NotificationHubService(db)
+    audit = AuditService(db)
+    before = await hub.list_preferences(school_id=auth.school_id, user_id=auth.user_id)
+    after = await hub.update_preferences(
+        school_id=auth.school_id,
+        user_id=auth.user_id,
+        items=body.preferences,
+    )
+    await audit.log_event(
+        school_id=auth.school_id,
+        actor_id=auth.user_id,
+        action_type="notification.preferences.update",
+        target_type="notification_preferences",
+        target_id=auth.user_id,
+        outcome="success",
+        entity_before={"preferences": before},
+        entity_after={"preferences": after},
+        ip_address=_get_client_ip(request),
+    )
+    return success_response({"user_id": str(auth.user_id), "preferences": after})
+
+
+@router.post(
+    "/preferences",
+    summary="Update notification preferences",
+    response_description="Updated preferences",
+)
+async def post_preferences(
+    body: NotificationPreferencesUpdateRequest,
+    request: Request,
+    auth: AuthContext = Depends(requires_permission("PERM-COM:notification:read")),
+    db: AsyncSession = Depends(get_db),
+):
+    return await _update_preferences(body, request, auth, db)
+
+
+@router.put(
+    "/preferences",
+    summary="Replace notification preferences",
+    response_description="Updated preferences",
+)
+async def put_preferences(
+    body: NotificationPreferencesUpdateRequest,
+    request: Request,
+    auth: AuthContext = Depends(requires_permission("PERM-COM:notification:read")),
+    db: AsyncSession = Depends(get_db),
+):
+    return await _update_preferences(body, request, auth, db)
+
+
+@router.get(
+    "/digest/preferences",
+    summary="Get digest preference",
+    response_description="Digest frequency for the current user",
+)
+async def get_digest_preferences(
+    auth: AuthContext = Depends(requires_permission("PERM-COM:notification:read")),
+    db: AsyncSession = Depends(get_db),
+):
+    email_digest = EmailDigestService(db)
+    frequency = await email_digest.get_digest_frequency(
+        school_id=auth.school_id,
+        user_id=auth.user_id,
+    )
+    return success_response(
+        {
+            "user_id": str(auth.user_id),
+            "digest_frequency": frequency,
+            "send_hour": 7,
+            "timezone": "Africa/Casablanca",
+        }
+    )
+
+
+@router.post(
+    "/digest/preferences",
+    summary="Update digest preference",
+    response_description="Digest frequency saved for the current user",
+)
+async def update_digest_preferences(
+    body: DigestPreferenceRequest,
+    request: Request,
+    auth: AuthContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if auth.role not in {"PAR", "TCH", "ADM"}:
+        raise AuthorizationError(
+            "Digest preferences are not available for this role",
+            error_code="ERR-COM-403",
+        )
+
+    email_digest = EmailDigestService(db)
+    audit = AuditService(db)
+    before = await email_digest.get_digest_frequency(
+        school_id=auth.school_id,
+        user_id=auth.user_id,
+    )
+    after = await email_digest.update_digest_frequency(
+        school_id=auth.school_id,
+        user_id=auth.user_id,
+        digest_frequency=body.digest_frequency,
+    )
+    await audit.log_event(
+        school_id=auth.school_id,
+        actor_id=auth.user_id,
+        action_type="notification.digest.update",
+        target_type="notification_preferences",
+        target_id=auth.user_id,
+        outcome="success",
+        entity_before={"digest_frequency": before},
+        entity_after={"digest_frequency": after},
+        ip_address=_get_client_ip(request),
+    )
+    return success_response(
+        {
+            "user_id": str(auth.user_id),
+            "digest_frequency": after,
+            "send_hour": 7,
+            "timezone": "Africa/Casablanca",
+        }
+    )
+
+
+@router.patch(
+    "/mark-all-read",
+    summary="Mark all notifications as read",
+    response_description="Count of updated notifications",
+)
+async def mark_all_read(
+    auth: AuthContext = Depends(requires_permission("PERM-COM:notification:read")),
+    db: AsyncSession = Depends(get_db),
+):
+    hub = NotificationHubService(db)
+    result = await hub.mark_all_read(
+        school_id=auth.school_id,
+        user_id=auth.user_id,
+    )
+    return success_response(result)
+
+
+@router.patch(
+    "/{notification_id}/read",
+    summary="Mark a notification as read or unread",
+    response_description="Updated notification read state",
+)
+async def mark_notification_read(
+    notification_id: uuid.UUID,
+    body: NotificationReadRequest,
+    auth: AuthContext = Depends(requires_permission("PERM-COM:notification:read")),
+    db: AsyncSession = Depends(get_db),
+):
+    hub = NotificationHubService(db)
+    result = await hub.mark_read(
+        notification_id=notification_id,
+        school_id=auth.school_id,
+        user_id=auth.user_id,
+        role=auth.role,
+        read=body.read,
+    )
+    return success_response(result)
+
+
+@router.post(
+    "/batch",
+    summary="Batch create notifications",
+    response_description="Batch creation result",
+)
+async def batch_notifications(
+    body: NotificationBatchRequest,
+    request: Request,
+    auth: AuthContext = Depends(
+        requires_permission("PERM-COM:notification:batch-create")
+    ),
+    db: AsyncSession = Depends(get_db),
+):
+    hub = NotificationHubService(db)
+    audit = AuditService(db)
+    result = await hub.create_batch_notifications(
+        school_id=auth.school_id,
+        request=body,
+    )
+    await audit.log_event(
+        school_id=auth.school_id,
+        actor_id=auth.user_id,
+        action_type="notification.batch.create",
+        target_type="notification",
+        outcome="success",
+        entity_after={
+            "request": body.model_dump(mode="json"),
+            "result": result,
+        },
+        ip_address=_get_client_ip(request),
+    )
+    return success_response(result)
+
+
+@router.delete(
+    "/{notification_id}",
+    summary="Delete a notification",
+    response_description="Deletion outcome",
+)
+async def delete_notification(
+    notification_id: uuid.UUID,
+    hard_delete: bool = Query(False),
+    auth: AuthContext = Depends(requires_permission("PERM-COM:notification:read")),
+    db: AsyncSession = Depends(get_db),
+):
+    hub = NotificationHubService(db)
+    result = await hub.delete_notification(
+        notification_id=notification_id,
+        school_id=auth.school_id,
+        user_id=auth.user_id,
+        role=auth.role,
+        hard_delete=hard_delete,
+    )
+    return success_response(result)
+
+
+@router.get(
+    "/unsubscribe",
+    summary="One-click unsubscribe from notification emails",
+    response_description="Unsubscribe confirmation",
+    response_class=HTMLResponse,
+)
+async def unsubscribe_notifications(
+    token: str = Query(...),
+    db: AsyncSession = Depends(get_db),
+):
+    email_digest = EmailDigestService(db)
+    school_id, user_id = email_digest.parse_unsubscribe_token(token)
+    await email_digest.unsubscribe_all_email(school_id=school_id, user_id=user_id)
+    return HTMLResponse(
+        "<html><body><h1>Notification emails disabled</h1><p>You have been unsubscribed successfully.</p></body></html>"
+    )
+
+
+@router.get(
+    "/email-open",
+    summary="Tracking pixel for email opens",
+    response_description="1x1 transparent pixel",
+)
+async def track_email_open(
+    token: str = Query(...),
+    db: AsyncSession = Depends(get_db),
+):
+    email_digest = EmailDigestService(db)
+    delivery_id = email_digest.parse_open_tracking_token(token)
+    await email_digest.mark_email_opened(delivery_id=delivery_id)
+    return Response(
+        content=(
+            b"\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00"
+            b"\xff\xff\xff\x21\xf9\x04\x01\x00\x00\x00\x00\x2c\x00\x00\x00\x00"
+            b"\x01\x00\x01\x00\x00\x02\x02\x44\x01\x00\x3b"
+        ),
+        media_type="image/gif",
     )

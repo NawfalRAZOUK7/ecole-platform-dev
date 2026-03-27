@@ -194,55 +194,67 @@ async def task_cleanup_expired_cache(ctx: dict) -> int:
 # Task: send_notification_digest
 # ---------------------------------------------------------------------------
 async def task_send_notification_digest(ctx: dict) -> int:
-    """Send daily digest of unread notifications to parents.
+    """Send digest emails at the configured Africa/Casablanca send hour.
 
-    Queries notifications created in the last 24h that haven't been read,
-    groups by parent, and sends a summary email.
+    The worker runs hourly and the service decides whether daily/weekly users
+    are due based on local timezone rules.
     """
     from app.core.metrics import TASK_COMPLETED_COUNT, TASK_DURATION, TASK_FAILED_COUNT
 
     start = time.perf_counter()
     try:
-        from sqlalchemy import func, select
-
         from app.core.database import async_session
-        from app.models.com import Notification
-        from app.models.iam import User
-        from app.services.email import email_service
+        from app.repositories.notifications import NotificationRepository
+        from app.services.email_digest import EmailDigestService
 
-        cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
         sent_count = 0
+        now = datetime.now(timezone.utc)
 
         async with async_session() as db:
-            # Count unread notifications per parent in last 24h
-            result = await db.execute(
-                select(
-                    Notification.parent_id,
-                    func.count(Notification.id).label("count"),
-                )
-                .where(Notification.created_at >= cutoff)
-                .group_by(Notification.parent_id)
+            repo = NotificationRepository(db)
+            email_digest = EmailDigestService(db)
+
+            daily_targets = await email_digest.users_due_for_digest(
+                now=now,
+                frequency="daily",
             )
-            rows = result.all()
+            weekly_targets = await email_digest.users_due_for_digest(
+                now=now,
+                frequency="weekly",
+            )
 
-            for parent_id, notif_count in rows:
-                # Get parent email
-                user_result = await db.execute(select(User).where(User.id == parent_id))
-                user = user_result.scalar_one_or_none()
-                if user is None or not user.email:
-                    continue
+            users = await repo.list_user_contacts(
+                [user_id for _, user_id in [*daily_targets, *weekly_targets]]
+            )
 
-                # Send digest (reuse welcome template concept — simple notification)
-                await email_service.send_email(
-                    to=user.email,
-                    template_name="welcome",
-                    lang="fr",
-                    user_name=user.first_name or user.email,
-                    school_name="École Platform",
-                    email=user.email,
-                    role=f"{notif_count} nouvelle(s) notification(s)",
-                )
-                sent_count += 1
+            for frequency, targets in (
+                ("daily", daily_targets),
+                ("weekly", weekly_targets),
+            ):
+                since = now - timedelta(days=1 if frequency == "daily" else 7)
+                for school_id, user_id in targets:
+                    user = users.get(user_id)
+                    if user is None or not user.email:
+                        continue
+
+                    notifications = await repo.list_unread_digest_notifications(
+                        school_id=school_id,
+                        user_id=user_id,
+                        since=since,
+                    )
+                    if not notifications:
+                        continue
+
+                    success = await email_digest.send_digest_email(
+                        user=user,
+                        school_id=school_id,
+                        notifications=notifications,
+                        locale="fr",
+                    )
+                    if success:
+                        sent_count += 1
+
+            await db.commit()
 
         duration = time.perf_counter() - start
         TASK_DURATION.labels(
@@ -550,8 +562,8 @@ class WorkerSettings:
     if settings.app_env in ("staging", "production"):
         cron_jobs.extend(
             [
-                # Send notification digest daily at 07:00 UTC (8:00 Morocco time)
-                cron(task_send_notification_digest, hour=7, minute=0),
+                # Digest scheduling is evaluated hourly against Africa/Casablanca.
+                cron(task_send_notification_digest, minute=0),
                 # Phase 11B: Retry failed payments every hour
                 cron(task_retry_failed_payments, minute=30),
                 # Phase 11B: Send overdue reminders daily at 09:00 UTC (10:00 Morocco time)

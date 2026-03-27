@@ -53,10 +53,12 @@ from app.models.com import (
     ConsentPreference,
     Conversation,
     ConversationParticipant,
+    DeviceToken,
     Message,
     MessageReadReceipt,
     Notification,
     NotificationDelivery,
+    NotificationPreference,
     ParentFeedItem,
 )
 
@@ -123,6 +125,8 @@ __all__ = [
     "ConsentPreference",
     "Notification",
     "NotificationDelivery",
+    "NotificationPreference",
+    "DeviceToken",
     "ParentFeedItem",
     "Conversation",
     "ConversationParticipant",

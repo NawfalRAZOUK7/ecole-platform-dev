@@ -46,6 +46,7 @@
     "timetable": "الجدول الزمني",
     "messages": "الرسائل",
     "announcements": "الإعلانات",
+    "notificationSettings": "إعدادات الإشعارات",
     "adminFeeStructures": "هيكل الرسوم",
     "adminFeeAssignments": "تخصيص الرسوم",
     "adminGenerateInvoices": "إنشاء الفواتير",
@@ -85,7 +86,70 @@
   "notifications": {
     "title": "الإشعارات",
     "empty": "لا توجد إشعارات",
-    "searchPlaceholder": "البحث في الإشعارات..."
+    "subtitle": "صفِّ الإشعارات واقرأها وافتحها من مركز موحد.",
+    "searchPlaceholder": "البحث في الإشعارات...",
+    "bellLabel": "فتح الإشعارات",
+    "quickViewTitle": "أحدث غير المقروء",
+    "viewAll": "عرض الكل",
+    "markRead": "تحديد كمقروء",
+    "markUnread": "تحديد كغير مقروء",
+    "markAllRead": "تحديد الكل كمقروء",
+    "manageSettings": "إدارة الإعدادات",
+    "settingsTitle": "إعدادات الإشعارات",
+    "settingsSubtitle": "تحكم في القنوات والملخصات البريدية والأجهزة المسجلة.",
+    "clearFilters": "إعادة التعيين",
+    "saved": "تم الحفظ",
+    "enabled": "مفعّل",
+    "disabled": "معطّل",
+    "preferenceMatrixTitle": "القنوات حسب الفئة",
+    "preferenceMatrixSubtitle": "فعّل أو عطّل كل قناة لكل نوع من الإشعارات.",
+    "digestTitle": "ملخص البريد الإلكتروني",
+    "digestSubtitle": "استلم ملخصاً يومياً أو أسبوعياً في 07:00 بتوقيت الدار البيضاء.",
+    "devicesTitle": "الأجهزة المسجلة",
+    "devicesSubtitle": "أزل الأجهزة القديمة للحفاظ على وصول الإشعارات الدفعية.",
+    "removeDevice": "إزالة",
+    "noDevices": "لا توجد أجهزة مسجلة",
+    "unknownDevice": "جهاز غير معروف",
+    "lastSeen": "آخر نشاط",
+    "filters": {
+      "category": "الفئة",
+      "allCategories": "كل الفئات",
+      "allChannels": "كل القنوات",
+      "allStates": "كل الحالات",
+      "read": "مقروءة",
+      "unread": "غير مقروءة",
+      "from": "من",
+      "to": "إلى"
+    },
+    "categories": {
+      "academic": "أكاديمي",
+      "billing": "الفوترة",
+      "attendance": "الحضور",
+      "system": "النظام",
+      "announcement": "إعلان"
+    },
+    "channels": {
+      "in_app": "داخل التطبيق",
+      "push": "دفع",
+      "email": "بريد إلكتروني",
+      "sms": "رسائل قصيرة"
+    },
+    "priorities": {
+      "low": "منخفضة",
+      "normal": "عادية",
+      "high": "مرتفعة",
+      "critical": "حرجة"
+    },
+    "digest": {
+      "off": "متوقف",
+      "daily": "يومي",
+      "weekly": "أسبوعي"
+    },
+    "devicePlatforms": {
+      "android": "أندرويد",
+      "ios": "آيفون / آيباد",
+      "web": "ويب"
+    }
   },
   "content": {
     "title": "مكتبة المحتويات",

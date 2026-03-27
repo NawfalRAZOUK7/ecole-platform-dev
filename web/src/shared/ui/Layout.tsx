@@ -1,15 +1,14 @@
 /**
- * Main application layout — sidebar navigation + content area.
- *
- * Reference: S-083 — Layout with role-based navigation
- * Shows navigation items based on user role (PAR, STD, TCH, ADM).
+ * Main application layout — sidebar navigation + topbar bell/dropdown.
  */
 
-import { useCallback, useEffect, useState } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { api } from '@/services/api/client';
 import { useAuth } from '@/services/auth/AuthContext';
 import { LanguageSwitcher } from '@/shared/ui/LanguageSwitcher';
+import { formatDate } from '@/shared/i18n';
 import { wsClient, type WsEvent } from '@/services/ws/WebSocketClient';
 
 interface NavItem {
@@ -17,6 +16,16 @@ interface NavItem {
   labelKey: string;
   icon: string;
   roles: string[];
+}
+
+interface NotificationPreview {
+  id: string;
+  title: string;
+  body: string | null;
+  category: string;
+  created_at: string;
+  action_url: string | null;
+  is_read: boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -47,7 +56,8 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/timetable', labelKey: 'nav.timetable', icon: '📅', roles: ['ADM', 'DIR', 'TCH', 'STD', 'PAR'] },
   { to: '/messages', labelKey: 'nav.messages', icon: '💬', roles: ['PAR', 'TCH', 'ADM', 'DIR'] },
   { to: '/announcements', labelKey: 'nav.announcements', icon: '📢', roles: ['PAR', 'TCH', 'ADM', 'DIR', 'STD'] },
-  { to: '/notifications', labelKey: 'nav.notifications', icon: '🔔', roles: ['PAR', 'TCH', 'ADM', 'DIR'] },
+  { to: '/notifications', labelKey: 'nav.notifications', icon: '🔔', roles: ['PAR', 'TCH', 'ADM', 'DIR', 'STD'] },
+  { to: '/settings/notifications', labelKey: 'nav.notificationSettings', icon: '⚡', roles: ['PAR', 'TCH', 'ADM', 'DIR', 'STD'] },
   { to: '/content', labelKey: 'nav.content', icon: '📚', roles: ['STD', 'PAR', 'TCH', 'ADM'] },
   { to: '/submissions', labelKey: 'nav.submissions', icon: '📤', roles: ['STD'] },
   { to: '/results', labelKey: 'nav.results', icon: '📊', roles: ['STD', 'PAR'] },
@@ -68,62 +78,113 @@ interface Toast {
 
 let toastIdCounter = 0;
 
+function normalizeWsEvent(eventName: string): string {
+  return eventName.replace(/:/g, '_');
+}
+
 export function Layout() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [notifCount, setNotifCount] = useState(0);
   const [msgCount, setMsgCount] = useState(0);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [dropdownLoading, setDropdownLoading] = useState(false);
+  const [recentNotifications, setRecentNotifications] = useState<NotificationPreview[]>([]);
 
   const userRole = user?.role || '';
-  const visibleItems = NAV_ITEMS.filter((item) => item.roles.includes(userRole));
+  const visibleItems = useMemo(
+    () => NAV_ITEMS.filter((item) => item.roles.includes(userRole)),
+    [userRole]
+  );
 
   const addToast = useCallback((message: string) => {
     const id = ++toastIdCounter;
     setToasts((prev) => [...prev, { id, message }]);
     setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
+      setToasts((prev) => prev.filter((toast) => toast.id !== id));
     }, 5000);
   }, []);
 
-  // WebSocket connect/disconnect on mount/unmount
+  const fetchNotificationSummary = useCallback(async () => {
+    if (!user) return;
+    setDropdownLoading(true);
+    try {
+      const [countResp, listResp] = await Promise.all([
+        api.get<{ unread_count: number }>('/notifications/unread-count'),
+        api.list<NotificationPreview>('/notifications', { read: 'false', limit: 5 }),
+      ]);
+      setNotifCount(countResp.data.unread_count);
+      setRecentNotifications(listResp.data);
+    } catch {
+      // Keep current UI state; page-level components handle full errors.
+    } finally {
+      setDropdownLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    void fetchNotificationSummary();
+    const timer = window.setInterval(() => {
+      void fetchNotificationSummary();
+    }, 60000);
+    return () => window.clearInterval(timer);
+  }, [fetchNotificationSummary]);
+
+  useEffect(() => {
+    setDropdownOpen(false);
+  }, [location.pathname]);
+
   useEffect(() => {
     wsClient.connect();
-    const unsub = wsClient.subscribe((event: WsEvent) => {
-      if (event.event === 'notification_created') {
-        setNotifCount((c) => c + 1);
-        const subject = (event.data.subject as string) || t('notifications.title');
-        addToast(subject);
+    const unsubscribe = wsClient.subscribe((event: WsEvent) => {
+      const eventName = normalizeWsEvent(event.event);
+      if (eventName === 'notification_created') {
+        void fetchNotificationSummary();
+        const title = (event.data.title as string) || t('notifications.title');
+        addToast(title);
       }
-      if (event.event === 'grade_published') {
+      if (eventName === 'grade_published') {
         addToast(t('ws.gradePublished'));
       }
-      if (event.event === 'payment_updated') {
+      if (eventName === 'payment_updated') {
         addToast(t('ws.paymentUpdated'));
       }
-      if (event.event === 'message_created' || (event.event === 'notification_created' && event.data.event_type === 'message_created')) {
-        setMsgCount((c) => c + 1);
+      if (eventName === 'message_created') {
+        setMsgCount((count) => count + 1);
         addToast(t('ws.newMessage'));
       }
-      if (event.event === 'announcement_published' || (event.event === 'notification_created' && event.data.event_type === 'announcement_published')) {
+      if (eventName === 'announcement_published') {
         addToast(t('ws.announcementPublished'));
       }
     });
     return () => {
-      unsub();
+      unsubscribe();
       wsClient.disconnect();
     };
-  }, [addToast, t]);
+  }, [addToast, fetchNotificationSummary, t]);
 
   async function handleLogout() {
     await logout();
     navigate('/login');
   }
 
+  async function handleMarkAsRead(notification: NotificationPreview) {
+    await api.patch(`/notifications/${notification.id}/read`, { read: true });
+    await fetchNotificationSummary();
+  }
+
+  async function handleOpenNotification(notification: NotificationPreview) {
+    if (!notification.is_read) {
+      await handleMarkAsRead(notification);
+    }
+    navigate(notification.action_url || '/notifications');
+  }
+
   return (
     <div className="app-layout">
-      {/* Sidebar */}
       <aside className="app-sidebar">
         <div className="sidebar-header">
           <h2 className="sidebar-title">{t('app.name')}</h2>
@@ -135,11 +196,8 @@ export function Layout() {
             <NavLink
               key={item.to}
               to={item.to}
-              className={({ isActive }) =>
-                `nav-link ${isActive ? 'nav-link--active' : ''}`
-              }
+              className={({ isActive }) => `nav-link ${isActive ? 'nav-link--active' : ''}`}
               onClick={() => {
-                if (item.to === '/notifications') setNotifCount(0);
                 if (item.to === '/messages') setMsgCount(0);
               }}
             >
@@ -166,12 +224,117 @@ export function Layout() {
         </div>
       </aside>
 
-      {/* Main content */}
       <main className="app-main">
+        <div className="app-topbar">
+          <div />
+          <div className="topbar-actions">
+            <div className="notification-menu">
+              <button
+                type="button"
+                className="bell-button"
+                onClick={() => {
+                  setDropdownOpen((open) => !open);
+                  if (!dropdownOpen) {
+                    void fetchNotificationSummary();
+                  }
+                }}
+                aria-label={t('notifications.bellLabel')}
+              >
+                <span className="bell-button__icon">🔔</span>
+                {notifCount > 0 && (
+                  <span className="notif-badge bell-button__badge">
+                    {notifCount > 99 ? '99+' : notifCount}
+                  </span>
+                )}
+              </button>
+
+              {dropdownOpen && (
+                <div className="notification-dropdown">
+                  <div className="notification-dropdown__header">
+                    <strong>{t('notifications.quickViewTitle')}</strong>
+                    <button
+                      type="button"
+                      className="dropdown-link"
+                      onClick={() => navigate('/notifications')}
+                    >
+                      {t('notifications.viewAll')}
+                    </button>
+                  </div>
+
+                  {dropdownLoading ? (
+                    <div className="notification-dropdown__empty">
+                      {t('app.loading')}
+                    </div>
+                  ) : recentNotifications.length === 0 ? (
+                    <div className="notification-dropdown__empty">
+                      {t('notifications.empty')}
+                    </div>
+                  ) : (
+                    <div className="notification-dropdown__list">
+                      {recentNotifications.map((notification) => (
+                        <div
+                          key={notification.id}
+                          className="notification-dropdown__item"
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => void handleOpenNotification(notification)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault();
+                              void handleOpenNotification(notification);
+                            }
+                          }}
+                        >
+                          <span className="notification-dropdown__meta">
+                            <span className="notification-category-badge">
+                              {t(`notifications.categories.${notification.category}`)}
+                            </span>
+                            <time>
+                              {formatDate(notification.created_at, i18n.language, {
+                                dateStyle: 'short',
+                                timeStyle: 'short',
+                              })}
+                            </time>
+                          </span>
+                          <strong>{notification.title}</strong>
+                          {notification.body && <span>{notification.body}</span>}
+                          {!notification.is_read && (
+                            <span className="notification-dropdown__actions">
+                              <button
+                                type="button"
+                                className="dropdown-link"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  void handleMarkAsRead(notification);
+                                }}
+                              >
+                                {t('notifications.markRead')}
+                              </button>
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="notification-dropdown__footer">
+                    <button
+                      type="button"
+                      className="dropdown-link"
+                      onClick={() => navigate('/settings/notifications')}
+                    >
+                      {t('notifications.manageSettings')}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
         <Outlet />
       </main>
 
-      {/* Toast notifications */}
       {toasts.length > 0 && (
         <div className="toast-container">
           {toasts.map((toast) => (
@@ -179,7 +342,7 @@ export function Layout() {
               <span>{toast.message}</span>
               <button
                 className="toast-close"
-                onClick={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
+                onClick={() => setToasts((prev) => prev.filter((item) => item.id !== toast.id))}
               >
                 &times;
               </button>

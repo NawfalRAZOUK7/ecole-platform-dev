@@ -60,6 +60,7 @@ from app.api.v1.invoices import router as invoices_router
 from app.api.v1.payments import router as payments_router
 
 # Phase 3 — COM routers
+from app.api.v1.devices import router as devices_router
 from app.api.v1.notifications import router as notifications_router
 from app.api.v1.consents import router as consents_router
 from app.api.v1.feed import router as feed_router
@@ -155,6 +156,7 @@ router.include_router(payments_router)
 
 # Mount sub-routers — Phase 3 COM
 router.include_router(notifications_router)
+router.include_router(devices_router)
 router.include_router(consents_router)
 router.include_router(feed_router)
 

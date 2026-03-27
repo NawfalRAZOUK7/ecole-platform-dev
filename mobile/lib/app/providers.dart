@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ecole_platform/data/api/api_client.dart';
 import 'package:ecole_platform/data/api/ws_client.dart';
 import 'package:ecole_platform/data/local_store/cache_store.dart';
+import 'package:ecole_platform/data/local_store/notifications_store.dart';
 import 'package:ecole_platform/data/local_store/offline_queue.dart';
 import 'package:ecole_platform/data/repositories_impl/auth_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/feed_repository_impl.dart';
@@ -35,6 +36,7 @@ import 'package:ecole_platform/domain/repositories/content_library_repository.da
 import 'package:ecole_platform/domain/repositories/quiz_repository.dart';
 import 'package:ecole_platform/features/auth/biometric_service.dart';
 import 'package:ecole_platform/shared/secure_storage.dart';
+import 'package:ecole_platform/shared/connectivity_service.dart';
 import 'package:ecole_platform/shared/push_notifications.dart';
 
 // ── Infrastructure providers ──
@@ -59,6 +61,10 @@ final offlineQueueProvider = Provider<OfflineQueue>((ref) {
   return OfflineQueue();
 });
 
+final notificationsStoreProvider = Provider<NotificationsStore>((ref) {
+  return NotificationsStore();
+});
+
 /// Shared local notifications plugin — used by push + WS.
 final localNotificationsProvider =
     Provider<FlutterLocalNotificationsPlugin>((ref) {
@@ -67,7 +73,16 @@ final localNotificationsProvider =
 
 final pushNotificationProvider = Provider<PushNotificationService>((ref) {
   return PushNotificationService(
+    apiClient: ref.watch(apiClientProvider),
     localNotifications: ref.watch(localNotificationsProvider),
+  );
+});
+
+final connectivityServiceProvider = Provider<ConnectivityService>((ref) {
+  return ConnectivityService(
+    api: ref.watch(apiClientProvider),
+    queue: ref.watch(offlineQueueProvider),
+    cache: ref.watch(cacheStoreProvider),
   );
 });
 
@@ -102,6 +117,7 @@ final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
   return NotificationRepositoryImpl(
     api: ref.watch(apiClientProvider),
     cache: ref.watch(cacheStoreProvider),
+    notificationsStore: ref.watch(notificationsStoreProvider),
   );
 });
 

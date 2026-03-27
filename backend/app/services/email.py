@@ -65,6 +65,16 @@ SUBJECTS: dict[str, dict[str, str]] = {
         "ar": "فشل الدفع — إجراء مطلوب",
         "en": "Payment failed — action required",
     },
+    "notification_alert": {
+        "fr": "Nouvelle notification",
+        "ar": "إشعار جديد",
+        "en": "New notification",
+    },
+    "notification_digest": {
+        "fr": "Résumé des notifications",
+        "ar": "ملخص الإشعارات",
+        "en": "Notification digest",
+    },
 }
 
 
@@ -114,6 +124,7 @@ class EmailService:
                 username=settings.smtp_user or None,
                 password=settings.smtp_password or None,
                 use_tls=settings.smtp_use_tls,
+                timeout=settings.smtp_timeout_seconds,
             )
             logger.info("Email sent to %s: %s", to, subject)
             return True

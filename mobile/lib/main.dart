@@ -12,22 +12,25 @@
 
 import 'dart:developer' as dev;
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-// import 'package:firebase_core/firebase_core.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/app/router.dart';
 import 'package:ecole_platform/data/local_store/cache_store.dart';
 import 'package:ecole_platform/features/auth/auth_provider.dart';
+import 'package:ecole_platform/features/notifications/notifications_provider.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase for push notifications
-  // Note: Firebase requires google-services.json (Android) / GoogleService-Info.plist (iOS)
-  // Uncomment when Firebase is configured:
-  // await Firebase.initializeApp();
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    dev.log('Firebase init skipped: $e', name: 'Main');
+  }
 
   // Prune expired cache entries on startup
   try {
@@ -52,7 +55,10 @@ class EcolePlatformApp extends ConsumerStatefulWidget {
 
 class _EcolePlatformAppState extends ConsumerState<EcolePlatformApp>
     with WidgetsBindingObserver {
+  final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey =
+      GlobalKey<ScaffoldMessengerState>();
   bool _biometricLocked = false;
+  String? _connectedAccessToken;
 
   @override
   void initState() {
@@ -68,13 +74,39 @@ class _EcolePlatformAppState extends ConsumerState<EcolePlatformApp>
   }
 
   Future<void> _initServices() async {
-    // Initialize push notifications (requires Firebase.initializeApp() first)
-    // Uncomment when Firebase is configured:
-    // try {
-    //   await ref.read(pushNotificationProvider).initialize();
-    // } catch (e) {
-    //   dev.log('Push notification init failed: $e', name: 'Main');
-    // }
+    try {
+      final push = ref.read(pushNotificationProvider);
+      push.onForegroundMessage = (message) {
+        final t = AppLocalizations.of(ref);
+        final title = message.notification?.title ?? 'Notification';
+        final body = message.notification?.body ?? '';
+        _scaffoldMessengerKey.currentState
+          ?..clearMaterialBanners()
+          ..showMaterialBanner(
+            MaterialBanner(
+              content: Text(body.isEmpty ? title : '$title\n$body'),
+              leading: const Icon(Icons.notifications_active_outlined),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    _scaffoldMessengerKey.currentState?.hideCurrentMaterialBanner();
+                  },
+                  child: Text(t.t('notifications.dismiss')),
+                ),
+              ],
+            ),
+          );
+      };
+      await push.initialize();
+    } catch (e) {
+      dev.log('Push notification init failed: $e', name: 'Main');
+    }
+
+    try {
+      await ref.read(connectivityServiceProvider).initialize();
+    } catch (e) {
+      dev.log('Connectivity service init failed: $e', name: 'Main');
+    }
   }
 
   @override
@@ -106,6 +138,7 @@ class _EcolePlatformAppState extends ConsumerState<EcolePlatformApp>
 
     // Reset push badge when user opens app
     ref.read(pushNotificationProvider).resetBadge();
+    ref.read(notificationsProvider.notifier).refreshBadge();
   }
 
   /// Called when app goes to background.
@@ -120,18 +153,37 @@ class _EcolePlatformAppState extends ConsumerState<EcolePlatformApp>
 
     // Connect/disconnect WebSocket based on auth state
     final wsClient = ref.read(wsClientProvider);
+    wsClient.onEvent = (event) {
+      if (event.type.name == 'notificationCreated') {
+        ref.read(notificationsProvider.notifier).refreshBadge();
+      }
+    };
+    final pushService = ref.read(pushNotificationProvider);
     if (authState.isAuthenticated) {
       final api = ref.read(apiClientProvider);
-      if (api.accessToken != null) {
+      if (api.accessToken != null && api.accessToken != _connectedAccessToken) {
+        _connectedAccessToken = api.accessToken;
         wsClient.connect(api.accessToken!);
+        pushService.syncTokenRegistration();
+        ref.read(notificationsProvider.notifier).refreshBadge();
       }
     } else {
+      _connectedAccessToken = null;
       wsClient.disconnect();
+    }
+
+    final pendingDeepLink = pushService.pendingDeepLink;
+    if (pendingDeepLink != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        router.go(pendingDeepLink.route);
+        pushService.clearDeepLink();
+      });
     }
 
     return MaterialApp.router(
       title: 'École Platform',
       debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: _scaffoldMessengerKey,
       theme: ThemeData(
         colorSchemeSeed: const Color(0xFF2563EB),
         useMaterial3: true,

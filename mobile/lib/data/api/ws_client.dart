@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'dart:developer' as dev;
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -71,6 +72,8 @@ class WsClient {
   bool _shouldConnect = false;
   String? _accessToken;
   int _badgeCount = 0;
+
+  void Function(WsEvent event)? onEvent;
 
   static const _maxReconnectDelay = 30000;
   static const _initialReconnectDelay = 1000;
@@ -155,6 +158,7 @@ class WsClient {
       for (final listener in _listeners) {
         listener(event);
       }
+      onEvent?.call(event);
 
       // Show local notification for important events
       _handleLocalNotification(event);

@@ -6,6 +6,7 @@
 import 'package:ecole_platform/domain/entities/user.dart';
 import 'package:ecole_platform/domain/entities/feed_item.dart';
 import 'package:ecole_platform/domain/entities/notification_item.dart';
+import 'package:ecole_platform/domain/entities/notification_settings.dart';
 import 'package:ecole_platform/domain/entities/content_item.dart';
 import 'package:ecole_platform/domain/entities/result.dart';
 import 'package:ecole_platform/domain/entities/invoice.dart';
@@ -58,11 +59,40 @@ NotificationItem notificationFromJson(Map<String, dynamic> json) {
   return NotificationItem(
     id: json['id'] as String,
     schoolId: json['school_id'] as String,
-    parentId: json['parent_id'] as String,
+    userId: (json['user_id'] ?? json['parent_id']) as String,
     eventRef: json['event_ref'] as String?,
     title: json['title'] as String,
     body: json['body'] as String?,
+    category: json['category'] as String? ?? 'system',
+    priority: json['priority'] as String? ?? 'normal',
+    actionUrl: json['action_url'] as String?,
+    actionPayload: json['action_payload'] as Map<String, dynamic>?,
+    isRead: json['is_read'] as bool? ?? false,
+    readAt: json['read_at'] as String?,
     createdAt: json['created_at'] as String,
+    channels: (json['channels'] as List<dynamic>? ?? const [])
+        .map((item) => item.toString())
+        .toList(),
+  );
+}
+
+NotificationPreferenceItem notificationPreferenceFromJson(
+    Map<String, dynamic> json) {
+  return NotificationPreferenceItem(
+    channel: json['channel'] as String,
+    category: json['category'] as String,
+    enabled: json['enabled'] as bool? ?? true,
+    digestFrequency: json['digest_frequency'] as String? ?? 'off',
+  );
+}
+
+RegisteredDevice registeredDeviceFromJson(Map<String, dynamic> json) {
+  return RegisteredDevice(
+    id: json['id'] as String,
+    platform: json['platform'] as String,
+    deviceName: json['device_name'] as String?,
+    tokenPreview: json['token_preview'] as String? ?? '',
+    lastActiveAt: json['last_active_at'] as String? ?? '',
   );
 }
 

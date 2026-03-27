@@ -58,6 +58,17 @@ class Settings(BaseSettings):
     smtp_use_tls: bool = False
     smtp_from_email: str = "noreply@ecole-platform.ma"
     smtp_from_name: str = "École Platform"
+    smtp_timeout_seconds: int = 20
+
+    # Notifications (Phase 13)
+    notifications_digest_timezone: str = "Africa/Casablanca"
+    notifications_digest_send_hour: int = 7
+    notifications_unsubscribe_ttl_hours: int = 24 * 30
+    firebase_service_account_path: str = ""
+    firebase_project_id: str = ""
+    push_retry_max_attempts: int = 3
+    push_retry_base_delay_seconds: int = 1
+    web_app_base_url: str = "http://localhost:5173"
 
     # CORS
     cors_origins: str = "http://localhost:5173,http://localhost:3000"

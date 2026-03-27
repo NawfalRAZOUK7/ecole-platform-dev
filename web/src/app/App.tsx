@@ -13,6 +13,7 @@ import { LoginPage, ROLE_REDIRECT } from '@/features/auth/LoginPage';
 import { ProtectedRoute } from '@/features/auth/ProtectedRoute';
 import { FeedPage } from '@/features/feed/FeedPage';
 import { NotificationsPage } from '@/features/notifications/NotificationsPage';
+import { NotificationSettingsPage } from '@/features/notifications/NotificationSettingsPage';
 import { ContentPage } from '@/features/content/ContentPage';
 import { ResultsPage } from '@/features/results/ResultsPage';
 import { InvoicesPage } from '@/features/invoices/InvoicesPage';
@@ -346,8 +347,16 @@ function App() {
         <Route
           path="/notifications"
           element={
-            <ProtectedRoute roles={['PAR', 'TCH', 'ADM', 'DIR']}>
+            <ProtectedRoute roles={['PAR', 'TCH', 'ADM', 'DIR', 'STD']}>
               <NotificationsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings/notifications"
+          element={
+            <ProtectedRoute roles={['PAR', 'TCH', 'ADM', 'DIR', 'STD']}>
+              <NotificationSettingsPage />
             </ProtectedRoute>
           }
         />

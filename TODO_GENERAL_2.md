@@ -8,45 +8,45 @@
 ## Phase 13 — Notifications Center
 
 ### 13A — Backend
-- [ ] Notification hub service with channel routing (in-app, push, email)
-- [ ] `GET /notifications` — list with cursor pagination + read/type filters
-- [ ] `POST /notifications/{id}/read` — mark single as read
-- [ ] `POST /notifications/read-all` — mark all as read
-- [ ] `DELETE /notifications/{id}` — soft-delete
-- [ ] `GET /notifications/preferences` — user notification preferences
-- [ ] `PUT /notifications/preferences` — update preferences
-- [ ] Device token registration/deregistration endpoints
-- [ ] FCM integration via `firebase-admin` SDK
-- [ ] Push delivery tracking (sent, delivered, failed, clicked)
-- [ ] Email digest service with Jinja2 templates (fr/ar/en)
-- [ ] ARQ scheduled task for daily digest at 07:00
-- [ ] Unread count endpoint with Redis caching (30s TTL)
-- [ ] Database migrations: notification_preferences, device_tokens
-- [ ] ABAC enforcement on all endpoints
+- [x] Notification hub service with channel routing (in-app, push, email)
+- [x] `GET /notifications` — list with cursor pagination + read/type filters
+- [x] `POST /notifications/{id}/read` — mark single as read
+- [x] `POST /notifications/read-all` — mark all as read
+- [x] `DELETE /notifications/{id}` — soft-delete
+- [x] `GET /notifications/preferences` — user notification preferences
+- [x] `PUT /notifications/preferences` — update preferences
+- [x] Device token registration/deregistration endpoints
+- [x] FCM integration via `firebase-admin` SDK
+- [x] Push delivery tracking (sent, delivered, failed, clicked)
+- [x] Email digest service with Jinja2 templates (fr/ar/en)
+- [x] ARQ scheduled task for daily digest at 07:00
+- [x] Unread count endpoint with Redis caching (30s TTL)
+- [x] Database migrations: notification_preferences, device_tokens
+- [x] ABAC enforcement on all endpoints
 
 ### 13B — Web Frontend
-- [ ] Notification bell icon in Layout header with unread badge
-- [ ] Dropdown quick-view (last 5 unread)
-- [ ] `/notifications` page — full list with infinite scroll
-- [ ] Read/unread toggle filter + mark-all-read button
-- [ ] Click-through navigation to `action_url`
-- [ ] `/settings/notifications` preferences page
-- [ ] i18n keys in fr/en/ar
+- [x] Notification bell icon in Layout header with unread badge
+- [x] Dropdown quick-view (last 5 unread)
+- [x] `/notifications` page — full list with infinite scroll
+- [x] Read/unread toggle filter + mark-all-read button
+- [x] Click-through navigation to `action_url`
+- [x] `/settings/notifications` preferences page
+- [x] i18n keys in fr/en/ar
 
 ### 13C — Mobile
-- [ ] `NotificationsScreen` — list with pull-to-refresh
-- [ ] Swipe-to-dismiss (soft delete) + swipe-to-read
-- [ ] Badge on bottom nav icon (unread count)
-- [ ] `NotificationPreferencesScreen` — switches for channels
-- [ ] `flutter_local_notifications` foreground display
-- [ ] Offline cache: last 100 notifications in SQLite
-- [ ] i18n keys in fr/en/ar
+- [x] `NotificationsScreen` — list with pull-to-refresh
+- [x] Swipe-to-dismiss (soft delete) + swipe-to-read
+- [x] Badge on bottom nav icon (unread count)
+- [x] `NotificationPreferencesScreen` — switches for channels
+- [x] `flutter_local_notifications` foreground display
+- [x] Offline cache: last 100 notifications in SQLite
+- [x] i18n keys in fr/en/ar
 
 ### 13D — Tests
-- [ ] Postman collection: notification CRUD + preferences
-- [ ] Integration tests: channel routing, preferences
-- [ ] Push delivery mock tests
-- [ ] Email digest template rendering tests
+- [x] Postman collection: notification CRUD + preferences
+- [x] Integration tests: channel routing, preferences
+- [x] Push delivery mock tests
+- [x] Email digest template rendering tests
 - [ ] Load test: 1000 batch notifications within 10s
 
 ---

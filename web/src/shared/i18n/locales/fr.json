@@ -46,6 +46,7 @@
     "timetable": "Emploi du temps",
     "messages": "Messages",
     "announcements": "Annonces",
+    "notificationSettings": "Preferences notifications",
     "adminFeeStructures": "Frais scolaires",
     "adminFeeAssignments": "Attribution des frais",
     "adminGenerateInvoices": "Generer des factures",
@@ -85,7 +86,70 @@
   "notifications": {
     "title": "Notifications",
     "empty": "Aucune notification",
-    "searchPlaceholder": "Rechercher dans les notifications..."
+    "subtitle": "Filtrez, lisez et ouvrez vos notifications depuis un centre unique.",
+    "searchPlaceholder": "Rechercher dans les notifications...",
+    "bellLabel": "Ouvrir le centre de notifications",
+    "quickViewTitle": "Non lues recentes",
+    "viewAll": "Voir tout",
+    "markRead": "Marquer comme lue",
+    "markUnread": "Marquer comme non lue",
+    "markAllRead": "Tout marquer comme lu",
+    "manageSettings": "Gerer les preferences",
+    "settingsTitle": "Preferences de notifications",
+    "settingsSubtitle": "Configurez vos canaux, digest e-mail et appareils enregistres.",
+    "clearFilters": "Reinitialiser",
+    "saved": "Enregistre",
+    "enabled": "Active",
+    "disabled": "Desactive",
+    "preferenceMatrixTitle": "Canaux par categorie",
+    "preferenceMatrixSubtitle": "Activez ou desactivez chaque canal pour chaque type de notification.",
+    "digestTitle": "Digest e-mail",
+    "digestSubtitle": "Recevez un resume quotidien ou hebdomadaire a 07:00 heure de Casablanca.",
+    "devicesTitle": "Appareils enregistres",
+    "devicesSubtitle": "Retirez les anciens appareils pour garder vos notifications push a jour.",
+    "removeDevice": "Retirer",
+    "noDevices": "Aucun appareil enregistre",
+    "unknownDevice": "Appareil inconnu",
+    "lastSeen": "Derniere activite",
+    "filters": {
+      "category": "Categorie",
+      "allCategories": "Toutes les categories",
+      "allChannels": "Tous les canaux",
+      "allStates": "Tous les etats",
+      "read": "Lues",
+      "unread": "Non lues",
+      "from": "Du",
+      "to": "Au"
+    },
+    "categories": {
+      "academic": "Academique",
+      "billing": "Facturation",
+      "attendance": "Presence",
+      "system": "Systeme",
+      "announcement": "Annonce"
+    },
+    "channels": {
+      "in_app": "Dans l'application",
+      "push": "Push",
+      "email": "Email",
+      "sms": "SMS"
+    },
+    "priorities": {
+      "low": "Faible",
+      "normal": "Normale",
+      "high": "Haute",
+      "critical": "Critique"
+    },
+    "digest": {
+      "off": "Desactive",
+      "daily": "Quotidien",
+      "weekly": "Hebdomadaire"
+    },
+    "devicePlatforms": {
+      "android": "Android",
+      "ios": "iPhone / iPad",
+      "web": "Web"
+    }
   },
   "content": {
     "title": "Bibliotheque de contenus",

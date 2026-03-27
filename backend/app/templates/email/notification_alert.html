@@ -1,0 +1,31 @@
+{% extends "email/base.html" %}
+{% block content %}
+{% if lang == 'ar' %}
+  <h2>{{ title }}</h2>
+  {% if category %}<p><strong>الفئة:</strong> {{ category }}</p>{% endif %}
+  {% if body %}<p>{{ body }}</p>{% endif %}
+  {% if action_url %}
+    <p><a href="{{ action_url }}">فتح الإشعار</a></p>
+  {% endif %}
+  <p><a href="{{ unsubscribe_url }}">إلغاء الاشتراك من رسائل البريد الخاصة بالإشعارات</a></p>
+{% elif lang == 'fr' %}
+  <h2>{{ title }}</h2>
+  {% if category %}<p><strong>Catégorie :</strong> {{ category }}</p>{% endif %}
+  {% if body %}<p>{{ body }}</p>{% endif %}
+  {% if action_url %}
+    <p><a href="{{ action_url }}">Ouvrir la notification</a></p>
+  {% endif %}
+  <p><a href="{{ unsubscribe_url }}">Se désabonner des e-mails de notification</a></p>
+{% else %}
+  <h2>{{ title }}</h2>
+  {% if category %}<p><strong>Category:</strong> {{ category }}</p>{% endif %}
+  {% if body %}<p>{{ body }}</p>{% endif %}
+  {% if action_url %}
+    <p><a href="{{ action_url }}">Open notification</a></p>
+  {% endif %}
+  <p><a href="{{ unsubscribe_url }}">Unsubscribe from notification emails</a></p>
+{% endif %}
+{% if open_tracking_url %}
+  <img src="{{ open_tracking_url }}" alt="" width="1" height="1" style="display:none;">
+{% endif %}
+{% endblock %}

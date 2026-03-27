@@ -5,10 +5,14 @@
 /// Phase 5A: Enhanced deep-link routing, badge count, permission flow.
 
 import 'dart:developer' as dev;
+import 'dart:io';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+
+import 'package:ecole_platform/data/api/api_client.dart';
 
 /// Background message handler — must be top-level function.
 @pragma('vm:entry-point')
@@ -28,6 +32,7 @@ class PushDeepLink {
 class PushNotificationService {
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin _localNotifications;
+  final ApiClient _apiClient;
 
   /// Route extracted from the latest push notification (deep-link).
   PushDeepLink? _pendingDeepLink;
@@ -37,13 +42,22 @@ class PushNotificationService {
   void Function(RemoteMessage message)? onForegroundMessage;
 
   PushNotificationService({
+    required ApiClient apiClient,
     required FlutterLocalNotificationsPlugin localNotifications,
-  }) : _localNotifications = localNotifications;
+  })  : _apiClient = apiClient,
+        _localNotifications = localNotifications;
 
   PushDeepLink? get pendingDeepLink => _pendingDeepLink;
   int get badgeCount => _badgeCount;
 
   void clearDeepLink() => _pendingDeepLink = null;
+
+  Future<void> syncTokenRegistration() async {
+    final token = await _messaging.getToken();
+    if (token != null) {
+      await _registerTokenWithBackend(token);
+    }
+  }
 
   void resetBadge() {
     _badgeCount = 0;
@@ -68,11 +82,14 @@ class PushNotificationService {
     // Get FCM token
     final token = await _messaging.getToken();
     dev.log('FCM token: $token', name: 'PushNotifications');
+    if (token != null) {
+      await _registerTokenWithBackend(token);
+    }
 
     // Listen for token refresh
-    _messaging.onTokenRefresh.listen((newToken) {
+    _messaging.onTokenRefresh.listen((newToken) async {
       dev.log('FCM token refreshed: $newToken', name: 'PushNotifications');
-      // TODO: Send new token to backend when endpoint is available
+      await _registerTokenWithBackend(newToken);
     });
 
     // Handle foreground messages
@@ -171,6 +188,36 @@ class PushNotificationService {
 
   void _handleNotificationTap(RemoteMessage message) {
     _extractDeepLink(message);
+  }
+
+  Future<void> _registerTokenWithBackend(String token) async {
+    try {
+      final deviceInfo = DeviceInfoPlugin();
+      String deviceName = 'Unknown';
+      String platform = 'android';
+
+      if (Platform.isIOS) {
+        final ios = await deviceInfo.iosInfo;
+        deviceName = ios.name;
+        platform = 'ios';
+      } else if (Platform.isAndroid) {
+        final android = await deviceInfo.androidInfo;
+        deviceName = '${android.brand} ${android.model}';
+        platform = 'android';
+      }
+
+      await _apiClient.post(
+        '/devices/register',
+        body: {
+          'token': token,
+          'platform': platform,
+          'device_name': deviceName,
+        },
+      );
+    } catch (e) {
+      dev.log('Device token registration failed: $e',
+          name: 'PushNotifications');
+    }
   }
 
   /// Extract deep-link route from push notification data.

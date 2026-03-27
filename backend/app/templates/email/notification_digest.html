@@ -1,0 +1,48 @@
+{% extends "email/base.html" %}
+{% block content %}
+{% if lang == 'ar' %}
+  <h2>{{ title }}</h2>
+  <p>هذا ملخص بالإشعارات غير المقروءة.</p>
+{% elif lang == 'fr' %}
+  <h2>{{ title }}</h2>
+  <p>Voici le r&eacute;sum&eacute; de vos notifications non lues.</p>
+{% else %}
+  <h2>{{ title }}</h2>
+  <p>Here is your unread notification summary.</p>
+{% endif %}
+
+{% for category, items in grouped_notifications.items() %}
+  <h3 style="margin-top:24px;">{{ category }}</h3>
+  <table class="info-table">
+    {% for item in items %}
+      <tr>
+        <td>
+          <strong>{{ item.title }}</strong><br>
+          {% if item.body %}<span>{{ item.body }}</span><br>{% endif %}
+          {% if item.action_url %}
+            <a href="{{ item.action_url }}">
+              {% if lang == 'ar' %}فتح{% elif lang == 'fr' %}Ouvrir{% else %}Open{% endif %}
+            </a>
+          {% endif %}
+        </td>
+        <td>{{ item.created_at }}</td>
+      </tr>
+    {% endfor %}
+  </table>
+{% endfor %}
+
+<p style="margin-top:24px;">
+  <a href="{{ unsubscribe_url }}">
+    {% if lang == 'ar' %}
+      إلغاء الاشتراك من ملخصات البريد
+    {% elif lang == 'fr' %}
+      Se d&eacute;sabonner des digest e-mail
+    {% else %}
+      Unsubscribe from email digests
+    {% endif %}
+  </a>
+</p>
+{% if open_tracking_url %}
+  <img src="{{ open_tracking_url }}" alt="" width="1" height="1" style="display:none;">
+{% endif %}
+{% endblock %}

@@ -1,123 +1,237 @@
-/**
- * Notifications page — list of user notifications with cursor pagination.
- *
- * Reference: S-081 — Notifications page
- * Calls GET /notifications. Available to PAR, TCH, ADM roles.
- */
-
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api, ApiClientError } from '@/services/api/client';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
 import { EmptyState } from '@/shared/ui/EmptyState';
 import { formatDate } from '@/shared/i18n';
+import type { NotificationItem } from './types';
 
-interface Notification {
-  id: string;
-  user_id: string;
-  channel: string;
-  subject: string;
-  body_plain: string | null;
-  body_html: string | null;
-  sent_at: string | null;
-  created_at: string;
-}
+const CATEGORY_OPTIONS = ['academic', 'billing', 'attendance', 'system', 'announcement'] as const;
+const CHANNEL_OPTIONS = ['in_app', 'push', 'email', 'sms'] as const;
 
 export function NotificationsPage() {
   const { t, i18n } = useTranslation();
-  const [items, setItems] = useState<Notification[]>([]);
+  const navigate = useNavigate();
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const [items, setItems] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('');
+  const [channel, setChannel] = useState('');
+  const [readFilter, setReadFilter] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
 
-  const fetchNotifications = useCallback(async (cursor?: string) => {
+  const filters = useMemo(
+    () => ({ category, channel, readFilter, fromDate, toDate }),
+    [category, channel, readFilter, fromDate, toDate]
+  );
+
+  const fetchNotifications = useCallback(async (cursor?: string, append = false) => {
+    const params: Record<string, string | number | undefined> = {
+      limit: 20,
+      cursor,
+      category: category || undefined,
+      channel: channel || undefined,
+      read: readFilter === '' ? undefined : readFilter,
+      from: fromDate || undefined,
+      to: toDate || undefined,
+    };
+
     try {
-      const params: Record<string, string | number | undefined> = {};
-      if (cursor) params.cursor = cursor;
-      if (search) params.search = search;
-
-      const resp = await api.list<Notification>('/notifications', params);
-      if (cursor) {
-        setItems((prev) => [...prev, ...resp.data]);
-      } else {
-        setItems(resp.data);
-      }
+      const resp = await api.list<NotificationItem>('/notifications', params);
+      setItems((prev) => (append ? [...prev, ...resp.data] : resp.data));
       setNextCursor(resp.meta.next_cursor);
       setHasMore(resp.meta.has_more);
       setError(null);
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : t('app.error'));
     }
-  }, [t, search]);
+  }, [category, channel, fromDate, readFilter, t, toDate]);
 
   useEffect(() => {
     setLoading(true);
-    fetchNotifications().finally(() => setLoading(false));
-  }, [fetchNotifications]);
+    void fetchNotifications().finally(() => setLoading(false));
+  }, [fetchNotifications, filters]);
 
-  async function handleLoadMore() {
-    if (!nextCursor) return;
-    setLoadingMore(true);
-    await fetchNotifications(nextCursor);
-    setLoadingMore(false);
+  useEffect(() => {
+    if (!hasMore || loading || loadingMore || !sentinelRef.current) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0]?.isIntersecting && nextCursor) {
+        setLoadingMore(true);
+        void fetchNotifications(nextCursor, true).finally(() => setLoadingMore(false));
+      }
+    }, { threshold: 0.2 });
+
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [fetchNotifications, hasMore, loading, loadingMore, nextCursor]);
+
+  async function handleMarkRead(notification: NotificationItem, read = true) {
+    await api.patch(`/notifications/${notification.id}/read`, { read });
+    setItems((prev) => prev.map((item) => (
+      item.id === notification.id
+        ? {
+            ...item,
+            is_read: read,
+            read_at: read ? new Date().toISOString() : null,
+          }
+        : item
+    )));
   }
 
-  if (loading) return <LoadingState />;
+  async function handleMarkAllRead() {
+    await api.patch('/notifications/mark-all-read');
+    setItems((prev) => prev.map((item) => ({
+      ...item,
+      is_read: true,
+      read_at: item.read_at || new Date().toISOString(),
+    })));
+  }
+
+  async function handleNotificationClick(notification: NotificationItem) {
+    if (!notification.is_read) {
+      await handleMarkRead(notification, true);
+    }
+    navigate(notification.action_url || '/notifications');
+  }
+
+  function resetFilters() {
+    setCategory('');
+    setChannel('');
+    setReadFilter('');
+    setFromDate('');
+    setToDate('');
+  }
+
+  if (loading) {
+    return <LoadingState />;
+  }
 
   return (
     <div className="page">
-      <h1 className="page-title">{t('notifications.title')}</h1>
+      <div className="page-header page-header--split">
+        <div>
+          <h1 className="page-title">{t('notifications.title')}</h1>
+          <p className="page-subtitle">{t('notifications.subtitle')}</p>
+        </div>
+        <div className="page-actions">
+          <button className="btn btn-secondary" onClick={resetFilters}>
+            {t('notifications.clearFilters')}
+          </button>
+          <button className="btn btn-primary" onClick={() => void handleMarkAllRead()}>
+            {t('notifications.markAllRead')}
+          </button>
+        </div>
+      </div>
 
-      {/* Search */}
-      <div className="filters-bar">
+      <div className="filters-bar filters-bar--notifications">
+        <select className="filter-select" value={category} onChange={(e) => setCategory(e.target.value)}>
+          <option value="">{t('notifications.filters.allCategories')}</option>
+          {CATEGORY_OPTIONS.map((option) => (
+            <option key={option} value={option}>
+              {t(`notifications.categories.${option}`)}
+            </option>
+          ))}
+        </select>
+
+        <select className="filter-select" value={channel} onChange={(e) => setChannel(e.target.value)}>
+          <option value="">{t('notifications.filters.allChannels')}</option>
+          {CHANNEL_OPTIONS.map((option) => (
+            <option key={option} value={option}>
+              {t(`notifications.channels.${option}`)}
+            </option>
+          ))}
+        </select>
+
+        <select className="filter-select" value={readFilter} onChange={(e) => setReadFilter(e.target.value)}>
+          <option value="">{t('notifications.filters.allStates')}</option>
+          <option value="false">{t('notifications.filters.unread')}</option>
+          <option value="true">{t('notifications.filters.read')}</option>
+        </select>
+
         <input
-          type="search"
+          type="date"
           className="filter-input"
-          placeholder={t('notifications.searchPlaceholder')}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          value={fromDate}
+          onChange={(e) => setFromDate(e.target.value)}
+          aria-label={t('notifications.filters.from')}
+        />
+
+        <input
+          type="date"
+          className="filter-input"
+          value={toDate}
+          onChange={(e) => setToDate(e.target.value)}
+          aria-label={t('notifications.filters.to')}
         />
       </div>
 
-      <ErrorBanner error={error} onDismiss={() => setError(null)} onRetry={() => fetchNotifications()} />
+      <ErrorBanner error={error} onDismiss={() => setError(null)} onRetry={() => void fetchNotifications()} />
 
       {items.length === 0 ? (
         <EmptyState message={t('notifications.empty')} icon="🔔" />
       ) : (
-        <>
-          <div className="card-list">
-            {items.map((notif) => (
-              <div key={notif.id} className="card notification-card">
+        <div className="card-list">
+          {items.map((notification) => (
+            <article
+              key={notification.id}
+              className={`card notification-card ${notification.is_read ? 'notification-card--read' : 'notification-card--unread'}`}
+            >
+              <button
+                type="button"
+                className="notification-card__click"
+                onClick={() => void handleNotificationClick(notification)}
+              >
                 <div className="notification-header">
-                  <span className="notification-channel">{notif.channel}</span>
+                  <span className="notification-category-badge">
+                    {t(`notifications.categories.${notification.category}`)}
+                  </span>
                   <time className="notification-date">
-                    {formatDate(notif.sent_at || notif.created_at, i18n.language)}
+                    {formatDate(notification.created_at, i18n.language, {
+                      dateStyle: 'medium',
+                      timeStyle: 'short',
+                    })}
                   </time>
                 </div>
-                <h3 className="notification-subject">{notif.subject}</h3>
-                {notif.body_plain && (
-                  <p className="notification-body">{notif.body_plain}</p>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {hasMore && (
-            <div style={{ textAlign: 'center', marginTop: '16px' }}>
-              <button
-                className="btn btn-secondary"
-                onClick={handleLoadMore}
-                disabled={loadingMore}
-              >
-                {loadingMore ? t('app.loading') : t('feed.loadMore')}
+                <div className="notification-card__meta">
+                  <span className={`priority-badge priority-badge--${notification.priority}`}>
+                    {t(`notifications.priorities.${notification.priority}`)}
+                  </span>
+                  <span className="notification-channel-list">
+                    {notification.channels.map((item) => t(`notifications.channels.${item}`)).join(' • ')}
+                  </span>
+                </div>
+                <h3 className="notification-subject">{notification.title}</h3>
+                {notification.body && <p className="notification-body">{notification.body}</p>}
               </button>
-            </div>
-          )}
-        </>
+              <div className="notification-card__actions">
+                {!notification.is_read ? (
+                  <button className="btn btn-secondary" onClick={() => void handleMarkRead(notification, true)}>
+                    {t('notifications.markRead')}
+                  </button>
+                ) : (
+                  <button className="btn btn-secondary" onClick={() => void handleMarkRead(notification, false)}>
+                    {t('notifications.markUnread')}
+                  </button>
+                )}
+                <button className="btn btn-secondary" onClick={() => navigate('/settings/notifications')}>
+                  {t('notifications.manageSettings')}
+                </button>
+              </div>
+            </article>
+          ))}
+
+          <div ref={sentinelRef} className="notifications-sentinel">
+            {loadingMore && <span>{t('app.loading')}</span>}
+          </div>
+        </div>
       )}
     </div>
   );

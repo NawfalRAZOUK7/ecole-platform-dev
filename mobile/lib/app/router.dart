@@ -15,6 +15,7 @@ import 'package:ecole_platform/features/auth/login_screen.dart';
 import 'package:ecole_platform/features/auth/register_screen.dart';
 import 'package:ecole_platform/features/feed/feed_screen.dart';
 import 'package:ecole_platform/features/notifications/notifications_screen.dart';
+import 'package:ecole_platform/features/notifications/notification_preferences_screen.dart';
 import 'package:ecole_platform/features/content/content_screen.dart';
 import 'package:ecole_platform/features/results/results_screen.dart';
 import 'package:ecole_platform/features/invoices/invoices_screen.dart';
@@ -196,6 +197,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/notifications',
             builder: (context, state) => const NotificationsScreen(),
+          ),
+          GoRoute(
+            path: '/settings/notifications',
+            builder: (context, state) => const NotificationPreferencesScreen(),
           ),
           GoRoute(
             path: '/content',

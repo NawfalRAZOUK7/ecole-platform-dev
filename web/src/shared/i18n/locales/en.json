@@ -46,6 +46,7 @@
     "timetable": "Timetable",
     "messages": "Messages",
     "announcements": "Announcements",
+    "notificationSettings": "Notification Settings",
     "adminFeeStructures": "Fee Structures",
     "adminFeeAssignments": "Fee Assignments",
     "adminGenerateInvoices": "Generate Invoices",
@@ -85,7 +86,70 @@
   "notifications": {
     "title": "Notifications",
     "empty": "No notifications",
-    "searchPlaceholder": "Search notifications..."
+    "subtitle": "Filter, read, and open everything from one notification center.",
+    "searchPlaceholder": "Search notifications...",
+    "bellLabel": "Open notifications",
+    "quickViewTitle": "Recent unread",
+    "viewAll": "View all",
+    "markRead": "Mark as read",
+    "markUnread": "Mark as unread",
+    "markAllRead": "Mark all as read",
+    "manageSettings": "Manage settings",
+    "settingsTitle": "Notification Settings",
+    "settingsSubtitle": "Control channels, email digests, and registered devices.",
+    "clearFilters": "Reset filters",
+    "saved": "Saved",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "preferenceMatrixTitle": "Channels by category",
+    "preferenceMatrixSubtitle": "Turn each channel on or off for each notification type.",
+    "digestTitle": "Email digest",
+    "digestSubtitle": "Receive a daily or weekly summary at 07:00 Africa/Casablanca.",
+    "devicesTitle": "Registered devices",
+    "devicesSubtitle": "Remove old devices to keep push delivery clean.",
+    "removeDevice": "Remove",
+    "noDevices": "No registered devices",
+    "unknownDevice": "Unknown device",
+    "lastSeen": "Last active",
+    "filters": {
+      "category": "Category",
+      "allCategories": "All categories",
+      "allChannels": "All channels",
+      "allStates": "All states",
+      "read": "Read",
+      "unread": "Unread",
+      "from": "From",
+      "to": "To"
+    },
+    "categories": {
+      "academic": "Academic",
+      "billing": "Billing",
+      "attendance": "Attendance",
+      "system": "System",
+      "announcement": "Announcement"
+    },
+    "channels": {
+      "in_app": "In-app",
+      "push": "Push",
+      "email": "Email",
+      "sms": "SMS"
+    },
+    "priorities": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High",
+      "critical": "Critical"
+    },
+    "digest": {
+      "off": "Off",
+      "daily": "Daily",
+      "weekly": "Weekly"
+    },
+    "devicePlatforms": {
+      "android": "Android",
+      "ios": "iPhone / iPad",
+      "web": "Web"
+    }
   },
   "content": {
     "title": "Content Library",

@@ -96,6 +96,7 @@ PERM_BIL_INVOICE_GENERATE = "PERM-BIL:invoice:generate"
 # COM
 PERM_COM_CONSENT_UPDATE = "PERM-COM:consent:update"
 PERM_COM_NOTIFICATION_READ = "PERM-COM:notification:read"
+PERM_COM_NOTIFICATION_BATCH_CREATE = "PERM-COM:notification:batch-create"
 PERM_COM_MESSAGE_SEND = "PERM-COM:message:send"
 
 # Progress (Phase 11D)
@@ -206,6 +207,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # COM — config + messaging + announcements (Phase 11C)
         PERM_COM_CONSENT_UPDATE,
         PERM_COM_NOTIFICATION_READ,
+        PERM_COM_NOTIFICATION_BATCH_CREATE,
         PERM_COM_CONVERSATION_CREATE,
         PERM_COM_CONVERSATION_READ,
         PERM_COM_ANNOUNCEMENT_CREATE,
@@ -395,6 +397,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
     SYS: {
         # Service account — jobs + webhooks
         PERM_BIL_PAYMENT_RECONCILE,
+        PERM_COM_NOTIFICATION_BATCH_CREATE,
         PERM_IA_WRITING_ATTEMPT_REVIEW,
         # Feature toggles (Phase 11E)
         PERM_SYS_FEATURE_MANAGE,

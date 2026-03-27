@@ -10,48 +10,50 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ecole_platform/features/auth/auth_provider.dart';
+import 'package:ecole_platform/features/notifications/notifications_provider.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 
 class _NavItem {
   final String route;
   final IconData icon;
-  final String label;
+  final String labelKey;
   final List<String> roles;
 
   const _NavItem({
     required this.route,
     required this.icon,
-    required this.label,
+    required this.labelKey,
     required this.roles,
   });
 }
 
 const _allNavItems = [
   // Admin tabs
-  _NavItem(route: '/admin/dashboard', icon: Icons.dashboard, label: 'Dashboard', roles: ['ADM', 'DIR']),
-  _NavItem(route: '/admin/users', icon: Icons.people, label: 'Utilisateurs', roles: ['ADM', 'DIR']),
+  _NavItem(route: '/admin/dashboard', icon: Icons.dashboard, labelKey: 'shell.dashboard', roles: ['ADM', 'DIR']),
+  _NavItem(route: '/admin/users', icon: Icons.people, labelKey: 'shell.users', roles: ['ADM', 'DIR']),
   // Teacher tabs
-  _NavItem(route: '/teacher/classes', icon: Icons.class_, label: 'Classes', roles: ['TCH']),
-  _NavItem(route: '/teacher/content-library', icon: Icons.library_books, label: 'Bibliothèque', roles: ['TCH']),
-  _NavItem(route: '/teacher/submissions', icon: Icons.grading, label: 'Notes', roles: ['TCH']),
+  _NavItem(route: '/teacher/classes', icon: Icons.class_, labelKey: 'shell.classes', roles: ['TCH']),
+  _NavItem(route: '/teacher/content-library', icon: Icons.library_books, labelKey: 'shell.library', roles: ['TCH']),
+  _NavItem(route: '/teacher/submissions', icon: Icons.grading, labelKey: 'shell.grading', roles: ['TCH']),
   // Parent tabs
-  _NavItem(route: '/family', icon: Icons.family_restroom, label: 'Enfants', roles: ['PAR']),
+  _NavItem(route: '/family', icon: Icons.family_restroom, labelKey: 'shell.children', roles: ['PAR']),
   // Student tabs (Phase 10C)
-  _NavItem(route: '/student/content', icon: Icons.library_books, label: 'Contenu', roles: ['STD']),
-  _NavItem(route: '/student/quizzes', icon: Icons.quiz, label: 'Quiz', roles: ['STD']),
+  _NavItem(route: '/student/content', icon: Icons.library_books, labelKey: 'shell.content', roles: ['STD']),
+  _NavItem(route: '/student/quizzes', icon: Icons.quiz, labelKey: 'shell.quiz', roles: ['STD']),
   // Phase 12B tabs
-  _NavItem(route: '/timetable', icon: Icons.calendar_view_week, label: 'Emploi du temps', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR']),
-  _NavItem(route: '/messages', icon: Icons.chat, label: 'Messages', roles: ['PAR', 'TCH', 'ADM', 'DIR']),
-  _NavItem(route: '/announcements', icon: Icons.campaign, label: 'Annonces', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR']),
+  _NavItem(route: '/timetable', icon: Icons.calendar_view_week, labelKey: 'shell.timetable', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR']),
+  _NavItem(route: '/messages', icon: Icons.chat, labelKey: 'shell.messages', roles: ['PAR', 'TCH', 'ADM', 'DIR']),
+  _NavItem(route: '/announcements', icon: Icons.campaign, labelKey: 'shell.announcements', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR']),
   // Common tabs
-  _NavItem(route: '/feed', icon: Icons.newspaper, label: 'Feed', roles: ['PAR']),
-  _NavItem(route: '/notifications', icon: Icons.notifications, label: 'Notifs', roles: ['PAR', 'TCH', 'ADM', 'DIR']),
-  _NavItem(route: '/content', icon: Icons.library_books, label: 'Contenu', roles: ['PAR', 'ADM']),
-  _NavItem(route: '/results', icon: Icons.assessment, label: 'Résultats', roles: ['STD', 'PAR']),
+  _NavItem(route: '/feed', icon: Icons.newspaper, labelKey: 'shell.feed', roles: ['PAR']),
+  _NavItem(route: '/notifications', icon: Icons.notifications, labelKey: 'shell.notifications', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR']),
+  _NavItem(route: '/content', icon: Icons.library_books, labelKey: 'shell.content', roles: ['PAR', 'ADM']),
+  _NavItem(route: '/results', icon: Icons.assessment, labelKey: 'shell.results', roles: ['STD', 'PAR']),
   // Phase 12C tabs
-  _NavItem(route: '/progress', icon: Icons.trending_up, label: 'Progrès', roles: ['STD']),
-  _NavItem(route: '/parent/progress', icon: Icons.trending_up, label: 'Progrès', roles: ['PAR']),
-  _NavItem(route: '/invoices', icon: Icons.receipt_long, label: 'Factures', roles: ['PAR', 'ADM']),
-  _NavItem(route: '/profile', icon: Icons.person, label: 'Profil', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR', 'SUP']),
+  _NavItem(route: '/progress', icon: Icons.trending_up, labelKey: 'shell.progress', roles: ['STD']),
+  _NavItem(route: '/parent/progress', icon: Icons.trending_up, labelKey: 'shell.progress', roles: ['PAR']),
+  _NavItem(route: '/invoices', icon: Icons.receipt_long, labelKey: 'shell.invoices', roles: ['PAR', 'ADM']),
+  _NavItem(route: '/profile', icon: Icons.person, labelKey: 'shell.profile', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR', 'SUP']),
 ];
 
 class ShellScreen extends ConsumerWidget {
@@ -62,6 +64,8 @@ class ShellScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
+    final notificationsState = ref.watch(notificationsProvider);
+    final t = AppLocalizations.of(ref);
     final userRole = authState.user?.role ?? '';
     final visibleItems = _allNavItems
         .where((item) => item.roles.contains(userRole))
@@ -81,11 +85,43 @@ class ShellScreen extends ConsumerWidget {
         },
         destinations: visibleItems
             .map((item) => NavigationDestination(
-                  icon: Icon(item.icon),
-                  label: item.label,
+                  icon: _buildIcon(item, notificationsState.unreadCount),
+                  label: t.t(item.labelKey),
                 ))
             .toList(),
       ),
+    );
+  }
+
+  Widget _buildIcon(_NavItem item, int unreadCount) {
+    if (item.route != '/notifications' || unreadCount <= 0) {
+      return Icon(item.icon);
+    }
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Icon(item.icon),
+        Positioned(
+          right: -6,
+          top: -6,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+            decoration: BoxDecoration(
+              color: Colors.red,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              unreadCount > 99 ? '99+' : '$unreadCount',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

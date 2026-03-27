@@ -269,6 +269,19 @@ class ApiClient {
     return ApiResponse(data: respBody['data'] as Map<String, dynamic>);
   }
 
+  Future<ApiResponse<Map<String, dynamic>>> patch(String path,
+      {dynamic body}) async {
+    final resp = await _request('PATCH', path, data: body);
+    final respBody = resp.data as Map<String, dynamic>;
+    return ApiResponse(data: respBody['data'] as Map<String, dynamic>);
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> delete(String path) async {
+    final resp = await _request('DELETE', path);
+    final respBody = resp.data as Map<String, dynamic>;
+    return ApiResponse(data: respBody['data'] as Map<String, dynamic>);
+  }
+
   /// Upload files with multipart form data and progress tracking.
   Future<ApiResponse<Map<String, dynamic>>> uploadFiles(
     String path, {
