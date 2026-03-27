@@ -3,7 +3,6 @@
 /// Reference: Phase 12B — Messaging providers
 /// Includes offline cache for conversations and announcements.
 
-import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/data/local_store/cache_store.dart';
@@ -59,23 +58,22 @@ class ConversationsNotifier extends StateNotifier<ConversationsState> {
   Future<void> _fetchFromApi() async {
     try {
       final api = _ref.read(apiClientProvider);
-      final resp = await api.list('/messages/conversations', params: {'limit': '20'});
-      final items = (resp['data'] as List<dynamic>)
-          .map((j) => Conversation.fromJson(j as Map<String, dynamic>))
-          .toList();
+      final resp =
+          await api.list('/messages/conversations', params: {'limit': '20'});
+      final items = resp.data.map(Conversation.fromJson).toList();
 
       // Cache
       final cache = _ref.read(cacheStoreProvider);
       await cache.put(
         'conversations:first',
-        (resp['data'] as List<dynamic>).cast<Map<String, dynamic>>(),
+        resp.data,
         CacheTtl.notifications,
       );
 
       state = ConversationsState(
         items: items,
-        nextCursor: resp['meta']?['next_cursor'] as String?,
-        hasMore: resp['meta']?['has_more'] as bool? ?? false,
+        nextCursor: resp.nextCursor,
+        hasMore: resp.hasMore,
       );
     } catch (e) {
       if (state.items.isEmpty) {
@@ -146,18 +144,22 @@ class ChatNotifier extends StateNotifier<ChatState> {
         '/messages/conversations/$conversationId/messages',
         params: {'limit': '50'},
       );
-      final messages = (resp['data'] as List<dynamic>)
-          .map((j) => Message.fromJson(j as Map<String, dynamic>))
-          .toList()
-          .reversed
-          .toList();
+      final messages =
+          resp.data.map(Message.fromJson).toList().reversed.toList();
 
       state = ChatState(messages: messages);
 
       // Mark as read
       if (messages.isNotEmpty) {
-        final newestId = (resp['data'] as List<dynamic>).first['id'] as String;
-        api.post('/messages/conversations/$conversationId/read', body: {'message_id': newestId}).catchError((_) {});
+        final newestId = resp.data.first['id'] as String;
+        try {
+          await api.post(
+            '/messages/conversations/$conversationId/read',
+            body: {'message_id': newestId},
+          );
+        } catch (_) {
+          // Ignore read receipt failures.
+        }
       }
     } catch (e) {
       state = ChatState(error: e.toString());
@@ -172,7 +174,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
         '/messages/conversations/$conversationId/messages',
         body: {'body': body},
       );
-      final msg = Message.fromJson(resp['data'] as Map<String, dynamic>);
+      final msg = Message.fromJson(resp.data);
       state = ChatState(messages: [...state.messages, msg]);
     } catch (e) {
       state = ChatState(messages: state.messages, error: e.toString());
@@ -186,7 +188,8 @@ class ChatNotifier extends StateNotifier<ChatState> {
   }
 }
 
-final chatProvider = StateNotifierProvider.family<ChatNotifier, ChatState, String>(
+final chatProvider =
+    StateNotifierProvider.family<ChatNotifier, ChatState, String>(
   (ref, conversationId) => ChatNotifier(ref, conversationId),
 );
 
@@ -238,21 +241,19 @@ class AnnouncementsNotifier extends StateNotifier<AnnouncementsState> {
     try {
       final api = _ref.read(apiClientProvider);
       final resp = await api.list('/announcements', params: {'limit': '20'});
-      final items = (resp['data'] as List<dynamic>)
-          .map((j) => Announcement.fromJson(j as Map<String, dynamic>))
-          .toList();
+      final items = resp.data.map(Announcement.fromJson).toList();
 
       final cache = _ref.read(cacheStoreProvider);
       await cache.put(
         'announcements:first',
-        (resp['data'] as List<dynamic>).cast<Map<String, dynamic>>(),
+        resp.data,
         CacheTtl.feed,
       );
 
       state = AnnouncementsState(
         items: items,
-        nextCursor: resp['meta']?['next_cursor'] as String?,
-        hasMore: resp['meta']?['has_more'] as bool? ?? false,
+        nextCursor: resp.nextCursor,
+        hasMore: resp.hasMore,
       );
     } catch (e) {
       if (state.items.isEmpty) {

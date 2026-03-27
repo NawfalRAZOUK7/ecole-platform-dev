@@ -3,7 +3,6 @@
 /// Reference: Phase 12B — Chat screen
 /// Listens to WS events for incoming messages in this conversation.
 
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -146,8 +145,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         ? const SizedBox(
                             width: 20,
                             height: 20,
-                            child:
-                                CircularProgressIndicator(strokeWidth: 2))
+                            child: CircularProgressIndicator(strokeWidth: 2))
                         : const Icon(Icons.send),
                   ),
                 ],
@@ -163,9 +161,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
     _controller.clear();
-    ref
-        .read(chatProvider(widget.conversationId).notifier)
-        .sendMessage(text);
+    ref.read(chatProvider(widget.conversationId).notifier).sendMessage(text);
   }
 }
 

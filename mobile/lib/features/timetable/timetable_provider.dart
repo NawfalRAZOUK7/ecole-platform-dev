@@ -26,7 +26,7 @@ class TimetableNotifier extends StateNotifier<TimetableState> {
     try {
       final api = _ref.read(apiClientProvider);
       final resp = await api.get('/timetable/me/weekly');
-      final data = resp['data'] as Map<String, dynamic>;
+      final data = resp.data;
       final schedule = WeeklySchedule.fromJson(data);
       state = TimetableState(schedule: schedule);
     } catch (e) {

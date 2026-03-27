@@ -29,8 +29,10 @@ class ChartData {
   final List<ChartDataset> datasets;
   const ChartData({required this.labels, required this.datasets});
   factory ChartData.fromJson(Map<String, dynamic> json) => ChartData(
-        labels:
-            (json['labels'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
+        labels: (json['labels'] as List<dynamic>?)
+                ?.map((e) => e as String)
+                .toList() ??
+            [],
         datasets: (json['datasets'] as List<dynamic>?)
                 ?.map((e) => ChartDataset.fromJson(e as Map<String, dynamic>))
                 .toList() ??
@@ -44,7 +46,9 @@ class AttendanceSummary {
   final int present;
   final double attendanceRate;
   const AttendanceSummary(
-      {required this.total, required this.present, required this.attendanceRate});
+      {required this.total,
+      required this.present,
+      required this.attendanceRate});
   factory AttendanceSummary.fromJson(Map<String, dynamic> json) =>
       AttendanceSummary(
         total: json['total'] as int? ?? 0,
@@ -59,7 +63,9 @@ class ContentSummary {
   final int completed;
   final double completionRate;
   const ContentSummary(
-      {required this.total, required this.completed, required this.completionRate});
+      {required this.total,
+      required this.completed,
+      required this.completionRate});
   factory ContentSummary.fromJson(Map<String, dynamic> json) => ContentSummary(
         total: json['total'] as int? ?? 0,
         completed: json['completed'] as int? ?? 0,
@@ -93,23 +99,25 @@ class StudentProgress {
   });
 
   factory StudentProgress.fromJson(Map<String, dynamic> json) {
-    final contentMap = json['content_completion'] as Map<String, dynamic>? ?? {};
+    final contentMap =
+        json['content_completion'] as Map<String, dynamic>? ?? {};
     final attendanceMap = json['attendance'] as Map<String, dynamic>? ?? {};
-    final overviewMap = attendanceMap['overview'] as Map<String, dynamic>? ?? {};
+    final overviewMap =
+        attendanceMap['overview'] as Map<String, dynamic>? ?? {};
 
     return StudentProgress(
       studentId: json['student_id'] as String? ?? '',
       studentName: json['student_name'] as String? ?? '',
-      gradeTrends:
-          ChartData.fromJson(json['grade_trends'] as Map<String, dynamic>? ?? {}),
+      gradeTrends: ChartData.fromJson(
+          json['grade_trends'] as Map<String, dynamic>? ?? {}),
       contentCompletion: ChartData.fromJson(contentMap),
-      contentSummary:
-          ContentSummary.fromJson(contentMap['summary'] as Map<String, dynamic>? ?? {}),
-      activityScores:
-          ChartData.fromJson(json['activity_scores'] as Map<String, dynamic>? ?? {}),
+      contentSummary: ContentSummary.fromJson(
+          contentMap['summary'] as Map<String, dynamic>? ?? {}),
+      activityScores: ChartData.fromJson(
+          json['activity_scores'] as Map<String, dynamic>? ?? {}),
       attendanceOverview: ChartData.fromJson(overviewMap),
-      attendanceSummary:
-          AttendanceSummary.fromJson(overviewMap['summary'] as Map<String, dynamic>? ?? {}),
+      attendanceSummary: AttendanceSummary.fromJson(
+          overviewMap['summary'] as Map<String, dynamic>? ?? {}),
     );
   }
 }
@@ -180,11 +188,10 @@ class ProgressNotifier extends StateNotifier<ProgressState> {
     state = const ProgressState(isLoading: true);
     try {
       final api = _ref.read(apiClientProvider);
-      final endpoint = studentId != null
-          ? '/progress/student/$studentId'
-          : '/progress/me';
+      final endpoint =
+          studentId != null ? '/progress/student/$studentId' : '/progress/me';
       final resp = await api.get(endpoint);
-      final data = resp['data'] as Map<String, dynamic>;
+      final data = resp.data;
       state = ProgressState(progress: StudentProgress.fromJson(data));
     } catch (e) {
       state = ProgressState(error: e.toString());
@@ -209,7 +216,7 @@ class ChildrenProgressNotifier extends StateNotifier<ChildrenProgressState> {
     try {
       final api = _ref.read(apiClientProvider);
       final resp = await api.get('/progress/children');
-      final data = resp['data'] as Map<String, dynamic>;
+      final data = resp.data;
       final children = (data['children'] as List<dynamic>)
           .map((j) => ChildProgressSummary.fromJson(j as Map<String, dynamic>))
           .toList();

@@ -2,7 +2,6 @@
 ///
 /// Phase 10C: Quiz engine for student quiz player + teacher quiz manager.
 import '../entities/quiz.dart';
-import 'feed_repository.dart'; // for PaginatedList
 
 abstract class QuizRepository {
   /// List available quizzes for the student.
@@ -18,7 +17,8 @@ abstract class QuizRepository {
   Future<QuizAttempt> startAttempt(String quizId);
 
   /// Submit a response to a question within an attempt.
-  Future<void> submitResponse(String attemptId, {
+  Future<void> submitResponse(
+    String attemptId, {
     required String questionId,
     required dynamic answer,
   });

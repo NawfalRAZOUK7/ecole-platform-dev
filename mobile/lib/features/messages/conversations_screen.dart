@@ -83,7 +83,8 @@ class ConversationsScreen extends ConsumerWidget {
     );
   }
 
-  void _showNewConversation(BuildContext context, WidgetRef ref, AppLocalizations t) {
+  void _showNewConversation(
+      BuildContext context, WidgetRef ref, AppLocalizations t) {
     final recipientCtrl = TextEditingController();
     final subjectCtrl = TextEditingController();
     final messageCtrl = TextEditingController();
@@ -129,16 +130,19 @@ class ConversationsScreen extends ConsumerWidget {
               width: double.infinity,
               child: FilledButton(
                 onPressed: () async {
-                  if (recipientCtrl.text.isEmpty || messageCtrl.text.isEmpty) return;
+                  if (recipientCtrl.text.isEmpty || messageCtrl.text.isEmpty)
+                    return;
                   try {
                     final api = ref.read(apiClientProvider);
-                    final resp = await api.post('/messages/conversations', body: {
+                    final resp =
+                        await api.post('/messages/conversations', body: {
                       'type': 'DIRECT',
                       'participant_ids': [recipientCtrl.text.trim()],
-                      'subject': subjectCtrl.text.isNotEmpty ? subjectCtrl.text : null,
+                      'subject':
+                          subjectCtrl.text.isNotEmpty ? subjectCtrl.text : null,
                       'initial_message': messageCtrl.text,
                     });
-                    final convId = (resp['data'] as Map<String, dynamic>)['id'] as String;
+                    final convId = resp.data['id'] as String;
                     if (ctx.mounted) Navigator.pop(ctx);
                     if (context.mounted) context.push('/messages/$convId');
                   } catch (e) {
@@ -199,7 +203,8 @@ class _ConversationTile extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
-          fontWeight: conversation.unreadCount > 0 ? FontWeight.w800 : FontWeight.w600,
+          fontWeight:
+              conversation.unreadCount > 0 ? FontWeight.w800 : FontWeight.w600,
         ),
       ),
       subtitle: Column(
@@ -213,10 +218,12 @@ class _ConversationTile extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.bodySmall?.copyWith(
-                fontWeight: conversation.unreadCount > 0 ? FontWeight.w600 : null,
+                fontWeight:
+                    conversation.unreadCount > 0 ? FontWeight.w600 : null,
               ),
             ),
-          Text(subtitle, style: theme.textTheme.bodySmall?.copyWith(fontSize: 11)),
+          Text(subtitle,
+              style: theme.textTheme.bodySmall?.copyWith(fontSize: 11)),
         ],
       ),
       trailing: Column(
@@ -249,9 +256,8 @@ class _ConversationTile extends StatelessWidget {
   }
 
   String _otherParticipant() {
-    final other = conversation.participants
-        .where((p) => p.userId != userId)
-        .firstOrNull;
+    final other =
+        conversation.participants.where((p) => p.userId != userId).firstOrNull;
     if (other != null) return '${other.userId.substring(0, 8)}...';
     return t.t('messages.conversation');
   }

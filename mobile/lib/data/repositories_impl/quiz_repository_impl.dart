@@ -2,8 +2,6 @@
 ///
 /// Phase 10C: Quiz engine for student quiz player.
 
-import 'dart:convert';
-
 import 'package:ecole_platform/data/api/api_client.dart';
 import 'package:ecole_platform/data/local_store/cache_store.dart';
 import 'package:ecole_platform/domain/entities/quiz.dart';
@@ -110,7 +108,8 @@ class QuizRepositoryImpl implements QuizRepository {
   }
 
   @override
-  Future<void> submitResponse(String attemptId, {
+  Future<void> submitResponse(
+    String attemptId, {
     required String questionId,
     required dynamic answer,
   }) async {
@@ -150,16 +149,19 @@ class QuizRepositoryImpl implements QuizRepository {
   }
 
   @override
-  Future<void> cacheQuizForOffline(String quizId, List<Question> questions) async {
-    final data = questions.map((q) => {
-      'id': q.id,
-      'question_type': q.questionType,
-      'question_text': q.questionText,
-      'question_media_path': q.questionMediaPath,
-      'options': q.options,
-      'points': q.points,
-      'order': q.order,
-    }).toList();
+  Future<void> cacheQuizForOffline(
+      String quizId, List<Question> questions) async {
+    final data = questions
+        .map((q) => {
+              'id': q.id,
+              'question_type': q.questionType,
+              'question_text': q.questionText,
+              'question_media_path': q.questionMediaPath,
+              'options': q.options,
+              'points': q.points,
+              'order': q.order,
+            })
+        .toList();
     await _cache.put('quiz_offline:$quizId', data, 7 * 24 * 3600); // 7 days
   }
 
