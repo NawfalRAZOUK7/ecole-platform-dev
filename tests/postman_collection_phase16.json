@@ -1,0 +1,278 @@
+{
+  "info": {
+    "_postman_id": "9e86f526-6d9a-4ae5-9500-5f97bf13dd9a",
+    "name": "Ecole Platform Phase 16 - Document Management",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api/v1"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "studentId",
+      "value": ""
+    },
+    {
+      "key": "documentId",
+      "value": ""
+    },
+    {
+      "key": "resourceId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Documents - Upload",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "category",
+              "value": "medical",
+              "type": "text"
+            },
+            {
+              "key": "linked_student_id",
+              "value": "{{studentId}}",
+              "type": "text"
+            },
+            {
+              "key": "file",
+              "type": "file",
+              "src": ""
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/documents/upload",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "documents",
+            "upload"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Documents - List Mine",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/documents?owner=me&limit=50",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "documents"
+          ],
+          "query": [
+            {
+              "key": "owner",
+              "value": "me"
+            },
+            {
+              "key": "limit",
+              "value": "50"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Documents - Student Checklist",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/students/{{studentId}}/documents/checklist",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "students",
+            "{{studentId}}",
+            "documents",
+            "checklist"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Documents - Download",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/documents/{{documentId}}/download",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "documents",
+            "{{documentId}}",
+            "download"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Resources - Upload",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "title",
+              "value": "Phase 16 Worksheet",
+              "type": "text"
+            },
+            {
+              "key": "subject",
+              "value": "Mathematics",
+              "type": "text"
+            },
+            {
+              "key": "level",
+              "value": "College",
+              "type": "text"
+            },
+            {
+              "key": "type",
+              "value": "worksheet",
+              "type": "text"
+            },
+            {
+              "key": "visibility",
+              "value": "school",
+              "type": "text"
+            },
+            {
+              "key": "tags",
+              "value": "phase16,documents",
+              "type": "text"
+            },
+            {
+              "key": "file",
+              "type": "file",
+              "src": ""
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/resources",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "resources"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Resources - Search",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/resources?q=phase16&type=worksheet&rating=4",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "resources"
+          ],
+          "query": [
+            {
+              "key": "q",
+              "value": "phase16"
+            },
+            {
+              "key": "type",
+              "value": "worksheet"
+            },
+            {
+              "key": "rating",
+              "value": "4"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Resources - Rate",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"rating\": 5\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/resources/{{resourceId}}/rate",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "resources",
+            "{{resourceId}}",
+            "rate"
+          ]
+        }
+      }
+    }
+  ]
+}

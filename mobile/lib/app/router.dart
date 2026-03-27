@@ -46,6 +46,7 @@ import 'package:ecole_platform/features/progress/progress_screen.dart';
 import 'package:ecole_platform/features/progress/parent_progress_screen.dart';
 import 'package:ecole_platform/features/reports/reports_screen.dart';
 import 'package:ecole_platform/features/analytics/analytics_summary_screen.dart';
+import 'package:ecole_platform/features/documents/documents_screen.dart';
 import 'package:ecole_platform/presentation/shell_screen.dart';
 
 /// Role-based redirect targets.
@@ -225,6 +226,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/reports',
             builder: (context, state) => const ReportsScreen(),
+          ),
+          GoRoute(
+            path: '/documents',
+            builder: (context, state) => const DocumentsScreen(),
           ),
           GoRoute(
             path: '/settings/notifications',

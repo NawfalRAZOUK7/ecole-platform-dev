@@ -50,6 +50,35 @@ class Settings(BaseSettings):
         "application/zip"
     )
 
+    # Document management (Phase 16)
+    document_storage_backend: str = "local"  # local | s3
+    document_storage_subdirectory: str = "documents"
+    document_preview_subdirectory: str = "documents/previews"
+    document_storage_bucket: str = "ecole-platform"
+    document_storage_prefix: str = "documents"
+    document_storage_region: str = "us-east-1"
+    document_storage_endpoint: str = ""
+    document_storage_access_key: str = ""
+    document_storage_secret_key: str = ""
+    document_storage_force_path_style: bool = True
+    max_document_size_mb: int = 50
+    allowed_document_mime_types: str = (
+        "application/pdf,"
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document,"
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,"
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation,"
+        "image/jpeg,"
+        "image/png,"
+        "image/webp,"
+        "application/zip"
+    )
+    document_download_ttl_hours: int = 1
+    document_deleted_retention_days: int = 30
+    document_expiry_notice_days: int = 30
+    virus_scan_enabled: bool = False
+    virus_scan_host: str = "localhost"
+    virus_scan_port: int = 3310
+
     # SMTP / Email (Phase 3E)
     smtp_host: str = "localhost"
     smtp_port: int = 1025  # Mailhog default for dev

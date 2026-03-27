@@ -59,6 +59,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/announcements', labelKey: 'nav.announcements', icon: '📢', roles: ['PAR', 'TCH', 'ADM', 'DIR', 'STD'] },
   { to: '/notifications', labelKey: 'nav.notifications', icon: '🔔', roles: ['PAR', 'TCH', 'ADM', 'DIR', 'STD'] },
   { to: '/reports', labelKey: 'nav.reports', icon: '🧾', roles: ['PAR', 'TCH', 'ADM', 'DIR', 'STD'] },
+  { to: '/documents', labelKey: 'nav.documents', icon: '🗂️', roles: ['PAR', 'TCH', 'ADM', 'DIR', 'STD'] },
   { to: '/settings/notifications', labelKey: 'nav.notificationSettings', icon: '⚡', roles: ['PAR', 'TCH', 'ADM', 'DIR', 'STD'] },
   { to: '/content', labelKey: 'nav.content', icon: '📚', roles: ['STD', 'PAR', 'TCH', 'ADM'] },
   { to: '/submissions', labelKey: 'nav.submissions', icon: '📤', roles: ['STD'] },

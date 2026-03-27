@@ -49,6 +49,7 @@
     "notificationSettings": "Notification Settings",
     "calendar": "Calendar",
     "reports": "Reports",
+    "documents": "Documents",
     "adminFeeStructures": "Fee Structures",
     "adminFeeAssignments": "Fee Assignments",
     "adminGenerateInvoices": "Generate Invoices",
@@ -151,6 +152,80 @@
       "android": "Android",
       "ios": "iPhone / iPad",
       "web": "Web"
+    }
+  },
+  "documents": {
+    "title": "Documents",
+    "subtitle": "Manage school files, student checklists, and shared teaching resources.",
+    "tabs": {
+      "mine": "My Documents",
+      "student": "Student Documents",
+      "resources": "Resources Library"
+    },
+    "filters": {
+      "search": "Search files...",
+      "allCategories": "All categories",
+      "allTypes": "All file types"
+    },
+    "view": {
+      "grid": "Grid view",
+      "list": "List view"
+    },
+    "uploadTitle": "Upload a file",
+    "uploadSubtitle": "Drag and drop a file here or pick one from your device.",
+    "uploadAction": "Upload",
+    "uploading": "Uploading...",
+    "cancelUpload": "Cancel upload",
+    "uploadCanceled": "Upload canceled",
+    "empty": "No documents found",
+    "previewPanelTitle": "Preview",
+    "previewEmpty": "Select a file to preview it here",
+    "preview": "Preview",
+    "download": "Download",
+    "delete": "Delete",
+    "bulk": {
+      "download": "Download selected",
+      "delete": "Delete selected",
+      "hardDelete": "Hard delete selected"
+    },
+    "studentSelector": "Student",
+    "checklist": {
+      "uploaded": "Uploaded",
+      "missing": "Missing",
+      "expired": "Expired"
+    },
+    "expired": "Expired",
+    "expiringSoon": "Expiring soon",
+    "expiresAt": "Expires on",
+    "categories": {
+      "certificate": "Certificate",
+      "report_card": "Report card",
+      "medical": "Medical",
+      "identity": "Identity",
+      "transcript": "Transcript",
+      "other": "Other"
+    },
+    "resourceTypes": {
+      "lesson_plan": "Lesson plan",
+      "worksheet": "Worksheet",
+      "presentation": "Presentation",
+      "exam_template": "Exam template",
+      "reference": "Reference"
+    },
+    "resources": {
+      "searchPlaceholder": "Search resources...",
+      "subject": "Subject",
+      "level": "Level",
+      "allTypes": "All resource types",
+      "allRatings": "All ratings",
+      "ratingAtLeast": "{{rating}} stars and up",
+      "rating": "{{rating}} / 5 ({{count}} ratings)",
+      "loadMore": "Load more resources",
+      "uploadAction": "Upload resource",
+      "title": "Title",
+      "tags": "Tags (comma-separated)",
+      "description": "Description",
+      "empty": "No resources found"
     }
   },
   "content": {

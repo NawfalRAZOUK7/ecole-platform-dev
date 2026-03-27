@@ -248,6 +248,30 @@ REPORT_GENERATION_DURATION = Histogram(
     registry=REGISTRY,
 )
 
+# ---------------------------------------------------------------------------
+# Document storage metrics (Phase 16)
+# ---------------------------------------------------------------------------
+DOCUMENT_UPLOAD_COUNT = Counter(
+    "upload_count",
+    "Total document uploads accepted by the backend",
+    ["env", "mime_type", "deduplicated"],
+    registry=REGISTRY,
+)
+
+DOCUMENT_UPLOAD_SIZE_BYTES = Counter(
+    "upload_size_bytes",
+    "Total uploaded document size in bytes",
+    ["env", "mime_type"],
+    registry=REGISTRY,
+)
+
+DOCUMENT_STORAGE_TOTAL_BYTES = Gauge(
+    "storage_total_bytes",
+    "Current total stored document bytes tracked by the API",
+    ["env"],
+    registry=REGISTRY,
+)
+
 
 class _CollectorNameProxy:
     """Expose a stable public metric name without mutating the registered collector."""

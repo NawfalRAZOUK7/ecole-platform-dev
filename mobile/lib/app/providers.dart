@@ -16,8 +16,10 @@ import 'package:ecole_platform/data/local_store/notifications_store.dart';
 import 'package:ecole_platform/data/local_store/offline_queue.dart';
 import 'package:ecole_platform/data/local_store/reports_store.dart';
 import 'package:ecole_platform/data/local_store/events_store.dart';
+import 'package:ecole_platform/data/local_store/documents_store.dart';
 import 'package:ecole_platform/data/repositories_impl/auth_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/calendar_repository_impl.dart';
+import 'package:ecole_platform/data/repositories_impl/document_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/feed_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/notification_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/content_repository_impl.dart';
@@ -30,6 +32,7 @@ import 'package:ecole_platform/data/repositories_impl/content_library_repository
 import 'package:ecole_platform/data/repositories_impl/quiz_repository_impl.dart';
 import 'package:ecole_platform/domain/repositories/auth_repository.dart';
 import 'package:ecole_platform/domain/repositories/calendar_repository.dart';
+import 'package:ecole_platform/domain/repositories/document_repository.dart';
 import 'package:ecole_platform/domain/repositories/feed_repository.dart';
 import 'package:ecole_platform/domain/repositories/notification_repository.dart';
 import 'package:ecole_platform/domain/repositories/content_repository.dart';
@@ -77,6 +80,10 @@ final reportsStoreProvider = Provider<ReportsStore>((ref) {
 
 final eventsStoreProvider = Provider<EventsStore>((ref) {
   return EventsStore();
+});
+
+final documentsStoreProvider = Provider<DocumentsStore>((ref) {
+  return DocumentsStore();
 });
 
 /// Shared local notifications plugin — used by push + WS.
@@ -131,6 +138,13 @@ final calendarRepositoryProvider = Provider<CalendarRepository>((ref) {
   return CalendarRepositoryImpl(
     api: ref.watch(apiClientProvider),
     eventsStore: ref.watch(eventsStoreProvider),
+  );
+});
+
+final documentRepositoryProvider = Provider<DocumentRepository>((ref) {
+  return DocumentRepositoryImpl(
+    api: ref.watch(apiClientProvider),
+    documentsStore: ref.watch(documentsStoreProvider),
   );
 });
 

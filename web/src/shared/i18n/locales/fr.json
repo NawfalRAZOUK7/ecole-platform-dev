@@ -49,6 +49,7 @@
     "notificationSettings": "Preferences notifications",
     "calendar": "Calendrier",
     "reports": "Rapports",
+    "documents": "Documents",
     "adminFeeStructures": "Frais scolaires",
     "adminFeeAssignments": "Attribution des frais",
     "adminGenerateInvoices": "Generer des factures",
@@ -151,6 +152,80 @@
       "android": "Android",
       "ios": "iPhone / iPad",
       "web": "Web"
+    }
+  },
+  "documents": {
+    "title": "Documents",
+    "subtitle": "Gerez les fichiers de l'ecole, les dossiers eleves et les ressources partagees.",
+    "tabs": {
+      "mine": "Mes documents",
+      "student": "Documents eleves",
+      "resources": "Bibliotheque de ressources"
+    },
+    "filters": {
+      "search": "Rechercher des fichiers...",
+      "allCategories": "Toutes les categories",
+      "allTypes": "Tous les types"
+    },
+    "view": {
+      "grid": "Vue grille",
+      "list": "Vue liste"
+    },
+    "uploadTitle": "Televerser un fichier",
+    "uploadSubtitle": "Glissez-deposez un fichier ici ou choisissez-en un depuis votre appareil.",
+    "uploadAction": "Televerser",
+    "uploading": "Televersement...",
+    "cancelUpload": "Annuler",
+    "uploadCanceled": "Televersement annule",
+    "empty": "Aucun document trouve",
+    "previewPanelTitle": "Apercu",
+    "previewEmpty": "Selectionnez un fichier pour l'apercu",
+    "preview": "Apercu",
+    "download": "Telecharger",
+    "delete": "Supprimer",
+    "bulk": {
+      "download": "Telecharger la selection",
+      "delete": "Supprimer la selection",
+      "hardDelete": "Suppression definitive"
+    },
+    "studentSelector": "Eleve",
+    "checklist": {
+      "uploaded": "Televerse",
+      "missing": "Manquant",
+      "expired": "Expire"
+    },
+    "expired": "Expire",
+    "expiringSoon": "Expire bientot",
+    "expiresAt": "Expire le",
+    "categories": {
+      "certificate": "Certificat",
+      "report_card": "Bulletin",
+      "medical": "Medical",
+      "identity": "Identite",
+      "transcript": "Releve",
+      "other": "Autre"
+    },
+    "resourceTypes": {
+      "lesson_plan": "Plan de cours",
+      "worksheet": "Fiche",
+      "presentation": "Presentation",
+      "exam_template": "Modele d'examen",
+      "reference": "Reference"
+    },
+    "resources": {
+      "searchPlaceholder": "Rechercher des ressources...",
+      "subject": "Matiere",
+      "level": "Niveau",
+      "allTypes": "Tous les types de ressources",
+      "allRatings": "Toutes les notes",
+      "ratingAtLeast": "{{rating}} etoiles et plus",
+      "rating": "{{rating}} / 5 ({{count}} avis)",
+      "loadMore": "Charger plus",
+      "uploadAction": "Ajouter une ressource",
+      "title": "Titre",
+      "tags": "Tags (separes par des virgules)",
+      "description": "Description",
+      "empty": "Aucune ressource trouvee"
     }
   },
   "content": {

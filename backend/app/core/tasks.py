@@ -626,6 +626,82 @@ async def task_send_event_reminders(ctx: dict) -> int:
 
 
 # ---------------------------------------------------------------------------
+# Task: notify_expiring_documents (Phase 16)
+# ---------------------------------------------------------------------------
+async def task_notify_expiring_documents(ctx: dict) -> int:
+    """Send in-app/push reminders for documents expiring soon."""
+    from app.core.metrics import TASK_COMPLETED_COUNT, TASK_DURATION, TASK_FAILED_COUNT
+
+    start = time.perf_counter()
+    try:
+        from app.core.database import async_session
+        from app.services.student_documents import StudentDocumentsService
+
+        async with async_session() as db:
+            service = StudentDocumentsService(db)
+            sent_count = await service.notify_expiring_documents()
+            await db.commit()
+
+        duration = time.perf_counter() - start
+        TASK_DURATION.labels(
+            env=settings.app_env, task="notify_expiring_documents"
+        ).observe(duration)
+        TASK_COMPLETED_COUNT.labels(
+            env=settings.app_env, task="notify_expiring_documents"
+        ).inc()
+        logger.info("Sent %d expiring document reminders", sent_count)
+        return sent_count
+    except Exception:
+        duration = time.perf_counter() - start
+        TASK_DURATION.labels(
+            env=settings.app_env, task="notify_expiring_documents"
+        ).observe(duration)
+        TASK_FAILED_COUNT.labels(
+            env=settings.app_env, task="notify_expiring_documents"
+        ).inc()
+        logger.exception("task_notify_expiring_documents failed")
+        return 0
+
+
+# ---------------------------------------------------------------------------
+# Task: cleanup_deleted_documents (Phase 16)
+# ---------------------------------------------------------------------------
+async def task_cleanup_deleted_documents(ctx: dict) -> int:
+    """Permanently delete soft-deleted documents after retention."""
+    from app.core.metrics import TASK_COMPLETED_COUNT, TASK_DURATION, TASK_FAILED_COUNT
+
+    start = time.perf_counter()
+    try:
+        from app.core.database import async_session
+        from app.services.student_documents import StudentDocumentsService
+
+        async with async_session() as db:
+            service = StudentDocumentsService(db)
+            deleted_count = await service.cleanup_deleted_documents()
+            await db.commit()
+
+        duration = time.perf_counter() - start
+        TASK_DURATION.labels(
+            env=settings.app_env, task="cleanup_deleted_documents"
+        ).observe(duration)
+        TASK_COMPLETED_COUNT.labels(
+            env=settings.app_env, task="cleanup_deleted_documents"
+        ).inc()
+        logger.info("Cleaned up %d deleted documents", deleted_count)
+        return deleted_count
+    except Exception:
+        duration = time.perf_counter() - start
+        TASK_DURATION.labels(
+            env=settings.app_env, task="cleanup_deleted_documents"
+        ).observe(duration)
+        TASK_FAILED_COUNT.labels(
+            env=settings.app_env, task="cleanup_deleted_documents"
+        ).inc()
+        logger.exception("task_cleanup_deleted_documents failed")
+        return 0
+
+
+# ---------------------------------------------------------------------------
 # Enqueue helpers — fire-and-forget from API endpoints
 # ---------------------------------------------------------------------------
 _arq_pool: ArqRedis | None = None
@@ -715,6 +791,8 @@ class WorkerSettings:
         task_generate_report,
         task_cleanup_expired_reports,
         task_send_event_reminders,
+        task_notify_expiring_documents,
+        task_cleanup_deleted_documents,
     ]
 
     # Cron jobs
@@ -727,6 +805,10 @@ class WorkerSettings:
         cron(task_refresh_kpi_views, hour=3, minute=30),
         # Cleanup expired report files daily at 04:00 UTC (Phase 14)
         cron(task_cleanup_expired_reports, hour=4, minute=0),
+        # Phase 16: Expiring document notifications daily at 04:15 UTC
+        cron(task_notify_expiring_documents, hour=4, minute=15),
+        # Phase 16: Hard cleanup of deleted documents daily at 04:30 UTC
+        cron(task_cleanup_deleted_documents, hour=4, minute=30),
         # Phase 15: Event reminder dispatch every 5 minutes
         cron(task_send_event_reminders, minute=set(range(0, 60, 5))),
     ]

@@ -154,6 +154,17 @@ PERM_CAL_EVENT_DELETE = "PERM-CAL:event:delete"
 PERM_CAL_RSVP_RESPOND = "PERM-CAL:event-rsvp:respond"
 PERM_CAL_RSVP_READ = "PERM-CAL:event-rsvp:read"
 
+# Document management (Phase 16)
+PERM_DOC_DOCUMENT_UPLOAD = "PERM-DOC:document:upload"
+PERM_DOC_DOCUMENT_READ = "PERM-DOC:document:read"
+PERM_DOC_DOCUMENT_DELETE = "PERM-DOC:document:delete"
+PERM_DOC_STUDENT_DOCUMENT_LINK = "PERM-DOC:student-document:link"
+PERM_DOC_RESOURCE_CREATE = "PERM-DOC:resource:create"
+PERM_DOC_RESOURCE_READ = "PERM-DOC:resource:read"
+PERM_DOC_RESOURCE_UPDATE = "PERM-DOC:resource:update"
+PERM_DOC_RESOURCE_DELETE = "PERM-DOC:resource:delete"
+PERM_DOC_RESOURCE_RATE = "PERM-DOC:resource:rate"
+
 # Support
 PERM_SUP_GRANT_REQUEST = "PERM-SUP:grant:request"
 PERM_SUP_GRANT_APPROVE = "PERM-SUP:grant:approve"
@@ -229,6 +240,16 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_CAL_EVENT_UPDATE,
         PERM_CAL_EVENT_DELETE,
         PERM_CAL_RSVP_READ,
+        # Document management (Phase 16)
+        PERM_DOC_DOCUMENT_UPLOAD,
+        PERM_DOC_DOCUMENT_READ,
+        PERM_DOC_DOCUMENT_DELETE,
+        PERM_DOC_STUDENT_DOCUMENT_LINK,
+        PERM_DOC_RESOURCE_CREATE,
+        PERM_DOC_RESOURCE_READ,
+        PERM_DOC_RESOURCE_UPDATE,
+        PERM_DOC_RESOURCE_DELETE,
+        PERM_DOC_RESOURCE_RATE,
         # COM — config + messaging + announcements (Phase 11C)
         PERM_COM_CONSENT_UPDATE,
         PERM_COM_NOTIFICATION_READ,
@@ -274,6 +295,16 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_CAL_EVENT_UPDATE,
         PERM_CAL_EVENT_DELETE,
         PERM_CAL_RSVP_READ,
+        # Document management (Phase 16)
+        PERM_DOC_DOCUMENT_UPLOAD,
+        PERM_DOC_DOCUMENT_READ,
+        PERM_DOC_DOCUMENT_DELETE,
+        PERM_DOC_STUDENT_DOCUMENT_LINK,
+        PERM_DOC_RESOURCE_CREATE,
+        PERM_DOC_RESOURCE_READ,
+        PERM_DOC_RESOURCE_UPDATE,
+        PERM_DOC_RESOURCE_DELETE,
+        PERM_DOC_RESOURCE_RATE,
         # COM — read + announcements (Phase 11C)
         PERM_COM_NOTIFICATION_READ,
         PERM_COM_CONVERSATION_READ,
@@ -332,6 +363,14 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_CAL_EVENT_UPDATE,
         PERM_CAL_RSVP_RESPOND,
         PERM_CAL_RSVP_READ,
+        # Document management (Phase 16)
+        PERM_DOC_DOCUMENT_UPLOAD,
+        PERM_DOC_DOCUMENT_READ,
+        PERM_DOC_RESOURCE_CREATE,
+        PERM_DOC_RESOURCE_READ,
+        PERM_DOC_RESOURCE_UPDATE,
+        PERM_DOC_RESOURCE_DELETE,
+        PERM_DOC_RESOURCE_RATE,
         # COM — messaging (P1) + conversations (Phase 11C)
         PERM_COM_NOTIFICATION_READ,
         PERM_COM_MESSAGE_SEND,
@@ -377,6 +416,11 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # Calendar & Events (Phase 15)
         PERM_CAL_EVENT_READ,
         PERM_CAL_RSVP_RESPOND,
+        # Document management (Phase 16)
+        PERM_DOC_DOCUMENT_UPLOAD,
+        PERM_DOC_DOCUMENT_READ,
+        PERM_DOC_STUDENT_DOCUMENT_LINK,
+        PERM_DOC_RESOURCE_READ,
         # COM — consent + feed + messaging + announcements (Phase 11C)
         PERM_COM_CONSENT_UPDATE,
         PERM_COM_NOTIFICATION_READ,
@@ -428,6 +472,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # Calendar & Events (Phase 15)
         PERM_CAL_EVENT_READ,
         PERM_CAL_RSVP_RESPOND,
+        # Document management (Phase 16)
+        PERM_DOC_DOCUMENT_READ,
+        PERM_DOC_RESOURCE_READ,
         # COM — read notifications + announcements (Phase 11C)
         PERM_COM_NOTIFICATION_READ,
         PERM_COM_ANNOUNCEMENT_READ,

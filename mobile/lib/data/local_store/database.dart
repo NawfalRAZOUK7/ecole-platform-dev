@@ -8,7 +8,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 const String _dbName = 'ecole_platform.db';
-const int _dbVersion = 4;
+const int _dbVersion = 5;
 
 class AppDatabase {
   static Database? _database;
@@ -74,6 +74,51 @@ class AppDatabase {
           await db.execute('''
             CREATE INDEX IF NOT EXISTS idx_cached_calendar_events_month
             ON cached_calendar_events(cache_month, start_at)
+          ''');
+        }
+        if (oldVersion < 5) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS cached_documents (
+              scope_key TEXT NOT NULL,
+              document_id TEXT NOT NULL,
+              payload TEXT NOT NULL,
+              local_file_path TEXT,
+              created_at INTEGER NOT NULL,
+              updated_at INTEGER NOT NULL,
+              PRIMARY KEY (scope_key, document_id)
+            )
+          ''');
+          await db.execute('''
+            CREATE INDEX IF NOT EXISTS idx_cached_documents_scope
+            ON cached_documents(scope_key, updated_at)
+          ''');
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS cached_student_document_checklists (
+              student_id TEXT NOT NULL,
+              category TEXT NOT NULL,
+              payload TEXT NOT NULL,
+              updated_at INTEGER NOT NULL,
+              PRIMARY KEY (student_id, category)
+            )
+          ''');
+          await db.execute('''
+            CREATE INDEX IF NOT EXISTS idx_cached_student_document_checklists
+            ON cached_student_document_checklists(student_id, updated_at)
+          ''');
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS cached_resources (
+              scope_key TEXT NOT NULL,
+              resource_id TEXT NOT NULL,
+              payload TEXT NOT NULL,
+              local_file_path TEXT,
+              created_at INTEGER NOT NULL,
+              updated_at INTEGER NOT NULL,
+              PRIMARY KEY (scope_key, resource_id)
+            )
+          ''');
+          await db.execute('''
+            CREATE INDEX IF NOT EXISTS idx_cached_resources_scope
+            ON cached_resources(scope_key, updated_at)
           ''');
         }
       },
@@ -158,6 +203,55 @@ class AppDatabase {
     await db.execute('''
       CREATE INDEX idx_cached_calendar_events_month
       ON cached_calendar_events(cache_month, start_at)
+    ''');
+
+    await db.execute('''
+      CREATE TABLE cached_documents (
+        scope_key TEXT NOT NULL,
+        document_id TEXT NOT NULL,
+        payload TEXT NOT NULL,
+        local_file_path TEXT,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        PRIMARY KEY (scope_key, document_id)
+      )
+    ''');
+
+    await db.execute('''
+      CREATE INDEX idx_cached_documents_scope
+      ON cached_documents(scope_key, updated_at)
+    ''');
+
+    await db.execute('''
+      CREATE TABLE cached_student_document_checklists (
+        student_id TEXT NOT NULL,
+        category TEXT NOT NULL,
+        payload TEXT NOT NULL,
+        updated_at INTEGER NOT NULL,
+        PRIMARY KEY (student_id, category)
+      )
+    ''');
+
+    await db.execute('''
+      CREATE INDEX idx_cached_student_document_checklists
+      ON cached_student_document_checklists(student_id, updated_at)
+    ''');
+
+    await db.execute('''
+      CREATE TABLE cached_resources (
+        scope_key TEXT NOT NULL,
+        resource_id TEXT NOT NULL,
+        payload TEXT NOT NULL,
+        local_file_path TEXT,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        PRIMARY KEY (scope_key, resource_id)
+      )
+    ''');
+
+    await db.execute('''
+      CREATE INDEX idx_cached_resources_scope
+      ON cached_resources(scope_key, updated_at)
     ''');
   }
 

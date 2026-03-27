@@ -116,6 +116,9 @@ from app.api.v1.reports import router as reports_router
 # Phase 15 — Calendar & Events
 from app.api.v1.events import router as events_router
 
+# Phase 16 — Documents
+from app.api.v1.documents import router as documents_router
+
 router = APIRouter()
 
 
@@ -218,3 +221,6 @@ router.include_router(analytics_router)
 
 # Mount sub-routers — Phase 15 Calendar & Events
 router.include_router(events_router)
+
+# Mount sub-routers — Phase 16 Documents
+router.include_router(documents_router)

@@ -100,6 +100,14 @@ from app.models.reporting import (
     ReportJob,
 )
 
+# G10 — Document management
+from app.models.documents import (
+    Document,
+    Resource,
+    ResourceRating,
+    StudentDocumentRequirement,
+)
+
 __all__ = [
     # IAM
     "User",
@@ -171,4 +179,9 @@ __all__ = [
     # Reporting
     "ReportJob",
     "DataExport",
+    # Documents
+    "Document",
+    "Resource",
+    "ResourceRating",
+    "StudentDocumentRequirement",
 ]

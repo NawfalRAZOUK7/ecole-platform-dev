@@ -14,6 +14,7 @@ import 'package:ecole_platform/domain/entities/admin.dart';
 import 'package:ecole_platform/domain/entities/reporting.dart';
 import 'package:ecole_platform/domain/entities/teacher.dart';
 import 'package:ecole_platform/domain/entities/calendar_event.dart';
+import 'package:ecole_platform/domain/entities/document_management.dart';
 
 // ── User ──
 
@@ -166,6 +167,105 @@ EventRsvpRecord eventRsvpRecordFromJson(Map<String, dynamic> json) {
     role: json['role'] as String? ?? '',
     status: json['status'] as String? ?? 'maybe',
     respondedAt: json['responded_at'] as String? ?? '',
+  );
+}
+
+// ── Documents & Resources ──
+
+DocumentOptionStudent documentOptionStudentFromJson(Map<String, dynamic> json) {
+  return DocumentOptionStudent(
+    id: json['id'] as String,
+    fullName: json['full_name'] as String? ?? '',
+    email: json['email'] as String?,
+  );
+}
+
+ManagedDocument managedDocumentFromJson(Map<String, dynamic> json) {
+  return ManagedDocument(
+    id: json['id'] as String,
+    originalFilename: json['original_filename'] as String? ?? '',
+    filename: json['filename'] as String? ?? '',
+    mimeType: json['mime_type'] as String? ?? 'application/octet-stream',
+    sizeBytes: json['size_bytes'] as int? ?? 0,
+    category: json['category'] as String? ?? 'other',
+    sha256: json['sha256'] as String? ?? '',
+    linkedStudentId: json['linked_student_id'] as String?,
+    linkedStudentName: json['linked_student_name'] as String?,
+    uploaderId: json['uploader_id'] as String? ?? '',
+    uploaderName: json['uploader_name'] as String?,
+    expiresAt: json['expires_at'] as String?,
+    isExpired: json['is_expired'] as bool? ?? false,
+    isExpiringSoon: json['is_expiring_soon'] as bool? ?? false,
+    downloadCount: json['download_count'] as int? ?? 0,
+    thumbnailUrl: json['thumbnail_url'] as String?,
+    previewUrl: json['preview_url'] as String?,
+    downloadUrl: json['download_url'] as String?,
+    createdAt: json['created_at'] as String? ?? '',
+    deletedAt: json['deleted_at'] as String?,
+    deduplicated: json['deduplicated'] as bool? ?? false,
+    canDelete: json['can_delete'] as bool? ?? false,
+    canHardDelete: json['can_hard_delete'] as bool? ?? false,
+    localFilePath: json['local_file_path'] as String?,
+  );
+}
+
+StudentDocumentChecklistItem studentChecklistItemFromJson(
+  Map<String, dynamic> json,
+) {
+  return StudentDocumentChecklistItem(
+    category: json['category'] as String? ?? 'other',
+    required: json['required'] as bool? ?? false,
+    description: json['description'] as String?,
+    status: json['status'] as String? ?? 'missing',
+    expiresAt: json['expires_at'] as String?,
+    document: (json['document'] as Map<String, dynamic>?) == null
+        ? null
+        : managedDocumentFromJson(
+            json['document'] as Map<String, dynamic>,
+          ),
+  );
+}
+
+ResourceLibraryItem resourceLibraryItemFromJson(Map<String, dynamic> json) {
+  return ResourceLibraryItem(
+    id: json['id'] as String,
+    title: json['title'] as String? ?? '',
+    description: json['description'] as String?,
+    subject: json['subject'] as String?,
+    level: json['level'] as String?,
+    type: json['type'] as String? ?? 'reference',
+    tags: (json['tags'] as List<dynamic>? ?? const [])
+        .map((item) => item.toString())
+        .toList(),
+    visibility: json['visibility'] as String? ?? 'school',
+    classId: json['class_id'] as String?,
+    downloadCount: json['download_count'] as int? ?? 0,
+    avgRating: (json['avg_rating'] as num?)?.toDouble() ?? 0,
+    ratingCount: json['rating_count'] as int? ?? 0,
+    downloadUrl: json['download_url'] as String?,
+    previewUrl: json['preview_url'] as String?,
+    thumbnailUrl: json['thumbnail_url'] as String?,
+    document: (json['document'] as Map<String, dynamic>?) == null
+        ? null
+        : managedDocumentFromJson(
+            json['document'] as Map<String, dynamic>,
+          ),
+    myRating: json['my_rating'] as int?,
+    createdAt: json['created_at'] as String? ?? '',
+    updatedAt: json['updated_at'] as String?,
+    canEdit: json['can_edit'] as bool? ?? false,
+    canDelete: json['can_delete'] as bool? ?? false,
+    canRate: json['can_rate'] as bool? ?? false,
+    localFilePath: json['local_file_path'] as String?,
+  );
+}
+
+ResourceRatingSummary resourceRatingSummaryFromJson(Map<String, dynamic> json) {
+  return ResourceRatingSummary(
+    resourceId: json['resource_id'] as String? ?? '',
+    avgRating: (json['avg_rating'] as num?)?.toDouble() ?? 0,
+    ratingCount: json['rating_count'] as int? ?? 0,
+    myRating: json['my_rating'] as int? ?? json['rating'] as int?,
   );
 }
 

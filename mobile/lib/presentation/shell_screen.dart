@@ -115,6 +115,11 @@ const _allNavItems = [
       labelKey: 'shell.reports',
       roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR']),
   _NavItem(
+      route: '/documents',
+      icon: Icons.folder_open_outlined,
+      labelKey: 'shell.documents',
+      roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR']),
+  _NavItem(
       route: '/content',
       icon: Icons.library_books,
       labelKey: 'shell.content',

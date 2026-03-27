@@ -49,6 +49,7 @@
     "notificationSettings": "إعدادات الإشعارات",
     "calendar": "التقويم",
     "reports": "التقارير",
+    "documents": "الوثائق",
     "adminFeeStructures": "هيكل الرسوم",
     "adminFeeAssignments": "تخصيص الرسوم",
     "adminGenerateInvoices": "إنشاء الفواتير",
@@ -151,6 +152,80 @@
       "android": "أندرويد",
       "ios": "آيفون / آيباد",
       "web": "ويب"
+    }
+  },
+  "documents": {
+    "title": "الوثائق",
+    "subtitle": "إدارة ملفات المدرسة ووثائق التلاميذ والموارد التعليمية المشتركة.",
+    "tabs": {
+      "mine": "وثائقي",
+      "student": "وثائق التلاميذ",
+      "resources": "مكتبة الموارد"
+    },
+    "filters": {
+      "search": "ابحث عن الملفات...",
+      "allCategories": "كل الفئات",
+      "allTypes": "كل الأنواع"
+    },
+    "view": {
+      "grid": "عرض شبكي",
+      "list": "عرض قائمة"
+    },
+    "uploadTitle": "رفع ملف",
+    "uploadSubtitle": "اسحب الملف هنا أو اختره من جهازك.",
+    "uploadAction": "رفع",
+    "uploading": "جار الرفع...",
+    "cancelUpload": "إلغاء الرفع",
+    "uploadCanceled": "تم إلغاء الرفع",
+    "empty": "لا توجد وثائق",
+    "previewPanelTitle": "المعاينة",
+    "previewEmpty": "اختر ملفا لعرض معاينته هنا",
+    "preview": "معاينة",
+    "download": "تنزيل",
+    "delete": "حذف",
+    "bulk": {
+      "download": "تنزيل المحدد",
+      "delete": "حذف المحدد",
+      "hardDelete": "حذف نهائي"
+    },
+    "studentSelector": "التلميذ",
+    "checklist": {
+      "uploaded": "مرفوع",
+      "missing": "ناقص",
+      "expired": "منتهي"
+    },
+    "expired": "منتهي",
+    "expiringSoon": "ينتهي قريبا",
+    "expiresAt": "ينتهي في",
+    "categories": {
+      "certificate": "شهادة",
+      "report_card": "بيان النقط",
+      "medical": "طبي",
+      "identity": "هوية",
+      "transcript": "كشف",
+      "other": "اخرى"
+    },
+    "resourceTypes": {
+      "lesson_plan": "خطة درس",
+      "worksheet": "ورقة عمل",
+      "presentation": "عرض",
+      "exam_template": "قالب اختبار",
+      "reference": "مرجع"
+    },
+    "resources": {
+      "searchPlaceholder": "ابحث عن الموارد...",
+      "subject": "المادة",
+      "level": "المستوى",
+      "allTypes": "كل انواع الموارد",
+      "allRatings": "كل التقييمات",
+      "ratingAtLeast": "{{rating}} نجوم فاكثر",
+      "rating": "{{rating}} / 5 ({{count}} تقييمات)",
+      "loadMore": "تحميل المزيد",
+      "uploadAction": "رفع مورد",
+      "title": "العنوان",
+      "tags": "الوسوم (مفصولة بفواصل)",
+      "description": "الوصف",
+      "empty": "لا توجد موارد"
     }
   },
   "content": {

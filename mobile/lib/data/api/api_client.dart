@@ -294,6 +294,63 @@ class ApiClient {
     return File(savePath);
   }
 
+  Future<ApiResponse<Map<String, dynamic>>> uploadFile(
+    String path, {
+    required File file,
+    String fileField = 'file',
+    Map<String, dynamic>? fields,
+    void Function(int sent, int total)? onProgress,
+  }) async {
+    final formData = FormData();
+
+    if (fields != null) {
+      for (final entry in fields.entries) {
+        if (entry.value == null) continue;
+        formData.fields.add(MapEntry(entry.key, entry.value.toString()));
+      }
+    }
+
+    formData.files.add(
+      MapEntry(
+        fileField,
+        MultipartFile.fromFileSync(
+          file.path,
+          filename: file.path.split('/').last,
+        ),
+      ),
+    );
+
+    try {
+      final resp = await _dio.post(
+        path,
+        data: formData,
+        options: Options(headers: _headers()),
+        onSendProgress: onProgress,
+      );
+      final body = resp.data as Map<String, dynamic>;
+      return ApiResponse(data: body['data'] as Map<String, dynamic>);
+    } on DioException catch (e) {
+      final statusCode = e.response?.statusCode ?? 500;
+      final errorBody = e.response?.data;
+      if (errorBody is Map<String, dynamic> &&
+          errorBody['error'] is Map<String, dynamic>) {
+        throw ApiClientError(
+          statusCode,
+          ApiError.fromJson(errorBody['error'] as Map<String, dynamic>),
+        );
+      }
+      throw ApiClientError(
+        statusCode,
+        ApiError(
+          code: 'ERR-NET-000',
+          message: e.message ?? 'Network error',
+          category: 'network',
+          retryable: false,
+        ),
+      );
+    }
+  }
+
   /// Upload files with multipart form data and progress tracking.
   Future<ApiResponse<Map<String, dynamic>>> uploadFiles(
     String path, {

@@ -130,41 +130,41 @@
 ## Phase 16 — Document Management
 
 ### 16A — Backend
-- [ ] Pluggable file storage (LocalStorage + S3Storage)
-- [ ] Upload endpoint with MIME validation + size limits + SHA-256 dedup
-- [ ] Thumbnail generation (Pillow)
-- [ ] Signed URL download endpoint (1h expiry)
-- [ ] Student document CRUD with category + expiry
-- [ ] Document checklist per school (required docs config)
-- [ ] Expiry notification (30 days before)
-- [ ] Teacher resource library with full-text search (tsvector)
-- [ ] Resource rating system
-- [ ] Database migrations: documents, resources, resource_ratings, student_document_requirements
-- [ ] File cleanup task (30 days after soft delete)
+- [x] Pluggable file storage (LocalStorage + S3Storage)
+- [x] Upload endpoint with MIME validation + size limits + SHA-256 dedup
+- [x] Thumbnail generation (Pillow)
+- [x] Signed URL download endpoint (1h expiry)
+- [x] Student document CRUD with category + expiry
+- [x] Document checklist per school (required docs config)
+- [x] Expiry notification (30 days before)
+- [x] Teacher resource library with full-text search (tsvector)
+- [x] Resource rating system
+- [x] Database migrations: documents, resources, resource_ratings, student_document_requirements
+- [x] File cleanup task (30 days after soft delete)
 
 ### 16B — Web Frontend
-- [ ] `/documents` page with tabs (My Docs, Student Docs, Resources)
-- [ ] Drag-and-drop upload zone with progress bar
-- [ ] Grid/list view toggle with thumbnails
-- [ ] Inline preview (images, PDFs)
-- [ ] Student document checklist with status badges
-- [ ] Resource library with search, filters, rating stars
-- [ ] Bulk actions (download ZIP, delete)
+- [x] `/documents` page with tabs (My Docs, Student Docs, Resources)
+- [x] Drag-and-drop upload zone with progress bar
+- [x] Grid/list view toggle with thumbnails
+- [x] Inline preview (images, PDFs)
+- [x] Student document checklist with status badges
+- [x] Resource library with search, filters, rating stars
+- [x] Bulk actions (download ZIP, delete)
 
 ### 16C — Mobile
-- [ ] `DocumentsScreen` with tab layout + category chips
-- [ ] Camera capture for document scanning
-- [ ] File picker upload with progress
-- [ ] PDF/image preview screen
-- [ ] Resource library with search
-- [ ] Downloaded files available offline
+- [x] `DocumentsScreen` with tab layout + category chips
+- [x] Camera capture for document scanning
+- [x] File picker upload with progress
+- [x] PDF/image preview screen
+- [x] Resource library with search
+- [x] Downloaded files available offline
 
 ### 16D — Tests
-- [ ] Upload/download integration tests (all MIME types)
-- [ ] SHA-256 dedup verification
-- [ ] Full-text search accuracy tests
-- [ ] RBAC tests: document endpoints x all roles
-- [ ] Storage backend tests (local + S3 mock)
+- [x] Upload/download integration tests (all MIME types)
+- [x] SHA-256 dedup verification
+- [x] Full-text search accuracy tests
+- [x] RBAC tests: document endpoints x all roles
+- [x] Storage backend tests (local + S3 mock)
 
 ---
 

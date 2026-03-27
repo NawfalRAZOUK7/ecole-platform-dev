@@ -64,6 +64,8 @@ import { ProgressDashboardPage } from '@/features/progress/ProgressDashboardPage
 import { ParentProgressPage } from '@/features/progress/ParentProgressPage';
 import { ClassProgressPage } from '@/features/teacher/ClassProgressPage';
 import { AnalyticsDashboardPage } from '@/features/analytics/AnalyticsDashboardPage';
+import { DocumentsPage } from '@/features/documents/DocumentsPage';
+import { ResourcesPage } from '@/features/documents/ResourcesPage';
 
 /** Redirect based on user role */
 function RoleRedirect() {
@@ -384,6 +386,22 @@ function App() {
           element={
             <ProtectedRoute roles={['PAR', 'TCH', 'ADM', 'DIR', 'STD']}>
               <ReportsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/documents"
+          element={
+            <ProtectedRoute roles={['PAR', 'TCH', 'ADM', 'DIR', 'STD']}>
+              <DocumentsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/resources"
+          element={
+            <ProtectedRoute roles={['PAR', 'TCH', 'ADM', 'DIR', 'STD']}>
+              <ResourcesPage />
             </ProtectedRoute>
           }
         />
