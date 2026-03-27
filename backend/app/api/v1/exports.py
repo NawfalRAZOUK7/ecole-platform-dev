@@ -1,4 +1,4 @@
-"""Phase 14 data export API."""
+"""Data export API."""
 
 from __future__ import annotations
 
@@ -6,18 +6,16 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import FileResponse, StreamingResponse
-from starlette.background import BackgroundTask
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.background import BackgroundTask
 
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, requires_permission
 from app.core.permissions import PERM_REP_EXPORT_CREATE
 from app.core.request_utils import get_client_ip
-from app.services.audit import AuditService
 from app.services.data_export import DataExportService
 
 router = APIRouter(prefix="/export", tags=["exports"])
-
 
 
 @router.get(
@@ -33,34 +31,16 @@ async def export_csv(
     db: AsyncSession = Depends(get_db),
 ):
     service = DataExportService(db)
-    audit = AuditService(db)
-    parsed_filters = service.parse_filters(filters)
-    export_log = await service.prepare_export(
+    payload = await service.prepare_csv_download(
         school_id=auth.school_id,
         requester_id=auth.user_id,
         entity=entity,
-        filters=parsed_filters,
-        export_format="csv",
-    )
-    await audit.log_event(
-        school_id=auth.school_id,
-        actor_id=auth.user_id,
-        action_type="export.csv.download",
-        target_type="data_export",
-        target_id=export_log.id,
-        outcome="success",
-        entity_after={"entity": entity, "filters": parsed_filters, "row_count": export_log.row_count},
+        filters_json=filters,
         ip_address=get_client_ip(request),
     )
-    headers = {
-        "Content-Disposition": f'attachment; filename="{entity}.csv"',
-    }
+    headers = {"Content-Disposition": f'attachment; filename="{payload["filename"]}"'}
     return StreamingResponse(
-        service.stream_csv(
-            school_id=auth.school_id,
-            entity=entity,
-            filters=parsed_filters,
-        ),
+        payload["stream"],
         media_type="text/csv; charset=utf-8",
         headers=headers,
     )
@@ -79,33 +59,16 @@ async def export_xlsx(
     db: AsyncSession = Depends(get_db),
 ):
     service = DataExportService(db)
-    audit = AuditService(db)
-    parsed_filters = service.parse_filters(filters)
-    export_log = await service.prepare_export(
+    payload = await service.prepare_xlsx_download(
         school_id=auth.school_id,
         requester_id=auth.user_id,
         entity=entity,
-        filters=parsed_filters,
-        export_format="xlsx",
-    )
-    xlsx_path = await service.build_xlsx(
-        school_id=auth.school_id,
-        entity=entity,
-        filters=parsed_filters,
-    )
-    await audit.log_event(
-        school_id=auth.school_id,
-        actor_id=auth.user_id,
-        action_type="export.xlsx.download",
-        target_type="data_export",
-        target_id=export_log.id,
-        outcome="success",
-        entity_after={"entity": entity, "filters": parsed_filters, "row_count": export_log.row_count},
+        filters_json=filters,
         ip_address=get_client_ip(request),
     )
     return FileResponse(
-        xlsx_path,
+        payload["path"],
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        filename=f"{entity}.xlsx",
-        background=BackgroundTask(Path(xlsx_path).unlink, missing_ok=True),
+        filename=payload["filename"],
+        background=BackgroundTask(Path(payload["path"]).unlink, missing_ok=True),
     )

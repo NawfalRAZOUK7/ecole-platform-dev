@@ -7,16 +7,12 @@ import uuid
 from datetime import date, datetime, time, timedelta, timezone
 from typing import Any
 
-from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.core.dependencies import AuthContext, verify_teacher_assignment
 from app.core.redis import redis_client
-from app.models.audit import AuditLog
-from app.models.billing import Invoice
-from app.models.erp import AttendanceRecord, AttendanceSession, Class, Enrollment
-from app.models.lms import Assignment, Course, Grade, Submission
-from app.repositories.reports import AnalyticsRepository
+from app.repositories.analytics import AnalyticsRepository
 
 
 def _utc_day_bounds(from_date: date, to_date: date) -> tuple[datetime, datetime]:
@@ -52,8 +48,40 @@ class DashboardAnalyticsService:
     """Cached analytics aggregations for the admin dashboard."""
 
     def __init__(self, db: AsyncSession) -> None:
-        self.db = db
         self.repo = AnalyticsRepository(db)
+
+    @staticmethod
+    def resolve_window(
+        *,
+        from_date: date | None,
+        to_date: date | None,
+        period: str | None,
+    ) -> tuple[date, date]:
+        if from_date and to_date:
+            return from_date, to_date
+
+        today = date.today()
+        if period == "this_week":
+            return today - timedelta(days=today.weekday()), today
+        if period == "this_month":
+            return today.replace(day=1), today
+        if period == "this_period":
+            return today - timedelta(days=30), today
+        return today - timedelta(days=29), today
+
+    async def verify_teacher_class_scope(
+        self,
+        *,
+        auth: AuthContext,
+        class_id: uuid.UUID | None,
+    ) -> None:
+        if auth.role != "TCH" or class_id is None:
+            return
+        teacher_classes = await self.repo.list_teacher_class_ids(
+            teacher_id=auth.user_id,
+            school_id=auth.school_id,
+        )
+        verify_teacher_assignment(class_id, teacher_classes)
 
     async def get_overview(
         self,
@@ -85,9 +113,7 @@ class DashboardAnalyticsService:
             from_date=from_date,
             to_date=to_date,
         )
-        attendance_rate = (
-            (present_records / total_records) * 100 if total_records > 0 else 0.0
-        )
+        attendance_rate = (present_records / total_records * 100) if total_records > 0 else 0.0
         average_grade = await self.repo.average_grade(
             school_id=school_id,
             from_dt=from_dt,
@@ -103,12 +129,10 @@ class DashboardAnalyticsService:
         previous = None
         if compare:
             period_days = max((to_date - from_date).days + 1, 1)
-            previous_from = from_date - timedelta(days=period_days)
-            previous_to = from_date - timedelta(days=1)
             previous = await self.get_overview(
                 school_id=school_id,
-                from_date=previous_from,
-                to_date=previous_to,
+                from_date=from_date - timedelta(days=period_days),
+                to_date=from_date - timedelta(days=1),
                 compare=False,
             )
 
@@ -180,54 +204,30 @@ class DashboardAnalyticsService:
         if cached is not None:
             return cached
 
-        bucket = {
-            "daily": "day",
-            "weekly": "week",
-            "monthly": "month",
-        }.get(period, "day")
-
-        query = (
-            select(
-                func.date_trunc(bucket, AttendanceSession.session_date).label("bucket"),
-                func.count(AttendanceRecord.id).label("total"),
-                func.count().filter(AttendanceRecord.status == "present").label("present"),
-                func.count().filter(AttendanceRecord.status == "absent").label("absent"),
-                func.count().filter(AttendanceRecord.status == "excused").label("excused"),
-            )
-            .select_from(AttendanceRecord)
-            .join(
-                AttendanceSession,
-                AttendanceSession.id == AttendanceRecord.attendance_session_id,
-            )
-            .where(
-                AttendanceRecord.school_id == school_id,
-                AttendanceSession.session_date >= from_date,
-                AttendanceSession.session_date <= to_date,
-            )
-            .group_by("bucket")
-            .order_by("bucket")
+        bucket = {"daily": "day", "weekly": "week", "monthly": "month"}.get(period, "day")
+        rows = await self.repo.list_attendance_series(
+            school_id=school_id,
+            from_date=from_date,
+            to_date=to_date,
+            class_id=class_id,
+            bucket=bucket,
         )
-        if class_id:
-            query = query.where(AttendanceSession.class_id == class_id)
-        result = await self.db.execute(query)
-        series = []
         total = 0
         present = 0
-        for row in result:
-            total += int(row.total or 0)
-            present += int(row.present or 0)
+        series = []
+        for row in rows:
+            total += row["total"]
+            present += row["present"]
+            bucket_dt = row["bucket"]
             series.append(
                 {
-                    "label": row.bucket.date().isoformat(),
-                    "value": round(
-                        ((row.present or 0) / row.total) * 100 if row.total else 0,
-                        2,
-                    ),
+                    "label": bucket_dt.date().isoformat(),
+                    "value": round((row["present"] / row["total"] * 100) if row["total"] else 0, 2),
                     "extra": {
-                        "total": int(row.total or 0),
-                        "present": int(row.present or 0),
-                        "absent": int(row.absent or 0),
-                        "excused": int(row.excused or 0),
+                        "total": row["total"],
+                        "present": row["present"],
+                        "absent": row["absent"],
+                        "excused": row["excused"],
                     },
                 }
             )
@@ -284,29 +284,13 @@ class DashboardAnalyticsService:
             return cached
 
         from_dt, to_dt = _utc_day_bounds(from_date, to_date)
-        query = (
-            select(Grade.score)
-            .select_from(Grade)
-            .join(Submission, Submission.id == Grade.submission_id)
-            .join(Assignment, Assignment.id == Submission.assignment_id)
-            .join(Course, Course.id == Assignment.course_id)
-            .where(
-                Course.school_id == school_id,
-                Grade.created_at >= from_dt,
-                Grade.created_at < to_dt,
-            )
+        scores = await self.repo.list_grade_scores(
+            school_id=school_id,
+            from_dt=from_dt,
+            to_dt=to_dt,
+            subject=subject,
         )
-        if subject:
-            query = query.where(Course.title == subject)
-        result = await self.db.execute(query)
-        scores = [float(score) for score in result.scalars().all() if score is not None]
-
-        buckets = {
-            "0-5": 0,
-            "5-10": 0,
-            "10-15": 0,
-            "15-20": 0,
-        }
+        buckets = {"0-5": 0, "5-10": 0, "10-15": 0, "15-20": 0}
         for score in scores:
             if score < 5:
                 buckets["0-5"] += 1
@@ -366,44 +350,24 @@ class DashboardAnalyticsService:
         if cached is not None:
             return cached
 
-        bucket = {
-            "daily": "day",
-            "weekly": "week",
-            "monthly": "month",
-        }.get(period, "month")
-
-        series_query = (
-            select(
-                func.date_trunc(bucket, Invoice.issued_date).label("bucket"),
-                func.sum(Invoice.total_amount).label("invoiced"),
-                func.sum(
-                    case((Invoice.status == "paid", Invoice.total_amount), else_=0)
-                ).label("paid"),
-            )
-            .where(
-                Invoice.school_id == school_id,
-                Invoice.issued_date >= from_date,
-                Invoice.issued_date <= to_date,
-            )
-            .group_by("bucket")
-            .order_by("bucket")
+        bucket = {"daily": "day", "weekly": "week", "monthly": "month"}.get(period, "month")
+        rows = await self.repo.list_billing_series(
+            school_id=school_id,
+            from_date=from_date,
+            to_date=to_date,
+            bucket=bucket,
         )
-        result = await self.db.execute(series_query)
-        series = []
-        for row in result:
-            invoiced = float(row.invoiced or 0)
-            paid = float(row.paid or 0)
-            series.append(
-                {
-                    "label": row.bucket.date().isoformat(),
-                    "value": invoiced,
-                    "extra": {
-                        "paid": paid,
-                        "outstanding": max(invoiced - paid, 0),
-                    },
-                }
-            )
-
+        series = [
+            {
+                "label": row["bucket"].date().isoformat(),
+                "value": row["invoiced"],
+                "extra": {
+                    "paid": row["paid"],
+                    "outstanding": max(row["invoiced"] - row["paid"], 0),
+                },
+            }
+            for row in rows
+        ]
         invoiced, paid, outstanding = await self.repo.billing_summary(
             school_id=school_id,
             from_date=from_date,
@@ -464,7 +428,6 @@ class DashboardAnalyticsService:
             from_dt=from_dt,
             to_dt=to_dt,
         )
-
         mau_from = max(to_date - timedelta(days=29), from_date)
         mau = await self.repo.count_active_users(
             school_id=school_id,
@@ -475,20 +438,20 @@ class DashboardAnalyticsService:
         feature_specs = {
             "messages": ["conversation.create", "message.send"],
             "content": ["content.progress.update", "content.assign"],
-            "notifications": ["notification.batch.create", "notification.preferences.update"],
+            "notifications": [
+                "notification.batch.create",
+                "notification.preferences.update",
+            ],
             "billing": ["fee_assignment.create", "payment.initiated"],
         }
         feature_adoption = []
         for feature, action_types in feature_specs.items():
-            result = await self.db.execute(
-                select(func.count(func.distinct(AuditLog.actor_id))).where(
-                    AuditLog.school_id == school_id,
-                    AuditLog.created_at >= from_dt,
-                    AuditLog.created_at <= to_dt,
-                    AuditLog.action_type.in_(action_types),
-                )
+            users = await self.repo.count_distinct_audit_users(
+                school_id=school_id,
+                from_dt=from_dt,
+                to_dt=to_dt,
+                action_types=action_types,
             )
-            users = int(result.scalar_one() or 0)
             feature_adoption.append(
                 {
                     "feature": feature,
@@ -535,20 +498,6 @@ class DashboardAnalyticsService:
         from_date: date,
         to_date: date,
     ) -> dict[str, Any]:
-        enrollments_result = await self.db.execute(
-            select(
-                Class.code,
-                func.count(func.distinct(Enrollment.student_id)).label("student_count"),
-            )
-            .select_from(Enrollment)
-            .join(Class, Class.id == Enrollment.class_id)
-            .where(
-                Enrollment.school_id == school_id,
-                Enrollment.status == "active",
-            )
-            .group_by(Class.code)
-            .order_by(Class.code.asc())
-        )
         return {
             "overview": await self.get_overview(
                 school_id=school_id,
@@ -578,13 +527,9 @@ class DashboardAnalyticsService:
                 period="monthly",
                 compare=False,
             ),
-            "enrollment_by_class": [
-                {
-                    "class_code": row.code,
-                    "student_count": int(row.student_count or 0),
-                }
-                for row in enrollments_result
-            ],
+            "enrollment_by_class": await self.repo.list_enrollment_by_class(
+                school_id=school_id
+            ),
         }
 
     async def _get_cached(self, cache_key: str) -> dict[str, Any] | None:

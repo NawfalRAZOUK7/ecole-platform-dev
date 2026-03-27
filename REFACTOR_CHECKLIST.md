@@ -68,16 +68,16 @@
 - [ ] **Review & commit myself**: `refactor(backend): extract LMS and Quiz repositories, standardize LMS RBAC`
 
 ### Batch 5 — Communication, Progress & Analytics
-- [ ] Create `backend/app/repositories/progress.py`
-- [ ] Create `backend/app/repositories/analytics.py`
-- [ ] Create `backend/app/repositories/messaging.py`
-- [ ] Create `backend/app/repositories/cms.py`
-- [ ] Refactor `services/progress.py` (816), `dashboard_analytics.py` (605), `kpi.py` (355)
-- [ ] Refactor `services/data_export.py` (186) → use repositories
-- [ ] Refactor `api/v1/progress.py`, `analytics.py`, `exports.py`
-- [ ] Refactor `api/v1/messaging.py` (705), `announcements.py` (407), `cms.py` (468), `feed.py`
-- [ ] RBAC: Standardize all COM/CMS permission checks
-- [ ] Verify: no SQL in routers/services
+- [x] Create `backend/app/repositories/progress.py`
+- [x] Create `backend/app/repositories/analytics.py`
+- [x] Create `backend/app/repositories/messaging.py`
+- [x] Create `backend/app/repositories/cms.py`
+- [x] Refactor `services/progress.py` (816), `dashboard_analytics.py` (605), `kpi.py` (355)
+- [x] Refactor `services/data_export.py` (186) → use repositories
+- [x] Refactor `api/v1/progress.py`, `analytics.py`, `exports.py`
+- [x] Refactor `api/v1/messaging.py` (705), `announcements.py` (407), `cms.py` (468), `feed.py`
+- [x] RBAC: Standardize all COM/CMS permission checks
+- [x] Verify: no SQL in routers/services
 - [ ] **Review & commit myself**: `refactor(backend): extract communication and analytics repositories, standardize RBAC`
 
 ### Batch 6 — Admin, Profiles, GDPR & Remaining

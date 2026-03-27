@@ -1,56 +1,20 @@
-"""Phase 14 analytics dashboard API."""
+"""Analytics dashboard API."""
 
 from __future__ import annotations
 
 import uuid
-from datetime import date, timedelta
+from datetime import date
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import (
-    AuthContext,
-    get_teacher_class_ids,
-    requires_permission,
-    verify_teacher_assignment,
-)
+from app.core.dependencies import AuthContext, requires_permission
 from app.core.permissions import PERM_REP_ANALYTICS_READ
 from app.core.response import success_response
 from app.services.dashboard_analytics import DashboardAnalyticsService
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
-
-
-def _resolve_window(
-    *,
-    from_date: date | None,
-    to_date: date | None,
-    period: str | None,
-) -> tuple[date, date]:
-    if from_date and to_date:
-        return from_date, to_date
-
-    today = date.today()
-    if period == "this_week":
-        return today - timedelta(days=today.weekday()), today
-    if period == "this_month":
-        return today.replace(day=1), today
-    if period == "this_period":
-        return today - timedelta(days=30), today
-    return today - timedelta(days=29), today
-
-
-async def _verify_teacher_class_scope(
-    *,
-    auth: AuthContext,
-    db: AsyncSession,
-    class_id: uuid.UUID | None,
-) -> None:
-    if auth.role != "TCH" or class_id is None:
-        return
-    teacher_classes = await get_teacher_class_ids(auth.user_id, auth.school_id, db)
-    verify_teacher_assignment(class_id, teacher_classes)
 
 
 @router.get("/overview", summary="School-wide KPI overview")
@@ -62,12 +26,12 @@ async def analytics_overview(
     auth: AuthContext = Depends(requires_permission(PERM_REP_ANALYTICS_READ)),
     db: AsyncSession = Depends(get_db),
 ):
-    start_date, end_date = _resolve_window(
+    service = DashboardAnalyticsService(db)
+    start_date, end_date = service.resolve_window(
         from_date=from_date,
         to_date=to_date,
         period=period,
     )
-    service = DashboardAnalyticsService(db)
     return success_response(
         await service.get_overview(
             school_id=auth.school_id,
@@ -88,9 +52,9 @@ async def analytics_attendance(
     auth: AuthContext = Depends(requires_permission(PERM_REP_ANALYTICS_READ)),
     db: AsyncSession = Depends(get_db),
 ):
-    await _verify_teacher_class_scope(auth=auth, db=db, class_id=class_id)
     service = DashboardAnalyticsService(db)
-    start_date, end_date = _resolve_window(
+    await service.verify_teacher_class_scope(auth=auth, class_id=class_id)
+    start_date, end_date = service.resolve_window(
         from_date=from_date,
         to_date=to_date,
         period=None,
@@ -118,7 +82,7 @@ async def analytics_grades(
     db: AsyncSession = Depends(get_db),
 ):
     service = DashboardAnalyticsService(db)
-    start_date, end_date = _resolve_window(
+    start_date, end_date = service.resolve_window(
         from_date=from_date,
         to_date=to_date,
         period=period,
@@ -144,7 +108,7 @@ async def analytics_billing(
     db: AsyncSession = Depends(get_db),
 ):
     service = DashboardAnalyticsService(db)
-    start_date, end_date = _resolve_window(
+    start_date, end_date = service.resolve_window(
         from_date=from_date,
         to_date=to_date,
         period=None,
@@ -170,7 +134,7 @@ async def analytics_engagement(
     db: AsyncSession = Depends(get_db),
 ):
     service = DashboardAnalyticsService(db)
-    start_date, end_date = _resolve_window(
+    start_date, end_date = service.resolve_window(
         from_date=from_date,
         to_date=to_date,
         period=period,

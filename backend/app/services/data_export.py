@@ -18,6 +18,7 @@ from app.core.exceptions import ValidationError
 from app.models.reporting import DataExport
 from app.repositories.reports import ReportsRepository
 from app.schemas.reports import ExportFilters
+from app.services.audit import AuditService
 
 try:  # pragma: no cover - optional runtime dependency
     from openpyxl import Workbook
@@ -48,6 +49,7 @@ class DataExportService:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
         self.repo = ReportsRepository(db)
+        self.audit = AuditService(db)
 
     def parse_filters(self, filters_json: str | None) -> dict[str, Any]:
         if not filters_json:
@@ -96,6 +98,89 @@ class DataExportService:
         )
         await self.repo.create_export_log(export_log)
         return export_log
+
+    async def prepare_csv_download(
+        self,
+        *,
+        school_id: uuid.UUID,
+        requester_id: uuid.UUID,
+        entity: str,
+        filters_json: str | None,
+        ip_address: str | None,
+    ) -> dict[str, Any]:
+        parsed_filters = self.parse_filters(filters_json)
+        export_log = await self.prepare_export(
+            school_id=school_id,
+            requester_id=requester_id,
+            entity=entity,
+            filters=parsed_filters,
+            export_format="csv",
+        )
+        await self.audit.log_event(
+            school_id=school_id,
+            actor_id=requester_id,
+            action_type="export.csv.download",
+            target_type="data_export",
+            target_id=export_log.id,
+            outcome="success",
+            entity_after={
+                "entity": entity,
+                "filters": parsed_filters,
+                "row_count": export_log.row_count,
+            },
+            ip_address=ip_address,
+        )
+        await self.db.commit()
+        return {
+            "filename": f"{entity}.csv",
+            "stream": self.stream_csv(
+                school_id=school_id,
+                entity=entity,
+                filters=parsed_filters,
+            ),
+        }
+
+    async def prepare_xlsx_download(
+        self,
+        *,
+        school_id: uuid.UUID,
+        requester_id: uuid.UUID,
+        entity: str,
+        filters_json: str | None,
+        ip_address: str | None,
+    ) -> dict[str, Any]:
+        parsed_filters = self.parse_filters(filters_json)
+        export_log = await self.prepare_export(
+            school_id=school_id,
+            requester_id=requester_id,
+            entity=entity,
+            filters=parsed_filters,
+            export_format="xlsx",
+        )
+        xlsx_path = await self.build_xlsx(
+            school_id=school_id,
+            entity=entity,
+            filters=parsed_filters,
+        )
+        await self.audit.log_event(
+            school_id=school_id,
+            actor_id=requester_id,
+            action_type="export.xlsx.download",
+            target_type="data_export",
+            target_id=export_log.id,
+            outcome="success",
+            entity_after={
+                "entity": entity,
+                "filters": parsed_filters,
+                "row_count": export_log.row_count,
+            },
+            ip_address=ip_address,
+        )
+        await self.db.commit()
+        return {
+            "filename": f"{entity}.xlsx",
+            "path": xlsx_path,
+        }
 
     async def stream_csv(
         self,
