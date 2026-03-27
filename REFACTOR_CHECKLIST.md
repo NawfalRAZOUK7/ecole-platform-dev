@@ -81,17 +81,17 @@
 - [ ] **Review & commit myself**: `refactor(backend): extract communication and analytics repositories, standardize RBAC`
 
 ### Batch 6 — Admin, Profiles, GDPR & Remaining
-- [ ] Create `backend/app/repositories/admin.py`
-- [ ] Create `backend/app/repositories/profile.py`
-- [ ] Create `backend/app/repositories/gdpr.py`
-- [ ] Create `backend/app/repositories/feature.py`
-- [ ] Refactor `api/v1/admin.py` (902 lines — largest router)
-- [ ] Refactor `api/v1/profiles.py`, `teacher.py`, `gdpr.py`, `features.py`, `consents.py`
-- [ ] Refactor `api/v1/ai.py`, `services/ai.py` if has DB logic
-- [ ] RBAC: Replace `requires_role("ADM")` in admin.py with granular permissions
-- [ ] RBAC: Define new PERM_ADM_* constants if needed
-- [ ] Verify: ZERO `from sqlalchemy import` in any router
-- [ ] Verify: ZERO `select(` in any service
+- [x] Create `backend/app/repositories/admin.py`
+- [x] Create `backend/app/repositories/profile.py`
+- [x] Create `backend/app/repositories/gdpr.py`
+- [x] Create `backend/app/repositories/feature.py`
+- [x] Refactor `api/v1/admin.py` (902 lines — largest router)
+- [x] Refactor `api/v1/profiles.py`, `teacher.py`, `gdpr.py`, `features.py`, `consents.py`
+- [x] Refactor `api/v1/ai.py`, `services/ai.py` if has DB logic
+- [x] RBAC: Replace `requires_role("ADM")` in admin.py with granular permissions
+- [x] RBAC: Define new PERM_ADM_* constants if needed
+- [x] Verify: ZERO `from sqlalchemy import` in any router
+- [x] Verify: ZERO `select(` in any service
 - [ ] **Review & commit myself**: `refactor(backend): extract remaining repositories, complete RBAC standardization`
 
 ### Batch 7 — Backend Validation

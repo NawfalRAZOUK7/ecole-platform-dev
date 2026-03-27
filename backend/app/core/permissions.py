@@ -43,6 +43,20 @@ PERM_IAM_PARENT_LINK_CREATE = "PERM-IAM:parent-link:create"
 PERM_IAM_PARENT_LINK_READ = "PERM-IAM:parent-link:read"
 PERM_IAM_PARENT_LINK_DELETE = "PERM-IAM:parent-link:delete"
 
+# Admin
+PERM_ADM_DASHBOARD_READ = "PERM-ADM:dashboard:read"
+PERM_ADM_USER_READ = "PERM-ADM:user:read"
+PERM_ADM_USER_CREATE = "PERM-ADM:user:create"
+PERM_ADM_USER_MANAGE = "PERM-ADM:user:manage"
+PERM_ADM_INVITATION_READ = "PERM-ADM:invitation:read"
+PERM_ADM_AUDIT_READ = "PERM-ADM:audit:read"
+
+# Profiles / GDPR
+PERM_PROF_ADMIN_READ = "PERM-PROF:profile-admin:read"
+PERM_PROF_CHILD_READ = "PERM-PROF:child:read"
+PERM_GDPR_DATA_DELETE = "PERM-GDPR:data-deletion:create"
+PERM_GDPR_CONSENT_MANAGE = "PERM-GDPR:consent:manage"
+
 # ERP
 PERM_ERP_CLASS_READ = "PERM-ERP:class:read"
 PERM_ERP_ENROLLMENT_ASSIGN = "PERM-ERP:enrollment:assign"
@@ -183,6 +197,16 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IAM_RECOVERY_RESET,
     },
     ADM: {
+        # Admin
+        PERM_ADM_DASHBOARD_READ,
+        PERM_ADM_USER_READ,
+        PERM_ADM_USER_CREATE,
+        PERM_ADM_USER_MANAGE,
+        PERM_ADM_INVITATION_READ,
+        PERM_ADM_AUDIT_READ,
+        PERM_PROF_ADMIN_READ,
+        PERM_GDPR_DATA_DELETE,
+        PERM_GDPR_CONSENT_MANAGE,
         # IAM — full admin
         PERM_IAM_SESSION_CREATE,
         PERM_IAM_SESSION_REFRESH,
@@ -264,6 +288,13 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_SUP_GRANT_REVOKE,
     },
     DIR: {
+        # Admin
+        PERM_ADM_DASHBOARD_READ,
+        PERM_ADM_USER_READ,
+        PERM_ADM_USER_CREATE,
+        PERM_ADM_INVITATION_READ,
+        PERM_ADM_AUDIT_READ,
+        PERM_GDPR_DATA_DELETE,
         # IAM — read/validate
         PERM_IAM_SESSION_CREATE,
         PERM_IAM_SESSION_REFRESH,
@@ -383,6 +414,8 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IA_REQUEST_OVERRIDE,
     },
     PAR: {
+        # Profiles
+        PERM_PROF_CHILD_READ,
         # IAM — login/recovery/invite consume
         PERM_IAM_SESSION_CREATE,
         PERM_IAM_SESSION_REFRESH,

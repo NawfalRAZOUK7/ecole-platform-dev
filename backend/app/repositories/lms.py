@@ -13,6 +13,8 @@ from app.core.search import apply_search
 from app.models.erp import Class, Enrollment
 from app.models.iam import ParentChildLink, User
 from app.models.lms import (
+    Activity,
+    ActivitySession,
     Assessment,
     AssessmentResult,
     Assignment,
@@ -64,6 +66,85 @@ class LMSRepository(BaseRepository):
     ) -> User | None:
         result = await self.db.execute(select(User).where(User.id == user_id))
         return result.scalar_one_or_none()
+
+    async def list_activities(
+        self,
+        *,
+        school_id: uuid.UUID,
+        activity_type: str | None,
+        difficulty: str | None,
+        filters: FilterSpec,
+        sort: SortSpec,
+        search: str | None,
+        cursor: str | None,
+        limit: int,
+    ) -> tuple[list[Activity], bool]:
+        query = select(Activity).where(
+            (Activity.school_id == school_id) | (Activity.school_id.is_(None))
+        )
+
+        if activity_type:
+            query = query.where(Activity.type == activity_type)
+        if difficulty:
+            query = query.where(Activity.difficulty == difficulty)
+
+        query = apply_filters(query, Activity, filters)
+        if search:
+            query = apply_search(query, Activity, search)
+        query = apply_sort(query, Activity, sort, default_column=Activity.id)
+
+        if cursor:
+            last_id, _ = decode_cursor(cursor)
+            query = query.where(Activity.id > last_id)
+
+        return await self._paginate_scalars(query, limit=limit)
+
+    async def get_activity(
+        self,
+        activity_id: uuid.UUID,
+    ) -> Activity | None:
+        result = await self.db.execute(select(Activity).where(Activity.id == activity_id))
+        return result.scalar_one_or_none()
+
+    async def get_next_activity_attempt_no(
+        self,
+        *,
+        student_id: uuid.UUID,
+        activity_id: uuid.UUID,
+    ) -> int:
+        result = await self.db.execute(
+            select(func.coalesce(func.max(ActivitySession.attempt_no), 0)).where(
+                ActivitySession.student_id == student_id,
+                ActivitySession.activity_id == activity_id,
+            )
+        )
+        return int(result.scalar() or 0) + 1
+
+    async def create_activity_session(
+        self,
+        **kwargs: Any,
+    ) -> ActivitySession:
+        session = ActivitySession(**kwargs)
+        self.db.add(session)
+        await self.db.flush()
+        return session
+
+    async def get_activity_session(
+        self,
+        session_id: uuid.UUID,
+    ) -> ActivitySession | None:
+        result = await self.db.execute(
+            select(ActivitySession).where(ActivitySession.id == session_id)
+        )
+        return result.scalar_one_or_none()
+
+    async def save_activity_session(
+        self,
+        session: ActivitySession,
+    ) -> ActivitySession:
+        self.db.add(session)
+        await self.db.flush()
+        return session
 
     async def get_class(
         self,

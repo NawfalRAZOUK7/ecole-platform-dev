@@ -431,6 +431,15 @@ class NotificationDeliveryRepository:
         )
         return list(result.scalars().all())
 
+    async def get_delivery_by_id(
+        self,
+        delivery_id: uuid.UUID,
+    ) -> NotificationDelivery | None:
+        result = await self.db.execute(
+            select(NotificationDelivery).where(NotificationDelivery.id == delivery_id)
+        )
+        return result.scalar_one_or_none()
+
     async def delete_deliveries_for_notification(
         self,
         notification_id: uuid.UUID,

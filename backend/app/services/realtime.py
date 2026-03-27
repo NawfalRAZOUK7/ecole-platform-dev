@@ -17,7 +17,11 @@ import logging
 import uuid
 from typing import Any
 
+from app.core.database import async_session
+from app.core.exceptions import AuthenticationError
+from app.core.security import decode_access_token
 from app.core.ws_manager import ws_manager
+from app.repositories.auth import AuthRepository
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +50,20 @@ async def publish_event(
             user_id,
             exc_info=True,
         )
+
+
+async def authenticate_websocket_token(token: str) -> dict[str, Any]:
+    """Validate a WebSocket access token and ensure the session is active."""
+    payload = decode_access_token(token)
+    session_id = uuid.UUID(payload["session_id"])
+
+    async with async_session() as db:
+        repo = AuthRepository(db)
+        session = await repo.get_session_by_id(session_id, active_only=True)
+        if session is None:
+            raise AuthenticationError("Session revoked", error_code="ERR-IAM-401")
+
+    return payload
 
 
 async def publish_notification_created(

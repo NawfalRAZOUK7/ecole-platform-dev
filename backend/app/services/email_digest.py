@@ -9,7 +9,6 @@ from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from jose import JWTError, jwt
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -226,10 +225,7 @@ class EmailDigestService:
         *,
         delivery_id: uuid.UUID,
     ) -> NotificationDelivery | None:
-        result = await self.db.execute(
-            select(NotificationDelivery).where(NotificationDelivery.id == delivery_id)
-        )
-        delivery = result.scalar_one_or_none()
+        delivery = await self.delivery_repo.get_delivery_by_id(delivery_id)
         if delivery is None:
             return None
         delivery.status = DeliveryStatus.OPENED.value

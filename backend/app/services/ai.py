@@ -30,10 +30,23 @@ from enum import Enum
 from typing import Any
 
 from app.core.config import settings
+from app.core.permissions import PERM_IA_PREFERENCE_UPDATE
 from app.core.metrics import (
     REGISTRY,
 )
 from prometheus_client import Counter, Histogram
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.ai import AIPreference, WritingAttempt
+from app.repositories.ai import AIRepository
+from app.services.analytics import (
+    SCHEMA_VERSION,
+    _EVENT_PROPERTY_WHITELIST,
+    emit_event,
+    pseudonymize_actor_id,
+)
+from app.services.audit import AuditService
+from app.services.kpi import compute_all_kpis
 
 logger = logging.getLogger(__name__)
 
@@ -339,8 +352,11 @@ class AIService:
     call model (stubbed) → validate output → return result.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, db: AsyncSession) -> None:
+        self.db = db
         self.env = settings.app_env
+        self.repo = AIRepository(db)
+        self.audit = AuditService(db)
 
     async def process_writing_assist(
         self,
@@ -563,3 +579,234 @@ class AIService:
             )
 
         return {"recommendations": recommendations[:3]}
+
+    async def create_writing_attempt(
+        self,
+        *,
+        auth,
+        body,
+        client_ip: str,
+    ) -> dict[str, Any]:
+        opt_out = await self.repo.get_opt_out_preference(target_user_id=auth.user_id)
+        if opt_out is not None:
+            fallback = get_fallback_response("writing_assist", "opt_out")
+            attempt = await self.repo.create_writing_attempt(
+                WritingAttempt(
+                    student_id=auth.user_id,
+                    school_id=auth.school_id,
+                    subject=body.subject,
+                    input_text="[opted_out]",
+                    input_word_count=len(body.text.split()),
+                    status="fallback",
+                    prompt_id=None,
+                )
+            )
+            emit_event(
+                "ai_fallback_used",
+                actor_id=auth.user_id,
+                actor_role=auth.role,
+                properties={"reason": "opt_out", "request_type": "writing_assist"},
+            )
+            await self.db.commit()
+            return {
+                "id": str(attempt.id),
+                "student_id": str(auth.user_id),
+                "status": "fallback",
+                "suggestion": fallback.get("message"),
+                "hints": [],
+                "prompt_id": None,
+                "prompt_version": None,
+                "warnings": ["ai_opt_out_active"],
+                "created_at": attempt.created_at.isoformat(),
+            }
+
+        result = await self.process_writing_assist(
+            text=body.text,
+            subject=body.subject,
+            student_id=auth.user_id,
+            school_id=auth.school_id,
+        )
+        attempt = await self.repo.create_writing_attempt(
+            WritingAttempt(
+                student_id=auth.user_id,
+                school_id=auth.school_id,
+                subject=body.subject,
+                input_text=body.text[:500],
+                input_word_count=len(body.text.split()),
+                status=result.get("status", "completed"),
+                suggestion=result.get("suggestion"),
+                hints=result.get("hints"),
+                prompt_id=result.get("prompt_id"),
+                prompt_version=result.get("prompt_version"),
+                warnings=result.get("warnings"),
+            )
+        )
+        await self.audit.log_event(
+            school_id=auth.school_id,
+            actor_id=auth.user_id,
+            action_type="WRITING_ATTEMPT_CREATED",
+            outcome="success",
+            target_type="writing_attempt",
+            target_id=attempt.id,
+            entity_after={
+                "subject": body.subject,
+                "word_count": attempt.input_word_count,
+                "status": attempt.status,
+                "prompt_id": attempt.prompt_id,
+            },
+            ip_address=client_ip,
+        )
+        emit_event(
+            "writing_attempt_created",
+            actor_id=auth.user_id,
+            actor_role=auth.role,
+            properties={
+                "subject": body.subject or "general",
+                "word_count": attempt.input_word_count,
+            },
+        )
+        await self.db.commit()
+        return {
+            "id": str(attempt.id),
+            "student_id": str(auth.user_id),
+            "status": attempt.status,
+            "suggestion": result.get("suggestion"),
+            "hints": result.get("hints", []),
+            "prompt_id": result.get("prompt_id"),
+            "prompt_version": result.get("prompt_version"),
+            "warnings": result.get("warnings", []),
+            "created_at": attempt.created_at.isoformat(),
+        }
+
+    async def update_opt_out(
+        self,
+        *,
+        auth,
+        body,
+        client_ip: str,
+    ) -> dict[str, Any]:
+        target_user_id = body.target_user_id or auth.user_id
+        existing = await self.repo.get_ai_preference(
+            user_id=auth.user_id,
+            target_user_id=target_user_id,
+        )
+        if existing is not None:
+            old_value = existing.opt_out
+            existing.opt_out = body.opt_out
+            preference = await self.repo.save_ai_preference(existing)
+        else:
+            old_value = None
+            preference = await self.repo.save_ai_preference(
+                AIPreference(
+                    user_id=auth.user_id,
+                    target_user_id=target_user_id,
+                    school_id=auth.school_id,
+                    opt_out=body.opt_out,
+                )
+            )
+
+        action = "opt_out" if body.opt_out else "opt_in"
+        AI_OPT_OUT_COUNT.labels(env=settings.app_env, action=action).inc()
+        await self.audit.log_event(
+            school_id=auth.school_id,
+            actor_id=auth.user_id,
+            action_type="AI_OPT_OUT_UPDATED",
+            outcome="success",
+            target_type="ai_preference",
+            target_id=preference.id,
+            entity_before={"opt_out": old_value} if old_value is not None else None,
+            entity_after={"opt_out": body.opt_out, "target_user_id": str(target_user_id)},
+            ip_address=client_ip,
+        )
+        emit_event(
+            "ai_opt_out_updated",
+            actor_id=auth.user_id,
+            actor_role=auth.role,
+            properties={
+                "opt_out": body.opt_out,
+                "target_user_id_hash": pseudonymize_actor_id(target_user_id),
+            },
+        )
+        await self.db.commit()
+        return {
+            "id": str(preference.id),
+            "user_id": str(preference.user_id),
+            "target_user_id": str(preference.target_user_id),
+            "opt_out": preference.opt_out,
+            "updated_at": preference.updated_at.isoformat()
+            if preference.updated_at
+            else preference.created_at.isoformat(),
+        }
+
+    async def get_recommendations_for_user(self, *, auth) -> dict[str, Any]:
+        opt_out = await self.repo.get_opt_out_preference(target_user_id=auth.user_id)
+        if opt_out is not None:
+            emit_event(
+                "ai_fallback_used",
+                actor_id=auth.user_id,
+                actor_role=auth.role,
+                properties={"reason": "opt_out", "request_type": "recommendation"},
+            )
+            return {
+                "status": "fallback",
+                "recommendations": [],
+                "prompt_id": None,
+                "prompt_version": None,
+                "expires_at": None,
+                "message": "AI recommendations disabled by preference.",
+            }
+
+        completed_count = await self.repo.count_completed_content_progress(
+            student_id=auth.user_id
+        )
+        result = await self.process_recommendation(
+            student_id=auth.user_id,
+            school_id=auth.school_id,
+            completed_count=completed_count,
+        )
+        emit_event(
+            "recommendation_served",
+            actor_id=auth.user_id,
+            actor_role=auth.role,
+            properties={
+                "reason_code": result["recommendations"][0]["reason_code"]
+                if result.get("recommendations")
+                else "none",
+                "item_count": len(result.get("recommendations", [])),
+            },
+        )
+        return result
+
+    async def get_kpis(
+        self,
+        *,
+        school_id: uuid.UUID,
+        period: int,
+    ) -> dict[str, Any]:
+        kpis = await compute_all_kpis(self.db, school_id=school_id, period_days=period)
+        return {
+            "kpis": kpis,
+            "period": f"{period}d",
+            "computed_at": datetime.now(timezone.utc).isoformat(),
+        }
+
+    async def get_event_schema(self) -> dict[str, Any]:
+        events = []
+        for event_name, properties in _EVENT_PROPERTY_WHITELIST.items():
+            events.append(
+                {
+                    "event_name": event_name,
+                    "event_version": 1,
+                    "schema_version": SCHEMA_VERSION,
+                    "required_properties": sorted(properties),
+                    "pii_risk": "medium"
+                    if "invoice" in event_name or "payment" in event_name
+                    else "low",
+                    "status": "known",
+                }
+            )
+        return {
+            "schema_version": SCHEMA_VERSION,
+            "events": events,
+            "total": len(events),
+        }

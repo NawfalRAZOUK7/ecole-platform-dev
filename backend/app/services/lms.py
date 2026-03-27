@@ -19,6 +19,8 @@ from app.core.filtering import FilterSpec, SortSpec
 from app.core.response import encode_cursor
 from app.core.storage import storage, validate_mime_type
 from app.models.lms import (
+    Activity,
+    ActivitySession,
     Assessment,
     Assignment,
     ContentItem,
@@ -38,6 +40,8 @@ from app.repositories.lms import LMSRepository
 from app.repositories.quiz import QuizRepository
 from app.schemas.cms import ContentAssignRequest, ContentSubmitForReviewRequest
 from app.schemas.lms import (
+    ActivitySessionCompleteRequest,
+    ActivitySessionCreateRequest,
     AssessmentCreateRequest,
     AssessmentResultSubmitRequest,
     AssignmentCreateRequest,
@@ -138,6 +142,26 @@ class LMSService:
             else None,
             "total_points": assessment.total_points,
             "status": assessment.status,
+        }
+
+    def _activity_to_dict(self, activity: Activity) -> dict:
+        return {
+            "id": str(activity.id),
+            "school_id": str(activity.school_id) if activity.school_id else None,
+            "type": activity.type,
+            "difficulty": activity.difficulty,
+            "title": activity.title,
+            "pedagogical_objective": activity.pedagogical_objective,
+        }
+
+    def _activity_session_to_dict(self, session: ActivitySession) -> dict:
+        return {
+            "id": str(session.id),
+            "student_id": str(session.student_id),
+            "activity_id": str(session.activity_id),
+            "status": session.status,
+            "score": float(session.score) if session.score is not None else None,
+            "attempt_no": session.attempt_no,
         }
 
     def _quiz_to_dict(
@@ -241,6 +265,109 @@ class LMSService:
         )
 
         return self._course_to_dict(course)
+
+    async def list_activities(
+        self,
+        *,
+        activity_type: str | None,
+        difficulty: str | None,
+        filters: FilterSpec,
+        sort: SortSpec,
+        search: str | None,
+        cursor: str | None,
+        limit: int,
+        auth: AuthContext,
+    ) -> tuple[list[dict], str | None, bool]:
+        activities, has_more = await self.repo.list_activities(
+            school_id=auth.school_id,
+            activity_type=activity_type,
+            difficulty=difficulty,
+            filters=filters,
+            sort=sort,
+            search=search,
+            cursor=cursor,
+            limit=limit,
+        )
+        items = [self._activity_to_dict(activity) for activity in activities]
+        next_cursor = encode_cursor(activities[-1].id) if has_more and activities else None
+        return items, next_cursor, has_more
+
+    async def create_activity_session(
+        self,
+        *,
+        body: ActivitySessionCreateRequest,
+        auth: AuthContext,
+        ip_address: str | None,
+    ) -> dict:
+        activity = await self.repo.get_activity(body.activity_id)
+        if activity is None:
+            raise NotFoundError("Activity not found", error_code="ERR-LMS-404")
+        if activity.school_id is not None:
+            verify_school_boundary(activity.school_id, auth)
+
+        attempt_no = await self.repo.get_next_activity_attempt_no(
+            student_id=auth.user_id,
+            activity_id=body.activity_id,
+        )
+        session = await self.repo.create_activity_session(
+            student_id=auth.user_id,
+            activity_id=body.activity_id,
+            status="started",
+            attempt_no=attempt_no,
+        )
+        await self.audit.log_event(
+            school_id=auth.school_id,
+            actor_id=auth.user_id,
+            action_type="ACTIVITY_SESSION_STARTED",
+            outcome="success",
+            target_type="activity_session",
+            target_id=session.id,
+            entity_after={
+                "activity_id": str(body.activity_id),
+                "attempt_no": session.attempt_no,
+            },
+            ip_address=ip_address,
+        )
+        return self._activity_session_to_dict(session)
+
+    async def complete_activity_session(
+        self,
+        *,
+        session_id: uuid.UUID,
+        body: ActivitySessionCompleteRequest,
+        auth: AuthContext,
+        ip_address: str | None,
+    ) -> dict:
+        session = await self.repo.get_activity_session(session_id)
+        if session is None:
+            raise NotFoundError("Activity session not found", error_code="ERR-LMS-404")
+        if session.student_id != auth.user_id:
+            raise NotFoundError("Activity session not found", error_code="ERR-LMS-404")
+        if session.status != "started":
+            raise ConflictError(
+                "Session is not in started status",
+                error_code="ERR-LMS-409",
+                details={"current_status": session.status},
+            )
+
+        session.status = "completed"
+        if body.score is not None:
+            session.score = body.score
+        await self.repo.save_activity_session(session)
+        await self.audit.log_event(
+            school_id=auth.school_id,
+            actor_id=auth.user_id,
+            action_type="ACTIVITY_SESSION_COMPLETED",
+            outcome="success",
+            target_type="activity_session",
+            target_id=session.id,
+            entity_after={
+                "status": "completed",
+                "score": float(body.score) if body.score is not None else None,
+            },
+            ip_address=ip_address,
+        )
+        return self._activity_session_to_dict(session)
 
     async def list_courses(
         self,

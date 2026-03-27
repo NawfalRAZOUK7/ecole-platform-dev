@@ -15,41 +15,12 @@ import logging
 import uuid
 
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
-from sqlalchemy import select
-
-from app.core.database import async_session
-from app.core.exceptions import AuthenticationError
-from app.core.security import decode_access_token
 from app.core.ws_manager import HEARTBEAT_INTERVAL, ws_manager
-from app.models.iam import Session
+from app.services.realtime import authenticate_websocket_token
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["websocket"])
-
-
-async def _authenticate_ws(token: str) -> dict:
-    """Validate the JWT token for WebSocket connection.
-
-    Returns the decoded payload or raises AuthenticationError.
-    Also verifies the session is not revoked.
-    """
-    payload = decode_access_token(token)
-
-    # Verify session is still active
-    session_id = uuid.UUID(payload["session_id"])
-    async with async_session() as db:
-        result = await db.execute(
-            select(Session).where(
-                Session.id == session_id,
-                Session.revoke_at.is_(None),
-            )
-        )
-        session = result.scalar_one_or_none()
-        if session is None:
-            raise AuthenticationError("Session revoked", error_code="ERR-IAM-401")
-
-    return payload
 
 
 @router.websocket("/ws")
@@ -72,8 +43,8 @@ async def websocket_endpoint(
     """
     # 1. Authenticate
     try:
-        payload = await _authenticate_ws(token)
-    except (AuthenticationError, Exception) as exc:
+        payload = await authenticate_websocket_token(token)
+    except Exception as exc:
         logger.warning("WS auth failed: %s", exc)
         await websocket.close(code=4001, reason="Authentication failed")
         return
