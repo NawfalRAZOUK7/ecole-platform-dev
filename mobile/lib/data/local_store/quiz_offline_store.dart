@@ -6,6 +6,7 @@
 /// - Integrates with existing OfflineQueue for answer submission
 
 import 'dart:convert';
+import 'package:sqflite/sqflite.dart';
 import 'database.dart';
 
 class QuizOfflineStore {
@@ -24,7 +25,7 @@ class QuizOfflineStore {
         'created_at': now,
         'ttl_seconds': 7 * 24 * 3600, // 7 days
       },
-      conflictAlgorithm: 1, // replace
+      conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
@@ -63,7 +64,7 @@ class QuizOfflineStore {
         'created_at': now,
         'ttl_seconds': 24 * 3600, // 24 hours
       },
-      conflictAlgorithm: 1,
+      conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
@@ -104,7 +105,8 @@ class QuizOfflineStore {
     );
 
     return rows
-        .map((r) => (r['cache_key'] as String).replaceFirst('quiz_questions:', ''))
+        .map((r) =>
+            (r['cache_key'] as String).replaceFirst('quiz_questions:', ''))
         .toList();
   }
 }

@@ -6,11 +6,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/admin.dart';
-import 'package:ecole_platform/domain/repositories/feed_repository.dart';
 import 'package:ecole_platform/features/auth/auth_provider.dart';
 import 'package:ecole_platform/shared/widgets/search_filter_bar.dart';
 
@@ -149,8 +147,7 @@ class _UsersNotifier extends StateNotifier<_UsersState> {
   }
 
   Future<void> suspendUser(String userId) async {
-    state =
-        state.copyWith(actionLoading: {...state.actionLoading, userId});
+    state = state.copyWith(actionLoading: {...state.actionLoading, userId});
     try {
       final repo = _ref.read(adminRepositoryProvider);
       await repo.suspendUser(userId);
@@ -164,8 +161,7 @@ class _UsersNotifier extends StateNotifier<_UsersState> {
   }
 
   Future<void> activateUser(String userId) async {
-    state =
-        state.copyWith(actionLoading: {...state.actionLoading, userId});
+    state = state.copyWith(actionLoading: {...state.actionLoading, userId});
     try {
       final repo = _ref.read(adminRepositoryProvider);
       await repo.activateUser(userId);
@@ -179,8 +175,7 @@ class _UsersNotifier extends StateNotifier<_UsersState> {
   }
 
   Future<void> changeRole(String userId, String newRole) async {
-    state =
-        state.copyWith(actionLoading: {...state.actionLoading, userId});
+    state = state.copyWith(actionLoading: {...state.actionLoading, userId});
     try {
       final repo = _ref.read(adminRepositoryProvider);
       await repo.changeUserRole(userId, newRole);
@@ -249,7 +244,8 @@ class UsersScreen extends ConsumerWidget {
               }
             },
           ),
-          Expanded(child: _buildList(context, ref, state, theme, currentUserId)),
+          Expanded(
+              child: _buildList(context, ref, state, theme, currentUserId)),
         ],
       ),
     );
@@ -365,8 +361,7 @@ class UsersScreen extends ConsumerWidget {
                             ),
                             Text(user.email,
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                    color:
-                                        theme.colorScheme.onSurfaceVariant)),
+                                    color: theme.colorScheme.onSurfaceVariant)),
                           ],
                         ),
                       ),
@@ -468,7 +463,8 @@ class _StatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(label,
-          style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+          style: TextStyle(
+              fontSize: 11, color: color, fontWeight: FontWeight.w600)),
     );
   }
 }

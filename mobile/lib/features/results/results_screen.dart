@@ -23,7 +23,6 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen>
   late TabController _tabController;
   List<QuizResultSummary> _quizResults = [];
   bool _quizLoading = false;
-  String? _quizError;
 
   @override
   void initState() {
@@ -41,7 +40,6 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen>
   Future<void> _fetchQuizResults() async {
     setState(() {
       _quizLoading = true;
-      _quizError = null;
     });
     try {
       final repo = ref.read(quizRepositoryProvider);

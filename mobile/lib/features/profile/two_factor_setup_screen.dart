@@ -9,10 +9,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/app/providers.dart';
-import 'package:ecole_platform/features/auth/auth_provider.dart';
-import 'package:ecole_platform/domain/repositories/auth_repository.dart';
 
-enum _Step { idle, setup, verify, done, disable }
+enum _Step { idle, setup, done, disable }
 
 class TwoFactorSetupScreen extends ConsumerStatefulWidget {
   const TwoFactorSetupScreen({super.key});
@@ -28,7 +26,6 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
   String? _error;
 
   // Setup state
-  String _provisioningUri = '';
   String _secret = '';
   final _codeController = TextEditingController();
   List<String> _backupCodes = [];
@@ -43,15 +40,6 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
     super.dispose();
   }
 
-  bool get _is2faEnabled {
-    // Check from user profile — totp_enabled flag
-    final user = ref.read(authProvider).user;
-    // The user entity doesn't have totp_enabled yet, so we check memberships
-    // For simplicity we expose it via a heuristic or add the field
-    // For now we'll let the setup endpoint tell us if it fails
-    return false; // Will be overridden by actual state from server
-  }
-
   Future<void> _startSetup() async {
     setState(() {
       _loading = true;
@@ -61,7 +49,6 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
       final repo = ref.read(authRepositoryProvider);
       final data = await repo.setup2fa();
       setState(() {
-        _provisioningUri = data.provisioningUri;
         _secret = data.secret;
         _step = _Step.setup;
       });
@@ -141,8 +128,7 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(_error!,
-                  style:
-                      TextStyle(color: theme.colorScheme.onErrorContainer)),
+                  style: TextStyle(color: theme.colorScheme.onErrorContainer)),
             ),
             const SizedBox(height: 16),
           ],
@@ -161,8 +147,8 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                     const SizedBox(height: 8),
                     Text(
                       'Ajoutez une couche de sécurité supplémentaire avec une application d\'authentification (Google Authenticator, Authy, etc.)',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant),
+                      style: theme.textTheme.bodyMedium
+                          ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                     ),
                     const SizedBox(height: 16),
                     Row(
@@ -200,8 +186,8 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                     const SizedBox(height: 8),
                     Text(
                       'Scannez le QR code ou entrez la clé manuellement dans votre application d\'authentification.',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant),
+                      style: theme.textTheme.bodyMedium
+                          ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                     ),
                     const SizedBox(height: 16),
 
@@ -236,11 +222,9 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                           const SizedBox(height: 8),
                           TextButton.icon(
                             onPressed: () {
-                              Clipboard.setData(
-                                  ClipboardData(text: _secret));
+                              Clipboard.setData(ClipboardData(text: _secret));
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text('Clé copiée')),
+                                const SnackBar(content: Text('Clé copiée')),
                               );
                             },
                             icon: const Icon(Icons.copy, size: 16),
@@ -278,8 +262,7 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                                   height: 16,
                                   width: 16,
                                   child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white))
+                                      strokeWidth: 2, color: Colors.white))
                               : const Text('Vérifier'),
                         ),
                         const SizedBox(width: 8),
@@ -321,8 +304,8 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                     const SizedBox(height: 12),
                     Text(
                       'Sauvegardez ces codes de secours. Chaque code ne peut être utilisé qu\'une seule fois.',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant),
+                      style: theme.textTheme.bodyMedium
+                          ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                     ),
                     const SizedBox(height: 16),
                     Container(
@@ -388,8 +371,8 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                     const SizedBox(height: 8),
                     Text(
                       'Entrez votre code d\'authentification ou un code de secours pour désactiver la 2FA.',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant),
+                      style: theme.textTheme.bodyMedium
+                          ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
@@ -412,8 +395,7 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                                   height: 16,
                                   width: 16,
                                   child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white))
+                                      strokeWidth: 2, color: Colors.white))
                               : const Text('Désactiver'),
                         ),
                         const SizedBox(width: 8),

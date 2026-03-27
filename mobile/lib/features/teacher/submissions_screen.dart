@@ -8,7 +8,6 @@ import 'package:intl/intl.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/teacher.dart';
-import 'package:ecole_platform/domain/repositories/feed_repository.dart';
 
 // ── State ──
 
@@ -58,8 +57,7 @@ class _SubmissionsState {
       hasMore: hasMore ?? this.hasMore,
       statusFilter:
           clearStatusFilter ? null : (statusFilter ?? this.statusFilter),
-      gradingId:
-          clearGradingId ? null : (gradingId ?? this.gradingId),
+      gradingId: clearGradingId ? null : (gradingId ?? this.gradingId),
       actionLoading: actionLoading ?? this.actionLoading,
     );
   }
@@ -138,16 +136,17 @@ class _SubmissionsNotifier extends StateNotifier<_SubmissionsState> {
     } catch (e) {
       state = state.copyWith(error: e.toString());
     } finally {
-      state = state.copyWith(
-          actionLoading: {...state.actionLoading}..remove(id));
+      state =
+          state.copyWith(actionLoading: {...state.actionLoading}..remove(id));
     }
   }
 
   Future<void> refresh() async => load();
 }
 
-final _submissionsProvider = StateNotifierProvider.autoDispose<
-    _SubmissionsNotifier, _SubmissionsState>((ref) {
+final _submissionsProvider =
+    StateNotifierProvider.autoDispose<_SubmissionsNotifier, _SubmissionsState>(
+        (ref) {
   return _SubmissionsNotifier(ref);
 });
 
@@ -203,8 +202,8 @@ class SubmissionsScreen extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(state.error!,
-                    style: TextStyle(
-                        color: theme.colorScheme.onErrorContainer)),
+                    style:
+                        TextStyle(color: theme.colorScheme.onErrorContainer)),
               ),
             ),
 
@@ -305,12 +304,11 @@ class SubmissionsScreen extends ConsumerWidget {
                     submission: sub,
                     isLoading: isActionLoading,
                     onGrade: (score, feedback, publish) {
-                      ref
-                          .read(_submissionsProvider.notifier)
-                          .gradeSubmission(sub.id,
-                              score: score,
-                              feedbackText: feedback,
-                              publish: publish);
+                      ref.read(_submissionsProvider.notifier).gradeSubmission(
+                          sub.id,
+                          score: score,
+                          feedbackText: feedback,
+                          publish: publish);
                     },
                   ),
               ],
@@ -385,8 +383,8 @@ class _SubStatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(label,
-          style:
-              TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w600)),
+          style: TextStyle(
+              fontSize: 10, color: color, fontWeight: FontWeight.w600)),
     );
   }
 }
@@ -464,8 +462,8 @@ class _GradingFormState extends State<_GradingForm> {
                     labelText: 'Note',
                     suffixText: '/$maxPoints',
                     border: const OutlineInputBorder(),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 8),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                 ),
               ),

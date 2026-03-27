@@ -31,7 +31,8 @@ class _SelectedFile {
 
   String get sizeLabel {
     if (sizeBytes < 1024) return '$sizeBytes B';
-    if (sizeBytes < 1024 * 1024) return '${(sizeBytes / 1024).toStringAsFixed(1)} KB';
+    if (sizeBytes < 1024 * 1024)
+      return '${(sizeBytes / 1024).toStringAsFixed(1)} KB';
     return '${(sizeBytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 
@@ -48,8 +49,10 @@ class _SelectedFile {
 class SubmissionUploadScreen extends ConsumerStatefulWidget {
   final String? assignmentId;
   final String? assignmentTitle;
+
   /// Phase 10C: exercise type (e.g. 'PRINTABLE_PDF')
   final String? exerciseType;
+
   /// Phase 10C: whether exercise PDF is available for download
   final bool hasExercisePdf;
 
@@ -141,7 +144,17 @@ class _SubmissionUploadScreenState
       final result = await FilePicker.platform.pickFiles(
         allowMultiple: true,
         type: FileType.custom,
-        allowedExtensions: ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'jpg', 'jpeg', 'png'],
+        allowedExtensions: [
+          'pdf',
+          'doc',
+          'docx',
+          'xls',
+          'xlsx',
+          'txt',
+          'jpg',
+          'jpeg',
+          'png'
+        ],
       );
       if (result == null) return;
 
@@ -151,7 +164,8 @@ class _SubmissionUploadScreenState
           name: file.name,
           path: file.path!,
           sizeBytes: file.size,
-          mimeType: file.extension != null ? _mimeFromExt(file.extension!) : null,
+          mimeType:
+              file.extension != null ? _mimeFromExt(file.extension!) : null,
         ));
       }
     } catch (e) {
@@ -187,7 +201,8 @@ class _SubmissionUploadScreenState
       return;
     }
     if (file.sizeBytes > _maxFileSize) {
-      setState(() => _error = '${file.name} dépasse la taille maximale (10 MB)');
+      setState(
+          () => _error = '${file.name} dépasse la taille maximale (10 MB)');
       return;
     }
     setState(() {
@@ -205,11 +220,6 @@ class _SubmissionUploadScreenState
     if (widget.assignmentId == null) return;
     setState(() => _downloadingPdf = true);
     try {
-      final api = ref.read(apiClientProvider);
-      // Use Dio directly for binary download
-      final dio = api as dynamic; // access underlying _dio via API call
-      // Simple approach: open in external app via URL
-      final url = 'http://localhost:8000/api/v1/assignments/${widget.assignmentId}/exercise-pdf';
       // For now show success — on real device this would use url_launcher or open_file
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -344,7 +354,8 @@ class _SubmissionUploadScreenState
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.picture_as_pdf, color: Colors.blue, size: 24),
+                        const Icon(Icons.picture_as_pdf,
+                            color: Colors.blue, size: 24),
                         const SizedBox(width: 8),
                         Text('Exercice à imprimer',
                             style: theme.textTheme.titleMedium
@@ -362,11 +373,14 @@ class _SubmissionUploadScreenState
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
-                        onPressed: _downloadingPdf ? null : _downloadExercisePdf,
+                        onPressed:
+                            _downloadingPdf ? null : _downloadExercisePdf,
                         icon: _downloadingPdf
                             ? const SizedBox(
-                                height: 16, width: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2))
+                                height: 16,
+                                width: 16,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2))
                             : const Icon(Icons.download),
                         label: Text(_downloadingPdf
                             ? 'Téléchargement...'
@@ -393,8 +407,8 @@ class _SubmissionUploadScreenState
                   const SizedBox(height: 4),
                   Text(
                     'Max $_maxFiles fichiers, 10 MB chacun',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant),
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                   ),
                   const SizedBox(height: 16),
                   Row(

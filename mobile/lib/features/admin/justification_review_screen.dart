@@ -8,7 +8,6 @@ import 'package:intl/intl.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/admin.dart';
-import 'package:ecole_platform/domain/repositories/feed_repository.dart';
 
 // ── State ──
 
@@ -67,8 +66,7 @@ class _JustificationsNotifier extends StateNotifier<_JustificationsState> {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final repo = _ref.read(adminRepositoryProvider);
-      final result =
-          await repo.getJustifications(status: state.statusFilter);
+      final result = await repo.getJustifications(status: state.statusFilter);
       state = state.copyWith(
         items: result.items,
         nextCursor: result.nextCursor,
@@ -96,8 +94,8 @@ class _JustificationsNotifier extends StateNotifier<_JustificationsState> {
     } catch (e) {
       state = state.copyWith(error: e.toString());
     } finally {
-      state = state.copyWith(
-          actionLoading: {...state.actionLoading}..remove(id));
+      state =
+          state.copyWith(actionLoading: {...state.actionLoading}..remove(id));
     }
   }
 
@@ -105,14 +103,13 @@ class _JustificationsNotifier extends StateNotifier<_JustificationsState> {
     state = state.copyWith(actionLoading: {...state.actionLoading, id});
     try {
       final repo = _ref.read(adminRepositoryProvider);
-      await repo.reviewJustification(id, 'rejected',
-          rejectionReason: reason);
+      await repo.reviewJustification(id, 'rejected', rejectionReason: reason);
       await load();
     } catch (e) {
       state = state.copyWith(error: e.toString());
     } finally {
-      state = state.copyWith(
-          actionLoading: {...state.actionLoading}..remove(id));
+      state =
+          state.copyWith(actionLoading: {...state.actionLoading}..remove(id));
     }
   }
 
@@ -176,8 +173,8 @@ class JustificationReviewScreen extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(state.error!,
-                    style: TextStyle(
-                        color: theme.colorScheme.onErrorContainer)),
+                    style:
+                        TextStyle(color: theme.colorScheme.onErrorContainer)),
               ),
             ),
 
@@ -324,9 +321,7 @@ class JustificationReviewScreen extends ConsumerWidget {
             onPressed: () {
               final reason = controller.text.trim();
               if (reason.isNotEmpty) {
-                ref
-                    .read(_justificationsProvider.notifier)
-                    .reject(id, reason);
+                ref.read(_justificationsProvider.notifier).reject(id, reason);
                 Navigator.pop(ctx);
               }
             },
@@ -420,8 +415,8 @@ class _JustStatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(label,
-          style:
-              TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w600)),
+          style: TextStyle(
+              fontSize: 10, color: color, fontWeight: FontWeight.w600)),
     );
   }
 }

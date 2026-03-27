@@ -6,11 +6,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/quiz.dart';
-import 'package:ecole_platform/features/auth/auth_provider.dart';
 
 class StudentContentScreen extends ConsumerStatefulWidget {
   const StudentContentScreen({super.key});
@@ -40,19 +38,21 @@ class _StudentContentScreenState extends ConsumerState<StudentContentScreen> {
     try {
       // Student gets content from their enrolled classes
       // Use a default class endpoint that returns all assigned content
-      final repo = ref.read(contentLibraryRepositoryProvider);
       final api = ref.read(apiClientProvider);
       final resp = await api.list('/student/content');
-      _items = resp.data.map((json) => AssignedContent(
-        id: json['id'] as String,
-        contentItemId: json['content_item_id'] as String? ?? json['id'] as String,
-        title: json['title'] as String,
-        contentType: json['content_type'] as String,
-        subject: json['subject'] as String?,
-        description: json['description'] as String?,
-        progress: json['progress'] as String?,
-        streamUrl: json['stream_url'] as String?,
-      )).toList();
+      _items = resp.data
+          .map((json) => AssignedContent(
+                id: json['id'] as String,
+                contentItemId:
+                    json['content_item_id'] as String? ?? json['id'] as String,
+                title: json['title'] as String,
+                contentType: json['content_type'] as String,
+                subject: json['subject'] as String?,
+                description: json['description'] as String?,
+                progress: json['progress'] as String?,
+                streamUrl: json['stream_url'] as String?,
+              ))
+          .toList();
       setState(() => _loading = false);
     } catch (e) {
       setState(() {
@@ -168,7 +168,8 @@ class _StudentContentScreenState extends ConsumerState<StudentContentScreen> {
                     item: item,
                     onTap: () {
                       // Mark as started if not yet
-                      if (item.progress == null || item.progress == 'not_started') {
+                      if (item.progress == null ||
+                          item.progress == 'not_started') {
                         _updateProgress(item.contentItemId, 'started');
                       }
                       setState(() => _selectedItem = item);
@@ -356,7 +357,8 @@ class _ContentPlayer extends StatelessWidget {
                 Row(
                   children: [
                     Chip(
-                      label: Text(item.contentType, style: const TextStyle(fontSize: 11)),
+                      label: Text(item.contentType,
+                          style: const TextStyle(fontSize: 11)),
                       padding: EdgeInsets.zero,
                       visualDensity: VisualDensity.compact,
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -364,7 +366,8 @@ class _ContentPlayer extends StatelessWidget {
                     if (item.subject != null) ...[
                       const SizedBox(width: 6),
                       Chip(
-                        label: Text(item.subject!, style: const TextStyle(fontSize: 11)),
+                        label: Text(item.subject!,
+                            style: const TextStyle(fontSize: 11)),
                         padding: EdgeInsets.zero,
                         visualDensity: VisualDensity.compact,
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -412,8 +415,7 @@ class _ContentPlayer extends StatelessWidget {
                       onPressed: () {
                         final url = item.streamUrl;
                         if (url != null) {
-                          launchUrl(Uri.parse(url),
-                              mode: LaunchMode.externalApplication);
+                          _showExternalLink(context, url);
                         }
                         onProgress('started');
                       },
@@ -442,15 +444,15 @@ class _ContentPlayer extends StatelessWidget {
                 onPressed: () {
                   final url = item.streamUrl;
                   if (url != null) {
-                    launchUrl(Uri.parse(url),
-                        mode: LaunchMode.externalApplication);
+                    _showExternalLink(context, url);
                   }
                   onProgress('started');
                 },
                 icon: const Icon(Icons.play_arrow),
                 label: const Text('Écouter'),
                 style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 ),
               ),
             ],
@@ -472,15 +474,15 @@ class _ContentPlayer extends StatelessWidget {
                 onPressed: () {
                   final url = item.streamUrl;
                   if (url != null) {
-                    launchUrl(Uri.parse(url),
-                        mode: LaunchMode.externalApplication);
+                    _showExternalLink(context, url);
                   }
                   onProgress('started');
                 },
                 icon: const Icon(Icons.open_in_new),
                 label: const Text('Ouvrir le document'),
                 style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 ),
               ),
             ],
@@ -502,15 +504,15 @@ class _ContentPlayer extends StatelessWidget {
                 onPressed: () {
                   final url = item.streamUrl;
                   if (url != null) {
-                    launchUrl(Uri.parse(url),
-                        mode: LaunchMode.externalApplication);
+                    _showExternalLink(context, url);
                   }
                   onProgress('started');
                 },
                 icon: const Icon(Icons.launch),
                 label: const Text('Ouvrir'),
                 style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 ),
               ),
             ],
@@ -520,5 +522,13 @@ class _ContentPlayer extends StatelessWidget {
       default:
         return const Center(child: Text('Type de contenu non supporté'));
     }
+  }
+
+  void _showExternalLink(BuildContext context, String url) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Lien externe: $url'),
+      ),
+    );
   }
 }
