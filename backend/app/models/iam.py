@@ -140,7 +140,7 @@ class Membership(TimestampMixin, Base):
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
-    role_code: Mapped[str] = mapped_column(String(10), nullable=False)
+    role_code: Mapped[str] = mapped_column(String(20), nullable=False)
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default=MembershipStatus.ACTIVE.value
     )
@@ -213,7 +213,7 @@ class InvitationCode(TimestampMixin, Base):
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
     code_hash: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
-    role_target: Mapped[str] = mapped_column(String(10), nullable=False)
+    role_target: Mapped[str] = mapped_column(String(20), nullable=False)
     consumed_by: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )

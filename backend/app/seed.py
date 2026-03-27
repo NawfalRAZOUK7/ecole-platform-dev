@@ -213,9 +213,7 @@ async def clear_all(session: AsyncSession) -> None:
         await session.commit()
         return
 
-    await session.execute(
-        text(f"TRUNCATE TABLE {', '.join(present_tables)} CASCADE")
-    )
+    await session.execute(text(f"TRUNCATE TABLE {', '.join(present_tables)} CASCADE"))
     await session.commit()
 
 
