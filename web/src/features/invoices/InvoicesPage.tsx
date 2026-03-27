@@ -1,12 +1,14 @@
 /**
- * Invoices page — invoice list with payment status.
+ * Invoices page — invoice list with payment status, overdue indicators, retry.
  *
- * Reference: S-081 — Invoices page
+ * Reference: S-081 — Invoices page, Phase 12A — Extended with overdue + retry
  * Calls GET /invoices with cursor pagination. PAR and ADM roles.
+ * Phase 12A: Overdue indicator (past due_date + pending), retry payment for failed.
  */
 
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '@/services/auth/AuthContext';
 import { api, ApiClientError } from '@/services/api/client';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
@@ -27,19 +29,44 @@ interface Invoice {
   paid_at: string | null;
 }
 
+function isOverdue(inv: Invoice): boolean {
+  if (inv.status !== 'pending') return false;
+  return new Date(inv.due_date) < new Date();
+}
+
 export function InvoicesPage() {
   const { t, i18n } = useTranslation();
+  const { user } = useAuth();
+  const isPar = user?.role === 'PAR';
   const [items, setItems] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [retrying, setRetrying] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>('');
+
+  async function handleRetryPayment(invoiceId: string) {
+    setRetrying(invoiceId);
+    try {
+      await api.post('/payments/initiate', {
+        invoice_id: invoiceId,
+        idempotency_key: `retry-${invoiceId}-${Date.now()}`,
+      });
+      await fetchInvoices();
+    } catch (err) {
+      setError(err instanceof ApiClientError ? err.message : t('app.error'));
+    } finally {
+      setRetrying(null);
+    }
+  }
 
   const fetchInvoices = useCallback(async (cursor?: string) => {
     try {
       const params: Record<string, string | number | undefined> = {};
       if (cursor) params.cursor = cursor;
+      if (statusFilter) params.status = statusFilter;
 
       const resp = await api.list<Invoice>('/invoices', params);
       if (cursor) {
@@ -53,7 +80,7 @@ export function InvoicesPage() {
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : t('app.error'));
     }
-  }, [t]);
+  }, [t, statusFilter]);
 
   useEffect(() => {
     setLoading(true);
@@ -67,7 +94,8 @@ export function InvoicesPage() {
     setLoadingMore(false);
   }
 
-  function getStatusColor(status: string): string {
+  function getStatusColor(status: string, overdue?: boolean): string {
+    if (overdue) return '#ef4444';
     switch (status) {
       case 'paid': return '#10b981';
       case 'pending': return '#f59e0b';
@@ -77,11 +105,30 @@ export function InvoicesPage() {
     }
   }
 
+  // Count overdue
+  const overdueCount = items.filter(isOverdue).length;
+
   if (loading) return <LoadingState />;
 
   return (
     <div className="page">
       <h1 className="page-title">{t('invoices.title')}</h1>
+
+      {overdueCount > 0 && (
+        <div className="invoice-overdue-banner">
+          ⚠️ {t('invoices.overdueCount', { count: overdueCount })}
+        </div>
+      )}
+
+      <div className="filters-bar">
+        <select className="filter-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <option value="">{t('invoices.allStatuses')}</option>
+          <option value="pending">{t('invoices.statusLabels.pending')}</option>
+          <option value="paid">{t('invoices.statusLabels.paid')}</option>
+          <option value="failed">{t('invoices.statusLabels.failed')}</option>
+          <option value="canceled">{t('invoices.statusLabels.canceled')}</option>
+        </select>
+      </div>
 
       <ErrorBanner error={error} onDismiss={() => setError(null)} onRetry={() => fetchInvoices()} />
 
@@ -98,27 +145,48 @@ export function InvoicesPage() {
                   <th>{t('invoices.status')}</th>
                   <th>{t('invoices.issuedDate')}</th>
                   <th>{t('invoices.dueDate')}</th>
+                  {isPar && <th>{t('invoices.actions')}</th>}
                 </tr>
               </thead>
               <tbody>
-                {items.map((inv) => (
-                  <tr key={inv.id}>
+                {items.map((inv) => {
+                  const overdue = isOverdue(inv);
+                  return (
+                  <tr key={inv.id} className={overdue ? 'invoice-row--overdue' : ''}>
                     <td>{inv.label}</td>
                     <td>{formatCurrency(inv.total_cents / 100, inv.currency)}</td>
                     <td>
                       <span
                         className="status-badge"
                         style={{
-                          color: getStatusColor(inv.status),
-                          borderColor: getStatusColor(inv.status),
+                          color: getStatusColor(inv.status, overdue),
+                          borderColor: getStatusColor(inv.status, overdue),
                         }}
                       >
-                        {t(`invoices.statusLabels.${inv.status}`, inv.status)}
+                        {overdue ? t('invoices.overdue') : t(`invoices.statusLabels.${inv.status}`, inv.status)}
                       </span>
                     </td>
                     <td>{formatDate(inv.issued_date, i18n.language)}</td>
-                    <td>{formatDate(inv.due_date, i18n.language)}</td>
+                    <td>
+                      {formatDate(inv.due_date, i18n.language)}
+                      {overdue && <span style={{ color: 'var(--color-danger)', fontSize: 12, marginInlineStart: 4 }}>⚠️</span>}
+                    </td>
+                    {isPar && (
+                      <td>
+                        {(inv.status === 'pending' || inv.status === 'failed') && (
+                          <button
+                            className="btn btn-sm btn-primary"
+                            onClick={() => handleRetryPayment(inv.id)}
+                            disabled={retrying === inv.id}
+                          >
+                            {retrying === inv.id ? '...' : inv.status === 'failed' ? t('invoices.retry') : t('invoices.pay')}
+                          </button>
+                        )}
+                      </td>
+                    )}
                   </tr>
+                  );
+                }
                 ))}
               </tbody>
             </table>

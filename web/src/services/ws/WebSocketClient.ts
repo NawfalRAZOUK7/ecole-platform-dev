@@ -13,6 +13,8 @@ export type WsEventType =
   | 'grade_published'
   | 'payment_updated'
   | 'feed_new'
+  | 'message_created'
+  | 'announcement_published'
   | 'welcome'
   | 'pong';
 

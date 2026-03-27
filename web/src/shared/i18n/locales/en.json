@@ -42,7 +42,13 @@
     "teacherContentLibrary": "Content Library",
     "teacherQuizzes": "Quizzes",
     "studentContent": "My Content",
-    "studentQuizzes": "Quizzes"
+    "studentQuizzes": "Quizzes",
+    "timetable": "Timetable",
+    "messages": "Messages",
+    "announcements": "Announcements",
+    "adminFeeStructures": "Fee Structures",
+    "adminFeeAssignments": "Fee Assignments",
+    "adminGenerateInvoices": "Generate Invoices"
   },
   "login": {
     "title": "Sign In",
@@ -123,7 +129,12 @@
       "paid": "Paid",
       "failed": "Failed",
       "canceled": "Canceled"
-    }
+    },
+    "overdue": "Overdue",
+    "overdueCount": "{{count}} overdue invoice(s)",
+    "allStatuses": "All statuses",
+    "retry": "Retry payment",
+    "actions": "Actions"
   },
   "activities": {
     "title": "Activities",
@@ -229,7 +240,9 @@
   },
   "ws": {
     "gradePublished": "A new grade has been published",
-    "paymentUpdated": "A payment status has been updated"
+    "paymentUpdated": "A payment status has been updated",
+    "newMessage": "New message received",
+    "announcementPublished": "New announcement published"
   },
   "errors": {
     "validation": "Validation error",
@@ -830,5 +843,139 @@
       "submissions": "Submissions",
       "noData": "No data available"
     }
+  },
+  "timetable": {
+    "title": "Timetable",
+    "empty": "No slots for this week",
+    "weekOf": "Week of",
+    "addSlot": "Add Slot",
+    "editSlot": "Edit Slot",
+    "confirmDelete": "Are you sure you want to delete this slot?",
+    "day": "Day",
+    "startTime": "Start Time",
+    "endTime": "End Time",
+    "subject": "Subject",
+    "subjectPlaceholder": "E.g. math, french, arabic...",
+    "room": "Room",
+    "roomPlaceholder": "E.g. Room 101",
+    "teacherId": "Teacher (ID)",
+    "createException": "Create Exception",
+    "exceptionDate": "Exception Date",
+    "exceptionType": "Exception Type",
+    "canceled": "Canceled",
+    "substituted": "Substituted",
+    "roomChanged": "Room Changed",
+    "substituteTeacher": "Substitute Teacher (ID)",
+    "newRoom": "New Room",
+    "reason": "Reason",
+    "reasonPlaceholder": "Reason for exception...",
+    "days": {
+      "1": "Monday",
+      "2": "Tuesday",
+      "3": "Wednesday",
+      "4": "Thursday",
+      "5": "Friday",
+      "6": "Saturday"
+    }
+  },
+  "billing": {
+    "feeStructures": {
+      "title": "Fee Structures",
+      "empty": "No fee structures configured",
+      "create": "New Fee",
+      "edit": "Edit",
+      "name": "Name",
+      "amount": "Amount",
+      "currency": "Currency",
+      "frequency": "Frequency",
+      "dueDay": "Due Day",
+      "level": "Level",
+      "levelPlaceholder": "E.g. 6th grade (optional)",
+      "status": "Status",
+      "actions": "Actions",
+      "academicYear": "Academic Year (ID)"
+    },
+    "feeAssignments": {
+      "title": "Fee Assignments",
+      "empty": "No assignments",
+      "assign": "Assign",
+      "individual": "Individual",
+      "bulk": "Bulk",
+      "feeStructure": "Fee",
+      "selectFee": "Select a fee...",
+      "student": "Student",
+      "studentId": "Student ID",
+      "classId": "Class ID",
+      "classIdPlaceholder": "Class UUID (optional)",
+      "levelFilter": "Level",
+      "levelPlaceholder": "E.g. 6th grade (optional)",
+      "discount": "Discount",
+      "discountPercent": "Discount (%)",
+      "discountReason": "Discount Reason",
+      "discountReasonPlaceholder": "E.g. scholarship, sibling...",
+      "status": "Status",
+      "bulkResult": "Result",
+      "created": "Created",
+      "skipped": "Skipped"
+    },
+    "generate": {
+      "title": "Generate Invoices",
+      "feeStructure": "Fee Structure",
+      "selectFee": "Select a fee...",
+      "periodId": "Period (ID)",
+      "issuedDate": "Issued Date",
+      "dueDate": "Due Date",
+      "submit": "Generate Invoices",
+      "result": "Generation Result",
+      "generated": "Invoices generated",
+      "skipped": "Skipped",
+      "totalAmount": "Total Amount"
+    },
+    "frequencies": {
+      "monthly": "Monthly",
+      "trimester": "Trimester",
+      "annual": "Annual",
+      "one_time": "One-time"
+    },
+    "statuses": {
+      "ACTIVE": "Active",
+      "ARCHIVED": "Archived",
+      "EXEMPTED": "Exempted"
+    }
+  },
+  "messages": {
+    "title": "Messages",
+    "empty": "No conversations",
+    "newConversation": "New Conversation",
+    "conversation": "Conversation",
+    "direct": "Direct",
+    "group": "Group",
+    "participants": "participants",
+    "recipient": "Recipient (User ID)",
+    "recipientPlaceholder": "Recipient UUID",
+    "subject": "Subject",
+    "subjectPlaceholder": "Conversation subject (optional)",
+    "message": "Message",
+    "messagePlaceholder": "Write your message...",
+    "send": "Send",
+    "chat": "Chat",
+    "noMessages": "No messages yet. Start the conversation!",
+    "typePlaceholder": "Type a message..."
+  },
+  "announcements": {
+    "title": "Announcements",
+    "empty": "No announcements",
+    "create": "New Announcement",
+    "edit": "Edit",
+    "publish": "Publish",
+    "allStatuses": "All statuses",
+    "statusDraft": "Draft",
+    "statusPublished": "Published",
+    "statusArchived": "Archived",
+    "formTitle": "Title",
+    "titlePlaceholder": "Announcement title...",
+    "formBody": "Content",
+    "bodyPlaceholder": "Write the announcement content...",
+    "targetRoles": "Target Roles"
   }
 }

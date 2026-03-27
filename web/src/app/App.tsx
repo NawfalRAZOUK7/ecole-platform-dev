@@ -50,6 +50,13 @@ import { CmsContentEditPage } from '@/features/cms/ContentEditPage';
 import { CmsReviewQueuePage } from '@/features/cms/ReviewQueuePage';
 import { CmsQuizBuilderPage } from '@/features/cms/QuizBuilderPage';
 import { CmsAnalyticsPage } from '@/features/cms/AnalyticsPage';
+import { TimetablePage } from '@/features/timetable/TimetablePage';
+import { FeeStructuresPage } from '@/features/billing/FeeStructuresPage';
+import { FeeAssignmentsPage } from '@/features/billing/FeeAssignmentsPage';
+import { GenerateInvoicesPage } from '@/features/billing/GenerateInvoicesPage';
+import { ConversationsPage } from '@/features/messages/ConversationsPage';
+import { ChatPage } from '@/features/messages/ChatPage';
+import { AnnouncementsPage } from '@/features/announcements/AnnouncementsPage';
 
 /** Redirect based on user role */
 function RoleRedirect() {
@@ -151,6 +158,30 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/admin/fee-structures"
+          element={
+            <ProtectedRoute roles={['ADM']}>
+              <FeeStructuresPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/fee-assignments"
+          element={
+            <ProtectedRoute roles={['ADM']}>
+              <FeeAssignmentsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/generate-invoices"
+          element={
+            <ProtectedRoute roles={['ADM']}>
+              <GenerateInvoicesPage />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Teacher routes (TCH) */}
         <Route
@@ -232,6 +263,44 @@ function App() {
           element={
             <ProtectedRoute roles={['STD']}>
               <QuizPlayerPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Timetable (all roles) */}
+        <Route
+          path="/timetable"
+          element={
+            <ProtectedRoute roles={['ADM', 'DIR', 'TCH', 'STD', 'PAR']}>
+              <TimetablePage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Messaging (PAR, TCH, ADM, DIR) */}
+        <Route
+          path="/messages"
+          element={
+            <ProtectedRoute roles={['PAR', 'TCH', 'ADM', 'DIR']}>
+              <ConversationsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/messages/:conversationId"
+          element={
+            <ProtectedRoute roles={['PAR', 'TCH', 'ADM', 'DIR']}>
+              <ChatPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Announcements (all roles) */}
+        <Route
+          path="/announcements"
+          element={
+            <ProtectedRoute roles={['PAR', 'TCH', 'ADM', 'DIR', 'STD']}>
+              <AnnouncementsPage />
             </ProtectedRoute>
           }
         />

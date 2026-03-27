@@ -42,7 +42,13 @@
     "teacherContentLibrary": "Bibliotheque de contenus",
     "teacherQuizzes": "Quiz",
     "studentContent": "Mon contenu",
-    "studentQuizzes": "Quiz"
+    "studentQuizzes": "Quiz",
+    "timetable": "Emploi du temps",
+    "messages": "Messages",
+    "announcements": "Annonces",
+    "adminFeeStructures": "Frais scolaires",
+    "adminFeeAssignments": "Attribution des frais",
+    "adminGenerateInvoices": "Generer des factures"
   },
   "login": {
     "title": "Connexion",
@@ -123,7 +129,12 @@
       "paid": "Payee",
       "failed": "Echouee",
       "canceled": "Annulee"
-    }
+    },
+    "overdue": "En retard",
+    "overdueCount": "{{count}} facture(s) en retard",
+    "allStatuses": "Tous les statuts",
+    "retry": "Reessayer le paiement",
+    "actions": "Actions"
   },
   "activities": {
     "title": "Activites",
@@ -229,7 +240,9 @@
   },
   "ws": {
     "gradePublished": "Une nouvelle note a ete publiee",
-    "paymentUpdated": "Le statut d'un paiement a ete mis a jour"
+    "paymentUpdated": "Le statut d'un paiement a ete mis a jour",
+    "newMessage": "Nouveau message recu",
+    "announcementPublished": "Nouvelle annonce publiee"
   },
   "errors": {
     "validation": "Erreur de validation",
@@ -830,5 +843,139 @@
       "submissions": "Soumissions",
       "noData": "Aucune donnee disponible"
     }
+  },
+  "timetable": {
+    "title": "Emploi du temps",
+    "empty": "Aucun creneau pour cette semaine",
+    "weekOf": "Semaine du",
+    "addSlot": "Ajouter un creneau",
+    "editSlot": "Modifier le creneau",
+    "confirmDelete": "Etes-vous sur de vouloir supprimer ce creneau ?",
+    "day": "Jour",
+    "startTime": "Heure de debut",
+    "endTime": "Heure de fin",
+    "subject": "Matiere",
+    "subjectPlaceholder": "Ex: math, french, arabic...",
+    "room": "Salle",
+    "roomPlaceholder": "Ex: Salle 101",
+    "teacherId": "Enseignant (ID)",
+    "createException": "Creer une exception",
+    "exceptionDate": "Date de l'exception",
+    "exceptionType": "Type d'exception",
+    "canceled": "Annule",
+    "substituted": "Remplace",
+    "roomChanged": "Changement de salle",
+    "substituteTeacher": "Enseignant remplacant (ID)",
+    "newRoom": "Nouvelle salle",
+    "reason": "Motif",
+    "reasonPlaceholder": "Motif de l'exception...",
+    "days": {
+      "1": "Lundi",
+      "2": "Mardi",
+      "3": "Mercredi",
+      "4": "Jeudi",
+      "5": "Vendredi",
+      "6": "Samedi"
+    }
+  },
+  "billing": {
+    "feeStructures": {
+      "title": "Frais scolaires",
+      "empty": "Aucun frais configure",
+      "create": "Nouveau frais",
+      "edit": "Modifier",
+      "name": "Designation",
+      "amount": "Montant",
+      "currency": "Devise",
+      "frequency": "Frequence",
+      "dueDay": "Jour d'echeance",
+      "level": "Niveau",
+      "levelPlaceholder": "Ex: 6eme, 5eme (optionnel)",
+      "status": "Statut",
+      "actions": "Actions",
+      "academicYear": "Annee scolaire (ID)"
+    },
+    "feeAssignments": {
+      "title": "Attribution des frais",
+      "empty": "Aucune attribution",
+      "assign": "Attribuer",
+      "individual": "Individuel",
+      "bulk": "En masse",
+      "feeStructure": "Frais",
+      "selectFee": "Selectionner un frais...",
+      "student": "Eleve",
+      "studentId": "ID de l'eleve",
+      "classId": "ID de la classe",
+      "classIdPlaceholder": "UUID de la classe (optionnel)",
+      "levelFilter": "Niveau",
+      "levelPlaceholder": "Ex: 6eme (optionnel)",
+      "discount": "Reduction",
+      "discountPercent": "Reduction (%)",
+      "discountReason": "Motif de reduction",
+      "discountReasonPlaceholder": "Ex: bourse, fratrie...",
+      "status": "Statut",
+      "bulkResult": "Resultat",
+      "created": "Crees",
+      "skipped": "Ignores"
+    },
+    "generate": {
+      "title": "Generer des factures",
+      "feeStructure": "Frais scolaire",
+      "selectFee": "Selectionner un frais...",
+      "periodId": "Periode (ID)",
+      "issuedDate": "Date d'emission",
+      "dueDate": "Date d'echeance",
+      "submit": "Generer les factures",
+      "result": "Resultat de la generation",
+      "generated": "Factures generees",
+      "skipped": "Ignores (sans parent)",
+      "totalAmount": "Montant total"
+    },
+    "frequencies": {
+      "monthly": "Mensuel",
+      "trimester": "Trimestriel",
+      "annual": "Annuel",
+      "one_time": "Unique"
+    },
+    "statuses": {
+      "ACTIVE": "Actif",
+      "ARCHIVED": "Archive",
+      "EXEMPTED": "Exempte"
+    }
+  },
+  "messages": {
+    "title": "Messages",
+    "empty": "Aucune conversation",
+    "newConversation": "Nouvelle conversation",
+    "conversation": "Conversation",
+    "direct": "Direct",
+    "group": "Groupe",
+    "participants": "participants",
+    "recipient": "Destinataire (ID utilisateur)",
+    "recipientPlaceholder": "UUID du destinataire",
+    "subject": "Sujet",
+    "subjectPlaceholder": "Sujet de la conversation (optionnel)",
+    "message": "Message",
+    "messagePlaceholder": "Ecrivez votre message...",
+    "send": "Envoyer",
+    "chat": "Conversation",
+    "noMessages": "Aucun message. Commencez la conversation !",
+    "typePlaceholder": "Tapez un message..."
+  },
+  "announcements": {
+    "title": "Annonces",
+    "empty": "Aucune annonce",
+    "create": "Nouvelle annonce",
+    "edit": "Modifier",
+    "publish": "Publier",
+    "allStatuses": "Tous les statuts",
+    "statusDraft": "Brouillon",
+    "statusPublished": "Publiee",
+    "statusArchived": "Archivee",
+    "formTitle": "Titre",
+    "titlePlaceholder": "Titre de l'annonce...",
+    "formBody": "Contenu",
+    "bodyPlaceholder": "Redigez le contenu de l'annonce...",
+    "targetRoles": "Roles cibles"
   }
 }

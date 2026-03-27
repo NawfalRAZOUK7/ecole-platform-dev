@@ -42,7 +42,13 @@
     "teacherContentLibrary": "مكتبة المحتويات",
     "teacherQuizzes": "الاختبارات",
     "studentContent": "محتوياتي",
-    "studentQuizzes": "الاختبارات"
+    "studentQuizzes": "الاختبارات",
+    "timetable": "الجدول الزمني",
+    "messages": "الرسائل",
+    "announcements": "الإعلانات",
+    "adminFeeStructures": "هيكل الرسوم",
+    "adminFeeAssignments": "تخصيص الرسوم",
+    "adminGenerateInvoices": "إنشاء الفواتير"
   },
   "login": {
     "title": "تسجيل الدخول",
@@ -123,7 +129,12 @@
       "paid": "مدفوعة",
       "failed": "فشلت",
       "canceled": "ملغاة"
-    }
+    },
+    "overdue": "متأخرة",
+    "overdueCount": "{{count}} فاتورة متأخرة",
+    "allStatuses": "جميع الحالات",
+    "retry": "إعادة محاولة الدفع",
+    "actions": "الإجراءات"
   },
   "activities": {
     "title": "الأنشطة",
@@ -229,7 +240,9 @@
   },
   "ws": {
     "gradePublished": "تم نشر درجة جديدة",
-    "paymentUpdated": "تم تحديث حالة الدفع"
+    "paymentUpdated": "تم تحديث حالة الدفع",
+    "newMessage": "رسالة جديدة",
+    "announcementPublished": "إعلان جديد"
   },
   "errors": {
     "validation": "خطأ في التحقق",
@@ -830,5 +843,139 @@
       "submissions": "التقديمات",
       "noData": "لا توجد بيانات متاحة"
     }
+  },
+  "timetable": {
+    "title": "الجدول الزمني",
+    "empty": "لا توجد حصص لهذا الأسبوع",
+    "weekOf": "أسبوع",
+    "addSlot": "إضافة حصة",
+    "editSlot": "تعديل الحصة",
+    "confirmDelete": "هل أنت متأكد من حذف هذه الحصة؟",
+    "day": "اليوم",
+    "startTime": "وقت البداية",
+    "endTime": "وقت النهاية",
+    "subject": "المادة",
+    "subjectPlaceholder": "مثال: رياضيات، فرنسية، عربية...",
+    "room": "القاعة",
+    "roomPlaceholder": "مثال: قاعة 101",
+    "teacherId": "الأستاذ (المعرف)",
+    "createException": "إنشاء استثناء",
+    "exceptionDate": "تاريخ الاستثناء",
+    "exceptionType": "نوع الاستثناء",
+    "canceled": "ملغى",
+    "substituted": "استبدال",
+    "roomChanged": "تغيير القاعة",
+    "substituteTeacher": "الأستاذ البديل (المعرف)",
+    "newRoom": "القاعة الجديدة",
+    "reason": "السبب",
+    "reasonPlaceholder": "سبب الاستثناء...",
+    "days": {
+      "1": "الإثنين",
+      "2": "الثلاثاء",
+      "3": "الأربعاء",
+      "4": "الخميس",
+      "5": "الجمعة",
+      "6": "السبت"
+    }
+  },
+  "billing": {
+    "feeStructures": {
+      "title": "هيكل الرسوم",
+      "empty": "لا توجد رسوم",
+      "create": "رسوم جديدة",
+      "edit": "تعديل",
+      "name": "التسمية",
+      "amount": "المبلغ",
+      "currency": "العملة",
+      "frequency": "التكرار",
+      "dueDay": "يوم الاستحقاق",
+      "level": "المستوى",
+      "levelPlaceholder": "مثال: السادسة (اختياري)",
+      "status": "الحالة",
+      "actions": "الإجراءات",
+      "academicYear": "السنة الدراسية (المعرف)"
+    },
+    "feeAssignments": {
+      "title": "تخصيص الرسوم",
+      "empty": "لا توجد تخصيصات",
+      "assign": "تخصيص",
+      "individual": "فردي",
+      "bulk": "جماعي",
+      "feeStructure": "الرسوم",
+      "selectFee": "اختر رسوم...",
+      "student": "التلميذ",
+      "studentId": "معرف التلميذ",
+      "classId": "معرف القسم",
+      "classIdPlaceholder": "UUID القسم (اختياري)",
+      "levelFilter": "المستوى",
+      "levelPlaceholder": "مثال: السادسة (اختياري)",
+      "discount": "تخفيض",
+      "discountPercent": "نسبة التخفيض (%)",
+      "discountReason": "سبب التخفيض",
+      "discountReasonPlaceholder": "مثال: منحة، أشقاء...",
+      "status": "الحالة",
+      "bulkResult": "النتيجة",
+      "created": "تم الإنشاء",
+      "skipped": "تم التجاوز"
+    },
+    "generate": {
+      "title": "إنشاء الفواتير",
+      "feeStructure": "الرسوم الدراسية",
+      "selectFee": "اختر رسوم...",
+      "periodId": "الفترة (المعرف)",
+      "issuedDate": "تاريخ الإصدار",
+      "dueDate": "تاريخ الاستحقاق",
+      "submit": "إنشاء الفواتير",
+      "result": "نتيجة الإنشاء",
+      "generated": "فواتير تم إنشاؤها",
+      "skipped": "تم التجاوز",
+      "totalAmount": "المبلغ الإجمالي"
+    },
+    "frequencies": {
+      "monthly": "شهري",
+      "trimester": "فصلي",
+      "annual": "سنوي",
+      "one_time": "مرة واحدة"
+    },
+    "statuses": {
+      "ACTIVE": "نشط",
+      "ARCHIVED": "مؤرشف",
+      "EXEMPTED": "معفى"
+    }
+  },
+  "messages": {
+    "title": "الرسائل",
+    "empty": "لا توجد محادثات",
+    "newConversation": "محادثة جديدة",
+    "conversation": "محادثة",
+    "direct": "مباشر",
+    "group": "مجموعة",
+    "participants": "مشاركين",
+    "recipient": "المستلم (معرف المستخدم)",
+    "recipientPlaceholder": "UUID المستلم",
+    "subject": "الموضوع",
+    "subjectPlaceholder": "موضوع المحادثة (اختياري)",
+    "message": "الرسالة",
+    "messagePlaceholder": "اكتب رسالتك...",
+    "send": "إرسال",
+    "chat": "محادثة",
+    "noMessages": "لا توجد رسائل. ابدأ المحادثة!",
+    "typePlaceholder": "اكتب رسالة..."
+  },
+  "announcements": {
+    "title": "الإعلانات",
+    "empty": "لا توجد إعلانات",
+    "create": "إعلان جديد",
+    "edit": "تعديل",
+    "publish": "نشر",
+    "allStatuses": "جميع الحالات",
+    "statusDraft": "مسودة",
+    "statusPublished": "منشور",
+    "statusArchived": "مؤرشف",
+    "formTitle": "العنوان",
+    "titlePlaceholder": "عنوان الإعلان...",
+    "formBody": "المحتوى",
+    "bodyPlaceholder": "اكتب محتوى الإعلان...",
+    "targetRoles": "الأدوار المستهدفة"
   }
 }

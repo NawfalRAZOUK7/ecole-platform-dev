@@ -29,6 +29,9 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/admin/batch-register', labelKey: 'nav.adminBatchRegister', icon: '📋', roles: ['ADM'] },
   { to: '/admin/family-links', labelKey: 'nav.adminFamilyLinks', icon: '👨‍👩‍👧', roles: ['ADM'] },
   { to: '/admin/settings', labelKey: 'nav.adminSettings', icon: '🏫', roles: ['ADM'] },
+  { to: '/admin/fee-structures', labelKey: 'nav.adminFeeStructures', icon: '💰', roles: ['ADM'] },
+  { to: '/admin/fee-assignments', labelKey: 'nav.adminFeeAssignments', icon: '📋', roles: ['ADM'] },
+  { to: '/admin/generate-invoices', labelKey: 'nav.adminGenerateInvoices', icon: '🧾', roles: ['ADM'] },
   { to: '/teacher', labelKey: 'nav.teacherClasses', icon: '🏫', roles: ['TCH'] },
   { to: '/teacher/courses', labelKey: 'nav.teacherCourses', icon: '📖', roles: ['TCH'] },
   { to: '/teacher/assignments', labelKey: 'nav.teacherAssignments', icon: '📝', roles: ['TCH'] },
@@ -40,6 +43,9 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/student/content', labelKey: 'nav.studentContent', icon: '📚', roles: ['STD'] },
   { to: '/student/quizzes', labelKey: 'nav.studentQuizzes', icon: '❓', roles: ['STD'] },
   { to: '/feed', labelKey: 'nav.feed', icon: '📰', roles: ['PAR'] },
+  { to: '/timetable', labelKey: 'nav.timetable', icon: '📅', roles: ['ADM', 'DIR', 'TCH', 'STD', 'PAR'] },
+  { to: '/messages', labelKey: 'nav.messages', icon: '💬', roles: ['PAR', 'TCH', 'ADM', 'DIR'] },
+  { to: '/announcements', labelKey: 'nav.announcements', icon: '📢', roles: ['PAR', 'TCH', 'ADM', 'DIR', 'STD'] },
   { to: '/notifications', labelKey: 'nav.notifications', icon: '🔔', roles: ['PAR', 'TCH', 'ADM', 'DIR'] },
   { to: '/content', labelKey: 'nav.content', icon: '📚', roles: ['STD', 'PAR', 'TCH', 'ADM'] },
   { to: '/submissions', labelKey: 'nav.submissions', icon: '📤', roles: ['STD'] },
@@ -64,6 +70,7 @@ export function Layout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [notifCount, setNotifCount] = useState(0);
+  const [msgCount, setMsgCount] = useState(0);
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const userRole = user?.role || '';
@@ -91,6 +98,13 @@ export function Layout() {
       }
       if (event.event === 'payment_updated') {
         addToast(t('ws.paymentUpdated'));
+      }
+      if (event.event === 'message_created' || (event.event === 'notification_created' && event.data.event_type === 'message_created')) {
+        setMsgCount((c) => c + 1);
+        addToast(t('ws.newMessage'));
+      }
+      if (event.event === 'announcement_published' || (event.event === 'notification_created' && event.data.event_type === 'announcement_published')) {
+        addToast(t('ws.announcementPublished'));
       }
     });
     return () => {
@@ -123,12 +137,16 @@ export function Layout() {
               }
               onClick={() => {
                 if (item.to === '/notifications') setNotifCount(0);
+                if (item.to === '/messages') setMsgCount(0);
               }}
             >
               <span className="nav-icon">{item.icon}</span>
               <span className="nav-label">{t(item.labelKey)}</span>
               {item.to === '/notifications' && notifCount > 0 && (
                 <span className="notif-badge">{notifCount > 99 ? '99+' : notifCount}</span>
+              )}
+              {item.to === '/messages' && msgCount > 0 && (
+                <span className="notif-badge">{msgCount > 99 ? '99+' : msgCount}</span>
               )}
             </NavLink>
           ))}

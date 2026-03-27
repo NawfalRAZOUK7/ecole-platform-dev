@@ -814,19 +814,19 @@
 - [x] Pre-create toggles: content_library, quiz_engine, pdf_exercises, messaging, announcements, timetable
 - [x] Audit trail on toggle changes
 
-## Phase 12A — Timetable + Billing + Messaging UI (Web)
-- [ ] `TimetablePage.tsx` — weekly grid (Mon-Sat, time slots as rows, color-coded by subject)
-- [ ] ADM: add/edit/delete slots, create exceptions (cancel, substitute)
-- [ ] Teacher/student/parent timetable views (read-only)
-- [ ] `FeeStructuresPage.tsx` — CRUD for fee structures (ADM)
-- [ ] `FeeAssignmentsPage.tsx` — assign fees to students/classes, apply discounts
-- [ ] `GenerateInvoicesPage.tsx` — generate invoices from fee structures
-- [ ] Extend InvoicesPage with overdue indicators + retry status
-- [ ] `ConversationsPage.tsx` — inbox-style conversation list
-- [ ] `ChatPage.tsx` — message thread with read receipts (blue ticks), real-time via WebSocket
-- [ ] Unread message count badge on navigation
-- [ ] `AnnouncementsPage.tsx` — list + create/publish (ADM/DIR)
-- [ ] i18n (fr/ar/en)
+## Phase 12A — Timetable + Billing + Messaging UI (Web) ✅
+- [x] `TimetablePage.tsx` — weekly grid (Mon-Sat, time slots as rows, color-coded by subject)
+- [x] ADM: add/edit/delete slots, create exceptions (cancel, substitute)
+- [x] Teacher/student/parent timetable views (read-only)
+- [x] `FeeStructuresPage.tsx` — CRUD for fee structures (ADM)
+- [x] `FeeAssignmentsPage.tsx` — assign fees to students/classes, apply discounts
+- [x] `GenerateInvoicesPage.tsx` — generate invoices from fee structures
+- [x] Extend InvoicesPage with overdue indicators + retry status
+- [x] `ConversationsPage.tsx` — inbox-style conversation list
+- [x] `ChatPage.tsx` — message thread with read receipts (blue ticks), real-time via WebSocket
+- [x] Unread message count badge on navigation
+- [x] `AnnouncementsPage.tsx` — list + create/publish (ADM/DIR)
+- [x] i18n (fr/ar/en)
 
 ## Phase 12B — Timetable + Billing + Messaging (Mobile)
 - [ ] `timetable_screen.dart` — weekly grid (swipe days on phone, full week on tablet)
