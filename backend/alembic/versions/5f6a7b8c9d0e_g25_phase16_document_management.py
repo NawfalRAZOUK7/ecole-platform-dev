@@ -102,19 +102,13 @@ def upgrade() -> None:
     op.create_index("idx_resources_school_visibility", "resources", ["school_id", "visibility"], unique=False)
     op.create_index("idx_resources_class_id", "resources", ["class_id"], unique=False)
     op.create_index("idx_resources_deleted_at", "resources", ["deleted_at"], unique=False)
+    # Resource search currently combines ILIKE filters with ARRAY overlap on tags.
+    # A plain GIN index on tags is safe on PostgreSQL and avoids non-immutable
+    # expression index failures during migration.
     op.execute(
         """
         CREATE INDEX idx_resources_search_gin ON resources
-        USING gin (
-          to_tsvector(
-            'simple',
-            coalesce(title, '') || ' ' ||
-            coalesce(description, '') || ' ' ||
-            coalesce(subject, '') || ' ' ||
-            coalesce(level, '') || ' ' ||
-            coalesce(array_to_string(tags, ' '), '')
-          )
-        )
+        USING gin (tags)
         """
     )
 
