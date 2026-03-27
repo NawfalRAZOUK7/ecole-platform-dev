@@ -73,6 +73,9 @@ class Settings(BaseSettings):
     report_download_ttl_hours: int = 24
     report_cache_ttl_hours: int = 1
     analytics_cache_ttl_seconds: int = 300
+    calendar_ical_ttl_days: int = 30
+    calendar_reminder_horizon_days: int = 90
+    calendar_reminder_default_offsets: str = "1440,60"
 
     # CORS
     cors_origins: str = "http://localhost:5173,http://localhost:3000"

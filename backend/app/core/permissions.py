@@ -146,6 +146,14 @@ PERM_REP_REPORT_READ = "PERM-REP:report:read"
 PERM_REP_ANALYTICS_READ = "PERM-REP:analytics:read"
 PERM_REP_EXPORT_CREATE = "PERM-REP:export:create"
 
+# Calendar & Events (Phase 15)
+PERM_CAL_EVENT_CREATE = "PERM-CAL:event:create"
+PERM_CAL_EVENT_READ = "PERM-CAL:event:read"
+PERM_CAL_EVENT_UPDATE = "PERM-CAL:event:update"
+PERM_CAL_EVENT_DELETE = "PERM-CAL:event:delete"
+PERM_CAL_RSVP_RESPOND = "PERM-CAL:event-rsvp:respond"
+PERM_CAL_RSVP_READ = "PERM-CAL:event-rsvp:read"
+
 # Support
 PERM_SUP_GRANT_REQUEST = "PERM-SUP:grant:request"
 PERM_SUP_GRANT_APPROVE = "PERM-SUP:grant:approve"
@@ -215,6 +223,12 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_REP_REPORT_READ,
         PERM_REP_ANALYTICS_READ,
         PERM_REP_EXPORT_CREATE,
+        # Calendar & Events (Phase 15)
+        PERM_CAL_EVENT_CREATE,
+        PERM_CAL_EVENT_READ,
+        PERM_CAL_EVENT_UPDATE,
+        PERM_CAL_EVENT_DELETE,
+        PERM_CAL_RSVP_READ,
         # COM — config + messaging + announcements (Phase 11C)
         PERM_COM_CONSENT_UPDATE,
         PERM_COM_NOTIFICATION_READ,
@@ -254,6 +268,12 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_REP_REPORT_READ,
         PERM_REP_ANALYTICS_READ,
         PERM_REP_EXPORT_CREATE,
+        # Calendar & Events (Phase 15)
+        PERM_CAL_EVENT_CREATE,
+        PERM_CAL_EVENT_READ,
+        PERM_CAL_EVENT_UPDATE,
+        PERM_CAL_EVENT_DELETE,
+        PERM_CAL_RSVP_READ,
         # COM — read + announcements (Phase 11C)
         PERM_COM_NOTIFICATION_READ,
         PERM_COM_CONVERSATION_READ,
@@ -306,6 +326,12 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # Reporting (Phase 14)
         PERM_REP_REPORT_GENERATE,
         PERM_REP_REPORT_READ,
+        # Calendar & Events (Phase 15)
+        PERM_CAL_EVENT_CREATE,
+        PERM_CAL_EVENT_READ,
+        PERM_CAL_EVENT_UPDATE,
+        PERM_CAL_RSVP_RESPOND,
+        PERM_CAL_RSVP_READ,
         # COM — messaging (P1) + conversations (Phase 11C)
         PERM_COM_NOTIFICATION_READ,
         PERM_COM_MESSAGE_SEND,
@@ -348,6 +374,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # Reporting (Phase 14)
         PERM_REP_REPORT_GENERATE,
         PERM_REP_REPORT_READ,
+        # Calendar & Events (Phase 15)
+        PERM_CAL_EVENT_READ,
+        PERM_CAL_RSVP_RESPOND,
         # COM — consent + feed + messaging + announcements (Phase 11C)
         PERM_COM_CONSENT_UPDATE,
         PERM_COM_NOTIFICATION_READ,
@@ -396,6 +425,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # Reporting (Phase 14)
         PERM_REP_REPORT_GENERATE,
         PERM_REP_REPORT_READ,
+        # Calendar & Events (Phase 15)
+        PERM_CAL_EVENT_READ,
+        PERM_CAL_RSVP_RESPOND,
         # COM — read notifications + announcements (Phase 11C)
         PERM_COM_NOTIFICATION_READ,
         PERM_COM_ANNOUNCEMENT_READ,

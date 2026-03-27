@@ -47,6 +47,7 @@
     "messages": "Messages",
     "announcements": "Announcements",
     "notificationSettings": "Notification Settings",
+    "calendar": "Calendar",
     "reports": "Reports",
     "adminFeeStructures": "Fee Structures",
     "adminFeeAssignments": "Fee Assignments",
@@ -573,6 +574,97 @@
       "attendance": "Attendance",
       "invoices": "Invoices",
       "payments": "Payments"
+    }
+  },
+  "calendar": {
+    "title": "Calendar",
+    "subtitle": "Track school events, recurring activities, and key dates in one place.",
+    "eventDetailTitle": "Event details",
+    "backToCalendar": "Back to calendar",
+    "createEvent": "Create event",
+    "editEvent": "Edit event",
+    "deleteEvent": "Delete event",
+    "saving": "Saving...",
+    "confirmDelete": "Delete this event?",
+    "selectedDay": "Day details",
+    "noEvents": "No events for this view",
+    "previous": "Previous",
+    "next": "Next",
+    "copyIcal": "Copy iCal link",
+    "copied": "Copied",
+    "subscribeTitle": "Calendar subscription",
+    "subscribeHint": "Use this signed feed in Google Calendar, Apple Calendar, or Outlook.",
+    "openPage": "Open full page",
+    "allDay": "All day",
+    "eventCount_one": "{{count}} event",
+    "eventCount_other": "{{count}} events",
+    "capacityValue_one": "{{count}} seat",
+    "capacityValue_other": "{{count}} seats",
+    "attendees": "Attendees",
+    "noAttendees": "No RSVP responses yet",
+    "views": {
+      "month": "Month",
+      "week": "Week",
+      "agenda": "Agenda"
+    },
+    "filters": {
+      "title": "Filters",
+      "allClasses": "All classes"
+    },
+    "types": {
+      "holiday": "Holiday",
+      "exam": "Exam",
+      "meeting": "Meeting",
+      "excursion": "Excursion",
+      "ceremony": "Ceremony",
+      "custom": "Custom"
+    },
+    "visibility": {
+      "school": "School-wide",
+      "class": "Class-specific",
+      "role": "Role-specific"
+    },
+    "recurrence": {
+      "none": "No recurrence",
+      "weekly": "Weekly",
+      "annual": "Annual"
+    },
+    "rsvp": {
+      "attending": "Attending",
+      "maybe": "Maybe",
+      "declined": "Declined"
+    },
+    "rsvpSummary": {
+      "attending_one": "{{count}} attending",
+      "attending_other": "{{count}} attending",
+      "maybe_one": "{{count}} maybe",
+      "maybe_other": "{{count}} maybe",
+      "declined_one": "{{count}} declined",
+      "declined_other": "{{count}} declined"
+    },
+    "external": {
+      "google": "Google Calendar",
+      "outlook": "Outlook",
+      "ical": "Download iCal",
+      "map": "Open map"
+    },
+    "form": {
+      "titleFr": "French title",
+      "titleAr": "Arabic title",
+      "titleEn": "English title",
+      "type": "Type",
+      "visibility": "Visibility",
+      "start": "Start",
+      "end": "End",
+      "location": "Location",
+      "capacity": "Capacity",
+      "class": "Class",
+      "roles": "Target roles",
+      "description": "Description",
+      "allDay": "All-day event",
+      "recurrence": "Recurrence",
+      "interval": "Interval",
+      "until": "Repeat until"
     }
   },
   "reports": {

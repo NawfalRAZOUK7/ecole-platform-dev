@@ -588,6 +588,44 @@ async def task_cleanup_expired_reports(ctx: dict) -> int:
 
 
 # ---------------------------------------------------------------------------
+# Task: send_event_reminders
+# ---------------------------------------------------------------------------
+async def task_send_event_reminders(ctx: dict) -> int:
+    """Send due calendar reminders through the notification hub."""
+    from app.core.metrics import TASK_COMPLETED_COUNT, TASK_DURATION, TASK_FAILED_COUNT
+
+    start = time.perf_counter()
+    try:
+        from app.core.database import async_session
+        from app.services.reminders import ReminderService
+
+        async with async_session() as db:
+            service = ReminderService(db)
+            sent_count = await service.send_due_reminders()
+            await db.commit()
+
+        duration = time.perf_counter() - start
+        TASK_DURATION.labels(
+            env=settings.app_env, task="send_event_reminders"
+        ).observe(duration)
+        TASK_COMPLETED_COUNT.labels(
+            env=settings.app_env, task="send_event_reminders"
+        ).inc()
+        logger.info("Sent %d event reminders", sent_count)
+        return sent_count
+    except Exception:
+        duration = time.perf_counter() - start
+        TASK_DURATION.labels(
+            env=settings.app_env, task="send_event_reminders"
+        ).observe(duration)
+        TASK_FAILED_COUNT.labels(
+            env=settings.app_env, task="send_event_reminders"
+        ).inc()
+        logger.exception("task_send_event_reminders failed")
+        return 0
+
+
+# ---------------------------------------------------------------------------
 # Enqueue helpers — fire-and-forget from API endpoints
 # ---------------------------------------------------------------------------
 _arq_pool: ArqRedis | None = None
@@ -676,6 +714,7 @@ class WorkerSettings:
         task_send_overdue_reminders,
         task_generate_report,
         task_cleanup_expired_reports,
+        task_send_event_reminders,
     ]
 
     # Cron jobs
@@ -688,6 +727,8 @@ class WorkerSettings:
         cron(task_refresh_kpi_views, hour=3, minute=30),
         # Cleanup expired report files daily at 04:00 UTC (Phase 14)
         cron(task_cleanup_expired_reports, hour=4, minute=0),
+        # Phase 15: Event reminder dispatch every 5 minutes
+        cron(task_send_event_reminders, minute=set(range(0, 60, 5))),
     ]
 
     if settings.app_env in ("staging", "production"):

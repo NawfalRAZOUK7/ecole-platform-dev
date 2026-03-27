@@ -54,6 +54,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/student/quizzes', labelKey: 'nav.studentQuizzes', icon: '❓', roles: ['STD'] },
   { to: '/feed', labelKey: 'nav.feed', icon: '📰', roles: ['PAR'] },
   { to: '/timetable', labelKey: 'nav.timetable', icon: '📅', roles: ['ADM', 'DIR', 'TCH', 'STD', 'PAR'] },
+  { to: '/calendar', labelKey: 'nav.calendar', icon: '🗓️', roles: ['ADM', 'DIR', 'TCH', 'STD', 'PAR'] },
   { to: '/messages', labelKey: 'nav.messages', icon: '💬', roles: ['PAR', 'TCH', 'ADM', 'DIR'] },
   { to: '/announcements', labelKey: 'nav.announcements', icon: '📢', roles: ['PAR', 'TCH', 'ADM', 'DIR', 'STD'] },
   { to: '/notifications', labelKey: 'nav.notifications', icon: '🔔', roles: ['PAR', 'TCH', 'ADM', 'DIR', 'STD'] },

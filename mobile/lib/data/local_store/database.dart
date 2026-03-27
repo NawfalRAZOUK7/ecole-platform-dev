@@ -8,7 +8,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 const String _dbName = 'ecole_platform.db';
-const int _dbVersion = 3;
+const int _dbVersion = 4;
 
 class AppDatabase {
   static Database? _database;
@@ -58,6 +58,22 @@ class AppDatabase {
           await db.execute('''
             CREATE INDEX IF NOT EXISTS idx_cached_reports_updated
             ON cached_reports(updated_at)
+          ''');
+        }
+        if (oldVersion < 4) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS cached_calendar_events (
+              cache_month TEXT NOT NULL,
+              event_id TEXT NOT NULL,
+              payload TEXT NOT NULL,
+              start_at TEXT NOT NULL,
+              updated_at INTEGER NOT NULL,
+              PRIMARY KEY (cache_month, event_id)
+            )
+          ''');
+          await db.execute('''
+            CREATE INDEX IF NOT EXISTS idx_cached_calendar_events_month
+            ON cached_calendar_events(cache_month, start_at)
           ''');
         }
       },
@@ -126,6 +142,22 @@ class AppDatabase {
     await db.execute('''
       CREATE INDEX idx_cached_reports_updated
       ON cached_reports(updated_at)
+    ''');
+
+    await db.execute('''
+      CREATE TABLE cached_calendar_events (
+        cache_month TEXT NOT NULL,
+        event_id TEXT NOT NULL,
+        payload TEXT NOT NULL,
+        start_at TEXT NOT NULL,
+        updated_at INTEGER NOT NULL,
+        PRIMARY KEY (cache_month, event_id)
+      )
+    ''');
+
+    await db.execute('''
+      CREATE INDEX idx_cached_calendar_events_month
+      ON cached_calendar_events(cache_month, start_at)
     ''');
   }
 

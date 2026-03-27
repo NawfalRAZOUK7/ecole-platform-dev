@@ -31,6 +31,15 @@ from app.models.erp import (
     TimetableSlot,
 )
 
+# G2B — Calendar
+from app.models.calendar import (
+    Event,
+    EventReminder,
+    EventReminderPreference,
+    EventRSVP,
+    MoroccanHoliday,
+)
+
 # G3 — LMS
 from app.models.lms import (
     Activity,
@@ -114,6 +123,11 @@ __all__ = [
     "JustificationReview",
     "TimetableSlot",
     "TimetableException",
+    "Event",
+    "EventRSVP",
+    "EventReminder",
+    "EventReminderPreference",
+    "MoroccanHoliday",
     # LMS
     "Course",
     "Assignment",

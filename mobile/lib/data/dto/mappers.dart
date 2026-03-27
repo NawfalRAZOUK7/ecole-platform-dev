@@ -13,6 +13,7 @@ import 'package:ecole_platform/domain/entities/invoice.dart';
 import 'package:ecole_platform/domain/entities/admin.dart';
 import 'package:ecole_platform/domain/entities/reporting.dart';
 import 'package:ecole_platform/domain/entities/teacher.dart';
+import 'package:ecole_platform/domain/entities/calendar_event.dart';
 
 // ── User ──
 
@@ -97,6 +98,77 @@ RegisteredDevice registeredDeviceFromJson(Map<String, dynamic> json) {
   );
 }
 
+// ── Calendar ──
+
+CalendarClassOption calendarClassOptionFromJson(Map<String, dynamic> json) {
+  final code = json['code']?.toString();
+  final name = json['name']?.toString();
+  return CalendarClassOption(
+    id: json['id'] as String,
+    label: [code, name]
+        .whereType<String>()
+        .where((item) => item.isNotEmpty)
+        .join(' · '),
+  );
+}
+
+ReminderPreference reminderPreferenceFromJson(Map<String, dynamic> json) {
+  return ReminderPreference(
+    eventType: json['event_type'] as String? ?? 'custom',
+    enabled: json['enabled'] as bool? ?? true,
+  );
+}
+
+CalendarEvent calendarEventFromJson(Map<String, dynamic> json) {
+  return CalendarEvent(
+    id: json['id'] as String,
+    instanceId: json['instance_id'] as String? ?? json['id'] as String,
+    source: json['source'] as String? ?? 'event',
+    titleFr: json['title_fr'] as String? ?? '',
+    titleAr: json['title_ar'] as String?,
+    titleEn: json['title_en'] as String?,
+    description: json['description'] as String?,
+    type: json['type'] as String? ?? 'custom',
+    visibility: json['visibility'] as String? ?? 'school',
+    startAt: json['start_at'] as String,
+    endAt: json['end_at'] as String,
+    location: json['location'] as String?,
+    latitude: (json['latitude'] as num?)?.toDouble(),
+    longitude: (json['longitude'] as num?)?.toDouble(),
+    classId: json['class_id'] as String?,
+    roleCodes: (json['role_codes'] as List<dynamic>? ?? const [])
+        .map((item) => item.toString())
+        .toList(),
+    capacity: json['capacity'] as int?,
+    rsvpDeadline: json['rsvp_deadline'] as String?,
+    attendeeCount: json['attendee_count'] as int? ?? 0,
+    maybeCount: json['maybe_count'] as int? ?? 0,
+    declinedCount: json['declined_count'] as int? ?? 0,
+    myRsvp: json['my_rsvp'] as String?,
+    isAllDay: json['is_all_day'] as bool? ?? false,
+    isRecurring: json['is_recurring'] as bool? ?? false,
+    recurrenceRule: json['recurrence_rule'] as Map<String, dynamic>?,
+    canEdit: json['can_edit'] as bool? ?? false,
+    canDelete: json['can_delete'] as bool? ?? false,
+    canRsvp: json['can_rsvp'] as bool? ?? false,
+    isHoliday: json['is_holiday'] as bool? ?? false,
+    rsvps: (json['rsvps'] as List<dynamic>? ?? const [])
+        .cast<Map<String, dynamic>>()
+        .map(eventRsvpRecordFromJson)
+        .toList(),
+  );
+}
+
+EventRsvpRecord eventRsvpRecordFromJson(Map<String, dynamic> json) {
+  return EventRsvpRecord(
+    userId: json['user_id'] as String,
+    fullName: json['full_name'] as String? ?? '',
+    role: json['role'] as String? ?? '',
+    status: json['status'] as String? ?? 'maybe',
+    respondedAt: json['responded_at'] as String? ?? '',
+  );
+}
+
 // ── Reporting ──
 
 ReportOptionItem reportOptionFromJson(
@@ -107,7 +179,9 @@ ReportOptionItem reportOptionFromJson(
   String? secondary;
   for (final key in secondaryKeys) {
     final value = json[key]?.toString();
-    if (value != null && value.isNotEmpty && value != json[primaryKey]?.toString()) {
+    if (value != null &&
+        value.isNotEmpty &&
+        value != json[primaryKey]?.toString()) {
       secondary = value;
       break;
     }
@@ -417,9 +491,12 @@ Submission submissionFromJson(Map<String, dynamic> json) {
     studentName: json['student_name'] as String?,
     status: json['status'] as String? ?? 'submitted',
     submittedAt: json['submitted_at'] as String?,
-    score: (grade?['score'] as num?)?.toDouble() ?? (json['score'] as num?)?.toDouble(),
-    feedbackText: grade?['feedback_text'] as String? ?? json['feedback_text'] as String?,
-    publishedAt: grade?['published_at'] as String? ?? json['published_at'] as String?,
+    score: (grade?['score'] as num?)?.toDouble() ??
+        (json['score'] as num?)?.toDouble(),
+    feedbackText:
+        grade?['feedback_text'] as String? ?? json['feedback_text'] as String?,
+    publishedAt:
+        grade?['published_at'] as String? ?? json['published_at'] as String?,
   );
 }
 

@@ -28,6 +28,8 @@ Routes:
   /announcements/*              — Announcements CRUD + publish (Phase 11C)
   /progress/*                   — Student progress visualization (Phase 11D)
   /features/*                   — Feature toggles management (Phase 11E)
+  /events/*                     — Calendar events, RSVP, reminders (Phase 15)
+  /calendar/*                   — Calendar feeds and options (Phase 15)
 """
 
 from datetime import datetime, timezone
@@ -110,6 +112,9 @@ from app.api.v1.features import router as features_router
 from app.api.v1.analytics import router as analytics_router
 from app.api.v1.exports import router as exports_router
 from app.api.v1.reports import router as reports_router
+
+# Phase 15 — Calendar & Events
+from app.api.v1.events import router as events_router
 
 router = APIRouter()
 
@@ -210,3 +215,6 @@ router.include_router(features_router)
 router.include_router(reports_router)
 router.include_router(exports_router)
 router.include_router(analytics_router)
+
+# Mount sub-routers — Phase 15 Calendar & Events
+router.include_router(events_router)

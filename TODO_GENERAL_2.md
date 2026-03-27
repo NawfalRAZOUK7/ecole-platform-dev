@@ -94,36 +94,36 @@
 ## Phase 15 — Calendar & Events
 
 ### 15A — Backend
-- [ ] Calendar service with Moroccan holiday seed data
-- [ ] Event CRUD with type/visibility controls
-- [ ] Recurring event support (weekly, annual)
-- [ ] RSVP system with capacity enforcement
-- [ ] Reminder service (ARQ periodic task, every 5min)
-- [ ] iCal feed generation with signed token auth
-- [ ] Event visibility filtering by role + class membership
-- [ ] Database migrations: events, event_rsvps, event_reminders, moroccan_holidays
+- [x] Calendar service with Moroccan holiday seed data
+- [x] Event CRUD with type/visibility controls
+- [x] Recurring event support (weekly, annual)
+- [x] RSVP system with capacity enforcement
+- [x] Reminder service (ARQ periodic task, every 5min)
+- [x] iCal feed generation with signed token auth
+- [x] Event visibility filtering by role + class membership
+- [x] Database migrations: events, event_rsvps, event_reminders, moroccan_holidays
 
 ### 15B — Web Frontend
-- [ ] `/calendar` page with month/week/list views
-- [ ] Color-coded events by type
-- [ ] Event creation modal
-- [ ] Event detail with RSVP + attendee list
-- [ ] Add to external calendar buttons (Google, Outlook, iCal)
-- [ ] Filter sidebar (type, class)
+- [x] `/calendar` page with month/week/list views
+- [x] Color-coded events by type
+- [x] Event creation modal
+- [x] Event detail with RSVP + attendee list
+- [x] Add to external calendar buttons (Google, Outlook, iCal)
+- [x] Filter sidebar (type, class)
 
 ### 15C — Mobile
-- [ ] `CalendarScreen` with `table_calendar` package
-- [ ] Event detail bottom sheet with RSVP
-- [ ] Device calendar integration
-- [ ] Push notification reminders
-- [ ] Offline cache for current month
+- [x] `CalendarScreen` with `table_calendar` package
+- [x] Event detail bottom sheet with RSVP
+- [x] Device calendar integration
+- [x] Push notification reminders
+- [x] Offline cache for current month
 
 ### 15D — Tests
-- [ ] Postman collection: event CRUD + RSVP
-- [ ] Recurring event generation tests
-- [ ] RSVP capacity enforcement tests
-- [ ] Reminder dispatch timing tests
-- [ ] iCal RFC 5545 compliance tests
+- [x] Postman collection: event CRUD + RSVP
+- [x] Recurring event generation tests
+- [x] RSVP capacity enforcement tests
+- [x] Reminder dispatch timing tests
+- [x] iCal RFC 5545 compliance tests
 
 ---
 

@@ -47,6 +47,7 @@
     "messages": "Messages",
     "announcements": "Annonces",
     "notificationSettings": "Preferences notifications",
+    "calendar": "Calendrier",
     "reports": "Rapports",
     "adminFeeStructures": "Frais scolaires",
     "adminFeeAssignments": "Attribution des frais",
@@ -573,6 +574,97 @@
       "attendance": "Presence",
       "invoices": "Factures",
       "payments": "Paiements"
+    }
+  },
+  "calendar": {
+    "title": "Calendrier",
+    "subtitle": "Suivez les evenements scolaires, les rendez-vous recurrents et les dates cles.",
+    "eventDetailTitle": "Detail de l'evenement",
+    "backToCalendar": "Retour au calendrier",
+    "createEvent": "Creer un evenement",
+    "editEvent": "Modifier l'evenement",
+    "deleteEvent": "Supprimer l'evenement",
+    "saving": "Enregistrement...",
+    "confirmDelete": "Supprimer cet evenement ?",
+    "selectedDay": "Detail du jour",
+    "noEvents": "Aucun evenement pour cette vue",
+    "previous": "Precedent",
+    "next": "Suivant",
+    "copyIcal": "Copier le lien iCal",
+    "copied": "Copie",
+    "subscribeTitle": "Abonnement calendrier",
+    "subscribeHint": "Utilisez ce flux signe dans Google Calendar, Apple Calendar ou Outlook.",
+    "openPage": "Ouvrir la page",
+    "allDay": "Toute la journee",
+    "eventCount_one": "{{count}} evenement",
+    "eventCount_other": "{{count}} evenements",
+    "capacityValue_one": "{{count}} place",
+    "capacityValue_other": "{{count}} places",
+    "attendees": "Participants",
+    "noAttendees": "Aucune reponse RSVP pour le moment",
+    "views": {
+      "month": "Mois",
+      "week": "Semaine",
+      "agenda": "Agenda"
+    },
+    "filters": {
+      "title": "Filtres",
+      "allClasses": "Toutes les classes"
+    },
+    "types": {
+      "holiday": "Jour ferie",
+      "exam": "Examen",
+      "meeting": "Reunion",
+      "excursion": "Excursion",
+      "ceremony": "Ceremonie",
+      "custom": "Personnalise"
+    },
+    "visibility": {
+      "school": "Toute l'ecole",
+      "class": "Classe",
+      "role": "Par role"
+    },
+    "recurrence": {
+      "none": "Pas de recurrence",
+      "weekly": "Hebdomadaire",
+      "annual": "Annuelle"
+    },
+    "rsvp": {
+      "attending": "Present",
+      "maybe": "Peut-etre",
+      "declined": "Decline"
+    },
+    "rsvpSummary": {
+      "attending_one": "{{count}} present",
+      "attending_other": "{{count}} presents",
+      "maybe_one": "{{count}} peut-etre",
+      "maybe_other": "{{count}} peut-etre",
+      "declined_one": "{{count}} refus",
+      "declined_other": "{{count}} refus"
+    },
+    "external": {
+      "google": "Google Calendar",
+      "outlook": "Outlook",
+      "ical": "Telecharger iCal",
+      "map": "Ouvrir la carte"
+    },
+    "form": {
+      "titleFr": "Titre en francais",
+      "titleAr": "Titre en arabe",
+      "titleEn": "Titre en anglais",
+      "type": "Type",
+      "visibility": "Visibilite",
+      "start": "Debut",
+      "end": "Fin",
+      "location": "Lieu",
+      "capacity": "Capacite",
+      "class": "Classe",
+      "roles": "Roles cibles",
+      "description": "Description",
+      "allDay": "Evenement sur la journee",
+      "recurrence": "Recurrence",
+      "interval": "Intervalle",
+      "until": "Repeter jusqu'au"
     }
   },
   "reports": {

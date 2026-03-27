@@ -84,6 +84,11 @@ const _allNavItems = [
       labelKey: 'shell.timetable',
       roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR']),
   _NavItem(
+      route: '/calendar',
+      icon: Icons.event_note,
+      labelKey: 'shell.calendar',
+      roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR']),
+  _NavItem(
       route: '/messages',
       icon: Icons.chat,
       labelKey: 'shell.messages',

@@ -15,6 +15,8 @@ import { FeedPage } from '@/features/feed/FeedPage';
 import { NotificationsPage } from '@/features/notifications/NotificationsPage';
 import { NotificationSettingsPage } from '@/features/notifications/NotificationSettingsPage';
 import { ReportsPage } from '@/features/reports/ReportsPage';
+import { CalendarPage } from '@/features/calendar/CalendarPage';
+import { EventDetailPage } from '@/features/calendar/EventDetailPage';
 import { ContentPage } from '@/features/content/ContentPage';
 import { ResultsPage } from '@/features/results/ResultsPage';
 import { InvoicesPage } from '@/features/invoices/InvoicesPage';
@@ -358,6 +360,22 @@ function App() {
           element={
             <ProtectedRoute roles={['PAR', 'TCH', 'ADM', 'DIR', 'STD']}>
               <NotificationsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/calendar"
+          element={
+            <ProtectedRoute roles={['PAR', 'TCH', 'ADM', 'DIR', 'STD']}>
+              <CalendarPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/events/:id"
+          element={
+            <ProtectedRoute roles={['PAR', 'TCH', 'ADM', 'DIR', 'STD']}>
+              <EventDetailPage />
             </ProtectedRoute>
           }
         />

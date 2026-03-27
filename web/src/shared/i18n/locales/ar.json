@@ -47,6 +47,7 @@
     "messages": "الرسائل",
     "announcements": "الإعلانات",
     "notificationSettings": "إعدادات الإشعارات",
+    "calendar": "التقويم",
     "reports": "التقارير",
     "adminFeeStructures": "هيكل الرسوم",
     "adminFeeAssignments": "تخصيص الرسوم",
@@ -573,6 +574,117 @@
       "attendance": "الحضور",
       "invoices": "الفواتير",
       "payments": "المدفوعات"
+    }
+  },
+  "calendar": {
+    "title": "التقويم",
+    "subtitle": "تابع فعاليات المدرسة والمواعيد المتكررة والتواريخ المهمة في مكان واحد.",
+    "eventDetailTitle": "تفاصيل الحدث",
+    "backToCalendar": "العودة إلى التقويم",
+    "createEvent": "إنشاء حدث",
+    "editEvent": "تعديل الحدث",
+    "deleteEvent": "حذف الحدث",
+    "saving": "جارٍ الحفظ...",
+    "confirmDelete": "حذف هذا الحدث؟",
+    "selectedDay": "تفاصيل اليوم",
+    "noEvents": "لا توجد أحداث في هذا العرض",
+    "previous": "السابق",
+    "next": "التالي",
+    "copyIcal": "نسخ رابط iCal",
+    "copied": "تم النسخ",
+    "subscribeTitle": "اشتراك التقويم",
+    "subscribeHint": "استخدم هذا الرابط الموقّع في Google Calendar أو Apple Calendar أو Outlook.",
+    "openPage": "فتح الصفحة",
+    "allDay": "طوال اليوم",
+    "eventCount_zero": "0 أحداث",
+    "eventCount_one": "حدث واحد",
+    "eventCount_two": "حدثان",
+    "eventCount_few": "{{count}} أحداث",
+    "eventCount_many": "{{count}} حدثًا",
+    "eventCount_other": "{{count}} حدث",
+    "capacityValue_zero": "لا مقاعد",
+    "capacityValue_one": "مقعد واحد",
+    "capacityValue_two": "مقعدان",
+    "capacityValue_few": "{{count}} مقاعد",
+    "capacityValue_many": "{{count}} مقعدًا",
+    "capacityValue_other": "{{count}} مقعد",
+    "attendees": "الحضور",
+    "noAttendees": "لا توجد ردود RSVP بعد",
+    "views": {
+      "month": "شهر",
+      "week": "أسبوع",
+      "agenda": "أجندة"
+    },
+    "filters": {
+      "title": "الفلاتر",
+      "allClasses": "كل الفصول"
+    },
+    "types": {
+      "holiday": "عطلة",
+      "exam": "امتحان",
+      "meeting": "اجتماع",
+      "excursion": "رحلة",
+      "ceremony": "حفل",
+      "custom": "مخصص"
+    },
+    "visibility": {
+      "school": "للمدرسة كلها",
+      "class": "لفصل محدد",
+      "role": "حسب الدور"
+    },
+    "recurrence": {
+      "none": "بدون تكرار",
+      "weekly": "أسبوعي",
+      "annual": "سنوي"
+    },
+    "rsvp": {
+      "attending": "سأحضر",
+      "maybe": "ربما",
+      "declined": "لن أحضر"
+    },
+    "rsvpSummary": {
+      "attending_zero": "لا أحد",
+      "attending_one": "حاضر واحد",
+      "attending_two": "حاضران",
+      "attending_few": "{{count}} حضور",
+      "attending_many": "{{count}} حاضرًا",
+      "attending_other": "{{count}} حاضر",
+      "maybe_zero": "لا أحد",
+      "maybe_one": "ربما واحد",
+      "maybe_two": "ربما اثنان",
+      "maybe_few": "{{count}} ربما",
+      "maybe_many": "{{count}} ربما",
+      "maybe_other": "{{count}} ربما",
+      "declined_zero": "لا أحد",
+      "declined_one": "رفض واحد",
+      "declined_two": "رفضان",
+      "declined_few": "{{count}} رفض",
+      "declined_many": "{{count}} رافضًا",
+      "declined_other": "{{count}} رافض"
+    },
+    "external": {
+      "google": "Google Calendar",
+      "outlook": "Outlook",
+      "ical": "تنزيل iCal",
+      "map": "فتح الخريطة"
+    },
+    "form": {
+      "titleFr": "العنوان بالفرنسية",
+      "titleAr": "العنوان بالعربية",
+      "titleEn": "العنوان بالإنجليزية",
+      "type": "النوع",
+      "visibility": "إمكانية الرؤية",
+      "start": "البداية",
+      "end": "النهاية",
+      "location": "المكان",
+      "capacity": "السعة",
+      "class": "الفصل",
+      "roles": "الأدوار المستهدفة",
+      "description": "الوصف",
+      "allDay": "حدث طوال اليوم",
+      "recurrence": "التكرار",
+      "interval": "الفاصل",
+      "until": "التكرار حتى"
     }
   },
   "reports": {
