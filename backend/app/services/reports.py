@@ -59,6 +59,78 @@ def _datetime_bounds(from_date: date, to_date: date) -> tuple[datetime, datetime
     return start_dt, end_dt
 
 
+def _format_decimal(value: Any, digits: int = 2) -> str:
+    if value is None:
+        return "—"
+    try:
+        rendered = f"{float(value):.{digits}f}"
+    except (TypeError, ValueError):
+        return str(value)
+    return rendered.rstrip("0").rstrip(".")
+
+
+def _format_report_date(value: Any) -> str:
+    if value in (None, ""):
+        return "—"
+    if isinstance(value, datetime):
+        return value.strftime("%d/%m/%Y")
+    if isinstance(value, date):
+        return value.strftime("%d/%m/%Y")
+    if isinstance(value, str):
+        try:
+            return datetime.fromisoformat(value.replace("Z", "+00:00")).strftime("%d/%m/%Y")
+        except ValueError:
+            try:
+                return date.fromisoformat(value).strftime("%d/%m/%Y")
+            except ValueError:
+                return value
+    return str(value)
+
+
+def _format_report_datetime(value: Any) -> str:
+    if value in (None, ""):
+        return "—"
+    if isinstance(value, datetime):
+        return value.strftime("%d/%m/%Y %H:%M")
+    if isinstance(value, date):
+        return value.strftime("%d/%m/%Y")
+    if isinstance(value, str):
+        try:
+            return datetime.fromisoformat(value.replace("Z", "+00:00")).strftime(
+                "%d/%m/%Y %H:%M"
+            )
+        except ValueError:
+            return _format_report_date(value)
+    return str(value)
+
+
+def _format_grade(value: Any) -> str:
+    if value is None:
+        return "—"
+    return f"{_format_decimal(value)}/20"
+
+
+def _academic_year_label(value: dict[str, Any] | None) -> str | None:
+    if not value:
+        return None
+    if value.get("label"):
+        return str(value["label"])
+    start = value.get("date_start") or value.get("academic_year_start")
+    end = value.get("date_end") or value.get("academic_year_end")
+    if start and end:
+        return f"{_format_report_date(start)} - {_format_report_date(end)}"
+    return None
+
+
+_jinja_env.globals.update(
+    fmt_date=_format_report_date,
+    fmt_datetime=_format_report_datetime,
+    fmt_grade=_format_grade,
+    fmt_number=_format_decimal,
+    academic_year_label=_academic_year_label,
+)
+
+
 class ReportsService:
     """Report job orchestration, rendering, and download security."""
 
@@ -517,6 +589,28 @@ class ReportsService:
 
         from_date, to_date = self._resolve_window(job.parameters)
         from_dt, to_dt = _datetime_bounds(from_date, to_date)
+        period_id = (
+            uuid.UUID(job.parameters["period_id"])
+            if job.parameters.get("period_id")
+            else None
+        )
+        class_context = await self.repo.get_student_class_context(
+            student_id=student_id,
+            school_id=job.school_id,
+            period_id=period_id,
+        )
+        class_average_map: dict[str, float] = {}
+        if class_context is not None:
+            class_subject_rows = await self.repo.list_class_subject_averages(
+                school_id=job.school_id,
+                class_id=class_context["class_id"],
+                from_dt=from_dt,
+                to_dt=to_dt,
+            )
+            class_average_map = {
+                item["subject"]: round(item["average_grade"], 2)
+                for item in class_subject_rows
+            }
 
         grade_rows = await self.repo.list_student_report_grade_rows(
             school_id=job.school_id,
@@ -552,12 +646,14 @@ class ReportsService:
                 {
                     "subject": subject,
                     "average": round(sum(scores) / len(scores), 2) if scores else 0.0,
+                    "class_average": class_average_map.get(subject),
                     "assignments": payload["assignments"],
                     "comments": payload["comments"][:3],
                 }
             )
+        subject_rows.sort(key=lambda item: item["subject"])
 
-        total_records, present_records, _absent_records, _excused_records = (
+        total_records, present_records, absent_records, excused_records, late_records = (
             await self.repo.get_student_report_attendance_summary(
                 school_id=job.school_id,
                 student_id=student_id,
@@ -565,7 +661,9 @@ class ReportsService:
                 to_date=to_date,
             )
         )
-        attendance_rate = (present_records / total_records) * 100 if total_records else 0.0
+        attendance_rate = (
+            ((present_records + late_records) / total_records) * 100 if total_records else 0.0
+        )
 
         return {
             "lang": job.parameters.get("locale", "fr"),
@@ -576,6 +674,9 @@ class ReportsService:
                 "id": str(student.id),
                 "full_name": student.full_name,
                 "email": student.email,
+                "class_code": class_context["class_code"] if class_context else None,
+                "class_name": class_context["class_name"] if class_context else None,
+                "academic_year": _academic_year_label(class_context),
             },
             "period": self._period_label(job.parameters, from_date, to_date),
             "subject_rows": subject_rows,
@@ -583,6 +684,13 @@ class ReportsService:
                 "average_grade": round(sum(all_scores) / len(all_scores), 2) if all_scores else 0.0,
                 "attendance_rate": round(attendance_rate, 2),
                 "assignment_count": sum(len(item["assignments"]) for item in subject_rows),
+                "attendance": {
+                    "total_records": total_records,
+                    "present_records": present_records,
+                    "absent_records": absent_records,
+                    "excused_records": excused_records,
+                    "late_records": late_records,
+                },
                 "teacher_comments": comments[:5],
             },
         }
@@ -598,6 +706,10 @@ class ReportsService:
 
         from_date, to_date = self._resolve_window(job.parameters)
         from_dt, to_dt = _datetime_bounds(from_date, to_date)
+        academic_year = await self.repo.get_class_academic_year(
+            class_id=class_id,
+            school_id=job.school_id,
+        )
         student_ids = await self._class_student_ids(class_id, job)
         student_names = await self.repo.list_user_names_by_ids(student_ids)
         grade_map = await self.repo.list_class_student_grade_averages(
@@ -614,6 +726,12 @@ class ReportsService:
             from_date=from_date,
             to_date=to_date,
         )
+        subject_breakdown = await self.repo.list_class_subject_averages(
+            school_id=job.school_id,
+            class_id=class_id,
+            from_dt=from_dt,
+            to_dt=to_dt,
+        )
 
         rows = []
         for student_id in student_ids:
@@ -627,6 +745,13 @@ class ReportsService:
             )
 
         ranked = sorted(rows, key=lambda item: item["average_grade"], reverse=True)
+        ranking_rows = [
+            {
+                "rank": index + 1,
+                **item,
+            }
+            for index, item in enumerate(ranked)
+        ]
         return {
             "lang": job.parameters.get("locale", "fr"),
             "is_rtl": job.parameters.get("locale") == "ar",
@@ -636,9 +761,12 @@ class ReportsService:
                 "id": str(class_obj.id),
                 "code": class_obj.code,
                 "name": class_obj.name,
+                "academic_year": _academic_year_label(academic_year),
             },
             "period": self._period_label(job.parameters, from_date, to_date),
-            "students": rows,
+            "students": sorted(rows, key=lambda item: item["student_name"]),
+            "rankings": ranking_rows,
+            "subject_breakdown": subject_breakdown,
             "summary": {
                 "student_count": len(rows),
                 "class_average": round(
@@ -654,7 +782,11 @@ class ReportsService:
                 if rows
                 else 0.0,
                 "top_performers": ranked[:5],
-                "bottom_performers": ranked[-5:] if len(ranked) > 5 else ranked,
+                "bottom_performers": sorted(
+                    rows,
+                    key=lambda item: item["average_grade"],
+                )[:5],
+                "support_count": len([item for item in rows if item["average_grade"] < 10]),
             },
         }
 
@@ -684,10 +816,23 @@ class ReportsService:
                 "student_id": str(row.student_id),
                 "student_name": student_names.get(row.student_id, "Unknown"),
                 "total_records": int(row.total_records or 0),
+                "present": int(row.present or 0),
                 "absences": int(row.absences or 0),
                 "excused": int(row.excused or 0),
+                "late": int(row.late or 0),
                 "justified": int(row.justified or 0),
+                "pending": int(row.pending or 0),
                 "unjustified": max(int(row.absences or 0) - int(row.justified or 0), 0),
+                "attendance_rate": round(
+                    (
+                        (int(row.present or 0) + int(row.late or 0))
+                        / int(row.total_records or 1)
+                    )
+                    * 100,
+                    2,
+                )
+                if row.total_records
+                else 0.0,
             }
             for row in summary_rows
         ]
@@ -716,9 +861,21 @@ class ReportsService:
                     "label": row.session_date.isoformat(),
                     "absent": int(row.absent or 0),
                     "excused": int(row.excused or 0),
+                    "late": int(row.late or 0),
                 }
                 for row in trend_rows
             ],
+            "summary": {
+                "student_count": len(student_rows),
+                "average_attendance_rate": round(
+                    sum(item["attendance_rate"] for item in student_rows) / len(student_rows),
+                    2,
+                )
+                if student_rows
+                else 0.0,
+                "total_absences": sum(item["absences"] for item in student_rows),
+                "total_late": sum(item["late"] for item in student_rows),
+            },
         }
 
     async def _billing_statement_context(self, job: ReportJob) -> dict[str, Any]:
@@ -737,6 +894,10 @@ class ReportsService:
             from_date=from_date,
             to_date=to_date,
         )
+        children = await self.repo.list_children(
+            parent_id=parent_id,
+            school_id=job.school_id,
+        )
         invoice_ids = [invoice.id for invoice in invoices]
 
         payments_map: dict[uuid.UUID, list[dict[str, Any]]] = defaultdict(list)
@@ -753,6 +914,7 @@ class ReportsService:
             )
 
         invoice_rows = []
+        payment_history = []
         total_invoiced = 0.0
         total_outstanding = 0.0
         for invoice in invoices:
@@ -767,10 +929,21 @@ class ReportsService:
                     "issued_date": invoice.issued_date.isoformat(),
                     "due_date": invoice.due_date.isoformat(),
                     "amount": amount,
+                    "balance_due": 0.0 if invoice.status == "paid" else amount,
                     "currency": invoice.currency,
                     "payments": payments_map.get(invoice.id, []),
                 }
             )
+            for payment in payments_map.get(invoice.id, []):
+                payment_history.append(
+                    {
+                        "invoice_id": str(invoice.id),
+                        "invoice_status": invoice.status,
+                        "payment_status": payment["status"],
+                        "retry_count": payment["retry_count"],
+                        "finalized_at": payment["finalized_at"],
+                    }
+                )
 
         return {
             "lang": job.parameters.get("locale", "fr"),
@@ -782,12 +955,25 @@ class ReportsService:
                 "full_name": parent.full_name,
                 "email": parent.email,
             },
+            "students": [
+                {
+                    "id": str(child.id),
+                    "full_name": child.full_name,
+                }
+                for child in children
+            ],
             "period": self._period_label(job.parameters, from_date, to_date),
             "invoices": invoice_rows,
+            "payment_history": sorted(
+                payment_history,
+                key=lambda item: item["finalized_at"] or "",
+                reverse=True,
+            ),
             "summary": {
                 "invoice_count": len(invoice_rows),
                 "total_invoiced": round(total_invoiced, 2),
                 "outstanding_balance": round(total_outstanding, 2),
+                "payment_count": len(payment_history),
                 "currency": "MAD",
             },
         }
@@ -833,7 +1019,7 @@ class ReportsService:
     def _period_label(self, parameters: dict[str, Any], from_date: date, to_date: date) -> str:
         if parameters.get("period_label"):
             return str(parameters["period_label"])
-        return f"{from_date.isoformat()} → {to_date.isoformat()}"
+        return f"{_format_report_date(from_date)} → {_format_report_date(to_date)}"
 
     def _render_template(self, report_type: str, context: dict[str, Any]) -> str:
         template = _jinja_env.get_template(f"reports/{report_type}.html")

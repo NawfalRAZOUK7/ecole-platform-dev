@@ -1,45 +1,80 @@
 {% extends "reports/base.html" %}
 {% block content %}
 <h2>{{ class.code }} — {{ class.name }}</h2>
+<p class="meta">
+  {% if lang == 'ar' %}الفترة{% elif lang == 'en' %}Date Range{% else %}Période{% endif %}:
+  {{ period }}
+</p>
 
-<table>
+<table class="summary-table">
+  <tr>
+    <td>
+      <div class="summary-label">{% if lang == 'ar' %}التلاميذ{% elif lang == 'en' %}Students{% else %}Élèves{% endif %}</div>
+      <div class="summary-value">{{ summary.student_count }}</div>
+    </td>
+    <td>
+      <div class="summary-label">{% if lang == 'ar' %}متوسط الحضور{% elif lang == 'en' %}Average Attendance{% else %}Présence moyenne{% endif %}</div>
+      <div class="summary-value">{{ fmt_number(summary.average_attendance_rate) }}%</div>
+    </td>
+    <td>
+      <div class="summary-label">{% if lang == 'ar' %}إجمالي الغياب{% elif lang == 'en' %}Total Absences{% else %}Absences totales{% endif %}</div>
+      <div class="summary-value">{{ summary.total_absences }}</div>
+    </td>
+    <td>
+      <div class="summary-label">{% if lang == 'ar' %}إجمالي التأخر{% elif lang == 'en' %}Total Late{% else %}Retards totaux{% endif %}</div>
+      <div class="summary-value">{{ summary.total_late }}</div>
+    </td>
+  </tr>
+</table>
+
+<div class="chart-placeholder">
+  {% if lang == 'ar' %}مساحة مخصصة للرسم البياني النسبي للحضور{% elif lang == 'en' %}Attendance percentage chart placeholder{% else %}Zone réservée au graphique de présence{% endif %}
+</div>
+
+<table class="data-table">
   <thead>
     <tr>
       <th>{% if lang == 'ar' %}التلميذ{% elif lang == 'en' %}Student{% else %}Élève{% endif %}</th>
-      <th>{% if lang == 'ar' %}الحصص{% elif lang == 'en' %}Sessions{% else %}Séances{% endif %}</th>
+      <th>{% if lang == 'ar' %}حضور{% elif lang == 'en' %}Present{% else %}Présence{% endif %}</th>
       <th>{% if lang == 'ar' %}غياب{% elif lang == 'en' %}Absences{% else %}Absences{% endif %}</th>
-      <th>{% if lang == 'ar' %}مُبرر{% elif lang == 'en' %}Justified{% else %}Justifiées{% endif %}</th>
-      <th>{% if lang == 'ar' %}غير مُبرر{% elif lang == 'en' %}Unjustified{% else %}Non justifiées{% endif %}</th>
+      <th>{% if lang == 'ar' %}معذور{% elif lang == 'en' %}Excused{% else %}Excusé{% endif %}</th>
+      <th>{% if lang == 'ar' %}تأخر{% elif lang == 'en' %}Late{% else %}Retard{% endif %}</th>
+      <th>{% if lang == 'ar' %}حالة التبرير{% elif lang == 'en' %}Justification Status{% else %}Statut justificatif{% endif %}</th>
+      <th>{% if lang == 'ar' %}النسبة{% elif lang == 'en' %}Rate{% else %}Taux{% endif %}</th>
     </tr>
   </thead>
   <tbody>
     {% for row in students %}
     <tr>
       <td>{{ row.student_name }}</td>
-      <td>{{ row.total_records }}</td>
+      <td>{{ row.present }}</td>
       <td>{{ row.absences }}</td>
-      <td>{{ row.justified }}</td>
-      <td>{{ row.unjustified }}</td>
+      <td>{{ row.excused }}</td>
+      <td>{{ row.late }}</td>
+      <td>{{ row.justified }} / {{ row.pending }} / {{ row.unjustified }}</td>
+      <td>{{ fmt_number(row.attendance_rate) }}%</td>
     </tr>
     {% endfor %}
   </tbody>
 </table>
 
 <h2>{% if lang == 'ar' %}اتجاهات الغياب{% elif lang == 'en' %}Absence Trends{% else %}Tendances d'absence{% endif %}</h2>
-<table>
+<table class="data-table">
   <thead>
     <tr>
       <th>{% if lang == 'ar' %}التاريخ{% elif lang == 'en' %}Date{% else %}Date{% endif %}</th>
       <th>{% if lang == 'ar' %}غياب{% elif lang == 'en' %}Absent{% else %}Absents{% endif %}</th>
       <th>{% if lang == 'ar' %}معذور{% elif lang == 'en' %}Excused{% else %}Excusés{% endif %}</th>
+      <th>{% if lang == 'ar' %}تأخر{% elif lang == 'en' %}Late{% else %}Retards{% endif %}</th>
     </tr>
   </thead>
   <tbody>
     {% for item in trends %}
     <tr>
-      <td>{{ item.label }}</td>
+      <td>{{ fmt_date(item.label) }}</td>
       <td>{{ item.absent }}</td>
       <td>{{ item.excused }}</td>
+      <td>{{ item.late }}</td>
     </tr>
     {% endfor %}
   </tbody>

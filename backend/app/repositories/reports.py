@@ -12,6 +12,7 @@ from app.core.response import decode_cursor, encode_cursor
 from app.models.audit import AuditLog
 from app.models.billing import Invoice, PaymentAttempt
 from app.models.erp import (
+    AcademicYear,
     AbsenceJustification,
     AttendanceRecord,
     AttendanceSession,
@@ -173,6 +174,31 @@ class ReportsRepository(BaseRepository):
         )
         return result.scalar_one_or_none()
 
+    async def get_class_academic_year(
+        self,
+        *,
+        class_id: uuid.UUID,
+        school_id: uuid.UUID,
+    ) -> dict[str, Any] | None:
+        result = await self.db.execute(
+            select(
+                AcademicYear.label.label("label"),
+                AcademicYear.date_start.label("date_start"),
+                AcademicYear.date_end.label("date_end"),
+            )
+            .select_from(Class)
+            .join(AcademicYear, AcademicYear.id == Class.academic_year_id)
+            .where(Class.id == class_id, Class.school_id == school_id)
+        )
+        row = result.one_or_none()
+        if row is None:
+            return None
+        return {
+            "label": row.label,
+            "date_start": row.date_start,
+            "date_end": row.date_end,
+        }
+
     async def list_parent_child_ids(
         self,
         *,
@@ -290,6 +316,48 @@ class ReportsRepository(BaseRepository):
         )
         return list(result.scalars().all())
 
+    async def get_student_class_context(
+        self,
+        *,
+        student_id: uuid.UUID,
+        school_id: uuid.UUID,
+        period_id: uuid.UUID | None = None,
+    ) -> dict[str, Any] | None:
+        query = (
+            select(
+                Class.id.label("class_id"),
+                Class.code.label("class_code"),
+                Class.name.label("class_name"),
+                AcademicYear.label.label("academic_year_label"),
+                AcademicYear.date_start.label("academic_year_start"),
+                AcademicYear.date_end.label("academic_year_end"),
+            )
+            .select_from(Enrollment)
+            .join(Class, Class.id == Enrollment.class_id)
+            .join(AcademicYear, AcademicYear.id == Class.academic_year_id)
+            .where(
+                Enrollment.student_id == student_id,
+                Enrollment.school_id == school_id,
+                Enrollment.status == "active",
+            )
+            .order_by(Enrollment.created_at.desc())
+            .limit(1)
+        )
+        if period_id is not None:
+            query = query.where(Enrollment.period_id == period_id)
+        result = await self.db.execute(query)
+        row = result.one_or_none()
+        if row is None:
+            return None
+        return {
+            "class_id": row.class_id,
+            "class_code": row.class_code,
+            "class_name": row.class_name,
+            "academic_year_label": row.academic_year_label,
+            "academic_year_start": row.academic_year_start,
+            "academic_year_end": row.academic_year_end,
+        }
+
     async def list_teacher_class_ids(
         self,
         *,
@@ -368,13 +436,14 @@ class ReportsRepository(BaseRepository):
         student_id: uuid.UUID,
         from_date: date,
         to_date: date,
-    ) -> tuple[int, int, int, int]:
+    ) -> tuple[int, int, int, int, int]:
         result = await self.db.execute(
             select(
                 func.count(AttendanceRecord.id).label("total"),
                 func.count().filter(AttendanceRecord.status == "present").label("present"),
                 func.count().filter(AttendanceRecord.status == "absent").label("absent"),
                 func.count().filter(AttendanceRecord.status == "excused").label("excused"),
+                func.count().filter(AttendanceRecord.status == "late").label("late"),
             )
             .select_from(AttendanceRecord)
             .join(
@@ -394,7 +463,44 @@ class ReportsRepository(BaseRepository):
             int(row.present or 0),
             int(row.absent or 0),
             int(row.excused or 0),
+            int(row.late or 0),
         )
+
+    async def list_class_subject_averages(
+        self,
+        *,
+        school_id: uuid.UUID,
+        class_id: uuid.UUID,
+        from_dt: datetime,
+        to_dt: datetime,
+    ) -> list[dict[str, Any]]:
+        result = await self.db.execute(
+            select(
+                Course.title.label("subject"),
+                func.avg(Grade.score).label("average_grade"),
+                func.count(Grade.id).label("grade_count"),
+            )
+            .select_from(Grade)
+            .join(Submission, Submission.id == Grade.submission_id)
+            .join(Assignment, Assignment.id == Submission.assignment_id)
+            .join(Course, Course.id == Assignment.course_id)
+            .where(
+                Course.school_id == school_id,
+                Course.class_id == class_id,
+                Grade.created_at >= from_dt,
+                Grade.created_at < to_dt,
+            )
+            .group_by(Course.title)
+            .order_by(Course.title.asc())
+        )
+        return [
+            {
+                "subject": row.subject,
+                "average_grade": float(row.average_grade or 0),
+                "grade_count": int(row.grade_count or 0),
+            }
+            for row in result
+        ]
 
     async def list_class_student_grade_averages(
         self,
@@ -446,6 +552,7 @@ class ReportsRepository(BaseRepository):
                 AttendanceRecord.student_id,
                 func.count(AttendanceRecord.id).label("total"),
                 func.count().filter(AttendanceRecord.status == "present").label("present"),
+                func.count().filter(AttendanceRecord.status == "late").label("late"),
             )
             .select_from(AttendanceRecord)
             .join(
@@ -462,7 +569,7 @@ class ReportsRepository(BaseRepository):
             .group_by(AttendanceRecord.student_id)
         )
         return {
-            row.student_id: round(((row.present or 0) / row.total) * 100, 2)
+            row.student_id: round((((row.present or 0) + (row.late or 0)) / row.total) * 100, 2)
             if row.total
             else 0.0
             for row in result
@@ -483,9 +590,12 @@ class ReportsRepository(BaseRepository):
             select(
                 AttendanceRecord.student_id,
                 func.count(AttendanceRecord.id).label("total_records"),
+                func.count().filter(AttendanceRecord.status == "present").label("present"),
                 func.count().filter(AttendanceRecord.status == "absent").label("absences"),
                 func.count().filter(AttendanceRecord.status == "excused").label("excused"),
+                func.count().filter(AttendanceRecord.status == "late").label("late"),
                 func.count().filter(AbsenceJustification.status == "justified").label("justified"),
+                func.count().filter(AbsenceJustification.status == "pending").label("pending"),
             )
             .select_from(AttendanceRecord)
             .join(
@@ -520,6 +630,7 @@ class ReportsRepository(BaseRepository):
                 AttendanceSession.session_date,
                 func.count().filter(AttendanceRecord.status == "absent").label("absent"),
                 func.count().filter(AttendanceRecord.status == "excused").label("excused"),
+                func.count().filter(AttendanceRecord.status == "late").label("late"),
             )
             .select_from(AttendanceRecord)
             .join(

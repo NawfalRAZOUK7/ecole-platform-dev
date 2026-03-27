@@ -1,63 +1,128 @@
 {% extends "reports/base.html" %}
 {% block content %}
-<h2>{% if lang == 'ar' %}معلومات التلميذ{% elif lang == 'en' %}Student{% else %}Élève{% endif %}</h2>
-<p><strong>{{ student.full_name }}</strong> <span class="muted">({{ student.email }})</span></p>
+<table class="plain-table">
+  <tr>
+    <td style="width: 72%;">
+      <h2>{% if lang == 'ar' %}بطاقة التلميذ{% elif lang == 'en' %}Student Profile{% else %}Profil de l'élève{% endif %}</h2>
+      <table class="kv-table">
+        <tr>
+          <th>{% if lang == 'ar' %}الاسم الكامل{% elif lang == 'en' %}Full Name{% else %}Nom complet{% endif %}</th>
+          <td>{{ student.full_name }}</td>
+        </tr>
+        <tr>
+          <th>{% if lang == 'ar' %}البريد الإلكتروني{% elif lang == 'en' %}Email{% else %}E-mail{% endif %}</th>
+          <td>{{ student.email }}</td>
+        </tr>
+        <tr>
+          <th>{% if lang == 'ar' %}القسم{% elif lang == 'en' %}Class{% else %}Classe{% endif %}</th>
+          <td>
+            {% if student.class_code or student.class_name %}
+            {{ student.class_code }}{% if student.class_code and student.class_name %} — {% endif %}{{ student.class_name }}
+            {% else %}
+            —
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <th>{% if lang == 'ar' %}السنة الدراسية{% elif lang == 'en' %}Academic Year{% else %}Année scolaire{% endif %}</th>
+          <td>{{ student.academic_year or "—" }}</td>
+        </tr>
+      </table>
+    </td>
+    <td style="width: 28%; {% if is_rtl %}padding-right: 12px;{% else %}padding-left: 12px;{% endif %}">
+      <div class="photo-box">
+        {% if lang == 'ar' %}صورة التلميذ{% elif lang == 'en' %}Student Photo{% else %}Photo élève{% endif %}
+      </div>
+    </td>
+  </tr>
+</table>
 
-<div class="cards">
-  <div class="card">
-    <div class="card-label">{% if lang == 'ar' %}المعدل{% elif lang == 'en' %}Average{% else %}Moyenne{% endif %}</div>
-    <div class="card-value">{{ summary.average_grade }}</div>
-  </div>
-  <div class="card">
-    <div class="card-label">{% if lang == 'ar' %}نسبة الحضور{% elif lang == 'en' %}Attendance{% else %}Présence{% endif %}</div>
-    <div class="card-value">{{ summary.attendance_rate }}%</div>
-  </div>
-  <div class="card">
-    <div class="card-label">{% if lang == 'ar' %}الواجبات{% elif lang == 'en' %}Assignments{% else %}Travaux notés{% endif %}</div>
-    <div class="card-value">{{ summary.assignment_count }}</div>
-  </div>
-</div>
+<table class="summary-table">
+  <tr>
+    <td>
+      <div class="summary-label">{% if lang == 'ar' %}المعدل العام{% elif lang == 'en' %}Overall Average{% else %}Moyenne générale{% endif %}</div>
+      <div class="summary-value">{{ fmt_grade(summary.average_grade) }}</div>
+    </td>
+    <td>
+      <div class="summary-label">{% if lang == 'ar' %}نسبة الحضور{% elif lang == 'en' %}Attendance Rate{% else %}Taux de présence{% endif %}</div>
+      <div class="summary-value">{{ fmt_number(summary.attendance_rate) }}%</div>
+    </td>
+    <td>
+      <div class="summary-label">{% if lang == 'ar' %}عدد الفروض{% elif lang == 'en' %}Assignments{% else %}Évaluations{% endif %}</div>
+      <div class="summary-value">{{ summary.assignment_count }}</div>
+    </td>
+  </tr>
+</table>
 
 <h2>{% if lang == 'ar' %}النتائج حسب المادة{% elif lang == 'en' %}Grades by Subject{% else %}Résultats par matière{% endif %}</h2>
-<table>
+<table class="data-table">
   <thead>
     <tr>
       <th>{% if lang == 'ar' %}المادة{% elif lang == 'en' %}Subject{% else %}Matière{% endif %}</th>
-      <th>{% if lang == 'ar' %}المعدل{% elif lang == 'en' %}Average{% else %}Moyenne{% endif %}</th>
-      <th>{% if lang == 'ar' %}الواجبات{% elif lang == 'en' %}Assignments{% else %}Évaluations{% endif %}</th>
-      <th>{% if lang == 'ar' %}تعليقات المدرس{% elif lang == 'en' %}Teacher Comments{% else %}Commentaires{% endif %}</th>
+      <th>{% if lang == 'ar' %}النقطة /20{% elif lang == 'en' %}Grade /20{% else %}Note /20{% endif %}</th>
+      <th>{% if lang == 'ar' %}معدل القسم{% elif lang == 'en' %}Class Average{% else %}Moyenne classe{% endif %}</th>
+      <th>{% if lang == 'ar' %}تعليق المدرس{% elif lang == 'en' %}Teacher Comment{% else %}Commentaire enseignant{% endif %}</th>
     </tr>
   </thead>
   <tbody>
     {% for row in subject_rows %}
     <tr>
       <td>{{ row.subject }}</td>
-      <td>{{ row.average }}</td>
+      <td>{{ fmt_grade(row.average) }}</td>
+      <td>{% if row.class_average is not none %}{{ fmt_grade(row.class_average) }}{% else %}—{% endif %}</td>
       <td>
-        <ul class="list">
-          {% for item in row.assignments %}
-          <li>{{ item.title }}: {{ item.score }}/{{ item.total_points }}</li>
-          {% endfor %}
-        </ul>
-      </td>
-      <td>
-        <ul class="list">
-          {% for comment in row.comments %}
-          <li>{{ comment }}</li>
-          {% endfor %}
-        </ul>
+        {% if row.comments %}
+        {{ row.comments | join("; ") }}
+        {% else %}
+        —
+        {% endif %}
       </td>
     </tr>
     {% endfor %}
   </tbody>
 </table>
 
-{% if summary.teacher_comments %}
-<h2>{% if lang == 'ar' %}ملخص الفترة{% elif lang == 'en' %}Period Summary{% else %}Synthèse de la période{% endif %}</h2>
-<ul class="list">
-  {% for comment in summary.teacher_comments %}
-  <li>{{ comment }}</li>
-  {% endfor %}
-</ul>
-{% endif %}
+<div class="section-box">
+  <h3>{% if lang == 'ar' %}ملخص الحضور{% elif lang == 'en' %}Attendance Summary{% else %}Synthèse de présence{% endif %}</h3>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{% if lang == 'ar' %}إجمالي الحصص{% elif lang == 'en' %}Total Sessions{% else %}Total séances{% endif %}</th>
+        <th>{% if lang == 'ar' %}حضور{% elif lang == 'en' %}Present{% else %}Présent{% endif %}</th>
+        <th>{% if lang == 'ar' %}غياب{% elif lang == 'en' %}Absent{% else %}Absent{% endif %}</th>
+        <th>{% if lang == 'ar' %}معذور{% elif lang == 'en' %}Excused{% else %}Excusé{% endif %}</th>
+        <th>{% if lang == 'ar' %}تأخر{% elif lang == 'en' %}Late{% else %}Retard{% endif %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>{{ summary.attendance.total_records }}</td>
+        <td>{{ summary.attendance.present_records }}</td>
+        <td>{{ summary.attendance.absent_records }}</td>
+        <td>{{ summary.attendance.excused_records }}</td>
+        <td>{{ summary.attendance.late_records }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section-box">
+  <h3>{% if lang == 'ar' %}ملاحظات المدرسين{% elif lang == 'en' %}Teacher Remarks{% else %}Remarques des enseignants{% endif %}</h3>
+  {% if summary.teacher_comments %}
+  <ul class="list">
+    {% for comment in summary.teacher_comments %}
+    <li>{{ comment }}</li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="muted">—</p>
+  {% endif %}
+</div>
+
+<div class="section-box">
+  <h3>{% if lang == 'ar' %}توقيع المدير{% elif lang == 'en' %}Principal Signature{% else %}Signature du directeur{% endif %}</h3>
+  <div class="signature-box">
+    {% if lang == 'ar' %}ختم وتوقيع الإدارة{% elif lang == 'en' %}Stamp and signature{% else %}Cachet et signature{% endif %}
+  </div>
+</div>
 {% endblock %}

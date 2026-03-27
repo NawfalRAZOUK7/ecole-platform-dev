@@ -1,27 +1,38 @@
 {% extends "reports/base.html" %}
 {% block content %}
 <h2>{{ class.code }} — {{ class.name }}</h2>
+<p class="meta">
+  {% if lang == 'ar' %}السنة الدراسية{% elif lang == 'en' %}Academic Year{% else %}Année scolaire{% endif %}:
+  {{ class.academic_year or "—" }}
+</p>
 
-<div class="cards">
-  <div class="card">
-    <div class="card-label">{% if lang == 'ar' %}عدد التلاميذ{% elif lang == 'en' %}Students{% else %}Élèves{% endif %}</div>
-    <div class="card-value">{{ summary.student_count }}</div>
-  </div>
-  <div class="card">
-    <div class="card-label">{% if lang == 'ar' %}معدل القسم{% elif lang == 'en' %}Class Average{% else %}Moyenne de classe{% endif %}</div>
-    <div class="card-value">{{ summary.class_average }}</div>
-  </div>
-  <div class="card">
-    <div class="card-label">{% if lang == 'ar' %}معدل الحضور{% elif lang == 'en' %}Attendance{% else %}Présence moyenne{% endif %}</div>
-    <div class="card-value">{{ summary.attendance_average }}%</div>
-  </div>
-</div>
+<table class="summary-table">
+  <tr>
+    <td>
+      <div class="summary-label">{% if lang == 'ar' %}عدد التلاميذ{% elif lang == 'en' %}Students{% else %}Élèves{% endif %}</div>
+      <div class="summary-value">{{ summary.student_count }}</div>
+    </td>
+    <td>
+      <div class="summary-label">{% if lang == 'ar' %}معدل القسم{% elif lang == 'en' %}Class Average{% else %}Moyenne classe{% endif %}</div>
+      <div class="summary-value">{{ fmt_grade(summary.class_average) }}</div>
+    </td>
+    <td>
+      <div class="summary-label">{% if lang == 'ar' %}الحضور المتوسط{% elif lang == 'en' %}Average Attendance{% else %}Présence moyenne{% endif %}</div>
+      <div class="summary-value">{{ fmt_number(summary.attendance_average) }}%</div>
+    </td>
+    <td>
+      <div class="summary-label">{% if lang == 'ar' %}حالات الدعم{% elif lang == 'en' %}Support Cases{% else %}Élèves à soutenir{% endif %}</div>
+      <div class="summary-value">{{ summary.support_count }}</div>
+    </td>
+  </tr>
+</table>
 
-<table>
+<h2>{% if lang == 'ar' %}لائحة التلاميذ{% elif lang == 'en' %}Student Roster{% else %}Liste des élèves{% endif %}</h2>
+<table class="data-table">
   <thead>
     <tr>
       <th>{% if lang == 'ar' %}التلميذ{% elif lang == 'en' %}Student{% else %}Élève{% endif %}</th>
-      <th>{% if lang == 'ar' %}المعدل{% elif lang == 'en' %}Average Grade{% else %}Moyenne{% endif %}</th>
+      <th>{% if lang == 'ar' %}المعدل /20{% elif lang == 'en' %}Average /20{% else %}Moyenne /20{% endif %}</th>
       <th>{% if lang == 'ar' %}الحضور{% elif lang == 'en' %}Attendance{% else %}Présence{% endif %}</th>
     </tr>
   </thead>
@@ -29,24 +40,74 @@
     {% for student in students %}
     <tr>
       <td>{{ student.student_name }}</td>
-      <td>{{ student.average_grade }}</td>
-      <td>{{ student.attendance_rate }}%</td>
+      <td>{{ fmt_grade(student.average_grade) }}</td>
+      <td>{{ fmt_number(student.attendance_rate) }}%</td>
     </tr>
     {% endfor %}
   </tbody>
 </table>
 
-<h2>{% if lang == 'ar' %}أفضل النتائج{% elif lang == 'en' %}Top Performers{% else %}Top performers{% endif %}</h2>
-<ul class="list">
-  {% for item in summary.top_performers %}
-  <li>{{ item.student_name }} — {{ item.average_grade }}</li>
-  {% endfor %}
-</ul>
+<h2>{% if lang == 'ar' %}تفصيل المواد{% elif lang == 'en' %}Subject Breakdown{% else %}Détail par matière{% endif %}</h2>
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>{% if lang == 'ar' %}المادة{% elif lang == 'en' %}Subject{% else %}Matière{% endif %}</th>
+      <th>{% if lang == 'ar' %}المعدل /20{% elif lang == 'en' %}Average /20{% else %}Moyenne /20{% endif %}</th>
+      <th>{% if lang == 'ar' %}عدد الفروض{% elif lang == 'en' %}Assessments{% else %}Évaluations{% endif %}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in subject_breakdown %}
+    <tr>
+      <td>{{ row.subject }}</td>
+      <td>{{ fmt_grade(row.average_grade) }}</td>
+      <td>{{ row.grade_count }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 
-<h2>{% if lang == 'ar' %}نتائج تحتاج دعما{% elif lang == 'en' %}Students Requiring Support{% else %}Élèves à soutenir{% endif %}</h2>
-<ul class="list">
-  {% for item in summary.bottom_performers %}
-  <li>{{ item.student_name }} — {{ item.average_grade }}</li>
-  {% endfor %}
-</ul>
+<h2>{% if lang == 'ar' %}جدول الترتيب{% elif lang == 'en' %}Ranking Table{% else %}Tableau de classement{% endif %}</h2>
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>{% if lang == 'ar' %}الرتبة{% elif lang == 'en' %}Rank{% else %}Rang{% endif %}</th>
+      <th>{% if lang == 'ar' %}التلميذ{% elif lang == 'en' %}Student{% else %}Élève{% endif %}</th>
+      <th>{% if lang == 'ar' %}المعدل{% elif lang == 'en' %}Average{% else %}Moyenne{% endif %}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in rankings %}
+    <tr>
+      <td>{{ item.rank }}</td>
+      <td>{{ item.student_name }}</td>
+      <td>{{ fmt_grade(item.average_grade) }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="section-box">
+  <h3>{% if lang == 'ar' %}إحصاءات القسم{% elif lang == 'en' %}Class Statistics{% else %}Statistiques de classe{% endif %}</h3>
+  <p>
+    <span class="badge">
+      {% if lang == 'ar' %}أفضل النتائج{% elif lang == 'en' %}Top Performers{% else %}Meilleurs résultats{% endif %}
+    </span>
+  </p>
+  <ul class="list">
+    {% for item in summary.top_performers %}
+    <li>{{ item.student_name }} — {{ fmt_grade(item.average_grade) }}</li>
+    {% endfor %}
+  </ul>
+  <p style="margin-top: 12px;">
+    <span class="badge">
+      {% if lang == 'ar' %}تتبع ودعم{% elif lang == 'en' %}Support Tracking{% else %}Suivi et soutien{% endif %}
+    </span>
+  </p>
+  <ul class="list">
+    {% for item in summary.bottom_performers %}
+    <li>{{ item.student_name }} — {{ fmt_grade(item.average_grade) }}</li>
+    {% endfor %}
+  </ul>
+</div>
 {% endblock %}

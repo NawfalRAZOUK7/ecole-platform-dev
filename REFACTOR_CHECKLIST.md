@@ -110,9 +110,9 @@
 ## Phase 2: Fix Missing Features from Phases 14-16
 
 ### Phase 14 Gaps
-- [ ] Create PDF Jinja2 templates: student report card, class summary, attendance, billing
-- [ ] Add Arabic RTL layout support in PDF templates
-- [ ] Add weekly aggregation to analytics endpoints
+- [x] Create PDF Jinja2 templates: student report card, class summary, attendance, billing
+- [x] Add Arabic RTL layout support in PDF templates
+- [x] Add weekly aggregation to analytics endpoints
 - [ ] **Review & commit myself**: `feat(backend): add PDF report templates and Arabic RTL support`
 
 ### Phase 15 Gaps

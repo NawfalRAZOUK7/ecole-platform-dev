@@ -134,16 +134,19 @@ async def analytics_engagement(
     db: AsyncSession = Depends(get_db),
 ):
     service = DashboardAnalyticsService(db)
+    window_period = period if period in {"this_week", "this_month", "this_period"} else None
+    bucket_period = period if period in {"daily", "weekly", "monthly"} else "weekly"
     start_date, end_date = service.resolve_window(
         from_date=from_date,
         to_date=to_date,
-        period=period,
+        period=window_period,
     )
     return success_response(
         await service.get_engagement(
             school_id=auth.school_id,
             from_date=start_date,
             to_date=end_date,
+            period=bucket_period,
             compare=compare,
         )
     )

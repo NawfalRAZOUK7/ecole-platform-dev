@@ -44,6 +44,10 @@ def _comparison_metric(current: float, previous: float | None) -> dict[str, Any]
     }
 
 
+def _series_bucket(period: str | None, *, default: str = "weekly") -> str:
+    return period if period in {"daily", "weekly", "monthly"} else default
+
+
 class DashboardAnalyticsService:
     """Cached analytics aggregations for the admin dashboard."""
 
@@ -409,6 +413,7 @@ class DashboardAnalyticsService:
         school_id: uuid.UUID,
         from_date: date,
         to_date: date,
+        period: str,
         compare: bool,
     ) -> dict[str, Any]:
         cache_key = self._cache_key(
@@ -416,6 +421,7 @@ class DashboardAnalyticsService:
             "engagement",
             from_date=from_date.isoformat(),
             to_date=to_date.isoformat(),
+            period=period,
             compare=str(compare).lower(),
         )
         cached = await self._get_cached(cache_key)
@@ -423,10 +429,27 @@ class DashboardAnalyticsService:
             return cached
 
         from_dt, to_dt = _utc_day_bounds(from_date, to_date)
+        bucket = {"daily": "day", "weekly": "week", "monthly": "month"}.get(
+            _series_bucket(period),
+            "week",
+        )
         registered, active, engaged = await self.repo.engagement_summary(
             school_id=school_id,
             from_dt=from_dt,
             to_dt=to_dt,
+        )
+        active_series = await self.repo.list_active_user_series(
+            school_id=school_id,
+            from_dt=from_dt,
+            to_dt=to_dt,
+            bucket=bucket,
+        )
+        engaged_series = await self.repo.list_engaged_user_series(
+            school_id=school_id,
+            from_dt=from_dt,
+            to_dt=to_dt,
+            bucket=bucket,
+            outcome="success",
         )
         mau_from = max(to_date - timedelta(days=29), from_date)
         mau = await self.repo.count_active_users(
@@ -467,13 +490,50 @@ class DashboardAnalyticsService:
                 school_id=school_id,
                 from_date=from_date - timedelta(days=period_days),
                 to_date=from_date - timedelta(days=1),
+                period=period,
                 compare=False,
             )
             previous_active = previous_data["summary"]["active_users"]["current"]
 
+        series_map: dict[str, dict[str, Any]] = {}
+        for row in active_series:
+            label = row["bucket"].date().isoformat()
+            series_map[label] = {
+                "label": label,
+                "active_users": row["active_users"],
+                "engaged_users": 0,
+            }
+        for row in engaged_series:
+            label = row["bucket"].date().isoformat()
+            bucket_item = series_map.setdefault(
+                label,
+                {
+                    "label": label,
+                    "active_users": 0,
+                    "engaged_users": 0,
+                },
+            )
+            bucket_item["engaged_users"] = row["engaged_users"]
+
+        series = []
+        for label in sorted(series_map):
+            item = series_map[label]
+            active_users = item["active_users"]
+            engaged_users = item["engaged_users"]
+            series.append(
+                {
+                    **item,
+                    "engagement_rate": round(
+                        (engaged_users / active_users) * 100 if active_users else 0.0,
+                        2,
+                    ),
+                }
+            )
+
         response = {
             "from_date": from_date.isoformat(),
             "to_date": to_date.isoformat(),
+            "period": period,
             "summary": {
                 "registered_users": registered,
                 "dau": active,
@@ -486,6 +546,7 @@ class DashboardAnalyticsService:
                 {"label": "active", "value": active},
                 {"label": "engaged", "value": engaged},
             ],
+            "series": series,
             "feature_adoption": feature_adoption,
         }
         await self._set_cached(cache_key, response)

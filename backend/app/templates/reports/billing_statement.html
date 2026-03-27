@@ -1,49 +1,108 @@
 {% extends "reports/base.html" %}
 {% block content %}
-<h2>{{ parent.full_name }}</h2>
-<p class="muted">{{ parent.email }}</p>
+<h2>{% if lang == 'ar' %}كشف الفوترة{% elif lang == 'en' %}Billing Statement{% else %}Relevé de facturation{% endif %}</h2>
+<table class="kv-table">
+  <tr>
+    <th>{% if lang == 'ar' %}ولي الأمر{% elif lang == 'en' %}Parent{% else %}Parent{% endif %}</th>
+    <td>{{ parent.full_name }}</td>
+  </tr>
+  <tr>
+    <th>{% if lang == 'ar' %}البريد الإلكتروني{% elif lang == 'en' %}Email{% else %}E-mail{% endif %}</th>
+    <td>{{ parent.email }}</td>
+  </tr>
+  <tr>
+    <th>{% if lang == 'ar' %}التلميذ/التلاميذ{% elif lang == 'en' %}Student(s){% else %}Élève(s){% endif %}</th>
+    <td>
+      {% if students %}
+      {{ students | map(attribute='full_name') | join(", ") }}
+      {% else %}
+      —
+      {% endif %}
+    </td>
+  </tr>
+</table>
 
-<div class="cards">
-  <div class="card">
-    <div class="card-label">{% if lang == 'ar' %}الفواتير{% elif lang == 'en' %}Invoices{% else %}Factures{% endif %}</div>
-    <div class="card-value">{{ summary.invoice_count }}</div>
-  </div>
-  <div class="card">
-    <div class="card-label">{% if lang == 'ar' %}المبلغ المفوتر{% elif lang == 'en' %}Invoiced{% else %}Montant facturé{% endif %}</div>
-    <div class="card-value">{{ summary.total_invoiced }} {{ summary.currency }}</div>
-  </div>
-  <div class="card">
-    <div class="card-label">{% if lang == 'ar' %}الرصيد المستحق{% elif lang == 'en' %}Outstanding{% else %}Solde restant{% endif %}</div>
-    <div class="card-value">{{ summary.outstanding_balance }} {{ summary.currency }}</div>
-  </div>
-</div>
+<table class="summary-table">
+  <tr>
+    <td>
+      <div class="summary-label">{% if lang == 'ar' %}الفواتير{% elif lang == 'en' %}Invoices{% else %}Factures{% endif %}</div>
+      <div class="summary-value">{{ summary.invoice_count }}</div>
+    </td>
+    <td>
+      <div class="summary-label">{% if lang == 'ar' %}المبلغ المفوتر{% elif lang == 'en' %}Invoiced{% else %}Montant facturé{% endif %}</div>
+      <div class="summary-value">{{ fmt_number(summary.total_invoiced) }} {{ summary.currency }}</div>
+    </td>
+    <td>
+      <div class="summary-label">{% if lang == 'ar' %}الرصيد المستحق{% elif lang == 'en' %}Balance Due{% else %}Solde dû{% endif %}</div>
+      <div class="summary-value">{{ fmt_number(summary.outstanding_balance) }} {{ summary.currency }}</div>
+    </td>
+    <td>
+      <div class="summary-label">{% if lang == 'ar' %}عمليات الدفع{% elif lang == 'en' %}Payments{% else %}Paiements{% endif %}</div>
+      <div class="summary-value">{{ summary.payment_count }}</div>
+    </td>
+  </tr>
+</table>
 
-<table>
+<table class="data-table">
   <thead>
     <tr>
       <th>{% if lang == 'ar' %}الفاتورة{% elif lang == 'en' %}Invoice{% else %}Facture{% endif %}</th>
       <th>{% if lang == 'ar' %}الحالة{% elif lang == 'en' %}Status{% else %}Statut{% endif %}</th>
-      <th>{% if lang == 'ar' %}التواريخ{% elif lang == 'en' %}Dates{% else %}Dates{% endif %}</th>
+      <th>{% if lang == 'ar' %}تاريخ الإصدار{% elif lang == 'en' %}Issued{% else %}Émise le{% endif %}</th>
+      <th>{% if lang == 'ar' %}تاريخ الاستحقاق{% elif lang == 'en' %}Due{% else %}Échéance{% endif %}</th>
       <th>{% if lang == 'ar' %}المبلغ{% elif lang == 'en' %}Amount{% else %}Montant{% endif %}</th>
-      <th>{% if lang == 'ar' %}الدفعات{% elif lang == 'en' %}Payments{% else %}Paiements{% endif %}</th>
+      <th>{% if lang == 'ar' %}الرصيد{% elif lang == 'en' %}Balance{% else %}Solde{% endif %}</th>
+      <th>{% if lang == 'ar' %}الدفعات المستلمة{% elif lang == 'en' %}Payments Received{% else %}Paiements reçus{% endif %}</th>
     </tr>
   </thead>
   <tbody>
     {% for invoice in invoices %}
     <tr>
       <td>{{ invoice.id }}</td>
-      <td>{{ invoice.status }}</td>
-      <td>{{ invoice.issued_date }} → {{ invoice.due_date }}</td>
-      <td>{{ invoice.amount }} {{ invoice.currency }}</td>
+      <td>{{ invoice.status | upper }}</td>
+      <td>{{ fmt_date(invoice.issued_date) }}</td>
+      <td>{{ fmt_date(invoice.due_date) }}</td>
+      <td>{{ fmt_number(invoice.amount) }} {{ invoice.currency }}</td>
+      <td>{{ fmt_number(invoice.balance_due) }} {{ invoice.currency }}</td>
       <td>
         <ul class="list">
           {% for payment in invoice.payments %}
-          <li>{{ payment.status }}{% if payment.finalized_at %} — {{ payment.finalized_at }}{% endif %}</li>
+          <li>{{ payment.status | upper }}{% if payment.finalized_at %} — {{ fmt_datetime(payment.finalized_at) }}{% endif %}</li>
           {% endfor %}
+          {% if not invoice.payments %}
+          <li>—</li>
+          {% endif %}
         </ul>
       </td>
     </tr>
     {% endfor %}
+  </tbody>
+</table>
+
+<h2>{% if lang == 'ar' %}سجل الدفعات{% elif lang == 'en' %}Payment History{% else %}Historique des paiements{% endif %}</h2>
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>{% if lang == 'ar' %}الفاتورة{% elif lang == 'en' %}Invoice{% else %}Facture{% endif %}</th>
+      <th>{% if lang == 'ar' %}حالة الدفع{% elif lang == 'en' %}Payment Status{% else %}Statut paiement{% endif %}</th>
+      <th>{% if lang == 'ar' %}عدد المحاولات{% elif lang == 'en' %}Retry Count{% else %}Relances{% endif %}</th>
+      <th>{% if lang == 'ar' %}آخر تحديث{% elif lang == 'en' %}Updated At{% else %}Mis à jour{% endif %}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in payment_history %}
+    <tr>
+      <td>{{ item.invoice_id }}</td>
+      <td>{{ item.payment_status | upper }}</td>
+      <td>{{ item.retry_count }}</td>
+      <td>{{ fmt_datetime(item.finalized_at) }}</td>
+    </tr>
+    {% endfor %}
+    {% if not payment_history %}
+    <tr>
+      <td colspan="4" class="align-center muted">—</td>
+    </tr>
+    {% endif %}
   </tbody>
 </table>
 {% endblock %}

@@ -9,45 +9,91 @@
     }
     body {
       font-family: "Noto Sans", "Arial", sans-serif;
+      margin: 0;
       color: #1f2937;
       font-size: 12px;
       line-height: 1.45;
+      background: #ffffff;
       {% if is_rtl %}direction: rtl;{% endif %}
     }
-    h1, h2, h3 {
-      margin: 0 0 10px;
+    h1, h2, h3, h4 {
+      margin: 0 0 8px;
       color: #0f3d66;
     }
     h1 {
       font-size: 22px;
+      letter-spacing: 0.02em;
     }
     h2 {
       font-size: 16px;
       margin-top: 18px;
     }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      border-bottom: 2px solid #dbe7f2;
-      padding-bottom: 12px;
+    h3 {
+      font-size: 13px;
+      margin-top: 14px;
+    }
+    p {
+      margin: 0 0 8px;
+    }
+    .report-frame {
+      border: 1px solid #cbd5e1;
+      padding: 14px;
+    }
+    .header-table,
+    .summary-table,
+    .plain-table,
+    .data-table,
+    .kv-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .header-table {
       margin-bottom: 16px;
+      border-bottom: 2px solid #dbe7f2;
+    }
+    .header-table td {
+      border: none;
+      padding: 0 0 12px;
+      vertical-align: top;
+    }
+    .logo-cell {
+      width: 90px;
+      {% if is_rtl %}padding-left: 12px;{% else %}padding-right: 12px;{% endif %}
+    }
+    .logo-box {
+      height: 76px;
+      border: 1px dashed #94a3b8;
+      background: #f8fafc;
+      color: #64748b;
+      text-align: center;
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 76px;
+    }
+    .header-meta {
+      text-align: {% if is_rtl %}left{% else %}right{% endif %};
     }
     .meta {
       color: #6b7280;
       font-size: 11px;
     }
+    .subtle {
+      color: #475569;
+    }
     .cards {
-      display: flex;
-      gap: 10px;
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+      border-spacing: 8px 0;
       margin: 12px 0 18px;
     }
     .card {
-      flex: 1;
+      display: table-cell;
       background: #f7fafc;
       border: 1px solid #dbe7f2;
       border-radius: 8px;
       padding: 10px;
+      vertical-align: top;
     }
     .card-label {
       color: #64748b;
@@ -61,21 +107,61 @@
       font-weight: 700;
       color: #0f172a;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
+    .summary-table {
+      margin: 10px 0 18px;
+    }
+    .summary-table td {
+      width: 25%;
+      border: 1px solid #dbe7f2;
+      background: #f8fafc;
+      padding: 10px;
+      vertical-align: top;
+    }
+    .summary-label {
+      color: #64748b;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+    .summary-value {
+      font-size: 17px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .data-table,
+    .kv-table {
       margin-top: 8px;
     }
-    th, td {
+    .data-table th,
+    .data-table td,
+    .kv-table th,
+    .kv-table td {
       border: 1px solid #dbe7f2;
       padding: 7px 8px;
       vertical-align: top;
       text-align: {% if is_rtl %}right{% else %}left{% endif %};
     }
-    th {
+    .data-table th,
+    .kv-table th {
       background: #eff6ff;
       color: #0f3d66;
       font-weight: 700;
+    }
+    .kv-table th {
+      width: 28%;
+    }
+    .plain-table td,
+    .plain-table th {
+      border: none;
+      padding: 0;
+      vertical-align: top;
+    }
+    .section-box {
+      border: 1px solid #dbe7f2;
+      padding: 12px;
+      margin-top: 12px;
+      background: #ffffff;
     }
     .list {
       margin: 8px 0 0;
@@ -89,16 +175,70 @@
     .muted {
       color: #64748b;
     }
+    .photo-box,
+    .signature-box,
+    .chart-placeholder {
+      border: 1px dashed #94a3b8;
+      background: #f8fafc;
+      color: #64748b;
+      text-align: center;
+    }
+    .photo-box {
+      height: 120px;
+      line-height: 120px;
+      font-weight: 700;
+    }
+    .signature-box {
+      height: 72px;
+      line-height: 72px;
+      margin-top: 8px;
+    }
+    .chart-placeholder {
+      height: 90px;
+      line-height: 90px;
+      margin-top: 12px;
+      font-style: italic;
+    }
+    .badge {
+      display: inline-block;
+      border: 1px solid #bfdbfe;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .align-center {
+      text-align: center;
+    }
   </style>
 </head>
-<body>
-  <div class="header">
-    <div>
-      <h1>{{ report_title }}</h1>
-      <div class="meta">{{ period }}</div>
-    </div>
-    <div class="meta">{{ generated_at }}</div>
+<body {% if is_rtl %}dir="rtl"{% endif %}>
+  <div class="report-frame">
+    <table class="header-table">
+      <tr>
+        <td class="logo-cell">
+          <div class="logo-box">
+            {% if lang == 'ar' %}شعار المدرسة{% elif lang == 'en' %}School Logo{% else %}Logo École{% endif %}
+          </div>
+        </td>
+        <td>
+          <h1>{{ report_title }}</h1>
+          <div class="meta">{{ period }}</div>
+          <div class="meta subtle">
+            {% if lang == 'ar' %}نموذج رسمي للمنصة التعليمية{% elif lang == 'en' %}Official École Platform report{% else %}Rapport officiel École Platform{% endif %}
+          </div>
+        </td>
+        <td class="header-meta">
+          <div class="meta">
+            {% if lang == 'ar' %}تاريخ الإنشاء{% elif lang == 'en' %}Generated{% else %}Généré le{% endif %}
+          </div>
+          <div>{{ fmt_datetime(generated_at) }}</div>
+        </td>
+      </tr>
+    </table>
+    {% block content %}{% endblock %}
   </div>
-  {% block content %}{% endblock %}
 </body>
 </html>

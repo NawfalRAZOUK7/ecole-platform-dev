@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime
+from typing import Any
 
 from sqlalchemy import case, func, select
 
@@ -33,6 +34,35 @@ class AnalyticsRepository(BaseRepository):
             )
         )
         return int(result.scalar_one() or 0)
+
+    async def list_active_user_series(
+        self,
+        *,
+        school_id: uuid.UUID,
+        from_dt: datetime,
+        to_dt: datetime,
+        bucket: str,
+    ) -> list[dict[str, Any]]:
+        result = await self.db.execute(
+            select(
+                func.date_trunc(bucket, Session.created_at).label("bucket"),
+                func.count(func.distinct(Session.user_id)).label("active_users"),
+            )
+            .where(
+                Session.school_id == school_id,
+                Session.created_at >= from_dt,
+                Session.created_at <= to_dt,
+            )
+            .group_by("bucket")
+            .order_by("bucket")
+        )
+        return [
+            {
+                "bucket": row.bucket,
+                "active_users": int(row.active_users or 0),
+            }
+            for row in result
+        ]
 
     async def count_users(
         self,
@@ -273,6 +303,39 @@ class AnalyticsRepository(BaseRepository):
             query = query.where(AuditLog.outcome == outcome)
         result = await self.db.execute(query)
         return int(result.scalar_one() or 0)
+
+    async def list_engaged_user_series(
+        self,
+        *,
+        school_id: uuid.UUID,
+        from_dt: datetime,
+        to_dt: datetime,
+        bucket: str,
+        outcome: str | None = None,
+    ) -> list[dict[str, Any]]:
+        query = (
+            select(
+                func.date_trunc(bucket, AuditLog.created_at).label("bucket"),
+                func.count(func.distinct(AuditLog.actor_id)).label("engaged_users"),
+            )
+            .where(
+                AuditLog.school_id == school_id,
+                AuditLog.created_at >= from_dt,
+                AuditLog.created_at <= to_dt,
+            )
+            .group_by("bucket")
+            .order_by("bucket")
+        )
+        if outcome:
+            query = query.where(AuditLog.outcome == outcome)
+        result = await self.db.execute(query)
+        return [
+            {
+                "bucket": row.bucket,
+                "engaged_users": int(row.engaged_users or 0),
+            }
+            for row in result
+        ]
 
     async def count_audit_events(
         self,
