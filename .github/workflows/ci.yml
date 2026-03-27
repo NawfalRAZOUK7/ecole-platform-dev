@@ -235,7 +235,6 @@ jobs:
       ACCESS_TOKEN_EXPIRE_MINUTES: "30"
       REFRESH_TOKEN_EXPIRE_DAYS: "7"
       APP_ENV: test
-      APP_ENV: test
 
     steps:
       - uses: actions/checkout@v4
