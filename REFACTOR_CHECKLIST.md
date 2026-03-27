@@ -28,13 +28,13 @@
 - [ ] **Review & commit myself**: `refactor(backend): add BaseRepository and shared request utilities`
 
 ### Batch 1 — Auth & Audit
-- [ ] Create `backend/app/repositories/auth.py` (AuthRepository)
-- [ ] Create `backend/app/repositories/audit.py` (AuditRepository)
-- [ ] Refactor `services/auth.py` → use AuthRepository (1,707 lines)
-- [ ] Refactor `services/audit.py` → use AuditRepository
-- [ ] RBAC: Standardize permission checks in `api/v1/auth.py`, `recovery.py`, `invitations.py`
-- [ ] Add OpenAPI metadata to all auth endpoints
-- [ ] Verify: no `select()` in services, no SQL in routers
+- [x] Create `backend/app/repositories/auth.py` (AuthRepository)
+- [x] Create `backend/app/repositories/audit.py` (AuditRepository)
+- [x] Refactor `services/auth.py` → use AuthRepository (1,707 lines)
+- [x] Refactor `services/audit.py` → use AuditRepository
+- [x] RBAC: Standardize permission checks in `api/v1/auth.py`, `recovery.py`, `invitations.py`
+- [x] Add OpenAPI metadata to all auth endpoints
+- [x] Verify: no `select()` in services, no SQL in routers
 - [ ] **Review & commit myself**: `refactor(backend): extract AuthRepository and AuditRepository, standardize RBAC`
 
 ### Batch 2 — Billing & Payments

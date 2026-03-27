@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.middleware import get_correlation_id
 from app.models.audit import AuditLog
+from app.repositories.audit import AuditRepository
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,7 @@ class AuditService:
 
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
+        self.repo = AuditRepository(db)
 
     async def log_event(
         self,
@@ -59,7 +61,7 @@ class AuditService:
                 except ValueError:
                     cid = None
 
-        entry = AuditLog(
+        entry = await self.repo.create_log(
             school_id=school_id,
             actor_id=actor_id,
             action_type=action_type,
@@ -72,9 +74,6 @@ class AuditService:
             correlation_id=cid,
             ip_address=ip_address,
         )
-        self.db.add(entry)
-        # Flush to assign ID without committing the outer transaction
-        await self.db.flush()
 
         logger.info(
             "Audit: action=%s outcome=%s actor=%s target=%s/%s cid=%s",

@@ -2,7 +2,7 @@
 
 Reference: S-030 through S-033, Pack D6 — Security Pipeline
 Phase 2B: TOTP 2FA (setup, verify-setup, disable, verify-login), email verification
-Layer: Service (called by Router, uses Repository/DB directly for MVP)
+Layer: Service (called by Router, uses Repository)
 """
 
 from __future__ import annotations
@@ -16,7 +16,6 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import redis.asyncio as aioredis
-from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -38,18 +37,8 @@ from app.core.security import (
     hash_password,
     verify_password,
 )
-from app.models.iam import (
-    AccountRecoveryRequest,
-    InvitationCode,
-    Membership,
-    ParentChildLink,
-    ParentProfile,
-    Session,
-    StudentProfile,
-    TeacherProfile,
-    User,
-)
 from app.core.password_policy import password_validator
+from app.repositories.auth import AuthRepository
 from app.schemas.profile import (
     ParentProfileUpdate,
     StudentProfileUpdate,
@@ -93,6 +82,7 @@ class AuthService:
     def __init__(self, db: AsyncSession, redis: aioredis.Redis) -> None:
         self.db = db
         self.redis = redis
+        self.repo = AuthRepository(db)
         self.audit = AuditService(db)
 
     # ------------------------------------------------------------------
@@ -130,13 +120,7 @@ class AuthService:
             )
 
         # 2. Find user by email + school_id
-        result = await self.db.execute(
-            select(User).where(
-                User.email == email,
-                User.school_id == school_id,
-            )
-        )
-        user = result.scalar_one_or_none()
+        user = await self.repo.get_user_by_email(email, school_id)
 
         if user is None or not verify_password(password, user.password_hash):
             # Increment failed attempts
@@ -173,14 +157,7 @@ class AuthService:
             )
 
         # 4. Check active membership for user + school
-        membership_result = await self.db.execute(
-            select(Membership).where(
-                Membership.user_id == user.id,
-                Membership.school_id == school_id,
-                Membership.status == "active",
-            )
-        )
-        membership = membership_result.scalar_one_or_none()
+        membership = await self.repo.get_membership(user.id, school_id)
         if membership is None:
             await self.audit.log_event(
                 school_id=school_id,
@@ -237,7 +214,7 @@ class AuthService:
 
         # 6. Create session record (Phase 2A: include device info)
         cid = get_correlation_id()
-        session = Session(
+        session = await self.repo.create_session(
             user_id=user.id,
             school_id=school_id,
             source=source,
@@ -246,8 +223,6 @@ class AuthService:
             ip_address=ip_address[:45] if ip_address else None,
             device_name=device_name[:200] if device_name else None,
         )
-        self.db.add(session)
-        await self.db.flush()  # Get session.id
 
         # 7. Generate tokens
         access_token = create_access_token(user.id, role, school_id, session.id)
@@ -318,10 +293,7 @@ class AuthService:
         """
         # 1. Validate invitation code
         code_hash = hashlib.sha256(code.encode()).hexdigest()
-        result = await self.db.execute(
-            select(InvitationCode).where(InvitationCode.code_hash == code_hash)
-        )
-        invite = result.scalar_one_or_none()
+        invite = await self.repo.get_invitation_by_code_hash(code_hash)
 
         if invite is None:
             raise NotFoundError("Invalid invitation code", error_code="ERR-IAM-404")
@@ -346,10 +318,8 @@ class AuthService:
         )
 
         # 2. Check email uniqueness within this school
-        existing = await self.db.execute(
-            select(User).where(User.email == email, User.school_id == school_id)
-        )
-        if existing.scalar_one_or_none() is not None:
+        existing_user = await self.repo.get_user_by_email(email, school_id)
+        if existing_user is not None:
             raise ConflictError(
                 "An account with this email already exists for this school",
                 error_code="ERR-IAM-CONFLICT",
@@ -359,7 +329,7 @@ class AuthService:
         password_validator.validate(password, email=email, full_name=full_name)
 
         # 4. Create user
-        user = User(
+        user = await self.repo.create_user(
             email=email,
             full_name=full_name,
             phone=phone,
@@ -367,46 +337,38 @@ class AuthService:
             status="active",
             school_id=school_id,
         )
-        self.db.add(user)
-        await self.db.flush()
 
         # 5. Create membership
-        membership = Membership(
+        membership = await self.repo.create_membership(
             user_id=user.id,
             school_id=school_id,
             role_code=role,
             status="active",
         )
-        self.db.add(membership)
-        await self.db.flush()
 
         # 6. Create role-specific profile
         if role == "STD":
-            profile = StudentProfile(
+            await self.repo.create_student_profile(
                 user_id=user.id,
                 school_id=school_id,
                 **profile_data,
             )
-            self.db.add(profile)
         elif role == "PAR":
-            profile = ParentProfile(
+            await self.repo.create_parent_profile(
                 user_id=user.id,
                 school_id=school_id,
                 **profile_data,
             )
-            self.db.add(profile)
         elif role == "TCH":
-            profile = TeacherProfile(
+            await self.repo.create_teacher_profile(
                 user_id=user.id,
                 school_id=school_id,
                 **profile_data,
             )
-            self.db.add(profile)
-        await self.db.flush()
 
         # 7. Auto-create parent_child_link if code has target_student_id
         if role == "PAR" and invite.target_student_id:
-            link = ParentChildLink(
+            await self.repo.create_parent_child_link(
                 parent_user_id=user.id,
                 child_user_id=invite.target_student_id,
                 school_id=school_id,
@@ -414,16 +376,17 @@ class AuthService:
                 linked_at=datetime.now(timezone.utc),
                 linked_by=invite.issuer_user_id,
             )
-            self.db.add(link)
-            await self.db.flush()
 
         # 8. Consume the invitation code
-        invite.consumed_by = user.id
-        invite.consumed_at = datetime.now(timezone.utc)
+        await self.repo.consume_invitation(
+            invite.id,
+            user_id=user.id,
+            consumed_at=datetime.now(timezone.utc),
+        )
 
         # 9. Create session and generate tokens
         cid = get_correlation_id()
-        session = Session(
+        session = await self.repo.create_session(
             user_id=user.id,
             school_id=school_id,
             source=source,
@@ -432,8 +395,6 @@ class AuthService:
             ip_address=ip_address[:45] if ip_address else None,
             device_name=device_name[:200] if device_name else None,
         )
-        self.db.add(session)
-        await self.db.flush()
 
         access_token = create_access_token(user.id, role, school_id, session.id)
         refresh_token, refresh_jti = create_refresh_token(
@@ -506,13 +467,7 @@ class AuthService:
             )
 
         # 3. Verify session is active
-        session_result = await self.db.execute(
-            select(Session).where(
-                Session.id == session_id,
-                Session.revoke_at.is_(None),
-            )
-        )
-        session = session_result.scalar_one_or_none()
+        session = await self.repo.get_session_by_id(session_id, active_only=True)
         if session is None:
             raise AuthenticationError(
                 "Session has been revoked",
@@ -523,11 +478,7 @@ class AuthService:
         stored_jti = await self.redis.get(f"refresh_jti:{session_id}")
         if stored_jti != token_jti:
             # Possible replay attack — revoke session entirely
-            await self.db.execute(
-                update(Session)
-                .where(Session.id == session_id)
-                .values(revoke_at=datetime.now(timezone.utc))
-            )
+            await self.repo.revoke_session(session_id, datetime.now(timezone.utc))
             await self.redis.delete(f"refresh_jti:{session_id}")
             await self.redis.delete(f"csrf:{session_id}")
             logger.warning(
@@ -539,14 +490,7 @@ class AuthService:
             )
 
         # 5. Get user's active role for this school
-        membership_result = await self.db.execute(
-            select(Membership).where(
-                Membership.user_id == user_id,
-                Membership.school_id == school_id,
-                Membership.status == "active",
-            )
-        )
-        membership = membership_result.scalar_one_or_none()
+        membership = await self.repo.get_membership(user_id, school_id)
         if membership is None:
             raise AuthenticationError(
                 "No active membership",
@@ -599,11 +543,7 @@ class AuthService:
         Idempotent: calling logout on an already-revoked session is a no-op.
         """
         # 1. Revoke session (set revoke_at)
-        await self.db.execute(
-            update(Session)
-            .where(Session.id == session_id, Session.revoke_at.is_(None))
-            .values(revoke_at=datetime.now(timezone.utc))
-        )
+        await self.repo.revoke_session(session_id, datetime.now(timezone.utc))
 
         # 2. Clean up Redis
         await self.redis.delete(f"refresh_jti:{session_id}")
@@ -631,19 +571,12 @@ class AuthService:
     ) -> dict[str, Any]:
         """Get the authenticated user's profile with permissions and memberships."""
         # 1. Load user
-        result = await self.db.execute(select(User).where(User.id == user_id))
-        user = result.scalar_one_or_none()
+        user = await self.repo.get_user_by_id(user_id)
         if user is None:
             raise NotFoundError("User not found", error_code="ERR-IAM-404")
 
         # 2. Load all memberships for this user
-        memberships_result = await self.db.execute(
-            select(Membership).where(
-                Membership.user_id == user_id,
-                Membership.status == "active",
-            )
-        )
-        memberships = memberships_result.scalars().all()
+        memberships = await self.repo.list_memberships(user_id, active_only=True)
 
         # 3. Get permissions for current role
         permissions = sorted(get_permissions_for_role(role))
@@ -678,16 +611,10 @@ class AuthService:
         Returns sessions with device info (user_agent, ip_address, device_name).
         Only returns non-revoked sessions for the user's current school.
         """
-        result = await self.db.execute(
-            select(Session)
-            .where(
-                Session.user_id == user_id,
-                Session.school_id == school_id,
-                Session.revoke_at.is_(None),
-            )
-            .order_by(Session.created_at.desc())
+        sessions = await self.repo.list_active_sessions(
+            user_id=user_id,
+            school_id=school_id,
         )
-        sessions = result.scalars().all()
 
         return [
             {
@@ -719,13 +646,7 @@ class AuthService:
         ADM can revoke any session within their school.
         """
         # Find the target session
-        result = await self.db.execute(
-            select(Session).where(
-                Session.id == target_session_id,
-                Session.revoke_at.is_(None),
-            )
-        )
-        session = result.scalar_one_or_none()
+        session = await self.repo.get_session_by_id(target_session_id, active_only=True)
 
         if session is None:
             raise NotFoundError("Session not found", error_code="ERR-IAM-404")
@@ -743,7 +664,7 @@ class AuthService:
 
         # Revoke
         session.revoke_at = datetime.now(timezone.utc)
-        await self.db.flush()
+        await self.repo.save_session(session)
 
         # Clean up Redis tokens
         await self.redis.delete(f"refresh_jti:{target_session_id}")
@@ -780,8 +701,7 @@ class AuthService:
         Revokes all other sessions (keeps current one).
         """
         # Load user
-        result = await self.db.execute(select(User).where(User.id == user_id))
-        user = result.scalar_one_or_none()
+        user = await self.repo.get_user_by_id(user_id)
         if user is None:
             raise NotFoundError("User not found", error_code="ERR-IAM-404")
 
@@ -803,17 +723,13 @@ class AuthService:
 
         # Update password
         user.password_hash = hash_password(new_password)
-        await self.db.flush()
+        await self.repo.save_user(user)
 
         # Revoke all OTHER active sessions (keep current one)
-        await self.db.execute(
-            update(Session)
-            .where(
-                Session.user_id == user_id,
-                Session.revoke_at.is_(None),
-                Session.id != current_session_id,
-            )
-            .values(revoke_at=datetime.now(timezone.utc))
+        await self.repo.revoke_all_sessions(
+            user_id,
+            datetime.now(timezone.utc),
+            exclude_session_id=current_session_id,
         )
 
         # Audit
@@ -836,6 +752,7 @@ class InvitationService:
     def __init__(self, db: AsyncSession, redis: aioredis.Redis) -> None:
         self.db = db
         self.redis = redis
+        self.repo = AuthRepository(db)
         self.audit = AuditService(db)
 
     async def create_invite(
@@ -864,17 +781,8 @@ class InvitationService:
                     error_code="ERR-VAL-001",
                 )
             # Check student exists in the same school with STD role
-            student_result = await self.db.execute(
-                select(User)
-                .join(Membership)
-                .where(
-                    User.id == target_student_id,
-                    User.school_id == school_id,
-                    Membership.role_code == "STD",
-                    Membership.school_id == school_id,
-                )
-            )
-            if student_result.scalar_one_or_none() is None:
+            student = await self.repo.get_student_in_school(target_student_id, school_id)
+            if student is None:
                 from app.core.exceptions import NotFoundError
 
                 raise NotFoundError(
@@ -890,7 +798,7 @@ class InvitationService:
 
         expires_at = datetime.now(timezone.utc) + timedelta(hours=expires_in_hours)
 
-        invite = InvitationCode(
+        invite = await self.repo.create_invitation(
             school_id=school_id,
             issuer_user_id=issuer_user_id,
             code_hash=code_hash,
@@ -898,8 +806,6 @@ class InvitationService:
             expires_at=expires_at,
             target_student_id=target_student_id,
         )
-        self.db.add(invite)
-        await self.db.flush()
 
         # Audit
         await self.audit.log_event(
@@ -935,12 +841,7 @@ class InvitationService:
         code_hash = hashlib.sha256(code.encode()).hexdigest()
 
         # Find the invitation
-        result = await self.db.execute(
-            select(InvitationCode).where(
-                InvitationCode.code_hash == code_hash,
-            )
-        )
-        invite = result.scalar_one_or_none()
+        invite = await self.repo.get_invitation_by_code_hash(code_hash)
 
         if invite is None:
             raise NotFoundError("Invalid invitation code", error_code="ERR-IAM-404")
@@ -970,18 +871,31 @@ class InvitationService:
             )
 
         # Consume: update invitation
-        invite.consumed_by = user_id
-        invite.consumed_at = datetime.now(timezone.utc)
+        await self.repo.consume_invitation(
+            invite.id,
+            user_id=user_id,
+            consumed_at=datetime.now(timezone.utc),
+        )
 
         # Create membership for user
-        membership = Membership(
+        membership = await self.repo.create_membership(
             user_id=user_id,
             school_id=school_id,
             role_code=invite.role_target,
             status="active",
         )
-        self.db.add(membership)
-        await self.db.flush()
+
+        user = await self.repo.get_user_by_id(user_id)
+        email_verification_required = False
+        if user and user.email_verified_at is None:
+            email_service = EmailVerificationService(self.db, self.redis)
+            await email_service.send_verification_otp(
+                user_id=user_id,
+                school_id=school_id,
+                email=user.email,
+                ip_address=ip_address,
+            )
+            email_verification_required = True
 
         # Audit
         await self.audit.log_event(
@@ -998,6 +912,7 @@ class InvitationService:
             "message": "Invitation consumed successfully",
             "role": invite.role_target,
             "membership_id": membership.id,
+            "email_verification_required": email_verification_required,
         }
 
     async def revoke_invite(
@@ -1011,13 +926,7 @@ class InvitationService:
 
         Idempotent: revoking an already-revoked code is a no-op.
         """
-        result = await self.db.execute(
-            select(InvitationCode).where(
-                InvitationCode.id == invite_id,
-                InvitationCode.school_id == school_id,
-            )
-        )
-        invite = result.scalar_one_or_none()
+        invite = await self.repo.get_invitation_by_id(invite_id, school_id)
 
         if invite is None:
             raise NotFoundError("Invitation not found", error_code="ERR-IAM-404")
@@ -1027,6 +936,7 @@ class InvitationService:
             invite.consumed_at = datetime.now(timezone.utc)
             # Set expires_at to now to effectively revoke
             invite.expires_at = datetime.now(timezone.utc)
+            await self.repo.save_invitation(invite)
 
         # Audit
         await self.audit.log_event(
@@ -1048,6 +958,7 @@ class RecoveryService:
     def __init__(self, db: AsyncSession, redis: aioredis.Redis) -> None:
         self.db = db
         self.redis = redis
+        self.repo = AuthRepository(db)
         self.audit = AuditService(db)
 
     async def request_recovery(
@@ -1062,10 +973,7 @@ class RecoveryService:
         If user doesn't exist: returns success anyway (no enumeration).
         """
         # Find user (but don't reveal if not found)
-        result = await self.db.execute(
-            select(User).where(User.email == email, User.school_id == school_id)
-        )
-        user = result.scalar_one_or_none()
+        user = await self.repo.get_user_by_email(email, school_id)
 
         if user is None:
             # Don't reveal that user doesn't exist — return same response
@@ -1082,14 +990,12 @@ class RecoveryService:
         expires_at = datetime.now(timezone.utc) + timedelta(
             minutes=RECOVERY_EXPIRE_MINUTES
         )
-        recovery = AccountRecoveryRequest(
+        recovery = await self.repo.create_recovery_request(
             user_id=user.id,
             school_id=school_id,
             status="pending",
             expires_at=expires_at,
         )
-        self.db.add(recovery)
-        await self.db.flush()
 
         # Store OTP hash in Redis with TTL
         await self.redis.setex(
@@ -1142,12 +1048,7 @@ class RecoveryService:
     ) -> dict[str, Any]:
         """Verify recovery OTP. Transitions status: pending -> verified."""
         # Find recovery request
-        result = await self.db.execute(
-            select(AccountRecoveryRequest).where(
-                AccountRecoveryRequest.id == request_id,
-            )
-        )
-        recovery = result.scalar_one_or_none()
+        recovery = await self.repo.get_recovery_request(request_id)
 
         if recovery is None:
             raise NotFoundError("Recovery request not found", error_code="ERR-IAM-404")
@@ -1189,7 +1090,7 @@ class RecoveryService:
                 recovery.lock_until = datetime.now(timezone.utc) + timedelta(
                     minutes=RECOVERY_LOCK_MINUTES
                 )
-            await self.db.flush()
+            await self.repo.save_recovery_request(recovery)
 
             raise AuthenticationError(
                 "Invalid OTP",
@@ -1198,7 +1099,7 @@ class RecoveryService:
 
         # Success — transition to verified
         recovery.status = "verified"
-        await self.db.flush()
+        await self.repo.save_recovery_request(recovery)
 
         # Clean up OTP from Redis
         await self.redis.delete(f"recovery_otp:{request_id}")
@@ -1227,12 +1128,7 @@ class RecoveryService:
         Phase 2A: enforces password policy before accepting the new password.
         """
         # Find recovery request
-        result = await self.db.execute(
-            select(AccountRecoveryRequest).where(
-                AccountRecoveryRequest.id == request_id,
-            )
-        )
-        recovery = result.scalar_one_or_none()
+        recovery = await self.repo.get_recovery_request(request_id)
 
         if recovery is None:
             raise NotFoundError("Recovery request not found", error_code="ERR-IAM-404")
@@ -1244,10 +1140,7 @@ class RecoveryService:
             )
 
         # Phase 2A: load user to get email/name for password policy check
-        user_result = await self.db.execute(
-            select(User).where(User.id == recovery.user_id)
-        )
-        user = user_result.scalar_one_or_none()
+        user = await self.repo.get_user_by_id(recovery.user_id)
 
         # Phase 2A: enforce password policy
         from app.core.password_policy import password_validator
@@ -1259,25 +1152,18 @@ class RecoveryService:
         )
 
         # Update password
-        new_hash = hash_password(new_password)
-        await self.db.execute(
-            update(User)
-            .where(User.id == recovery.user_id)
-            .values(password_hash=new_hash)
-        )
+        if user is not None:
+            user.password_hash = hash_password(new_password)
+            await self.repo.save_user(user)
 
         # Transition: verified -> reset
         recovery.status = "reset"
-        await self.db.flush()
+        await self.repo.save_recovery_request(recovery)
 
         # Revoke all active sessions for this user (force re-login)
-        await self.db.execute(
-            update(Session)
-            .where(
-                Session.user_id == recovery.user_id,
-                Session.revoke_at.is_(None),
-            )
-            .values(revoke_at=datetime.now(timezone.utc))
+        await self.repo.revoke_all_sessions(
+            recovery.user_id,
+            datetime.now(timezone.utc),
         )
 
         # Audit
@@ -1300,6 +1186,7 @@ class TwoFactorService:
     def __init__(self, db: AsyncSession, redis: aioredis.Redis) -> None:
         self.db = db
         self.redis = redis
+        self.repo = AuthRepository(db)
         self.audit = AuditService(db)
 
     # ------------------------------------------------------------------
@@ -1319,8 +1206,7 @@ class TwoFactorService:
         """
         from app.core.totp import generate_totp_secret, get_provisioning_uri
 
-        result = await self.db.execute(select(User).where(User.id == user_id))
-        user = result.scalar_one_or_none()
+        user = await self.repo.get_user_by_id(user_id)
         if user is None:
             raise NotFoundError("User not found", error_code="ERR-IAM-404")
 
@@ -1336,7 +1222,7 @@ class TwoFactorService:
         user.totp_enabled = False
         user.totp_verified_at = None
         user.backup_codes = None
-        await self.db.flush()
+        await self.repo.save_user(user)
 
         provisioning_uri = get_provisioning_uri(secret, user.email)
 
@@ -1377,8 +1263,7 @@ class TwoFactorService:
             verify_totp_code,
         )
 
-        result = await self.db.execute(select(User).where(User.id == user_id))
-        user = result.scalar_one_or_none()
+        user = await self.repo.get_user_by_id(user_id)
         if user is None:
             raise NotFoundError("User not found", error_code="ERR-IAM-404")
 
@@ -1409,7 +1294,7 @@ class TwoFactorService:
         user.totp_enabled = True
         user.totp_verified_at = datetime.now(timezone.utc)
         user.backup_codes = json.dumps(hashed_codes)
-        await self.db.flush()
+        await self.repo.save_user(user)
 
         await self.audit.log_event(
             school_id=school_id,
@@ -1439,8 +1324,7 @@ class TwoFactorService:
         """Disable 2FA. Requires a valid TOTP code or backup code."""
         from app.core.totp import verify_backup_code, verify_totp_code
 
-        result = await self.db.execute(select(User).where(User.id == user_id))
-        user = result.scalar_one_or_none()
+        user = await self.repo.get_user_by_id(user_id)
         if user is None:
             raise NotFoundError("User not found", error_code="ERR-IAM-404")
 
@@ -1476,7 +1360,7 @@ class TwoFactorService:
         user.totp_enabled = False
         user.totp_verified_at = None
         user.backup_codes = None
-        await self.db.flush()
+        await self.repo.save_user(user)
 
         await self.audit.log_event(
             school_id=school_id,
@@ -1524,8 +1408,7 @@ class TwoFactorService:
         device_name = temp_data.get("device_name")
 
         # 2. Load user
-        result = await self.db.execute(select(User).where(User.id == user_id))
-        user = result.scalar_one_or_none()
+        user = await self.repo.get_user_by_id(user_id)
         if user is None or not user.totp_enabled:
             raise AuthenticationError(
                 "Invalid 2FA state",
@@ -1547,7 +1430,7 @@ class TwoFactorService:
                 # Consume the backup code
                 hashed_codes.pop(idx)
                 user.backup_codes = json.dumps(hashed_codes)
-                await self.db.flush()
+                await self.repo.save_user(user)
 
         if not valid:
             raise AuthenticationError(
@@ -1560,7 +1443,7 @@ class TwoFactorService:
 
         # 5. Create session (same logic as normal login)
         cid = get_correlation_id()
-        session = Session(
+        session = await self.repo.create_session(
             user_id=user.id,
             school_id=school_id,
             source=source,
@@ -1569,8 +1452,6 @@ class TwoFactorService:
             ip_address=stored_ip[:45] if stored_ip else None,
             device_name=device_name[:200] if device_name else None,
         )
-        self.db.add(session)
-        await self.db.flush()
 
         # 6. Generate tokens
         access_token = create_access_token(user.id, role, school_id, session.id)
@@ -1611,6 +1492,7 @@ class EmailVerificationService:
     def __init__(self, db: AsyncSession, redis: aioredis.Redis) -> None:
         self.db = db
         self.redis = redis
+        self.repo = AuthRepository(db)
         self.audit = AuditService(db)
 
     async def send_verification_otp(
@@ -1662,10 +1544,7 @@ class EmailVerificationService:
     ) -> dict[str, Any]:
         """Verify email via OTP. Sets email_verified_at on success."""
         # Load user
-        result = await self.db.execute(
-            select(User).where(User.id == user_id, User.school_id == school_id)
-        )
-        user = result.scalar_one_or_none()
+        user = await self.repo.get_user_in_school(user_id, school_id)
         if user is None:
             raise NotFoundError("User not found", error_code="ERR-IAM-404")
 
@@ -1689,7 +1568,7 @@ class EmailVerificationService:
 
         # Mark email as verified
         user.email_verified_at = datetime.now(timezone.utc)
-        await self.db.flush()
+        await self.repo.save_user(user)
 
         # Cleanup
         await self.redis.delete(f"email_verify_otp:{user_id}:{school_id}")

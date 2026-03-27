@@ -23,7 +23,7 @@ from app.schemas.auth import (
     InviteCreateRequest,
     InviteRevokeRequest,
 )
-from app.services.auth import EmailVerificationService, InvitationService
+from app.services.auth import InvitationService
 
 router = APIRouter(prefix="/invites", tags=["invitations"])
 
@@ -87,23 +87,6 @@ async def consume_invite(
         school_id=auth.school_id,
         ip_address=get_client_ip(request),
     )
-
-    # Phase 2B: Send email verification OTP on successful consumption
-    if result.get("membership_id"):
-        from sqlalchemy import select
-        from app.models.iam import User
-
-        user_result = await db.execute(select(User).where(User.id == auth.user_id))
-        user = user_result.scalar_one_or_none()
-        if user and user.email_verified_at is None:
-            email_service = EmailVerificationService(db, redis)
-            await email_service.send_verification_otp(
-                user_id=auth.user_id,
-                school_id=auth.school_id,
-                email=user.email,
-                ip_address=get_client_ip(request),
-            )
-            result["email_verification_required"] = True
 
     return success_response(result)
 

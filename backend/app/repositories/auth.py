@@ -1,0 +1,311 @@
+"""Repository helpers for authentication, invitations, recovery, and 2FA."""
+
+from __future__ import annotations
+
+import uuid
+from datetime import datetime
+from typing import Any
+
+from sqlalchemy import select, update
+from sqlalchemy.orm import selectinload
+
+from app.models.iam import (
+    AccountRecoveryRequest,
+    InvitationCode,
+    Membership,
+    ParentChildLink,
+    ParentProfile,
+    Session,
+    StudentProfile,
+    TeacherProfile,
+    User,
+)
+from app.repositories.base import BaseRepository
+
+
+class AuthRepository(BaseRepository):
+    """Data access for IAM/auth domain workflows."""
+
+    async def get_user_by_email(
+        self,
+        email: str,
+        school_id: uuid.UUID | None = None,
+    ) -> User | None:
+        query = select(User).where(User.email == email)
+        if school_id is not None:
+            query = query.where(User.school_id == school_id)
+        result = await self.db.execute(query)
+        return result.scalar_one_or_none()
+
+    async def get_user_by_id(
+        self,
+        user_id: uuid.UUID,
+    ) -> User | None:
+        result = await self.db.execute(select(User).where(User.id == user_id))
+        return result.scalar_one_or_none()
+
+    async def get_user_in_school(
+        self,
+        user_id: uuid.UUID,
+        school_id: uuid.UUID,
+    ) -> User | None:
+        result = await self.db.execute(
+            select(User).where(User.id == user_id, User.school_id == school_id)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_user_with_memberships(
+        self,
+        user_id: uuid.UUID,
+    ) -> User | None:
+        result = await self.db.execute(
+            select(User)
+            .options(selectinload(User.memberships))
+            .where(User.id == user_id)
+        )
+        return result.scalar_one_or_none()
+
+    async def create_user(self, **kwargs: Any) -> User:
+        user = User(**kwargs)
+        self.db.add(user)
+        await self.db.flush()
+        return user
+
+    async def save_user(self, user: User) -> User:
+        self.db.add(user)
+        await self.db.flush()
+        return user
+
+    async def update_user(self, user_id: uuid.UUID, **kwargs: Any) -> User | None:
+        await self.db.execute(update(User).where(User.id == user_id).values(**kwargs))
+        return await self.get_user_by_id(user_id)
+
+    async def create_membership(self, **kwargs: Any) -> Membership:
+        membership = Membership(**kwargs)
+        self.db.add(membership)
+        await self.db.flush()
+        return membership
+
+    async def get_membership(
+        self,
+        user_id: uuid.UUID,
+        school_id: uuid.UUID,
+        *,
+        active_only: bool = True,
+    ) -> Membership | None:
+        query = select(Membership).where(
+            Membership.user_id == user_id,
+            Membership.school_id == school_id,
+        )
+        if active_only:
+            query = query.where(Membership.status == "active")
+        result = await self.db.execute(query)
+        return result.scalar_one_or_none()
+
+    async def list_memberships(
+        self,
+        user_id: uuid.UUID,
+        *,
+        active_only: bool = False,
+    ) -> list[Membership]:
+        query = select(Membership).where(Membership.user_id == user_id)
+        if active_only:
+            query = query.where(Membership.status == "active")
+        result = await self.db.execute(query)
+        return list(result.scalars().all())
+
+    async def create_student_profile(
+        self,
+        *,
+        user_id: uuid.UUID,
+        school_id: uuid.UUID,
+        **kwargs: Any,
+    ) -> StudentProfile:
+        profile = StudentProfile(user_id=user_id, school_id=school_id, **kwargs)
+        self.db.add(profile)
+        await self.db.flush()
+        return profile
+
+    async def create_parent_profile(
+        self,
+        *,
+        user_id: uuid.UUID,
+        school_id: uuid.UUID,
+        **kwargs: Any,
+    ) -> ParentProfile:
+        profile = ParentProfile(user_id=user_id, school_id=school_id, **kwargs)
+        self.db.add(profile)
+        await self.db.flush()
+        return profile
+
+    async def create_teacher_profile(
+        self,
+        *,
+        user_id: uuid.UUID,
+        school_id: uuid.UUID,
+        **kwargs: Any,
+    ) -> TeacherProfile:
+        profile = TeacherProfile(user_id=user_id, school_id=school_id, **kwargs)
+        self.db.add(profile)
+        await self.db.flush()
+        return profile
+
+    async def create_parent_child_link(self, **kwargs: Any) -> ParentChildLink:
+        link = ParentChildLink(**kwargs)
+        self.db.add(link)
+        await self.db.flush()
+        return link
+
+    async def create_session(self, **kwargs: Any) -> Session:
+        session = Session(**kwargs)
+        self.db.add(session)
+        await self.db.flush()
+        return session
+
+    async def save_session(self, session: Session) -> Session:
+        self.db.add(session)
+        await self.db.flush()
+        return session
+
+    async def get_session_by_id(
+        self,
+        session_id: uuid.UUID,
+        *,
+        active_only: bool = False,
+    ) -> Session | None:
+        query = select(Session).where(Session.id == session_id)
+        if active_only:
+            query = query.where(Session.revoke_at.is_(None))
+        result = await self.db.execute(query)
+        return result.scalar_one_or_none()
+
+    async def list_active_sessions(
+        self,
+        *,
+        user_id: uuid.UUID,
+        school_id: uuid.UUID,
+    ) -> list[Session]:
+        result = await self.db.execute(
+            select(Session)
+            .where(
+                Session.user_id == user_id,
+                Session.school_id == school_id,
+                Session.revoke_at.is_(None),
+            )
+            .order_by(Session.created_at.desc())
+        )
+        return list(result.scalars().all())
+
+    async def revoke_session(
+        self,
+        session_id: uuid.UUID,
+        revoked_at: datetime,
+    ) -> None:
+        await self.db.execute(
+            update(Session)
+            .where(Session.id == session_id, Session.revoke_at.is_(None))
+            .values(revoke_at=revoked_at)
+        )
+
+    async def revoke_all_sessions(
+        self,
+        user_id: uuid.UUID,
+        revoked_at: datetime,
+        *,
+        exclude_session_id: uuid.UUID | None = None,
+    ) -> int:
+        query = (
+            update(Session)
+            .where(Session.user_id == user_id, Session.revoke_at.is_(None))
+            .values(revoke_at=revoked_at)
+        )
+        if exclude_session_id is not None:
+            query = query.where(Session.id != exclude_session_id)
+        result = await self.db.execute(query)
+        return int(result.rowcount or 0)
+
+    async def get_invitation_by_code_hash(
+        self,
+        code_hash: str,
+    ) -> InvitationCode | None:
+        result = await self.db.execute(
+            select(InvitationCode).where(InvitationCode.code_hash == code_hash)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_invitation_by_id(
+        self,
+        invite_id: uuid.UUID,
+        school_id: uuid.UUID | None = None,
+    ) -> InvitationCode | None:
+        query = select(InvitationCode).where(InvitationCode.id == invite_id)
+        if school_id is not None:
+            query = query.where(InvitationCode.school_id == school_id)
+        result = await self.db.execute(query)
+        return result.scalar_one_or_none()
+
+    async def create_invitation(self, **kwargs: Any) -> InvitationCode:
+        invite = InvitationCode(**kwargs)
+        self.db.add(invite)
+        await self.db.flush()
+        return invite
+
+    async def save_invitation(self, invite: InvitationCode) -> InvitationCode:
+        self.db.add(invite)
+        await self.db.flush()
+        return invite
+
+    async def consume_invitation(
+        self,
+        invitation_id: uuid.UUID,
+        *,
+        user_id: uuid.UUID,
+        consumed_at: datetime,
+    ) -> InvitationCode | None:
+        invite = await self.get_invitation_by_id(invitation_id)
+        if invite is None:
+            return None
+        invite.consumed_by = user_id
+        invite.consumed_at = consumed_at
+        await self.save_invitation(invite)
+        return invite
+
+    async def get_student_in_school(
+        self,
+        user_id: uuid.UUID,
+        school_id: uuid.UUID,
+    ) -> User | None:
+        result = await self.db.execute(
+            select(User)
+            .join(Membership, Membership.user_id == User.id)
+            .where(
+                User.id == user_id,
+                User.school_id == school_id,
+                Membership.school_id == school_id,
+                Membership.role_code == "STD",
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def create_recovery_request(self, **kwargs: Any) -> AccountRecoveryRequest:
+        recovery = AccountRecoveryRequest(**kwargs)
+        self.db.add(recovery)
+        await self.db.flush()
+        return recovery
+
+    async def get_recovery_request(
+        self,
+        request_id: uuid.UUID,
+    ) -> AccountRecoveryRequest | None:
+        result = await self.db.execute(
+            select(AccountRecoveryRequest).where(AccountRecoveryRequest.id == request_id)
+        )
+        return result.scalar_one_or_none()
+
+    async def save_recovery_request(
+        self,
+        recovery: AccountRecoveryRequest,
+    ) -> AccountRecoveryRequest:
+        self.db.add(recovery)
+        await self.db.flush()
+        return recovery
