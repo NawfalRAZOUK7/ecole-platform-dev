@@ -400,11 +400,8 @@ class NotificationRepository(BaseRepository):
         return f"notifications:unread-count:{user_id}"
 
 
-class NotificationDeliveryRepository:
+class NotificationDeliveryRepository(BaseRepository):
     """Focused helpers for delivery status persistence."""
-
-    def __init__(self, db: AsyncSession) -> None:
-        self.db = db
 
     async def get_delivery(
         self,

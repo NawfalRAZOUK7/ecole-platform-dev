@@ -95,11 +95,11 @@
 - [ ] **Review & commit myself**: `refactor(backend): extract remaining repositories, complete RBAC standardization`
 
 ### Batch 7 — Backend Validation
-- [ ] Search all routers for remaining SQL imports → fix
-- [ ] Search all services for remaining `select()` → fix
-- [ ] All repositories extend BaseRepository → verify
-- [ ] All services create repos in `__init__` → verify
-- [ ] No local helper functions in routers → verify
+- [x] Search all routers for remaining SQL imports → fix
+- [x] Search all services for remaining `select()` → fix
+- [x] All repositories extend BaseRepository → verify
+- [x] All services create repos in `__init__` → verify
+- [x] No local helper functions in routers → verify
 - [ ] All endpoints have `@requires_permission()` → verify
 - [ ] No hardcoded role checks for access control → verify
 - [ ] 36 unused permissions: either implement or document as deprecated
