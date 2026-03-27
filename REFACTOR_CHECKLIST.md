@@ -57,14 +57,14 @@
 - [ ] **Review & commit myself**: `refactor(backend): extract ERPRepository, standardize ERP RBAC`
 
 ### Batch 4 — LMS (Content, Assignments, Quizzes)
-- [ ] Create `backend/app/repositories/lms.py` (LMSRepository)
-- [ ] Create `backend/app/repositories/quiz.py` (QuizRepository)
-- [ ] Refactor `services/resource_library.py`, `services/quiz_grading.py`
-- [ ] Refactor `api/v1/content.py` (511), `assignments.py` (369), `submissions.py` (700)
-- [ ] Refactor `api/v1/quizzes.py` (795), `courses.py`, `content_library.py` (447)
-- [ ] Refactor `api/v1/assessments.py` (396), `results.py`
-- [ ] RBAC: Standardize all LMS permission checks, remove hardcoded role checks
-- [ ] Verify: no SQL in routers/services
+- [x] Create `backend/app/repositories/lms.py` (LMSRepository)
+- [x] Create `backend/app/repositories/quiz.py` (QuizRepository)
+- [x] Refactor `services/resource_library.py`, `services/quiz_grading.py`
+- [x] Refactor `api/v1/content.py` (511), `assignments.py` (369), `submissions.py` (700)
+- [x] Refactor `api/v1/quizzes.py` (795), `courses.py`, `content_library.py` (447)
+- [x] Refactor `api/v1/assessments.py` (396), `results.py`
+- [x] RBAC: Standardize all LMS permission checks, remove hardcoded role checks
+- [x] Verify: no SQL in routers/services
 - [ ] **Review & commit myself**: `refactor(backend): extract LMS and Quiz repositories, standardize LMS RBAC`
 
 ### Batch 5 — Communication, Progress & Analytics

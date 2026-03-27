@@ -25,7 +25,6 @@ def _utc_now() -> datetime:
 
 class ResourceLibraryService:
     def __init__(self, db: AsyncSession) -> None:
-        self.db = db
         self.repo = DocumentsRepository(db)
         self.documents = StudentDocumentsService(db)
 

@@ -14,10 +14,9 @@ import logging
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.lms import QuizAttempt, QuizQuestion, QuizResponse
+from app.repositories.quiz import QuizRepository
 
 logger = logging.getLogger(__name__)
 
@@ -100,23 +99,16 @@ async def grade_attempt(attempt_id, db: AsyncSession) -> tuple[float, int]:
     Updates each QuizResponse with is_correct and points_earned.
     Updates the QuizAttempt with score, max_score, and status=COMPLETED.
     """
-    # Load attempt
-    attempt_result = await db.execute(
-        select(QuizAttempt).where(QuizAttempt.id == attempt_id)
-    )
-    attempt = attempt_result.scalar_one()
+    repo = QuizRepository(db)
+    attempt = await repo.get_quiz_attempt(attempt_id)
+    if attempt is None:
+        raise ValueError(f"Attempt {attempt_id} not found")
 
-    # Load all questions for this quiz
-    questions_result = await db.execute(
-        select(QuizQuestion).where(QuizQuestion.quiz_id == attempt.quiz_id)
-    )
-    questions = {q.id: q for q in questions_result.scalars().all()}
-
-    # Load all responses for this attempt
-    responses_result = await db.execute(
-        select(QuizResponse).where(QuizResponse.attempt_id == attempt_id)
-    )
-    responses = list(responses_result.scalars().all())
+    questions = {
+        question.id: question
+        for question in await repo.list_quiz_questions(attempt.quiz_id)
+    }
+    responses = await repo.list_attempt_responses(attempt_id)
 
     total_score = 0.0
     max_score = sum(q.points for q in questions.values())
@@ -141,5 +133,5 @@ async def grade_attempt(attempt_id, db: AsyncSession) -> tuple[float, int]:
     attempt.status = "COMPLETED"
     attempt.completed_at = datetime.now(timezone.utc)
 
-    await db.flush()
+    await repo.save_quiz_attempt(attempt)
     return total_score, max_score
