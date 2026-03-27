@@ -1,12 +1,24 @@
 /// Invoices screen — invoice list with payment status.
 ///
 /// Reference: S-100, UI-PAR-001
+/// Phase 12B: Added overdue indicators + retry payment.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
+import 'package:ecole_platform/domain/entities/invoice.dart';
 
 import 'invoices_provider.dart';
+
+bool _isOverdue(Invoice inv) {
+  if (inv.status != 'pending') return false;
+  try {
+    return DateTime.parse(inv.dueDate).isBefore(DateTime.now());
+  } catch (_) {
+    return false;
+  }
+}
 
 class InvoicesScreen extends ConsumerWidget {
   const InvoicesScreen({super.key});
@@ -15,15 +27,16 @@ class InvoicesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(invoicesProvider);
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Factures')),
-      body: _buildBody(context, ref, state, theme),
+      appBar: AppBar(title: Text(t.t('invoices.title'))),
+      body: _buildBody(context, ref, state, theme, t),
     );
   }
 
   Widget _buildBody(BuildContext context, WidgetRef ref, InvoicesState state,
-      ThemeData theme) {
+      ThemeData theme, AppLocalizations t) {
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -39,7 +52,7 @@ class InvoicesScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             FilledButton.tonal(
               onPressed: () => ref.read(invoicesProvider.notifier).load(),
-              child: const Text('Réessayer'),
+              child: Text(t.t('common.retry')),
             ),
           ],
         ),
@@ -47,87 +60,164 @@ class InvoicesScreen extends ConsumerWidget {
     }
 
     if (state.items.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.receipt_long, size: 48, color: Colors.grey),
-            SizedBox(height: 16),
-            Text('Aucune facture'),
+            const Icon(Icons.receipt_long, size: 48, color: Colors.grey),
+            const SizedBox(height: 16),
+            Text(t.t('invoices.empty')),
           ],
         ),
       );
     }
 
+    final overdueCount = state.items.where(_isOverdue).length;
+
     return RefreshIndicator(
       onRefresh: () => ref.read(invoicesProvider.notifier).refresh(),
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: state.items.length,
-        itemBuilder: (context, index) {
-          final inv = state.items[index];
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        children: [
+          if (overdueCount > 0)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              color: Colors.red.shade50,
+              child: Row(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _statusChip(inv.status, theme),
-                      Text(
-                        _formatCurrency(inv.totalAmount, inv.currency),
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+                  const Icon(Icons.warning_amber, color: Colors.red, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    '$overdueCount ${t.t('invoices.overdueLabel')}',
+                    style: const TextStyle(
+                        color: Colors.red, fontWeight: FontWeight.w600),
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(Icons.calendar_today, size: 14),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Émise: ${_formatDate(inv.issuedDate)}',
-                        style: theme.textTheme.bodySmall,
-                      ),
-                      const SizedBox(width: 16),
-                      const Icon(Icons.event, size: 14),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Échéance: ${_formatDate(inv.dueDate)}',
-                        style: theme.textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
-                  if (inv.items.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    const Divider(),
-                    ...inv.items.map((item) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                  child: Text(item.description,
-                                      style: theme.textTheme.bodySmall)),
-                              Text(
-                                _formatCurrency(item.amount, inv.currency),
-                                style: theme.textTheme.bodySmall
-                                    ?.copyWith(fontWeight: FontWeight.w600),
-                              ),
-                            ],
-                          ),
-                        )),
-                  ],
                 ],
               ),
             ),
-          );
-        },
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: state.items.length,
+              itemBuilder: (context, index) {
+                final inv = state.items[index];
+                final overdue = _isOverdue(inv);
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  color: overdue ? Colors.red.shade50 : null,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                _statusChip(inv.status, theme),
+                                if (overdue) ...[
+                                  const SizedBox(width: 8),
+                                  _overdueChip(t),
+                                ],
+                              ],
+                            ),
+                            Text(
+                              _formatCurrency(inv.totalAmount, inv.currency),
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Icon(Icons.calendar_today, size: 14),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${t.t('invoices.issued')}: ${_formatDate(inv.issuedDate)}',
+                              style: theme.textTheme.bodySmall,
+                            ),
+                            const SizedBox(width: 16),
+                            const Icon(Icons.event, size: 14),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${t.t('invoices.due')}: ${_formatDate(inv.dueDate)}',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: overdue ? Colors.red : null,
+                                fontWeight: overdue ? FontWeight.w600 : null,
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (inv.items.isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          const Divider(),
+                          ...inv.items.map((item) => Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                        child: Text(item.description,
+                                            style: theme.textTheme.bodySmall)),
+                                    Text(
+                                      _formatCurrency(
+                                          item.amount, inv.currency),
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                              fontWeight: FontWeight.w600),
+                                    ),
+                                  ],
+                                ),
+                              )),
+                        ],
+                        if (overdue || inv.status == 'failed') ...[
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton.tonal(
+                              onPressed: state.retrying
+                                  ? null
+                                  : () => ref
+                                      .read(invoicesProvider.notifier)
+                                      .retryPayment(inv.id),
+                              child: state.retrying
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2))
+                                  : Text(t.t('invoices.retry')),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _overdueChip(AppLocalizations t) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colors.red.withAlpha(30),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.red, width: 0.5),
+      ),
+      child: Text(
+        t.t('invoices.overdue'),
+        style: const TextStyle(
+            fontSize: 10, fontWeight: FontWeight.w600, color: Colors.red),
       ),
     );
   }

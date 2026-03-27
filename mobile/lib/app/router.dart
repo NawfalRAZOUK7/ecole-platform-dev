@@ -34,6 +34,10 @@ import 'package:ecole_platform/features/teacher/content_library_screen.dart';
 import 'package:ecole_platform/features/student/student_content_screen.dart';
 import 'package:ecole_platform/features/student/quiz_player_screen.dart';
 import 'package:ecole_platform/features/family/my_children_screen.dart';
+import 'package:ecole_platform/features/timetable/timetable_screen.dart';
+import 'package:ecole_platform/features/messages/conversations_screen.dart';
+import 'package:ecole_platform/features/messages/chat_screen.dart';
+import 'package:ecole_platform/features/messages/announcements_screen.dart';
 import 'package:ecole_platform/presentation/shell_screen.dart';
 
 /// Role-based redirect targets.
@@ -144,6 +148,26 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/student/quizzes',
             builder: (context, state) => const QuizPlayerScreen(),
+          ),
+
+          // ── Phase 12B routes ──
+          GoRoute(
+            path: '/timetable',
+            builder: (context, state) => const TimetableScreen(),
+          ),
+          GoRoute(
+            path: '/messages',
+            builder: (context, state) => const ConversationsScreen(),
+          ),
+          GoRoute(
+            path: '/messages/:id',
+            builder: (context, state) => ChatScreen(
+              conversationId: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/announcements',
+            builder: (context, state) => const AnnouncementsScreen(),
           ),
 
           // ── Common routes ──

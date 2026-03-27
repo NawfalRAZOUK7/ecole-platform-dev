@@ -115,6 +115,48 @@ const Map<String, Map<String, String>> _translations = {
     // ── Profile ──
     'profile.rewardPoints': 'Points de récompense',
 
+    // ── Timetable (Phase 12B) ──
+    'timetable.title': 'Emploi du temps',
+    'timetable.empty': 'Aucun emploi du temps disponible',
+    'timetable.weekOf': 'Semaine du',
+    'timetable.canceled': 'Annulé',
+    'timetable.substituted': 'Remplacé',
+    'timetable.days.1': 'Lundi',
+    'timetable.days.2': 'Mardi',
+    'timetable.days.3': 'Mercredi',
+    'timetable.days.4': 'Jeudi',
+    'timetable.days.5': 'Vendredi',
+    'timetable.days.6': 'Samedi',
+
+    // ── Messages (Phase 12B) ──
+    'messages.title': 'Messages',
+    'messages.empty': 'Aucune conversation',
+    'messages.chat': 'Discussion',
+    'messages.noMessages': 'Aucun message',
+    'messages.typePlaceholder': 'Écrire un message...',
+    'messages.send': 'Envoyer',
+    'messages.newConversation': 'Nouvelle conversation',
+    'messages.recipient': 'ID du destinataire',
+    'messages.subject': 'Sujet (optionnel)',
+    'messages.message': 'Message',
+    'messages.direct': 'Message direct',
+    'messages.group': 'Groupe',
+    'messages.participants': 'participants',
+    'messages.conversation': 'Conversation',
+
+    // ── Announcements (Phase 12B) ──
+    'announcements.title': 'Annonces',
+    'announcements.empty': 'Aucune annonce',
+
+    // ── Invoices (Phase 12B) ──
+    'invoices.title': 'Factures',
+    'invoices.empty': 'Aucune facture',
+    'invoices.overdue': 'En retard',
+    'invoices.overdueLabel': 'facture(s) en retard',
+    'invoices.issued': 'Émise',
+    'invoices.due': 'Échéance',
+    'invoices.retry': 'Relancer le paiement',
+
     // ── Common ──
     'common.error': 'Erreur',
     'common.retry': 'Réessayer',
@@ -219,6 +261,48 @@ const Map<String, Map<String, String>> _translations = {
     // ── Profile ──
     'profile.rewardPoints': 'نقاط المكافأة',
 
+    // ── Timetable (Phase 12B) ──
+    'timetable.title': 'الجدول الزمني',
+    'timetable.empty': 'لا يوجد جدول زمني',
+    'timetable.weekOf': 'أسبوع',
+    'timetable.canceled': 'ملغى',
+    'timetable.substituted': 'بديل',
+    'timetable.days.1': 'الإثنين',
+    'timetable.days.2': 'الثلاثاء',
+    'timetable.days.3': 'الأربعاء',
+    'timetable.days.4': 'الخميس',
+    'timetable.days.5': 'الجمعة',
+    'timetable.days.6': 'السبت',
+
+    // ── Messages (Phase 12B) ──
+    'messages.title': 'الرسائل',
+    'messages.empty': 'لا توجد محادثات',
+    'messages.chat': 'محادثة',
+    'messages.noMessages': 'لا توجد رسائل',
+    'messages.typePlaceholder': 'اكتب رسالة...',
+    'messages.send': 'إرسال',
+    'messages.newConversation': 'محادثة جديدة',
+    'messages.recipient': 'معرف المستلم',
+    'messages.subject': 'الموضوع (اختياري)',
+    'messages.message': 'الرسالة',
+    'messages.direct': 'رسالة مباشرة',
+    'messages.group': 'مجموعة',
+    'messages.participants': 'مشاركين',
+    'messages.conversation': 'محادثة',
+
+    // ── Announcements (Phase 12B) ──
+    'announcements.title': 'الإعلانات',
+    'announcements.empty': 'لا توجد إعلانات',
+
+    // ── Invoices (Phase 12B) ──
+    'invoices.title': 'الفواتير',
+    'invoices.empty': 'لا توجد فواتير',
+    'invoices.overdue': 'متأخر',
+    'invoices.overdueLabel': 'فاتورة متأخرة',
+    'invoices.issued': 'صدرت',
+    'invoices.due': 'الاستحقاق',
+    'invoices.retry': 'إعادة الدفع',
+
     // ── Common ──
     'common.error': 'خطأ',
     'common.retry': 'إعادة المحاولة',
@@ -322,6 +406,48 @@ const Map<String, Map<String, String>> _translations = {
 
     // ── Profile ──
     'profile.rewardPoints': 'Reward Points',
+
+    // ── Timetable (Phase 12B) ──
+    'timetable.title': 'Timetable',
+    'timetable.empty': 'No timetable available',
+    'timetable.weekOf': 'Week of',
+    'timetable.canceled': 'Canceled',
+    'timetable.substituted': 'Substituted',
+    'timetable.days.1': 'Monday',
+    'timetable.days.2': 'Tuesday',
+    'timetable.days.3': 'Wednesday',
+    'timetable.days.4': 'Thursday',
+    'timetable.days.5': 'Friday',
+    'timetable.days.6': 'Saturday',
+
+    // ── Messages (Phase 12B) ──
+    'messages.title': 'Messages',
+    'messages.empty': 'No conversations',
+    'messages.chat': 'Chat',
+    'messages.noMessages': 'No messages',
+    'messages.typePlaceholder': 'Type a message...',
+    'messages.send': 'Send',
+    'messages.newConversation': 'New conversation',
+    'messages.recipient': 'Recipient ID',
+    'messages.subject': 'Subject (optional)',
+    'messages.message': 'Message',
+    'messages.direct': 'Direct message',
+    'messages.group': 'Group',
+    'messages.participants': 'participants',
+    'messages.conversation': 'Conversation',
+
+    // ── Announcements (Phase 12B) ──
+    'announcements.title': 'Announcements',
+    'announcements.empty': 'No announcements',
+
+    // ── Invoices (Phase 12B) ──
+    'invoices.title': 'Invoices',
+    'invoices.empty': 'No invoices',
+    'invoices.overdue': 'Overdue',
+    'invoices.overdueLabel': 'overdue invoice(s)',
+    'invoices.issued': 'Issued',
+    'invoices.due': 'Due',
+    'invoices.retry': 'Retry payment',
 
     // ── Common ──
     'common.error': 'Error',

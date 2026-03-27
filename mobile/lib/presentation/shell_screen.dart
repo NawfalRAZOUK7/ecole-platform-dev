@@ -38,6 +38,10 @@ const _allNavItems = [
   // Student tabs (Phase 10C)
   _NavItem(route: '/student/content', icon: Icons.library_books, label: 'Contenu', roles: ['STD']),
   _NavItem(route: '/student/quizzes', icon: Icons.quiz, label: 'Quiz', roles: ['STD']),
+  // Phase 12B tabs
+  _NavItem(route: '/timetable', icon: Icons.calendar_view_week, label: 'Emploi du temps', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR']),
+  _NavItem(route: '/messages', icon: Icons.chat, label: 'Messages', roles: ['PAR', 'TCH', 'ADM', 'DIR']),
+  _NavItem(route: '/announcements', icon: Icons.campaign, label: 'Annonces', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR']),
   // Common tabs
   _NavItem(route: '/feed', icon: Icons.newspaper, label: 'Feed', roles: ['PAR']),
   _NavItem(route: '/notifications', icon: Icons.notifications, label: 'Notifs', roles: ['PAR', 'TCH', 'ADM', 'DIR']),

@@ -19,6 +19,8 @@ enum WsEventType {
   gradePublished,
   paymentUpdated,
   feedNew,
+  messageCreated,
+  announcementPublished,
   welcome,
   pong,
   unknown,
@@ -34,6 +36,10 @@ WsEventType _parseEventType(String type) {
       return WsEventType.paymentUpdated;
     case 'feed_new':
       return WsEventType.feedNew;
+    case 'message_created':
+      return WsEventType.messageCreated;
+    case 'announcement_published':
+      return WsEventType.announcementPublished;
     case 'welcome':
       return WsEventType.welcome;
     case 'pong':
@@ -177,6 +183,14 @@ class WsClient {
       case WsEventType.feedNew:
         title = 'Nouvelle actualité';
         body = event.data['title'] as String? ?? 'Une nouvelle actualité est disponible';
+        break;
+      case WsEventType.messageCreated:
+        title = 'Nouveau message';
+        body = event.data['body'] as String? ?? 'Vous avez un nouveau message';
+        break;
+      case WsEventType.announcementPublished:
+        title = 'Nouvelle annonce';
+        body = event.data['title'] as String? ?? 'Une nouvelle annonce a été publiée';
         break;
       default:
         return; // Don't show notification for welcome, pong, unknown

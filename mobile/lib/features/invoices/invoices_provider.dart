@@ -12,6 +12,7 @@ class InvoicesState {
   final String? error;
   final String? nextCursor;
   final bool hasMore;
+  final bool retrying;
 
   const InvoicesState({
     this.items = const [],
@@ -19,6 +20,7 @@ class InvoicesState {
     this.error,
     this.nextCursor,
     this.hasMore = false,
+    this.retrying = false,
   });
 }
 
@@ -47,6 +49,27 @@ class InvoicesNotifier extends StateNotifier<InvoicesState> {
   Future<void> refresh() async {
     await _ref.read(cacheStoreProvider).invalidatePrefix('invoices:');
     await load();
+  }
+
+  Future<void> retryPayment(String invoiceId) async {
+    state = InvoicesState(
+      items: state.items,
+      nextCursor: state.nextCursor,
+      hasMore: state.hasMore,
+      retrying: true,
+    );
+    try {
+      final api = _ref.read(apiClientProvider);
+      await api.post('/payments/initiate', body: {'invoice_id': invoiceId});
+      await refresh();
+    } catch (e) {
+      state = InvoicesState(
+        items: state.items,
+        nextCursor: state.nextCursor,
+        hasMore: state.hasMore,
+        error: e.toString(),
+      );
+    }
   }
 }
 

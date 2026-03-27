@@ -829,14 +829,14 @@
 - [x] i18n (fr/ar/en)
 
 ## Phase 12B — Timetable + Billing + Messaging (Mobile)
-- [ ] `timetable_screen.dart` — weekly grid (swipe days on phone, full week on tablet)
-- [ ] `conversations_screen.dart` — inbox with unread badges
-- [ ] `chat_screen.dart` — chat bubbles, real-time, read receipts
-- [ ] Push notification → deep link to conversation on new message
-- [ ] `announcements_screen.dart` — list with push notification for new announcements
-- [ ] Update InvoicesScreen with overdue indicators + retry status
-- [ ] Offline cache for conversations + announcements
-- [ ] i18n (fr/ar/en)
+- [x] `timetable_screen.dart` — weekly grid (swipe days on phone, full week on tablet)
+- [x] `conversations_screen.dart` — inbox with unread badges
+- [x] `chat_screen.dart` — chat bubbles, real-time, read receipts
+- [x] Push notification → deep link to conversation on new message
+- [x] `announcements_screen.dart` — list with push notification for new announcements
+- [x] Update InvoicesScreen with overdue indicators + retry status
+- [x] Offline cache for conversations + announcements
+- [x] i18n (fr/ar/en)
 
 ## Phase 12C — Student Progress Dashboard (Web + Mobile)
 - [ ] `ProgressDashboardPage.tsx` — student progress with 4 charts (grade trend, content completion, activity scores, attendance)
