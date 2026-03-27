@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import base64
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 
 import pytest
 
@@ -40,6 +40,7 @@ from app.core.exceptions import (
 
 
 # ── Cursor Encoding / Decoding ──
+
 
 class TestCursorEncoding:
     """Tests for opaque base64 cursor encode/decode."""
@@ -85,6 +86,7 @@ class TestCursorEncoding:
 
 # ── Page Size Clamping ──
 
+
 class TestClampPageSize:
     """Tests for pagination page size clamping."""
 
@@ -114,6 +116,7 @@ class TestClampPageSize:
 
 
 # ── Success Response Envelope ──
+
 
 class TestSuccessResponse:
     """Tests for the success_response helper."""
@@ -147,6 +150,7 @@ class TestSuccessResponse:
 
 
 # ── List Response Envelope ──
+
 
 class TestListResponse:
     """Tests for the list_response helper."""
@@ -189,6 +193,7 @@ class TestListResponse:
 
 # ── Pydantic Meta Models ──
 
+
 class TestMetaModels:
     """Tests for Meta and PaginationMeta Pydantic models."""
 
@@ -205,6 +210,7 @@ class TestMetaModels:
 
 
 # ── Exception Hierarchy ──
+
 
 class TestExceptionHierarchy:
     """Tests for the domain exception classes and their attributes."""
@@ -286,6 +292,7 @@ class TestExceptionHierarchy:
 
 # ── ErrorDetail Pydantic Model ──
 
+
 class TestErrorDetailModel:
     """Tests for the ErrorDetail and ErrorResponse Pydantic models."""
 
@@ -328,8 +335,16 @@ class TestErrorDetailModel:
 
     def test_error_category_values(self):
         expected = {
-            "validation", "authn", "authz", "conflict", "external",
-            "system", "rate_limit", "network", "not_found", "policy",
+            "validation",
+            "authn",
+            "authz",
+            "conflict",
+            "external",
+            "system",
+            "rate_limit",
+            "network",
+            "not_found",
+            "policy",
         }
         actual = {c.value for c in ErrorCategory}
         assert actual == expected

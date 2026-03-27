@@ -148,10 +148,12 @@ class TestWebSocketRealtime:
 
             r = aioredis.from_url("redis://localhost:6379/0", decode_responses=True)
             try:
-                test_event = json.dumps({
-                    "event": "test:ping",
-                    "data": {"message": "integration-test"},
-                })
+                test_event = json.dumps(
+                    {
+                        "event": "test:ping",
+                        "data": {"message": "integration-test"},
+                    }
+                )
                 await r.publish(f"ws:user:{user_id}", test_event)
 
                 # Receive the event on WS

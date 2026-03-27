@@ -17,9 +17,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import Any
 
-import redis.asyncio as aioredis
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import JSONResponse
@@ -94,11 +92,15 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
                 body_json = json.loads(body_str)
 
                 # Cache the response
-                cache_payload = json.dumps({
-                    "status_code": response.status_code,
-                    "body": body_json,
-                })
-                await redis_client.setex(cache_key, IDEMPOTENCY_TTL_SECONDS, cache_payload)
+                cache_payload = json.dumps(
+                    {
+                        "status_code": response.status_code,
+                        "body": body_json,
+                    }
+                )
+                await redis_client.setex(
+                    cache_key, IDEMPOTENCY_TTL_SECONDS, cache_payload
+                )
 
                 # Return new response since we consumed the body iterator
                 return JSONResponse(

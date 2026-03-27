@@ -7,7 +7,7 @@ Phase 11A: Added timetable slot and exception schemas.
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, time
+from datetime import date, time
 
 from pydantic import BaseModel, Field
 
@@ -129,6 +129,7 @@ class TimetableSlotCreateRequest(BaseModel):
 
 class TimetableSlotBulkCreateRequest(BaseModel):
     """Bulk create multiple timetable slots at once."""
+
     slots: list[TimetableSlotCreateRequest] = Field(..., min_length=1, max_length=50)
 
 
@@ -191,6 +192,7 @@ class TimetableExceptionResponse(BaseModel):
 # ---------------------------------------------------------------------------
 class WeeklySlotResponse(BaseModel):
     """A single slot in the weekly timetable view, with exception info if any."""
+
     id: str
     day_of_week: int
     start_time: str
@@ -207,6 +209,7 @@ class WeeklySlotResponse(BaseModel):
 
 class WeeklyTimetableResponse(BaseModel):
     """Full weekly timetable — grouped by day."""
+
     academic_year_id: str
     week_start: str
     week_end: str

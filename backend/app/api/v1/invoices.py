@@ -14,9 +14,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.database import get_db
-from app.core.dependencies import AuthContext, requires_permission, verify_school_boundary
+from app.core.dependencies import (
+    AuthContext,
+    requires_permission,
+    verify_school_boundary,
+)
 from app.core.exceptions import NotFoundError
-from app.core.filtering import FilterSpec, SortSpec, apply_filters, apply_sort, parse_filters, parse_sort
+from app.core.filtering import (
+    FilterSpec,
+    SortSpec,
+    apply_filters,
+    apply_sort,
+    parse_filters,
+    parse_sort,
+)
 from app.core.response import (
     clamp_page_size,
     decode_cursor,
@@ -25,12 +36,14 @@ from app.core.response import (
     success_response,
 )
 from app.core.search import apply_search, parse_search
-from app.models.billing import Invoice, InvoiceItem
+from app.models.billing import Invoice
 
 router = APIRouter(prefix="/invoices", tags=["billing-invoices"])
 
 
-@router.get("", summary="List invoices", response_description="Paginated list of invoices")
+@router.get(
+    "", summary="List invoices", response_description="Paginated list of invoices"
+)
 async def list_invoices(
     status: str | None = Query(None),
     cursor: str | None = Query(None),
@@ -119,7 +132,11 @@ async def list_invoices(
     )
 
 
-@router.get("/{invoice_id}", summary="Get invoice details", response_description="Invoice with line items")
+@router.get(
+    "/{invoice_id}",
+    summary="Get invoice details",
+    response_description="Invoice with line items",
+)
 async def get_invoice(
     invoice_id: uuid.UUID,
     auth: AuthContext = Depends(requires_permission("PERM-BIL:invoice:read")),
@@ -141,24 +158,26 @@ async def get_invoice(
     if auth.role == "PAR" and inv.parent_id != auth.user_id:
         raise NotFoundError("Invoice not found", error_code="ERR-BIL-404")
 
-    return success_response({
-        "id": str(inv.id),
-        "school_id": str(inv.school_id),
-        "parent_id": str(inv.parent_id),
-        "period_id": str(inv.period_id) if inv.period_id else None,
-        "status": inv.status,
-        "total_amount": float(inv.total_amount),
-        "currency": inv.currency,
-        "issued_date": str(inv.issued_date),
-        "due_date": str(inv.due_date),
-        "items": [
-            {
-                "id": str(item.id),
-                "description": item.description,
-                "amount": float(item.amount),
-                "unit_price": float(item.unit_price),
-                "quantity": item.quantity,
-            }
-            for item in inv.items
-        ],
-    })
+    return success_response(
+        {
+            "id": str(inv.id),
+            "school_id": str(inv.school_id),
+            "parent_id": str(inv.parent_id),
+            "period_id": str(inv.period_id) if inv.period_id else None,
+            "status": inv.status,
+            "total_amount": float(inv.total_amount),
+            "currency": inv.currency,
+            "issued_date": str(inv.issued_date),
+            "due_date": str(inv.due_date),
+            "items": [
+                {
+                    "id": str(item.id),
+                    "description": item.description,
+                    "amount": float(item.amount),
+                    "unit_price": float(item.unit_price),
+                    "quantity": item.quantity,
+                }
+                for item in inv.items
+            ],
+        }
+    )

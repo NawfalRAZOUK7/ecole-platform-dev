@@ -42,9 +42,9 @@ AUTH_PATHS = {
 
 # Limit configs: (max_requests, window_seconds)
 RATE_LIMITS = {
-    "auth": (5, 900),     # 5 per 15 minutes
-    "write": (30, 60),    # 30 per minute
-    "read": (100, 60),    # 100 per minute
+    "auth": (5, 900),  # 5 per 15 minutes
+    "write": (30, 60),  # 30 per minute
+    "read": (100, 60),  # 100 per minute
 }
 
 # Paths to skip rate limiting (health, metrics, docs)
@@ -96,6 +96,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # This allows integration tests to run without hitting rate limits.
         # Production enforcement is enabled via ENABLE_STRICT_RATE_LIMIT=true or app_env=production.
         from app.core.config import settings
+
         strict_rate_limit = getattr(settings, "enable_strict_rate_limit", False)
         if not strict_rate_limit and settings.app_env not in ("production", "staging"):
             response = await call_next(request)
@@ -103,7 +104,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             max_requests, window_seconds = RATE_LIMITS[category]
             response.headers["X-RateLimit-Limit"] = str(max_requests)
             response.headers["X-RateLimit-Remaining"] = str(max_requests)
-            response.headers["X-RateLimit-Reset"] = str(int(time.time()) + window_seconds)
+            response.headers["X-RateLimit-Reset"] = str(
+                int(time.time()) + window_seconds
+            )
             return response
 
         category = _classify_request(request.method, path)
@@ -175,5 +178,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             response = await call_next(request)
             response.headers["X-RateLimit-Limit"] = str(max_requests)
             response.headers["X-RateLimit-Remaining"] = str(max_requests)
-            response.headers["X-RateLimit-Reset"] = str(int(time.time()) + window_seconds)
+            response.headers["X-RateLimit-Reset"] = str(
+                int(time.time()) + window_seconds
+            )
             return response

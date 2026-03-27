@@ -14,7 +14,6 @@ Requires: running Redis for ARQ pool tests.
 
 from __future__ import annotations
 
-import asyncio
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -207,7 +206,7 @@ class TestEmailService:
     async def test_invalid_lang_defaults_to_fr(self):
         from app.services.email import email_service
 
-        with patch("aiosmtplib.send", new_callable=AsyncMock) as mock_send:
+        with patch("aiosmtplib.send", new_callable=AsyncMock):
             result = await email_service.send_email(
                 to="test@example.com",
                 template_name="welcome",
@@ -267,7 +266,7 @@ class TestTaskFunctions:
 class TestTaskMetrics:
     @pytest.mark.asyncio
     async def test_metrics_increment_on_email_task(self):
-        from app.core.metrics import TASK_COMPLETED_COUNT, TASK_ENQUEUED_COUNT
+        from app.core.metrics import TASK_COMPLETED_COUNT
         from app.core.tasks import task_send_email
 
         # Get baseline

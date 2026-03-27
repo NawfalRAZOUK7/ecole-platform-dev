@@ -123,6 +123,7 @@ OPENAPI_TAGS = [
     },
 ]
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan — startup and shutdown hooks."""

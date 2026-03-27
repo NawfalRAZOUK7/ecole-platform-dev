@@ -26,7 +26,6 @@ from typing import Any
 
 from fastapi import Query, Request
 from sqlalchemy import asc, desc
-from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.sql import Select
 
 
@@ -64,10 +63,7 @@ class SortSpec:
 
     def as_list(self) -> list[str]:
         """Serialize for meta.sort_by (e.g. ['-created_at', 'title'])."""
-        return [
-            f"-{f}" if d == "desc" else f
-            for f, d in self.fields
-        ]
+        return [f"-{f}" if d == "desc" else f for f, d in self.fields]
 
 
 # ---------------------------------------------------------------------------
@@ -117,12 +113,17 @@ async def parse_filters(request: Request) -> FilterSpec:
             field_name = match.group(1)
             operator = match.group(2) or "eq"
             if operator in VALID_OPERATORS:
-                spec.items.append(FilterItem(field=field_name, operator=operator, value=value))
+                spec.items.append(
+                    FilterItem(field=field_name, operator=operator, value=value)
+                )
     return spec
 
 
 async def parse_sort(
-    sort: str | None = Query(None, description="Sort fields, comma-separated. Prefix with - for desc. E.g. -created_at,title"),
+    sort: str | None = Query(
+        None,
+        description="Sort fields, comma-separated. Prefix with - for desc. E.g. -created_at,title",
+    ),
 ) -> SortSpec:
     """Parse ?sort=-created_at,title into SortSpec."""
     spec = SortSpec()
@@ -145,7 +146,14 @@ async def parse_sort(
 FILTERABLE_FIELDS: dict[str, set[str]] = {
     "Course": {"status", "title", "class_id", "teacher_id", "created_at"},
     "Assignment": {"title", "course_id", "due_at", "created_at"},
-    "ContentItem": {"status", "content_type", "level_band", "language", "title", "created_at"},
+    "ContentItem": {
+        "status",
+        "content_type",
+        "level_band",
+        "language",
+        "title",
+        "created_at",
+    },
     "Notification": {"title", "event_ref", "created_at"},
     "Activity": {"type", "difficulty", "title", "created_at"},
     "Assessment": {"status", "class_id", "title", "due_at", "created_at"},

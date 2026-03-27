@@ -16,7 +16,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import AuthContext, requires_permission, verify_school_boundary
+from app.core.dependencies import (
+    AuthContext,
+    requires_permission,
+    verify_school_boundary,
+)
 from app.core.exceptions import ConflictError, NotFoundError
 from app.core.redis import get_redis
 from app.core.response import success_response
@@ -42,7 +46,12 @@ def _get_client_ip(request: Request) -> str | None:
     return None
 
 
-@router.post("", status_code=201, summary="Enroll student in class", response_description="Enrollment record")
+@router.post(
+    "",
+    status_code=201,
+    summary="Enroll student in class",
+    response_description="Enrollment record",
+)
 async def create_enrollment(
     body: EnrollmentCreateRequest,
     request: Request,

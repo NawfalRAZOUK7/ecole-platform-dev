@@ -55,9 +55,7 @@ async def _verify_student_access(
     """
     if auth.role in ("ADM", "DIR"):
         # Verify student exists and is in the same school
-        result = await db.execute(
-            select(User.school_id).where(User.id == student_id)
-        )
+        result = await db.execute(select(User.school_id).where(User.id == student_id))
         student_school_id = result.scalar_one_or_none()
         if student_school_id is None:
             raise NotFoundError("Student not found", error_code="ERR-PROGRESS-404")
@@ -104,9 +102,7 @@ async def _verify_class_access(
     - TCH: must be assigned to the class
     - ADM/DIR: any class in their school
     """
-    result = await db.execute(
-        select(Class.school_id).where(Class.id == class_id)
-    )
+    result = await db.execute(select(Class.school_id).where(Class.id == class_id))
     class_school_id = result.scalar_one_or_none()
     if class_school_id is None:
         raise NotFoundError("Class not found", error_code="ERR-PROGRESS-404")

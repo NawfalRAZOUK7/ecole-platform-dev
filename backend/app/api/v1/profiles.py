@@ -35,7 +35,6 @@ from app.schemas.profile import (
     StudentProfileUpdate,
     TeacherProfileResponse,
     TeacherProfileUpdate,
-    UserProfileResponse,
 )
 from app.services.audit import AuditService
 
@@ -92,11 +91,15 @@ async def _get_user_with_profile(
         profile = (await db.execute(stmt)).scalar_one_or_none()
         if profile:
             if role == "STD":
-                result["student_profile"] = StudentProfileResponse.model_validate(profile)
+                result["student_profile"] = StudentProfileResponse.model_validate(
+                    profile
+                )
             elif role == "PAR":
                 result["parent_profile"] = ParentProfileResponse.model_validate(profile)
             elif role == "TCH":
-                result["teacher_profile"] = TeacherProfileResponse.model_validate(profile)
+                result["teacher_profile"] = TeacherProfileResponse.model_validate(
+                    profile
+                )
 
     return result
 
@@ -259,11 +262,13 @@ async def get_my_children(
 
     # Fetch active links
     links_result = await db.execute(
-        select(ParentChildLink).where(
+        select(ParentChildLink)
+        .where(
             ParentChildLink.parent_user_id == auth.user_id,
             ParentChildLink.school_id == auth.school_id,
             ParentChildLink.status == "active",
-        ).order_by(ParentChildLink.linked_at.desc())
+        )
+        .order_by(ParentChildLink.linked_at.desc())
     )
     links = list(links_result.scalars().all())
 
@@ -286,18 +291,24 @@ async def get_my_children(
         )
         profile = profile_result.scalar_one_or_none()
 
-        children.append({
-            "user_id": str(child.id),
-            "full_name": child.full_name,
-            "email": child.email,
-            "link_id": str(link.id),
-            "linked_at": link.linked_at.isoformat() if link.linked_at else None,
-            "student_profile": {
-                "class_level": profile.class_level if profile else None,
-                "date_of_birth": str(profile.date_of_birth) if profile and profile.date_of_birth else None,
-                "student_number": profile.student_number if profile else None,
-                "nationality": profile.nationality if profile else None,
-            } if profile else None,
-        })
+        children.append(
+            {
+                "user_id": str(child.id),
+                "full_name": child.full_name,
+                "email": child.email,
+                "link_id": str(link.id),
+                "linked_at": link.linked_at.isoformat() if link.linked_at else None,
+                "student_profile": {
+                    "class_level": profile.class_level if profile else None,
+                    "date_of_birth": str(profile.date_of_birth)
+                    if profile and profile.date_of_birth
+                    else None,
+                    "student_number": profile.student_number if profile else None,
+                    "nationality": profile.nationality if profile else None,
+                }
+                if profile
+                else None,
+            }
+        )
 
     return success_response(children)

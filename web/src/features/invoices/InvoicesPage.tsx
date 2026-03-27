@@ -171,42 +171,41 @@ export function InvoicesPage() {
                 {displayedItems.map((inv) => {
                   const overdue = isOverdue(inv);
                   return (
-                  <tr key={inv.id} className={overdue ? 'invoice-row--overdue' : ''}>
-                    <td>{inv.label}</td>
-                    <td>{formatCurrency(inv.total_cents / 100, inv.currency)}</td>
-                    <td>
-                      <span
-                        className="status-badge"
-                        style={{
-                          color: getStatusColor(inv.status, overdue),
-                          borderColor: getStatusColor(inv.status, overdue),
-                        }}
-                      >
-                        {overdue ? t('invoices.overdue') : t(`invoices.statusLabels.${inv.status}`, inv.status)}
-                      </span>
-                    </td>
-                    <td>{formatDate(inv.issued_date, i18n.language)}</td>
-                    <td>
-                      {formatDate(inv.due_date, i18n.language)}
-                      {overdue && <span style={{ color: 'var(--color-danger)', fontSize: 12, marginInlineStart: 4 }}>⚠️</span>}
-                    </td>
-                    {isPar && (
+                    <tr key={inv.id} className={overdue ? 'invoice-row--overdue' : ''}>
+                      <td>{inv.label}</td>
+                      <td>{formatCurrency(inv.total_cents / 100, inv.currency)}</td>
                       <td>
-                        {(inv.status === 'pending' || inv.status === 'failed') && (
-                          <button
-                            className="btn btn-sm btn-primary"
-                            onClick={() => handleRetryPayment(inv.id)}
-                            disabled={retrying === inv.id}
-                          >
-                            {retrying === inv.id ? '...' : inv.status === 'failed' ? t('invoices.retry') : t('invoices.pay')}
-                          </button>
-                        )}
+                        <span
+                          className="status-badge"
+                          style={{
+                            color: getStatusColor(inv.status, overdue),
+                            borderColor: getStatusColor(inv.status, overdue),
+                          }}
+                        >
+                          {overdue ? t('invoices.overdue') : t(`invoices.statusLabels.${inv.status}`, inv.status)}
+                        </span>
                       </td>
-                    )}
-                  </tr>
+                      <td>{formatDate(inv.issued_date, i18n.language)}</td>
+                      <td>
+                        {formatDate(inv.due_date, i18n.language)}
+                        {overdue && <span style={{ color: 'var(--color-danger)', fontSize: 12, marginInlineStart: 4 }}>⚠️</span>}
+                      </td>
+                      {isPar && (
+                        <td>
+                          {(inv.status === 'pending' || inv.status === 'failed') && (
+                            <button
+                              className="btn btn-sm btn-primary"
+                              onClick={() => handleRetryPayment(inv.id)}
+                              disabled={retrying === inv.id}
+                            >
+                              {retrying === inv.id ? '...' : inv.status === 'failed' ? t('invoices.retry') : t('invoices.pay')}
+                            </button>
+                          )}
+                        </td>
+                      )}
+                    </tr>
                   );
-                }
-                ))}
+                })}
               </tbody>
             </table>
           </div>

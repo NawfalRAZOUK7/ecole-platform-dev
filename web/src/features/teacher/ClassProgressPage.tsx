@@ -15,9 +15,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
-  LineChart,
-  Line,
 } from 'recharts';
 import { api, ApiClientError } from '@/services/api/client';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
@@ -95,7 +92,9 @@ export function ClassProgressPage() {
         const items = resp.data.data as unknown as ClassOption[];
         setClasses(items);
         if (items.length > 0) setSelectedClass(items[0].id);
-      } catch (_) {}
+      } catch {
+        setClasses([]);
+      }
     })();
   }, []);
 

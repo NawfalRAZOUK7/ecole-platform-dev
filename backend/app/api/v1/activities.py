@@ -14,9 +14,20 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import AuthContext, requires_permission, verify_school_boundary
-from app.core.exceptions import ConflictError, NotFoundError, ValidationError
-from app.core.filtering import FilterSpec, SortSpec, apply_filters, apply_sort, parse_filters, parse_sort
+from app.core.dependencies import (
+    AuthContext,
+    requires_permission,
+    verify_school_boundary,
+)
+from app.core.exceptions import ConflictError, NotFoundError
+from app.core.filtering import (
+    FilterSpec,
+    SortSpec,
+    apply_filters,
+    apply_sort,
+    parse_filters,
+    parse_sort,
+)
 from app.core.response import (
     clamp_page_size,
     decode_cursor,
@@ -44,7 +55,9 @@ def _get_client_ip(request: Request) -> str | None:
 # ---------------------------------------------------------------------------
 # S-058: GET /activities — List activities (STD)
 # ---------------------------------------------------------------------------
-@router.get("", summary="List activities", response_description="Paginated list of activities")
+@router.get(
+    "", summary="List activities", response_description="Paginated list of activities"
+)
 async def list_activities(
     activity_type: str | None = Query(None, alias="type"),
     difficulty: str | None = Query(None),
@@ -53,7 +66,9 @@ async def list_activities(
     filters: FilterSpec = Depends(parse_filters),
     sort: SortSpec = Depends(parse_sort),
     search: str | None = Depends(parse_search),
-    auth: AuthContext = Depends(requires_permission("PERM-LMS:activity-session:create")),
+    auth: AuthContext = Depends(
+        requires_permission("PERM-LMS:activity-session:create")
+    ),
     db: AsyncSession = Depends(get_db),
 ):
     """List available activities with filtering, sorting, and full-text search.
@@ -119,11 +134,18 @@ async def list_activities(
 # ---------------------------------------------------------------------------
 # S-058: POST /activity-sessions — Start activity session (STD)
 # ---------------------------------------------------------------------------
-@router.post("/sessions", status_code=201, summary="Start activity session", response_description="Created activity session")
+@router.post(
+    "/sessions",
+    status_code=201,
+    summary="Start activity session",
+    response_description="Created activity session",
+)
 async def create_activity_session(
     body: ActivitySessionCreateRequest,
     request: Request,
-    auth: AuthContext = Depends(requires_permission("PERM-LMS:activity-session:create")),
+    auth: AuthContext = Depends(
+        requires_permission("PERM-LMS:activity-session:create")
+    ),
     db: AsyncSession = Depends(get_db),
 ):
     """Start a new activity session.
@@ -179,25 +201,34 @@ async def create_activity_session(
         ip_address=_get_client_ip(request),
     )
 
-    return success_response({
-        "id": str(session.id),
-        "student_id": str(session.student_id),
-        "activity_id": str(session.activity_id),
-        "status": session.status,
-        "score": None,
-        "attempt_no": session.attempt_no,
-    })
+    return success_response(
+        {
+            "id": str(session.id),
+            "student_id": str(session.student_id),
+            "activity_id": str(session.activity_id),
+            "status": session.status,
+            "score": None,
+            "attempt_no": session.attempt_no,
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
 # S-059: POST /activity-sessions/{id}/complete — Complete session (STD)
 # ---------------------------------------------------------------------------
-@router.post("/sessions/{session_id}/complete", status_code=200, summary="Complete activity session", response_description="Completed session with score")
+@router.post(
+    "/sessions/{session_id}/complete",
+    status_code=200,
+    summary="Complete activity session",
+    response_description="Completed session with score",
+)
 async def complete_activity_session(
     session_id: uuid.UUID,
     body: ActivitySessionCompleteRequest,
     request: Request,
-    auth: AuthContext = Depends(requires_permission("PERM-LMS:activity-session:complete")),
+    auth: AuthContext = Depends(
+        requires_permission("PERM-LMS:activity-session:complete")
+    ),
     db: AsyncSession = Depends(get_db),
 ):
     """Complete an activity session with optional score.
@@ -250,11 +281,13 @@ async def complete_activity_session(
         ip_address=_get_client_ip(request),
     )
 
-    return success_response({
-        "id": str(session.id),
-        "student_id": str(session.student_id),
-        "activity_id": str(session.activity_id),
-        "status": session.status,
-        "score": float(session.score) if session.score is not None else None,
-        "attempt_no": session.attempt_no,
-    })
+    return success_response(
+        {
+            "id": str(session.id),
+            "student_id": str(session.student_id),
+            "activity_id": str(session.activity_id),
+            "status": session.status,
+            "score": float(session.score) if session.score is not None else None,
+            "attempt_no": session.attempt_no,
+        }
+    )

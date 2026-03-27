@@ -19,16 +19,7 @@ import pytest
 import pytest_asyncio
 
 from tests.conftest import (
-    BASE_URL,
     SCHOOL_ID,
-    ADMIN_EMAIL,
-    ADMIN_PASSWORD,
-    STUDENT_EMAIL,
-    STUDENT_PASSWORD,
-    PARENT_EMAIL,
-    PARENT_PASSWORD,
-    TEACHER_EMAIL,
-    TEACHER_PASSWORD,
 )
 
 # Seed user IDs from seed.py (fixed UUIDs)
@@ -573,7 +564,6 @@ class TestBatchRegisterWithAutoLink:
         assert resp.status_code == 201
         data = resp.json()["data"]
         assert data["total_created"] == 1
-        new_parent_id = data["created"][0]["user_id"]
         temp_password = data["created"][0]["temp_password"]
 
         # Login as the new parent

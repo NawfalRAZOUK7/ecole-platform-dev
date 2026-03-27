@@ -9,16 +9,9 @@ import pytest
 import httpx
 
 from tests.conftest import (
-    BASE_URL,
     SCHOOL_ID,
     ADMIN_EMAIL,
     ADMIN_PASSWORD,
-    TEACHER_EMAIL,
-    TEACHER_PASSWORD,
-    PARENT_EMAIL,
-    PARENT_PASSWORD,
-    STUDENT_EMAIL,
-    STUDENT_PASSWORD,
 )
 
 # ──────────────────────────────────────────────────────────
@@ -70,7 +63,9 @@ class TestAuthBypass:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("method,path", PROTECTED_ENDPOINTS)
-    async def test_no_token_returns_401(self, client: httpx.AsyncClient, method: str, path: str):
+    async def test_no_token_returns_401(
+        self, client: httpx.AsyncClient, method: str, path: str
+    ):
         """Endpoint must reject requests without Authorization header."""
         if method == "GET":
             r = await client.get(path)
@@ -79,12 +74,16 @@ class TestAuthBypass:
         else:
             r = await client.request(method, path)
 
-        assert r.status_code == 401, f"{method} {path} returned {r.status_code}, expected 401"
+        assert (
+            r.status_code == 401
+        ), f"{method} {path} returned {r.status_code}, expected 401"
 
     @pytest.mark.asyncio
     async def test_invalid_token_returns_401(self, client: httpx.AsyncClient):
         """A malformed JWT must be rejected."""
-        r = await client.get("/auth/me", headers={"Authorization": "Bearer invalid.jwt.token"})
+        r = await client.get(
+            "/auth/me", headers={"Authorization": "Bearer invalid.jwt.token"}
+        )
         assert r.status_code == 401
 
     @pytest.mark.asyncio
@@ -95,7 +94,9 @@ class TestAuthBypass:
             "eyJzdWIiOiIxMjM0NTY3ODkwIiwiZXhwIjoxfQ."
             "SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
         )
-        r = await client.get("/auth/me", headers={"Authorization": f"Bearer {fake_jwt}"})
+        r = await client.get(
+            "/auth/me", headers={"Authorization": f"Bearer {fake_jwt}"}
+        )
         assert r.status_code == 401
 
 
@@ -163,9 +164,11 @@ class TestSQLInjection:
             },
         )
         # Must not succeed (200 with token)
-        assert r.status_code in (400, 401, 422), (
-            f"SQL injection payload returned {r.status_code}"
-        )
+        assert r.status_code in (
+            400,
+            401,
+            422,
+        ), f"SQL injection payload returned {r.status_code}"
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("payload", SQL_PAYLOADS)
@@ -179,9 +182,7 @@ class TestSQLInjection:
             headers=auth_header(admin_token),
         )
         # Should return 200 (empty results) — never 500
-        assert r.status_code == 200, (
-            f"SQL injection in search returned {r.status_code}"
-        )
+        assert r.status_code == 200, f"SQL injection in search returned {r.status_code}"
 
 
 # ──────────────────────────────────────────────────────────
@@ -194,7 +195,7 @@ class TestXSSPrevention:
 
     XSS_PAYLOADS = [
         '<script>alert("xss")</script>',
-        '<img src=x onerror=alert(1)>',
+        "<img src=x onerror=alert(1)>",
         '"><svg onload=alert(1)>',
         "javascript:alert(1)",
         '<iframe src="javascript:alert(1)">',
@@ -233,7 +234,7 @@ class TestXSSPrevention:
         if "<script>" in payload:
             # API should either escape or not reflect the input
             body = r.text
-            assert '<script>alert' not in body.lower()
+            assert "<script>alert" not in body.lower()
 
 
 # ──────────────────────────────────────────────────────────
@@ -319,9 +320,10 @@ class TestPasswordPolicy:
             headers=auth_header(admin_token),
         )
         # Must not succeed — 400 or 422 expected
-        assert r.status_code in (400, 422), (
-            f"Weak password ({reason}) was accepted: {r.status_code}"
-        )
+        assert r.status_code in (
+            400,
+            422,
+        ), f"Weak password ({reason}) was accepted: {r.status_code}"
 
     @pytest.mark.asyncio
     async def test_strong_password_accepted(

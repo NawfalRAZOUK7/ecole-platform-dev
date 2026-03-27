@@ -12,16 +12,20 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, Form, Query, Request, UploadFile
+from fastapi import APIRouter, Depends, Form, Request, UploadFile
 from fastapi.responses import FileResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import AuthContext, requires_permission, verify_school_boundary
-from app.core.exceptions import AuthorizationError, ConflictError, NotFoundError, ValidationError
+from app.core.dependencies import (
+    AuthContext,
+    requires_permission,
+    verify_school_boundary,
+)
+from app.core.exceptions import AuthorizationError, NotFoundError, ValidationError
 from app.core.response import success_response
-from app.core.storage import storage, validate_file_size, validate_mime_type
+from app.core.storage import storage, validate_mime_type
 from app.models.lms import Assignment, Course, Grade, Submission, SubmissionFile
 from app.schemas.lms import GradeRequest, SubmissionCreateRequest
 from app.services.audit import AuditService
@@ -42,7 +46,12 @@ def _get_client_ip(request: Request) -> str | None:
 # ---------------------------------------------------------------------------
 # S-053: POST /submissions — Submit work (STD)
 # ---------------------------------------------------------------------------
-@router.post("", status_code=201, summary="Submit student work", response_description="Submission record")
+@router.post(
+    "",
+    status_code=201,
+    summary="Submit student work",
+    response_description="Submission record",
+)
 async def create_submission(
     body: SubmissionCreateRequest,
     request: Request,
@@ -85,13 +94,17 @@ async def create_submission(
     )
     existing = existing_result.scalar_one_or_none()
     if existing is not None:
-        return success_response({
-            "id": str(existing.id),
-            "assignment_id": str(existing.assignment_id),
-            "student_id": str(existing.student_id),
-            "status": existing.status,
-            "submitted_at": existing.submitted_at.isoformat() if existing.submitted_at else None,
-        })
+        return success_response(
+            {
+                "id": str(existing.id),
+                "assignment_id": str(existing.assignment_id),
+                "student_id": str(existing.student_id),
+                "status": existing.status,
+                "submitted_at": existing.submitted_at.isoformat()
+                if existing.submitted_at
+                else None,
+            }
+        )
 
     # 4. Create submission
     # PRINTABLE_PDF assignments start as draft so student can upload solution files first
@@ -123,19 +136,28 @@ async def create_submission(
         ip_address=_get_client_ip(request),
     )
 
-    return success_response({
-        "id": str(submission.id),
-        "assignment_id": str(submission.assignment_id),
-        "student_id": str(submission.student_id),
-        "status": submission.status,
-        "submitted_at": submission.submitted_at.isoformat() if submission.submitted_at else None,
-    })
+    return success_response(
+        {
+            "id": str(submission.id),
+            "assignment_id": str(submission.assignment_id),
+            "student_id": str(submission.student_id),
+            "status": submission.status,
+            "submitted_at": submission.submitted_at.isoformat()
+            if submission.submitted_at
+            else None,
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
 # S-054: POST /submissions/{id}/grade — Grade a submission (TCH)
 # ---------------------------------------------------------------------------
-@router.post("/{submission_id}/grade", status_code=201, summary="Grade a submission", response_description="Updated submission with grade")
+@router.post(
+    "/{submission_id}/grade",
+    status_code=201,
+    summary="Grade a submission",
+    response_description="Updated submission with grade",
+)
 async def grade_submission(
     submission_id: uuid.UUID,
     body: GradeRequest,
@@ -280,14 +302,18 @@ async def grade_submission(
         except Exception:
             pass  # Fire-and-forget — never block grading
 
-    return success_response({
-        "id": str(grade.id),
-        "submission_id": str(grade.submission_id),
-        "teacher_id": str(grade.teacher_id),
-        "score": float(grade.score),
-        "feedback_text": grade.feedback_text,
-        "published_at": grade.published_at.isoformat() if grade.published_at else None,
-    })
+    return success_response(
+        {
+            "id": str(grade.id),
+            "submission_id": str(grade.submission_id),
+            "teacher_id": str(grade.teacher_id),
+            "score": float(grade.score),
+            "feedback_text": grade.feedback_text,
+            "published_at": grade.published_at.isoformat()
+            if grade.published_at
+            else None,
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -416,15 +442,17 @@ async def upload_submission_file(
         ip_address=_get_client_ip(request),
     )
 
-    return success_response({
-        "id": str(sf.id),
-        "submission_id": str(sf.submission_id),
-        "file_path": sf.file_path,
-        "checksum": sf.checksum,
-        "mime_type": sf.mime_type,
-        "file_size": sf.file_size,
-        "file_type_hint": sf.file_type_hint,
-    })
+    return success_response(
+        {
+            "id": str(sf.id),
+            "submission_id": str(sf.submission_id),
+            "file_path": sf.file_path,
+            "checksum": sf.checksum,
+            "mime_type": sf.mime_type,
+            "file_size": sf.file_size,
+            "file_type_hint": sf.file_type_hint,
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -580,13 +608,15 @@ async def finalize_submission(
         ip_address=_get_client_ip(request),
     )
 
-    return success_response({
-        "id": str(submission.id),
-        "assignment_id": str(submission.assignment_id),
-        "student_id": str(submission.student_id),
-        "status": submission.status,
-        "submitted_at": submission.submitted_at.isoformat(),
-    })
+    return success_response(
+        {
+            "id": str(submission.id),
+            "assignment_id": str(submission.assignment_id),
+            "student_id": str(submission.student_id),
+            "status": submission.status,
+            "submitted_at": submission.submitted_at.isoformat(),
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -642,23 +672,29 @@ async def preview_submission_files(
 
     items = []
     for f in files:
-        is_previewable = (f.mime_type or "").startswith("image/") or f.mime_type == "application/pdf"
-        items.append({
-            "id": str(f.id),
-            "file_path": f.file_path,
-            "mime_type": f.mime_type,
-            "file_size": f.file_size,
-            "file_type_hint": f.file_type_hint,
-            "checksum": f.checksum,
-            "is_previewable": is_previewable,
-            "download_url": f"/api/v1/submissions/{submission_id}/files/{f.id}",
-        })
+        is_previewable = (f.mime_type or "").startswith(
+            "image/"
+        ) or f.mime_type == "application/pdf"
+        items.append(
+            {
+                "id": str(f.id),
+                "file_path": f.file_path,
+                "mime_type": f.mime_type,
+                "file_size": f.file_size,
+                "file_type_hint": f.file_type_hint,
+                "checksum": f.checksum,
+                "is_previewable": is_previewable,
+                "download_url": f"/api/v1/submissions/{submission_id}/files/{f.id}",
+            }
+        )
 
-    return success_response({
-        "submission_id": str(submission_id),
-        "assignment_id": str(submission.assignment_id),
-        "student_id": str(submission.student_id),
-        "status": submission.status,
-        "exercise_type": assignment.exercise_type,
-        "files": items,
-    })
+    return success_response(
+        {
+            "submission_id": str(submission_id),
+            "assignment_id": str(submission.assignment_id),
+            "student_id": str(submission.student_id),
+            "status": submission.status,
+            "exercise_type": assignment.exercise_type,
+            "files": items,
+        }
+    )

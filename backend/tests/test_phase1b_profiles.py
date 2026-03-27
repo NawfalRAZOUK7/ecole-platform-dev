@@ -11,19 +11,12 @@ from __future__ import annotations
 
 import httpx
 import pytest
-import pytest_asyncio
 
 from tests.conftest import (
-    BASE_URL,
-    SCHOOL_ID,
     ADMIN_EMAIL,
-    ADMIN_PASSWORD,
     STUDENT_EMAIL,
-    STUDENT_PASSWORD,
     PARENT_EMAIL,
-    PARENT_PASSWORD,
     TEACHER_EMAIL,
-    TEACHER_PASSWORD,
 )
 
 # Seed user IDs from seed.py (fixed UUIDs)
@@ -42,7 +35,9 @@ class TestGetMyProfile:
     """GET /me/profile — returns user data + role-specific profile."""
 
     @pytest.mark.asyncio
-    async def test_student_gets_own_profile(self, client: httpx.AsyncClient, student_token: str):
+    async def test_student_gets_own_profile(
+        self, client: httpx.AsyncClient, student_token: str
+    ):
         resp = await client.get(
             "/me/profile",
             headers={"Authorization": f"Bearer {student_token}"},
@@ -59,7 +54,9 @@ class TestGetMyProfile:
         assert data["teacher_profile"] is None
 
     @pytest.mark.asyncio
-    async def test_parent_gets_own_profile(self, client: httpx.AsyncClient, parent_token: str):
+    async def test_parent_gets_own_profile(
+        self, client: httpx.AsyncClient, parent_token: str
+    ):
         resp = await client.get(
             "/me/profile",
             headers={"Authorization": f"Bearer {parent_token}"},
@@ -72,7 +69,9 @@ class TestGetMyProfile:
         assert data["teacher_profile"] is None
 
     @pytest.mark.asyncio
-    async def test_teacher_gets_own_profile(self, client: httpx.AsyncClient, teacher_token: str):
+    async def test_teacher_gets_own_profile(
+        self, client: httpx.AsyncClient, teacher_token: str
+    ):
         resp = await client.get(
             "/me/profile",
             headers={"Authorization": f"Bearer {teacher_token}"},
@@ -85,7 +84,9 @@ class TestGetMyProfile:
         assert data["parent_profile"] is None
 
     @pytest.mark.asyncio
-    async def test_admin_gets_own_profile(self, client: httpx.AsyncClient, admin_token: str):
+    async def test_admin_gets_own_profile(
+        self, client: httpx.AsyncClient, admin_token: str
+    ):
         resp = await client.get(
             "/me/profile",
             headers={"Authorization": f"Bearer {admin_token}"},
@@ -104,7 +105,9 @@ class TestGetMyProfile:
         assert resp.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_response_follows_envelope(self, client: httpx.AsyncClient, student_token: str):
+    async def test_response_follows_envelope(
+        self, client: httpx.AsyncClient, student_token: str
+    ):
         resp = await client.get(
             "/me/profile",
             headers={"Authorization": f"Bearer {student_token}"},
@@ -125,7 +128,9 @@ class TestUpdateMyProfile:
     """PUT /me/profile — updates role-specific fields (upsert)."""
 
     @pytest.mark.asyncio
-    async def test_student_update_class_level(self, client: httpx.AsyncClient, student_token: str):
+    async def test_student_update_class_level(
+        self, client: httpx.AsyncClient, student_token: str
+    ):
         resp = await client.put(
             "/me/profile",
             headers={"Authorization": f"Bearer {student_token}"},
@@ -137,7 +142,9 @@ class TestUpdateMyProfile:
         assert data["student_profile"]["class_level"] == "3ème année collège"
 
     @pytest.mark.asyncio
-    async def test_student_update_date_of_birth(self, client: httpx.AsyncClient, student_token: str):
+    async def test_student_update_date_of_birth(
+        self, client: httpx.AsyncClient, student_token: str
+    ):
         resp = await client.put(
             "/me/profile",
             headers={"Authorization": f"Bearer {student_token}"},
@@ -148,7 +155,9 @@ class TestUpdateMyProfile:
         assert data["student_profile"]["date_of_birth"] == "2008-03-15"
 
     @pytest.mark.asyncio
-    async def test_parent_update_relationship_type(self, client: httpx.AsyncClient, parent_token: str):
+    async def test_parent_update_relationship_type(
+        self, client: httpx.AsyncClient, parent_token: str
+    ):
         resp = await client.put(
             "/me/profile",
             headers={"Authorization": f"Bearer {parent_token}"},
@@ -160,7 +169,9 @@ class TestUpdateMyProfile:
         assert data["parent_profile"]["relationship_type"] == "mother"
 
     @pytest.mark.asyncio
-    async def test_parent_update_cin_and_emergency_phone(self, client: httpx.AsyncClient, parent_token: str):
+    async def test_parent_update_cin_and_emergency_phone(
+        self, client: httpx.AsyncClient, parent_token: str
+    ):
         resp = await client.put(
             "/me/profile",
             headers={"Authorization": f"Bearer {parent_token}"},
@@ -175,7 +186,9 @@ class TestUpdateMyProfile:
         assert data["parent_profile"]["emergency_phone"] == "+212600112233"
 
     @pytest.mark.asyncio
-    async def test_teacher_update_subject_and_qualification(self, client: httpx.AsyncClient, teacher_token: str):
+    async def test_teacher_update_subject_and_qualification(
+        self, client: httpx.AsyncClient, teacher_token: str
+    ):
         resp = await client.put(
             "/me/profile",
             headers={"Authorization": f"Bearer {teacher_token}"},
@@ -191,7 +204,9 @@ class TestUpdateMyProfile:
         assert data["teacher_profile"]["qualification"] == "Agrégation"
 
     @pytest.mark.asyncio
-    async def test_update_with_no_fields_returns_422(self, client: httpx.AsyncClient, student_token: str):
+    async def test_update_with_no_fields_returns_422(
+        self, client: httpx.AsyncClient, student_token: str
+    ):
         resp = await client.put(
             "/me/profile",
             headers={"Authorization": f"Bearer {student_token}"},
@@ -200,7 +215,9 @@ class TestUpdateMyProfile:
         assert resp.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_admin_update_returns_422_no_profile(self, client: httpx.AsyncClient, admin_token: str):
+    async def test_admin_update_returns_422_no_profile(
+        self, client: httpx.AsyncClient, admin_token: str
+    ):
         """ADM role doesn't have a role-specific profile table."""
         resp = await client.put(
             "/me/profile",
@@ -210,7 +227,9 @@ class TestUpdateMyProfile:
         assert resp.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_update_creates_profile_if_missing(self, client: httpx.AsyncClient, student_token: str):
+    async def test_update_creates_profile_if_missing(
+        self, client: httpx.AsyncClient, student_token: str
+    ):
         """PUT /me/profile creates profile row on first update (upsert)."""
         resp = await client.put(
             "/me/profile",
@@ -223,7 +242,9 @@ class TestUpdateMyProfile:
         assert data["student_profile"]["nationality"] == "Marocaine"
 
     @pytest.mark.asyncio
-    async def test_update_preserves_existing_fields(self, client: httpx.AsyncClient, teacher_token: str):
+    async def test_update_preserves_existing_fields(
+        self, client: httpx.AsyncClient, teacher_token: str
+    ):
         """Updating one field shouldn't erase other existing fields."""
         # Set subject
         await client.put(
@@ -258,7 +279,9 @@ class TestAdminGetUserProfile:
     """GET /admin/users/{id}/profile — admin-only access."""
 
     @pytest.mark.asyncio
-    async def test_admin_reads_student_profile(self, client: httpx.AsyncClient, admin_token: str):
+    async def test_admin_reads_student_profile(
+        self, client: httpx.AsyncClient, admin_token: str
+    ):
         resp = await client.get(
             f"/admin/users/{STUDENT_ID}/profile",
             headers={"Authorization": f"Bearer {admin_token}"},
@@ -269,7 +292,9 @@ class TestAdminGetUserProfile:
         assert data["email"] == STUDENT_EMAIL
 
     @pytest.mark.asyncio
-    async def test_admin_reads_parent_profile(self, client: httpx.AsyncClient, admin_token: str):
+    async def test_admin_reads_parent_profile(
+        self, client: httpx.AsyncClient, admin_token: str
+    ):
         resp = await client.get(
             f"/admin/users/{PARENT_ID}/profile",
             headers={"Authorization": f"Bearer {admin_token}"},
@@ -279,7 +304,9 @@ class TestAdminGetUserProfile:
         assert data["role"] == "PAR"
 
     @pytest.mark.asyncio
-    async def test_admin_reads_teacher_profile(self, client: httpx.AsyncClient, admin_token: str):
+    async def test_admin_reads_teacher_profile(
+        self, client: httpx.AsyncClient, admin_token: str
+    ):
         resp = await client.get(
             f"/admin/users/{TEACHER_ID}/profile",
             headers={"Authorization": f"Bearer {admin_token}"},
@@ -289,7 +316,9 @@ class TestAdminGetUserProfile:
         assert data["role"] == "TCH"
 
     @pytest.mark.asyncio
-    async def test_nonexistent_user_returns_404(self, client: httpx.AsyncClient, admin_token: str):
+    async def test_nonexistent_user_returns_404(
+        self, client: httpx.AsyncClient, admin_token: str
+    ):
         resp = await client.get(
             "/admin/users/99999999-9999-4999-9999-999999999999/profile",
             headers={"Authorization": f"Bearer {admin_token}"},
@@ -327,7 +356,9 @@ class TestAdminGetUserProfile:
         assert resp.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_response_follows_envelope(self, client: httpx.AsyncClient, admin_token: str):
+    async def test_response_follows_envelope(
+        self, client: httpx.AsyncClient, admin_token: str
+    ):
         resp = await client.get(
             f"/admin/users/{STUDENT_ID}/profile",
             headers={"Authorization": f"Bearer {admin_token}"},

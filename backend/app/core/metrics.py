@@ -10,7 +10,6 @@ Metrics endpoint: GET /metrics (public, no auth)
 from __future__ import annotations
 
 import time
-from typing import Callable
 
 from fastapi import FastAPI, Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
@@ -38,10 +37,12 @@ APP_INFO = Info(
     "École Platform application metadata",
     registry=REGISTRY,
 )
-APP_INFO.info({
-    "version": "0.1.0",
-    "service": "api-backend",
-})
+APP_INFO.info(
+    {
+        "version": "0.1.0",
+        "service": "api-backend",
+    }
+)
 
 # ---------------------------------------------------------------------------
 # Golden Signal 1: Request Count (throughput)
@@ -236,6 +237,7 @@ TASK_DURATION = Histogram(
 def _normalize_path(path: str) -> str:
     """Collapse UUID path segments to {id} to limit label cardinality."""
     import re
+
     # Replace UUID-like segments
     path = re.sub(
         r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",

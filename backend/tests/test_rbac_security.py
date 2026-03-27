@@ -9,10 +9,8 @@ from __future__ import annotations
 
 import uuid
 
-import httpx
 import pytest
 
-from tests.conftest import SCHOOL_ID
 
 # Fixed seed IDs
 CLASS_ID = "20000000-0000-4000-8000-000000000004"
@@ -68,7 +66,9 @@ class TestUnauthenticated:
             resp = await client.get(path)
         else:
             resp = await client.post(path, json={})
-        assert resp.status_code == 401, f"{method} {path} expected 401, got {resp.status_code}"
+        assert (
+            resp.status_code == 401
+        ), f"{method} {path} expected 401, got {resp.status_code}"
 
 
 # ======================================================================

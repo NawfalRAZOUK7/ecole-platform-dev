@@ -7,13 +7,12 @@ Phase 11A: Added TimetableSlot, TimetableException models.
 
 import enum
 import uuid
-from datetime import date, datetime, time
+from datetime import date, time
 
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
     Date,
-    DateTime,
     ForeignKey,
     Index,
     Integer,
@@ -58,6 +57,7 @@ class JustificationStatus(str, enum.Enum):
 
 class ExceptionType(str, enum.Enum):
     """Timetable exception types (Phase 11A)."""
+
     CANCELED = "CANCELED"
     SUBSTITUTED = "SUBSTITUTED"
     ROOM_CHANGED = "ROOM_CHANGED"
@@ -147,7 +147,9 @@ class Class(TimestampMixin, Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "code", "school_id", "academic_year_id",
+            "code",
+            "school_id",
+            "academic_year_id",
             name="uq_classes_code_school_year",
         ),
     )
@@ -248,7 +250,9 @@ class AttendanceSession(TimestampMixin, Base):
     __table_args__ = (
         # One session per class/date/slot
         UniqueConstraint(
-            "class_id", "session_date", "slot",
+            "class_id",
+            "session_date",
+            "slot",
             name="uq_attendance_sessions_class_date_slot",
         ),
     )
@@ -286,7 +290,8 @@ class AttendanceRecord(TimestampMixin, Base):
         ),
         # One record per student per session
         UniqueConstraint(
-            "attendance_session_id", "student_id",
+            "attendance_session_id",
+            "student_id",
             name="uq_attendance_records_session_student",
         ),
     )
@@ -388,7 +393,10 @@ class TimetableSlot(TimestampMixin, Base):
             name="ck_timetable_slots_day_of_week",
         ),
         UniqueConstraint(
-            "class_id", "day_of_week", "start_time", "academic_year_id",
+            "class_id",
+            "day_of_week",
+            "start_time",
+            "academic_year_id",
             name="uq_timetable_slots_class_day_time_year",
         ),
         Index("idx_timetable_slots_school", "school_id"),
@@ -418,9 +426,7 @@ class TimetableException(TimestampMixin, Base):
     reason: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationships
-    timetable_slot: Mapped["TimetableSlot"] = relationship(
-        back_populates="exceptions"
-    )
+    timetable_slot: Mapped["TimetableSlot"] = relationship(back_populates="exceptions")
 
     __table_args__ = (
         CheckConstraint(
@@ -428,7 +434,8 @@ class TimetableException(TimestampMixin, Base):
             name="ck_timetable_exceptions_type",
         ),
         UniqueConstraint(
-            "timetable_slot_id", "exception_date",
+            "timetable_slot_id",
+            "exception_date",
             name="uq_timetable_exceptions_slot_date",
         ),
         Index("idx_timetable_exceptions_school", "school_id"),

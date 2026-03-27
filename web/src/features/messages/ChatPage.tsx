@@ -147,7 +147,7 @@ export function ChatPage() {
   }
 
   // Check if a message has been read by at least one other participant
-  function isRead(messageId: string): boolean {
+  function isRead(): boolean {
     for (const [userId, receipts] of readReceipts.entries()) {
       if (userId !== user?.id && receipts.length > 0) {
         return true;
@@ -195,7 +195,7 @@ export function ChatPage() {
                 <div className="chat-bubble-meta">
                   <span>{formatDate(msg.sent_at, i18n.language, { hour: '2-digit', minute: '2-digit' })}</span>
                   {isOwn && (
-                    <span className={`chat-read-indicator ${isRead(msg.id) ? 'chat-read--read' : ''}`}>
+                    <span className={`chat-read-indicator ${isRead() ? 'chat-read--read' : ''}`}>
                       ✓✓
                     </span>
                   )}

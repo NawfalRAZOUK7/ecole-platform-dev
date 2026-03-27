@@ -44,7 +44,9 @@ class StudentProfileResponse(BaseModel):
 # Parent Profile
 # ---------------------------------------------------------------------------
 class ParentProfileUpdate(BaseModel):
-    relationship_type: str | None = Field(None, pattern="^(father|mother|guardian|other)$")
+    relationship_type: str | None = Field(
+        None, pattern="^(father|mother|guardian|other)$"
+    )
     cin_number: str | None = Field(None, max_length=30)
     address: str | None = None
     profession: str | None = Field(None, max_length=200)

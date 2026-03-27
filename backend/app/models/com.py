@@ -56,18 +56,21 @@ class DeliveryStatus(str, enum.Enum):
 
 class ConversationType(str, enum.Enum):
     """Phase 11C: Conversation type."""
+
     DIRECT = "DIRECT"
     GROUP = "GROUP"
 
 
 class ParticipantRole(str, enum.Enum):
     """Phase 11C: Role in conversation."""
+
     INITIATOR = "INITIATOR"
     PARTICIPANT = "PARTICIPANT"
 
 
 class AnnouncementStatus(str, enum.Enum):
     """Phase 11C: Announcement status."""
+
     DRAFT = "DRAFT"
     PUBLISHED = "PUBLISHED"
     ARCHIVED = "ARCHIVED"
@@ -101,7 +104,11 @@ class ConsentPreference(TimestampMixin, Base):
     __table_args__ = (
         # INV-COM-CONSENT: unique on full scope tuple
         UniqueConstraint(
-            "user_id", "topic", "channel", "scope_type", "scope_ref_id",
+            "user_id",
+            "topic",
+            "channel",
+            "scope_type",
+            "scope_ref_id",
             name="uq_consent_user_topic_channel_scope",
         ),
         Index("idx_consent_school_user", "school_id", "user_id"),
@@ -246,19 +253,16 @@ class ConversationParticipant(TimestampMixin, Base):
     role_in_conversation: Mapped[str] = mapped_column(
         String(20), nullable=False, default=ParticipantRole.PARTICIPANT.value
     )
-    joined_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
+    joined_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     muted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     # Relationships
-    conversation: Mapped["Conversation"] = relationship(
-        back_populates="participants"
-    )
+    conversation: Mapped["Conversation"] = relationship(back_populates="participants")
 
     __table_args__ = (
         UniqueConstraint(
-            "conversation_id", "user_id",
+            "conversation_id",
+            "user_id",
             name="uq_conversation_participants_conv_user",
         ),
         Index("idx_conv_participants_user", "user_id"),
@@ -277,17 +281,13 @@ class Message(TimestampMixin, Base):
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     body: Mapped[str] = mapped_column(Text, nullable=False)
-    sent_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
+    sent_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     edited_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
 
     # Relationships
-    conversation: Mapped["Conversation"] = relationship(
-        back_populates="messages"
-    )
+    conversation: Mapped["Conversation"] = relationship(back_populates="messages")
     read_receipts: Mapped[list["MessageReadReceipt"]] = relationship(
         back_populates="message", cascade="all, delete-orphan"
     )
@@ -309,16 +309,15 @@ class MessageReadReceipt(TimestampMixin, Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    read_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
+    read_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
     # Relationships
     message: Mapped["Message"] = relationship(back_populates="read_receipts")
 
     __table_args__ = (
         UniqueConstraint(
-            "message_id", "user_id",
+            "message_id",
+            "user_id",
             name="uq_message_read_receipts_msg_user",
         ),
         Index("idx_read_receipts_user", "user_id"),

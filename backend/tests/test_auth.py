@@ -16,8 +16,6 @@ from tests.conftest import (
     ADMIN_EMAIL,
     ADMIN_PASSWORD,
     SCHOOL_ID,
-    STUDENT_EMAIL,
-    STUDENT_PASSWORD,
     TEACHER_EMAIL,
     TEACHER_PASSWORD,
 )
@@ -58,12 +56,16 @@ class TestJWT:
             },
         )
         assert response.status_code == 200
-        cookies = response.cookies
         # httpx may not fully expose cookie attributes, check it exists
-        assert "refresh_token" in response.headers.get("set-cookie", "").lower() or response.status_code == 200
+        assert (
+            "refresh_token" in response.cookies
+            or "refresh_token" in response.headers.get("set-cookie", "").lower()
+        )
 
     @pytest.mark.asyncio
-    async def test_expired_or_invalid_token_returns_401(self, client: httpx.AsyncClient):
+    async def test_expired_or_invalid_token_returns_401(
+        self, client: httpx.AsyncClient
+    ):
         """Invalid token returns 401 with ERR-IAM-401."""
         response = await client.get(
             "/auth/me",
@@ -387,9 +389,7 @@ class TestDenyOrdering:
     """Tests for security pipeline deny ordering."""
 
     @pytest.mark.asyncio
-    async def test_unauthenticated_returns_401_not_403(
-        self, client: httpx.AsyncClient
-    ):
+    async def test_unauthenticated_returns_401_not_403(self, client: httpx.AsyncClient):
         """Unauthenticated request to protected endpoint returns 401 (not 403 or 404)."""
         response = await client.get("/classes/00000000-0000-0000-0000-000000000001")
         assert response.status_code == 401
@@ -424,9 +424,7 @@ class TestResponseEnvelope:
     """Tests for standard response formatting."""
 
     @pytest.mark.asyncio
-    async def test_success_response_has_data_and_meta(
-        self, client: httpx.AsyncClient
-    ):
+    async def test_success_response_has_data_and_meta(self, client: httpx.AsyncClient):
         """Success response follows { data, meta: { timestamp, version } }."""
         response = await client.post(
             "/auth/login",
@@ -443,9 +441,7 @@ class TestResponseEnvelope:
         assert "version" in body["meta"]
 
     @pytest.mark.asyncio
-    async def test_error_response_has_error_envelope(
-        self, client: httpx.AsyncClient
-    ):
+    async def test_error_response_has_error_envelope(self, client: httpx.AsyncClient):
         """Error response follows { error: { code, message, category, ... } }."""
         response = await client.get("/auth/me")
         body = response.json()
@@ -513,9 +509,7 @@ class TestRecovery:
     """Tests for the account recovery flow."""
 
     @pytest.mark.asyncio
-    async def test_recovery_request_always_returns_200(
-        self, client: httpx.AsyncClient
-    ):
+    async def test_recovery_request_always_returns_200(self, client: httpx.AsyncClient):
         """Recovery request always returns 200 to prevent email enumeration."""
         # Existing email
         r1 = await client.post(

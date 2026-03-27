@@ -7,7 +7,7 @@ Phase 11B: Added fee structure, fee assignment, and invoice generation schemas.
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime
+from datetime import date
 
 from pydantic import BaseModel, Field
 
@@ -91,7 +91,9 @@ class FeeStructureUpdateRequest(BaseModel):
     name: str | None = Field(None, min_length=1, max_length=200)
     amount: float | None = Field(None, gt=0)
     currency: str | None = Field(None, max_length=3)
-    frequency: str | None = Field(None, pattern="^(MONTHLY|TRIMESTRIAL|ANNUAL|ONE_TIME)$")
+    frequency: str | None = Field(
+        None, pattern="^(MONTHLY|TRIMESTRIAL|ANNUAL|ONE_TIME)$"
+    )
     due_day: int | None = Field(None, ge=1, le=28)
     applies_to_level: str | None = Field(None, max_length=50)
     status: str | None = Field(None, pattern="^(ACTIVE|ARCHIVED)$")
@@ -124,6 +126,7 @@ class FeeAssignmentCreateRequest(BaseModel):
 
 class FeeAssignmentBulkCreateRequest(BaseModel):
     """Bulk assign a fee to all students in a class or level."""
+
     fee_structure_id: uuid.UUID
     class_id: uuid.UUID | None = None
     level: str | None = Field(None, max_length=50)
@@ -147,6 +150,7 @@ class FeeAssignmentResponse(BaseModel):
 # ---------------------------------------------------------------------------
 class InvoiceGenerateRequest(BaseModel):
     """Generate invoices from fee structures for a period."""
+
     fee_structure_id: uuid.UUID
     period_id: uuid.UUID | None = None
     issued_date: date

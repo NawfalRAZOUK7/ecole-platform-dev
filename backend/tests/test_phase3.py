@@ -8,11 +8,8 @@ from __future__ import annotations
 
 import uuid
 
-import httpx
 import pytest
-import pytest_asyncio
 
-from tests.conftest import SCHOOL_ID
 
 # Fixed seed IDs
 CLASS_ID = "20000000-0000-4000-8000-000000000004"
@@ -164,7 +161,9 @@ class TestAttendance:
 # ======================================================================
 class TestJustification:
     @pytest.mark.asyncio
-    async def test_justification_flow(self, client, teacher_token, parent_token, admin_token):
+    async def test_justification_flow(
+        self, client, teacher_token, parent_token, admin_token
+    ):
         """Full flow: TCH marks absent → PAR justifies → ADM reviews."""
         # 1. Teacher marks student absent
         slot = f"just-{uuid.uuid4().hex[:8]}"

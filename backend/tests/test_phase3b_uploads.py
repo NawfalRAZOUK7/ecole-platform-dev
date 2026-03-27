@@ -9,11 +9,8 @@ from __future__ import annotations
 import hashlib
 import io
 
-import httpx
 import pytest
-import pytest_asyncio
 
-from tests.conftest import SCHOOL_ID
 
 # Fixed seed IDs (must match test_phase3.py / seed data)
 ASSIGNMENT_ID = "30000000-0000-4000-8000-000000000003"
@@ -84,7 +81,9 @@ class TestSubmissionFileUpload:
         resp = await client.post(
             f"/submissions/{submission_id}/files",
             headers=auth_header(student_token),
-            files={"file": ("malware.exe", io.BytesIO(b"bad"), "application/x-msdownload")},
+            files={
+                "file": ("malware.exe", io.BytesIO(b"bad"), "application/x-msdownload")
+            },
         )
         assert resp.status_code == 422
 
@@ -104,7 +103,9 @@ class TestSubmissionFileUpload:
             resp = await client.post(
                 f"/submissions/{submission_id}/files",
                 headers=auth_header(student_token),
-                files={"file": (f"file{i}.pdf", io.BytesIO(content), "application/pdf")},
+                files={
+                    "file": (f"file{i}.pdf", io.BytesIO(content), "application/pdf")
+                },
             )
             # May hit the limit if files already exist from prior test runs
             if resp.status_code == 422:
@@ -119,7 +120,9 @@ class TestSubmissionFileUpload:
         assert resp.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_teacher_can_download_submission_file(self, client, student_token, teacher_token):
+    async def test_teacher_can_download_submission_file(
+        self, client, student_token, teacher_token
+    ):
         """TCH can download files from student submissions in their course."""
         # Create submission and upload file as student
         sub_resp = await client.post(
@@ -147,7 +150,9 @@ class TestSubmissionFileUpload:
             assert download_resp.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_rbac_student_cannot_read_others_submission_files(self, client, student_token):
+    async def test_rbac_student_cannot_read_others_submission_files(
+        self, client, student_token
+    ):
         """STD cannot download files from another student's submission."""
         # Use a non-existent submission ID (different student)
         fake_submission = "00000000-0000-4000-8000-ffffffffffff"
@@ -213,7 +218,13 @@ class TestContentAssetUpload:
         resp = await client.post(
             f"/content-items/{CONTENT_ITEM_ID}/assets",
             headers=auth_header(admin_token),
-            files={"file": ("admin-doc.pdf", io.BytesIO(b"admin-content"), "application/pdf")},
+            files={
+                "file": (
+                    "admin-doc.pdf",
+                    io.BytesIO(b"admin-content"),
+                    "application/pdf",
+                )
+            },
         )
         assert resp.status_code == 201
 
@@ -225,13 +236,21 @@ class TestContentAssetUpload:
         )
 
     @pytest.mark.asyncio
-    async def test_student_can_download_content_asset(self, client, teacher_token, student_token):
+    async def test_student_can_download_content_asset(
+        self, client, teacher_token, student_token
+    ):
         """STD can download content assets (read-only)."""
         # Upload as teacher
         upload_resp = await client.post(
             f"/content-items/{CONTENT_ITEM_ID}/assets",
             headers=auth_header(teacher_token),
-            files={"file": ("for-students.pdf", io.BytesIO(b"study-material"), "application/pdf")},
+            files={
+                "file": (
+                    "for-students.pdf",
+                    io.BytesIO(b"study-material"),
+                    "application/pdf",
+                )
+            },
         )
         assert upload_resp.status_code == 201
         asset_id = upload_resp.json()["data"]["id"]
@@ -260,13 +279,17 @@ class TestContentAssetUpload:
         assert resp.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_student_cannot_delete_content_asset(self, client, teacher_token, student_token):
+    async def test_student_cannot_delete_content_asset(
+        self, client, teacher_token, student_token
+    ):
         """STD cannot delete content assets (403)."""
         # Upload as teacher
         upload_resp = await client.post(
             f"/content-items/{CONTENT_ITEM_ID}/assets",
             headers=auth_header(teacher_token),
-            files={"file": ("protected.pdf", io.BytesIO(b"no-delete"), "application/pdf")},
+            files={
+                "file": ("protected.pdf", io.BytesIO(b"no-delete"), "application/pdf")
+            },
         )
         assert upload_resp.status_code == 201
         asset_id = upload_resp.json()["data"]["id"]
@@ -290,6 +313,8 @@ class TestContentAssetUpload:
         resp = await client.post(
             f"/content-items/{CONTENT_ITEM_ID}/assets",
             headers=auth_header(teacher_token),
-            files={"file": ("bad.exe", io.BytesIO(b"malware"), "application/x-msdownload")},
+            files={
+                "file": ("bad.exe", io.BytesIO(b"malware"), "application/x-msdownload")
+            },
         )
         assert resp.status_code == 422

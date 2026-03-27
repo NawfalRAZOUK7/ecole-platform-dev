@@ -14,7 +14,6 @@ Endpoints:
 from __future__ import annotations
 
 import uuid
-from datetime import date
 
 from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy import select
@@ -50,6 +49,7 @@ router = APIRouter(prefix="/billing", tags=["billing-fees"])
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _get_client_ip(request: Request) -> str | None:
     forwarded = request.headers.get("X-Forwarded-For")
     if forwarded:
@@ -82,7 +82,9 @@ def _fee_assignment_to_response(fa: FeeAssignment) -> dict:
         fee_structure_id=str(fa.fee_structure_id),
         student_id=str(fa.student_id),
         school_id=str(fa.school_id),
-        discount_percent=float(fa.discount_percent) if fa.discount_percent is not None else None,
+        discount_percent=float(fa.discount_percent)
+        if fa.discount_percent is not None
+        else None,
         discount_reason=fa.discount_reason,
         status=fa.status,
         created_at=fa.created_at.isoformat(),
@@ -281,9 +283,7 @@ async def create_fee_assignment(
     verify_school_boundary(fs.school_id, auth)
 
     # Validate student exists
-    student_result = await db.execute(
-        select(User).where(User.id == body.student_id)
-    )
+    student_result = await db.execute(select(User).where(User.id == body.student_id))
     student = student_result.scalar_one_or_none()
     if student is None:
         raise NotFoundError("Student not found", error_code="ERR-BIL-404")
@@ -406,11 +406,13 @@ async def bulk_create_fee_assignments(
             student_ids = list(enroll_result.scalars().all())
 
     if not student_ids:
-        return success_response({
-            "created": 0,
-            "skipped": 0,
-            "assignments": [],
-        })
+        return success_response(
+            {
+                "created": 0,
+                "skipped": 0,
+                "assignments": [],
+            }
+        )
 
     # Get already-assigned student IDs
     existing_result = await db.execute(
@@ -454,11 +456,13 @@ async def bulk_create_fee_assignments(
     )
 
     await db.commit()
-    return success_response({
-        "created": len(created),
-        "skipped": len(existing_ids),
-        "assignments": [_fee_assignment_to_response(fa) for fa in created],
-    })
+    return success_response(
+        {
+            "created": len(created),
+            "skipped": len(existing_ids),
+            "assignments": [_fee_assignment_to_response(fa) for fa in created],
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -563,11 +567,13 @@ async def generate_invoices(
     assignments = assign_result.scalars().all()
 
     if not assignments:
-        return success_response({
-            "generated": 0,
-            "skipped": 0,
-            "total_amount": 0,
-        })
+        return success_response(
+            {
+                "generated": 0,
+                "skipped": 0,
+                "total_amount": 0,
+            }
+        )
 
     # Build student_id → parent_id map
     student_ids = [a.student_id for a in assignments]
@@ -658,9 +664,11 @@ async def generate_invoices(
     )
 
     await db.commit()
-    return success_response({
-        "generated": generated,
-        "skipped": skipped,
-        "total_amount": total_generated_amount,
-        "currency": fs.currency,
-    })
+    return success_response(
+        {
+            "generated": generated,
+            "skipped": skipped,
+            "total_amount": total_generated_amount,
+            "currency": fs.currency,
+        }
+    )

@@ -85,7 +85,9 @@ def _build_error_body(
     }
 
 
-async def domain_exception_handler(request: Request, exc: DomainException) -> JSONResponse:
+async def domain_exception_handler(
+    request: Request, exc: DomainException
+) -> JSONResponse:
     """Handle all DomainException subclasses → ErrorResponse JSON."""
     logger.warning(
         "DomainException: code=%s message=%s cid=%s",

@@ -21,7 +21,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.dependencies import (
     AuthContext,
-    get_current_user,
     get_teacher_class_ids,
     requires_permission,
     verify_school_boundary,
@@ -189,15 +188,17 @@ async def assign_content_to_class(
         ip_address=_get_client_ip(request),
     )
 
-    return success_response({
-        "id": str(assignment.id),
-        "teacher_id": str(assignment.teacher_id),
-        "class_id": str(assignment.class_id),
-        "content_item_id": str(assignment.content_item_id),
-        "school_id": str(assignment.school_id),
-        "assigned_at": assignment.assigned_at.isoformat(),
-        "notes": assignment.notes,
-    })
+    return success_response(
+        {
+            "id": str(assignment.id),
+            "teacher_id": str(assignment.teacher_id),
+            "class_id": str(assignment.class_id),
+            "content_item_id": str(assignment.content_item_id),
+            "school_id": str(assignment.school_id),
+            "assigned_at": assignment.assigned_at.isoformat(),
+            "notes": assignment.notes,
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -252,7 +253,11 @@ async def unassign_content(
 # ---------------------------------------------------------------------------
 # POST /content/submit-for-review — Teacher submits for platform promotion
 # ---------------------------------------------------------------------------
-@router.post("/content/submit-for-review", status_code=201, summary="Submit content for platform review")
+@router.post(
+    "/content/submit-for-review",
+    status_code=201,
+    summary="Submit content for platform review",
+)
 async def submit_for_review(
     body: ContentSubmitForReviewRequest,
     request: Request,
@@ -316,12 +321,14 @@ async def submit_for_review(
         ip_address=_get_client_ip(request),
     )
 
-    return success_response({
-        "id": str(submission.id),
-        "content_item_id": str(submission.content_item_id),
-        "status": submission.status,
-        "submitted_at": submission.submitted_at.isoformat(),
-    })
+    return success_response(
+        {
+            "id": str(submission.id),
+            "content_item_id": str(submission.content_item_id),
+            "status": submission.status,
+            "submitted_at": submission.submitted_at.isoformat(),
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -338,10 +345,12 @@ async def list_my_submissions(
     """Teacher sees status of their submitted content."""
     page_size = clamp_page_size(limit)
 
-    query = select(ContentSubmission, ContentItem).join(
-        ContentItem, ContentSubmission.content_item_id == ContentItem.id
-    ).where(
-        ContentSubmission.submitted_by == auth.user_id,
+    query = (
+        select(ContentSubmission, ContentItem)
+        .join(ContentItem, ContentSubmission.content_item_id == ContentItem.id)
+        .where(
+            ContentSubmission.submitted_by == auth.user_id,
+        )
     )
 
     if status:
@@ -369,7 +378,9 @@ async def list_my_submissions(
             "status": sub.status,
             "submitted_at": sub.submitted_at.isoformat() if sub.submitted_at else None,
             "review_notes": sub.review_notes,
-            "promoted_content_id": str(sub.promoted_content_id) if sub.promoted_content_id else None,
+            "promoted_content_id": str(sub.promoted_content_id)
+            if sub.promoted_content_id
+            else None,
         }
         for sub, ci in rows
     ]
@@ -392,12 +403,14 @@ async def list_class_content(
     """Students (and parents/teachers) see content assigned to a class."""
     page_size = clamp_page_size(limit)
 
-    query = select(ClassContentAssignment, ContentItem).join(
-        ContentItem, ClassContentAssignment.content_item_id == ContentItem.id
-    ).where(
-        ClassContentAssignment.class_id == class_id,
-        ClassContentAssignment.school_id == auth.school_id,
-        ContentItem.status == "published",
+    query = (
+        select(ClassContentAssignment, ContentItem)
+        .join(ContentItem, ClassContentAssignment.content_item_id == ContentItem.id)
+        .where(
+            ClassContentAssignment.class_id == class_id,
+            ClassContentAssignment.school_id == auth.school_id,
+            ContentItem.status == "published",
+        )
     )
 
     query = query.order_by(ClassContentAssignment.id)

@@ -12,7 +12,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import AuthContext, requires_permission, verify_school_boundary
+from app.core.dependencies import (
+    AuthContext,
+    requires_permission,
+    verify_school_boundary,
+)
 from app.core.exceptions import NotFoundError
 from app.core.response import (
     clamp_page_size,
@@ -37,7 +41,11 @@ def _get_client_ip(request: Request) -> str | None:
     return None
 
 
-@router.get("", summary="List consent preferences", response_description="List of consent settings")
+@router.get(
+    "",
+    summary="List consent preferences",
+    response_description="List of consent settings",
+)
 async def list_consents(
     cursor: str | None = Query(None),
     limit: int | None = Query(None),
@@ -89,7 +97,11 @@ async def list_consents(
     return list_response(items, next_cursor=next_cursor, has_more=has_more)
 
 
-@router.put("/{consent_id}", summary="Update consent preference", response_description="Updated consent record")
+@router.put(
+    "/{consent_id}",
+    summary="Update consent preference",
+    response_description="Updated consent record",
+)
 async def update_consent(
     consent_id: uuid.UUID,
     body: ConsentUpdateRequest,
@@ -137,13 +149,15 @@ async def update_consent(
         ip_address=_get_client_ip(request),
     )
 
-    return success_response({
-        "id": str(consent.id),
-        "user_id": str(consent.user_id),
-        "school_id": str(consent.school_id),
-        "topic": consent.topic,
-        "channel": consent.channel,
-        "scope_type": consent.scope_type,
-        "scope_ref_id": str(consent.scope_ref_id) if consent.scope_ref_id else None,
-        "status": consent.status,
-    })
+    return success_response(
+        {
+            "id": str(consent.id),
+            "user_id": str(consent.user_id),
+            "school_id": str(consent.school_id),
+            "topic": consent.topic,
+            "channel": consent.channel,
+            "scope_type": consent.scope_type,
+            "scope_ref_id": str(consent.scope_ref_id) if consent.scope_ref_id else None,
+            "status": consent.status,
+        }
+    )

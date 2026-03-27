@@ -16,7 +16,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.redis import get_redis
 from app.core.response import success_response
-from app.schemas.auth import RecoveryRequestCreate, RecoveryResetRequest, RecoveryVerifyRequest
+from app.schemas.auth import (
+    RecoveryRequestCreate,
+    RecoveryResetRequest,
+    RecoveryVerifyRequest,
+)
 from app.services.auth import RecoveryService
 
 router = APIRouter(prefix="/recovery", tags=["recovery"])
@@ -34,7 +38,11 @@ def _get_client_ip(request: Request) -> str | None:
 # ---------------------------------------------------------------------------
 # POST /recovery/request — Public
 # ---------------------------------------------------------------------------
-@router.post("/request", summary="Request password recovery", response_description="Recovery request ID (always 200, no email enumeration)")
+@router.post(
+    "/request",
+    summary="Request password recovery",
+    response_description="Recovery request ID (always 200, no email enumeration)",
+)
 async def request_recovery(
     body: RecoveryRequestCreate,
     request: Request,
@@ -58,7 +66,11 @@ async def request_recovery(
 # ---------------------------------------------------------------------------
 # POST /recovery/verify — Public
 # ---------------------------------------------------------------------------
-@router.post("/verify", summary="Verify recovery OTP", response_description="OTP verification confirmation")
+@router.post(
+    "/verify",
+    summary="Verify recovery OTP",
+    response_description="OTP verification confirmation",
+)
 async def verify_recovery(
     body: RecoveryVerifyRequest,
     request: Request,
@@ -81,7 +93,11 @@ async def verify_recovery(
 # ---------------------------------------------------------------------------
 # POST /recovery/reset — Public
 # ---------------------------------------------------------------------------
-@router.post("/reset", summary="Reset password", response_description="Password reset confirmation")
+@router.post(
+    "/reset",
+    summary="Reset password",
+    response_description="Password reset confirmation",
+)
 async def reset_password(
     body: RecoveryResetRequest,
     request: Request,

@@ -44,6 +44,7 @@ ANALYTICS_HMAC_KEY = "ecole-analytics-pseudonymize-v1"  # Salt for actor_id hash
 # Enums
 # ---------------------------------------------------------------------------
 
+
 class ActorType(str, Enum):
     STUDENT = "student"
     PARENT = "parent"
@@ -75,11 +76,24 @@ _ROLE_TO_ACTOR: dict[str, ActorType] = {
 # ---------------------------------------------------------------------------
 # PII patterns to block from properties (POL-G3-001, G2.5)
 # ---------------------------------------------------------------------------
-_PII_FIELD_BLOCKLIST = frozenset({
-    "email", "phone", "full_name", "password", "password_hash",
-    "token", "refresh_token", "access_token", "otp", "code",
-    "credit_card", "card_number", "ssn", "national_id",
-})
+_PII_FIELD_BLOCKLIST = frozenset(
+    {
+        "email",
+        "phone",
+        "full_name",
+        "password",
+        "password_hash",
+        "token",
+        "refresh_token",
+        "access_token",
+        "otp",
+        "code",
+        "credit_card",
+        "card_number",
+        "ssn",
+        "national_id",
+    }
+)
 
 
 # ---------------------------------------------------------------------------
@@ -111,12 +125,18 @@ _EVENT_PROPERTY_WHITELIST: dict[str, frozenset[str]] = {
     # Error events (EVT-017)
     "error_api_received": frozenset({"error_code", "http_status", "endpoint"}),
     # P0 KPI events
-    "content_progress_updated": frozenset({"content_item_id", "status", "previous_status"}),
-    "notification_delivered": frozenset({"notification_id", "channel", "delivery_status"}),
+    "content_progress_updated": frozenset(
+        {"content_item_id", "status", "previous_status"}
+    ),
+    "notification_delivered": frozenset(
+        {"notification_id", "channel", "delivery_status"}
+    ),
     "payment_completed": frozenset({"payment_id", "outcome", "amount_currency"}),
     # AI events
     "ai_request_submitted": frozenset({"request_type", "prompt_id", "prompt_version"}),
-    "ai_request_completed": frozenset({"request_type", "prompt_id", "status", "latency_ms"}),
+    "ai_request_completed": frozenset(
+        {"request_type", "prompt_id", "status", "latency_ms"}
+    ),
     "ai_opt_out_updated": frozenset({"opt_out", "target_user_id_hash"}),
     "ai_fallback_used": frozenset({"reason", "request_type"}),
     "writing_attempt_created": frozenset({"subject", "word_count"}),

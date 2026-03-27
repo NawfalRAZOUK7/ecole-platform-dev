@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
-from typing import Sequence
 
 from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -20,7 +19,7 @@ from app.core.database import get_db
 from app.core.exceptions import AuthenticationError, AuthorizationError
 from app.core.permissions import get_permissions_for_role, role_has_permission
 from app.core.security import decode_access_token
-from app.models.iam import Membership, Session, User
+from app.models.iam import Session, User
 
 # HTTPBearer scheme — auto_error=False so we return 401 ourselves (not 403)
 _bearer_scheme = HTTPBearer(auto_error=False)
@@ -123,7 +122,10 @@ class RequiresPermission:
                 raise AuthorizationError(
                     "Insufficient permissions",
                     error_code="ERR-AUTHZ-001",
-                    details={"required": list(self.required_permissions), "role": auth.role},
+                    details={
+                        "required": list(self.required_permissions),
+                        "role": auth.role,
+                    },
                 )
         return auth
 

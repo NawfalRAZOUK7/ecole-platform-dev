@@ -5,11 +5,9 @@ Migration group: G7-AI (depends on G1-IAM for users FK).
 """
 
 import uuid
-from datetime import datetime
 
 from sqlalchemy import (
     Boolean,
-    DateTime,
     ForeignKey,
     Index,
     Integer,
@@ -38,9 +36,7 @@ class WritingAttempt(TimestampMixin, Base):
     subject: Mapped[str | None] = mapped_column(String(200), nullable=True)
     input_text: Mapped[str] = mapped_column(Text, nullable=False)
     input_word_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default="completed"
-    )
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="completed")
     suggestion: Mapped[str | None] = mapped_column(Text, nullable=True)
     hints: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     prompt_id: Mapped[str | None] = mapped_column(String(50), nullable=True)
@@ -76,7 +72,8 @@ class AIPreference(TimestampMixin, Base):
     __table_args__ = (
         # One preference per (user, target) pair
         UniqueConstraint(
-            "user_id", "target_user_id",
+            "user_id",
+            "target_user_id",
             name="uq_ai_preferences_user_target",
         ),
         Index("idx_ai_preferences_target", "target_user_id"),

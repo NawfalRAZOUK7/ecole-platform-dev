@@ -31,9 +31,9 @@ from app.core.response import (
     list_response,
     success_response,
 )
-from app.models.com import Announcement, Notification, NotificationDelivery
+from app.models.com import Announcement, Notification
 from app.models.erp import Enrollment
-from app.models.iam import Membership, User
+from app.models.iam import Membership
 from app.schemas.com import (
     AnnouncementCreateRequest,
     AnnouncementResponse,
@@ -65,7 +65,9 @@ def _announcement_to_response(a: Announcement) -> dict:
         title=a.title,
         body=a.body,
         target_roles=a.target_roles or [],
-        target_class_ids=[str(cid) for cid in a.target_class_ids] if a.target_class_ids else None,
+        target_class_ids=[str(cid) for cid in a.target_class_ids]
+        if a.target_class_ids
+        else None,
         published_at=a.published_at.isoformat() if a.published_at else None,
         status=a.status,
         created_at=a.created_at.isoformat(),
@@ -109,7 +111,9 @@ async def create_announcement(
         title=body.title,
         body=body.body,
         target_roles=body.target_roles,
-        target_class_ids=[str(cid) for cid in body.target_class_ids] if body.target_class_ids else None,
+        target_class_ids=[str(cid) for cid in body.target_class_ids]
+        if body.target_class_ids
+        else None,
         status="DRAFT",
     )
     db.add(announcement)
@@ -160,10 +164,7 @@ async def list_announcements(
     if auth.role not in ("ADM", "DIR"):
         query = query.where(Announcement.status == "PUBLISHED")
         # Filter by role targeting — use PostgreSQL JSONB contains
-        from sqlalchemy import cast, text
-        query = query.where(
-            Announcement.target_roles.contains([auth.role])
-        )
+        query = query.where(Announcement.target_roles.contains([auth.role]))
     elif status:
         query = query.where(Announcement.status == status)
 
@@ -345,6 +346,7 @@ async def publish_announcement(
             )
             # Union both
             from sqlalchemy import union_all
+
             target_query = union_all(non_std_query, std_query)
 
     target_result = await db.execute(target_query)
@@ -362,7 +364,9 @@ async def publish_announcement(
             event_ref=f"announcement:{announcement.id}",
             idempotency_key=f"ann-{announcement.id}-{uid}",
             title=announcement.title,
-            body=announcement.body[:500] if len(announcement.body) > 500 else announcement.body,
+            body=announcement.body[:500]
+            if len(announcement.body) > 500
+            else announcement.body,
         )
         db.add(notif)
         notif_count += 1
@@ -395,7 +399,9 @@ async def publish_announcement(
                 author_id=auth.user_id,
             )
 
-    return success_response({
-        **entity_after,
-        "notifications_sent": notif_count,
-    })
+    return success_response(
+        {
+            **entity_after,
+            "notifications_sent": notif_count,
+        }
+    )

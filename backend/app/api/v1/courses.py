@@ -22,7 +22,14 @@ from app.core.dependencies import (
     verify_teacher_assignment,
 )
 from app.core.exceptions import NotFoundError
-from app.core.filtering import FilterSpec, SortSpec, apply_filters, apply_sort, parse_filters, parse_sort
+from app.core.filtering import (
+    FilterSpec,
+    SortSpec,
+    apply_filters,
+    apply_sort,
+    parse_filters,
+    parse_sort,
+)
 from app.core.response import (
     clamp_page_size,
     decode_cursor,
@@ -48,7 +55,12 @@ def _get_client_ip(request: Request) -> str | None:
     return None
 
 
-@router.post("", status_code=201, summary="Create a course", response_description="Created course record")
+@router.post(
+    "",
+    status_code=201,
+    summary="Create a course",
+    response_description="Created course record",
+)
 async def create_course(
     body: CourseCreateRequest,
     request: Request,
@@ -103,18 +115,22 @@ async def create_course(
         ip_address=_get_client_ip(request),
     )
 
-    return success_response({
-        "id": str(course.id),
-        "school_id": str(course.school_id),
-        "class_id": str(course.class_id),
-        "teacher_id": str(course.teacher_id),
-        "title": course.title,
-        "description": course.description,
-        "status": course.status,
-    })
+    return success_response(
+        {
+            "id": str(course.id),
+            "school_id": str(course.school_id),
+            "class_id": str(course.class_id),
+            "teacher_id": str(course.teacher_id),
+            "title": course.title,
+            "description": course.description,
+            "status": course.status,
+        }
+    )
 
 
-@router.get("", summary="List courses", response_description="Paginated list of courses")
+@router.get(
+    "", summary="List courses", response_description="Paginated list of courses"
+)
 async def list_courses(
     class_id: uuid.UUID | None = Query(None),
     cursor: str | None = Query(None),

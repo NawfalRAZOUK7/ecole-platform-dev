@@ -184,15 +184,17 @@ class AuthService:
         if user.totp_enabled:
             # Generate a temp token and store context in Redis
             temp_token = secrets.token_urlsafe(48)
-            temp_data = json.dumps({
-                "user_id": str(user.id),
-                "school_id": str(school_id),
-                "role": role,
-                "source": source,
-                "ip_address": ip_address,
-                "user_agent": user_agent,
-                "device_name": device_name,
-            })
+            temp_data = json.dumps(
+                {
+                    "user_id": str(user.id),
+                    "school_id": str(school_id),
+                    "role": role,
+                    "source": source,
+                    "ip_address": ip_address,
+                    "user_agent": user_agent,
+                    "device_name": device_name,
+                }
+            )
             await self.redis.setex(
                 f"2fa_temp:{temp_token}",
                 TOTP_TEMP_TOKEN_TTL,
@@ -233,7 +235,9 @@ class AuthService:
 
         # 7. Generate tokens
         access_token = create_access_token(user.id, role, school_id, session.id)
-        refresh_token, refresh_jti = create_refresh_token(user.id, school_id, session.id)
+        refresh_token, refresh_jti = create_refresh_token(
+            user.id, school_id, session.id
+        )
         csrf_token = create_csrf_token()
 
         # 8. Store refresh JTI in Redis for rotation tracking
@@ -426,7 +430,9 @@ class AuthService:
         await self.db.flush()
 
         access_token = create_access_token(user.id, role, school_id, session.id)
-        refresh_token, refresh_jti = create_refresh_token(user.id, school_id, session.id)
+        refresh_token, refresh_jti = create_refresh_token(
+            user.id, school_id, session.id
+        )
         csrf_token = create_csrf_token()
 
         # Store refresh JTI and CSRF in Redis
@@ -782,6 +788,7 @@ class AuthService:
 
         # Enforce password policy
         from app.core.password_policy import password_validator
+
         password_validator.validate(
             new_password,
             email=user.email,
@@ -845,13 +852,16 @@ class InvitationService:
         if target_student_id is not None:
             if role_target != "PAR":
                 from app.core.exceptions import ValidationError
+
                 raise ValidationError(
                     "target_student_id is only valid for PAR invitations",
                     error_code="ERR-VAL-001",
                 )
             # Check student exists in the same school with STD role
             student_result = await self.db.execute(
-                select(User).join(Membership).where(
+                select(User)
+                .join(Membership)
+                .where(
                     User.id == target_student_id,
                     User.school_id == school_id,
                     Membership.role_code == "STD",
@@ -860,6 +870,7 @@ class InvitationService:
             )
             if student_result.scalar_one_or_none() is None:
                 from app.core.exceptions import NotFoundError
+
                 raise NotFoundError(
                     "Target student not found in this school",
                     error_code="ERR-RES-404",
@@ -943,7 +954,10 @@ class InvitationService:
         if invite.consumed_by is not None:
             if invite.consumed_by == user_id:
                 # Idempotent: same user consuming again
-                return {"message": "Invitation already consumed", "role": invite.role_target}
+                return {
+                    "message": "Invitation already consumed",
+                    "role": invite.role_target,
+                }
             raise ConflictError(
                 "Invitation code has already been used",
                 error_code="ERR-IAM-CONFLICT",
@@ -1059,7 +1073,9 @@ class RecoveryService:
         otp_hash = hashlib.sha256(otp.encode()).hexdigest()
 
         # Create recovery request
-        expires_at = datetime.now(timezone.utc) + timedelta(minutes=RECOVERY_EXPIRE_MINUTES)
+        expires_at = datetime.now(timezone.utc) + timedelta(
+            minutes=RECOVERY_EXPIRE_MINUTES
+        )
         recovery = AccountRecoveryRequest(
             user_id=user.id,
             school_id=school_id,
@@ -1229,6 +1245,7 @@ class RecoveryService:
 
         # Phase 2A: enforce password policy
         from app.core.password_policy import password_validator
+
         password_validator.validate(
             new_password,
             email=user.email if user else None,
@@ -1238,7 +1255,9 @@ class RecoveryService:
         # Update password
         new_hash = hash_password(new_password)
         await self.db.execute(
-            update(User).where(User.id == recovery.user_id).values(password_hash=new_hash)
+            update(User)
+            .where(User.id == recovery.user_id)
+            .values(password_hash=new_hash)
         )
 
         # Transition: verified -> reset
@@ -1549,7 +1568,9 @@ class TwoFactorService:
 
         # 6. Generate tokens
         access_token = create_access_token(user.id, role, school_id, session.id)
-        refresh_token, refresh_jti = create_refresh_token(user.id, school_id, session.id)
+        refresh_token, refresh_jti = create_refresh_token(
+            user.id, school_id, session.id
+        )
         csrf_token = create_csrf_token()
 
         ttl = settings.refresh_token_expire_days * 86400

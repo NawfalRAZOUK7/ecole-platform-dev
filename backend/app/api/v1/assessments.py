@@ -24,8 +24,15 @@ from app.core.dependencies import (
     verify_school_boundary,
     verify_teacher_assignment,
 )
-from app.core.exceptions import AuthorizationError, ConflictError, NotFoundError, ValidationError
-from app.core.filtering import FilterSpec, SortSpec, apply_filters, apply_sort, parse_filters, parse_sort
+from app.core.exceptions import ConflictError, NotFoundError, ValidationError
+from app.core.filtering import (
+    FilterSpec,
+    SortSpec,
+    apply_filters,
+    apply_sort,
+    parse_filters,
+    parse_sort,
+)
 from app.core.response import (
     clamp_page_size,
     decode_cursor,
@@ -54,7 +61,12 @@ def _get_client_ip(request: Request) -> str | None:
 # ---------------------------------------------------------------------------
 # POST /assessments — Create assessment (TCH, ADM)
 # ---------------------------------------------------------------------------
-@router.post("", status_code=201, summary="Create an assessment", response_description="Created assessment record")
+@router.post(
+    "",
+    status_code=201,
+    summary="Create an assessment",
+    response_description="Created assessment record",
+)
 async def create_assessment(
     body: AssessmentCreateRequest,
     request: Request,
@@ -110,22 +122,28 @@ async def create_assessment(
         ip_address=_get_client_ip(request),
     )
 
-    return success_response({
-        "id": str(assessment.id),
-        "class_id": str(assessment.class_id),
-        "teacher_id": str(assessment.teacher_id),
-        "title": assessment.title,
-        "due_at": assessment.due_at.isoformat() if assessment.due_at else None,
-        "window_end": assessment.window_end.isoformat() if assessment.window_end else None,
-        "total_points": assessment.total_points,
-        "status": assessment.status,
-    })
+    return success_response(
+        {
+            "id": str(assessment.id),
+            "class_id": str(assessment.class_id),
+            "teacher_id": str(assessment.teacher_id),
+            "title": assessment.title,
+            "due_at": assessment.due_at.isoformat() if assessment.due_at else None,
+            "window_end": assessment.window_end.isoformat()
+            if assessment.window_end
+            else None,
+            "total_points": assessment.total_points,
+            "status": assessment.status,
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
 # GET /assessments — List assessments (STD, ADM, TCH)
 # ---------------------------------------------------------------------------
-@router.get("", summary="List assessments", response_description="Paginated list of assessments")
+@router.get(
+    "", summary="List assessments", response_description="Paginated list of assessments"
+)
 async def list_assessments(
     class_id: uuid.UUID | None = Query(None),
     status: str | None = Query(None),
@@ -193,7 +211,9 @@ async def list_assessments(
         for a in assessments
     ]
 
-    next_cursor = encode_cursor(assessments[-1].id) if has_more and assessments else None
+    next_cursor = (
+        encode_cursor(assessments[-1].id) if has_more and assessments else None
+    )
     return list_response(
         items,
         next_cursor=next_cursor,
@@ -207,7 +227,12 @@ async def list_assessments(
 # ---------------------------------------------------------------------------
 # POST /assessments/{id}/publish — Publish assessment (TCH, ADM)
 # ---------------------------------------------------------------------------
-@router.post("/{assessment_id}/publish", status_code=200, summary="Publish an assessment", response_description="Published assessment")
+@router.post(
+    "/{assessment_id}/publish",
+    status_code=200,
+    summary="Publish an assessment",
+    response_description="Published assessment",
+)
 async def publish_assessment(
     assessment_id: uuid.UUID,
     request: Request,
@@ -217,15 +242,15 @@ async def publish_assessment(
     """Publish an assessment (change status from draft to published)."""
     audit = AuditService(db)
 
-    result = await db.execute(
-        select(Assessment).where(Assessment.id == assessment_id)
-    )
+    result = await db.execute(select(Assessment).where(Assessment.id == assessment_id))
     assessment = result.scalar_one_or_none()
     if assessment is None:
         raise NotFoundError("Assessment not found", error_code="ERR-LMS-404")
 
     # School boundary via class
-    class_result = await db.execute(select(Class).where(Class.id == assessment.class_id))
+    class_result = await db.execute(
+        select(Class).where(Class.id == assessment.class_id)
+    )
     cls = class_result.scalar_one_or_none()
     if cls is None:
         raise NotFoundError("Class not found", error_code="ERR-LMS-404")
@@ -252,22 +277,31 @@ async def publish_assessment(
         ip_address=_get_client_ip(request),
     )
 
-    return success_response({
-        "id": str(assessment.id),
-        "class_id": str(assessment.class_id),
-        "teacher_id": str(assessment.teacher_id),
-        "title": assessment.title,
-        "due_at": assessment.due_at.isoformat() if assessment.due_at else None,
-        "window_end": assessment.window_end.isoformat() if assessment.window_end else None,
-        "total_points": assessment.total_points,
-        "status": assessment.status,
-    })
+    return success_response(
+        {
+            "id": str(assessment.id),
+            "class_id": str(assessment.class_id),
+            "teacher_id": str(assessment.teacher_id),
+            "title": assessment.title,
+            "due_at": assessment.due_at.isoformat() if assessment.due_at else None,
+            "window_end": assessment.window_end.isoformat()
+            if assessment.window_end
+            else None,
+            "total_points": assessment.total_points,
+            "status": assessment.status,
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
 # POST /assessments/{id}/results — Submit assessment result (STD)
 # ---------------------------------------------------------------------------
-@router.post("/{assessment_id}/results", status_code=201, summary="Submit assessment result", response_description="Assessment result record")
+@router.post(
+    "/{assessment_id}/results",
+    status_code=201,
+    summary="Submit assessment result",
+    response_description="Assessment result record",
+)
 async def submit_assessment_result(
     assessment_id: uuid.UUID,
     body: AssessmentResultSubmitRequest,
@@ -292,7 +326,9 @@ async def submit_assessment_result(
         raise NotFoundError("Assessment not found", error_code="ERR-LMS-404")
 
     # School boundary via class
-    class_result = await db.execute(select(Class).where(Class.id == assessment.class_id))
+    class_result = await db.execute(
+        select(Class).where(Class.id == assessment.class_id)
+    )
     cls = class_result.scalar_one_or_none()
     if cls is None:
         raise NotFoundError("Class not found", error_code="ERR-LMS-404")
@@ -314,13 +350,15 @@ async def submit_assessment_result(
     )
     existing = existing_result.scalar_one_or_none()
     if existing is not None:
-        return success_response({
-            "id": str(existing.id),
-            "assessment_id": str(existing.assessment_id),
-            "student_id": str(existing.student_id),
-            "score": float(existing.score) if existing.score is not None else None,
-            "status": existing.status,
-        })
+        return success_response(
+            {
+                "id": str(existing.id),
+                "assessment_id": str(existing.assessment_id),
+                "student_id": str(existing.student_id),
+                "score": float(existing.score) if existing.score is not None else None,
+                "status": existing.status,
+            }
+        )
 
     # 3. Create result
     result_obj = AssessmentResult(
@@ -347,10 +385,12 @@ async def submit_assessment_result(
         ip_address=_get_client_ip(request),
     )
 
-    return success_response({
-        "id": str(result_obj.id),
-        "assessment_id": str(result_obj.assessment_id),
-        "student_id": str(result_obj.student_id),
-        "score": float(result_obj.score) if result_obj.score is not None else None,
-        "status": result_obj.status,
-    })
+    return success_response(
+        {
+            "id": str(result_obj.id),
+            "assessment_id": str(result_obj.assessment_id),
+            "student_id": str(result_obj.student_id),
+            "score": float(result_obj.score) if result_obj.score is not None else None,
+            "status": result_obj.status,
+        }
+    )

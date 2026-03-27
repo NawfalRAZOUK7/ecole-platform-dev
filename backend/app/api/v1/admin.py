@@ -14,9 +14,8 @@ from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import AuthContext, requires_permission, verify_school_boundary
+from app.core.dependencies import AuthContext, requires_permission
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
-from app.core.password_policy import password_validator
 from app.core.response import list_response, success_response
 from app.core.security import hash_password
 from app.models.audit import AuditLog
@@ -52,61 +51,80 @@ async def dashboard_stats(
     sid = auth.school_id
 
     # Users count
-    user_count = (await db.execute(
-        select(func.count()).select_from(User).where(User.school_id == sid)
-    )).scalar() or 0
+    user_count = (
+        await db.execute(
+            select(func.count()).select_from(User).where(User.school_id == sid)
+        )
+    ).scalar() or 0
 
     # Active sessions count
-    active_sessions = (await db.execute(
-        select(func.count()).select_from(Session).where(
-            Session.school_id == sid, Session.revoke_at.is_(None)
+    active_sessions = (
+        await db.execute(
+            select(func.count())
+            .select_from(Session)
+            .where(Session.school_id == sid, Session.revoke_at.is_(None))
         )
-    )).scalar() or 0
+    ).scalar() or 0
 
     # Invitations count (active = not consumed, not expired)
     now = datetime.now(timezone.utc)
-    active_invitations = (await db.execute(
-        select(func.count()).select_from(InvitationCode).where(
-            InvitationCode.school_id == sid,
-            InvitationCode.consumed_at.is_(None),
-            InvitationCode.expires_at > now,
+    active_invitations = (
+        await db.execute(
+            select(func.count())
+            .select_from(InvitationCode)
+            .where(
+                InvitationCode.school_id == sid,
+                InvitationCode.consumed_at.is_(None),
+                InvitationCode.expires_at > now,
+            )
         )
-    )).scalar() or 0
+    ).scalar() or 0
 
     # Audit events count (last 24h)
     from datetime import timedelta
+
     audit_cutoff = now - timedelta(hours=24)
-    audit_events_24h = (await db.execute(
-        select(func.count()).select_from(AuditLog).where(
-            AuditLog.school_id == sid,
-            AuditLog.created_at >= audit_cutoff,
+    audit_events_24h = (
+        await db.execute(
+            select(func.count())
+            .select_from(AuditLog)
+            .where(
+                AuditLog.school_id == sid,
+                AuditLog.created_at >= audit_cutoff,
+            )
         )
-    )).scalar() or 0
+    ).scalar() or 0
 
     # Pending justifications count
-    pending_justifications = (await db.execute(
-        select(func.count()).select_from(AbsenceJustification).where(
-            AbsenceJustification.school_id == sid,
-            AbsenceJustification.status == "pending",
+    pending_justifications = (
+        await db.execute(
+            select(func.count())
+            .select_from(AbsenceJustification)
+            .where(
+                AbsenceJustification.school_id == sid,
+                AbsenceJustification.status == "pending",
+            )
         )
-    )).scalar() or 0
+    ).scalar() or 0
 
     # Users by role
     role_counts_result = await db.execute(
-        select(Membership.role_code, func.count()).where(
-            Membership.school_id == sid, Membership.status == "active"
-        ).group_by(Membership.role_code)
+        select(Membership.role_code, func.count())
+        .where(Membership.school_id == sid, Membership.status == "active")
+        .group_by(Membership.role_code)
     )
     users_by_role = {row[0]: row[1] for row in role_counts_result.all()}
 
-    return success_response({
-        "users": user_count,
-        "active_sessions": active_sessions,
-        "active_invitations": active_invitations,
-        "audit_events_24h": audit_events_24h,
-        "pending_justifications": pending_justifications,
-        "users_by_role": users_by_role,
-    })
+    return success_response(
+        {
+            "users": user_count,
+            "active_sessions": active_sessions,
+            "active_invitations": active_invitations,
+            "audit_events_24h": audit_events_24h,
+            "pending_justifications": pending_justifications,
+            "users_by_role": users_by_role,
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -127,9 +145,7 @@ async def list_users(
 
     if search:
         pattern = f"%{search}%"
-        query = query.where(
-            User.full_name.ilike(pattern) | User.email.ilike(pattern)
-        )
+        query = query.where(User.full_name.ilike(pattern) | User.email.ilike(pattern))
 
     if status:
         query = query.where(User.status == status)
@@ -207,11 +223,15 @@ async def suspend_user(
 ):
     """Suspend a user in the school. ADM only."""
     if auth.role not in ("ADM",):
-        raise ValidationError("Only administrators can suspend users", error_code="ERR-ADMIN-403")
+        raise ValidationError(
+            "Only administrators can suspend users", error_code="ERR-ADMIN-403"
+        )
 
-    user = (await db.execute(
-        select(User).where(User.id == user_id, User.school_id == auth.school_id)
-    )).scalar_one_or_none()
+    user = (
+        await db.execute(
+            select(User).where(User.id == user_id, User.school_id == auth.school_id)
+        )
+    ).scalar_one_or_none()
     if user is None:
         raise NotFoundError("User not found", error_code="ERR-ADMIN-404")
 
@@ -223,9 +243,12 @@ async def suspend_user(
 
     audit = AuditService(db)
     await audit.log_event(
-        school_id=auth.school_id, actor_id=auth.user_id,
-        action_type="USER_SUSPENDED", outcome="success",
-        target_type="user", target_id=user_id,
+        school_id=auth.school_id,
+        actor_id=auth.user_id,
+        action_type="USER_SUSPENDED",
+        outcome="success",
+        target_type="user",
+        target_id=user_id,
         ip_address=_get_client_ip(request),
     )
     return success_response({"id": str(user_id), "status": "suspended"})
@@ -243,11 +266,15 @@ async def activate_user(
 ):
     """Activate a suspended user. ADM only."""
     if auth.role not in ("ADM",):
-        raise ValidationError("Only administrators can activate users", error_code="ERR-ADMIN-403")
+        raise ValidationError(
+            "Only administrators can activate users", error_code="ERR-ADMIN-403"
+        )
 
-    user = (await db.execute(
-        select(User).where(User.id == user_id, User.school_id == auth.school_id)
-    )).scalar_one_or_none()
+    user = (
+        await db.execute(
+            select(User).where(User.id == user_id, User.school_id == auth.school_id)
+        )
+    ).scalar_one_or_none()
     if user is None:
         raise NotFoundError("User not found", error_code="ERR-ADMIN-404")
 
@@ -256,9 +283,12 @@ async def activate_user(
 
     audit = AuditService(db)
     await audit.log_event(
-        school_id=auth.school_id, actor_id=auth.user_id,
-        action_type="USER_ACTIVATED", outcome="success",
-        target_type="user", target_id=user_id,
+        school_id=auth.school_id,
+        actor_id=auth.user_id,
+        action_type="USER_ACTIVATED",
+        outcome="success",
+        target_type="user",
+        target_id=user_id,
         ip_address=_get_client_ip(request),
     )
     return success_response({"id": str(user_id), "status": "active"})
@@ -277,15 +307,22 @@ async def change_user_role(
 ):
     """Change a user's role. ADM only. Valid roles: TCH, PAR, STD."""
     if auth.role not in ("ADM",):
-        raise ValidationError("Only administrators can change roles", error_code="ERR-ADMIN-403")
+        raise ValidationError(
+            "Only administrators can change roles", error_code="ERR-ADMIN-403"
+        )
 
     valid_targets = {"TCH", "PAR", "STD", "DIR"}
     if role not in valid_targets:
-        raise ValidationError(f"Invalid role. Must be one of: {', '.join(sorted(valid_targets))}", error_code="ERR-ADMIN-422")
+        raise ValidationError(
+            f"Invalid role. Must be one of: {', '.join(sorted(valid_targets))}",
+            error_code="ERR-ADMIN-422",
+        )
 
-    user = (await db.execute(
-        select(User).where(User.id == user_id, User.school_id == auth.school_id)
-    )).scalar_one_or_none()
+    user = (
+        await db.execute(
+            select(User).where(User.id == user_id, User.school_id == auth.school_id)
+        )
+    ).scalar_one_or_none()
     if user is None:
         raise NotFoundError("User not found", error_code="ERR-ADMIN-404")
 
@@ -294,19 +331,24 @@ async def change_user_role(
 
     # Update the active membership
     await db.execute(
-        update(Membership).where(
+        update(Membership)
+        .where(
             Membership.user_id == user_id,
             Membership.school_id == auth.school_id,
             Membership.status == "active",
-        ).values(role_code=role)
+        )
+        .values(role_code=role)
     )
     await db.flush()
 
     audit = AuditService(db)
     await audit.log_event(
-        school_id=auth.school_id, actor_id=auth.user_id,
-        action_type="USER_ROLE_CHANGED", outcome="success",
-        target_type="user", target_id=user_id,
+        school_id=auth.school_id,
+        actor_id=auth.user_id,
+        action_type="USER_ROLE_CHANGED",
+        outcome="success",
+        target_type="user",
+        target_id=user_id,
         entity_after={"role": role},
         ip_address=_get_client_ip(request),
     )
@@ -368,7 +410,8 @@ async def list_invitations(
             "created_at": inv.created_at.isoformat() if inv.created_at else None,
             "issuer_user_id": str(inv.issuer_user_id) if inv.issuer_user_id else None,
             "status": (
-                "consumed" if inv.consumed_at
+                "consumed"
+                if inv.consumed_at
                 else ("expired" if inv.expires_at <= now else "active")
             ),
         }
@@ -408,7 +451,9 @@ async def list_audit_logs(
 
     if date_from:
         try:
-            query = query.where(AuditLog.created_at >= datetime.fromisoformat(date_from))
+            query = query.where(
+                AuditLog.created_at >= datetime.fromisoformat(date_from)
+            )
         except ValueError:
             pass
 
@@ -539,18 +584,22 @@ async def register_batch(
             select(User).where(User.email == item.email, User.school_id == school_id)
         )
         if existing.scalar_one_or_none() is not None:
-            errors.append({
-                "email": item.email,
-                "error": "Email already exists for this school",
-            })
+            errors.append(
+                {
+                    "email": item.email,
+                    "error": "Email already exists for this school",
+                }
+            )
             continue
 
         # Validate role
         if item.role not in ("STD", "PAR", "TCH", "ADM", "DIR"):
-            errors.append({
-                "email": item.email,
-                "error": f"Invalid role: {item.role}",
-            })
+            errors.append(
+                {
+                    "email": item.email,
+                    "error": f"Invalid role: {item.role}",
+                }
+            )
             continue
 
         # Generate temporary password (16 chars, meets policy)
@@ -597,7 +646,9 @@ async def register_batch(
         if item.role == "PAR" and item.target_student_id:
             # Validate student exists in the same school
             std_check = await db.execute(
-                select(User).join(Membership).where(
+                select(User)
+                .join(Membership)
+                .where(
                     User.id == item.target_student_id,
                     User.school_id == school_id,
                     Membership.role_code == "STD",
@@ -627,22 +678,26 @@ async def register_batch(
             ip_address=_get_client_ip(request),
         )
 
-        results.append({
-            "user_id": str(user.id),
-            "email": item.email,
-            "full_name": item.full_name,
-            "role": item.role,
-            "temp_password": temp_password,
-        })
+        results.append(
+            {
+                "user_id": str(user.id),
+                "email": item.email,
+                "full_name": item.full_name,
+                "role": item.role,
+                "temp_password": temp_password,
+            }
+        )
 
     await db.commit()
 
-    return success_response({
-        "created": results,
-        "errors": errors,
-        "total_created": len(results),
-        "total_errors": len(errors),
-    })
+    return success_response(
+        {
+            "created": results,
+            "errors": errors,
+            "total_created": len(results),
+            "total_errors": len(errors),
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -661,7 +716,9 @@ async def create_parent_child_link(
 
     # Validate parent exists with PAR role in this school
     par_result = await db.execute(
-        select(User).join(Membership).where(
+        select(User)
+        .join(Membership)
+        .where(
             User.id == parent_user_id,
             User.school_id == school_id,
             Membership.role_code == "PAR",
@@ -669,11 +726,15 @@ async def create_parent_child_link(
         )
     )
     if par_result.scalar_one_or_none() is None:
-        raise NotFoundError("Parent user not found in this school", error_code="ERR-RES-404")
+        raise NotFoundError(
+            "Parent user not found in this school", error_code="ERR-RES-404"
+        )
 
     # Validate student exists with STD role in this school
     std_result = await db.execute(
-        select(User).join(Membership).where(
+        select(User)
+        .join(Membership)
+        .where(
             User.id == child_user_id,
             User.school_id == school_id,
             Membership.role_code == "STD",
@@ -681,7 +742,9 @@ async def create_parent_child_link(
         )
     )
     if std_result.scalar_one_or_none() is None:
-        raise NotFoundError("Student user not found in this school", error_code="ERR-RES-404")
+        raise NotFoundError(
+            "Student user not found in this school", error_code="ERR-RES-404"
+        )
 
     # Check for existing active link
     existing = await db.execute(
@@ -693,7 +756,9 @@ async def create_parent_child_link(
         )
     )
     if existing.scalar_one_or_none() is not None:
-        raise ConflictError("Parent-child link already exists", error_code="ERR-CONFLICT-001")
+        raise ConflictError(
+            "Parent-child link already exists", error_code="ERR-CONFLICT-001"
+        )
 
     link = ParentChildLink(
         parent_user_id=parent_user_id,
@@ -718,15 +783,17 @@ async def create_parent_child_link(
 
     await db.commit()
 
-    return success_response({
-        "id": str(link.id),
-        "parent_user_id": str(link.parent_user_id),
-        "child_user_id": str(link.child_user_id),
-        "school_id": str(link.school_id),
-        "status": link.status,
-        "linked_at": link.linked_at.isoformat(),
-        "linked_by": str(link.linked_by),
-    })
+    return success_response(
+        {
+            "id": str(link.id),
+            "parent_user_id": str(link.parent_user_id),
+            "child_user_id": str(link.child_user_id),
+            "school_id": str(link.school_id),
+            "status": link.status,
+            "linked_at": link.linked_at.isoformat(),
+            "linked_by": str(link.linked_by),
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -737,7 +804,9 @@ async def list_parent_child_links(
     parent_id: uuid.UUID | None = Query(None, description="Filter by parent user ID"),
     student_id: uuid.UUID | None = Query(None, description="Filter by student user ID"),
     status: str | None = Query(None, description="Filter by status (active, revoked)"),
-    cursor: str | None = Query(None, description="Cursor for pagination (linked_at ISO)"),
+    cursor: str | None = Query(
+        None, description="Cursor for pagination (linked_at ISO)"
+    ),
     limit: int = Query(20, ge=1, le=100),
     auth: AuthContext = Depends(requires_permission("PERM-IAM:parent-link:read")),
     db: AsyncSession = Depends(get_db),
@@ -825,8 +894,10 @@ async def revoke_parent_child_link(
 
     await db.commit()
 
-    return success_response({
-        "id": str(link.id),
-        "status": link.status,
-        "message": "Parent-child link revoked",
-    })
+    return success_response(
+        {
+            "id": str(link.id),
+            "status": link.status,
+            "message": "Parent-child link revoked",
+        }
+    )

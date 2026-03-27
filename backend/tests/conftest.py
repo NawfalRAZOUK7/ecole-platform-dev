@@ -6,7 +6,6 @@ Seed data must be loaded before running tests (make seed).
 
 from __future__ import annotations
 
-import uuid
 
 import httpx
 import pytest

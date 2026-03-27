@@ -75,6 +75,12 @@ class ActivitySessionStatus(str, enum.Enum):
     EXPIRED = "expired"
 
 
+class ExerciseType(str, enum.Enum):
+    STANDARD = "STANDARD"
+    PRINTABLE_PDF = "PRINTABLE_PDF"
+    QUIZ = "QUIZ"
+
+
 # ---------------------------------------------------------------------------
 # Models
 # ---------------------------------------------------------------------------
@@ -103,9 +109,7 @@ class Course(TimestampMixin, Base):
         back_populates="course", cascade="all, delete-orphan"
     )
 
-    __table_args__ = (
-        Index("idx_courses_school_class", "school_id", "class_id"),
-    )
+    __table_args__ = (Index("idx_courses_school_class", "school_id", "class_id"),)
 
 
 class Assignment(TimestampMixin, Base):
@@ -133,9 +137,7 @@ class Assignment(TimestampMixin, Base):
         ForeignKey("quizzes.id", ondelete="SET NULL"), nullable=True
     )
     # Phase 9C — PDF exercise workflow
-    exercise_pdf_path: Mapped[str | None] = mapped_column(
-        String(500), nullable=True
-    )
+    exercise_pdf_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # Relationships
     course: Mapped["Course"] = relationship(back_populates="assignments")
@@ -291,7 +293,8 @@ class AssessmentResult(TimestampMixin, Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "assessment_id", "student_id",
+            "assessment_id",
+            "student_id",
             name="uq_assessment_results_assessment_student",
         ),
     )
@@ -315,12 +318,6 @@ class QuizAttemptStatus(str, enum.Enum):
     STARTED = "STARTED"
     COMPLETED = "COMPLETED"
     TIMED_OUT = "TIMED_OUT"
-
-
-class ExerciseType(str, enum.Enum):
-    STANDARD = "STANDARD"
-    PRINTABLE_PDF = "PRINTABLE_PDF"
-    QUIZ = "QUIZ"
 
 
 class ContentOrigin(str, enum.Enum):
@@ -418,7 +415,8 @@ class ContentProgress(TimestampMixin, Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "student_id", "content_item_id",
+            "student_id",
+            "content_item_id",
             name="uq_content_progress_student_item",
         ),
     )
@@ -443,9 +441,7 @@ class Activity(TimestampMixin, Base):
         back_populates="activity", cascade="all, delete-orphan"
     )
 
-    __table_args__ = (
-        Index("idx_activities_school_type", "school_id", "type"),
-    )
+    __table_args__ = (Index("idx_activities_school_type", "school_id", "type"),)
 
 
 class ActivitySession(TimestampMixin, Base):
@@ -503,7 +499,8 @@ class ClassContentAssignment(TimestampMixin, Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "class_id", "content_item_id",
+            "class_id",
+            "content_item_id",
             name="uq_class_content_assignments_class_content",
         ),
         Index("idx_class_content_assignments_teacher", "teacher_id"),
@@ -576,14 +573,17 @@ class Quiz(TimestampMixin, Base):
     difficulty: Mapped[str | None] = mapped_column(String(20), nullable=True)
     time_limit_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
     max_attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
-    shuffle_questions: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    shuffle_questions: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False
+    )
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default=QuizStatus.DRAFT.value
     )
 
     # Relationships
     questions: Mapped[list["QuizQuestion"]] = relationship(
-        back_populates="quiz", cascade="all, delete-orphan",
+        back_populates="quiz",
+        cascade="all, delete-orphan",
         order_by="QuizQuestion.order",
     )
     attempts: Mapped[list["QuizAttempt"]] = relationship(
@@ -658,7 +658,9 @@ class QuizAttempt(TimestampMixin, Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "quiz_id", "student_id", "attempt_no",
+            "quiz_id",
+            "student_id",
+            "attempt_no",
             name="uq_quiz_attempts_quiz_student_attempt",
         ),
         Index("idx_quiz_attempts_student", "student_id"),
@@ -690,7 +692,8 @@ class QuizResponse(TimestampMixin, Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "attempt_id", "question_id",
+            "attempt_id",
+            "question_id",
             name="uq_quiz_responses_attempt_question",
         ),
         Index("idx_quiz_responses_attempt", "attempt_id"),

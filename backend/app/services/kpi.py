@@ -21,10 +21,10 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from sqlalchemy import func, select, text
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.iam import InvitationCode, Membership, Session, User
+from app.models.iam import InvitationCode, Session, User
 
 logger = logging.getLogger(__name__)
 
@@ -221,7 +221,7 @@ async def compute_kpi_g1_004(
         "value": None,
         "unit": "milliseconds",
         "data_source": "prometheus",
-        "query": 'histogram_quantile(0.95, rate(api_request_duration_seconds_bucket[5m]))',
+        "query": "histogram_quantile(0.95, rate(api_request_duration_seconds_bucket[5m]))",
         "period": f"{period_days}d",
         "threshold": "<=350ms (30d)",
         "note": "Query Prometheus /api/v1/query for live value",
@@ -338,12 +338,18 @@ async def compute_all_kpis(
             result["computed_at"] = datetime.now(timezone.utc).isoformat()
             kpis.append(result)
         except Exception as exc:
-            logger.warning("KPI computation failed for %s: %s", compute_fn.__name__, exc)
-            kpis.append({
-                "kpi_id": compute_fn.__name__.replace("compute_", "").upper().replace("_", "-"),
-                "name": "Computation error",
-                "value": None,
-                "error": str(exc),
-                "computed_at": datetime.now(timezone.utc).isoformat(),
-            })
+            logger.warning(
+                "KPI computation failed for %s: %s", compute_fn.__name__, exc
+            )
+            kpis.append(
+                {
+                    "kpi_id": compute_fn.__name__.replace("compute_", "")
+                    .upper()
+                    .replace("_", "-"),
+                    "name": "Computation error",
+                    "value": None,
+                    "error": str(exc),
+                    "computed_at": datetime.now(timezone.utc).isoformat(),
+                }
+            )
     return kpis

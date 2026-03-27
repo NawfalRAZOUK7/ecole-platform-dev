@@ -58,9 +58,16 @@ class MeData(BaseModel):
 # Invitation codes (S-040)
 # ---------------------------------------------------------------------------
 class InviteCreateRequest(BaseModel):
-    role_target: str = Field(..., description="Role code for the invited user (e.g. TCH, PAR, STD)")
-    expires_in_hours: int = Field(default=72, ge=1, le=720, description="Hours until code expires")
-    target_student_id: UUID | None = Field(None, description="Student user ID to auto-link when a PAR registers with this code")
+    role_target: str = Field(
+        ..., description="Role code for the invited user (e.g. TCH, PAR, STD)"
+    )
+    expires_in_hours: int = Field(
+        default=72, ge=1, le=720, description="Hours until code expires"
+    )
+    target_student_id: UUID | None = Field(
+        None,
+        description="Student user ID to auto-link when a PAR registers with this code",
+    )
 
 
 class InviteCreateData(BaseModel):
@@ -98,31 +105,48 @@ class RecoveryVerifyRequest(BaseModel):
 
 class RecoveryResetRequest(BaseModel):
     request_id: UUID
-    new_password: str = Field(..., min_length=12, description="New password (min 12 chars, Phase 2A policy)")
+    new_password: str = Field(
+        ..., min_length=12, description="New password (min 12 chars, Phase 2A policy)"
+    )
 
 
 # ---------------------------------------------------------------------------
 # Password change (Phase 2A)
 # ---------------------------------------------------------------------------
 class ChangePasswordRequest(BaseModel):
-    current_password: str = Field(..., min_length=1, description="Current password for verification")
-    new_password: str = Field(..., min_length=12, description="New password (min 12 chars, Phase 2A policy)")
+    current_password: str = Field(
+        ..., min_length=1, description="Current password for verification"
+    )
+    new_password: str = Field(
+        ..., min_length=12, description="New password (min 12 chars, Phase 2A policy)"
+    )
 
 
 # ---------------------------------------------------------------------------
 # Two-Factor Authentication — TOTP (Phase 2B)
 # ---------------------------------------------------------------------------
 class TwoFactorVerifySetupRequest(BaseModel):
-    code: str = Field(..., min_length=6, max_length=6, description="6-digit TOTP code from authenticator app")
+    code: str = Field(
+        ...,
+        min_length=6,
+        max_length=6,
+        description="6-digit TOTP code from authenticator app",
+    )
 
 
 class TwoFactorDisableRequest(BaseModel):
-    code: str = Field(..., min_length=6, max_length=8, description="TOTP code or backup code")
+    code: str = Field(
+        ..., min_length=6, max_length=8, description="TOTP code or backup code"
+    )
 
 
 class TwoFactorVerifyLoginRequest(BaseModel):
-    temp_token: str = Field(..., min_length=1, description="Temporary token from login response")
-    code: str = Field(..., min_length=6, max_length=8, description="TOTP code or backup code")
+    temp_token: str = Field(
+        ..., min_length=1, description="Temporary token from login response"
+    )
+    code: str = Field(
+        ..., min_length=6, max_length=8, description="TOTP code or backup code"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -131,18 +155,24 @@ class TwoFactorVerifyLoginRequest(BaseModel):
 class EmailVerifyRequest(BaseModel):
     user_id: UUID
     school_id: UUID
-    otp: str = Field(..., min_length=6, max_length=6, description="6-digit email verification OTP")
+    otp: str = Field(
+        ..., min_length=6, max_length=6, description="6-digit email verification OTP"
+    )
 
 
 # ---------------------------------------------------------------------------
 # Registration with invitation code (Phase 2C)
 # ---------------------------------------------------------------------------
 class RegisterRequest(BaseModel):
-    code: str = Field(..., min_length=8, max_length=8, description="8-char invitation code")
+    code: str = Field(
+        ..., min_length=8, max_length=8, description="8-char invitation code"
+    )
     email: EmailStr
     full_name: str = Field(..., min_length=1, max_length=200)
     phone: str | None = Field(None, max_length=20)
-    password: str = Field(..., min_length=12, description="Password (min 12 chars, Phase 2A policy)")
+    password: str = Field(
+        ..., min_length=12, description="Password (min 12 chars, Phase 2A policy)"
+    )
     profile_data: dict[str, Any] = Field(
         default_factory=dict,
         description="Role-specific profile fields (e.g. date_of_birth for STD, relationship_type for PAR)",
@@ -154,8 +184,12 @@ class BatchRegisterItem(BaseModel):
     full_name: str = Field(..., min_length=1, max_length=200)
     role: str = Field(..., description="Role code: STD, PAR, TCH")
     phone: str | None = Field(None, max_length=20)
-    class_code: str | None = Field(None, description="Class code for auto-enrollment (optional)")
-    target_student_id: UUID | None = Field(None, description="Student user ID to auto-link for PAR role")
+    class_code: str | None = Field(
+        None, description="Class code for auto-enrollment (optional)"
+    )
+    target_student_id: UUID | None = Field(
+        None, description="Student user ID to auto-link for PAR role"
+    )
 
 
 class BatchRegisterRequest(BaseModel):

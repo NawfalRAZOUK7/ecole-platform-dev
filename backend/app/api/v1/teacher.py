@@ -23,7 +23,7 @@ from app.core.dependencies import (
 )
 from app.core.exceptions import NotFoundError
 from app.core.response import list_response, success_response
-from app.models.erp import Class, Enrollment, Period, TeacherAssignment
+from app.models.erp import Class, Enrollment, Period
 from app.models.iam import User
 from app.models.lms import Assignment, Course, Grade, Submission
 
@@ -49,30 +49,36 @@ async def list_teacher_classes(
 
     # Get classes
     classes_result = await db.execute(
-        select(Class).where(
+        select(Class)
+        .where(
             Class.id.in_(teacher_class_ids),
             Class.school_id == auth.school_id,
-        ).order_by(Class.name)
+        )
+        .order_by(Class.name)
     )
     classes = list(classes_result.scalars().all())
 
     # Student counts per class (active enrollments)
     student_counts_result = await db.execute(
-        select(Enrollment.class_id, func.count()).where(
+        select(Enrollment.class_id, func.count())
+        .where(
             Enrollment.class_id.in_(teacher_class_ids),
             Enrollment.school_id == auth.school_id,
             Enrollment.status == "active",
-        ).group_by(Enrollment.class_id)
+        )
+        .group_by(Enrollment.class_id)
     )
     student_counts = dict(student_counts_result.all())
 
     # Course counts per class
     course_counts_result = await db.execute(
-        select(Course.class_id, func.count()).where(
+        select(Course.class_id, func.count())
+        .where(
             Course.class_id.in_(teacher_class_ids),
             Course.teacher_id == auth.user_id,
             Course.school_id == auth.school_id,
-        ).group_by(Course.class_id)
+        )
+        .group_by(Course.class_id)
     )
     course_counts = dict(course_counts_result.all())
 
@@ -114,11 +120,14 @@ async def list_class_students(
 
     # Get active enrollments with user info
     enrollments_result = await db.execute(
-        select(Enrollment, User).join(User, Enrollment.student_id == User.id).where(
+        select(Enrollment, User)
+        .join(User, Enrollment.student_id == User.id)
+        .where(
             Enrollment.class_id == class_id,
             Enrollment.school_id == auth.school_id,
             Enrollment.status == "active",
-        ).order_by(User.full_name)
+        )
+        .order_by(User.full_name)
     )
     rows = enrollments_result.all()
 
@@ -177,6 +186,7 @@ async def list_teacher_submissions(
     # Cursor pagination
     if cursor:
         from datetime import datetime
+
         try:
             cursor_dt = datetime.fromisoformat(cursor)
             query = query.where(Submission.created_at < cursor_dt)
@@ -214,8 +224,12 @@ async def list_teacher_submissions(
             "grade": {
                 "score": float(grades_map[sub.id].score),
                 "feedback_text": grades_map[sub.id].feedback_text,
-                "published_at": grades_map[sub.id].published_at.isoformat() if grades_map[sub.id].published_at else None,
-            } if sub.id in grades_map else None,
+                "published_at": grades_map[sub.id].published_at.isoformat()
+                if grades_map[sub.id].published_at
+                else None,
+            }
+            if sub.id in grades_map
+            else None,
         }
         for sub, assignment, student in rows
     ]
@@ -234,10 +248,12 @@ async def list_active_periods(
 ):
     """List active periods for the teacher's school (used in attendance form)."""
     result = await db.execute(
-        select(Period).where(
+        select(Period)
+        .where(
             Period.school_id == auth.school_id,
             Period.status == "active",
-        ).order_by(Period.date_start)
+        )
+        .order_by(Period.date_start)
     )
     periods = list(result.scalars().all())
 

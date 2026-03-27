@@ -25,7 +25,6 @@ import {
   Legend,
 } from 'recharts';
 import { api, ApiClientError } from '@/services/api/client';
-import { useAuth } from '@/services/auth/AuthContext';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
 
@@ -81,7 +80,6 @@ const DONUT_COLORS = ['#10b981', '#ef4444', '#3b82f6', '#f59e0b'];
  */
 export function ProgressDashboardPage() {
   const { t } = useTranslation();
-  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const studentId = searchParams.get('studentId');
   const [data, setData] = useState<ProgressData | null>(null);

@@ -8,7 +8,6 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '@/services/auth/AuthContext';
 import { api, ApiClientError } from '@/services/api/client';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
@@ -41,7 +40,6 @@ interface QuizAttemptResult {
 
 export function ResultsPage() {
   const { t, i18n } = useTranslation();
-  const { user } = useAuth();
   const [items, setItems] = useState<Result[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

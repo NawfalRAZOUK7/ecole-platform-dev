@@ -7,7 +7,6 @@ Phase 11C: Added Conversation, Message, ReadReceipt, Announcement schemas.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
 
 from pydantic import BaseModel, Field
 
@@ -63,14 +62,19 @@ class FeedItemResponse(BaseModel):
 # ---------------------------------------------------------------------------
 class ConversationCreateRequest(BaseModel):
     """Start a new conversation (DIRECT or GROUP)."""
+
     participant_ids: list[uuid.UUID] = Field(
-        ..., min_length=1, max_length=20,
+        ...,
+        min_length=1,
+        max_length=20,
         description="User IDs of the other participants (not including initiator)",
     )
     type: str = Field("DIRECT", pattern="^(DIRECT|GROUP)$")
     subject: str | None = Field(None, max_length=300)
     initial_message: str = Field(
-        ..., min_length=1, max_length=5000,
+        ...,
+        min_length=1,
+        max_length=5000,
         description="First message body to send in the conversation",
     )
 
@@ -98,6 +102,7 @@ class ConversationResponse(BaseModel):
 # ---------------------------------------------------------------------------
 class MessageCreateRequest(BaseModel):
     """Send a message in a conversation."""
+
     body: str = Field(..., min_length=1, max_length=5000)
 
 
@@ -118,6 +123,7 @@ class ReadReceiptResponse(BaseModel):
 
 class MarkReadRequest(BaseModel):
     """Mark messages as read up to a given message."""
+
     message_id: uuid.UUID
 
 
@@ -126,19 +132,23 @@ class MarkReadRequest(BaseModel):
 # ---------------------------------------------------------------------------
 class AnnouncementCreateRequest(BaseModel):
     """Create a new announcement (draft)."""
+
     title: str = Field(..., min_length=1, max_length=300)
     body: str = Field(..., min_length=1, max_length=10000)
     target_roles: list[str] = Field(
-        ..., min_length=1,
+        ...,
+        min_length=1,
         description="Target role codes, e.g. ['PAR', 'STD']",
     )
     target_class_ids: list[uuid.UUID] | None = Field(
-        None, description="Target class UUIDs — NULL means all classes",
+        None,
+        description="Target class UUIDs — NULL means all classes",
     )
 
 
 class AnnouncementUpdateRequest(BaseModel):
     """Update a draft announcement."""
+
     title: str | None = Field(None, max_length=300)
     body: str | None = Field(None, max_length=10000)
     target_roles: list[str] | None = None

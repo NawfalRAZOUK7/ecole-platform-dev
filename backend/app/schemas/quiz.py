@@ -15,7 +15,9 @@ from pydantic import BaseModel, Field
 # Quiz CRUD
 # ---------------------------------------------------------------------------
 class QuizQuestionInput(BaseModel):
-    question_type: str = Field(..., pattern="^(MCQ|TRUE_FALSE|FILL_IN|DRAG_DROP|MATCHING)$")
+    question_type: str = Field(
+        ..., pattern="^(MCQ|TRUE_FALSE|FILL_IN|DRAG_DROP|MATCHING)$"
+    )
     question_text: str = Field(..., min_length=1)
     question_media_path: str | None = None
     options: Any | None = None

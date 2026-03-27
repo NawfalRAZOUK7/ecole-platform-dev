@@ -14,15 +14,15 @@ import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Request
-from sqlalchemy import func, select, update
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, requires_permission
-from app.core.exceptions import ForbiddenError, NotFoundError
-from app.core.response import list_response, success_response
+from app.core.exceptions import AuthorizationError, NotFoundError
+from app.core.response import success_response
 from app.models.audit import AuditLog
-from app.models.billing import Invoice, PaymentAttempt
+from app.models.billing import Invoice
 from app.models.com import ConsentPreference, Notification
 from app.models.iam import Membership, Session, User
 from app.models.lms import Grade, Submission
@@ -60,13 +60,13 @@ async def _get_target_user(
     is_self = auth.user_id == user_id
 
     if admin_only and not is_admin:
-        raise ForbiddenError(
+        raise AuthorizationError(
             "Only administrators can perform this action",
             error_code="ERR-GDPR-403",
         )
 
     if not is_admin and not is_self:
-        raise ForbiddenError(
+        raise AuthorizationError(
             "You can only access your own data",
             error_code="ERR-GDPR-403",
         )
@@ -112,7 +112,9 @@ async def data_export(
         "status": user.status,
         "school_id": str(user.school_id),
         "created_at": user.created_at.isoformat() if user.created_at else None,
-        "email_verified_at": user.email_verified_at.isoformat() if user.email_verified_at else None,
+        "email_verified_at": user.email_verified_at.isoformat()
+        if user.email_verified_at
+        else None,
         "totp_enabled": user.totp_enabled,
     }
 
@@ -133,7 +135,10 @@ async def data_export(
 
     # --- Sessions ---
     sessions_result = await db.execute(
-        select(Session).where(Session.user_id == user_id).order_by(Session.created_at.desc()).limit(100)
+        select(Session)
+        .where(Session.user_id == user_id)
+        .order_by(Session.created_at.desc())
+        .limit(100)
     )
     sessions = [
         {
@@ -232,7 +237,9 @@ async def data_export(
         {
             "id": str(inv.id),
             "status": inv.status,
-            "total_amount": str(inv.total_amount) if inv.total_amount is not None else None,
+            "total_amount": str(inv.total_amount)
+            if inv.total_amount is not None
+            else None,
             "currency": inv.currency,
             "issued_at": inv.issued_at.isoformat() if inv.issued_at else None,
             "due_at": inv.due_at.isoformat() if inv.due_at else None,
@@ -270,19 +277,21 @@ async def data_export(
         ip_address=_get_client_ip(request),
     )
 
-    return success_response({
-        "user_id": str(user_id),
-        "exported_at": datetime.now(timezone.utc).isoformat(),
-        "profile": profile,
-        "memberships": memberships,
-        "sessions": sessions,
-        "audit_logs": audit_logs,
-        "submissions": submissions,
-        "grades": grades,
-        "notifications": notifications,
-        "invoices": invoices,
-        "consent_preferences": consents,
-    })
+    return success_response(
+        {
+            "user_id": str(user_id),
+            "exported_at": datetime.now(timezone.utc).isoformat(),
+            "profile": profile,
+            "memberships": memberships,
+            "sessions": sessions,
+            "audit_logs": audit_logs,
+            "submissions": submissions,
+            "grades": grades,
+            "notifications": notifications,
+            "invoices": invoices,
+            "consent_preferences": consents,
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -304,7 +313,7 @@ async def data_deletion(
     user = await _get_target_user(db, user_id, auth, admin_only=True)
 
     if user.id == auth.user_id:
-        raise ForbiddenError(
+        raise AuthorizationError(
             "Cannot anonymize your own account",
             error_code="ERR-GDPR-422",
         )
@@ -367,12 +376,14 @@ async def data_deletion(
         ip_address=_get_client_ip(request),
     )
 
-    return success_response({
-        "user_id": str(user_id),
-        "anonymized_at": datetime.now(timezone.utc).isoformat(),
-        "status": "anonymized",
-        "message": "User PII has been anonymized. Audit records preserved.",
-    })
+    return success_response(
+        {
+            "user_id": str(user_id),
+            "anonymized_at": datetime.now(timezone.utc).isoformat(),
+            "status": "anonymized",
+            "message": "User PII has been anonymized. Audit records preserved.",
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -390,7 +401,7 @@ async def consent_log(
     Returns all audit log entries where the target is a consent preference
     belonging to this user, plus current consent preferences.
     """
-    user = await _get_target_user(db, user_id, auth)
+    await _get_target_user(db, user_id, auth)
 
     # Current consent preferences
     consent_result = await db.execute(
@@ -412,7 +423,6 @@ async def consent_log(
     ]
 
     # Consent change history from audit logs
-    consent_ids = [c["id"] for c in current_consents]
     audit_result = await db.execute(
         select(AuditLog)
         .where(
@@ -450,8 +460,10 @@ async def consent_log(
         ip_address=_get_client_ip(request),
     )
 
-    return success_response({
-        "user_id": str(user_id),
-        "current_consents": current_consents,
-        "change_history": change_history,
-    })
+    return success_response(
+        {
+            "user_id": str(user_id),
+            "current_consents": current_consents,
+            "change_history": change_history,
+        }
+    )

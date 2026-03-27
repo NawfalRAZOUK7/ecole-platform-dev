@@ -41,6 +41,10 @@ interface QuestionInput {
   explanation: string;
 }
 
+interface McqOptions {
+  choices?: string[];
+}
+
 type View = 'list' | 'create';
 
 /* ------------------------------------------------------------------ */
@@ -168,7 +172,7 @@ function QuizCreateForm({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [subject, setSubject] = useState('');
-  const [levelBand, setLevelBand] = useState('');
+  const [levelBand] = useState('');
   const [difficulty, setDifficulty] = useState('easy');
   const [timeLimit, setTimeLimit] = useState('');
   const [maxAttempts, setMaxAttempts] = useState('3');
@@ -191,9 +195,9 @@ function QuizCreateForm({
     setQuestions([...questions, q]);
   }
 
-  function updateQuestion(idx: number, field: string, value: unknown) {
+  function updateQuestion<K extends keyof QuestionInput>(idx: number, field: K, value: QuestionInput[K]) {
     const copy = [...questions];
-    (copy[idx] as any)[field] = value;
+    copy[idx] = { ...copy[idx], [field]: value };
     setQuestions(copy);
   }
 
@@ -308,7 +312,7 @@ function QuizCreateForm({
           {/* MCQ options */}
           {q.question_type === 'mcq' && (
             <div style={{ marginBottom: 8 }}>
-              {((q.options as any)?.choices || []).map((c: string, ci: number) => (
+              {((q.options as McqOptions | null)?.choices || []).map((c: string, ci: number) => (
                 <div key={ci} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                   <input
                     type="radio"
@@ -320,7 +324,7 @@ function QuizCreateForm({
                     className="filter-input"
                     value={c}
                     onChange={(e) => {
-                      const choices = [...(q.options as any).choices];
+                      const choices = [...((q.options as McqOptions | null)?.choices || [])];
                       choices[ci] = e.target.value;
                       updateQuestion(idx, 'options', { choices });
                     }}
@@ -334,7 +338,7 @@ function QuizCreateForm({
                 className="btn btn-secondary"
                 style={{ fontSize: 11, padding: '2px 8px', marginTop: 4 }}
                 onClick={() => {
-                  const choices = [...(q.options as any).choices, ''];
+                  const choices = [...((q.options as McqOptions | null)?.choices || []), ''];
                   updateQuestion(idx, 'options', { choices });
                 }}
               >

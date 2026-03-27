@@ -14,9 +14,15 @@ import bcrypt
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import async_session, engine
+from app.core.database import async_session
 from app.models.audit import AuditLog
-from app.models.billing import FeeAssignment, FeeStructure, Invoice, InvoiceItem, PaymentAttempt
+from app.models.billing import (
+    FeeAssignment,
+    FeeStructure,
+    Invoice,
+    InvoiceItem,
+    PaymentAttempt,
+)
 from app.models.com import (
     Announcement,
     ConsentPreference,
@@ -41,8 +47,6 @@ from app.models.erp import (
 )
 from app.models.feature import FeatureToggle
 from app.models.iam import (
-    AccountRecoveryRequest,
-    InvitationCode,
     Membership,
     ParentChildLink,
     ParentProfile,
@@ -64,9 +68,7 @@ from app.models.lms import (
     Course,
     Grade,
     Quiz,
-    QuizAttempt,
     QuizQuestion,
-    QuizResponse,
     Submission,
 )
 
@@ -272,17 +274,42 @@ async def seed_iam(session: AsyncSession) -> None:
     await session.flush()
 
     memberships = [
-        Membership(user_id=ADMIN_ID, school_id=SCHOOL_ID, role_code="ADM", status="active"),
-        Membership(user_id=DIRECTOR_ID, school_id=SCHOOL_ID, role_code="DIR", status="active"),
-        Membership(user_id=TEACHER_1_ID, school_id=SCHOOL_ID, role_code="TCH", status="active"),
-        Membership(user_id=TEACHER_2_ID, school_id=SCHOOL_ID, role_code="TCH", status="active"),
-        Membership(user_id=PARENT_1_ID, school_id=SCHOOL_ID, role_code="PAR", status="active"),
-        Membership(user_id=PARENT_2_ID, school_id=SCHOOL_ID, role_code="PAR", status="active"),
-        Membership(user_id=STUDENT_1_ID, school_id=SCHOOL_ID, role_code="STD", status="active"),
-        Membership(user_id=STUDENT_2_ID, school_id=SCHOOL_ID, role_code="STD", status="active"),
-        Membership(user_id=STUDENT_3_ID, school_id=SCHOOL_ID, role_code="STD", status="active"),
-        Membership(user_id=SUPERADMIN_ID, school_id=SCHOOL_ID, role_code="SUP", status="active"),
-        Membership(user_id=CONTENT_MGR_ID, school_id=SCHOOL_ID, role_code="CONTENT_MGR", status="active"),
+        Membership(
+            user_id=ADMIN_ID, school_id=SCHOOL_ID, role_code="ADM", status="active"
+        ),
+        Membership(
+            user_id=DIRECTOR_ID, school_id=SCHOOL_ID, role_code="DIR", status="active"
+        ),
+        Membership(
+            user_id=TEACHER_1_ID, school_id=SCHOOL_ID, role_code="TCH", status="active"
+        ),
+        Membership(
+            user_id=TEACHER_2_ID, school_id=SCHOOL_ID, role_code="TCH", status="active"
+        ),
+        Membership(
+            user_id=PARENT_1_ID, school_id=SCHOOL_ID, role_code="PAR", status="active"
+        ),
+        Membership(
+            user_id=PARENT_2_ID, school_id=SCHOOL_ID, role_code="PAR", status="active"
+        ),
+        Membership(
+            user_id=STUDENT_1_ID, school_id=SCHOOL_ID, role_code="STD", status="active"
+        ),
+        Membership(
+            user_id=STUDENT_2_ID, school_id=SCHOOL_ID, role_code="STD", status="active"
+        ),
+        Membership(
+            user_id=STUDENT_3_ID, school_id=SCHOOL_ID, role_code="STD", status="active"
+        ),
+        Membership(
+            user_id=SUPERADMIN_ID, school_id=SCHOOL_ID, role_code="SUP", status="active"
+        ),
+        Membership(
+            user_id=CONTENT_MGR_ID,
+            school_id=SCHOOL_ID,
+            role_code="CONTENT_MGR",
+            status="active",
+        ),
     ]
     session.add_all(memberships)
 
@@ -354,17 +381,50 @@ async def seed_erp(session: AsyncSession) -> None:
 
     # Enrollments (students in classes for current period)
     enrollments = [
-        Enrollment(student_id=STUDENT_1_ID, class_id=CLASS_6A_ID, period_id=PERIOD_2_ID, school_id=SCHOOL_ID, status="active"),
-        Enrollment(student_id=STUDENT_2_ID, class_id=CLASS_6A_ID, period_id=PERIOD_2_ID, school_id=SCHOOL_ID, status="active"),
-        Enrollment(student_id=STUDENT_3_ID, class_id=CLASS_6B_ID, period_id=PERIOD_2_ID, school_id=SCHOOL_ID, status="active"),
+        Enrollment(
+            student_id=STUDENT_1_ID,
+            class_id=CLASS_6A_ID,
+            period_id=PERIOD_2_ID,
+            school_id=SCHOOL_ID,
+            status="active",
+        ),
+        Enrollment(
+            student_id=STUDENT_2_ID,
+            class_id=CLASS_6A_ID,
+            period_id=PERIOD_2_ID,
+            school_id=SCHOOL_ID,
+            status="active",
+        ),
+        Enrollment(
+            student_id=STUDENT_3_ID,
+            class_id=CLASS_6B_ID,
+            period_id=PERIOD_2_ID,
+            school_id=SCHOOL_ID,
+            status="active",
+        ),
     ]
     session.add_all(enrollments)
 
     # Teacher assignments
     assignments = [
-        TeacherAssignment(teacher_id=TEACHER_1_ID, class_id=CLASS_6A_ID, period_id=PERIOD_2_ID, school_id=SCHOOL_ID),
-        TeacherAssignment(teacher_id=TEACHER_2_ID, class_id=CLASS_6A_ID, period_id=PERIOD_2_ID, school_id=SCHOOL_ID),
-        TeacherAssignment(teacher_id=TEACHER_1_ID, class_id=CLASS_6B_ID, period_id=PERIOD_2_ID, school_id=SCHOOL_ID),
+        TeacherAssignment(
+            teacher_id=TEACHER_1_ID,
+            class_id=CLASS_6A_ID,
+            period_id=PERIOD_2_ID,
+            school_id=SCHOOL_ID,
+        ),
+        TeacherAssignment(
+            teacher_id=TEACHER_2_ID,
+            class_id=CLASS_6A_ID,
+            period_id=PERIOD_2_ID,
+            school_id=SCHOOL_ID,
+        ),
+        TeacherAssignment(
+            teacher_id=TEACHER_1_ID,
+            class_id=CLASS_6B_ID,
+            period_id=PERIOD_2_ID,
+            school_id=SCHOOL_ID,
+        ),
     ]
     session.add_all(assignments)
 
@@ -381,12 +441,25 @@ async def seed_erp(session: AsyncSession) -> None:
     await session.flush()
 
     att_records = [
-        AttendanceRecord(attendance_session_id=att_session.id, student_id=STUDENT_1_ID, school_id=SCHOOL_ID, status="present"),
-        AttendanceRecord(attendance_session_id=att_session.id, student_id=STUDENT_2_ID, school_id=SCHOOL_ID, status="absent", absence_reason="Maladie"),
+        AttendanceRecord(
+            attendance_session_id=att_session.id,
+            student_id=STUDENT_1_ID,
+            school_id=SCHOOL_ID,
+            status="present",
+        ),
+        AttendanceRecord(
+            attendance_session_id=att_session.id,
+            student_id=STUDENT_2_ID,
+            school_id=SCHOOL_ID,
+            status="absent",
+            absence_reason="Maladie",
+        ),
     ]
     session.add_all(att_records)
     await session.flush()
-    print("  [ERP] 1 year, 2 periods, 2 classes, 3 enrollments, 3 teacher assignments, 1 attendance session")
+    print(
+        "  [ERP] 1 year, 2 periods, 2 classes, 3 enrollments, 3 teacher assignments, 1 attendance session"
+    )
 
 
 async def seed_lms(session: AsyncSession) -> None:
@@ -523,7 +596,9 @@ async def seed_lms(session: AsyncSession) -> None:
     session.add(pdf_assign)
     await session.flush()
 
-    print("  [LMS] 2 courses, 2 assignments (1 STANDARD + 1 PRINTABLE_PDF), 1 submission+grade, 1 assessment+result, 1 content+progress, 1 activity+session")
+    print(
+        "  [LMS] 2 courses, 2 assignments (1 STANDARD + 1 PRINTABLE_PDF), 1 submission+grade, 1 assessment+result, 1 content+progress, 1 activity+session"
+    )
 
 
 async def seed_com(session: AsyncSession) -> None:
@@ -597,22 +672,24 @@ async def seed_messaging(session: AsyncSession) -> None:
     session.add(conv1)
     await session.flush()
 
-    session.add_all([
-        ConversationParticipant(
-            conversation_id=CONV_1_ID,
-            user_id=PARENT_1_ID,
-            role_in_conversation="INITIATOR",
-            joined_at=now,
-            muted=False,
-        ),
-        ConversationParticipant(
-            conversation_id=CONV_1_ID,
-            user_id=TEACHER_1_ID,
-            role_in_conversation="PARTICIPANT",
-            joined_at=now,
-            muted=False,
-        ),
-    ])
+    session.add_all(
+        [
+            ConversationParticipant(
+                conversation_id=CONV_1_ID,
+                user_id=PARENT_1_ID,
+                role_in_conversation="INITIATOR",
+                joined_at=now,
+                muted=False,
+            ),
+            ConversationParticipant(
+                conversation_id=CONV_1_ID,
+                user_id=TEACHER_1_ID,
+                role_in_conversation="PARTICIPANT",
+                joined_at=now,
+                muted=False,
+            ),
+        ]
+    )
     await session.flush()
 
     msg1 = Message(
@@ -649,29 +726,31 @@ async def seed_messaging(session: AsyncSession) -> None:
     session.add(conv2)
     await session.flush()
 
-    session.add_all([
-        ConversationParticipant(
-            conversation_id=CONV_2_ID,
-            user_id=ADMIN_ID,
-            role_in_conversation="INITIATOR",
-            joined_at=now,
-            muted=False,
-        ),
-        ConversationParticipant(
-            conversation_id=CONV_2_ID,
-            user_id=TEACHER_1_ID,
-            role_in_conversation="PARTICIPANT",
-            joined_at=now,
-            muted=False,
-        ),
-        ConversationParticipant(
-            conversation_id=CONV_2_ID,
-            user_id=TEACHER_2_ID,
-            role_in_conversation="PARTICIPANT",
-            joined_at=now,
-            muted=False,
-        ),
-    ])
+    session.add_all(
+        [
+            ConversationParticipant(
+                conversation_id=CONV_2_ID,
+                user_id=ADMIN_ID,
+                role_in_conversation="INITIATOR",
+                joined_at=now,
+                muted=False,
+            ),
+            ConversationParticipant(
+                conversation_id=CONV_2_ID,
+                user_id=TEACHER_1_ID,
+                role_in_conversation="PARTICIPANT",
+                joined_at=now,
+                muted=False,
+            ),
+            ConversationParticipant(
+                conversation_id=CONV_2_ID,
+                user_id=TEACHER_2_ID,
+                role_in_conversation="PARTICIPANT",
+                joined_at=now,
+                muted=False,
+            ),
+        ]
+    )
     await session.flush()
 
     msg3 = Message(
@@ -717,7 +796,9 @@ async def seed_messaging(session: AsyncSession) -> None:
     session.add(ann2)
     await session.flush()
 
-    print("  [Messaging] 2 conversations (4 messages, 1 read receipt), 2 announcements (1 published, 1 draft)")
+    print(
+        "  [Messaging] 2 conversations (4 messages, 1 read receipt), 2 announcements (1 published, 1 draft)"
+    )
 
 
 async def seed_billing(session: AsyncSession) -> None:
@@ -1044,7 +1125,9 @@ async def seed_cms(session: AsyncSession) -> None:
     session.add(assignment)
     await session.flush()
 
-    print("  [CMS] 6 platform content, 1 teacher content, 1 submission, 1 class assignment")
+    print(
+        "  [CMS] 6 platform content, 1 teacher content, 1 submission, 1 class assignment"
+    )
 
 
 async def seed_quizzes(session: AsyncSession) -> None:
@@ -1348,11 +1431,31 @@ async def seed_fees(session: AsyncSession) -> None:
     # Assignments
     assignments = [
         # All 3 students get tuition
-        FeeAssignment(fee_structure_id=FEE_SCOLARITE_ID, student_id=STUDENT_1_ID, school_id=SCHOOL_ID, status="ACTIVE"),
-        FeeAssignment(fee_structure_id=FEE_SCOLARITE_ID, student_id=STUDENT_2_ID, school_id=SCHOOL_ID, status="ACTIVE"),
-        FeeAssignment(fee_structure_id=FEE_SCOLARITE_ID, student_id=STUDENT_3_ID, school_id=SCHOOL_ID, status="ACTIVE"),
+        FeeAssignment(
+            fee_structure_id=FEE_SCOLARITE_ID,
+            student_id=STUDENT_1_ID,
+            school_id=SCHOOL_ID,
+            status="ACTIVE",
+        ),
+        FeeAssignment(
+            fee_structure_id=FEE_SCOLARITE_ID,
+            student_id=STUDENT_2_ID,
+            school_id=SCHOOL_ID,
+            status="ACTIVE",
+        ),
+        FeeAssignment(
+            fee_structure_id=FEE_SCOLARITE_ID,
+            student_id=STUDENT_3_ID,
+            school_id=SCHOOL_ID,
+            status="ACTIVE",
+        ),
         # Students 1+2 get transport
-        FeeAssignment(fee_structure_id=FEE_TRANSPORT_ID, student_id=STUDENT_1_ID, school_id=SCHOOL_ID, status="ACTIVE"),
+        FeeAssignment(
+            fee_structure_id=FEE_TRANSPORT_ID,
+            student_id=STUDENT_1_ID,
+            school_id=SCHOOL_ID,
+            status="ACTIVE",
+        ),
         FeeAssignment(
             fee_structure_id=FEE_TRANSPORT_ID,
             student_id=STUDENT_2_ID,

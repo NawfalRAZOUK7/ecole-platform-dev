@@ -14,15 +14,12 @@ Usage:
 
 from __future__ import annotations
 
-import hashlib
 import json
 import logging
 import uuid
-from collections import defaultdict
-from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import case, distinct, func, select
+from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.redis import redis_client
@@ -177,14 +174,16 @@ class ProgressService:
 
         data = {
             "labels": ["Terminé", "En cours", "Non commencé"],
-            "datasets": [{
-                "label": "Contenu",
-                "data": [
-                    status_counts["completed"],
-                    status_counts["in_progress"],
-                    status_counts["not_started"],
-                ],
-            }],
+            "datasets": [
+                {
+                    "label": "Contenu",
+                    "data": [
+                        status_counts["completed"],
+                        status_counts["in_progress"],
+                        status_counts["not_started"],
+                    ],
+                }
+            ],
             "summary": {
                 "total": total,
                 "completed": status_counts["completed"],
@@ -317,7 +316,9 @@ class ProgressService:
         for row in monthly_rows:
             month_labels.append(row.month)
             rate = round(
-                (row.present_count / row.total_records * 100) if row.total_records > 0 else 0,
+                (row.present_count / row.total_records * 100)
+                if row.total_records > 0
+                else 0,
                 1,
             )
             presence_rates.append(rate)
@@ -325,15 +326,17 @@ class ProgressService:
         data = {
             "overview": {
                 "labels": ["Présent", "Absent", "Excusé", "En retard"],
-                "datasets": [{
-                    "label": "Présence",
-                    "data": [
-                        status_map["present"],
-                        status_map["absent"],
-                        status_map["excused"],
-                        status_map["late"],
-                    ],
-                }],
+                "datasets": [
+                    {
+                        "label": "Présence",
+                        "data": [
+                            status_map["present"],
+                            status_map["absent"],
+                            status_map["excused"],
+                            status_map["late"],
+                        ],
+                    }
+                ],
                 "summary": {
                     "total": total,
                     "present": status_map["present"],
@@ -344,10 +347,12 @@ class ProgressService:
             },
             "trend": {
                 "labels": month_labels,
-                "datasets": [{
-                    "label": "Taux de présence (%)",
-                    "data": presence_rates,
-                }],
+                "datasets": [
+                    {
+                        "label": "Taux de présence (%)",
+                        "data": presence_rates,
+                    }
+                ],
             },
         }
         await _set_cached(cache_key, data)
@@ -522,7 +527,9 @@ class ProgressService:
             )
             .group_by(Submission.student_id)
         )
-        grade_rows = {row.student_id: float(row.avg_score) for row in grade_result.all()}
+        grade_rows = {
+            row.student_id: float(row.avg_score) for row in grade_result.all()
+        }
 
         # --- Class-wide attendance ---
         att_result = await self.db.execute(
@@ -543,7 +550,9 @@ class ProgressService:
             .group_by(AttendanceRecord.student_id)
         )
         att_rows = {
-            row.student_id: round(row.present / row.total * 100, 1) if row.total > 0 else 0
+            row.student_id: round(row.present / row.total * 100, 1)
+            if row.total > 0
+            else 0
             for row in att_result.all()
         }
 
@@ -563,7 +572,9 @@ class ProgressService:
             .group_by(ContentProgress.student_id)
         )
         content_rows = {
-            row.student_id: round(row.completed / row.total * 100, 1) if row.total > 0 else 0
+            row.student_id: round(row.completed / row.total * 100, 1)
+            if row.total > 0
+            else 0
             for row in content_result.all()
         }
 
@@ -579,13 +590,17 @@ class ProgressService:
             att_rate = att_rows.get(sid)
             cont_rate = content_rows.get(sid)
 
-            student_summaries.append({
-                "student_id": str(sid),
-                "student_name": s.full_name,
-                "grade_average": round(grade_avg, 2) if grade_avg is not None else None,
-                "attendance_rate": att_rate,
-                "content_completion_rate": cont_rate,
-            })
+            student_summaries.append(
+                {
+                    "student_id": str(sid),
+                    "student_name": s.full_name,
+                    "grade_average": round(grade_avg, 2)
+                    if grade_avg is not None
+                    else None,
+                    "attendance_rate": att_rate,
+                    "content_completion_rate": cont_rate,
+                }
+            )
 
             if grade_avg is not None:
                 all_grades.append(grade_avg)
@@ -598,9 +613,17 @@ class ProgressService:
         student_summaries.sort(key=lambda x: x["student_name"])
 
         # Class-level averages
-        class_grade_avg = round(sum(all_grades) / len(all_grades), 2) if all_grades else None
-        class_att_avg = round(sum(all_attendance) / len(all_attendance), 1) if all_attendance else None
-        class_content_avg = round(sum(all_content) / len(all_content), 1) if all_content else None
+        class_grade_avg = (
+            round(sum(all_grades) / len(all_grades), 2) if all_grades else None
+        )
+        class_att_avg = (
+            round(sum(all_attendance) / len(all_attendance), 1)
+            if all_attendance
+            else None
+        )
+        class_content_avg = (
+            round(sum(all_content) / len(all_content), 1) if all_content else None
+        )
 
         # Chart-ready: student names as labels, metrics as datasets
         data = {
@@ -616,17 +639,21 @@ class ProgressService:
             "charts": {
                 "grade_comparison": {
                     "labels": [s["student_name"] for s in student_summaries],
-                    "datasets": [{
-                        "label": "Moyenne des notes",
-                        "data": [s["grade_average"] for s in student_summaries],
-                    }],
+                    "datasets": [
+                        {
+                            "label": "Moyenne des notes",
+                            "data": [s["grade_average"] for s in student_summaries],
+                        }
+                    ],
                 },
                 "attendance_comparison": {
                     "labels": [s["student_name"] for s in student_summaries],
-                    "datasets": [{
-                        "label": "Taux de présence (%)",
-                        "data": [s["attendance_rate"] for s in student_summaries],
-                    }],
+                    "datasets": [
+                        {
+                            "label": "Taux de présence (%)",
+                            "data": [s["attendance_rate"] for s in student_summaries],
+                        }
+                    ],
                 },
             },
         }
@@ -696,8 +723,7 @@ class ProgressService:
                             else_=None,
                         )
                     ).label("present"),
-                )
-                .where(
+                ).where(
                     AttendanceRecord.student_id == child_id,
                     AttendanceRecord.school_id == school_id,
                 )
@@ -719,8 +745,7 @@ class ProgressService:
                             else_=None,
                         )
                     ).label("completed"),
-                )
-                .where(ContentProgress.student_id == child_id)
+                ).where(ContentProgress.student_id == child_id)
             )
             cont_row = cont_result.one()
             cont_rate = (
@@ -745,17 +770,21 @@ class ProgressService:
             )
             latest = latest_grade_result.one_or_none()
 
-            children_data.append({
-                "student_id": str(child_id),
-                "student_name": child_name,
-                "grade_average": round(float(grade_avg), 2) if grade_avg else None,
-                "attendance_rate": att_rate,
-                "content_completion_rate": cont_rate,
-                "latest_grade": {
-                    "score": float(latest.score),
-                    "assignment": latest.title,
-                } if latest else None,
-            })
+            children_data.append(
+                {
+                    "student_id": str(child_id),
+                    "student_name": child_name,
+                    "grade_average": round(float(grade_avg), 2) if grade_avg else None,
+                    "attendance_rate": att_rate,
+                    "content_completion_rate": cont_rate,
+                    "latest_grade": {
+                        "score": float(latest.score),
+                        "assignment": latest.title,
+                    }
+                    if latest
+                    else None,
+                }
+            )
 
         # Chart-ready: children comparison
         data = {
@@ -775,7 +804,9 @@ class ProgressService:
                         },
                         {
                             "label": "Contenu terminé (%)",
-                            "data": [c["content_completion_rate"] for c in children_data],
+                            "data": [
+                                c["content_completion_rate"] for c in children_data
+                            ],
                         },
                     ],
                 },

@@ -230,12 +230,8 @@ class InvitationCode(TimestampMixin, Base):
     )
 
     # Relationships
-    issuer: Mapped["User | None"] = relationship(
-        foreign_keys=[issuer_user_id]
-    )
-    consumer: Mapped["User | None"] = relationship(
-        foreign_keys=[consumed_by]
-    )
+    issuer: Mapped["User | None"] = relationship(foreign_keys=[issuer_user_id])
+    consumer: Mapped["User | None"] = relationship(foreign_keys=[consumed_by])
     target_student: Mapped["User | None"] = relationship(
         foreign_keys=[target_student_id]
     )
@@ -269,9 +265,7 @@ class AccountRecoveryRequest(TimestampMixin, Base):
     # Relationships
     user: Mapped["User"] = relationship()
 
-    __table_args__ = (
-        Index("idx_recovery_user_status", "user_id", "status"),
-    )
+    __table_args__ = (Index("idx_recovery_user_status", "user_id", "status"),)
 
 
 class ParentChildLink(TimestampMixin, Base):
@@ -294,9 +288,7 @@ class ParentChildLink(TimestampMixin, Base):
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default=LinkStatus.ACTIVE.value
     )
-    linked_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
+    linked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     linked_by: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
@@ -308,7 +300,9 @@ class ParentChildLink(TimestampMixin, Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "parent_user_id", "child_user_id", "school_id",
+            "parent_user_id",
+            "child_user_id",
+            "school_id",
             name="uq_parent_child_links_parent_child_school",
         ),
         Index("idx_parent_child_links_parent", "parent_user_id", "school_id"),
@@ -345,7 +339,8 @@ class StudentProfile(TimestampMixin, Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "student_number", "school_id",
+            "student_number",
+            "school_id",
             name="uq_student_profiles_number_school",
         ),
         Index("idx_student_profiles_user", "user_id"),

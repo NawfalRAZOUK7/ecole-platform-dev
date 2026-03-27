@@ -50,7 +50,9 @@ def create_access_token(
         "jti": str(uuid.uuid4()),
         "type": TOKEN_TYPE_ACCESS,
     }
-    return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+    return jwt.encode(
+        payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm
+    )
 
 
 def create_refresh_token(
@@ -74,7 +76,9 @@ def create_refresh_token(
         "jti": jti,
         "type": TOKEN_TYPE_REFRESH,
     }
-    token = jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+    token = jwt.encode(
+        payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm
+    )
     return token, jti
 
 

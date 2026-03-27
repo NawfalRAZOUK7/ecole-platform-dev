@@ -16,10 +16,7 @@ import pytest
 import pytest_asyncio
 
 from tests.conftest import (
-    BASE_URL,
     SCHOOL_ID,
-    ADMIN_EMAIL,
-    ADMIN_PASSWORD,
 )
 
 
@@ -552,7 +549,9 @@ class TestBatchRegister:
         resp2 = await client.post(
             "/admin/register-batch",
             headers={"Authorization": f"Bearer {admin_token}"},
-            json={"users": [{"email": email, "full_name": "Dup Test 2", "role": "STD"}]},
+            json={
+                "users": [{"email": email, "full_name": "Dup Test 2", "role": "STD"}]
+            },
         )
         assert resp2.status_code == 201
         data = resp2.json()["data"]
@@ -608,7 +607,9 @@ class TestBatchRegister:
         resp = await client.post(
             "/admin/register-batch",
             headers={"Authorization": f"Bearer {admin_token}"},
-            json={"users": [{"email": email, "full_name": "Batch Login", "role": "STD"}]},
+            json={
+                "users": [{"email": email, "full_name": "Batch Login", "role": "STD"}]
+            },
         )
         assert resp.status_code == 201
         temp_password = resp.json()["data"]["created"][0]["temp_password"]

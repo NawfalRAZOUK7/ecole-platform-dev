@@ -15,7 +15,7 @@ import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Query, Request
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -63,7 +63,9 @@ def _content_to_dict(ci: ContentItem) -> dict:
         "origin": ci.origin,
         "status": ci.status,
         "created_by": str(ci.created_by) if ci.created_by else None,
-        "original_content_id": str(ci.original_content_id) if ci.original_content_id else None,
+        "original_content_id": str(ci.original_content_id)
+        if ci.original_content_id
+        else None,
     }
 
 
@@ -265,10 +267,10 @@ async def list_submissions(
     """CONTENT_MGR reviews teacher submissions. Filter by status/subject/level/school."""
     page_size = clamp_page_size(limit)
 
-    query = select(ContentSubmission, ContentItem, User).join(
-        ContentItem, ContentSubmission.content_item_id == ContentItem.id
-    ).join(
-        User, ContentSubmission.submitted_by == User.id
+    query = (
+        select(ContentSubmission, ContentItem, User)
+        .join(ContentItem, ContentSubmission.content_item_id == ContentItem.id)
+        .join(User, ContentSubmission.submitted_by == User.id)
     )
 
     if status:
@@ -307,7 +309,9 @@ async def list_submissions(
             "reviewed_by": str(sub.reviewed_by) if sub.reviewed_by else None,
             "reviewed_at": sub.reviewed_at.isoformat() if sub.reviewed_at else None,
             "review_notes": sub.review_notes,
-            "promoted_content_id": str(sub.promoted_content_id) if sub.promoted_content_id else None,
+            "promoted_content_id": str(sub.promoted_content_id)
+            if sub.promoted_content_id
+            else None,
         }
         for sub, ci, user in rows
     ]
@@ -319,7 +323,9 @@ async def list_submissions(
 # ---------------------------------------------------------------------------
 # POST /cms/submissions/{id}/review — Approve or reject
 # ---------------------------------------------------------------------------
-@router.post("/submissions/{submission_id}/review", summary="Review a teacher submission")
+@router.post(
+    "/submissions/{submission_id}/review", summary="Review a teacher submission"
+)
 async def review_submission(
     submission_id: uuid.UUID,
     body: ReviewDecisionRequest,
@@ -416,7 +422,7 @@ async def review_submission(
 
         # Send rejection notification
         try:
-            feedback_text = f' Retour: {body.review_notes}' if body.review_notes else ''
+            feedback_text = f" Retour: {body.review_notes}" if body.review_notes else ""
             notif = Notification(
                 school_id=sub.school_id,
                 parent_id=sub.submitted_by,
@@ -441,16 +447,22 @@ async def review_submission(
         entity_after={
             "status": sub.status,
             "review_notes": sub.review_notes,
-            "promoted_content_id": str(sub.promoted_content_id) if sub.promoted_content_id else None,
+            "promoted_content_id": str(sub.promoted_content_id)
+            if sub.promoted_content_id
+            else None,
         },
         ip_address=_get_client_ip(request),
     )
 
-    return success_response({
-        "id": str(sub.id),
-        "status": sub.status,
-        "reviewed_by": str(sub.reviewed_by),
-        "reviewed_at": sub.reviewed_at.isoformat() if sub.reviewed_at else None,
-        "review_notes": sub.review_notes,
-        "promoted_content_id": str(sub.promoted_content_id) if sub.promoted_content_id else None,
-    })
+    return success_response(
+        {
+            "id": str(sub.id),
+            "status": sub.status,
+            "reviewed_by": str(sub.reviewed_by),
+            "reviewed_at": sub.reviewed_at.isoformat() if sub.reviewed_at else None,
+            "review_notes": sub.review_notes,
+            "promoted_content_id": str(sub.promoted_content_id)
+            if sub.promoted_content_id
+            else None,
+        }
+    )

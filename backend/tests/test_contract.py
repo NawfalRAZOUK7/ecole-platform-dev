@@ -13,10 +13,8 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-import httpx
 import pytest
 
-from tests.conftest import SCHOOL_ID
 
 # Fixed seed IDs
 CLASS_ID = "20000000-0000-4000-8000-000000000004"
@@ -124,8 +122,14 @@ class TestListEnvelopeContract:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("path,token_fixture", LIST_ENDPOINTS)
     async def test_list_envelope_structure(
-        self, client, path, token_fixture, admin_token, teacher_token,
-        student_token, parent_token,
+        self,
+        client,
+        path,
+        token_fixture,
+        admin_token,
+        teacher_token,
+        student_token,
+        parent_token,
     ):
         tokens = {
             "admin_token": admin_token,
@@ -210,8 +214,16 @@ class TestErrorEnvelopeContract:
     @pytest.mark.asyncio
     async def test_error_category_is_valid(self, client):
         valid = {
-            "validation", "authn", "authz", "conflict", "external",
-            "system", "rate_limit", "network", "not_found", "policy",
+            "validation",
+            "authn",
+            "authz",
+            "conflict",
+            "external",
+            "system",
+            "rate_limit",
+            "network",
+            "not_found",
+            "policy",
         }
         resp = await client.get("/invoices")
         cat = resp.json()["error"]["category"]

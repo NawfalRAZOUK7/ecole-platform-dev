@@ -17,7 +17,11 @@ from app.core.database import get_db
 from app.core.dependencies import AuthContext, requires_permission
 from app.core.redis import get_redis
 from app.core.response import success_response
-from app.schemas.auth import InviteConsumeRequest, InviteCreateRequest, InviteRevokeRequest
+from app.schemas.auth import (
+    InviteConsumeRequest,
+    InviteCreateRequest,
+    InviteRevokeRequest,
+)
 from app.services.auth import EmailVerificationService, InvitationService
 
 router = APIRouter(prefix="/invites", tags=["invitations"])
@@ -35,7 +39,12 @@ def _get_client_ip(request: Request) -> str | None:
 # ---------------------------------------------------------------------------
 # POST /invites/create — ADM only
 # ---------------------------------------------------------------------------
-@router.post("/create", status_code=201, summary="Create invitation code", response_description="Plaintext invitation code (shown once)")
+@router.post(
+    "/create",
+    status_code=201,
+    summary="Create invitation code",
+    response_description="Plaintext invitation code (shown once)",
+)
 async def create_invite(
     body: InviteCreateRequest,
     request: Request,
@@ -62,7 +71,11 @@ async def create_invite(
 # ---------------------------------------------------------------------------
 # POST /invites/consume — Authenticated user
 # ---------------------------------------------------------------------------
-@router.post("/consume", summary="Consume invitation code", response_description="New membership details")
+@router.post(
+    "/consume",
+    summary="Consume invitation code",
+    response_description="New membership details",
+)
 async def consume_invite(
     body: InviteConsumeRequest,
     request: Request,
@@ -87,9 +100,7 @@ async def consume_invite(
         from sqlalchemy import select
         from app.models.iam import User
 
-        user_result = await db.execute(
-            select(User).where(User.id == auth.user_id)
-        )
+        user_result = await db.execute(select(User).where(User.id == auth.user_id))
         user = user_result.scalar_one_or_none()
         if user and user.email_verified_at is None:
             email_service = EmailVerificationService(db, redis)
@@ -107,7 +118,11 @@ async def consume_invite(
 # ---------------------------------------------------------------------------
 # POST /invites/revoke — ADM only
 # ---------------------------------------------------------------------------
-@router.post("/revoke", summary="Revoke invitation code", response_description="Revocation confirmation")
+@router.post(
+    "/revoke",
+    summary="Revoke invitation code",
+    response_description="Revocation confirmation",
+)
 async def revoke_invite(
     body: InviteRevokeRequest,
     request: Request,

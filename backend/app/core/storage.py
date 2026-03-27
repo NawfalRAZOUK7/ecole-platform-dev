@@ -8,7 +8,6 @@ Virus scan hook is a no-op placeholder (to be replaced by ClamAV integration lat
 from __future__ import annotations
 
 import hashlib
-import shutil
 import uuid
 from pathlib import Path
 from typing import BinaryIO, Protocol, runtime_checkable

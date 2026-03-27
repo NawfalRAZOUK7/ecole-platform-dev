@@ -33,7 +33,6 @@ from app.core.response import list_response, success_response
 from app.models.feature import FeatureToggle
 from app.schemas.feature import (
     FeatureToggleCreateRequest,
-    FeatureToggleResponse,
     FeatureToggleUpdateRequest,
 )
 from app.services.audit import AuditService
@@ -85,7 +84,9 @@ async def get_active_features_for_user(
     """Returns list of feature keys that are enabled for the current user's
     school and role. Used by frontend for conditional feature rendering.
     """
-    features = await get_active_features(db, school_id=auth.school_id, role_code=auth.role)
+    features = await get_active_features(
+        db, school_id=auth.school_id, role_code=auth.role
+    )
     return success_response({"features": features})
 
 
@@ -153,9 +154,7 @@ async def list_feature_toggles(
     db: AsyncSession = Depends(get_db),
 ):
     """List all feature toggles. Only SYS and CONTENT_MGR roles."""
-    result = await db.execute(
-        select(FeatureToggle).order_by(FeatureToggle.feature_key)
-    )
+    result = await db.execute(select(FeatureToggle).order_by(FeatureToggle.feature_key))
     toggles = result.scalars().all()
 
     items = [_toggle_to_response(t) for t in toggles]
@@ -181,9 +180,7 @@ async def get_feature_toggle(
     )
     toggle = result.scalar_one_or_none()
     if toggle is None:
-        raise NotFoundError(
-            "Feature toggle not found", error_code="ERR-FEATURE-404"
-        )
+        raise NotFoundError("Feature toggle not found", error_code="ERR-FEATURE-404")
 
     return success_response(_toggle_to_response(toggle))
 
@@ -208,9 +205,7 @@ async def update_feature_toggle(
     )
     toggle = result.scalar_one_or_none()
     if toggle is None:
-        raise NotFoundError(
-            "Feature toggle not found", error_code="ERR-FEATURE-404"
-        )
+        raise NotFoundError("Feature toggle not found", error_code="ERR-FEATURE-404")
 
     # Snapshot before
     before = _toggle_snapshot(toggle)
@@ -267,9 +262,7 @@ async def delete_feature_toggle(
     )
     toggle = result.scalar_one_or_none()
     if toggle is None:
-        raise NotFoundError(
-            "Feature toggle not found", error_code="ERR-FEATURE-404"
-        )
+        raise NotFoundError("Feature toggle not found", error_code="ERR-FEATURE-404")
 
     # Snapshot before deletion
     before = _toggle_snapshot(toggle)

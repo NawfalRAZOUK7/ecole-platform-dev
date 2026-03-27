@@ -56,7 +56,12 @@ def _get_client_ip(request: Request) -> str | None:
 # ---------------------------------------------------------------------------
 # S-048: POST /attendance/sessions — Take attendance (TCH)
 # ---------------------------------------------------------------------------
-@router.post("/sessions", status_code=201, summary="Create attendance session", response_description="Attendance session with records")
+@router.post(
+    "/sessions",
+    status_code=201,
+    summary="Create attendance session",
+    response_description="Attendance session with records",
+)
 async def create_attendance_session(
     body: AttendanceSessionCreateRequest,
     request: Request,
@@ -136,12 +141,14 @@ async def create_attendance_session(
         )
         db.add(record)
         await db.flush()
-        record_responses.append({
-            "id": str(record.id),
-            "student_id": str(record.student_id),
-            "status": record.status,
-            "absence_reason": record.absence_reason,
-        })
+        record_responses.append(
+            {
+                "id": str(record.id),
+                "student_id": str(record.student_id),
+                "status": record.status,
+                "absence_reason": record.absence_reason,
+            }
+        )
 
     # 7. Audit
     await audit.log_event(
@@ -160,22 +167,29 @@ async def create_attendance_session(
         ip_address=_get_client_ip(request),
     )
 
-    return success_response({
-        "id": str(session.id),
-        "class_id": str(session.class_id),
-        "period_id": str(session.period_id),
-        "teacher_id": str(session.teacher_id),
-        "school_id": str(session.school_id),
-        "session_date": str(session.session_date),
-        "slot": session.slot,
-        "records": record_responses,
-    })
+    return success_response(
+        {
+            "id": str(session.id),
+            "class_id": str(session.class_id),
+            "period_id": str(session.period_id),
+            "teacher_id": str(session.teacher_id),
+            "school_id": str(session.school_id),
+            "session_date": str(session.session_date),
+            "slot": session.slot,
+            "records": record_responses,
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
 # S-049: POST /attendance/justifications — Submit justification (PAR)
 # ---------------------------------------------------------------------------
-@router.post("/justifications", status_code=201, summary="Submit absence justification", response_description="Justification record")
+@router.post(
+    "/justifications",
+    status_code=201,
+    summary="Submit absence justification",
+    response_description="Justification record",
+)
 async def create_justification(
     body: JustificationCreateRequest,
     request: Request,
@@ -220,15 +234,17 @@ async def create_justification(
     )
     existing = existing_result.scalar_one_or_none()
     if existing is not None:
-        return success_response({
-            "id": str(existing.id),
-            "attendance_record_id": str(existing.attendance_record_id),
-            "parent_id": str(existing.parent_id),
-            "school_id": str(existing.school_id),
-            "status": existing.status,
-            "reason": existing.reason,
-            "rejection_reason": existing.rejection_reason,
-        })
+        return success_response(
+            {
+                "id": str(existing.id),
+                "attendance_record_id": str(existing.attendance_record_id),
+                "parent_id": str(existing.parent_id),
+                "school_id": str(existing.school_id),
+                "status": existing.status,
+                "reason": existing.reason,
+                "rejection_reason": existing.rejection_reason,
+            }
+        )
 
     # 5. Create justification
     justification = AbsenceJustification(
@@ -256,21 +272,28 @@ async def create_justification(
         ip_address=_get_client_ip(request),
     )
 
-    return success_response({
-        "id": str(justification.id),
-        "attendance_record_id": str(justification.attendance_record_id),
-        "parent_id": str(justification.parent_id),
-        "school_id": str(justification.school_id),
-        "status": justification.status,
-        "reason": justification.reason,
-        "rejection_reason": justification.rejection_reason,
-    })
+    return success_response(
+        {
+            "id": str(justification.id),
+            "attendance_record_id": str(justification.attendance_record_id),
+            "parent_id": str(justification.parent_id),
+            "school_id": str(justification.school_id),
+            "status": justification.status,
+            "reason": justification.reason,
+            "rejection_reason": justification.rejection_reason,
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
 # S-050: POST /attendance/justifications/{id}/review — Review (ADM)
 # ---------------------------------------------------------------------------
-@router.post("/justifications/{justification_id}/review", status_code=201, summary="Review absence justification", response_description="Review decision record")
+@router.post(
+    "/justifications/{justification_id}/review",
+    status_code=201,
+    summary="Review absence justification",
+    response_description="Review decision record",
+)
 async def review_justification(
     justification_id: uuid.UUID,
     body: JustificationReviewRequest,
@@ -353,10 +376,12 @@ async def review_justification(
         ip_address=_get_client_ip(request),
     )
 
-    return success_response({
-        "id": str(review.id),
-        "justification_id": str(review.justification_id),
-        "reviewer_id": str(review.reviewer_id),
-        "school_id": str(review.school_id),
-        "decision": review.decision,
-    })
+    return success_response(
+        {
+            "id": str(review.id),
+            "justification_id": str(review.justification_id),
+            "reviewer_id": str(review.reviewer_id),
+            "school_id": str(review.school_id),
+            "decision": review.decision,
+        }
+    )

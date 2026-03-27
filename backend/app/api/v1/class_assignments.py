@@ -7,15 +7,18 @@ Validates: teacher exists, class exists, period exists, all same school.
 
 from __future__ import annotations
 
-import uuid
 
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import AuthContext, requires_permission, verify_school_boundary
-from app.core.exceptions import ConflictError, NotFoundError
+from app.core.dependencies import (
+    AuthContext,
+    requires_permission,
+    verify_school_boundary,
+)
+from app.core.exceptions import NotFoundError
 from app.core.response import success_response
 from app.models.erp import Class, Period, TeacherAssignment
 from app.models.iam import User
@@ -34,7 +37,12 @@ def _get_client_ip(request: Request) -> str | None:
     return None
 
 
-@router.post("", status_code=201, summary="Assign teacher to class", response_description="Teacher assignment record")
+@router.post(
+    "",
+    status_code=201,
+    summary="Assign teacher to class",
+    response_description="Teacher assignment record",
+)
 async def create_teacher_assignment(
     body: TeacherAssignmentCreateRequest,
     request: Request,
@@ -83,13 +91,15 @@ async def create_teacher_assignment(
     )
     existing = existing_result.scalar_one_or_none()
     if existing is not None:
-        return success_response({
-            "id": str(existing.id),
-            "teacher_id": str(existing.teacher_id),
-            "class_id": str(existing.class_id),
-            "period_id": str(existing.period_id),
-            "school_id": str(existing.school_id),
-        })
+        return success_response(
+            {
+                "id": str(existing.id),
+                "teacher_id": str(existing.teacher_id),
+                "class_id": str(existing.class_id),
+                "period_id": str(existing.period_id),
+                "school_id": str(existing.school_id),
+            }
+        )
 
     # 5. Create assignment
     assignment = TeacherAssignment(
@@ -117,10 +127,12 @@ async def create_teacher_assignment(
         ip_address=_get_client_ip(request),
     )
 
-    return success_response({
-        "id": str(assignment.id),
-        "teacher_id": str(assignment.teacher_id),
-        "class_id": str(assignment.class_id),
-        "period_id": str(assignment.period_id),
-        "school_id": str(assignment.school_id),
-    })
+    return success_response(
+        {
+            "id": str(assignment.id),
+            "teacher_id": str(assignment.teacher_id),
+            "class_id": str(assignment.class_id),
+            "period_id": str(assignment.period_id),
+            "school_id": str(assignment.school_id),
+        }
+    )

@@ -25,6 +25,39 @@ const PASSWORD_RULES = [
   { key: 'special', test: (p: string) => /[^A-Za-z0-9]/.test(p) },
 ];
 
+type ProfileFieldValue = string | number | boolean | null | undefined;
+
+interface StudentProfileData {
+  student_number?: string | null;
+  date_of_birth?: string | null;
+  class_level?: string | null;
+  nationality?: string | null;
+  [key: string]: ProfileFieldValue;
+}
+
+interface ParentProfileData {
+  relationship_type?: string | null;
+  cin_number?: string | null;
+  address?: string | null;
+  profession?: string | null;
+  emergency_phone?: string | null;
+  [key: string]: ProfileFieldValue;
+}
+
+interface TeacherProfileData {
+  employee_id?: string | null;
+  subject_specialty?: string | null;
+  qualification?: string | null;
+  reward_points?: number | null;
+  [key: string]: ProfileFieldValue;
+}
+
+interface ProfileResponse {
+  student_profile?: StudentProfileData | null;
+  parent_profile?: ParentProfileData | null;
+  teacher_profile?: TeacherProfileData | null;
+}
+
 export function ProfilePage() {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
@@ -40,7 +73,7 @@ export function ProfilePage() {
   const [passwordSuccess, setPasswordSuccess] = useState(false);
 
   // Phase 4D — Role-specific profile state
-  const [profileData, setProfileData] = useState<Record<string, any> | null>(null);
+  const [profileData, setProfileData] = useState<ProfileResponse | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [profileSuccess, setProfileSuccess] = useState(false);
@@ -78,7 +111,7 @@ export function ProfilePage() {
     if (!user) return;
     setProfileLoading(true);
     try {
-      const res = await api.get<Record<string, any>>('/me/profile');
+      const res = await api.get<ProfileResponse>('/me/profile');
       setProfileData(res.data);
       // Init form from profile data
       const p = res.data.student_profile || res.data.parent_profile || res.data.teacher_profile || {};

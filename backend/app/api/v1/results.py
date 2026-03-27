@@ -31,7 +31,11 @@ from app.models.lms import Assignment, Course, Grade, Submission
 router = APIRouter(prefix="/results", tags=["lms-results"])
 
 
-@router.get("", summary="List student results", response_description="Paginated list of grades and results")
+@router.get(
+    "",
+    summary="List student results",
+    response_description="Paginated list of grades and results",
+)
 async def list_results(
     student_id: uuid.UUID | None = Query(None),
     cursor: str | None = Query(None),
@@ -58,6 +62,7 @@ async def list_results(
             # Verify parent-child link
             child_ids = await get_parent_child_ids(auth.user_id, auth.school_id, db)
             from app.core.dependencies import verify_parent_child_ownership
+
             verify_parent_child_ownership(student_id, child_ids)
             target_student_id = student_id
     else:
@@ -109,9 +114,5 @@ async def list_results(
         for assignment, submission, grade, course in rows
     ]
 
-    next_cursor = (
-        encode_cursor(rows[-1][0].id)
-        if has_more and rows
-        else None
-    )
+    next_cursor = encode_cursor(rows[-1][0].id) if has_more and rows else None
     return list_response(items, next_cursor=next_cursor, has_more=has_more)

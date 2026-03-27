@@ -18,9 +18,20 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import AuthContext, requires_permission, verify_school_boundary
-from app.core.exceptions import AuthorizationError, NotFoundError
-from app.core.filtering import FilterSpec, SortSpec, apply_filters, apply_sort, parse_filters, parse_sort
+from app.core.dependencies import (
+    AuthContext,
+    requires_permission,
+    verify_school_boundary,
+)
+from app.core.exceptions import NotFoundError
+from app.core.filtering import (
+    FilterSpec,
+    SortSpec,
+    apply_filters,
+    apply_sort,
+    parse_filters,
+    parse_sort,
+)
 from app.core.response import (
     clamp_page_size,
     decode_cursor,
@@ -29,7 +40,7 @@ from app.core.response import (
     success_response,
 )
 from app.core.search import apply_search, parse_search
-from app.core.storage import storage, validate_file_size, validate_mime_type
+from app.core.storage import storage, validate_mime_type
 from app.models.lms import ContentItem, ContentItemAsset, ContentProgress
 from app.schemas.lms import ContentProgressRequest
 from app.services.audit import AuditService
@@ -49,7 +60,11 @@ def _get_client_ip(request: Request) -> str | None:
 # ---------------------------------------------------------------------------
 # S-056: GET /content-items — List content items (STD, PAR)
 # ---------------------------------------------------------------------------
-@router.get("", summary="List content items", response_description="Paginated list of learning materials")
+@router.get(
+    "",
+    summary="List content items",
+    response_description="Paginated list of learning materials",
+)
 async def list_content_items(
     content_type: str | None = Query(None),
     level_band: str | None = Query(None),
@@ -130,7 +145,11 @@ async def list_content_items(
 # ---------------------------------------------------------------------------
 # S-056: GET /content-items/{id} — Get content item detail (STD, PAR)
 # ---------------------------------------------------------------------------
-@router.get("/{content_item_id}", summary="Get content item details", response_description="Content item with assets")
+@router.get(
+    "/{content_item_id}",
+    summary="Get content item details",
+    response_description="Content item with assets",
+)
 async def get_content_item(
     content_item_id: uuid.UUID,
     auth: AuthContext = Depends(requires_permission("PERM-LMS:content:read")),
@@ -155,21 +174,28 @@ async def get_content_item(
     if ci.status != "published":
         raise NotFoundError("Content item not found", error_code="ERR-LMS-404")
 
-    return success_response({
-        "id": str(ci.id),
-        "school_id": str(ci.school_id) if ci.school_id else None,
-        "title": ci.title,
-        "content_type": ci.content_type,
-        "level_band": ci.level_band,
-        "language": ci.language,
-        "status": ci.status,
-    })
+    return success_response(
+        {
+            "id": str(ci.id),
+            "school_id": str(ci.school_id) if ci.school_id else None,
+            "title": ci.title,
+            "content_type": ci.content_type,
+            "level_band": ci.level_band,
+            "language": ci.language,
+            "status": ci.status,
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
 # S-057: POST /content-items/{id}/progress — Track progress (STD)
 # ---------------------------------------------------------------------------
-@router.post("/{content_item_id}/progress", status_code=200, summary="Update content progress", response_description="Updated progress record")
+@router.post(
+    "/{content_item_id}/progress",
+    status_code=200,
+    summary="Update content progress",
+    response_description="Updated progress record",
+)
 async def update_content_progress(
     content_item_id: uuid.UUID,
     body: ContentProgressRequest,
@@ -232,12 +258,14 @@ async def update_content_progress(
         ip_address=_get_client_ip(request),
     )
 
-    return success_response({
-        "id": str(progress.id),
-        "student_id": str(progress.student_id),
-        "content_item_id": str(progress.content_item_id),
-        "status": progress.status,
-    })
+    return success_response(
+        {
+            "id": str(progress.id),
+            "student_id": str(progress.student_id),
+            "content_item_id": str(progress.content_item_id),
+            "status": progress.status,
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -315,14 +343,16 @@ async def upload_content_asset(
         ip_address=_get_client_ip(request),
     )
 
-    return success_response({
-        "id": str(asset.id),
-        "content_item_id": str(asset.content_item_id),
-        "file_path": asset.file_path,
-        "checksum": asset.checksum,
-        "mime_type": asset.mime_type,
-        "file_size": asset.file_size,
-    })
+    return success_response(
+        {
+            "id": str(asset.id),
+            "content_item_id": str(asset.content_item_id),
+            "file_path": asset.file_path,
+            "checksum": asset.checksum,
+            "mime_type": asset.mime_type,
+            "file_size": asset.file_size,
+        }
+    )
 
 
 # ---------------------------------------------------------------------------

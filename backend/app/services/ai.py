@@ -26,7 +26,6 @@ import logging
 import re
 import time
 import uuid
-from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
@@ -110,11 +109,22 @@ _PII_PATTERNS = [
 ]
 
 # Fields that MUST NOT appear in AI prompt payloads
-_PII_FIELD_NAMES = frozenset({
-    "email", "phone", "full_name", "password", "password_hash",
-    "national_id", "cin", "credit_card", "card_number", "ssn",
-    "address", "date_of_birth",
-})
+_PII_FIELD_NAMES = frozenset(
+    {
+        "email",
+        "phone",
+        "full_name",
+        "password",
+        "password_hash",
+        "national_id",
+        "cin",
+        "credit_card",
+        "card_number",
+        "ssn",
+        "address",
+        "date_of_birth",
+    }
+)
 
 
 def detect_pii_in_text(text: str) -> list[str]:
@@ -174,8 +184,7 @@ def validate_ai_input(
             warnings.extend(payload_pii)
             # Remove PII fields from context
             sanitized_context = {
-                k: v for k, v in context.items()
-                if k.lower() not in _PII_FIELD_NAMES
+                k: v for k, v in context.items() if k.lower() not in _PII_FIELD_NAMES
             }
 
     # Length limits
@@ -223,7 +232,9 @@ def validate_ai_output(
 # Safety Content Check — G3.7 Guardrail 3
 # ---------------------------------------------------------------------------
 _UNSAFE_PATTERNS = [
-    re.compile(r"(?:password|mot de passe|كلمة المرور)\s*(?:is|est|هي)\s*[:=]", re.IGNORECASE),
+    re.compile(
+        r"(?:password|mot de passe|كلمة المرور)\s*(?:is|est|هي)\s*[:=]", re.IGNORECASE
+    ),
     re.compile(r"(?:hack|exploit|inject|xss|sql\s*injection)", re.IGNORECASE),
 ]
 
@@ -381,7 +392,9 @@ class AIService:
                 is_safe, violation = check_content_safety(validated["suggestion"])
                 if not is_safe:
                     AI_ERROR_COUNT.labels(
-                        env=self.env, request_type=request_type, error_type="safety_violation"
+                        env=self.env,
+                        request_type=request_type,
+                        error_type="safety_violation",
                     ).inc()
                     return get_fallback_response(request_type, f"safety:{violation}")
 
@@ -408,9 +421,7 @@ class AIService:
 
         finally:
             duration = time.perf_counter() - start
-            AI_LATENCY.labels(
-                env=self.env, request_type=request_type
-            ).observe(duration)
+            AI_LATENCY.labels(env=self.env, request_type=request_type).observe(duration)
 
     async def process_recommendation(
         self,
@@ -443,7 +454,9 @@ class AIService:
             for rec in result.get("recommendations", []):
                 if "reason_code" not in rec:
                     AI_ERROR_COUNT.labels(
-                        env=self.env, request_type=request_type, error_type="missing_reason_code"
+                        env=self.env,
+                        request_type=request_type,
+                        error_type="missing_reason_code",
                     ).inc()
                     return get_fallback_response(request_type, "missing_reason_code")
 
@@ -468,9 +481,7 @@ class AIService:
 
         finally:
             duration = time.perf_counter() - start
-            AI_LATENCY.labels(
-                env=self.env, request_type=request_type
-            ).observe(duration)
+            AI_LATENCY.labels(env=self.env, request_type=request_type).observe(duration)
 
     # ------------------------------------------------------------------
     # Stub implementations (replaced by real AI provider in production)
@@ -513,34 +524,42 @@ class AIService:
         recommendations = []
 
         if completed_count < 5:
-            recommendations.append({
-                "title": "Complete your first learning module",
-                "reason_code": "LOW_COMPLETION",
-                "priority": "high",
-                "content_type": "module",
-            })
+            recommendations.append(
+                {
+                    "title": "Complete your first learning module",
+                    "reason_code": "LOW_COMPLETION",
+                    "priority": "high",
+                    "content_type": "module",
+                }
+            )
         if level_band and level_band in ("CP", "CE1", "CE2"):
-            recommendations.append({
-                "title": "Practice reading comprehension exercises",
-                "reason_code": "LEVEL_APPROPRIATE",
-                "priority": "medium",
-                "content_type": "activity",
-            })
+            recommendations.append(
+                {
+                    "title": "Practice reading comprehension exercises",
+                    "reason_code": "LEVEL_APPROPRIATE",
+                    "priority": "medium",
+                    "content_type": "activity",
+                }
+            )
         if recent_topics:
-            recommendations.append({
-                "title": f"Continue exploring: {recent_topics[0] if recent_topics else 'new topics'}",
-                "reason_code": "TOPIC_CONTINUATION",
-                "priority": "medium",
-                "content_type": "content",
-            })
+            recommendations.append(
+                {
+                    "title": f"Continue exploring: {recent_topics[0] if recent_topics else 'new topics'}",
+                    "reason_code": "TOPIC_CONTINUATION",
+                    "priority": "medium",
+                    "content_type": "content",
+                }
+            )
 
         # Always provide at least one recommendation
         if not recommendations:
-            recommendations.append({
-                "title": "Explore the content library for new materials",
-                "reason_code": "GENERAL_EXPLORATION",
-                "priority": "low",
-                "content_type": "library",
-            })
+            recommendations.append(
+                {
+                    "title": "Explore the content library for new materials",
+                    "reason_code": "GENERAL_EXPLORATION",
+                    "priority": "low",
+                    "content_type": "library",
+                }
+            )
 
         return {"recommendations": recommendations[:3]}

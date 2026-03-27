@@ -11,17 +11,15 @@ Reference:
 
 from __future__ import annotations
 
-import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Query, Request
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import AuthContext, requires_permission, verify_school_boundary
-from app.core.exceptions import ConflictError, NotFoundError, ValidationError
-from app.core.response import success_response, list_response
+from app.core.dependencies import AuthContext, requires_permission
+from app.core.response import success_response
 from app.models.ai import AIPreference, WritingAttempt
 from app.schemas.ai import (
     AIOptOutRequest,
@@ -51,7 +49,12 @@ def _get_client_ip(request: Request) -> str | None:
 # ---------------------------------------------------------------------------
 # S-143: POST /writing-attempts — Writing assistance (STD)
 # ---------------------------------------------------------------------------
-@router.post("/writing-attempts", status_code=200, summary="Create writing attempt", response_description="AI writing feedback")
+@router.post(
+    "/writing-attempts",
+    status_code=200,
+    summary="Create writing attempt",
+    response_description="AI writing feedback",
+)
 async def create_writing_attempt(
     body: WritingAttemptRequest,
     request: Request,
@@ -79,6 +82,7 @@ async def create_writing_attempt(
     if optout_result.scalar_one_or_none() is not None:
         # User has opted out — return fallback without AI processing
         from app.services.ai import get_fallback_response
+
         fallback = get_fallback_response("writing_assist", "opt_out")
 
         # Still record the attempt
@@ -101,17 +105,19 @@ async def create_writing_attempt(
             properties={"reason": "opt_out", "request_type": "writing_assist"},
         )
 
-        return success_response({
-            "id": str(attempt.id),
-            "student_id": str(auth.user_id),
-            "status": "fallback",
-            "suggestion": fallback.get("message"),
-            "hints": [],
-            "prompt_id": None,
-            "prompt_version": None,
-            "warnings": ["ai_opt_out_active"],
-            "created_at": attempt.created_at.isoformat(),
-        })
+        return success_response(
+            {
+                "id": str(attempt.id),
+                "student_id": str(auth.user_id),
+                "status": "fallback",
+                "suggestion": fallback.get("message"),
+                "hints": [],
+                "prompt_id": None,
+                "prompt_version": None,
+                "warnings": ["ai_opt_out_active"],
+                "created_at": attempt.created_at.isoformat(),
+            }
+        )
 
     # Process with AI service
     result = await ai_service.process_writing_assist(
@@ -166,23 +172,30 @@ async def create_writing_attempt(
         },
     )
 
-    return success_response({
-        "id": str(attempt.id),
-        "student_id": str(auth.user_id),
-        "status": attempt.status,
-        "suggestion": result.get("suggestion"),
-        "hints": result.get("hints", []),
-        "prompt_id": result.get("prompt_id"),
-        "prompt_version": result.get("prompt_version"),
-        "warnings": result.get("warnings", []),
-        "created_at": attempt.created_at.isoformat(),
-    })
+    return success_response(
+        {
+            "id": str(attempt.id),
+            "student_id": str(auth.user_id),
+            "status": attempt.status,
+            "suggestion": result.get("suggestion"),
+            "hints": result.get("hints", []),
+            "prompt_id": result.get("prompt_id"),
+            "prompt_version": result.get("prompt_version"),
+            "warnings": result.get("warnings", []),
+            "created_at": attempt.created_at.isoformat(),
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
 # S-144: POST /ai/preferences/opt-out — AI opt-out (PAR)
 # ---------------------------------------------------------------------------
-@router.post("/ai/preferences/opt-out", status_code=200, summary="Update AI opt-out preference", response_description="Updated AI preferences")
+@router.post(
+    "/ai/preferences/opt-out",
+    status_code=200,
+    summary="Update AI opt-out preference",
+    response_description="Updated AI preferences",
+)
 async def update_ai_opt_out(
     body: AIOptOutRequest,
     request: Request,
@@ -226,6 +239,7 @@ async def update_ai_opt_out(
     # Metrics
     action = "opt_out" if body.opt_out else "opt_in"
     from app.core.config import settings
+
     AI_OPT_OUT_COUNT.labels(env=settings.app_env, action=action).inc()
 
     # Audit
@@ -243,6 +257,7 @@ async def update_ai_opt_out(
 
     # Analytics event (G3.3)
     from app.services.analytics import pseudonymize_actor_id
+
     emit_event(
         "ai_opt_out_updated",
         actor_id=auth.user_id,
@@ -253,19 +268,27 @@ async def update_ai_opt_out(
         },
     )
 
-    return success_response({
-        "id": str(pref.id),
-        "user_id": str(pref.user_id),
-        "target_user_id": str(pref.target_user_id),
-        "opt_out": pref.opt_out,
-        "updated_at": pref.updated_at.isoformat() if pref.updated_at else pref.created_at.isoformat(),
-    })
+    return success_response(
+        {
+            "id": str(pref.id),
+            "user_id": str(pref.user_id),
+            "target_user_id": str(pref.target_user_id),
+            "opt_out": pref.opt_out,
+            "updated_at": pref.updated_at.isoformat()
+            if pref.updated_at
+            else pref.created_at.isoformat(),
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
 # S-145: GET /recommendations — Learning recommendations (STD, PAR)
 # ---------------------------------------------------------------------------
-@router.get("/recommendations", summary="Get learning recommendations", response_description="Personalized recommendations")
+@router.get(
+    "/recommendations",
+    summary="Get learning recommendations",
+    response_description="Personalized recommendations",
+)
 async def get_recommendations(
     auth: AuthContext = Depends(requires_permission("PERM-IA:recommendation:read")),
     db: AsyncSession = Depends(get_db),
@@ -292,17 +315,20 @@ async def get_recommendations(
             actor_role=auth.role,
             properties={"reason": "opt_out", "request_type": "recommendation"},
         )
-        return success_response({
-            "status": "fallback",
-            "recommendations": [],
-            "prompt_id": None,
-            "prompt_version": None,
-            "expires_at": None,
-            "message": "AI recommendations disabled by preference.",
-        })
+        return success_response(
+            {
+                "status": "fallback",
+                "recommendations": [],
+                "prompt_id": None,
+                "prompt_version": None,
+                "expires_at": None,
+                "message": "AI recommendations disabled by preference.",
+            }
+        )
 
     # Get student activity stats for context
     from app.models.lms import ContentProgress
+
     progress_result = await db.execute(
         select(func.count()).where(
             ContentProgress.student_id == auth.user_id,
@@ -324,7 +350,9 @@ async def get_recommendations(
         actor_id=auth.user_id,
         actor_role=auth.role,
         properties={
-            "reason_code": result["recommendations"][0]["reason_code"] if result.get("recommendations") else "none",
+            "reason_code": result["recommendations"][0]["reason_code"]
+            if result.get("recommendations")
+            else "none",
             "item_count": len(result.get("recommendations", [])),
         },
     )
@@ -335,7 +363,11 @@ async def get_recommendations(
 # ---------------------------------------------------------------------------
 # S-140: GET /kpis — KPI dashboard (ADM)
 # ---------------------------------------------------------------------------
-@router.get("/kpis", summary="Get school KPIs", response_description="Key performance indicators")
+@router.get(
+    "/kpis",
+    summary="Get school KPIs",
+    response_description="Key performance indicators",
+)
 async def get_kpis(
     period: int = Query(default=7, ge=1, le=90, description="Period in days"),
     auth: AuthContext = Depends(requires_permission("PERM-IA:request:read")),
@@ -348,17 +380,23 @@ async def get_kpis(
     """
     kpis = await compute_all_kpis(db, school_id=auth.school_id, period_days=period)
 
-    return success_response({
-        "kpis": kpis,
-        "period": f"{period}d",
-        "computed_at": datetime.now(timezone.utc).isoformat(),
-    })
+    return success_response(
+        {
+            "kpis": kpis,
+            "period": f"{period}d",
+            "computed_at": datetime.now(timezone.utc).isoformat(),
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
 # S-146: GET /events/schema — Event schema registry
 # ---------------------------------------------------------------------------
-@router.get("/events/schema", summary="Get analytics event schema", response_description="Event schema definition")
+@router.get(
+    "/events/schema",
+    summary="Get analytics event schema",
+    response_description="Event schema definition",
+)
 async def get_event_schema(
     auth: AuthContext = Depends(requires_permission("PERM-IA:request:read")),
 ):
@@ -369,21 +407,23 @@ async def get_event_schema(
     """
     events = []
     for event_name, properties in _EVENT_PROPERTY_WHITELIST.items():
-        events.append({
-            "event_name": event_name,
-            "event_version": 1,
+        events.append(
+            {
+                "event_name": event_name,
+                "event_version": 1,
+                "schema_version": SCHEMA_VERSION,
+                "required_properties": sorted(properties),
+                "pii_risk": "medium"
+                if "invoice" in event_name or "payment" in event_name
+                else "low",
+                "status": "known",
+            }
+        )
+
+    return success_response(
+        {
             "schema_version": SCHEMA_VERSION,
-            "required_properties": sorted(properties),
-            "pii_risk": "medium" if "invoice" in event_name or "payment" in event_name else "low",
-            "status": "known",
-        })
-
-    return success_response({
-        "schema_version": SCHEMA_VERSION,
-        "events": events,
-        "total": len(events),
-    })
-
-
-# Need this import for the recommendations endpoint
-from sqlalchemy import func
+            "events": events,
+            "total": len(events),
+        }
+    )

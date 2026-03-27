@@ -41,6 +41,20 @@ interface Question {
   order: number;
 }
 
+interface McqOptions {
+  choices?: string[];
+}
+
+interface DragDropOptions {
+  items?: string[];
+  zones?: string[];
+}
+
+interface MatchingOptions {
+  left?: string[];
+  right?: string[];
+}
+
 interface Attempt {
   id: string;
   quiz_id: string;
@@ -347,7 +361,7 @@ function QuizPlay({
         {/* MCQ */}
         {question.question_type === 'mcq' && (
           <McqInput
-            options={(question.options as any)?.choices || []}
+            options={(question.options as McqOptions | null)?.choices || []}
             value={answers[question.id] as number | undefined}
             onChange={(v) => onAnswer(question.id, v)}
           />
@@ -501,8 +515,8 @@ function DragDropInput({
   onChange: (v: Record<string, string>) => void;
 }) {
   const { t } = useTranslation();
-  const items = (options as any)?.items || [];
-  const zones = (options as any)?.zones || [];
+  const items = (options as DragDropOptions | null)?.items || [];
+  const zones = (options as DragDropOptions | null)?.zones || [];
   const current = value || {};
 
   return (
@@ -538,8 +552,8 @@ function MatchingInput({
   onChange: (v: Record<string, string>) => void;
 }) {
   const { t } = useTranslation();
-  const left = (options as any)?.left || [];
-  const right = (options as any)?.right || [];
+  const left = (options as MatchingOptions | null)?.left || [];
+  const right = (options as MatchingOptions | null)?.right || [];
   const current = value || {};
 
   return (

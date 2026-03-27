@@ -5,9 +5,8 @@ Migration group: G6-Audit (depends on G1-IAM for user FK).
 """
 
 import uuid
-from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Index, String, Text
+from sqlalchemy import ForeignKey, Index, String
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 

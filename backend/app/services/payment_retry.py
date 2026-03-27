@@ -15,7 +15,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import select, update
+from sqlalchemy import select
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +57,9 @@ async def retry_failed_payments() -> int:
                 # Simulate retry (in production, this would call the payment provider)
                 # For now, we increment retry_count and schedule next retry
                 attempt.retry_count += 1
-                attempt.last_retry_error = f"Retry #{attempt.retry_count} at {now.isoformat()}"
+                attempt.last_retry_error = (
+                    f"Retry #{attempt.retry_count} at {now.isoformat()}"
+                )
 
                 if attempt.retry_count >= MAX_RETRIES:
                     # Final failure — mark attempt and invoice
@@ -113,9 +115,11 @@ async def retry_failed_payments() -> int:
                     )
                 else:
                     # Schedule next retry
-                    backoff_hours = RETRY_BACKOFF_HOURS[attempt.retry_count - 1] \
-                        if attempt.retry_count - 1 < len(RETRY_BACKOFF_HOURS) \
+                    backoff_hours = (
+                        RETRY_BACKOFF_HOURS[attempt.retry_count - 1]
+                        if attempt.retry_count - 1 < len(RETRY_BACKOFF_HOURS)
                         else RETRY_BACKOFF_HOURS[-1]
+                    )
                     attempt.next_retry_at = now + timedelta(hours=backoff_hours)
 
                     # Reset status to pending for re-processing

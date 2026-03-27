@@ -54,6 +54,7 @@ class WebhookEventStatus(str, enum.Enum):
 
 class FeeFrequency(str, enum.Enum):
     """Fee payment frequency (Phase 11B)."""
+
     MONTHLY = "MONTHLY"
     TRIMESTRIAL = "TRIMESTRIAL"
     ANNUAL = "ANNUAL"
@@ -62,12 +63,14 @@ class FeeFrequency(str, enum.Enum):
 
 class FeeStructureStatus(str, enum.Enum):
     """Fee structure status (Phase 11B)."""
+
     ACTIVE = "ACTIVE"
     ARCHIVED = "ARCHIVED"
 
 
 class FeeAssignmentStatus(str, enum.Enum):
     """Fee assignment status (Phase 11B)."""
+
     ACTIVE = "ACTIVE"
     EXEMPTED = "EXEMPTED"
     ARCHIVED = "ARCHIVED"
@@ -96,18 +99,14 @@ class Invoice(TimestampMixin, Base):
     total_amount: Mapped[float] = mapped_column(
         Numeric(12, 2), nullable=False, default=0
     )
-    currency: Mapped[str] = mapped_column(
-        String(3), nullable=False, default="MAD"
-    )
+    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="MAD")
     issued_date: Mapped[date] = mapped_column(Date, nullable=False)
     due_date: Mapped[date] = mapped_column(Date, nullable=False)
     # Phase 11B: Overdue reminder tracking
     reminder_sent_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    reminder_count: Mapped[int] = mapped_column(
-        Integer, nullable=False, default=0
-    )
+    reminder_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     # Phase 11B: Optional link to fee structure that generated this invoice
     fee_structure_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("fee_structures.id", ondelete="SET NULL"), nullable=True
@@ -183,9 +182,7 @@ class PaymentAttempt(TimestampMixin, Base):
         DateTime(timezone=True), nullable=True
     )
     # Phase 11B: Retry tracking
-    retry_count: Mapped[int] = mapped_column(
-        Integer, nullable=False, default=0
-    )
+    retry_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     next_retry_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
@@ -224,9 +221,7 @@ class PaymentProof(TimestampMixin, Base):
         nullable=False,
         unique=True,
     )
-    proof_hash: Mapped[str] = mapped_column(
-        String(255), nullable=False, unique=True
-    )
+    proof_hash: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     provider_ref: Mapped[str | None] = mapped_column(String(255), nullable=True)
     source: Mapped[str | None] = mapped_column(String(50), nullable=True)
     received_at: Mapped[datetime] = mapped_column(
@@ -294,16 +289,12 @@ class FeeStructure(TimestampMixin, Base):
     )
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
-    currency: Mapped[str] = mapped_column(
-        String(3), nullable=False, default="MAD"
-    )
+    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="MAD")
     frequency: Mapped[str] = mapped_column(
         String(20), nullable=False, default=FeeFrequency.ANNUAL.value
     )
     due_day: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
-    applies_to_level: Mapped[str | None] = mapped_column(
-        String(50), nullable=True
-    )
+    applies_to_level: Mapped[str | None] = mapped_column(String(50), nullable=True)
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default=FeeStructureStatus.ACTIVE.value
     )
@@ -348,22 +339,19 @@ class FeeAssignment(TimestampMixin, Base):
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
-    discount_percent: Mapped[float | None] = mapped_column(
-        Numeric(5, 2), nullable=True
-    )
+    discount_percent: Mapped[float | None] = mapped_column(Numeric(5, 2), nullable=True)
     discount_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default=FeeAssignmentStatus.ACTIVE.value
     )
 
     # Relationships
-    fee_structure: Mapped["FeeStructure"] = relationship(
-        back_populates="assignments"
-    )
+    fee_structure: Mapped["FeeStructure"] = relationship(back_populates="assignments")
 
     __table_args__ = (
         UniqueConstraint(
-            "fee_structure_id", "student_id",
+            "fee_structure_id",
+            "student_id",
             name="uq_fee_assignments_fee_student",
         ),
         CheckConstraint(

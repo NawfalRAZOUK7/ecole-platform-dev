@@ -16,7 +16,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import and_, select
+from sqlalchemy import select
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +52,8 @@ async def send_overdue_reminders() -> int:
             Invoice.status == "pending",
             Invoice.due_date < overdue_cutoff,
             Invoice.reminder_count < MAX_REMINDERS,
-            (Invoice.reminder_sent_at.is_(None)) | (Invoice.reminder_sent_at < reminder_cooldown),
+            (Invoice.reminder_sent_at.is_(None))
+            | (Invoice.reminder_sent_at < reminder_cooldown),
         )
 
         result = await db.execute(query)

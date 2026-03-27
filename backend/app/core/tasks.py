@@ -112,7 +112,9 @@ async def task_cleanup_expired_sessions(ctx: dict) -> int:
         from app.core.database import async_session
         from app.models.iam import Session
 
-        cutoff = datetime.now(timezone.utc) - timedelta(days=settings.refresh_token_expire_days)
+        cutoff = datetime.now(timezone.utc) - timedelta(
+            days=settings.refresh_token_expire_days
+        )
 
         async with async_session() as db:
             result = await db.execute(
@@ -124,14 +126,22 @@ async def task_cleanup_expired_sessions(ctx: dict) -> int:
             count = result.rowcount
 
         duration = time.perf_counter() - start
-        TASK_DURATION.labels(env=settings.app_env, task="cleanup_expired_sessions").observe(duration)
-        TASK_COMPLETED_COUNT.labels(env=settings.app_env, task="cleanup_expired_sessions").inc()
+        TASK_DURATION.labels(
+            env=settings.app_env, task="cleanup_expired_sessions"
+        ).observe(duration)
+        TASK_COMPLETED_COUNT.labels(
+            env=settings.app_env, task="cleanup_expired_sessions"
+        ).inc()
         logger.info("Cleaned up %d expired/revoked sessions", count)
         return count
     except Exception:
         duration = time.perf_counter() - start
-        TASK_DURATION.labels(env=settings.app_env, task="cleanup_expired_sessions").observe(duration)
-        TASK_FAILED_COUNT.labels(env=settings.app_env, task="cleanup_expired_sessions").inc()
+        TASK_DURATION.labels(
+            env=settings.app_env, task="cleanup_expired_sessions"
+        ).observe(duration)
+        TASK_FAILED_COUNT.labels(
+            env=settings.app_env, task="cleanup_expired_sessions"
+        ).inc()
         logger.exception("task_cleanup_expired_sessions failed")
         return 0
 
@@ -160,14 +170,22 @@ async def task_cleanup_expired_cache(ctx: dict) -> int:
         await redis_client.aclose()
 
         duration = time.perf_counter() - start
-        TASK_DURATION.labels(env=settings.app_env, task="cleanup_expired_cache").observe(duration)
-        TASK_COMPLETED_COUNT.labels(env=settings.app_env, task="cleanup_expired_cache").inc()
+        TASK_DURATION.labels(
+            env=settings.app_env, task="cleanup_expired_cache"
+        ).observe(duration)
+        TASK_COMPLETED_COUNT.labels(
+            env=settings.app_env, task="cleanup_expired_cache"
+        ).inc()
         logger.info("Cleaned up %d expired cache keys", count)
         return count
     except Exception:
         duration = time.perf_counter() - start
-        TASK_DURATION.labels(env=settings.app_env, task="cleanup_expired_cache").observe(duration)
-        TASK_FAILED_COUNT.labels(env=settings.app_env, task="cleanup_expired_cache").inc()
+        TASK_DURATION.labels(
+            env=settings.app_env, task="cleanup_expired_cache"
+        ).observe(duration)
+        TASK_FAILED_COUNT.labels(
+            env=settings.app_env, task="cleanup_expired_cache"
+        ).inc()
         logger.exception("task_cleanup_expired_cache failed")
         return 0
 
@@ -209,9 +227,7 @@ async def task_send_notification_digest(ctx: dict) -> int:
 
             for parent_id, notif_count in rows:
                 # Get parent email
-                user_result = await db.execute(
-                    select(User).where(User.id == parent_id)
-                )
+                user_result = await db.execute(select(User).where(User.id == parent_id))
                 user = user_result.scalar_one_or_none()
                 if user is None or not user.email:
                     continue
@@ -229,14 +245,22 @@ async def task_send_notification_digest(ctx: dict) -> int:
                 sent_count += 1
 
         duration = time.perf_counter() - start
-        TASK_DURATION.labels(env=settings.app_env, task="send_notification_digest").observe(duration)
-        TASK_COMPLETED_COUNT.labels(env=settings.app_env, task="send_notification_digest").inc()
+        TASK_DURATION.labels(
+            env=settings.app_env, task="send_notification_digest"
+        ).observe(duration)
+        TASK_COMPLETED_COUNT.labels(
+            env=settings.app_env, task="send_notification_digest"
+        ).inc()
         logger.info("Sent %d notification digest emails", sent_count)
         return sent_count
     except Exception:
         duration = time.perf_counter() - start
-        TASK_DURATION.labels(env=settings.app_env, task="send_notification_digest").observe(duration)
-        TASK_FAILED_COUNT.labels(env=settings.app_env, task="send_notification_digest").inc()
+        TASK_DURATION.labels(
+            env=settings.app_env, task="send_notification_digest"
+        ).observe(duration)
+        TASK_FAILED_COUNT.labels(
+            env=settings.app_env, task="send_notification_digest"
+        ).inc()
         logger.exception("task_send_notification_digest failed")
         return 0
 
@@ -261,7 +285,9 @@ async def task_refresh_kpi_views(ctx: dict) -> bool:
         async with async_session() as db:
             # Try refreshing materialized view
             try:
-                await db.execute(text("REFRESH MATERIALIZED VIEW CONCURRENTLY mv_kpi_daily"))
+                await db.execute(
+                    text("REFRESH MATERIALIZED VIEW CONCURRENTLY mv_kpi_daily")
+                )
                 await db.commit()
                 logger.info("Refreshed mv_kpi_daily materialized view")
             except Exception as mv_err:
@@ -272,7 +298,8 @@ async def task_refresh_kpi_views(ctx: dict) -> bool:
                     mv_err,
                 )
                 try:
-                    await db.execute(text("""
+                    await db.execute(
+                        text("""
                         CREATE MATERIALIZED VIEW IF NOT EXISTS mv_kpi_daily AS
                         SELECT
                             s.school_id,
@@ -311,11 +338,14 @@ async def task_refresh_kpi_views(ctx: dict) -> bool:
                         LEFT JOIN audit_logs a ON a.school_id = s.school_id
                         LEFT JOIN invitation_codes i ON i.school_id = s.school_id
                         GROUP BY s.school_id
-                    """))
-                    await db.execute(text(
-                        "CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_kpi_daily_school "
-                        "ON mv_kpi_daily (school_id)"
-                    ))
+                    """)
+                    )
+                    await db.execute(
+                        text(
+                            "CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_kpi_daily_school "
+                            "ON mv_kpi_daily (school_id)"
+                        )
+                    )
                     await db.commit()
                     logger.info("Created mv_kpi_daily materialized view")
                 except Exception as create_err:
@@ -324,12 +354,18 @@ async def task_refresh_kpi_views(ctx: dict) -> bool:
                     raise
 
         duration = time.perf_counter() - start
-        TASK_DURATION.labels(env=settings.app_env, task="refresh_kpi_views").observe(duration)
-        TASK_COMPLETED_COUNT.labels(env=settings.app_env, task="refresh_kpi_views").inc()
+        TASK_DURATION.labels(env=settings.app_env, task="refresh_kpi_views").observe(
+            duration
+        )
+        TASK_COMPLETED_COUNT.labels(
+            env=settings.app_env, task="refresh_kpi_views"
+        ).inc()
         return True
     except Exception:
         duration = time.perf_counter() - start
-        TASK_DURATION.labels(env=settings.app_env, task="refresh_kpi_views").observe(duration)
+        TASK_DURATION.labels(env=settings.app_env, task="refresh_kpi_views").observe(
+            duration
+        )
         TASK_FAILED_COUNT.labels(env=settings.app_env, task="refresh_kpi_views").inc()
         logger.exception("task_refresh_kpi_views failed")
         return False
@@ -353,14 +389,22 @@ async def task_retry_failed_payments(ctx: dict) -> int:
         count = await retry_failed_payments()
 
         duration = time.perf_counter() - start
-        TASK_DURATION.labels(env=settings.app_env, task="retry_failed_payments").observe(duration)
-        TASK_COMPLETED_COUNT.labels(env=settings.app_env, task="retry_failed_payments").inc()
+        TASK_DURATION.labels(
+            env=settings.app_env, task="retry_failed_payments"
+        ).observe(duration)
+        TASK_COMPLETED_COUNT.labels(
+            env=settings.app_env, task="retry_failed_payments"
+        ).inc()
         logger.info("Retried %d failed payments", count)
         return count
     except Exception:
         duration = time.perf_counter() - start
-        TASK_DURATION.labels(env=settings.app_env, task="retry_failed_payments").observe(duration)
-        TASK_FAILED_COUNT.labels(env=settings.app_env, task="retry_failed_payments").inc()
+        TASK_DURATION.labels(
+            env=settings.app_env, task="retry_failed_payments"
+        ).observe(duration)
+        TASK_FAILED_COUNT.labels(
+            env=settings.app_env, task="retry_failed_payments"
+        ).inc()
         logger.exception("task_retry_failed_payments failed")
         return 0
 
@@ -384,14 +428,22 @@ async def task_send_overdue_reminders(ctx: dict) -> int:
         count = await send_overdue_reminders()
 
         duration = time.perf_counter() - start
-        TASK_DURATION.labels(env=settings.app_env, task="send_overdue_reminders").observe(duration)
-        TASK_COMPLETED_COUNT.labels(env=settings.app_env, task="send_overdue_reminders").inc()
+        TASK_DURATION.labels(
+            env=settings.app_env, task="send_overdue_reminders"
+        ).observe(duration)
+        TASK_COMPLETED_COUNT.labels(
+            env=settings.app_env, task="send_overdue_reminders"
+        ).inc()
         logger.info("Sent %d overdue reminders", count)
         return count
     except Exception:
         duration = time.perf_counter() - start
-        TASK_DURATION.labels(env=settings.app_env, task="send_overdue_reminders").observe(duration)
-        TASK_FAILED_COUNT.labels(env=settings.app_env, task="send_overdue_reminders").inc()
+        TASK_DURATION.labels(
+            env=settings.app_env, task="send_overdue_reminders"
+        ).observe(duration)
+        TASK_FAILED_COUNT.labels(
+            env=settings.app_env, task="send_overdue_reminders"
+        ).inc()
         logger.exception("task_send_overdue_reminders failed")
         return 0
 

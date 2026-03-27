@@ -46,8 +46,7 @@ export function RegisterPage() {
 
   // Step 1 — code
   const [code, setCode] = useState('');
-  const [detectedRole, setDetectedRole] = useState('');
-  const [schoolName, setSchoolName] = useState('');
+  const [, setDetectedRole] = useState('');
 
   // Step 2 — personal info
   const [email, setEmail] = useState('');
@@ -59,12 +58,7 @@ export function RegisterPage() {
   // Step 3 — role-specific
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [classLevel, setClassLevel] = useState('');
-  const [nationality, setNationality] = useState('');
   const [relationshipType, setRelationshipType] = useState('');
-  const [cinNumber, setCinNumber] = useState('');
-  const [address, setAddress] = useState('');
-  const [profession, setProfession] = useState('');
-  const [emergencyPhone, setEmergencyPhone] = useState('');
   const [subjectSpecialty, setSubjectSpecialty] = useState('');
   const [qualification, setQualification] = useState('');
 
@@ -127,12 +121,7 @@ export function RegisterPage() {
     // We don't know the role yet (backend determines from code), so send all non-empty fields
     if (dateOfBirth) profileData.date_of_birth = dateOfBirth;
     if (classLevel) profileData.class_level = classLevel;
-    if (nationality) profileData.nationality = nationality;
     if (relationshipType) profileData.relationship_type = relationshipType;
-    if (cinNumber) profileData.cin_number = cinNumber;
-    if (address) profileData.address = address;
-    if (profession) profileData.profession = profession;
-    if (emergencyPhone) profileData.emergency_phone = emergencyPhone;
     if (subjectSpecialty) profileData.subject_specialty = subjectSpecialty;
     if (qualification) profileData.qualification = qualification;
 

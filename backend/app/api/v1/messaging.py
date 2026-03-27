@@ -176,15 +176,14 @@ async def _validate_messaging_abac(
 
         for pid in participant_ids:
             # Verify each participant is an allowed teacher
-            user_result = await db.execute(
-                select(User).where(User.id == pid)
-            )
+            user_result = await db.execute(select(User).where(User.id == pid))
             user = user_result.scalar_one_or_none()
             if user is None:
                 raise NotFoundError("User not found", error_code="ERR-COM-404")
 
             # Check the user's membership role
             from app.models.iam import Membership
+
             mem_result = await db.execute(
                 select(Membership.role_code).where(
                     Membership.user_id == pid,
@@ -236,14 +235,13 @@ async def _validate_messaging_abac(
         allowed_parent_ids = set(parent_result.scalars().all())
 
         for pid in participant_ids:
-            user_result = await db.execute(
-                select(User).where(User.id == pid)
-            )
+            user_result = await db.execute(select(User).where(User.id == pid))
             user = user_result.scalar_one_or_none()
             if user is None:
                 raise NotFoundError("User not found", error_code="ERR-COM-404")
 
             from app.models.iam import Membership
+
             mem_result = await db.execute(
                 select(Membership.role_code).where(
                     Membership.user_id == pid,
@@ -304,6 +302,7 @@ async def create_conversation(
     # Validate all participants exist and are in the same school
     for pid in body.participant_ids:
         from app.models.iam import Membership
+
         mem_result = await db.execute(
             select(Membership).where(
                 Membership.user_id == pid,
@@ -439,7 +438,9 @@ async def list_conversations(
             Conversation.id.in_(my_conv_ids),
             Conversation.school_id == auth.school_id,
         )
-        .order_by(last_msg_sub.c.last_sent.desc().nullslast(), Conversation.created_at.desc())
+        .order_by(
+            last_msg_sub.c.last_sent.desc().nullslast(), Conversation.created_at.desc()
+        )
     )
 
     if cursor:
@@ -651,10 +652,12 @@ async def mark_read(
     await db.flush()
     await db.commit()
 
-    return success_response({
-        "marked_read": created,
-        "up_to_message_id": str(body.message_id),
-    })
+    return success_response(
+        {
+            "marked_read": created,
+            "up_to_message_id": str(body.message_id),
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -667,7 +670,9 @@ async def mark_read(
 )
 async def get_read_status(
     conversation_id: uuid.UUID,
-    message_id: uuid.UUID | None = Query(None, description="Filter by specific message"),
+    message_id: uuid.UUID | None = Query(
+        None, description="Filter by specific message"
+    ),
     auth: AuthContext = Depends(requires_permission("PERM-COM:conversation:read")),
     db: AsyncSession = Depends(get_db),
 ):

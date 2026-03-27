@@ -6,7 +6,6 @@ Reference: S-142 to S-146, Pack G3 — AI Governance
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
 
 from pydantic import BaseModel, Field
 
@@ -16,6 +15,7 @@ from pydantic import BaseModel, Field
 # ---------------------------------------------------------------------------
 class WritingAttemptRequest(BaseModel):
     """POST /writing-attempts — student writing assistance request."""
+
     text: str = Field(..., min_length=1, max_length=5000)
     subject: str | None = Field(default=None, max_length=200)
     language: str | None = Field(default=None, pattern="^(fr|ar|en)$")
@@ -38,6 +38,7 @@ class WritingAttemptResponse(BaseModel):
 # ---------------------------------------------------------------------------
 class AIOptOutRequest(BaseModel):
     """POST /ai/preferences/opt-out — parent opts out of AI personalization."""
+
     opt_out: bool = Field(..., description="True to opt out, False to opt back in")
     target_user_id: uuid.UUID | None = Field(
         default=None,

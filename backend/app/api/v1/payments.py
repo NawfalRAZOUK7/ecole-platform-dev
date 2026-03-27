@@ -16,8 +16,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import AuthContext, requires_permission, verify_school_boundary
-from app.core.exceptions import ConflictError, NotFoundError, ValidationError
+from app.core.dependencies import (
+    AuthContext,
+    requires_permission,
+    verify_school_boundary,
+)
+from app.core.exceptions import ConflictError, NotFoundError
 from app.core.response import success_response
 from app.models.billing import Invoice, PaymentAttempt, ProviderWebhookEvent
 from app.schemas.billing import PaymentInitiateRequest, WebhookEventRequest
@@ -39,7 +43,12 @@ def _get_client_ip(request: Request) -> str | None:
 # ---------------------------------------------------------------------------
 # S-062: POST /payments/initiate — Initiate payment (PAR)
 # ---------------------------------------------------------------------------
-@router.post("/initiate", status_code=201, summary="Initiate a payment", response_description="Payment attempt with provider redirect")
+@router.post(
+    "/initiate",
+    status_code=201,
+    summary="Initiate a payment",
+    response_description="Payment attempt with provider redirect",
+)
 async def initiate_payment(
     body: PaymentInitiateRequest,
     request: Request,
@@ -56,9 +65,7 @@ async def initiate_payment(
     audit = AuditService(db)
 
     # 1. Validate invoice
-    inv_result = await db.execute(
-        select(Invoice).where(Invoice.id == body.invoice_id)
-    )
+    inv_result = await db.execute(select(Invoice).where(Invoice.id == body.invoice_id))
     invoice = inv_result.scalar_one_or_none()
     if invoice is None:
         raise NotFoundError("Invoice not found", error_code="ERR-BIL-404")
@@ -84,15 +91,19 @@ async def initiate_payment(
     )
     existing = existing_result.scalar_one_or_none()
     if existing is not None:
-        return success_response({
-            "id": str(existing.id),
-            "invoice_id": str(existing.invoice_id),
-            "parent_id": str(existing.parent_id),
-            "school_id": str(existing.school_id),
-            "idempotency_key": existing.idempotency_key,
-            "status": existing.status,
-            "finalized_at": existing.finalized_at.isoformat() if existing.finalized_at else None,
-        })
+        return success_response(
+            {
+                "id": str(existing.id),
+                "invoice_id": str(existing.invoice_id),
+                "parent_id": str(existing.parent_id),
+                "school_id": str(existing.school_id),
+                "idempotency_key": existing.idempotency_key,
+                "status": existing.status,
+                "finalized_at": existing.finalized_at.isoformat()
+                if existing.finalized_at
+                else None,
+            }
+        )
 
     # 4. Create payment attempt
     attempt = PaymentAttempt(
@@ -120,21 +131,27 @@ async def initiate_payment(
         ip_address=_get_client_ip(request),
     )
 
-    return success_response({
-        "id": str(attempt.id),
-        "invoice_id": str(attempt.invoice_id),
-        "parent_id": str(attempt.parent_id),
-        "school_id": str(attempt.school_id),
-        "idempotency_key": attempt.idempotency_key,
-        "status": attempt.status,
-        "finalized_at": None,
-    })
+    return success_response(
+        {
+            "id": str(attempt.id),
+            "invoice_id": str(attempt.invoice_id),
+            "parent_id": str(attempt.parent_id),
+            "school_id": str(attempt.school_id),
+            "idempotency_key": attempt.idempotency_key,
+            "status": attempt.status,
+            "finalized_at": None,
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
 # S-063: GET /payments/{attempt_id} — Get payment status (PAR, ADM)
 # ---------------------------------------------------------------------------
-@router.get("/{attempt_id}", summary="Get payment status", response_description="Payment attempt status")
+@router.get(
+    "/{attempt_id}",
+    summary="Get payment status",
+    response_description="Payment attempt status",
+)
 async def get_payment_status(
     attempt_id: uuid.UUID,
     auth: AuthContext = Depends(requires_permission("PERM-BIL:payment:read")),
@@ -154,21 +171,30 @@ async def get_payment_status(
     if auth.role == "PAR" and attempt.parent_id != auth.user_id:
         raise NotFoundError("Payment attempt not found", error_code="ERR-BIL-404")
 
-    return success_response({
-        "id": str(attempt.id),
-        "invoice_id": str(attempt.invoice_id),
-        "parent_id": str(attempt.parent_id),
-        "school_id": str(attempt.school_id),
-        "idempotency_key": attempt.idempotency_key,
-        "status": attempt.status,
-        "finalized_at": attempt.finalized_at.isoformat() if attempt.finalized_at else None,
-    })
+    return success_response(
+        {
+            "id": str(attempt.id),
+            "invoice_id": str(attempt.invoice_id),
+            "parent_id": str(attempt.parent_id),
+            "school_id": str(attempt.school_id),
+            "idempotency_key": attempt.idempotency_key,
+            "status": attempt.status,
+            "finalized_at": attempt.finalized_at.isoformat()
+            if attempt.finalized_at
+            else None,
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
 # S-064: POST /payments/webhook/provider — Handle webhook (SYS)
 # ---------------------------------------------------------------------------
-@router.post("/webhook/provider", status_code=200, summary="Handle provider webhook", response_description="Webhook processing result")
+@router.post(
+    "/webhook/provider",
+    status_code=200,
+    summary="Handle provider webhook",
+    response_description="Webhook processing result",
+)
 async def handle_provider_webhook(
     body: WebhookEventRequest,
     request: Request,
@@ -197,14 +223,18 @@ async def handle_provider_webhook(
     )
     existing = existing_result.scalar_one_or_none()
     if existing is not None:
-        return success_response({
-            "id": str(existing.id),
-            "provider_event_id": existing.provider_event_id,
-            "payment_attempt_id": str(existing.payment_attempt_id) if existing.payment_attempt_id else None,
-            "school_id": str(existing.school_id),
-            "status": existing.status,
-            "signature_status": existing.signature_status,
-        })
+        return success_response(
+            {
+                "id": str(existing.id),
+                "provider_event_id": existing.provider_event_id,
+                "payment_attempt_id": str(existing.payment_attempt_id)
+                if existing.payment_attempt_id
+                else None,
+                "school_id": str(existing.school_id),
+                "status": existing.status,
+                "signature_status": existing.signature_status,
+            }
+        )
 
     # 2. Find payment attempt if provided
     payment_attempt = None
@@ -243,6 +273,7 @@ async def handle_provider_webhook(
             # Phase 11B: Schedule retry for failed payment
             try:
                 from app.services.payment_retry import schedule_retry_for_failed_payment
+
                 await schedule_retry_for_failed_payment(payment_attempt.id, db)
             except Exception:
                 pass  # Retry scheduling is best-effort
@@ -277,11 +308,15 @@ async def handle_provider_webhook(
         ip_address=_get_client_ip(request),
     )
 
-    return success_response({
-        "id": str(webhook_event.id),
-        "provider_event_id": webhook_event.provider_event_id,
-        "payment_attempt_id": str(webhook_event.payment_attempt_id) if webhook_event.payment_attempt_id else None,
-        "school_id": str(webhook_event.school_id),
-        "status": webhook_event.status,
-        "signature_status": webhook_event.signature_status,
-    })
+    return success_response(
+        {
+            "id": str(webhook_event.id),
+            "provider_event_id": webhook_event.provider_event_id,
+            "payment_attempt_id": str(webhook_event.payment_attempt_id)
+            if webhook_event.payment_attempt_id
+            else None,
+            "school_id": str(webhook_event.school_id),
+            "status": webhook_event.status,
+            "signature_status": webhook_event.signature_status,
+        }
+    )

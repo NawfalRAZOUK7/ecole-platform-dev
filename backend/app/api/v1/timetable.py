@@ -27,7 +27,6 @@ from app.core.dependencies import (
     AuthContext,
     get_current_user,
     get_parent_child_ids,
-    get_teacher_class_ids,
     requires_permission,
     verify_school_boundary,
 )
@@ -59,6 +58,7 @@ router = APIRouter(prefix="/timetable", tags=["erp-timetable"])
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _get_client_ip(request: Request) -> str | None:
     forwarded = request.headers.get("X-Forwarded-For")
     if forwarded:
@@ -83,7 +83,9 @@ def _slot_to_response(slot: TimetableSlot) -> dict:
         room=slot.room,
         is_recurring=slot.is_recurring,
         effective_from=slot.effective_from.isoformat() if slot.effective_from else None,
-        effective_until=slot.effective_until.isoformat() if slot.effective_until else None,
+        effective_until=slot.effective_until.isoformat()
+        if slot.effective_until
+        else None,
         created_at=slot.created_at.isoformat(),
         updated_at=slot.updated_at.isoformat() if slot.updated_at else None,
     ).model_dump()
@@ -97,7 +99,9 @@ def _exception_to_response(exc: TimetableException) -> dict:
         school_id=str(exc.school_id),
         exception_date=exc.exception_date.isoformat(),
         exception_type=exc.exception_type,
-        substitute_teacher_id=str(exc.substitute_teacher_id) if exc.substitute_teacher_id else None,
+        substitute_teacher_id=str(exc.substitute_teacher_id)
+        if exc.substitute_teacher_id
+        else None,
         new_room=exc.new_room,
         reason=exc.reason,
         created_at=exc.created_at.isoformat(),
@@ -206,18 +210,25 @@ async def create_timetable_slots(
             raise ValidationError(
                 "end_time must be after start_time",
                 error_code="ERR-ERP-422",
-                details={"start_time": str(slot_req.start_time), "end_time": str(slot_req.end_time)},
+                details={
+                    "start_time": str(slot_req.start_time),
+                    "end_time": str(slot_req.end_time),
+                },
             )
 
         # Validate class exists + school boundary
-        class_result = await db.execute(select(Class).where(Class.id == slot_req.class_id))
+        class_result = await db.execute(
+            select(Class).where(Class.id == slot_req.class_id)
+        )
         cls = class_result.scalar_one_or_none()
         if cls is None:
             raise NotFoundError("Class not found", error_code="ERR-ERP-404")
         verify_school_boundary(cls.school_id, auth)
 
         # Validate academic year exists + school boundary
-        ay_result = await db.execute(select(AcademicYear).where(AcademicYear.id == slot_req.academic_year_id))
+        ay_result = await db.execute(
+            select(AcademicYear).where(AcademicYear.id == slot_req.academic_year_id)
+        )
         ay = ay_result.scalar_one_or_none()
         if ay is None:
             raise NotFoundError("Academic year not found", error_code="ERR-ERP-404")
@@ -452,7 +463,9 @@ async def delete_timetable_slot(
 )
 async def get_class_weekly_timetable(
     class_id: uuid.UUID,
-    target_date: date | None = Query(None, description="Any date in the target week (defaults to today)"),
+    target_date: date | None = Query(
+        None, description="Any date in the target week (defaults to today)"
+    ),
     auth: AuthContext = Depends(requires_permission("PERM-ERP:timetable:read")),
     db: AsyncSession = Depends(get_db),
 ):
@@ -482,7 +495,9 @@ async def get_class_weekly_timetable(
 )
 async def get_teacher_weekly_timetable(
     teacher_id: uuid.UUID,
-    target_date: date | None = Query(None, description="Any date in the target week (defaults to today)"),
+    target_date: date | None = Query(
+        None, description="Any date in the target week (defaults to today)"
+    ),
     auth: AuthContext = Depends(requires_permission("PERM-ERP:timetable:read")),
     db: AsyncSession = Depends(get_db),
 ):
@@ -504,7 +519,9 @@ async def get_teacher_weekly_timetable(
     response_description="Weekly timetable for current user",
 )
 async def get_my_weekly_timetable(
-    target_date: date | None = Query(None, description="Any date in the target week (defaults to today)"),
+    target_date: date | None = Query(
+        None, description="Any date in the target week (defaults to today)"
+    ),
     auth: AuthContext = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -529,12 +546,14 @@ async def get_my_weekly_timetable(
         # Find student's active class
         class_id = await _get_student_class_id(db, auth.user_id, auth.school_id)
         if class_id is None:
-            return success_response(WeeklyTimetableResponse(
-                academic_year_id="",
-                week_start=td.isoformat(),
-                week_end=td.isoformat(),
-                slots=[],
-            ).model_dump())
+            return success_response(
+                WeeklyTimetableResponse(
+                    academic_year_id="",
+                    week_start=td.isoformat(),
+                    week_end=td.isoformat(),
+                    slots=[],
+                ).model_dump()
+            )
         return await _build_weekly_timetable(
             db=db,
             school_id=auth.school_id,
@@ -546,21 +565,25 @@ async def get_my_weekly_timetable(
         # Get first child's class
         child_ids = await get_parent_child_ids(auth.user_id, auth.school_id, db)
         if not child_ids:
-            return success_response(WeeklyTimetableResponse(
-                academic_year_id="",
-                week_start=td.isoformat(),
-                week_end=td.isoformat(),
-                slots=[],
-            ).model_dump())
+            return success_response(
+                WeeklyTimetableResponse(
+                    academic_year_id="",
+                    week_start=td.isoformat(),
+                    week_end=td.isoformat(),
+                    slots=[],
+                ).model_dump()
+            )
         first_child_id = next(iter(child_ids))
         class_id = await _get_student_class_id(db, first_child_id, auth.school_id)
         if class_id is None:
-            return success_response(WeeklyTimetableResponse(
-                academic_year_id="",
-                week_start=td.isoformat(),
-                week_end=td.isoformat(),
-                slots=[],
-            ).model_dump())
+            return success_response(
+                WeeklyTimetableResponse(
+                    academic_year_id="",
+                    week_start=td.isoformat(),
+                    week_end=td.isoformat(),
+                    slots=[],
+                ).model_dump()
+            )
         return await _build_weekly_timetable(
             db=db,
             school_id=auth.school_id,
@@ -570,12 +593,14 @@ async def get_my_weekly_timetable(
 
     # ADM/DIR/SUP — return empty
     monday, sunday = _get_week_bounds(td)
-    return success_response(WeeklyTimetableResponse(
-        academic_year_id="",
-        week_start=monday.isoformat(),
-        week_end=sunday.isoformat(),
-        slots=[],
-    ).model_dump())
+    return success_response(
+        WeeklyTimetableResponse(
+            academic_year_id="",
+            week_start=monday.isoformat(),
+            week_end=sunday.isoformat(),
+            slots=[],
+        ).model_dump()
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -590,7 +615,9 @@ async def get_my_weekly_timetable(
 async def create_timetable_exception(
     body: TimetableExceptionCreateRequest,
     request: Request,
-    auth: AuthContext = Depends(requires_permission("PERM-ERP:timetable-exception:create")),
+    auth: AuthContext = Depends(
+        requires_permission("PERM-ERP:timetable-exception:create")
+    ),
     db: AsyncSession = Depends(get_db),
 ):
     """Create an exception for a timetable slot (cancel, substitute, room change).
@@ -604,7 +631,9 @@ async def create_timetable_exception(
     audit = AuditService(db)
 
     # Validate slot exists
-    slot_result = await db.execute(select(TimetableSlot).where(TimetableSlot.id == body.timetable_slot_id))
+    slot_result = await db.execute(
+        select(TimetableSlot).where(TimetableSlot.id == body.timetable_slot_id)
+    )
     slot = slot_result.scalar_one_or_none()
     if slot is None:
         raise NotFoundError("Timetable slot not found", error_code="ERR-ERP-404")
@@ -679,12 +708,18 @@ async def list_timetable_exceptions(
     timetable_slot_id: uuid.UUID | None = Query(None),
     date_from: date | None = Query(None),
     date_to: date | None = Query(None),
-    exception_type: str | None = Query(None, pattern="^(CANCELED|SUBSTITUTED|ROOM_CHANGED)$"),
-    auth: AuthContext = Depends(requires_permission("PERM-ERP:timetable-exception:read")),
+    exception_type: str | None = Query(
+        None, pattern="^(CANCELED|SUBSTITUTED|ROOM_CHANGED)$"
+    ),
+    auth: AuthContext = Depends(
+        requires_permission("PERM-ERP:timetable-exception:read")
+    ),
     db: AsyncSession = Depends(get_db),
 ):
     """List timetable exceptions with optional filters."""
-    query = select(TimetableException).where(TimetableException.school_id == auth.school_id)
+    query = select(TimetableException).where(
+        TimetableException.school_id == auth.school_id
+    )
 
     if timetable_slot_id:
         query = query.where(TimetableException.timetable_slot_id == timetable_slot_id)
@@ -706,6 +741,7 @@ async def list_timetable_exceptions(
 # Internal helpers
 # ---------------------------------------------------------------------------
 
+
 async def _get_student_class_id(
     db: AsyncSession,
     student_id: uuid.UUID,
@@ -713,11 +749,13 @@ async def _get_student_class_id(
 ) -> uuid.UUID | None:
     """Get the class_id for a student's active enrollment."""
     result = await db.execute(
-        select(Enrollment.class_id).where(
+        select(Enrollment.class_id)
+        .where(
             Enrollment.student_id == student_id,
             Enrollment.school_id == school_id,
             Enrollment.status == "active",
-        ).limit(1)
+        )
+        .limit(1)
     )
     return result.scalar_one_or_none()
 
@@ -746,9 +784,11 @@ async def _build_weekly_timetable(
     query = query.where(
         and_(
             # effective_from is NULL or <= sunday
-            (TimetableSlot.effective_from.is_(None)) | (TimetableSlot.effective_from <= sunday),
+            (TimetableSlot.effective_from.is_(None))
+            | (TimetableSlot.effective_from <= sunday),
             # effective_until is NULL or >= monday
-            (TimetableSlot.effective_until.is_(None)) | (TimetableSlot.effective_until >= monday),
+            (TimetableSlot.effective_until.is_(None))
+            | (TimetableSlot.effective_until >= monday),
         )
     )
 
@@ -757,12 +797,14 @@ async def _build_weekly_timetable(
     slots = result.scalars().all()
 
     if not slots:
-        return success_response(WeeklyTimetableResponse(
-            academic_year_id="",
-            week_start=monday.isoformat(),
-            week_end=sunday.isoformat(),
-            slots=[],
-        ).model_dump())
+        return success_response(
+            WeeklyTimetableResponse(
+                academic_year_id="",
+                week_start=monday.isoformat(),
+                week_end=sunday.isoformat(),
+                slots=[],
+            ).model_dump()
+        )
 
     slot_ids = [s.id for s in slots]
     academic_year_id = str(slots[0].academic_year_id) if slots else ""
@@ -792,33 +834,41 @@ async def _build_weekly_timetable(
         slot_date = monday + timedelta(days=slot.day_of_week)
         exc = exc_by_slot.get(slot.id, {}).get(slot_date)
 
-        weekly_slots.append(WeeklySlotResponse(
-            id=str(slot.id),
-            day_of_week=slot.day_of_week,
-            start_time=slot.start_time.strftime("%H:%M"),
-            end_time=slot.end_time.strftime("%H:%M"),
-            subject=slot.subject,
-            teacher_id=str(slot.teacher_id),
-            room=slot.room,
-            is_recurring=slot.is_recurring,
-            class_id=str(slot.class_id),
-            class_name=class_map.get(slot.class_id),
-            exception=TimetableExceptionResponse(
-                id=str(exc.id),
-                timetable_slot_id=str(exc.timetable_slot_id),
-                school_id=str(exc.school_id),
-                exception_date=exc.exception_date.isoformat(),
-                exception_type=exc.exception_type,
-                substitute_teacher_id=str(exc.substitute_teacher_id) if exc.substitute_teacher_id else None,
-                new_room=exc.new_room,
-                reason=exc.reason,
-                created_at=exc.created_at.isoformat(),
-            ) if exc else None,
-        ).model_dump())
+        weekly_slots.append(
+            WeeklySlotResponse(
+                id=str(slot.id),
+                day_of_week=slot.day_of_week,
+                start_time=slot.start_time.strftime("%H:%M"),
+                end_time=slot.end_time.strftime("%H:%M"),
+                subject=slot.subject,
+                teacher_id=str(slot.teacher_id),
+                room=slot.room,
+                is_recurring=slot.is_recurring,
+                class_id=str(slot.class_id),
+                class_name=class_map.get(slot.class_id),
+                exception=TimetableExceptionResponse(
+                    id=str(exc.id),
+                    timetable_slot_id=str(exc.timetable_slot_id),
+                    school_id=str(exc.school_id),
+                    exception_date=exc.exception_date.isoformat(),
+                    exception_type=exc.exception_type,
+                    substitute_teacher_id=str(exc.substitute_teacher_id)
+                    if exc.substitute_teacher_id
+                    else None,
+                    new_room=exc.new_room,
+                    reason=exc.reason,
+                    created_at=exc.created_at.isoformat(),
+                )
+                if exc
+                else None,
+            ).model_dump()
+        )
 
-    return success_response(WeeklyTimetableResponse(
-        academic_year_id=academic_year_id,
-        week_start=monday.isoformat(),
-        week_end=sunday.isoformat(),
-        slots=weekly_slots,
-    ).model_dump())
+    return success_response(
+        WeeklyTimetableResponse(
+            academic_year_id=academic_year_id,
+            week_start=monday.isoformat(),
+            week_end=sunday.isoformat(),
+            slots=weekly_slots,
+        ).model_dump()
+    )

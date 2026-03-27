@@ -67,7 +67,9 @@ async def invalidate_feature_cache(feature_key: str) -> None:
     try:
         await redis_client.delete(_cache_key(feature_key))
     except Exception:
-        logger.debug("Redis unavailable for feature cache invalidation: %s", feature_key)
+        logger.debug(
+            "Redis unavailable for feature cache invalidation: %s", feature_key
+        )
 
 
 async def invalidate_all_feature_cache(db: AsyncSession) -> None:

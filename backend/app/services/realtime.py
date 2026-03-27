@@ -32,10 +32,13 @@ async def publish_event(
     Fire-and-forget: errors are logged, never raised.
     """
     try:
-        await ws_manager.send_to_user(user_id, {
-            "event": event_type,
-            "data": data,
-        })
+        await ws_manager.send_to_user(
+            user_id,
+            {
+                "event": event_type,
+                "data": data,
+            },
+        )
     except Exception:
         logger.warning(
             "Failed to publish WS event %s to user %s",
@@ -53,12 +56,16 @@ async def publish_notification_created(
     event_ref: str | None = None,
 ) -> None:
     """Push a notification:created event to a parent."""
-    await publish_event(parent_id, "notification:created", {
-        "notification_id": str(notification_id),
-        "title": title,
-        "body": body,
-        "event_ref": event_ref,
-    })
+    await publish_event(
+        parent_id,
+        "notification:created",
+        {
+            "notification_id": str(notification_id),
+            "title": title,
+            "body": body,
+            "event_ref": event_ref,
+        },
+    )
 
 
 async def publish_feed_created(
@@ -69,12 +76,16 @@ async def publish_feed_created(
     source_type: str | None = None,
 ) -> None:
     """Push a feed:created event to a parent."""
-    await publish_event(parent_id, "feed:created", {
-        "feed_item_id": str(feed_item_id),
-        "title": title,
-        "body": body,
-        "source_type": source_type,
-    })
+    await publish_event(
+        parent_id,
+        "feed:created",
+        {
+            "feed_item_id": str(feed_item_id),
+            "title": title,
+            "body": body,
+            "source_type": source_type,
+        },
+    )
 
 
 async def publish_grade_published(
@@ -85,12 +96,16 @@ async def publish_grade_published(
     assignment_title: str | None = None,
 ) -> None:
     """Push a grade:published event to a student."""
-    await publish_event(student_id, "grade:published", {
-        "grade_id": str(grade_id),
-        "submission_id": str(submission_id),
-        "score": score,
-        "assignment_title": assignment_title,
-    })
+    await publish_event(
+        student_id,
+        "grade:published",
+        {
+            "grade_id": str(grade_id),
+            "submission_id": str(submission_id),
+            "score": score,
+            "assignment_title": assignment_title,
+        },
+    )
 
 
 async def publish_payment_updated(
@@ -100,11 +115,15 @@ async def publish_payment_updated(
     invoice_id: uuid.UUID | None = None,
 ) -> None:
     """Push a payment:updated event to a parent."""
-    await publish_event(parent_id, "payment:updated", {
-        "payment_attempt_id": str(payment_attempt_id),
-        "status": status,
-        "invoice_id": str(invoice_id) if invoice_id else None,
-    })
+    await publish_event(
+        parent_id,
+        "payment:updated",
+        {
+            "payment_attempt_id": str(payment_attempt_id),
+            "status": status,
+            "invoice_id": str(invoice_id) if invoice_id else None,
+        },
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -119,13 +138,17 @@ async def publish_message_created(
     sent_at: str,
 ) -> None:
     """Push a message:created event to a conversation participant."""
-    await publish_event(recipient_id, "message:created", {
-        "conversation_id": str(conversation_id),
-        "message_id": str(message_id),
-        "sender_id": str(sender_id),
-        "body": body[:200],  # Preview only
-        "sent_at": sent_at,
-    })
+    await publish_event(
+        recipient_id,
+        "message:created",
+        {
+            "conversation_id": str(conversation_id),
+            "message_id": str(message_id),
+            "sender_id": str(sender_id),
+            "body": body[:200],  # Preview only
+            "sent_at": sent_at,
+        },
+    )
 
 
 async def publish_announcement_published(
@@ -135,8 +158,12 @@ async def publish_announcement_published(
     author_id: uuid.UUID,
 ) -> None:
     """Push an announcement:published event to a targeted user."""
-    await publish_event(recipient_id, "announcement:published", {
-        "announcement_id": str(announcement_id),
-        "title": title,
-        "author_id": str(author_id),
-    })
+    await publish_event(
+        recipient_id,
+        "announcement:published",
+        {
+            "announcement_id": str(announcement_id),
+            "title": title,
+            "author_id": str(author_id),
+        },
+    )

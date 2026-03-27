@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     enable_strict_rate_limit: bool = False  # True in production/staging
 
     # File uploads (Phase 3B)
-    upload_dir: str = "/app/uploads"
+    upload_dir: str = "uploads"
     max_file_size_mb: int = 25
     allowed_mime_types: str = (
         "application/pdf,"

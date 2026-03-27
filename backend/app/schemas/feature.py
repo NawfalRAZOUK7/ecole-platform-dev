@@ -6,7 +6,6 @@ Request/response models for feature toggle CRUD and active features listing.
 
 from __future__ import annotations
 
-from datetime import datetime
 
 from pydantic import BaseModel, Field
 
@@ -15,7 +14,10 @@ class FeatureToggleCreateRequest(BaseModel):
     """Create a new feature toggle."""
 
     feature_key: str = Field(
-        ..., min_length=1, max_length=100, pattern=r"^[a-z][a-z0-9_]*$",
+        ...,
+        min_length=1,
+        max_length=100,
+        pattern=r"^[a-z][a-z0-9_]*$",
         description="Unique snake_case key, e.g. 'content_library'",
     )
     display_name: str = Field(..., min_length=1, max_length=200)
@@ -64,6 +66,4 @@ class FeatureToggleResponse(BaseModel):
 class ActiveFeaturesResponse(BaseModel):
     """Response listing active feature keys for current user context."""
 
-    features: list[str] = Field(
-        ..., description="List of active feature keys"
-    )
+    features: list[str] = Field(..., description="List of active feature keys")

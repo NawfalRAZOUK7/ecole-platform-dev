@@ -107,7 +107,7 @@ const EMPTY_EXCEPTION_FORM: ExceptionForm = {
 };
 
 export function TimetablePage() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { user } = useAuth();
   const role = user?.role || '';
   const isAdmin = role === 'ADM' || role === 'DIR';

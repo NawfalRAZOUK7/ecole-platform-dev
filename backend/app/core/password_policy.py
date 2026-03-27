@@ -17,7 +17,6 @@ from __future__ import annotations
 import re
 import logging
 from pathlib import Path
-from typing import Any
 
 from app.core.exceptions import ValidationError
 
@@ -26,7 +25,9 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Load common passwords (one-time at module import)
 # ---------------------------------------------------------------------------
-_COMMON_PASSWORDS_PATH = Path(__file__).resolve().parent.parent / "data" / "common_passwords.txt"
+_COMMON_PASSWORDS_PATH = (
+    Path(__file__).resolve().parent.parent / "data" / "common_passwords.txt"
+)
 
 _common_passwords: set[str] = set()
 
@@ -42,7 +43,11 @@ def _load_common_passwords() -> set[str]:
                 word = line.strip()
                 if word and not word.startswith("#"):
                     _common_passwords.add(word.lower())
-        logger.info("Loaded %d common passwords from %s", len(_common_passwords), _COMMON_PASSWORDS_PATH)
+        logger.info(
+            "Loaded %d common passwords from %s",
+            len(_common_passwords),
+            _COMMON_PASSWORDS_PATH,
+        )
     except FileNotFoundError:
         logger.warning("Common passwords file not found: %s", _COMMON_PASSWORDS_PATH)
     return _common_passwords
@@ -88,54 +93,68 @@ class PasswordValidator:
 
         # Rule 1: minimum length
         if len(password) < MIN_LENGTH:
-            failures.append({
-                "rule": "min_length",
-                "message": f"Password must be at least {MIN_LENGTH} characters long",
-            })
+            failures.append(
+                {
+                    "rule": "min_length",
+                    "message": f"Password must be at least {MIN_LENGTH} characters long",
+                }
+            )
 
         # Rule 2: uppercase
         if not re.search(r"[A-Z]", password):
-            failures.append({
-                "rule": "uppercase",
-                "message": "Password must contain at least one uppercase letter",
-            })
+            failures.append(
+                {
+                    "rule": "uppercase",
+                    "message": "Password must contain at least one uppercase letter",
+                }
+            )
 
         # Rule 3: lowercase
         if not re.search(r"[a-z]", password):
-            failures.append({
-                "rule": "lowercase",
-                "message": "Password must contain at least one lowercase letter",
-            })
+            failures.append(
+                {
+                    "rule": "lowercase",
+                    "message": "Password must contain at least one lowercase letter",
+                }
+            )
 
         # Rule 4: digit
         if not re.search(r"\d", password):
-            failures.append({
-                "rule": "digit",
-                "message": "Password must contain at least one digit",
-            })
+            failures.append(
+                {
+                    "rule": "digit",
+                    "message": "Password must contain at least one digit",
+                }
+            )
 
         # Rule 5: special character
         if not re.search(r"[!@#$%^&*()\-_=+\[\]{};':\"\\|,.<>/?`~]", password):
-            failures.append({
-                "rule": "special_char",
-                "message": "Password must contain at least one special character (!@#$%^&*...)",
-            })
+            failures.append(
+                {
+                    "rule": "special_char",
+                    "message": "Password must contain at least one special character (!@#$%^&*...)",
+                }
+            )
 
         # Rule 6: not a common password
         if password.lower() in _common_passwords:
-            failures.append({
-                "rule": "common_password",
-                "message": "This password is too common and easily guessable",
-            })
+            failures.append(
+                {
+                    "rule": "common_password",
+                    "message": "This password is too common and easily guessable",
+                }
+            )
 
         # Rule 7: must not contain email local part
         if email:
             local_part = email.split("@")[0].lower()
             if len(local_part) >= 3 and local_part in password.lower():
-                failures.append({
-                    "rule": "contains_email",
-                    "message": "Password must not contain your email address",
-                })
+                failures.append(
+                    {
+                        "rule": "contains_email",
+                        "message": "Password must not contain your email address",
+                    }
+                )
 
         # Rule 8: must not contain parts of user's name
         if full_name:
@@ -143,10 +162,12 @@ class PasswordValidator:
             pwd_lower = password.lower()
             for part in name_parts:
                 if part in pwd_lower:
-                    failures.append({
-                        "rule": "contains_name",
-                        "message": "Password must not contain your name",
-                    })
+                    failures.append(
+                        {
+                            "rule": "contains_name",
+                            "message": "Password must not contain your name",
+                        }
+                    )
                     break  # One failure is enough
 
         return failures

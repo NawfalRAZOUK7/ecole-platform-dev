@@ -28,7 +28,11 @@ from app.models.erp import Class, Enrollment, TeacherAssignment
 router = APIRouter(prefix="/classes", tags=["erp-classes"])
 
 
-@router.get("/{class_id}", summary="Get class details", response_description="Class with capacity, level, academic year")
+@router.get(
+    "/{class_id}",
+    summary="Get class details",
+    response_description="Class with capacity, level, academic year",
+)
 async def get_class(
     class_id: uuid.UUID,
     auth: AuthContext = Depends(requires_permission("PERM-ERP:class:read")),
@@ -59,7 +63,9 @@ async def get_class(
 
     # 4. Count teachers and students for response
     teacher_count_result = await db.execute(
-        select(func.count()).select_from(TeacherAssignment).where(
+        select(func.count())
+        .select_from(TeacherAssignment)
+        .where(
             TeacherAssignment.class_id == class_id,
             TeacherAssignment.school_id == auth.school_id,
         )
@@ -67,7 +73,9 @@ async def get_class(
     teacher_count = teacher_count_result.scalar() or 0
 
     student_count_result = await db.execute(
-        select(func.count()).select_from(Enrollment).where(
+        select(func.count())
+        .select_from(Enrollment)
+        .where(
             Enrollment.class_id == class_id,
             Enrollment.school_id == auth.school_id,
             Enrollment.status == "active",

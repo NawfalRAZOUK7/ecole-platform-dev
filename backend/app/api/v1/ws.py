@@ -87,15 +87,19 @@ async def websocket_endpoint(
 
     # Send welcome message
     try:
-        await websocket.send_text(json.dumps({
-            "event": "connected",
-            "data": {
-                "user_id": str(user_id),
-                "school_id": str(school_id),
-                "role": role,
-                "message": "WebSocket connected",
-            },
-        }))
+        await websocket.send_text(
+            json.dumps(
+                {
+                    "event": "connected",
+                    "data": {
+                        "user_id": str(user_id),
+                        "school_id": str(school_id),
+                        "role": role,
+                        "message": "WebSocket connected",
+                    },
+                }
+            )
+        )
     except Exception:
         await ws_manager.disconnect(websocket, user_id)
         return

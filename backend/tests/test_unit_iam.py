@@ -33,12 +33,14 @@ from app.core.permissions import (
     DIR,
     SUP,
     SYS,
+    CONTENT_MGR,
     PUBLIC,
 )
 from app.core.exceptions import AuthenticationError
 
 
 # ── JWT Token Tests ──
+
 
 class TestJWTGeneration:
     """Tests for JWT token creation."""
@@ -55,7 +57,6 @@ class TestJWTGeneration:
 
     def test_access_token_contains_correct_claims(self):
         uid = uuid.uuid4()
-        sid = uuid.uuid4()
         school = uuid.uuid4()
         session = uuid.uuid4()
 
@@ -105,9 +106,7 @@ class TestJWTValidation:
     """Tests for JWT token decoding and validation."""
 
     def test_decode_valid_access_token(self):
-        token = create_access_token(
-            uuid.uuid4(), "ADM", uuid.uuid4(), uuid.uuid4()
-        )
+        token = create_access_token(uuid.uuid4(), "ADM", uuid.uuid4(), uuid.uuid4())
         payload = decode_access_token(token)
         assert payload["type"] == TOKEN_TYPE_ACCESS
 
@@ -117,17 +116,13 @@ class TestJWTValidation:
 
     def test_decode_refresh_as_access_raises_error(self):
         """Using a refresh token where access token is expected must fail."""
-        token, _ = create_refresh_token(
-            uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
-        )
+        token, _ = create_refresh_token(uuid.uuid4(), uuid.uuid4(), uuid.uuid4())
         with pytest.raises(AuthenticationError):
             decode_access_token(token)
 
     def test_decode_access_as_refresh_raises_error(self):
         """Using an access token where refresh token is expected must fail."""
-        token = create_access_token(
-            uuid.uuid4(), "ADM", uuid.uuid4(), uuid.uuid4()
-        )
+        token = create_access_token(uuid.uuid4(), "ADM", uuid.uuid4(), uuid.uuid4())
         with pytest.raises(AuthenticationError):
             decode_refresh_token(token)
 
@@ -136,14 +131,13 @@ class TestJWTValidation:
             decode_access_token("")
 
     def test_decode_valid_refresh_token(self):
-        token, _ = create_refresh_token(
-            uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
-        )
+        token, _ = create_refresh_token(uuid.uuid4(), uuid.uuid4(), uuid.uuid4())
         payload = decode_refresh_token(token)
         assert payload["type"] == TOKEN_TYPE_REFRESH
 
 
 # ── Password Hashing Tests ──
+
 
 class TestPasswordHashing:
     """Tests for bcrypt password hashing."""
@@ -178,11 +172,12 @@ class TestPasswordHashing:
 
 # ── RBAC Permission Catalog Tests ──
 
+
 class TestPermissionCatalog:
     """Tests for the RBAC permission catalog."""
 
     def test_all_roles_defined(self):
-        expected_roles = {ADM, DIR, TCH, PAR, STD, SUP, SYS, PUBLIC}
+        expected_roles = {ADM, DIR, TCH, PAR, STD, SUP, SYS, CONTENT_MGR, PUBLIC}
         assert set(ROLE_PERMISSIONS.keys()) == expected_roles
 
     def test_admin_has_class_read(self):

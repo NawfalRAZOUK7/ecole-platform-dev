@@ -14,7 +14,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, requires_permission
-from app.core.filtering import FilterSpec, SortSpec, apply_filters, apply_sort, parse_filters, parse_sort
+from app.core.filtering import (
+    FilterSpec,
+    SortSpec,
+    apply_filters,
+    apply_sort,
+    parse_filters,
+    parse_sort,
+)
 from app.core.response import (
     clamp_page_size,
     decode_cursor,
@@ -27,7 +34,9 @@ from app.models.com import ParentFeedItem
 router = APIRouter(prefix="/feed", tags=["com-feed"])
 
 
-@router.get("", summary="List parent feed items", response_description="Paginated activity feed")
+@router.get(
+    "", summary="List parent feed items", response_description="Paginated activity feed"
+)
 async def list_feed(
     student_id: uuid.UUID | None = Query(None),
     cursor: str | None = Query(None),
@@ -60,7 +69,9 @@ async def list_feed(
     query = apply_filters(query, ParentFeedItem, filters)
     if search:
         query = apply_search(query, ParentFeedItem, search)
-    query = apply_sort(query, ParentFeedItem, sort, default_column=ParentFeedItem.created_at.desc())
+    query = apply_sort(
+        query, ParentFeedItem, sort, default_column=ParentFeedItem.created_at.desc()
+    )
 
     if cursor:
         last_id, _ = decode_cursor(cursor)

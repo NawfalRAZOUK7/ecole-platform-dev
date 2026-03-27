@@ -165,7 +165,9 @@ async def create_quiz(
     )
 
     result = _quiz_to_dict(quiz, questions)
-    result["questions"] = [_question_to_dict(qq, include_answer=True) for qq in questions]
+    result["questions"] = [
+        _question_to_dict(qq, include_answer=True) for qq in questions
+    ]
     return success_response(result)
 
 
@@ -296,7 +298,9 @@ async def get_quiz(
 
     is_creator = auth.role in ("CONTENT_MGR", "TCH", "ADM")
     d = _quiz_to_dict(quiz, questions)
-    d["questions"] = [_question_to_dict(qq, include_answer=is_creator) for qq in questions]
+    d["questions"] = [
+        _question_to_dict(qq, include_answer=is_creator) for qq in questions
+    ]
     return success_response(d)
 
 
@@ -435,7 +439,9 @@ async def publish_quiz(
 # ---------------------------------------------------------------------------
 # POST /quizzes/{id}/start — Student starts attempt
 # ---------------------------------------------------------------------------
-@router.post("/quizzes/{quiz_id}/start", status_code=201, summary="Start a quiz attempt")
+@router.post(
+    "/quizzes/{quiz_id}/start", status_code=201, summary="Start a quiz attempt"
+)
 async def start_attempt(
     quiz_id: uuid.UUID,
     request: Request,
@@ -555,7 +561,9 @@ async def respond_to_question(
     )
     question = q_result.scalar_one_or_none()
     if question is None:
-        raise NotFoundError("Question not found in this quiz", error_code="ERR-QUIZ-404")
+        raise NotFoundError(
+            "Question not found in this quiz", error_code="ERR-QUIZ-404"
+        )
 
     # Upsert response
     existing_resp = await db.execute(
@@ -583,12 +591,14 @@ async def respond_to_question(
 
     await db.flush()
 
-    return success_response({
-        "id": str(resp.id),
-        "attempt_id": str(attempt_id),
-        "question_id": str(body.question_id),
-        "answered_at": now.isoformat(),
-    })
+    return success_response(
+        {
+            "id": str(resp.id),
+            "attempt_id": str(attempt_id),
+            "question_id": str(body.question_id),
+            "answered_at": now.isoformat(),
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -675,17 +685,21 @@ async def get_attempt_results(
             "student_answer": resp.student_answer,
             "correct_answer": q.correct_answer,
             "is_correct": resp.is_correct,
-            "points_earned": float(resp.points_earned) if resp.points_earned is not None else None,
+            "points_earned": float(resp.points_earned)
+            if resp.points_earned is not None
+            else None,
             "points": q.points,
             "explanation": q.explanation,
         }
         for resp, q in rows
     ]
 
-    return success_response({
-        "attempt": _attempt_to_dict(attempt),
-        "responses": responses,
-    })
+    return success_response(
+        {
+            "attempt": _attempt_to_dict(attempt),
+            "responses": responses,
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -733,7 +747,9 @@ async def quiz_analytics(
     # Per-question stats
     question_stats = []
     q_result = await db.execute(
-        select(QuizQuestion).where(QuizQuestion.quiz_id == quiz_id).order_by(QuizQuestion.order)
+        select(QuizQuestion)
+        .where(QuizQuestion.quiz_id == quiz_id)
+        .order_by(QuizQuestion.order)
     )
     questions = list(q_result.scalars().all())
 
@@ -741,27 +757,39 @@ async def quiz_analytics(
         q_stats_result = await db.execute(
             select(
                 func.count(QuizResponse.id),
-                func.count(QuizResponse.id).filter(QuizResponse.is_correct == True),
+                func.count(QuizResponse.id).filter(QuizResponse.is_correct),
             ).where(QuizResponse.question_id == q.id)
         )
         total_resp, correct_resp = q_stats_result.one()
-        question_stats.append({
-            "question_id": str(q.id),
-            "question_text": q.question_text[:100],
-            "question_type": q.question_type,
-            "total_responses": total_resp,
-            "correct_responses": correct_resp,
-            "accuracy": round(correct_resp / total_resp * 100, 1) if total_resp > 0 else None,
-        })
+        question_stats.append(
+            {
+                "question_id": str(q.id),
+                "question_text": q.question_text[:100],
+                "question_type": q.question_type,
+                "total_responses": total_resp,
+                "correct_responses": correct_resp,
+                "accuracy": round(correct_resp / total_resp * 100, 1)
+                if total_resp > 0
+                else None,
+            }
+        )
 
-    return success_response({
-        "quiz_id": str(quiz_id),
-        "title": quiz.title,
-        "total_attempts": total_attempts,
-        "completed_attempts": completed,
-        "average_score": round(float(avg_score), 2) if avg_score is not None else None,
-        "max_score_achieved": float(max_achieved) if max_achieved is not None else None,
-        "min_score_achieved": float(min_achieved) if min_achieved is not None else None,
-        "average_percentage": avg_pct,
-        "question_stats": question_stats,
-    })
+    return success_response(
+        {
+            "quiz_id": str(quiz_id),
+            "title": quiz.title,
+            "total_attempts": total_attempts,
+            "completed_attempts": completed,
+            "average_score": round(float(avg_score), 2)
+            if avg_score is not None
+            else None,
+            "max_score_achieved": float(max_achieved)
+            if max_achieved is not None
+            else None,
+            "min_score_achieved": float(min_achieved)
+            if min_achieved is not None
+            else None,
+            "average_percentage": avg_pct,
+            "question_stats": question_stats,
+        }
+    )

@@ -7,7 +7,6 @@ Phase 3D: filter, sort, full-text search support.
 
 from __future__ import annotations
 
-import uuid
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select
@@ -15,7 +14,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, requires_permission
-from app.core.filtering import FilterSpec, SortSpec, apply_filters, apply_sort, parse_filters, parse_sort
+from app.core.filtering import (
+    FilterSpec,
+    SortSpec,
+    apply_filters,
+    apply_sort,
+    parse_filters,
+    parse_sort,
+)
 from app.core.response import (
     clamp_page_size,
     decode_cursor,
@@ -28,7 +34,11 @@ from app.models.com import Notification
 router = APIRouter(prefix="/notifications", tags=["com-notifications"])
 
 
-@router.get("", summary="List notifications", response_description="Paginated list of notifications")
+@router.get(
+    "",
+    summary="List notifications",
+    response_description="Paginated list of notifications",
+)
 async def list_notifications(
     cursor: str | None = Query(None),
     limit: int | None = Query(None),
@@ -58,7 +68,9 @@ async def list_notifications(
     query = apply_filters(query, Notification, filters)
     if search:
         query = apply_search(query, Notification, search)
-    query = apply_sort(query, Notification, sort, default_column=Notification.created_at.desc())
+    query = apply_sort(
+        query, Notification, sort, default_column=Notification.created_at.desc()
+    )
 
     if cursor:
         last_id, _ = decode_cursor(cursor)
@@ -85,7 +97,9 @@ async def list_notifications(
         for n in notifications
     ]
 
-    next_cursor = encode_cursor(notifications[-1].id) if has_more and notifications else None
+    next_cursor = (
+        encode_cursor(notifications[-1].id) if has_more and notifications else None
+    )
     return list_response(
         items,
         next_cursor=next_cursor,

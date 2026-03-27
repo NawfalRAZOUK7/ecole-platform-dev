@@ -6,11 +6,7 @@ Requires seed data to be loaded (make seed).
 
 from __future__ import annotations
 
-import httpx
 import pytest
-import pytest_asyncio
-
-from tests.conftest import SCHOOL_ID
 
 
 def auth_header(token: str) -> dict:

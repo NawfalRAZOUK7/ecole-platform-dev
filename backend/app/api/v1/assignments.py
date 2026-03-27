@@ -10,15 +10,26 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Depends, File, Form, Query, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Query, Request, UploadFile
 from fastapi.responses import FileResponse
 from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import AuthContext, requires_permission, verify_school_boundary
+from app.core.dependencies import (
+    AuthContext,
+    requires_permission,
+    verify_school_boundary,
+)
 from app.core.exceptions import AuthorizationError, NotFoundError, ValidationError
-from app.core.filtering import FilterSpec, SortSpec, apply_filters, apply_sort, parse_filters, parse_sort
+from app.core.filtering import (
+    FilterSpec,
+    SortSpec,
+    apply_filters,
+    apply_sort,
+    parse_filters,
+    parse_sort,
+)
 from app.core.response import (
     clamp_page_size,
     decode_cursor,
@@ -27,7 +38,7 @@ from app.core.response import (
     success_response,
 )
 from app.core.search import apply_search, parse_search
-from app.core.storage import storage, validate_file_size, validate_mime_type
+from app.core.storage import storage
 from app.models.erp import Enrollment
 from app.models.lms import Assignment, Course
 from app.schemas.lms import AssignmentCreateRequest
@@ -61,7 +72,12 @@ def _assignment_to_dict(a: Assignment) -> dict:
     }
 
 
-@router.post("", status_code=201, summary="Create an assignment", response_description="Created assignment record")
+@router.post(
+    "",
+    status_code=201,
+    summary="Create an assignment",
+    response_description="Created assignment record",
+)
 async def create_assignment(
     body: AssignmentCreateRequest,
     request: Request,
@@ -125,7 +141,9 @@ async def create_assignment(
     return success_response(_assignment_to_dict(assignment))
 
 
-@router.get("", summary="List assignments", response_description="Paginated list of assignments")
+@router.get(
+    "", summary="List assignments", response_description="Paginated list of assignments"
+)
 async def list_assignments(
     course_id: uuid.UUID | None = Query(None),
     cursor: str | None = Query(None),
@@ -179,7 +197,9 @@ async def list_assignments(
 
     items = [_assignment_to_dict(a) for a in assignments]
 
-    next_cursor = encode_cursor(assignments[-1].id) if has_more and assignments else None
+    next_cursor = (
+        encode_cursor(assignments[-1].id) if has_more and assignments else None
+    )
     return list_response(
         items,
         next_cursor=next_cursor,
@@ -220,7 +240,9 @@ async def upload_exercise_pdf(
     if assignment is None:
         raise NotFoundError("Assignment not found", error_code="ERR-LMS-404")
 
-    course_result = await db.execute(select(Course).where(Course.id == assignment.course_id))
+    course_result = await db.execute(
+        select(Course).where(Course.id == assignment.course_id)
+    )
     course = course_result.scalar_one_or_none()
     if course is None:
         raise NotFoundError("Course not found", error_code="ERR-LMS-404")
@@ -277,12 +299,14 @@ async def upload_exercise_pdf(
         ip_address=_get_client_ip(request),
     )
 
-    return success_response({
-        "id": str(assignment.id),
-        "exercise_pdf_path": relative_path,
-        "checksum": checksum,
-        "file_size": file_size,
-    })
+    return success_response(
+        {
+            "id": str(assignment.id),
+            "exercise_pdf_path": relative_path,
+            "checksum": checksum,
+            "file_size": file_size,
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -311,7 +335,9 @@ async def download_exercise_pdf(
     if not assignment.exercise_pdf_path:
         raise NotFoundError("No exercise PDF attached", error_code="ERR-LMS-404")
 
-    course_result = await db.execute(select(Course).where(Course.id == assignment.course_id))
+    course_result = await db.execute(
+        select(Course).where(Course.id == assignment.course_id)
+    )
     course = course_result.scalar_one_or_none()
     if course is None:
         raise NotFoundError("Course not found", error_code="ERR-LMS-404")

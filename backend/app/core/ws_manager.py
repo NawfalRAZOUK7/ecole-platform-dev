@@ -18,7 +18,7 @@ from collections import defaultdict
 from typing import Any
 
 import redis.asyncio as redis
-from fastapi import WebSocket, WebSocketDisconnect
+from fastapi import WebSocket
 
 from app.core.config import settings
 
@@ -57,7 +57,9 @@ class ConnectionManager:
             self._subscriber_task = asyncio.create_task(self._subscriber_loop())
             logger.info("WebSocket manager started with Redis Pub/Sub")
         except Exception:
-            logger.warning("Redis Pub/Sub unavailable — WebSocket will use local-only delivery")
+            logger.warning(
+                "Redis Pub/Sub unavailable — WebSocket will use local-only delivery"
+            )
             self._running = False
 
     async def shutdown(self) -> None:
@@ -114,7 +116,11 @@ class ConnectionManager:
                 await old_ws.close(code=1008, reason="Connection limit exceeded")
             except Exception:
                 pass
-            logger.info("Evicted oldest WS for user %s (limit %d)", user_id, MAX_CONNECTIONS_PER_USER)
+            logger.info(
+                "Evicted oldest WS for user %s (limit %d)",
+                user_id,
+                MAX_CONNECTIONS_PER_USER,
+            )
 
         connections.append(websocket)
 
@@ -144,7 +150,9 @@ class ConnectionManager:
                 except Exception:
                     pass
 
-        logger.info("WS disconnected: user=%s (remaining=%d)", user_id, len(connections))
+        logger.info(
+            "WS disconnected: user=%s (remaining=%d)", user_id, len(connections)
+        )
 
     async def send_to_user(self, user_id: uuid.UUID, event: dict[str, Any]) -> None:
         """Send an event to a specific user via Redis Pub/Sub.
@@ -198,7 +206,7 @@ class ConnectionManager:
                     # Channel format: "ws:user:{user_id}"
                     channel: str = message["channel"]
                     if channel.startswith("ws:user:"):
-                        user_id_str = channel[len("ws:user:"):]
+                        user_id_str = channel[len("ws:user:") :]
                         try:
                             user_id = uuid.UUID(user_id_str)
                             await self._deliver_local(user_id, message["data"])

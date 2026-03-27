@@ -41,7 +41,9 @@ class ErrorDetail(BaseModel):
     message: str = Field(..., description="Human-readable error message")
     category: ErrorCategory
     sub_category: str | None = Field(None, description="Optional sub-category")
-    details: dict[str, Any] | None = Field(None, description="Extra context for debugging")
+    details: dict[str, Any] | None = Field(
+        None, description="Extra context for debugging"
+    )
     correlation_id: UUID | None = Field(None, description="Request correlation ID")
     retryable: bool = Field(False)
     docs_ref: str | None = Field(None, description="Link to documentation")
@@ -113,7 +115,9 @@ class AuthorizationError(DomainException):
     error_code = "ERR-AUTHZ-001"
     category = ErrorCategory.AUTHZ
 
-    def __init__(self, message: str = "Insufficient permissions", **kwargs: Any) -> None:
+    def __init__(
+        self, message: str = "Insufficient permissions", **kwargs: Any
+    ) -> None:
         super().__init__(message, **kwargs)
 
 
