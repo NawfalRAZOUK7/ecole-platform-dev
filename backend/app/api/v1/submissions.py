@@ -19,7 +19,7 @@ from app.core.permissions import (
 from app.core.request_utils import get_client_ip
 from app.core.response import success_response
 from app.schemas.lms import GradeRequest, SubmissionCreateRequest
-from app.services.lms import LMSService
+from app.services.lms import AssignmentService
 
 router = APIRouter(prefix="/submissions", tags=["lms-submissions"])
 
@@ -36,7 +36,7 @@ async def create_submission(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_SUBMISSION_CREATE)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = AssignmentService(db)
     return success_response(
         await service.create_submission(
             body=body,
@@ -59,7 +59,7 @@ async def grade_submission(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_SUBMISSION_GRADE)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = AssignmentService(db)
     return success_response(
         await service.grade_submission(
             submission_id=submission_id,
@@ -84,7 +84,7 @@ async def upload_submission_file(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_SUBMISSION_FILE_UPLOAD)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = AssignmentService(db)
     return success_response(
         await service.upload_submission_file(
             submission_id=submission_id,
@@ -109,7 +109,7 @@ async def download_submission_file(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_SUBMISSION_FILE_READ)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = AssignmentService(db)
     path, media_type, filename = await service.get_submission_file(
         submission_id=submission_id,
         file_id=file_id,
@@ -129,7 +129,7 @@ async def finalize_submission(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_SUBMISSION_CREATE)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = AssignmentService(db)
     return success_response(
         await service.finalize_submission(
             submission_id=submission_id,
@@ -149,7 +149,7 @@ async def preview_submission_files(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_SUBMISSION_GRADE)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = AssignmentService(db)
     return success_response(
         await service.preview_submission_files(
             submission_id=submission_id,

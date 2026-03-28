@@ -17,7 +17,7 @@ from app.core.permissions import (
 from app.core.request_utils import get_client_ip
 from app.core.response import clamp_page_size, list_response, success_response
 from app.schemas.cms import ContentAssignRequest, ContentSubmitForReviewRequest
-from app.services.lms import LMSService
+from app.services.lms import ContentService
 
 router = APIRouter(tags=["content-library"])
 
@@ -34,7 +34,7 @@ async def browse_content_library(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_CONTENT_READ)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = ContentService(db)
     items, next_cursor, has_more = await service.browse_content_library(
         content_type=content_type,
         level_band=level_band,
@@ -55,7 +55,7 @@ async def assign_content_to_class(
     auth: AuthContext = Depends(requires_permission(PERM_CMS_CONTENT_ASSIGN)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = ContentService(db)
     return success_response(
         await service.assign_content_to_class(
             body=body,
@@ -72,7 +72,7 @@ async def unassign_content(
     auth: AuthContext = Depends(requires_permission(PERM_CMS_CONTENT_ASSIGN)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = ContentService(db)
     return success_response(
         await service.unassign_content(
             assignment_id=assignment_id,
@@ -93,7 +93,7 @@ async def submit_for_review(
     auth: AuthContext = Depends(requires_permission(PERM_CMS_CONTENT_SUBMIT)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = ContentService(db)
     return success_response(
         await service.submit_content_for_review(
             body=body,
@@ -111,7 +111,7 @@ async def list_my_submissions(
     auth: AuthContext = Depends(requires_permission(PERM_CMS_CONTENT_SUBMIT)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = ContentService(db)
     items, next_cursor, has_more = await service.list_my_content_submissions(
         status=status,
         cursor=cursor,
@@ -129,7 +129,7 @@ async def list_class_content(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_CONTENT_READ)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = ContentService(db)
     items, next_cursor, has_more = await service.list_class_content(
         class_id=class_id,
         cursor=cursor,

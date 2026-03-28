@@ -11,7 +11,7 @@ from app.core.database import get_db
 from app.core.dependencies import AuthContext, requires_permission
 from app.core.permissions import PERM_LMS_RESULT_READ
 from app.core.response import clamp_page_size, list_response
-from app.services.lms import LMSService
+from app.services.lms import ProgressService
 
 router = APIRouter(prefix="/results", tags=["lms-results"])
 
@@ -28,7 +28,7 @@ async def list_results(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_RESULT_READ)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = ProgressService(db)
     items, next_cursor, has_more = await service.list_results(
         student_id=student_id,
         cursor=cursor,

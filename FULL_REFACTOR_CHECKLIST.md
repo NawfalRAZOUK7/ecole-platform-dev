@@ -153,26 +153,26 @@
 ### Phase OOP-E: LMS Split
 
 #### OOP-E1: Split lms.py
-- [ ] Created services/lms/ directory
-- [ ] Created lms/course_service.py
-- [ ] Created lms/assignment_service.py
-- [ ] Created lms/quiz_service.py
-- [ ] Created lms/content_service.py
-- [ ] Created lms/progress_service.py
-- [ ] Created lms/_helpers.py (shared functions)
-- [ ] Created lms/__init__.py (re-exports)
-- [ ] Updated courses.py router
-- [ ] Updated assignments.py router
-- [ ] Updated submissions.py router
-- [ ] Updated quizzes.py router
-- [ ] Updated content.py router
-- [ ] Updated content_library.py router
-- [ ] Updated results.py router
-- [ ] Updated progress.py router
-- [ ] Updated assessments.py router
-- [ ] Updated activities.py router
-- [ ] Deleted original services/lms.py
-- [ ] Each sub-service under 500 lines
+- [x] Created services/lms/ directory
+- [x] Created lms/course_service.py
+- [x] Created lms/assignment_service.py
+- [x] Created lms/quiz_service.py
+- [x] Created lms/content_service.py
+- [x] Created lms/progress_service.py
+- [x] Created lms/_helpers.py (shared functions)
+- [x] Created lms/__init__.py (re-exports)
+- [x] Updated courses.py router
+- [x] Updated assignments.py router
+- [x] Updated submissions.py router
+- [x] Updated quizzes.py router
+- [x] Updated content.py router
+- [x] Updated content_library.py router
+- [x] Updated results.py router
+- [x] Updated progress.py router
+- [x] Updated assessments.py router
+- [x] Updated activities.py router
+- [x] Deleted original services/lms.py
+- [x] Each sub-service under 500 lines
 - [ ] **Review & commit myself**
 
 ---

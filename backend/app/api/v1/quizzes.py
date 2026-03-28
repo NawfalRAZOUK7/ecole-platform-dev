@@ -20,7 +20,7 @@ from app.core.permissions import (
 from app.core.request_utils import get_client_ip
 from app.core.response import clamp_page_size, list_response, success_response
 from app.schemas.quiz import QuizCreateRequest, QuizRespondRequest, QuizUpdateRequest
-from app.services.lms import LMSService
+from app.services.lms import QuizService
 
 router = APIRouter(tags=["quiz-engine"])
 
@@ -32,7 +32,7 @@ async def create_quiz(
     auth: AuthContext = Depends(requires_permission(PERM_QUIZ_CREATE)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = QuizService(db)
     return success_response(
         await service.create_quiz(
             body=body,
@@ -53,7 +53,7 @@ async def list_quizzes(
     auth: AuthContext = Depends(requires_permission(PERM_QUIZ_READ)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = QuizService(db)
     items, next_cursor, has_more = await service.list_quizzes(
         subject=subject,
         level_band=level_band,
@@ -72,7 +72,7 @@ async def get_quiz(
     auth: AuthContext = Depends(requires_permission(PERM_QUIZ_READ)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = QuizService(db)
     return success_response(await service.get_quiz(quiz_id=quiz_id, auth=auth))
 
 
@@ -84,7 +84,7 @@ async def update_quiz(
     auth: AuthContext = Depends(requires_permission(PERM_QUIZ_MANAGE)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = QuizService(db)
     return success_response(
         await service.update_quiz(
             quiz_id=quiz_id,
@@ -102,7 +102,7 @@ async def publish_quiz(
     auth: AuthContext = Depends(requires_permission(PERM_QUIZ_PUBLISH)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = QuizService(db)
     return success_response(
         await service.publish_quiz(
             quiz_id=quiz_id,
@@ -119,7 +119,7 @@ async def start_attempt(
     auth: AuthContext = Depends(requires_permission(PERM_QUIZ_ATTEMPT)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = QuizService(db)
     return success_response(
         await service.start_quiz_attempt(
             quiz_id=quiz_id,
@@ -137,7 +137,7 @@ async def respond_to_question(
     auth: AuthContext = Depends(requires_permission(PERM_QUIZ_ATTEMPT)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = QuizService(db)
     return success_response(
         await service.respond_to_quiz_question(
             attempt_id=attempt_id,
@@ -154,7 +154,7 @@ async def submit_attempt(
     auth: AuthContext = Depends(requires_permission(PERM_QUIZ_ATTEMPT)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = QuizService(db)
     return success_response(
         await service.submit_quiz_attempt(
             attempt_id=attempt_id,
@@ -170,7 +170,7 @@ async def get_attempt_results(
     auth: AuthContext = Depends(requires_permission(PERM_QUIZ_READ)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = QuizService(db)
     return success_response(
         await service.get_quiz_attempt_results(
             attempt_id=attempt_id,
@@ -185,7 +185,7 @@ async def quiz_analytics(
     auth: AuthContext = Depends(requires_permission(PERM_QUIZ_ANALYTICS)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = QuizService(db)
     return success_response(
         await service.get_quiz_analytics(
             quiz_id=quiz_id,

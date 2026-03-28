@@ -1,0 +1,527 @@
+"""Shared helpers for split LMS services."""
+
+from __future__ import annotations
+
+import logging
+import uuid
+from datetime import datetime, timezone
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.dependencies import AuthContext, verify_school_boundary
+from app.core.exceptions import NotFoundError, ValidationError
+from app.core.storage import storage
+from app.domain.events.lms import (
+    AssignmentCreated,
+    GradePublished,
+    QuizCompleted,
+    SubmissionReceived,
+)
+from app.models.lms import (
+    Activity,
+    ActivitySession,
+    Assessment,
+    Assignment,
+    ContentItem,
+    Course,
+    Grade,
+    Quiz,
+    QuizAttempt,
+    QuizQuestion,
+    Submission,
+)
+from app.repositories.lms import LMSRepository
+from app.repositories.quiz import QuizRepository
+from app.services.event_dispatcher import EventDispatcher
+from app.services.realtime import publish_grade_published
+
+MAX_FILES_PER_SUBMISSION = 5
+logger = logging.getLogger(__name__)
+
+
+def _utc_now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+class LMSServiceBase:
+    """Shared LMS service dependencies and serializers."""
+
+    def __init__(self, db: AsyncSession) -> None:
+        self.db = db
+        self.repo = LMSRepository(db)
+        self.quiz_repo = QuizRepository(db)
+        self._dispatcher = EventDispatcher(db)
+
+    def _course_to_dict(self, course: Course) -> dict:
+        return {
+            "id": str(course.id),
+            "school_id": str(course.school_id),
+            "class_id": str(course.class_id),
+            "teacher_id": str(course.teacher_id),
+            "title": course.title,
+            "description": course.description,
+            "status": course.status,
+        }
+
+    def _assignment_to_dict(self, assignment: Assignment) -> dict:
+        return {
+            "id": str(assignment.id),
+            "course_id": str(assignment.course_id),
+            "teacher_id": str(assignment.teacher_id),
+            "title": assignment.title,
+            "description": assignment.description,
+            "due_at": assignment.due_at.isoformat() if assignment.due_at else None,
+            "total_points": assignment.total_points,
+            "exercise_type": assignment.exercise_type,
+            "quiz_id": str(assignment.quiz_id) if assignment.quiz_id else None,
+            "exercise_pdf_path": assignment.exercise_pdf_path,
+        }
+
+    def _submission_to_dict(self, submission: Submission) -> dict:
+        return {
+            "id": str(submission.id),
+            "assignment_id": str(submission.assignment_id),
+            "student_id": str(submission.student_id),
+            "status": submission.status,
+            "submitted_at": (
+                submission.submitted_at.isoformat() if submission.submitted_at else None
+            ),
+        }
+
+    def _grade_to_dict(self, grade: Grade) -> dict:
+        return {
+            "id": str(grade.id),
+            "submission_id": str(grade.submission_id),
+            "teacher_id": str(grade.teacher_id),
+            "score": float(grade.score),
+            "feedback_text": grade.feedback_text,
+            "published_at": grade.published_at.isoformat() if grade.published_at else None,
+        }
+
+    def _content_item_to_dict(self, content_item: ContentItem) -> dict:
+        return {
+            "id": str(content_item.id),
+            "school_id": str(content_item.school_id) if content_item.school_id else None,
+            "title": content_item.title,
+            "content_type": content_item.content_type,
+            "level_band": content_item.level_band,
+            "language": content_item.language,
+            "status": content_item.status,
+        }
+
+    def _assessment_to_dict(self, assessment: Assessment) -> dict:
+        return {
+            "id": str(assessment.id),
+            "class_id": str(assessment.class_id),
+            "teacher_id": str(assessment.teacher_id),
+            "title": assessment.title,
+            "due_at": assessment.due_at.isoformat() if assessment.due_at else None,
+            "window_end": (
+                assessment.window_end.isoformat() if assessment.window_end else None
+            ),
+            "total_points": assessment.total_points,
+            "status": assessment.status,
+        }
+
+    def _activity_to_dict(self, activity: Activity) -> dict:
+        return {
+            "id": str(activity.id),
+            "school_id": str(activity.school_id) if activity.school_id else None,
+            "type": activity.type,
+            "difficulty": activity.difficulty,
+            "title": activity.title,
+            "pedagogical_objective": activity.pedagogical_objective,
+        }
+
+    def _activity_session_to_dict(self, session: ActivitySession) -> dict:
+        return {
+            "id": str(session.id),
+            "student_id": str(session.student_id),
+            "activity_id": str(session.activity_id),
+            "status": session.status,
+            "score": float(session.score) if session.score is not None else None,
+            "attempt_no": session.attempt_no,
+        }
+
+    def _quiz_to_dict(
+        self,
+        quiz: Quiz,
+        questions: list[QuizQuestion] | None = None,
+    ) -> dict:
+        questions = questions or []
+        return {
+            "id": str(quiz.id),
+            "school_id": str(quiz.school_id) if quiz.school_id else None,
+            "created_by": str(quiz.created_by),
+            "title": quiz.title,
+            "description": quiz.description,
+            "subject": quiz.subject,
+            "level_band": quiz.level_band,
+            "difficulty": quiz.difficulty,
+            "time_limit_minutes": quiz.time_limit_minutes,
+            "max_attempts": quiz.max_attempts,
+            "shuffle_questions": quiz.shuffle_questions,
+            "status": quiz.status,
+            "total_points": sum(question.points for question in questions),
+            "question_count": len(questions),
+        }
+
+    def _quiz_question_to_dict(
+        self,
+        question: QuizQuestion,
+        *,
+        include_answer: bool = False,
+    ) -> dict:
+        payload = {
+            "id": str(question.id),
+            "question_type": question.question_type,
+            "question_text": question.question_text,
+            "question_media_path": question.question_media_path,
+            "options": question.options,
+            "points": question.points,
+            "order": question.order,
+            "explanation": question.explanation if include_answer else None,
+        }
+        if include_answer:
+            payload["correct_answer"] = question.correct_answer
+        return payload
+
+    def _attempt_to_dict(self, attempt: QuizAttempt) -> dict:
+        return {
+            "id": str(attempt.id),
+            "quiz_id": str(attempt.quiz_id),
+            "student_id": str(attempt.student_id),
+            "attempt_no": attempt.attempt_no,
+            "started_at": attempt.started_at.isoformat() if attempt.started_at else None,
+            "completed_at": (
+                attempt.completed_at.isoformat() if attempt.completed_at else None
+            ),
+            "score": float(attempt.score) if attempt.score is not None else None,
+            "max_score": attempt.max_score,
+            "status": attempt.status,
+        }
+
+    async def get_exercise_pdf(
+        self,
+        *,
+        assignment_id: uuid.UUID,
+        auth: AuthContext,
+    ) -> tuple[str, str, str]:
+        bundle = await self.repo.get_assignment_with_course(assignment_id)
+        if bundle is None:
+            raise NotFoundError("Assignment not found", error_code="ERR-LMS-404")
+        assignment, course = bundle
+
+        if not assignment.exercise_pdf_path:
+            raise NotFoundError("No exercise PDF attached", error_code="ERR-LMS-404")
+        verify_school_boundary(course.school_id, auth)
+
+        if auth.role == "TCH" and course.teacher_id != auth.user_id:
+            raise NotFoundError("Assignment not found", error_code="ERR-LMS-404")
+        if auth.role == "STD":
+            enrolled = await self.repo.student_is_enrolled_in_class(
+                student_id=auth.user_id,
+                class_id=course.class_id,
+            )
+            if not enrolled:
+                raise NotFoundError("Assignment not found", error_code="ERR-LMS-404")
+
+        abs_path = await storage.read(assignment.exercise_pdf_path)
+        return str(abs_path), "application/pdf", f"exercise_{assignment_id}.pdf"
+
+    async def get_submission_file(
+        self,
+        *,
+        submission_id: uuid.UUID,
+        file_id: uuid.UUID,
+        auth: AuthContext,
+    ) -> tuple[str, str, str]:
+        submission_file = await self.repo.get_submission_file(
+            submission_id=submission_id,
+            file_id=file_id,
+        )
+        if submission_file is None:
+            raise NotFoundError("File not found", error_code="ERR-UPLOAD-404")
+
+        bundle = await self.repo.get_submission_with_context(submission_id)
+        if bundle is None:
+            raise NotFoundError("Submission not found", error_code="ERR-LMS-404")
+        submission, _assignment, course = bundle
+        verify_school_boundary(course.school_id, auth)
+
+        if auth.role == "STD" and submission.student_id != auth.user_id:
+            raise NotFoundError("File not found", error_code="ERR-UPLOAD-404")
+        if auth.role == "TCH" and course.teacher_id != auth.user_id:
+            raise NotFoundError("File not found", error_code="ERR-UPLOAD-404")
+
+        abs_path = await storage.read(submission_file.file_path)
+        return (
+            str(abs_path),
+            submission_file.mime_type or "application/octet-stream",
+            abs_path.name,
+        )
+
+    async def preview_submission_files(
+        self,
+        *,
+        submission_id: uuid.UUID,
+        auth: AuthContext,
+    ) -> dict:
+        bundle = await self.repo.get_submission_with_context(submission_id)
+        if bundle is None:
+            raise NotFoundError("Submission not found", error_code="ERR-LMS-404")
+        submission, assignment, course = bundle
+        verify_school_boundary(course.school_id, auth)
+
+        if auth.role == "TCH" and course.teacher_id != auth.user_id:
+            raise NotFoundError("Submission not found", error_code="ERR-LMS-404")
+
+        files = await self.repo.list_submission_files(submission_id)
+        return {
+            "submission_id": str(submission_id),
+            "assignment_id": str(submission.assignment_id),
+            "student_id": str(submission.student_id),
+            "status": submission.status,
+            "exercise_type": assignment.exercise_type,
+            "files": [
+                {
+                    "id": str(file.id),
+                    "file_path": file.file_path,
+                    "mime_type": file.mime_type,
+                    "file_size": file.file_size,
+                    "file_type_hint": file.file_type_hint,
+                    "checksum": file.checksum,
+                    "is_previewable": (
+                        (file.mime_type or "").startswith("image/")
+                        or file.mime_type == "application/pdf"
+                    ),
+                    "download_url": f"/api/v1/submissions/{submission_id}/files/{file.id}",
+                }
+                for file in files
+            ],
+        }
+
+    async def get_content_item(
+        self,
+        *,
+        content_item_id: uuid.UUID,
+        auth: AuthContext,
+    ) -> dict:
+        content_item = await self.repo.get_content_item(content_item_id)
+        if content_item is None:
+            raise NotFoundError("Content item not found", error_code="ERR-LMS-404")
+        if content_item.school_id is not None:
+            verify_school_boundary(content_item.school_id, auth)
+        if content_item.status != "published":
+            raise NotFoundError("Content item not found", error_code="ERR-LMS-404")
+        return self._content_item_to_dict(content_item)
+
+    async def get_content_asset(
+        self,
+        *,
+        content_item_id: uuid.UUID,
+        asset_id: uuid.UUID,
+        auth: AuthContext,
+    ) -> tuple[str, str, str]:
+        asset = await self.repo.get_content_asset(
+            content_item_id=content_item_id,
+            asset_id=asset_id,
+        )
+        if asset is None:
+            raise NotFoundError("Asset not found", error_code="ERR-UPLOAD-404")
+
+        content_item = await self.repo.get_content_item(content_item_id)
+        if content_item is None:
+            raise NotFoundError("Content item not found", error_code="ERR-LMS-404")
+        if content_item.school_id is not None:
+            verify_school_boundary(content_item.school_id, auth)
+
+        abs_path = await storage.read(asset.file_path)
+        return str(abs_path), asset.mime_type or "application/octet-stream", abs_path.name
+
+    async def get_quiz_attempt_results(
+        self,
+        *,
+        attempt_id: uuid.UUID,
+        auth: AuthContext,
+    ) -> dict:
+        attempt = await self.quiz_repo.get_quiz_attempt(attempt_id)
+        if attempt is None:
+            raise NotFoundError("Attempt not found", error_code="ERR-QUIZ-404")
+        if auth.role == "STD" and attempt.student_id != auth.user_id:
+            raise NotFoundError("Attempt not found", error_code="ERR-QUIZ-404")
+        if attempt.status == "STARTED":
+            raise ValidationError("Attempt not yet submitted", error_code="ERR-QUIZ-400")
+
+        rows = await self.quiz_repo.list_attempt_responses_with_questions(attempt_id)
+        return {
+            "attempt": self._attempt_to_dict(attempt),
+            "responses": [
+                {
+                    "question_id": str(response.question_id),
+                    "question_type": question.question_type,
+                    "question_text": question.question_text,
+                    "student_answer": response.student_answer,
+                    "correct_answer": question.correct_answer,
+                    "is_correct": response.is_correct,
+                    "points_earned": (
+                        float(response.points_earned)
+                        if response.points_earned is not None
+                        else None
+                    ),
+                    "points": question.points,
+                    "explanation": question.explanation,
+                }
+                for response, question in rows
+            ],
+        }
+
+    async def _dispatch_assignment_created(
+        self,
+        *,
+        assignment: Assignment,
+        course: Course,
+        actor_id: uuid.UUID,
+    ) -> None:
+        try:
+            await self._dispatcher.dispatch(
+                AssignmentCreated(
+                    school_id=course.school_id,
+                    actor_id=actor_id,
+                    assignment_id=assignment.id,
+                    course_title=course.title,
+                    due_at=assignment.due_at.isoformat() if assignment.due_at else "",
+                    class_id=course.class_id,
+                )
+            )
+        except Exception:
+            logger.exception("Failed to dispatch AssignmentCreated for %s", assignment.id)
+
+    async def _dispatch_submission_received(
+        self,
+        *,
+        submission: Submission,
+        assignment: Assignment,
+        course: Course,
+        actor_id: uuid.UUID,
+    ) -> None:
+        try:
+            student = await self.repo.get_user(actor_id)
+            await self._dispatcher.dispatch(
+                SubmissionReceived(
+                    school_id=course.school_id,
+                    actor_id=actor_id,
+                    submission_id=submission.id,
+                    student_name=student.full_name if student is not None else str(actor_id),
+                    assignment_title=assignment.title,
+                    teacher_id=course.teacher_id,
+                )
+            )
+        except Exception:
+            logger.exception("Failed to dispatch SubmissionReceived for %s", submission.id)
+
+    async def _send_grade_published_fallback_email(
+        self,
+        *,
+        grade: Grade,
+        submission: Submission,
+        assignment: Assignment,
+        score: float,
+        feedback_text: str | None,
+    ) -> None:
+        try:
+            from app.core.tasks import enqueue_email
+
+            student = await self.repo.get_user(submission.student_id)
+            if student is None or not student.email:
+                return
+
+            student_name = getattr(student, "first_name", None) or getattr(
+                student,
+                "full_name",
+                None,
+            )
+            await enqueue_email(
+                to=student.email,
+                template_name="grade_published",
+                lang="fr",
+                student_name=student_name or student.email,
+                assignment_title=assignment.title,
+                score=score,
+                total_points=float(assignment.total_points),
+                feedback=feedback_text,
+            )
+        except Exception:
+            logger.warning(
+                "Failed to execute GradePublished fallback email for %s",
+                grade.id,
+                exc_info=True,
+            )
+
+    async def _dispatch_grade_published(
+        self,
+        *,
+        grade: Grade,
+        submission: Submission,
+        assignment: Assignment,
+        course: Course,
+        actor_id: uuid.UUID,
+        score: float,
+        feedback_text: str | None,
+    ) -> None:
+        await publish_grade_published(
+            student_id=submission.student_id,
+            grade_id=grade.id,
+            submission_id=submission.id,
+            score=score,
+            assignment_title=assignment.title,
+        )
+
+        try:
+            teacher = await self.repo.get_user(actor_id)
+            await self._dispatcher.dispatch(
+                GradePublished(
+                    school_id=course.school_id,
+                    actor_id=actor_id,
+                    student_id=submission.student_id,
+                    course_title=course.title,
+                    score=score,
+                    teacher_name=teacher.full_name if teacher is not None else str(actor_id),
+                )
+            )
+        except Exception:
+            logger.exception("Failed to dispatch GradePublished for %s", grade.id)
+            await self._send_grade_published_fallback_email(
+                grade=grade,
+                submission=submission,
+                assignment=assignment,
+                score=score,
+                feedback_text=feedback_text,
+            )
+
+    async def _dispatch_quiz_completed(
+        self,
+        *,
+        attempt: QuizAttempt,
+        actor_id: uuid.UUID,
+        school_id: uuid.UUID,
+        total_score: float,
+        max_score: float | int,
+    ) -> None:
+        try:
+            quiz = await self.quiz_repo.get_quiz(attempt.quiz_id)
+            await self._dispatcher.dispatch(
+                QuizCompleted(
+                    school_id=school_id,
+                    actor_id=actor_id,
+                    student_id=attempt.student_id,
+                    quiz_title=quiz.title if quiz is not None else str(attempt.quiz_id),
+                    score_percent=(
+                        round((float(total_score) / float(max_score)) * 100, 2)
+                        if max_score
+                        else 0.0
+                    ),
+                )
+            )
+        except Exception:
+            logger.exception("Failed to dispatch QuizCompleted for %s", attempt.id)

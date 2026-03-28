@@ -11,7 +11,7 @@ from app.core.database import get_db
 from app.core.dependencies import AuthContext, requires_permission
 from app.core.permissions import PERM_PROGRESS_CLASS_READ, PERM_PROGRESS_READ
 from app.core.response import success_response
-from app.services.progress import ProgressService
+from app.services.lms import ProgressService
 
 router = APIRouter(prefix="/progress", tags=["progress"])
 

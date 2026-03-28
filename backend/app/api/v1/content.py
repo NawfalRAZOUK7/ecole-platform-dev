@@ -28,7 +28,7 @@ from app.core.response import clamp_page_size, list_response, success_response
 from app.core.search import parse_search
 from app.schemas.lms import ContentProgressRequest
 from app.schemas.student_work import StudentWorkListResponse
-from app.services.lms import LMSService
+from app.services.lms import ContentService
 from app.services.student_work import StudentWorkService
 
 router = APIRouter(prefix="/content-items", tags=["lms-content"])
@@ -53,7 +53,7 @@ async def list_content_items(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_CONTENT_READ)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = ContentService(db)
     items, next_cursor, has_more = await service.list_content_items(
         content_type=content_type,
         level_band=level_band,
@@ -88,7 +88,7 @@ async def legacy_list_content_items(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_CONTENT_READ)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = ContentService(db)
     items, next_cursor, has_more = await service.list_content_items(
         content_type=content_type,
         level_band=level_band,
@@ -120,7 +120,7 @@ async def get_content_item(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_CONTENT_READ)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = ContentService(db)
     return success_response(
         await service.get_content_item(content_item_id=content_item_id, auth=auth)
     )
@@ -139,7 +139,7 @@ async def update_content_progress(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_CONTENT_PROGRESS_WRITE)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = ContentService(db)
     return success_response(
         await service.update_content_progress(
             content_item_id=content_item_id,
@@ -163,7 +163,7 @@ async def upload_content_asset(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_CONTENT_ASSET_UPLOAD)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = ContentService(db)
     return success_response(
         await service.upload_content_asset(
             content_item_id=content_item_id,
@@ -187,7 +187,7 @@ async def download_content_asset(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_CONTENT_ASSET_READ)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = ContentService(db)
     path, media_type, filename = await service.get_content_asset(
         content_item_id=content_item_id,
         asset_id=asset_id,
@@ -209,7 +209,7 @@ async def delete_content_asset(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_CONTENT_ASSET_DELETE)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = ContentService(db)
     return success_response(
         await service.delete_content_asset(
             content_item_id=content_item_id,

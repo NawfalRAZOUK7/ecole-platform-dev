@@ -20,7 +20,7 @@ from app.core.request_utils import get_client_ip
 from app.core.response import clamp_page_size, list_response, success_response
 from app.core.search import parse_search
 from app.schemas.lms import AssessmentCreateRequest, AssessmentResultSubmitRequest
-from app.services.lms import LMSService
+from app.services.lms import ProgressService
 
 router = APIRouter(prefix="/assessments", tags=["lms-assessments"])
 
@@ -37,7 +37,7 @@ async def create_assessment(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_ASSESSMENT_CREATE)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = ProgressService(db)
     return success_response(
         await service.create_assessment(
             body=body,
@@ -63,7 +63,7 @@ async def list_assessments(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_ASSESSMENT_READ)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = ProgressService(db)
     items, next_cursor, has_more = await service.list_assessments(
         class_id=class_id,
         status=status,
@@ -96,7 +96,7 @@ async def publish_assessment(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_ASSESSMENT_PUBLISH)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = ProgressService(db)
     return success_response(
         await service.publish_assessment(
             assessment_id=assessment_id,
@@ -119,7 +119,7 @@ async def submit_assessment_result(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_ASSESSMENT_SUBMIT)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = ProgressService(db)
     return success_response(
         await service.submit_assessment_result(
             assessment_id=assessment_id,

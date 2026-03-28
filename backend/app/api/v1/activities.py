@@ -32,7 +32,7 @@ from app.core.permissions import (
 )
 from app.core.request_utils import get_client_ip
 from app.schemas.lms import ActivitySessionCompleteRequest, ActivitySessionCreateRequest
-from app.services.lms import LMSService
+from app.services.lms import CourseService
 
 router = APIRouter(prefix="/activities", tags=["lms-activities"])
 
@@ -62,7 +62,7 @@ async def list_activities(
     Sort: ?sort=-created_at
     Search: ?search=multiplication
     """
-    service = LMSService(db)
+    service = CourseService(db)
     items, next_cursor, has_more = await service.list_activities(
         activity_type=activity_type,
         difficulty=difficulty,
@@ -104,7 +104,7 @@ async def create_activity_session(
     1. Activity exists (school or platform-wide)
     2. Creates session with incremented attempt_no
     """
-    service = LMSService(db)
+    service = CourseService(db)
     return success_response(
         await service.create_activity_session(
             body=body,
@@ -137,7 +137,7 @@ async def complete_activity_session(
     2. Session is in 'started' status
     3. Updates status to 'completed' and sets score
     """
-    service = LMSService(db)
+    service = CourseService(db)
     return success_response(
         await service.complete_activity_session(
             session_id=session_id,

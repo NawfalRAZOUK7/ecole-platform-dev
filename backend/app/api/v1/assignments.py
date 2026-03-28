@@ -16,7 +16,7 @@ from app.core.request_utils import get_client_ip
 from app.core.response import clamp_page_size, list_response, success_response
 from app.core.search import parse_search
 from app.schemas.lms import AssignmentCreateRequest
-from app.services.lms import LMSService
+from app.services.lms import AssignmentService
 
 router = APIRouter(prefix="/assignments", tags=["lms-assignments"])
 
@@ -33,7 +33,7 @@ async def create_assignment(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_ASSIGNMENT_CREATE)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = AssignmentService(db)
     return success_response(
         await service.create_assignment(
             body=body,
@@ -58,7 +58,7 @@ async def list_assignments(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_ASSIGNMENT_CREATE)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = AssignmentService(db)
     items, next_cursor, has_more = await service.list_assignments(
         course_id=course_id,
         filters=filters,
@@ -90,7 +90,7 @@ async def upload_exercise_pdf(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_ASSIGNMENT_CREATE)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = AssignmentService(db)
     return success_response(
         await service.upload_exercise_pdf(
             assignment_id=assignment_id,
@@ -113,7 +113,7 @@ async def download_exercise_pdf(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_ASSIGNMENT_CREATE)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = AssignmentService(db)
     path, media_type, filename = await service.get_exercise_pdf(
         assignment_id=assignment_id,
         auth=auth,

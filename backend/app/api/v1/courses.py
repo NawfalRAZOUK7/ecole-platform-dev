@@ -15,7 +15,7 @@ from app.core.request_utils import get_client_ip
 from app.core.response import clamp_page_size, list_response, success_response
 from app.core.search import parse_search
 from app.schemas.lms import CourseCreateRequest
-from app.services.lms import LMSService
+from app.services.lms import CourseService
 
 router = APIRouter(prefix="/courses", tags=["lms-courses"])
 
@@ -32,7 +32,7 @@ async def create_course(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_COURSE_PUBLISH)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = CourseService(db)
     return success_response(
         await service.create_course(
             body=body,
@@ -57,7 +57,7 @@ async def list_courses(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_COURSE_PUBLISH)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = LMSService(db)
+    service = CourseService(db)
     items, next_cursor, has_more = await service.list_courses(
         class_id=class_id,
         filters=filters,
