@@ -39,6 +39,7 @@ from app.core.security import (
     verify_password,
 )
 from app.core.password_policy import password_validator
+from app.domain.events.auth import UserRegistered
 from app.repositories.auth import AuthRepository
 from app.schemas.profile import (
     ParentProfileUpdate,
@@ -46,6 +47,7 @@ from app.schemas.profile import (
     TeacherProfileUpdate,
 )
 from app.services.audit import AuditService
+from app.services.event_dispatcher import EventDispatcher
 from app.services.profile_loader import ProfileLoader
 
 logger = logging.getLogger(__name__)
@@ -86,6 +88,7 @@ class AuthService:
         self.redis = redis
         self.repo = AuthRepository(db)
         self.audit = AuditService(db)
+        self._dispatcher = EventDispatcher(self.db)
 
     # ------------------------------------------------------------------
     # Login (S-030, Phase 2A: device info)
@@ -400,6 +403,18 @@ class AuthService:
                 ip_address=ip_address,
             )
             await uow.commit()
+
+        try:
+            await self._dispatcher.dispatch(
+                UserRegistered(
+                    school_id=school_id,
+                    actor_id=user.id,
+                    user_id=user.id,
+                    role=role,
+                )
+            )
+        except Exception:
+            logger.exception("Failed to dispatch UserRegistered for %s", user.id)
 
         access_token = create_access_token(user.id, role, school_id, session.id)
         refresh_token, refresh_jti = create_refresh_token(

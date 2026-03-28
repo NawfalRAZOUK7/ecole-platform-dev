@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime, timezone
 
@@ -12,6 +13,7 @@ from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.core.filtering import FilterSpec, SortSpec
 from app.core.response import clamp_page_size
 from app.core.unit_of_work import UnitOfWork
+from app.domain.events.billing import InvoiceGenerated, PaymentFailed, PaymentReceived
 from app.models.billing import FeeAssignment, FeeStructure, Invoice, PaymentAttempt, ProviderWebhookEvent
 from app.models.iam import User
 from app.repositories.billing import BillingRepository
@@ -31,7 +33,10 @@ from app.schemas.billing import (
     WebhookEventResponse,
 )
 from app.services.audit import AuditService
+from app.services.event_dispatcher import EventDispatcher
 from app.services.realtime import publish_payment_updated
+
+logger = logging.getLogger(__name__)
 
 
 class BillingService:
@@ -41,6 +46,7 @@ class BillingService:
         self.db = db
         self.repo = BillingRepository(db)
         self.audit = AuditService(db)
+        self._dispatcher = EventDispatcher(self.db)
 
     def _fee_structure_to_response(self, fee_structure: FeeStructure) -> dict:
         return FeeStructureResponse(
@@ -435,6 +441,7 @@ class BillingService:
         generated = 0
         skipped = 0
         total_generated_amount = 0.0
+        generated_events: list[InvoiceGenerated] = []
 
         async with UnitOfWork(self.db) as uow:
             repo = BillingRepository(uow.session)
@@ -480,6 +487,16 @@ class BillingService:
                     unit_price=base_amount,
                     quantity=1,
                 )
+                generated_events.append(
+                    InvoiceGenerated(
+                        school_id=auth.school_id,
+                        actor_id=auth.user_id,
+                        invoice_id=invoice.id,
+                        student_id=assignment.student_id,
+                        amount=final_amount,
+                        due_date=body.due_date.isoformat(),
+                    )
+                )
 
                 generated += 1
                 total_generated_amount += final_amount
@@ -500,6 +517,15 @@ class BillingService:
                 ip_address=ip_address,
             )
             await uow.commit()
+
+        for event in generated_events:
+            try:
+                await self._dispatcher.dispatch(event)
+            except Exception:
+                logger.exception(
+                    "Failed to dispatch InvoiceGenerated for %s",
+                    event.invoice_id,
+                )
 
         return {
             "generated": generated,
@@ -584,6 +610,7 @@ class BillingService:
         ip_address: str | None,
     ) -> dict:
         now = datetime.now(timezone.utc)
+        payment_event: PaymentReceived | PaymentFailed | None = None
 
         existing = await self.repo.get_webhook_event_by_provider_event_id(
             body.provider_event_id
@@ -617,10 +644,25 @@ class BillingService:
                     if invoice is not None:
                         invoice.status = "paid"
                         await repo.save_invoice(invoice)
+                        payment_event = PaymentReceived(
+                            school_id=auth.school_id,
+                            actor_id=auth.user_id,
+                            payment_id=payment_attempt.id,
+                            invoice_id=payment_attempt.invoice_id,
+                            amount=float(invoice.total_amount),
+                            method=body.event_type,
+                        )
                 elif body.status == "failed":
                     payment_attempt.status = "failed"
                     payment_attempt.finalized_at = now
                     await repo.save_payment(payment_attempt)
+                    payment_event = PaymentFailed(
+                        school_id=auth.school_id,
+                        actor_id=auth.user_id,
+                        payment_id=payment_attempt.id,
+                        invoice_id=payment_attempt.invoice_id,
+                        reason=body.event_type,
+                    )
 
                     try:
                         from app.services.payment_retry import schedule_retry_for_failed_payment
@@ -659,6 +701,14 @@ class BillingService:
                 status=body.status,
                 invoice_id=payment_attempt.invoice_id,
             )
+        if payment_event is not None:
+            try:
+                await self._dispatcher.dispatch(payment_event)
+            except Exception:
+                logger.exception(
+                    "Failed to dispatch payment event for %s",
+                    payment_attempt.id if payment_attempt is not None else body.payment_attempt_id,
+                )
         return self._webhook_to_response(webhook_event)
 
     async def list_invoices(

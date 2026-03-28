@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime, timezone
 from typing import BinaryIO
@@ -19,6 +20,12 @@ from app.core.filtering import FilterSpec, SortSpec
 from app.core.response import encode_cursor
 from app.core.storage import storage, validate_mime_type
 from app.core.unit_of_work import UnitOfWork
+from app.domain.events.lms import (
+    AssignmentCreated,
+    GradePublished,
+    QuizCompleted,
+    SubmissionReceived,
+)
 from app.models.lms import (
     Activity,
     ActivitySession,
@@ -48,10 +55,12 @@ from app.schemas.lms import (
 )
 from app.schemas.quiz import QuizCreateRequest, QuizRespondRequest, QuizUpdateRequest
 from app.services.audit import AuditService
+from app.services.event_dispatcher import EventDispatcher
 from app.services.quiz_grading import grade_attempt
 from app.services.realtime import publish_grade_published
 
 MAX_FILES_PER_SUBMISSION = 5
+logger = logging.getLogger(__name__)
 
 
 def _utc_now() -> datetime:
@@ -66,6 +75,7 @@ class LMSService:
         self.repo = LMSRepository(db)
         self.quiz_repo = QuizRepository(db)
         self.audit = AuditService(db)
+        self._dispatcher = EventDispatcher(self.db)
 
     def _course_to_dict(self, course: Course) -> dict:
         return {
@@ -458,6 +468,20 @@ class LMSService:
             )
             await uow.commit()
 
+        try:
+            await self._dispatcher.dispatch(
+                AssignmentCreated(
+                    school_id=course.school_id,
+                    actor_id=auth.user_id,
+                    assignment_id=assignment.id,
+                    course_title=course.title,
+                    due_at=body.due_at.isoformat() if body.due_at else "",
+                    class_id=course.class_id,
+                )
+            )
+        except Exception:
+            logger.exception("Failed to dispatch AssignmentCreated for %s", assignment.id)
+
         return self._assignment_to_dict(assignment)
 
     async def list_assignments(
@@ -641,6 +665,29 @@ class LMSService:
             )
             await uow.commit()
 
+        if initial_status == "submitted":
+            try:
+                student = await self.repo.get_user(auth.user_id)
+                await self._dispatcher.dispatch(
+                    SubmissionReceived(
+                        school_id=course.school_id,
+                        actor_id=auth.user_id,
+                        submission_id=submission.id,
+                        student_name=(
+                            student.full_name
+                            if student is not None
+                            else str(auth.user_id)
+                        ),
+                        assignment_title=assignment.title,
+                        teacher_id=course.teacher_id,
+                    )
+                )
+            except Exception:
+                logger.exception(
+                    "Failed to dispatch SubmissionReceived for %s",
+                    submission.id,
+                )
+
         return self._submission_to_dict(submission)
 
     async def grade_submission(
@@ -724,27 +771,51 @@ class LMSService:
                 assignment_title=assignment.title,
             )
             try:
-                from app.core.tasks import enqueue_email
-
-                student = await self.repo.get_user(submission.student_id)
-                student_name = None
-                if student is not None:
-                    student_name = getattr(student, "first_name", None) or getattr(
-                        student, "full_name", None
-                    )
-                if student and student.email:
-                    await enqueue_email(
-                        to=student.email,
-                        template_name="grade_published",
-                        lang="fr",
-                        student_name=student_name or student.email,
-                        assignment_title=assignment.title,
+                teacher = await self.repo.get_user(auth.user_id)
+                await self._dispatcher.dispatch(
+                    GradePublished(
+                        school_id=course.school_id,
+                        actor_id=auth.user_id,
+                        student_id=submission.student_id,
+                        course_title=course.title,
                         score=float(body.score),
-                        total_points=float(assignment.total_points),
-                        feedback=body.feedback_text,
+                        teacher_name=(
+                            teacher.full_name if teacher is not None else str(auth.user_id)
+                        ),
                     )
+                )
             except Exception:
-                pass
+                logger.exception(
+                    "Failed to dispatch GradePublished for %s",
+                    grade.id,
+                )
+                try:
+                    from app.core.tasks import enqueue_email
+
+                    student = await self.repo.get_user(submission.student_id)
+                    student_name = None
+                    if student is not None:
+                        student_name = getattr(student, "first_name", None) or getattr(
+                            student, "full_name", None
+                        )
+                    if student and student.email:
+                        # TODO: Remove after event dispatcher verification
+                        await enqueue_email(
+                            to=student.email,
+                            template_name="grade_published",
+                            lang="fr",
+                            student_name=student_name or student.email,
+                            assignment_title=assignment.title,
+                            score=float(body.score),
+                            total_points=float(assignment.total_points),
+                            feedback=body.feedback_text,
+                        )
+                except Exception:
+                    logger.warning(
+                        "Failed to execute GradePublished fallback email for %s",
+                        grade.id,
+                        exc_info=True,
+                    )
 
         return self._grade_to_dict(grade)
 
@@ -920,6 +991,26 @@ class LMSService:
                 ip_address=ip_address,
             )
             await uow.commit()
+
+        try:
+            student = await self.repo.get_user(auth.user_id)
+            await self._dispatcher.dispatch(
+                SubmissionReceived(
+                    school_id=course.school_id,
+                    actor_id=auth.user_id,
+                    submission_id=submission.id,
+                    student_name=(
+                        student.full_name if student is not None else str(auth.user_id)
+                    ),
+                    assignment_title=assignment.title,
+                    teacher_id=course.teacher_id,
+                )
+            )
+        except Exception:
+            logger.exception(
+                "Failed to dispatch SubmissionReceived for finalized %s",
+                submission.id,
+            )
 
         return self._submission_to_dict(submission)
 
@@ -2118,6 +2209,24 @@ class LMSService:
                 ip_address=ip_address,
             )
             await uow.commit()
+
+        try:
+            quiz = await self.quiz_repo.get_quiz(attempt.quiz_id)
+            await self._dispatcher.dispatch(
+                QuizCompleted(
+                    school_id=auth.school_id,
+                    actor_id=auth.user_id,
+                    student_id=attempt.student_id,
+                    quiz_title=quiz.title if quiz is not None else str(attempt.quiz_id),
+                    score_percent=(
+                        round((float(total_score) / float(max_score)) * 100, 2)
+                        if max_score
+                        else 0.0
+                    ),
+                )
+            )
+        except Exception:
+            logger.exception("Failed to dispatch QuizCompleted for %s", attempt.id)
 
         return self._attempt_to_dict(attempt)
 

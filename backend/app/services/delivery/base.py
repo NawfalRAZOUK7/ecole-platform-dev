@@ -140,17 +140,35 @@ class DeliveryStrategy(ABC):
         recipient_id: UUID,
         template_key: str,
     ) -> str:
-        return (
-            f"domain:{self._snake_case(type(event).__name__)}:"
-            f"{recipient_id}:{template_key}:{self._event_fingerprint(event)}"
+        return self.build_notification_idempotency_key(
+            event=event,
+            recipient_id=recipient_id,
+            template_key=template_key,
         )
 
-    def _event_fingerprint(self, event: DomainEvent) -> str:
+    @classmethod
+    def build_notification_idempotency_key(
+        cls,
+        *,
+        event: DomainEvent,
+        recipient_id: UUID,
+        template_key: str,
+    ) -> str:
+        return (
+            f"domain:{cls._snake_case(type(event).__name__)}:"
+            f"{recipient_id}:{template_key}:{cls._event_fingerprint(event)}"
+        )
+
+    @classmethod
+    def _event_fingerprint(cls, event: DomainEvent) -> str:
         payload = asdict(event) if is_dataclass(event) else dict(event.__dict__)
+        payload.pop("event_id", None)
+        payload.pop("occurred_at", None)
         raw = json.dumps(payload, sort_keys=True, default=str)
         return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:24]
 
-    def _snake_case(self, value: str) -> str:
+    @classmethod
+    def _snake_case(cls, value: str) -> str:
         return _CAMEL_CASE_RE.sub("_", value).lower()
 
     def _jsonable_value(self, value: Any) -> Any:

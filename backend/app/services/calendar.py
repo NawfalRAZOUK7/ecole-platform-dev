@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import uuid
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta, timezone
@@ -13,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.exceptions import AuthorizationError, NotFoundError, ValidationError
 from app.core.unit_of_work import UnitOfWork
+from app.domain.events.calendar import EventCreated, EventUpdated
 from app.models.calendar import (
     Event,
     EventReminderPreference,
@@ -30,6 +32,7 @@ from app.schemas.calendar import (
     HolidayCreateRequest,
     HolidayUpdateRequest,
 )
+from app.services.event_dispatcher import EventDispatcher
 
 ICAL_ACTION = "calendar.ical"
 SYSTEM_NAMESPACE = uuid.UUID("9e09e90d-12fb-4e70-9f8a-a2d8d77d1d31")
@@ -42,6 +45,7 @@ EVENT_TYPE_COLORS = {
     EventType.CEREMONY.value: "#F3E5F5",
     EventType.CUSTOM.value: "#F5F5F5",
 }
+logger = logging.getLogger(__name__)
 
 
 def _utc_now() -> datetime:
@@ -81,6 +85,7 @@ class CalendarService:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
         self.repo = CalendarRepository(db)
+        self._dispatcher = EventDispatcher(self.db)
 
     async def list_events(
         self,
@@ -333,7 +338,22 @@ class CalendarService:
             )
             created = await repo.create_event(event)
             await uow.commit()
-            return created
+
+        try:
+            await self._dispatcher.dispatch(
+                EventCreated(
+                    school_id=school_id,
+                    actor_id=user_id,
+                    event_id=created.id,
+                    title=created.title_en or created.title_fr or created.title_ar or "",
+                    start_at=created.start_at.isoformat(),
+                    class_id=created.class_id,
+                )
+            )
+        except Exception:
+            logger.exception("Failed to dispatch EventCreated for %s", created.id)
+
+        return created
 
     async def update_event(
         self,
@@ -397,7 +417,21 @@ class CalendarService:
 
             saved = await repo.save_event(event)
             await uow.commit()
-            return saved
+
+        try:
+            await self._dispatcher.dispatch(
+                EventUpdated(
+                    school_id=school_id,
+                    actor_id=user_id,
+                    event_id=saved.id,
+                    title=saved.title_en or saved.title_fr or saved.title_ar or "",
+                    changes=payload,
+                )
+            )
+        except Exception:
+            logger.exception("Failed to dispatch EventUpdated for %s", saved.id)
+
+        return saved
 
     async def delete_event(
         self,

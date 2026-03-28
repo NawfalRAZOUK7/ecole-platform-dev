@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import tempfile
 import uuid
@@ -21,15 +22,19 @@ from app.core.metrics import (
     DOCUMENT_UPLOAD_SIZE_BYTES,
 )
 from app.core.unit_of_work import UnitOfWork
+from app.domain.events.documents import DocumentExpiring, DocumentUploaded
 from app.models.com import NotificationCategory
 from app.models.documents import Document, DocumentCategory, StudentDocumentRequirement
 from app.repositories.documents import DocumentsRepository
+from app.services.delivery.base import DeliveryStrategy
+from app.services.event_dispatcher import EventDispatcher
 from app.services.file_storage import file_storage_service
 from app.services.notification_hub import NotificationHubService
 
 DOCUMENT_DOWNLOAD_ACTION = "document.download"
 DOCUMENT_PREVIEW_ACTION = "document.preview"
 DOCUMENT_BULK_DOWNLOAD_ACTION = "document.bulk-download"
+logger = logging.getLogger(__name__)
 
 
 def _utc_now() -> datetime:
@@ -49,6 +54,7 @@ class StudentDocumentsService:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
         self.repo = DocumentsRepository(db)
+        self._dispatcher = EventDispatcher(self.db)
         self.notification_hub = NotificationHubService(db)
 
     async def upload_document(
@@ -65,7 +71,7 @@ class StudentDocumentsService:
         expires_at: datetime | None = None,
     ) -> dict:
         if self.db.info.get("_uow_depth"):
-            return await self._upload_document_with_repo(
+            payload = await self._upload_document_with_repo(
                 repo=DocumentsRepository(self.db),
                 school_id=school_id,
                 user_id=user_id,
@@ -77,6 +83,15 @@ class StudentDocumentsService:
                 linked_student_id=linked_student_id,
                 expires_at=expires_at,
             )
+            self.db.info.setdefault("_pending_domain_events", []).append(
+                self._build_document_uploaded_event(
+                    school_id=school_id,
+                    actor_id=user_id,
+                    payload=payload,
+                    linked_student_id=linked_student_id,
+                )
+            )
+            return payload
 
         async with UnitOfWork(self.db) as uow:
             payload = await self._upload_document_with_repo(
@@ -92,7 +107,23 @@ class StudentDocumentsService:
                 expires_at=expires_at,
             )
             await uow.commit()
-            return payload
+
+        try:
+            await self._dispatcher.dispatch(
+                self._build_document_uploaded_event(
+                    school_id=school_id,
+                    actor_id=user_id,
+                    payload=payload,
+                    linked_student_id=linked_student_id,
+                )
+            )
+        except Exception:
+            logger.exception(
+                "Failed to dispatch DocumentUploaded for %s",
+                payload["id"],
+            )
+
+        return payload
 
     async def list_documents(
         self,
@@ -618,24 +649,53 @@ class StudentDocumentsService:
                 if document.expires_at
                 else "unknown"
             )
+            event = DocumentExpiring(
+                school_id=document.school_id,
+                actor_id=document.uploader_id,
+                document_id=document.id,
+                student_id=document.linked_student_id,
+                document_name=document.original_filename,
+                expires_at=document.expires_at.isoformat() if document.expires_at else "",
+            )
+            pending_recipients: list[tuple[uuid.UUID, str]] = []
             for recipient_id in recipient_ids:
-                idempotency_key = (
-                    f"document-expiry:{document.id}:{recipient_id}:{expiry_key}"
+                domain_key = DeliveryStrategy.build_notification_idempotency_key(
+                    event=event,
+                    recipient_id=recipient_id,
+                    template_key="document_expiring",
                 )
-                if await self.repo.notification_exists(idempotency_key=idempotency_key):
+                if await self.repo.notification_exists(idempotency_key=domain_key):
                     continue
-                await self.notification_hub.create_single_notification(
-                    school_id=document.school_id,
-                    user_id=recipient_id,
-                    title="Document expiration reminder",
-                    body=message,
-                    category=NotificationCategory.SYSTEM.value,
-                    action_url=f"/documents?student={document.linked_student_id}",
-                    event_ref="document.expiring",
-                    preferred_channels=["in_app", "push"],
-                    idempotency_key=idempotency_key,
+                pending_recipients.append((recipient_id, domain_key))
+
+            if not pending_recipients:
+                continue
+
+            try:
+                await self._dispatcher.dispatch(event)
+                created += len(pending_recipients)
+            except Exception:
+                logger.exception(
+                    "Failed to dispatch DocumentExpiring for %s",
+                    document.id,
                 )
-                created += 1
+                for recipient_id, _domain_key in pending_recipients:
+                    idempotency_key = (
+                        f"document-expiry:{document.id}:{recipient_id}:{expiry_key}"
+                    )
+                    # TODO: Remove after event dispatcher verification
+                    await self.notification_hub.create_single_notification(
+                        school_id=document.school_id,
+                        user_id=recipient_id,
+                        title="Document expiration reminder",
+                        body=message,
+                        category=NotificationCategory.SYSTEM.value,
+                        action_url=f"/documents?student={document.linked_student_id}",
+                        event_ref="document.expiring",
+                        preferred_channels=["in_app", "push"],
+                        idempotency_key=idempotency_key,
+                    )
+                    created += 1
         return created
 
     async def notify_expiring_documents(self, *, now: datetime | None = None) -> int:
@@ -909,6 +969,25 @@ class StudentDocumentsService:
             role=role,
             actor_id=user_id,
             deduplicated=deduplicated,
+        )
+
+    def _build_document_uploaded_event(
+        self,
+        *,
+        school_id: uuid.UUID,
+        actor_id: uuid.UUID,
+        payload: dict,
+        linked_student_id: uuid.UUID | None,
+    ) -> DocumentUploaded:
+        student_id = linked_student_id
+        if student_id is None and payload.get("linked_student_id"):
+            student_id = uuid.UUID(payload["linked_student_id"])
+        return DocumentUploaded(
+            school_id=school_id,
+            actor_id=actor_id,
+            document_id=uuid.UUID(payload["id"]),
+            filename=payload["original_filename"],
+            student_id=student_id,
         )
 
     async def _ensure_default_requirements_with_repo(

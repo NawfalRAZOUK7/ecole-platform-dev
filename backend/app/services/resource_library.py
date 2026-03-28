@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import BinaryIO
@@ -12,12 +13,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.exceptions import AuthorizationError, NotFoundError, ValidationError
 from app.core.unit_of_work import UnitOfWork
+from app.domain.events.documents import ResourceShared
 from app.models.documents import DocumentCategory, Resource, ResourceRating
 from app.repositories.documents import DocumentsRepository
 from app.schemas.resources import ResourceCreateRequest, ResourceUpdateRequest
+from app.services.event_dispatcher import EventDispatcher
 from app.services.student_documents import StudentDocumentsService
 
 RESOURCE_DOWNLOAD_ACTION = "resource.download"
+logger = logging.getLogger(__name__)
 
 
 def _utc_now() -> datetime:
@@ -28,6 +32,7 @@ class ResourceLibraryService:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
         self.repo = DocumentsRepository(db)
+        self._dispatcher = EventDispatcher(self.db)
         self.documents = StudentDocumentsService(db)
 
     async def create_resource(
@@ -87,6 +92,28 @@ class ResourceLibraryService:
             )
             await repo.create_resource(resource)
             await uow.commit()
+            pending_events = list(uow.session.info.pop("_pending_domain_events", []))
+
+        for event in pending_events:
+            try:
+                await self._dispatcher.dispatch(event)
+            except Exception:
+                logger.exception(
+                    "Failed to dispatch nested document event during resource creation"
+                )
+
+        try:
+            await self._dispatcher.dispatch(
+                ResourceShared(
+                    school_id=school_id,
+                    actor_id=actor_id,
+                    resource_id=resource.id,
+                    title=resource.title,
+                    class_id=resource.class_id,
+                )
+            )
+        except Exception:
+            logger.exception("Failed to dispatch ResourceShared for %s", resource.id)
 
         return await self.serialize_resource(
             resource=resource,

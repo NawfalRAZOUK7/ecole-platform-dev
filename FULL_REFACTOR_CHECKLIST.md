@@ -111,18 +111,18 @@
 - [ ] **Review & commit myself**
 
 #### OOP-C3: Wire Events into Services
-- [ ] lms.py emits GradePublished
-- [ ] lms.py emits AssignmentCreated
-- [ ] lms.py emits QuizCompleted
-- [ ] lms.py emits SubmissionReceived
-- [ ] calendar.py emits EventCreated
-- [ ] calendar.py emits EventUpdated
-- [ ] billing.py emits InvoiceGenerated
-- [ ] billing.py emits PaymentReceived/Failed
-- [ ] student_documents.py emits DocumentExpiring
-- [ ] resource_library.py emits ResourceShared
-- [ ] auth.py emits UserRegistered
-- [ ] Existing notification calls kept as fallback (marked TODO)
+- [x] lms.py emits GradePublished
+- [x] lms.py emits AssignmentCreated
+- [x] lms.py emits QuizCompleted
+- [x] lms.py emits SubmissionReceived
+- [x] calendar.py emits EventCreated
+- [x] calendar.py emits EventUpdated
+- [x] billing.py emits InvoiceGenerated
+- [x] billing.py emits PaymentReceived/Failed
+- [x] student_documents.py emits DocumentExpiring
+- [x] resource_library.py emits ResourceShared
+- [x] auth.py emits UserRegistered
+- [x] Existing notification calls kept as fallback (marked TODO)
 - [ ] **Review & commit myself**
 
 ---
