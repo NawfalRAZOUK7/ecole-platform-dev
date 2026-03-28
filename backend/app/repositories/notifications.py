@@ -107,6 +107,15 @@ class NotificationRepository(BaseRepository):
         )
         return result.scalar_one_or_none()
 
+    async def find_notification_by_idempotency_key(
+        self,
+        idempotency_key: str,
+    ) -> Notification | None:
+        result = await self.db.execute(
+            select(Notification).where(Notification.idempotency_key == idempotency_key)
+        )
+        return result.scalar_one_or_none()
+
     async def save_notification(self, notification: Notification) -> Notification:
         self.db.add(notification)
         await self.db.flush()
@@ -307,6 +316,19 @@ class NotificationRepository(BaseRepository):
         )
         return set(result.scalars().all())
 
+    async def list_school_member_ids(
+        self,
+        *,
+        school_id: uuid.UUID,
+    ) -> set[uuid.UUID]:
+        result = await self.db.execute(
+            select(distinct(Membership.user_id)).where(
+                Membership.school_id == school_id,
+                Membership.status == "active",
+            )
+        )
+        return set(result.scalars().all())
+
     async def list_students_for_classes(
         self,
         *,
@@ -436,6 +458,14 @@ class NotificationDeliveryRepository(BaseRepository):
             select(NotificationDelivery).where(NotificationDelivery.id == delivery_id)
         )
         return result.scalar_one_or_none()
+
+    async def save_delivery(
+        self,
+        delivery: NotificationDelivery,
+    ) -> NotificationDelivery:
+        self.db.add(delivery)
+        await self.db.flush()
+        return delivery
 
     async def delete_deliveries_for_notification(
         self,

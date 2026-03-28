@@ -100,14 +100,14 @@
 - [ ] **Review & commit myself**
 
 #### OOP-C2: Delivery Strategies
-- [ ] Created services/delivery/ directory
-- [ ] Created delivery/base.py (DeliveryStrategy ABC)
-- [ ] Created delivery/push.py (PushDeliveryStrategy)
-- [ ] Created delivery/email_delivery.py (EmailDeliveryStrategy)
-- [ ] Created delivery/sms_delivery.py (SMSDeliveryStrategy)
-- [ ] Created delivery/in_app.py (InAppDeliveryStrategy)
-- [ ] Created services/event_dispatcher.py
-- [ ] Registered all events in EVENT_HANDLERS
+- [x] Created services/delivery/ directory
+- [x] Created delivery/base.py (DeliveryStrategy ABC)
+- [x] Created delivery/push.py (PushDeliveryStrategy)
+- [x] Created delivery/email_delivery.py (EmailDeliveryStrategy)
+- [x] Created delivery/sms_delivery.py (SMSDeliveryStrategy)
+- [x] Created delivery/in_app.py (InAppDeliveryStrategy)
+- [x] Created services/event_dispatcher.py
+- [x] Registered all events in EVENT_HANDLERS
 - [ ] **Review & commit myself**
 
 #### OOP-C3: Wire Events into Services
