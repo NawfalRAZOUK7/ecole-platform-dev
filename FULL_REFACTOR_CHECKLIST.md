@@ -238,13 +238,13 @@
 - [ ] **Review & commit myself**
 
 #### ENH-B2: Rubric Engine — Service + Router
-- [ ] Created repositories/rubric.py (CRUD for rubrics, criteria, levels, scores)
-- [ ] Created services/rubric.py — RubricService
-- [ ] Added PERM_LMS_RUBRIC_CREATE, PERM_LMS_RUBRIC_READ to permissions.py
-- [ ] Assigned to roles (TCH, ADM)
-- [ ] Created api/v1/rubrics.py — all endpoints
-- [ ] Registered in router.py
-- [ ] Updated AssignmentService to support rubric-based grading
+- [x] Created repositories/rubric.py (CRUD for rubrics, criteria, levels, scores)
+- [x] Created services/rubric.py — RubricService
+- [x] Added PERM_LMS_RUBRIC_CREATE, PERM_LMS_RUBRIC_READ to permissions.py
+- [x] Assigned to roles (TCH, ADM)
+- [x] Created api/v1/rubrics.py — all endpoints
+- [x] Registered in router.py
+- [x] Updated AssignmentService to support rubric-based grading
 - [ ] **Review & commit myself**
 
 #### ENH-B3: Weighted Gradebook + GPA

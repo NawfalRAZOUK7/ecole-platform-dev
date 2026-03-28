@@ -22,6 +22,7 @@ from app.repositories.profile_loader import ProfileLoaderRepository
 from app.repositories.progress import ProgressRepository
 from app.repositories.quiz import QuizRepository
 from app.repositories.reports import ReportsRepository
+from app.repositories.rubric import RubricRepository
 
 __all__ = [
     "BaseRepository",
@@ -46,6 +47,7 @@ __all__ = [
     "ProfileLoaderRepository",
     "ProgressRepository",
     "QuizRepository",
+    "RubricRepository",
     "AnalyticsRepository",
     "ReportsRepository",
 ]

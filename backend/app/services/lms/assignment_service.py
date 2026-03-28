@@ -256,6 +256,11 @@ class AssignmentService(LMSServiceBase):
                 "You can only grade submissions for your own courses",
                 error_code="ERR-AUTHZ-001",
             )
+        if assignment.rubric_id is not None:
+            raise ValidationError(
+                "This assignment uses rubric grading. Use /submissions/{id}/grade-rubric instead.",
+                error_code="ERR-LMS-422",
+            )
         if submission.status not in ("submitted", "graded"):
             raise ValidationError(
                 "Submission must be in submitted or graded status to be graded",

@@ -18,6 +18,7 @@ Routes:
   /student-work/*               — Unified student work views (LMS)
   /activities/*                 — Activities + sessions (LMS)
   /assessments/*                — Assessments + results (LMS)
+  /rubrics/*                    — Rubric engine (LMS)
   /invoices/*                   — Invoice listing (Billing)
   /payments/*                   — Payment + webhook (Billing)
   /notifications/*              — Notifications (COM)
@@ -58,6 +59,7 @@ from app.api.v1.content import router as content_router
 from app.api.v1.content import student_work_router
 from app.api.v1.activities import router as activities_router
 from app.api.v1.assessments import router as assessments_router
+from app.api.v1.rubrics import router as rubrics_router
 
 # Phase 3 — Billing routers
 from app.api.v1.invoices import router as invoices_router
@@ -165,6 +167,7 @@ router.include_router(legacy_content_router)
 router.include_router(student_work_router)
 router.include_router(activities_router)
 router.include_router(assessments_router)
+router.include_router(rubrics_router)
 
 # Mount sub-routers — Phase 3 Billing
 router.include_router(invoices_router)

@@ -71,13 +71,21 @@ class RubricScoreResponse(BaseModel):
     id: str
     submission_id: str
     criterion_id: str
+    criterion_title: str | None = None
+    criterion_weight: float | None = None
     level_id: str | None = None
+    level_label: str | None = None
+    level_points: float | None = None
     points_awarded: float
     comment: str | None = None
 
 
 class RubricResultsResponse(BaseModel):
     submission_id: str
+    assignment_id: str | None = None
     rubric_id: str | None = None
+    grade_id: str | None = None
+    published_at: str | None = None
+    feedback_text: str | None = None
     total_score: float | None = None
     scores: list[RubricScoreResponse] = Field(default_factory=list)

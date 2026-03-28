@@ -94,6 +94,8 @@ PERM_LMS_ASSESSMENT_CREATE = "PERM-LMS:assessment:create"
 PERM_LMS_ASSESSMENT_READ = "PERM-LMS:assessment:read"
 PERM_LMS_ASSESSMENT_PUBLISH = "PERM-LMS:assessment:publish"
 PERM_LMS_ASSESSMENT_SUBMIT = "PERM-LMS:assessment:submit"
+PERM_LMS_RUBRIC_CREATE = "PERM-LMS:rubric:create"
+PERM_LMS_RUBRIC_READ = "PERM-LMS:rubric:read"
 
 # Billing
 PERM_BIL_INVOICE_READ = "PERM-BIL:invoice:read"
@@ -248,6 +250,8 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_LMS_ASSESSMENT_CREATE,
         PERM_LMS_ASSESSMENT_READ,
         PERM_LMS_ASSESSMENT_PUBLISH,
+        PERM_LMS_RUBRIC_CREATE,
+        PERM_LMS_RUBRIC_READ,
         # Billing — read global + fee management (Phase 11B)
         PERM_BIL_INVOICE_READ,
         PERM_BIL_PAYMENT_READ,
@@ -388,6 +392,8 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_LMS_ASSESSMENT_CREATE,
         PERM_LMS_ASSESSMENT_READ,
         PERM_LMS_ASSESSMENT_PUBLISH,
+        PERM_LMS_RUBRIC_CREATE,
+        PERM_LMS_RUBRIC_READ,
         # CMS — assign content to class + submit for review
         PERM_CMS_CONTENT_ASSIGN,
         PERM_CMS_CONTENT_SUBMIT,
