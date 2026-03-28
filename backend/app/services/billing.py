@@ -11,6 +11,7 @@ from app.core.dependencies import AuthContext, verify_school_boundary
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.core.filtering import FilterSpec, SortSpec
 from app.core.response import clamp_page_size
+from app.core.unit_of_work import UnitOfWork
 from app.models.billing import FeeAssignment, FeeStructure, Invoice, PaymentAttempt, ProviderWebhookEvent
 from app.models.iam import User
 from app.repositories.billing import BillingRepository
@@ -435,65 +436,70 @@ class BillingService:
         skipped = 0
         total_generated_amount = 0.0
 
-        for assignment in assignments:
-            parent_id = student_to_parent.get(assignment.student_id)
-            if parent_id is None:
-                skipped += 1
-                continue
+        async with UnitOfWork(self.db) as uow:
+            repo = BillingRepository(uow.session)
+            audit = AuditService(uow.session)
 
-            base_amount = float(fee_structure.amount)
-            if assignment.discount_percent:
-                discount = base_amount * float(assignment.discount_percent) / 100
-                final_amount = round(base_amount - discount, 2)
-            else:
-                final_amount = base_amount
+            for assignment in assignments:
+                parent_id = student_to_parent.get(assignment.student_id)
+                if parent_id is None:
+                    skipped += 1
+                    continue
 
-            if final_amount <= 0:
-                skipped += 1
-                continue
+                base_amount = float(fee_structure.amount)
+                if assignment.discount_percent:
+                    discount = base_amount * float(assignment.discount_percent) / 100
+                    final_amount = round(base_amount - discount, 2)
+                else:
+                    final_amount = base_amount
 
-            invoice = await self.repo.create_invoice(
+                if final_amount <= 0:
+                    skipped += 1
+                    continue
+
+                invoice = await repo.create_invoice(
+                    school_id=auth.school_id,
+                    parent_id=parent_id,
+                    period_id=body.period_id,
+                    status="pending",
+                    total_amount=final_amount,
+                    currency=fee_structure.currency,
+                    issued_date=body.issued_date,
+                    due_date=body.due_date,
+                    fee_structure_id=fee_structure.id,
+                )
+
+                description = fee_structure.name
+                if assignment.discount_percent:
+                    description += f" (remise {float(assignment.discount_percent):.0f}%)"
+
+                await repo.create_invoice_item(
+                    invoice_id=invoice.id,
+                    description=description,
+                    amount=final_amount,
+                    unit_price=base_amount,
+                    quantity=1,
+                )
+
+                generated += 1
+                total_generated_amount += final_amount
+
+            await audit.log_event(
                 school_id=auth.school_id,
-                parent_id=parent_id,
-                period_id=body.period_id,
-                status="pending",
-                total_amount=final_amount,
-                currency=fee_structure.currency,
-                issued_date=body.issued_date,
-                due_date=body.due_date,
-                fee_structure_id=fee_structure.id,
+                actor_id=auth.user_id,
+                action_type="invoice.generate_from_fees",
+                target_type="fee_structure",
+                target_id=fee_structure.id,
+                outcome="success",
+                entity_after={
+                    "fee_structure_id": str(fee_structure.id),
+                    "generated": generated,
+                    "skipped": skipped,
+                    "total_amount": total_generated_amount,
+                },
+                ip_address=ip_address,
             )
-
-            description = fee_structure.name
-            if assignment.discount_percent:
-                description += f" (remise {float(assignment.discount_percent):.0f}%)"
-
-            await self.repo.create_invoice_item(
-                invoice_id=invoice.id,
-                description=description,
-                amount=final_amount,
-                unit_price=base_amount,
-                quantity=1,
-            )
-
-            generated += 1
-            total_generated_amount += final_amount
-
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="invoice.generate_from_fees",
-            target_type="fee_structure",
-            target_id=fee_structure.id,
-            outcome="success",
-            entity_after={
-                "fee_structure_id": str(fee_structure.id),
-                "generated": generated,
-                "skipped": skipped,
-                "total_amount": total_generated_amount,
-            },
-            ip_address=ip_address,
-        )
+            await uow.commit()
 
         return {
             "generated": generated,
@@ -528,27 +534,30 @@ class BillingService:
         if existing is not None:
             return self._payment_to_response(existing)
 
-        payment = await self.repo.create_payment(
-            invoice_id=body.invoice_id,
-            parent_id=auth.user_id,
-            school_id=auth.school_id,
-            idempotency_key=body.idempotency_key,
-            status="pending",
-        )
-
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="PAYMENT_INITIATED",
-            outcome="success",
-            target_type="payment_attempt",
-            target_id=payment.id,
-            entity_after={
-                "invoice_id": str(body.invoice_id),
-                "idempotency_key": body.idempotency_key,
-            },
-            ip_address=ip_address,
-        )
+        async with UnitOfWork(self.db) as uow:
+            repo = BillingRepository(uow.session)
+            audit = AuditService(uow.session)
+            payment = await repo.create_payment(
+                invoice_id=body.invoice_id,
+                parent_id=auth.user_id,
+                school_id=auth.school_id,
+                idempotency_key=body.idempotency_key,
+                status="pending",
+            )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="PAYMENT_INITIATED",
+                outcome="success",
+                target_type="payment_attempt",
+                target_id=payment.id,
+                entity_after={
+                    "invoice_id": str(body.invoice_id),
+                    "idempotency_key": body.idempotency_key,
+                },
+                ip_address=ip_address,
+            )
+            await uow.commit()
         return self._payment_to_response(payment)
 
     async def get_payment_status(
@@ -586,40 +595,62 @@ class BillingService:
         if body.payment_attempt_id:
             payment_attempt = await self.repo.get_payment_by_id(body.payment_attempt_id)
 
-        webhook_event = await self.repo.create_webhook_event(
-            payment_attempt_id=body.payment_attempt_id,
-            school_id=auth.school_id,
-            provider_event_id=body.provider_event_id,
-            signature_status="valid" if body.signature else "unchecked",
-            status="processed",
-            provider_event_received_at=now,
-        )
+        async with UnitOfWork(self.db) as uow:
+            repo = BillingRepository(uow.session)
+            audit = AuditService(uow.session)
+            webhook_event = await repo.create_webhook_event(
+                payment_attempt_id=body.payment_attempt_id,
+                school_id=auth.school_id,
+                provider_event_id=body.provider_event_id,
+                signature_status="valid" if body.signature else "unchecked",
+                status="processed",
+                provider_event_received_at=now,
+            )
 
-        if payment_attempt is not None:
-            if body.status == "paid":
-                payment_attempt.status = "paid"
-                payment_attempt.finalized_at = now
-                await self.repo.save_payment(payment_attempt)
+            if payment_attempt is not None:
+                if body.status == "paid":
+                    payment_attempt.status = "paid"
+                    payment_attempt.finalized_at = now
+                    await repo.save_payment(payment_attempt)
 
-                invoice = await self.repo.get_invoice_by_id(payment_attempt.invoice_id)
-                if invoice is not None:
-                    invoice.status = "paid"
-                    await self.repo.save_invoice(invoice)
-            elif body.status == "failed":
-                payment_attempt.status = "failed"
-                payment_attempt.finalized_at = now
-                await self.repo.save_payment(payment_attempt)
+                    invoice = await repo.get_invoice_by_id(payment_attempt.invoice_id)
+                    if invoice is not None:
+                        invoice.status = "paid"
+                        await repo.save_invoice(invoice)
+                elif body.status == "failed":
+                    payment_attempt.status = "failed"
+                    payment_attempt.finalized_at = now
+                    await repo.save_payment(payment_attempt)
 
-                try:
-                    from app.services.payment_retry import schedule_retry_for_failed_payment
+                    try:
+                        from app.services.payment_retry import schedule_retry_for_failed_payment
 
-                    await schedule_retry_for_failed_payment(payment_attempt.id, self.db)
-                except Exception:
-                    pass
-            elif body.status == "canceled":
-                payment_attempt.status = "canceled"
-                payment_attempt.finalized_at = now
-                await self.repo.save_payment(payment_attempt)
+                        await schedule_retry_for_failed_payment(
+                            payment_attempt.id,
+                            uow.session,
+                        )
+                    except Exception:
+                        pass
+                elif body.status == "canceled":
+                    payment_attempt.status = "canceled"
+                    payment_attempt.finalized_at = now
+                    await repo.save_payment(payment_attempt)
+
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="WEBHOOK_PROCESSED",
+                outcome="success",
+                target_type="provider_webhook_event",
+                target_id=webhook_event.id,
+                entity_after={
+                    "provider_event_id": body.provider_event_id,
+                    "event_type": body.event_type,
+                    "status": body.status,
+                },
+                ip_address=ip_address,
+            )
+            await uow.commit()
 
         if payment_attempt is not None and body.status in ("paid", "failed", "canceled"):
             await publish_payment_updated(
@@ -628,21 +659,6 @@ class BillingService:
                 status=body.status,
                 invoice_id=payment_attempt.invoice_id,
             )
-
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="WEBHOOK_PROCESSED",
-            outcome="success",
-            target_type="provider_webhook_event",
-            target_id=webhook_event.id,
-            entity_after={
-                "provider_event_id": body.provider_event_id,
-                "event_type": body.event_type,
-                "status": body.status,
-            },
-            ip_address=ip_address,
-        )
         return self._webhook_to_response(webhook_event)
 
     async def list_invoices(

@@ -29,6 +29,7 @@ from app.core.exceptions import (
 )
 from app.core.middleware import get_correlation_id
 from app.core.permissions import get_permissions_for_role
+from app.core.unit_of_work import UnitOfWork
 from app.core.security import (
     create_access_token,
     create_csrf_token,
@@ -214,15 +215,28 @@ class AuthService:
 
         # 6. Create session record (Phase 2A: include device info)
         cid = get_correlation_id()
-        session = await self.repo.create_session(
-            user_id=user.id,
-            school_id=school_id,
-            source=source,
-            correlation_id=uuid.UUID(cid) if cid else None,
-            user_agent=user_agent[:500] if user_agent else None,
-            ip_address=ip_address[:45] if ip_address else None,
-            device_name=device_name[:200] if device_name else None,
-        )
+        async with UnitOfWork(self.db) as uow:
+            repo = AuthRepository(uow.session)
+            audit = AuditService(uow.session)
+            session = await repo.create_session(
+                user_id=user.id,
+                school_id=school_id,
+                source=source,
+                correlation_id=uuid.UUID(cid) if cid else None,
+                user_agent=user_agent[:500] if user_agent else None,
+                ip_address=ip_address[:45] if ip_address else None,
+                device_name=device_name[:200] if device_name else None,
+            )
+            await audit.log_event(
+                school_id=school_id,
+                actor_id=user.id,
+                action_type="AUTH_SESSION_OPENED",
+                outcome="success",
+                target_type="session",
+                target_id=session.id,
+                ip_address=ip_address,
+            )
+            await uow.commit()
 
         # 7. Generate tokens
         access_token = create_access_token(user.id, role, school_id, session.id)
@@ -247,17 +261,6 @@ class AuthService:
 
         # 10. Clear rate limit on successful login
         await self.redis.delete(rate_key)
-
-        # 11. Audit event
-        await self.audit.log_event(
-            school_id=school_id,
-            actor_id=user.id,
-            action_type="AUTH_SESSION_OPENED",
-            outcome="success",
-            target_type="session",
-            target_id=session.id,
-            ip_address=ip_address,
-        )
 
         return {
             "access_token": access_token,
@@ -328,73 +331,87 @@ class AuthService:
         # 3. Enforce password policy
         password_validator.validate(password, email=email, full_name=full_name)
 
-        # 4. Create user
-        user = await self.repo.create_user(
-            email=email,
-            full_name=full_name,
-            phone=phone,
-            password_hash=hash_password(password),
-            status="active",
-            school_id=school_id,
-        )
+        async with UnitOfWork(self.db) as uow:
+            repo = AuthRepository(uow.session)
+            audit = AuditService(uow.session)
 
-        # 5. Create membership
-        await self.repo.create_membership(
-            user_id=user.id,
-            school_id=school_id,
-            role_code=role,
-            status="active",
-        )
-
-        # 6. Create role-specific profile
-        if role == "STD":
-            await self.repo.create_student_profile(
-                user_id=user.id,
-                school_id=school_id,
-                **profile_data,
-            )
-        elif role == "PAR":
-            await self.repo.create_parent_profile(
-                user_id=user.id,
-                school_id=school_id,
-                **profile_data,
-            )
-        elif role == "TCH":
-            await self.repo.create_teacher_profile(
-                user_id=user.id,
-                school_id=school_id,
-                **profile_data,
-            )
-
-        # 7. Auto-create parent_child_link if code has target_student_id
-        if role == "PAR" and invite.target_student_id:
-            await self.repo.create_parent_child_link(
-                parent_user_id=user.id,
-                child_user_id=invite.target_student_id,
-                school_id=school_id,
+            # 4. Create user
+            user = await repo.create_user(
+                email=email,
+                full_name=full_name,
+                phone=phone,
+                password_hash=hash_password(password),
                 status="active",
-                linked_at=datetime.now(timezone.utc),
-                linked_by=invite.issuer_user_id,
+                school_id=school_id,
             )
 
-        # 8. Consume the invitation code
-        await self.repo.consume_invitation(
-            invite.id,
-            user_id=user.id,
-            consumed_at=datetime.now(timezone.utc),
-        )
+            # 5. Create membership
+            await repo.create_membership(
+                user_id=user.id,
+                school_id=school_id,
+                role_code=role,
+                status="active",
+            )
 
-        # 9. Create session and generate tokens
-        cid = get_correlation_id()
-        session = await self.repo.create_session(
-            user_id=user.id,
-            school_id=school_id,
-            source=source,
-            correlation_id=uuid.UUID(cid) if cid else None,
-            user_agent=user_agent[:500] if user_agent else None,
-            ip_address=ip_address[:45] if ip_address else None,
-            device_name=device_name[:200] if device_name else None,
-        )
+            # 6. Create role-specific profile
+            if role == "STD":
+                await repo.create_student_profile(
+                    user_id=user.id,
+                    school_id=school_id,
+                    **profile_data,
+                )
+            elif role == "PAR":
+                await repo.create_parent_profile(
+                    user_id=user.id,
+                    school_id=school_id,
+                    **profile_data,
+                )
+            elif role == "TCH":
+                await repo.create_teacher_profile(
+                    user_id=user.id,
+                    school_id=school_id,
+                    **profile_data,
+                )
+
+            # 7. Auto-create parent_child_link if code has target_student_id
+            if role == "PAR" and invite.target_student_id:
+                await repo.create_parent_child_link(
+                    parent_user_id=user.id,
+                    child_user_id=invite.target_student_id,
+                    school_id=school_id,
+                    status="active",
+                    linked_at=datetime.now(timezone.utc),
+                    linked_by=invite.issuer_user_id,
+                )
+
+            # 8. Consume the invitation code
+            await repo.consume_invitation(
+                invite.id,
+                user_id=user.id,
+                consumed_at=datetime.now(timezone.utc),
+            )
+
+            # 9. Create session and audit registration
+            cid = get_correlation_id()
+            session = await repo.create_session(
+                user_id=user.id,
+                school_id=school_id,
+                source=source,
+                correlation_id=uuid.UUID(cid) if cid else None,
+                user_agent=user_agent[:500] if user_agent else None,
+                ip_address=ip_address[:45] if ip_address else None,
+                device_name=device_name[:200] if device_name else None,
+            )
+            await audit.log_event(
+                school_id=school_id,
+                actor_id=user.id,
+                action_type="USER_REGISTERED",
+                outcome="success",
+                target_type="user",
+                target_id=user.id,
+                ip_address=ip_address,
+            )
+            await uow.commit()
 
         access_token = create_access_token(user.id, role, school_id, session.id)
         refresh_token, refresh_jti = create_refresh_token(
@@ -412,17 +429,6 @@ class AuthService:
             f"csrf:{session.id}",
             settings.refresh_token_expire_days * 86400,
             csrf_token,
-        )
-
-        # 10. Audit event
-        await self.audit.log_event(
-            school_id=school_id,
-            actor_id=user.id,
-            action_type="USER_REGISTERED",
-            outcome="success",
-            target_type="user",
-            target_id=user.id,
-            ip_address=ip_address,
         )
 
         return {

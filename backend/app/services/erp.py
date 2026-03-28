@@ -14,6 +14,7 @@ from app.core.dependencies import (
     verify_teacher_assignment,
 )
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
+from app.core.unit_of_work import UnitOfWork
 from app.models.erp import (
     AbsenceJustification,
     AttendanceRecord,
@@ -324,29 +325,33 @@ class ERPService:
                 },
             )
 
-        enrollment = await self.repo.create_enrollment(
-            student_id=student_id,
-            class_id=class_id,
-            period_id=period_id,
-            school_id=auth.school_id,
-            status="active",
-        )
+        async with UnitOfWork(self.db) as uow:
+            repo = ERPRepository(uow.session)
+            audit = AuditService(uow.session)
+            enrollment = await repo.create_enrollment(
+                student_id=student_id,
+                class_id=class_id,
+                period_id=period_id,
+                school_id=auth.school_id,
+                status="active",
+            )
 
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="ENROLLMENT_ASSIGNED",
-            outcome="success",
-            target_type="enrollment",
-            target_id=enrollment.id,
-            entity_after={
-                "student_id": str(student_id),
-                "class_id": str(class_id),
-                "period_id": str(period_id),
-                "status": "active",
-            },
-            ip_address=ip_address,
-        )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="ENROLLMENT_ASSIGNED",
+                outcome="success",
+                target_type="enrollment",
+                target_id=enrollment.id,
+                entity_after={
+                    "student_id": str(student_id),
+                    "class_id": str(class_id),
+                    "period_id": str(period_id),
+                    "status": "active",
+                },
+                ip_address=ip_address,
+            )
+            await uow.commit()
         return self._enrollment_to_response(enrollment)
 
     async def create_teacher_assignment(
@@ -380,27 +385,31 @@ class ERPService:
         if existing is not None:
             return self._teacher_assignment_to_response(existing)
 
-        assignment = await self.repo.create_teacher_assignment(
-            teacher_id=body.teacher_id,
-            class_id=body.class_id,
-            period_id=body.period_id,
-            school_id=auth.school_id,
-        )
+        async with UnitOfWork(self.db) as uow:
+            repo = ERPRepository(uow.session)
+            audit = AuditService(uow.session)
+            assignment = await repo.create_teacher_assignment(
+                teacher_id=body.teacher_id,
+                class_id=body.class_id,
+                period_id=body.period_id,
+                school_id=auth.school_id,
+            )
 
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="TEACHER_ASSIGNED",
-            outcome="success",
-            target_type="teacher_assignment",
-            target_id=assignment.id,
-            entity_after={
-                "teacher_id": str(body.teacher_id),
-                "class_id": str(body.class_id),
-                "period_id": str(body.period_id),
-            },
-            ip_address=ip_address,
-        )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="TEACHER_ASSIGNED",
+                outcome="success",
+                target_type="teacher_assignment",
+                target_id=assignment.id,
+                entity_after={
+                    "teacher_id": str(body.teacher_id),
+                    "class_id": str(body.class_id),
+                    "period_id": str(body.period_id),
+                },
+                ip_address=ip_address,
+            )
+            await uow.commit()
         return self._teacher_assignment_to_response(assignment)
 
     async def create_attendance_session(
@@ -440,42 +449,46 @@ class ERPService:
                 details={"existing_session_id": str(existing.id)},
             )
 
-        session = await self.repo.create_attendance_session(
-            class_id=body.class_id,
-            period_id=body.period_id,
-            teacher_id=auth.user_id,
-            school_id=auth.school_id,
-            session_date=body.session_date,
-            slot=body.slot,
-        )
-        records = await self.repo.create_attendance_records(
-            [
-                {
-                    "attendance_session_id": session.id,
-                    "student_id": record.student_id,
-                    "school_id": auth.school_id,
-                    "status": record.status,
-                    "absence_reason": record.absence_reason,
-                }
-                for record in body.records
-            ]
-        )
+        async with UnitOfWork(self.db) as uow:
+            repo = ERPRepository(uow.session)
+            audit = AuditService(uow.session)
+            session = await repo.create_attendance_session(
+                class_id=body.class_id,
+                period_id=body.period_id,
+                teacher_id=auth.user_id,
+                school_id=auth.school_id,
+                session_date=body.session_date,
+                slot=body.slot,
+            )
+            records = await repo.create_attendance_records(
+                [
+                    {
+                        "attendance_session_id": session.id,
+                        "student_id": record.student_id,
+                        "school_id": auth.school_id,
+                        "status": record.status,
+                        "absence_reason": record.absence_reason,
+                    }
+                    for record in body.records
+                ]
+            )
 
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="ATTENDANCE_MARKED",
-            outcome="success",
-            target_type="attendance_session",
-            target_id=session.id,
-            entity_after={
-                "class_id": str(body.class_id),
-                "session_date": str(body.session_date),
-                "slot": body.slot,
-                "record_count": len(body.records),
-            },
-            ip_address=ip_address,
-        )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="ATTENDANCE_MARKED",
+                outcome="success",
+                target_type="attendance_session",
+                target_id=session.id,
+                entity_after={
+                    "class_id": str(body.class_id),
+                    "session_date": str(body.session_date),
+                    "slot": body.slot,
+                    "record_count": len(body.records),
+                },
+                ip_address=ip_address,
+            )
+            await uow.commit()
         return self._attendance_session_to_response(session, records)
 
     async def create_justification(

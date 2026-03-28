@@ -24,14 +24,14 @@
 - [ ] **Review & commit myself**
 
 #### OOP-A2: UnitOfWork (Core Services)
-- [ ] Created backend/app/core/unit_of_work.py
-- [ ] Updated auth.py — register() uses UoW
-- [ ] Updated auth.py — login() uses UoW
-- [ ] Updated billing.py — create_invoice uses UoW
-- [ ] Updated billing.py — process_payment uses UoW
-- [ ] Updated erp.py — create_enrollment uses UoW
-- [ ] Updated erp.py — batch_attendance uses UoW
-- [ ] Verified no direct db.commit() in updated methods
+- [x] Created backend/app/core/unit_of_work.py
+- [x] Updated auth.py — register() uses UoW
+- [x] Updated auth.py — login() uses UoW
+- [x] Updated billing.py — create_invoice uses UoW
+- [x] Updated billing.py — process_payment uses UoW
+- [x] Updated erp.py — create_enrollment uses UoW
+- [x] Updated erp.py — batch_attendance uses UoW
+- [x] Verified no direct db.commit() in updated methods
 - [ ] **Review & commit myself**
 
 #### OOP-A3: UnitOfWork (All Services)
