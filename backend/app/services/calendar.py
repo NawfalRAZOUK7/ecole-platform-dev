@@ -26,11 +26,21 @@ from app.schemas.calendar import (
     EventListItem,
     EventRSVPItem,
     EventUpdateRequest,
+    HolidayCreateRequest,
+    HolidayUpdateRequest,
 )
 
 ICAL_ACTION = "calendar.ical"
 SYSTEM_NAMESPACE = uuid.UUID("9e09e90d-12fb-4e70-9f8a-a2d8d77d1d31")
 DEFAULT_EVENT_TYPES = tuple(item.value for item in EventType)
+EVENT_TYPE_COLORS = {
+    EventType.HOLIDAY.value: "#E8F5E9",
+    EventType.EXAM.value: "#FFEBEE",
+    EventType.MEETING.value: "#E3F2FD",
+    EventType.EXCURSION.value: "#FFF3E0",
+    EventType.CEREMONY.value: "#F3E5F5",
+    EventType.CUSTOM.value: "#F5F5F5",
+}
 
 
 def _utc_now() -> datetime:
@@ -183,6 +193,92 @@ class CalendarService:
         if holiday is None:
             raise NotFoundError("Event not found", error_code="ERR-CAL-404")
         return EventDetailResponse(**self._serialize_holiday(holiday, actor=actor)).model_dump()
+
+    async def list_holidays(
+        self,
+        *,
+        school_id: uuid.UUID,
+        user_id: uuid.UUID,
+        role: str,
+        academic_year_id: uuid.UUID | None = None,
+        from_date: date | None = None,
+        to_date: date | None = None,
+    ) -> list[dict[str, Any]]:
+        actor = CalendarActor(user_id=user_id, role=role, school_id=school_id)
+        window_start, window_end = await self._resolve_holiday_window(
+            school_id=school_id,
+            academic_year_id=academic_year_id,
+            from_date=from_date,
+            to_date=to_date,
+        )
+        holidays = await self.repo.list_holidays(
+            from_date=window_start,
+            to_date=window_end,
+        )
+        return [self._serialize_holiday(item, actor=actor) for item in holidays]
+
+    async def create_holiday(
+        self,
+        *,
+        body: HolidayCreateRequest,
+    ) -> MoroccanHoliday:
+        conflict = await self.repo.find_holiday_conflict(
+            code=body.code,
+            holiday_date=body.holiday_date,
+        )
+        if conflict is not None:
+            raise ValidationError(
+                "Holiday already exists for this date",
+                error_code="ERR-CAL-422",
+            )
+        holiday = MoroccanHoliday(
+            code=body.code,
+            holiday_date=body.holiday_date,
+            name_fr=body.name_fr,
+            name_ar=body.name_ar,
+            name_en=body.name_en,
+            description=body.description,
+            is_all_day=body.is_all_day,
+        )
+        return await self.repo.create_holiday(holiday)
+
+    async def update_holiday(
+        self,
+        *,
+        holiday_id: uuid.UUID,
+        body: HolidayUpdateRequest,
+    ) -> MoroccanHoliday:
+        holiday = await self.repo.get_holiday(holiday_id)
+        if holiday is None:
+            raise NotFoundError("Holiday not found", error_code="ERR-CAL-404")
+
+        payload = body.model_dump(exclude_unset=True)
+        next_code = payload.get("code", holiday.code)
+        next_date = payload.get("holiday_date", holiday.holiday_date)
+        conflict = await self.repo.find_holiday_conflict(
+            code=next_code,
+            holiday_date=next_date,
+            exclude_id=holiday_id,
+        )
+        if conflict is not None:
+            raise ValidationError(
+                "Holiday already exists for this date",
+                error_code="ERR-CAL-422",
+            )
+        for field, value in payload.items():
+            setattr(holiday, field, value)
+        return await self.repo.save_holiday(holiday)
+
+    async def delete_holiday(
+        self,
+        *,
+        holiday_id: uuid.UUID,
+    ) -> MoroccanHoliday:
+        holiday = await self.repo.get_holiday(holiday_id)
+        if holiday is None:
+            raise NotFoundError("Holiday not found", error_code="ERR-CAL-404")
+        await self.repo.delete_holiday(holiday)
+        return holiday
 
     async def create_event(
         self,
@@ -547,6 +643,38 @@ class CalendarService:
             )
         return set()
 
+    async def _resolve_holiday_window(
+        self,
+        *,
+        school_id: uuid.UUID,
+        academic_year_id: uuid.UUID | None,
+        from_date: date | None,
+        to_date: date | None,
+    ) -> tuple[date, date]:
+        if academic_year_id is not None:
+            academic_year = await self.repo.get_academic_year(
+                school_id=school_id,
+                academic_year_id=academic_year_id,
+            )
+            if academic_year is None:
+                raise NotFoundError("Academic year not found", error_code="ERR-CAL-404")
+            return academic_year.date_start, academic_year.date_end
+        if (from_date is None) != (to_date is None):
+            raise ValidationError(
+                "from_date and to_date must be provided together",
+                error_code="ERR-CAL-422",
+            )
+        if from_date is not None and to_date is not None:
+            return from_date, to_date
+        current_year = await self.repo.get_current_academic_year(
+            school_id=school_id,
+            on_date=date.today(),
+        )
+        if current_year is not None:
+            return current_year.date_start, current_year.date_end
+        today = date.today()
+        return date(today.year, 1, 1), date(today.year, 12, 31)
+
     def _can_view_event(
         self,
         event: Event,
@@ -621,6 +749,9 @@ class CalendarService:
                 break
         return occurrences
 
+    def _event_color(self, event_type: str) -> str:
+        return EVENT_TYPE_COLORS.get(event_type, EVENT_TYPE_COLORS[EventType.CUSTOM.value])
+
     def _serialize_event(
         self,
         event: Event,
@@ -660,6 +791,7 @@ class CalendarService:
             is_all_day=event.is_all_day,
             is_recurring=occurrence.is_recurring,
             recurrence_rule=event.recurrence_rule,
+            color=self._event_color(event.type),
             can_edit=can_edit,
             can_delete=can_delete,
             can_rsvp=can_rsvp,
@@ -674,6 +806,7 @@ class CalendarService:
     ) -> dict[str, Any]:
         start_dt = datetime.combine(holiday.holiday_date, time.min, tzinfo=timezone.utc)
         end_dt = start_dt + timedelta(days=1)
+        can_manage = actor.role in {"ADM", "DIR"}
         return EventListItem(
             id=str(holiday.id),
             instance_id=str(holiday.id),
@@ -694,8 +827,9 @@ class CalendarService:
             is_all_day=holiday.is_all_day,
             is_recurring=False,
             recurrence_rule=None,
-            can_edit=False,
-            can_delete=False,
+            color=self._event_color(EventType.HOLIDAY.value),
+            can_edit=can_manage,
+            can_delete=can_manage,
             can_rsvp=False,
             is_holiday=True,
         ).model_dump()
@@ -721,6 +855,7 @@ class CalendarService:
             my_rsvp=None,
             is_all_day=True,
             is_recurring=False,
+            color=self._event_color(EventType.CUSTOM.value),
             can_edit=False,
             can_delete=False,
             can_rsvp=False,
@@ -748,6 +883,7 @@ class CalendarService:
             my_rsvp=None,
             is_all_day=True,
             is_recurring=False,
+            color=self._event_color(EventType.CUSTOM.value),
             can_edit=False,
             can_delete=False,
             can_rsvp=False,
@@ -775,6 +911,7 @@ class CalendarService:
             my_rsvp=None,
             is_all_day=True,
             is_recurring=False,
+            color=self._event_color(EventType.CUSTOM.value),
             can_edit=False,
             can_delete=False,
             can_rsvp=False,
@@ -802,6 +939,7 @@ class CalendarService:
             my_rsvp=None,
             is_all_day=True,
             is_recurring=False,
+            color=self._event_color(EventType.CUSTOM.value),
             can_edit=False,
             can_delete=False,
             can_rsvp=False,

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
@@ -90,6 +90,26 @@ class ReminderPreferencesRequest(BaseModel):
     preferences: list[ReminderPreferenceItem]
 
 
+class HolidayCreateRequest(BaseModel):
+    code: str = Field(..., min_length=1, max_length=100)
+    holiday_date: date
+    name_fr: str = Field(..., min_length=1, max_length=255)
+    name_ar: str | None = Field(default=None, max_length=255)
+    name_en: str | None = Field(default=None, max_length=255)
+    description: str | None = None
+    is_all_day: bool = True
+
+
+class HolidayUpdateRequest(BaseModel):
+    code: str | None = Field(default=None, min_length=1, max_length=100)
+    holiday_date: date | None = None
+    name_fr: str | None = Field(default=None, min_length=1, max_length=255)
+    name_ar: str | None = Field(default=None, max_length=255)
+    name_en: str | None = Field(default=None, max_length=255)
+    description: str | None = None
+    is_all_day: bool | None = None
+
+
 class EventRSVPItem(BaseModel):
     user_id: str
     full_name: str
@@ -124,6 +144,7 @@ class EventListItem(BaseModel):
     is_all_day: bool = False
     is_recurring: bool = False
     recurrence_rule: dict[str, Any] | None = None
+    color: str
     can_edit: bool = False
     can_delete: bool = False
     can_rsvp: bool = False

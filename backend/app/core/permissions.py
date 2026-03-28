@@ -165,6 +165,7 @@ PERM_CAL_EVENT_CREATE = "PERM-CAL:event:create"
 PERM_CAL_EVENT_READ = "PERM-CAL:event:read"
 PERM_CAL_EVENT_UPDATE = "PERM-CAL:event:update"
 PERM_CAL_EVENT_DELETE = "PERM-CAL:event:delete"
+PERM_CAL_HOLIDAY_MANAGE = "PERM-CAL:holiday:manage"
 PERM_CAL_RSVP_RESPOND = "PERM-CAL:event-rsvp:respond"
 PERM_CAL_RSVP_READ = "PERM-CAL:event-rsvp:read"
 
@@ -263,6 +264,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_CAL_EVENT_READ,
         PERM_CAL_EVENT_UPDATE,
         PERM_CAL_EVENT_DELETE,
+        PERM_CAL_HOLIDAY_MANAGE,
         PERM_CAL_RSVP_READ,
         # Document management (Phase 16)
         PERM_DOC_DOCUMENT_UPLOAD,
@@ -325,6 +327,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_CAL_EVENT_READ,
         PERM_CAL_EVENT_UPDATE,
         PERM_CAL_EVENT_DELETE,
+        PERM_CAL_HOLIDAY_MANAGE,
         PERM_CAL_RSVP_READ,
         # Document management (Phase 16)
         PERM_DOC_DOCUMENT_UPLOAD,

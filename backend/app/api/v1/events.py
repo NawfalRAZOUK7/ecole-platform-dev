@@ -15,6 +15,7 @@ from app.core.permissions import (
     PERM_CAL_EVENT_DELETE,
     PERM_CAL_EVENT_READ,
     PERM_CAL_EVENT_UPDATE,
+    PERM_CAL_HOLIDAY_MANAGE,
     PERM_CAL_RSVP_RESPOND,
 )
 from app.core.response import list_response, success_response
@@ -24,6 +25,8 @@ from app.schemas.calendar import (
     EventCreateRequest,
     EventRSVPRequest,
     EventUpdateRequest,
+    HolidayCreateRequest,
+    HolidayUpdateRequest,
     ReminderPreferencesRequest,
 )
 from app.services.audit import AuditService
@@ -32,9 +35,6 @@ from app.services.reminders import ReminderService
 from app.services.rsvp import RSVPService
 
 router = APIRouter(tags=["calendar"])
-
-
-
 
 @router.get(
     "/events",
@@ -60,6 +60,145 @@ async def list_events(
         class_id=class_id,
     )
     return list_response(items)
+
+
+@router.get(
+    "/calendar/holidays",
+    summary="List holidays",
+    response_description="Holiday calendar rows for the selected academic year or date range",
+)
+async def list_holidays(
+    academic_year_id: uuid.UUID | None = Query(None),
+    from_date: date | None = Query(None, alias="from"),
+    to_date: date | None = Query(None, alias="to"),
+    auth: AuthContext = Depends(requires_permission(PERM_CAL_EVENT_READ)),
+    db: AsyncSession = Depends(get_db),
+):
+    calendar = CalendarService(db)
+    items = await calendar.list_holidays(
+        school_id=auth.school_id,
+        user_id=auth.user_id,
+        role=auth.role,
+        academic_year_id=academic_year_id,
+        from_date=from_date,
+        to_date=to_date,
+    )
+    return list_response(items)
+
+
+@router.post(
+    "/calendar/holidays",
+    status_code=201,
+    summary="Create a holiday",
+    response_description="Created holiday",
+)
+async def create_holiday(
+    body: HolidayCreateRequest,
+    request: Request,
+    auth: AuthContext = Depends(requires_permission(PERM_CAL_HOLIDAY_MANAGE)),
+    db: AsyncSession = Depends(get_db),
+):
+    calendar = CalendarService(db)
+    audit = AuditService(db)
+    holiday = await calendar.create_holiday(body=body)
+    payload = await calendar.get_event_detail(
+        event_id=holiday.id,
+        school_id=auth.school_id,
+        user_id=auth.user_id,
+        role=auth.role,
+    )
+    await audit.log_event(
+        school_id=auth.school_id,
+        actor_id=auth.user_id,
+        action_type="calendar.holiday.create",
+        target_type="holiday",
+        target_id=holiday.id,
+        outcome="success",
+        entity_after=payload,
+        ip_address=get_client_ip(request),
+    )
+    await db.commit()
+    return success_response(payload)
+
+
+@router.put(
+    "/calendar/holidays/{holiday_id}",
+    summary="Update a holiday",
+    response_description="Updated holiday",
+)
+async def update_holiday(
+    holiday_id: uuid.UUID,
+    body: HolidayUpdateRequest,
+    request: Request,
+    auth: AuthContext = Depends(requires_permission(PERM_CAL_HOLIDAY_MANAGE)),
+    db: AsyncSession = Depends(get_db),
+):
+    calendar = CalendarService(db)
+    audit = AuditService(db)
+    before = await calendar.get_event_detail(
+        event_id=holiday_id,
+        school_id=auth.school_id,
+        user_id=auth.user_id,
+        role=auth.role,
+    )
+    holiday = await calendar.update_holiday(
+        holiday_id=holiday_id,
+        body=body,
+    )
+    after = await calendar.get_event_detail(
+        event_id=holiday.id,
+        school_id=auth.school_id,
+        user_id=auth.user_id,
+        role=auth.role,
+    )
+    await audit.log_event(
+        school_id=auth.school_id,
+        actor_id=auth.user_id,
+        action_type="calendar.holiday.update",
+        target_type="holiday",
+        target_id=holiday.id,
+        outcome="success",
+        entity_before=before,
+        entity_after=after,
+        ip_address=get_client_ip(request),
+    )
+    await db.commit()
+    return success_response(after)
+
+
+@router.delete(
+    "/calendar/holidays/{holiday_id}",
+    summary="Delete a holiday",
+    response_description="Deletion outcome",
+)
+async def delete_holiday(
+    holiday_id: uuid.UUID,
+    request: Request,
+    auth: AuthContext = Depends(requires_permission(PERM_CAL_HOLIDAY_MANAGE)),
+    db: AsyncSession = Depends(get_db),
+):
+    calendar = CalendarService(db)
+    audit = AuditService(db)
+    before = await calendar.get_event_detail(
+        event_id=holiday_id,
+        school_id=auth.school_id,
+        user_id=auth.user_id,
+        role=auth.role,
+    )
+    holiday = await calendar.delete_holiday(holiday_id=holiday_id)
+    await audit.log_event(
+        school_id=auth.school_id,
+        actor_id=auth.user_id,
+        action_type="calendar.holiday.delete",
+        target_type="holiday",
+        target_id=holiday.id,
+        outcome="success",
+        entity_before=before,
+        entity_after={"deleted": True, "id": str(holiday.id)},
+        ip_address=get_client_ip(request),
+    )
+    await db.commit()
+    return success_response({"deleted": True, "id": str(holiday.id)})
 
 
 @router.post(

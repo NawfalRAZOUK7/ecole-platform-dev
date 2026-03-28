@@ -116,8 +116,8 @@
 - [ ] **Review & commit myself**: `feat(backend): add PDF report templates and Arabic RTL support`
 
 ### Phase 15 Gaps
-- [ ] Add holiday CRUD endpoints (create/update for ADM)
-- [ ] Add event type color coding in calendar responses
+- [x] Add holiday CRUD endpoints (create/update for ADM)
+- [x] Add event type color coding in calendar responses
 - [ ] **Review & commit myself**: `feat(backend): add holiday management and event color coding`
 
 ### Phase 16 Gaps

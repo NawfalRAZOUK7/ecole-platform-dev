@@ -89,6 +89,68 @@ class CalendarRepository(BaseRepository):
         )
         return result.scalar_one_or_none()
 
+    async def find_holiday_conflict(
+        self,
+        *,
+        code: str,
+        holiday_date: date,
+        exclude_id: uuid.UUID | None = None,
+    ) -> MoroccanHoliday | None:
+        query = select(MoroccanHoliday).where(
+            MoroccanHoliday.code == code,
+            MoroccanHoliday.holiday_date == holiday_date,
+        )
+        if exclude_id is not None:
+            query = query.where(MoroccanHoliday.id != exclude_id)
+        result = await self.db.execute(query)
+        return result.scalar_one_or_none()
+
+    async def create_holiday(self, holiday: MoroccanHoliday) -> MoroccanHoliday:
+        self.db.add(holiday)
+        await self.db.flush()
+        return holiday
+
+    async def save_holiday(self, holiday: MoroccanHoliday) -> MoroccanHoliday:
+        self.db.add(holiday)
+        await self.db.flush()
+        return holiday
+
+    async def delete_holiday(self, holiday: MoroccanHoliday) -> None:
+        await self.db.delete(holiday)
+        await self.db.flush()
+
+    async def get_academic_year(
+        self,
+        *,
+        school_id: uuid.UUID,
+        academic_year_id: uuid.UUID,
+    ) -> AcademicYear | None:
+        result = await self.db.execute(
+            select(AcademicYear).where(
+                AcademicYear.school_id == school_id,
+                AcademicYear.id == academic_year_id,
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def get_current_academic_year(
+        self,
+        *,
+        school_id: uuid.UUID,
+        on_date: date,
+    ) -> AcademicYear | None:
+        result = await self.db.execute(
+            select(AcademicYear)
+            .where(
+                AcademicYear.school_id == school_id,
+                AcademicYear.date_start <= on_date,
+                AcademicYear.date_end >= on_date,
+            )
+            .order_by(AcademicYear.date_start.desc())
+            .limit(1)
+        )
+        return result.scalar_one_or_none()
+
     async def list_period_boundaries(
         self,
         *,
