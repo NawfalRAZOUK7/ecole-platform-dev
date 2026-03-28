@@ -132,10 +132,10 @@
 ## Phase 3: Web Frontend Refactor (4 batches)
 
 ### Batch 0 — React Query Setup
-- [ ] Install `@tanstack/react-query@5`
-- [ ] Update `web/src/main.tsx` with QueryClientProvider
-- [ ] Create `web/src/shared/hooks/useQueryDefaults.ts`
-- [ ] Verify: `npm run build` passes
+- [x] Install `@tanstack/react-query@5`
+- [x] Update `web/src/main.tsx` with QueryClientProvider
+- [x] Create `web/src/shared/hooks/useQueryDefaults.ts`
+- [x] Verify: `npm run build` passes
 - [ ] **Review & commit myself**: `feat(web): add React Query and shared query configuration`
 
 ### Batch 1 — Notifications, Feed, Calendar
