@@ -90,13 +90,13 @@
 ### Phase OOP-C: Domain Events
 
 #### OOP-C1: Event Classes
-- [ ] Created domain/events/base.py (DomainEvent)
-- [ ] Created domain/events/lms.py (5 events)
-- [ ] Created domain/events/calendar.py (4 events)
-- [ ] Created domain/events/billing.py (3 events)
-- [ ] Created domain/events/documents.py (3 events)
-- [ ] Created domain/events/auth.py (3 events)
-- [ ] Updated domain/events/__init__.py with all exports
+- [x] Created domain/events/base.py (DomainEvent)
+- [x] Created domain/events/lms.py (5 events)
+- [x] Created domain/events/calendar.py (4 events)
+- [x] Created domain/events/billing.py (3 events)
+- [x] Created domain/events/documents.py (3 events)
+- [x] Created domain/events/auth.py (3 events)
+- [x] Updated domain/events/__init__.py with all exports
 - [ ] **Review & commit myself**
 
 #### OOP-C2: Delivery Strategies
