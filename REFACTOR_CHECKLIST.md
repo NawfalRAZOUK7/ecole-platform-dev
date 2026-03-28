@@ -227,3 +227,47 @@
 | Infra Security | 1 | 30 min | ⬜ |
 | Final Validation | 1 | 30 min | ⬜ |
 | **TOTAL** | **18** | **~11 hours** | ⬜ |
+
+---
+
+## Independent Validation — 2026-03-28
+
+| Check | Area | Status | Issues |
+|-------|------|--------|--------|
+| 1 | Backend Routers | PASS | `backend/app/api/v1/` has zero `from sqlalchemy import`, `from sqlalchemy.orm import`, `db.execute(`, `select(`, and session `.add(` matches. |
+| 2 | Backend Services | PASS | `backend/app/services/` has zero `from sqlalchemy import select/update/delete` and zero `self.db.execute(` matches. |
+| 3 | Backend Repositories | PASS | 21 concrete repository classes across 19 implementation files extend `BaseRepository`; 22 repository classes total including `BaseRepository`. |
+| 4 | Backend Service Init | FAIL | Utility services `EmailService`, `FileStorageService`, and `SMSService` do not instantiate repositories in `__init__`. |
+| 5 | Backend RBAC Checks | FAIL | One hardcoded role gate remains in `backend/app/api/v1/notifications.py:202`; zero `requires_role(` matches. |
+| 6 | Backend Permission Coverage | FAIL | 181 of 194 authenticated endpoints use `requires_permission`; 13 endpoints still use `get_current_user` without a permission dependency. |
+| 7 | Backend Shared Helpers | PASS | Zero router-local `_get_client_ip`, `_request_locale`, or `_optional_current` helpers remain in `backend/app/api/v1/`. |
+| 8 | Backend OpenAPI Docs | PASS | 211 of 211 endpoints have `summary=` in the route decorator (100%). |
+| 9 | Web Pages | PASS | Zero direct `api.get/post/patch/delete/list` calls found in `web/src/features/**/*Page.tsx`. |
+| 10 | Web Feature Structure | PASS | All 23 feature directories contain at least one `*.service.ts` file and at least one `use*.ts` hook file. |
+| 11 | Web Runtime Build | PASS | `cd web && npm run build` succeeded; Vite only reported a large-chunk warning on the production bundle. |
+| 12 | Mobile Analyze | PASS | `cd mobile && flutter analyze` completed cleanly: `No issues found!` |
+| 13 | Mobile Pattern Scan | PASS | Zero deprecated `DropdownButtonFormField ... value:` patterns and zero `resp['data']` / `resp['meta']` matches in `mobile/lib/`. |
+| 14 | Infra Security | FAIL | Requested checks passed, but `infra/redis/redis.conf` still binds `0.0.0.0` instead of the `127.0.0.1` value claimed earlier in the checklist. |
+| 15 | Phase 14-16 Gaps | FAIL | PDF templates, RTL support, weekly analytics, expiry notifications, and bulk ZIP logic exist; `web/src/features/documents/ResourcesPage.tsx` is still only a 5-line wrapper, not a standalone >100 line implementation. |
+
+### Files Needing Fixes
+
+- `backend/app/api/v1/notifications.py:202` — replace the hardcoded `auth.role` check with `requires_permission(...)`.
+- `backend/app/api/v1/auth.py:268` — `logout` is authenticated but not permission-gated.
+- `backend/app/api/v1/auth.py:302` — `me` is authenticated but not permission-gated.
+- `backend/app/api/v1/auth.py:328` — `list_sessions` is authenticated but not permission-gated.
+- `backend/app/api/v1/auth.py:354` — `revoke_session` is authenticated but not permission-gated.
+- `backend/app/api/v1/auth.py:385` — `change_password` is authenticated but not permission-gated.
+- `backend/app/api/v1/auth.py:417` — `two_factor_setup` is authenticated but not permission-gated.
+- `backend/app/api/v1/auth.py:445` — `two_factor_verify_setup` is authenticated but not permission-gated.
+- `backend/app/api/v1/auth.py:474` — `two_factor_disable` is authenticated but not permission-gated.
+- `backend/app/api/v1/features.py:25` — `get_active_features_for_user` uses `get_current_user` without `requires_permission`.
+- `backend/app/api/v1/notifications.py:196` — `update_digest_preferences` uses `get_current_user` without `requires_permission`.
+- `backend/app/api/v1/profiles.py:25` — `get_my_profile` uses `get_current_user` without `requires_permission`.
+- `backend/app/api/v1/profiles.py:38` — `update_my_profile` uses `get_current_user` without `requires_permission`.
+- `backend/app/api/v1/timetable.py:182` — `get_my_weekly_timetable` uses `get_current_user` without `requires_permission`.
+- `backend/app/services/email.py:102` — `EmailService` has no repository construction in `__init__`.
+- `backend/app/services/file_storage.py:203` — `FileStorageService` has no repository construction in `__init__`.
+- `backend/app/services/sms.py:80` — `SMSService` has no repository construction in `__init__`.
+- `infra/redis/redis.conf:16` — Redis still binds `0.0.0.0`.
+- `web/src/features/documents/ResourcesPage.tsx:1` — file is only 5 lines and delegates to `DocumentsPage` instead of providing a standalone implementation.
