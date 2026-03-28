@@ -230,11 +230,11 @@
 ### Phase ENH-B: LMS Enhancements
 
 #### ENH-B1: Rubric Engine — Models + Migration
-- [ ] Added Rubric, RubricCriterion, RubricLevel, RubricScore models to lms.py
-- [ ] Added rubric_id FK to Assignment model
-- [ ] Updated models/__init__.py with new exports
-- [ ] Created migration G28a: rubrics + criteria + levels + scores tables + Assignment.rubric_id
-- [ ] Created schemas/rubric.py (all request/response schemas)
+- [x] Added Rubric, RubricCriterion, RubricLevel, RubricScore models to lms.py
+- [x] Added rubric_id FK to Assignment model
+- [x] Updated models/__init__.py with new exports
+- [x] Created migration G28a: rubrics + criteria + levels + scores tables + Assignment.rubric_id
+- [x] Created schemas/rubric.py (all request/response schemas)
 - [ ] **Review & commit myself**
 
 #### ENH-B2: Rubric Engine — Service + Router

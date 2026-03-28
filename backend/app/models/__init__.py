@@ -55,6 +55,10 @@ from app.models.lms import (
     ContentProgress,
     Course,
     Grade,
+    Rubric,
+    RubricCriterion,
+    RubricLevel,
+    RubricScore,
     Submission,
     SubmissionFile,
 )
@@ -153,6 +157,10 @@ __all__ = [
     "ContentItem",
     "ContentItemAsset",
     "ContentProgress",
+    "Rubric",
+    "RubricCriterion",
+    "RubricLevel",
+    "RubricScore",
     "Activity",
     "ActivitySession",
     # COM

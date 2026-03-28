@@ -13,6 +13,7 @@ from sqlalchemy import (
     Boolean,
     CheckConstraint,
     DateTime,
+    Float,
     ForeignKey,
     Index,
     Integer,
@@ -112,6 +113,92 @@ class Course(TimestampMixin, Base):
     __table_args__ = (Index("idx_courses_school_class", "school_id", "class_id"),)
 
 
+class Rubric(TimestampMixin, Base):
+    """Structured grading rubric owned by a teacher or reused as a template."""
+
+    __tablename__ = "rubrics"
+
+    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    teacher_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    title: Mapped[str] = mapped_column(String(300), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    total_points: Mapped[int] = mapped_column(Integer, nullable=False, default=20)
+    is_template: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+    )
+
+    criteria: Mapped[list["RubricCriterion"]] = relationship(
+        back_populates="rubric",
+        cascade="all, delete-orphan",
+        order_by="RubricCriterion.position",
+    )
+    assignments: Mapped[list["Assignment"]] = relationship(back_populates="rubric")
+
+    __table_args__ = (
+        CheckConstraint("total_points >= 0", name="ck_rubrics_total_points"),
+        Index("idx_rubrics_school_teacher", "school_id", "teacher_id"),
+    )
+
+
+class RubricCriterion(TimestampMixin, Base):
+    """Weighted criterion within a rubric."""
+
+    __tablename__ = "rubric_criteria"
+
+    rubric_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("rubrics.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    weight: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    position: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+    rubric: Mapped["Rubric"] = relationship(back_populates="criteria")
+    levels: Mapped[list["RubricLevel"]] = relationship(
+        back_populates="criterion",
+        cascade="all, delete-orphan",
+        order_by="RubricLevel.position",
+    )
+    scores: Mapped[list["RubricScore"]] = relationship(
+        back_populates="criterion",
+        cascade="all, delete-orphan",
+    )
+
+    __table_args__ = (
+        CheckConstraint("weight >= 0", name="ck_rubric_criteria_weight"),
+        Index("idx_rubric_criteria_rubric", "rubric_id"),
+    )
+
+
+class RubricLevel(TimestampMixin, Base):
+    """Level option for a rubric criterion."""
+
+    __tablename__ = "rubric_levels"
+
+    criterion_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("rubric_criteria.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    label: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    points: Mapped[float] = mapped_column(Float, nullable=False)
+    position: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+    criterion: Mapped["RubricCriterion"] = relationship(back_populates="levels")
+    scores: Mapped[list["RubricScore"]] = relationship(back_populates="level")
+
+    __table_args__ = (
+        CheckConstraint("points >= 0", name="ck_rubric_levels_points"),
+        Index("idx_rubric_levels_criterion", "criterion_id"),
+    )
+
+
 class Assignment(TimestampMixin, Base):
     """Assignment — teacher-created work for students in a course."""
 
@@ -133,6 +220,10 @@ class Assignment(TimestampMixin, Base):
     exercise_type: Mapped[str] = mapped_column(
         String(20), nullable=False, default=ExerciseType.STANDARD.value
     )
+    rubric_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("rubrics.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     quiz_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("quizzes.id", ondelete="SET NULL"), nullable=True
     )
@@ -141,6 +232,7 @@ class Assignment(TimestampMixin, Base):
 
     # Relationships
     course: Mapped["Course"] = relationship(back_populates="assignments")
+    rubric: Mapped["Rubric | None"] = relationship(back_populates="assignments")
     submissions: Mapped[list["Submission"]] = relationship(
         back_populates="assignment", cascade="all, delete-orphan"
     )
@@ -148,6 +240,7 @@ class Assignment(TimestampMixin, Base):
     __table_args__ = (
         CheckConstraint("total_points >= 0", name="ck_assignments_total_points"),
         Index("idx_assignments_course_due", "course_id", "due_at"),
+        Index("idx_assignments_rubric", "rubric_id"),
         Index("idx_assignments_quiz", "quiz_id"),
     )
 
@@ -177,6 +270,10 @@ class Submission(TimestampMixin, Base):
     assignment: Mapped["Assignment"] = relationship(back_populates="submissions")
     files: Mapped[list["SubmissionFile"]] = relationship(
         back_populates="submission", cascade="all, delete-orphan"
+    )
+    rubric_scores: Mapped[list["RubricScore"]] = relationship(
+        back_populates="submission",
+        cascade="all, delete-orphan",
     )
     grade: Mapped["Grade | None"] = relationship(
         back_populates="submission", uselist=False
@@ -211,6 +308,41 @@ class SubmissionFile(TimestampMixin, Base):
 
     # Relationships
     submission: Mapped["Submission"] = relationship(back_populates="files")
+
+
+class RubricScore(TimestampMixin, Base):
+    """Teacher score for one rubric criterion on a submission."""
+
+    __tablename__ = "rubric_scores"
+
+    submission_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("submissions.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    criterion_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("rubric_criteria.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    level_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("rubric_levels.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    points_awarded: Mapped[float] = mapped_column(Float, nullable=False)
+    comment: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    submission: Mapped["Submission"] = relationship(back_populates="rubric_scores")
+    criterion: Mapped["RubricCriterion"] = relationship(back_populates="scores")
+    level: Mapped["RubricLevel | None"] = relationship(back_populates="scores")
+
+    __table_args__ = (
+        CheckConstraint("points_awarded >= 0", name="ck_rubric_scores_points_awarded"),
+        UniqueConstraint(
+            "submission_id",
+            "criterion_id",
+            name="uq_rubric_scores_sub_criterion",
+        ),
+        Index("idx_rubric_scores_submission", "submission_id"),
+    )
 
 
 class Grade(TimestampMixin, Base):
