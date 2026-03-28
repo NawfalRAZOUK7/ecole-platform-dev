@@ -275,6 +275,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_LMS_ASSESSMENT_PUBLISH,
         PERM_LMS_RUBRIC_CREATE,
         PERM_LMS_RUBRIC_READ,
+        PERM_LMS_GRADEBOOK_MANAGE,
         PERM_LMS_GRADEBOOK_READ,
         PERM_LMS_QUESTION_BANK_READ,
         # Billing — read global + fee management (Phase 11B)
@@ -359,13 +360,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_ERP_TIMETABLE_EXCEPTION_READ,
         # LMS — read analytics
         PERM_LMS_ASSESSMENT_READ,
+        PERM_LMS_RUBRIC_READ,
         PERM_LMS_GRADEBOOK_READ,
-        PERM_LMS_QUESTION_BANK_READ,
         # Billing — policy oversight + plans (ENH-C1)
-        PERM_BIL_SIBLING_POLICY_MANAGE,
-        PERM_BIL_LATE_FEE_MANAGE,
-        PERM_BIL_PAYMENT_PLAN_CREATE,
-        PERM_BIL_PAYMENT_PLAN_READ,
         # Progress (Phase 11D)
         PERM_PROGRESS_READ,
         PERM_PROGRESS_CLASS_READ,
@@ -411,7 +408,6 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IAM_RECOVERY_REQUEST,
         PERM_IAM_RECOVERY_VERIFY,
         PERM_IAM_RECOVERY_RESET,
-        PERM_IAM_LOGIN_HISTORY_READ,
         # ERP — attendance mark
         PERM_ERP_CLASS_READ,
         PERM_ERP_ATTENDANCE_MARK,
@@ -435,6 +431,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_LMS_RUBRIC_CREATE,
         PERM_LMS_RUBRIC_READ,
         PERM_LMS_GRADEBOOK_MANAGE,
+        PERM_LMS_GRADEBOOK_READ,
         PERM_LMS_QUESTION_BANK_MANAGE,
         PERM_LMS_QUESTION_BANK_READ,
         # CMS — assign content to class + submit for review
@@ -491,10 +488,8 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IAM_RECOVERY_REQUEST,
         PERM_IAM_RECOVERY_VERIFY,
         PERM_IAM_RECOVERY_RESET,
-        PERM_IAM_LOGIN_HISTORY_READ,
         # ERP — justify absence
         PERM_ERP_ABSENCE_JUSTIFY,
-        PERM_ERP_ATTENDANCE_ANALYTICS_READ,
         # ERP — Timetable (Phase 11A)
         PERM_ERP_TIMETABLE_READ,
         PERM_ERP_TIMETABLE_EXCEPTION_READ,
@@ -549,9 +544,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IAM_RECOVERY_REQUEST,
         PERM_IAM_RECOVERY_VERIFY,
         PERM_IAM_RECOVERY_RESET,
-        PERM_IAM_LOGIN_HISTORY_READ,
         # ERP — Timetable (Phase 11A)
-        PERM_ERP_ATTENDANCE_ANALYTICS_READ,
         PERM_ERP_TIMETABLE_READ,
         PERM_ERP_TIMETABLE_EXCEPTION_READ,
         # LMS — submit + read progress + files
@@ -612,8 +605,6 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_BIL_PAYMENT_RECONCILE,
         PERM_COM_NOTIFICATION_BATCH_CREATE,
         PERM_IA_WRITING_ATTEMPT_REVIEW,
-        PERM_IAM_LOGIN_HISTORY_READ,
-        PERM_ERP_ATTENDANCE_ALERT_MANAGE,
         # Feature toggles (Phase 11E)
         PERM_SYS_FEATURE_MANAGE,
     },
@@ -627,7 +618,6 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IAM_RECOVERY_REQUEST,
         PERM_IAM_RECOVERY_VERIFY,
         PERM_IAM_RECOVERY_RESET,
-        PERM_IAM_LOGIN_HISTORY_READ,
         # CMS — full content management + review
         PERM_CMS_CONTENT_CREATE,
         PERM_CMS_CONTENT_PUBLISH,
@@ -646,6 +636,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_QUIZ_MANAGE,
         PERM_QUIZ_PUBLISH,
         PERM_QUIZ_ANALYTICS,
+        # LMS enhancement permissions
+        PERM_LMS_QUESTION_BANK_MANAGE,
+        PERM_LMS_QUESTION_BANK_READ,
         # COM — notifications
         PERM_COM_NOTIFICATION_READ,
         # Feature toggles (Phase 11E)

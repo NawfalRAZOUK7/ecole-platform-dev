@@ -387,7 +387,7 @@
 - [x] Document Versioning: DocumentVersion exists, /versions endpoints registered
 - [x] Report Scheduling: ReportSchedule exists, /schedules endpoints registered
 - [x] AI Provider: services/ai/ exists, MockProvider realistic, ClaudeProvider ready
-- [ ] All new permissions registered with correct role assignments
+- [x] All new permissions registered with correct role assignments
 - [x] All migrations (G27a-G30c) exist and are valid
 - [x] All new endpoints registered in router.py
 - [x] All import health checks pass

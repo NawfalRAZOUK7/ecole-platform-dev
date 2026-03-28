@@ -18,7 +18,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, get_current_user, requires_permission
-from app.core.permissions import PERM_IAM_LOGIN_HISTORY_READ
 from app.core.redis import get_redis
 from app.core.response import list_response, success_response
 from app.core.request_utils import get_client_ip, parse_device_name
@@ -350,7 +349,7 @@ async def list_sessions(
     response_description="Paginated login history for the authenticated user",
 )
 async def login_history(
-    auth: AuthContext = Depends(requires_permission(PERM_IAM_LOGIN_HISTORY_READ)),
+    auth: AuthContext = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
     redis: aioredis.Redis = Depends(get_redis),
     cursor: str | None = Query(None),
