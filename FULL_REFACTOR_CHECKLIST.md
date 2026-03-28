@@ -12,15 +12,15 @@
 ### Phase OOP-A: Foundation Layer
 
 #### OOP-A1: Value Objects
-- [ ] Created backend/app/domain/ directory
-- [ ] Created backend/app/domain/value_objects/ directory
-- [ ] Created backend/app/domain/events/ directory
-- [ ] Created backend/app/domain/protocols/ directory
-- [ ] Created __init__.py files in all domain directories
-- [ ] Created MoroccanGrade (grade.py) — validates 0-20, has mention property
-- [ ] Created Money (money.py) — validates non-negative, MAD currency
-- [ ] Created UserId + SchoolId (typed_id.py)
-- [ ] Created RoleSet (role_set.py) — validates 8 roles
+- [x] Created backend/app/domain/ directory
+- [x] Created backend/app/domain/value_objects/ directory
+- [x] Created backend/app/domain/events/ directory
+- [x] Created backend/app/domain/protocols/ directory
+- [x] Created __init__.py files in all domain directories
+- [x] Created MoroccanGrade (grade.py) — validates 0-20, has mention property
+- [x] Created Money (money.py) — validates non-negative, MAD currency
+- [x] Created UserId + SchoolId (typed_id.py)
+- [x] Created RoleSet (role_set.py) — validates 8 roles
 - [ ] **Review & commit myself**
 
 #### OOP-A2: UnitOfWork (Core Services)
