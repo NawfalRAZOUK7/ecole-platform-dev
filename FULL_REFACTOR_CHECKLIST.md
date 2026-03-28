@@ -330,21 +330,21 @@
 ### Phase ENH-D: Communication & Docs Enhancements
 
 #### ENH-D1: Message Attachments + Search + Document Versioning
-- [ ] Added attachment_id FK to Message model in com.py
-- [ ] Updated send_message in communication.py to accept attachment_id
-- [ ] Validated attachment belongs to sender
-- [ ] Created migration G30a: Message.attachment_id + GIN index on messages.body
-- [ ] Added search_messages() to messaging repository (PostgreSQL full-text search)
-- [ ] Added search_messages() to communication service
-- [ ] Added GET /messages/search endpoint
-- [ ] Added DocumentVersion model to documents.py
-- [ ] Created migration G30b: document_versions table
-- [ ] Updated student_documents.py upload logic (detect existing, create version)
-- [ ] Added list_versions(), restore_version(), get_version() to student_documents service
-- [ ] Added GET /documents/{id}/versions endpoint
-- [ ] Added POST /documents/{id}/versions/{n}/restore endpoint
-- [ ] Added GET /documents/{id}/versions/{n} endpoint
-- [ ] Updated models/__init__.py and repositories
+- [x] Added attachment_id FK to Message model in com.py
+- [x] Updated send_message in communication.py to accept attachment_id
+- [x] Validated attachment belongs to sender
+- [x] Created migration G30a: Message.attachment_id + GIN index on messages.body
+- [x] Added search_messages() to messaging repository (PostgreSQL full-text search)
+- [x] Added search_messages() to communication service
+- [x] Added GET /messages/search endpoint
+- [x] Added DocumentVersion model to documents.py
+- [x] Created migration G30b: document_versions table
+- [x] Updated student_documents.py upload logic (detect existing, create version)
+- [x] Added list_versions(), restore_version(), get_version() to student_documents service
+- [x] Added GET /documents/{id}/versions endpoint
+- [x] Added POST /documents/{id}/versions/{n}/restore endpoint
+- [x] Added GET /documents/{id}/versions/{n} endpoint
+- [x] Updated models/__init__.py and repositories
 - [ ] **Review & commit myself**
 
 #### ENH-D2: Report Scheduling + AI Provider Abstraction
@@ -383,8 +383,8 @@
 - [ ] Payment Plans: PaymentPlan + Installment exist, /payment-plans endpoints registered
 - [x] Attendance Analytics: AttendanceAlert exists, /analytics/attendance endpoints registered
 - [x] Timetable Generation: 2 models exist, algorithm runs within 30s
-- [ ] Message Attachments: attachment_id on Message, /messages/search works
-- [ ] Document Versioning: DocumentVersion exists, /versions endpoints registered
+- [x] Message Attachments: attachment_id on Message, /messages/search works
+- [x] Document Versioning: DocumentVersion exists, /versions endpoints registered
 - [ ] Report Scheduling: ReportSchedule exists, /schedules endpoints registered
 - [ ] AI Provider: services/ai/ exists, MockProvider realistic, ClaudeProvider ready
 - [ ] All new permissions registered with correct role assignments

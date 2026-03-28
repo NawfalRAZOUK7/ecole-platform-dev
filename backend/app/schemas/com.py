@@ -104,6 +104,7 @@ class MessageCreateRequest(BaseModel):
     """Send a message in a conversation."""
 
     body: str = Field(..., min_length=1, max_length=5000)
+    attachment_id: uuid.UUID | None = None
 
 
 class MessageResponse(BaseModel):

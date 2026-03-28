@@ -8,6 +8,7 @@ import mimetypes
 import re
 import socket
 import tempfile
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol, runtime_checkable
@@ -253,6 +254,34 @@ class FileStorageService:
         if thumbnail_path and not await self.backend.exists(thumbnail_path):
             thumbnail_path = None
         return storage_path, thumbnail_path
+
+    async def store_upload_copy(
+        self,
+        *,
+        content: bytes,
+        original_filename: str,
+        mime_type: str,
+    ) -> tuple[str, str]:
+        validate_document_upload(mime_type=mime_type, size_bytes=len(content))
+        await virus_scan_hook(content)
+        digest = self.compute_sha256(content)
+        safe_name = _safe_filename(original_filename)
+        extension = _extension_for(safe_name, mime_type)
+        relative_path = (
+            f"{settings.document_storage_subdirectory}/copies/"
+            f"{uuid.uuid4().hex}{extension}"
+        )
+        await self.backend.save_bytes(
+            relative_path=relative_path,
+            content=content,
+            mime_type=mime_type,
+        )
+        thumbnail_path = await self._maybe_generate_thumbnail(
+            content=content,
+            sha256=digest,
+            mime_type=mime_type,
+        )
+        return relative_path, thumbnail_path or ""
 
     async def _maybe_generate_thumbnail(
         self,

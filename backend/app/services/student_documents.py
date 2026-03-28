@@ -24,9 +24,16 @@ from app.core.metrics import (
 from app.core.unit_of_work import UnitOfWork
 from app.domain.events.documents import DocumentExpiring, DocumentUploaded
 from app.models.com import NotificationCategory
-from app.models.documents import Document, DocumentCategory, StudentDocumentRequirement
+from app.models.documents import (
+    Document,
+    DocumentCategory,
+    DocumentVersion,
+    StudentDocumentRequirement,
+)
 from app.repositories.documents import DocumentsRepository
+from app.schemas.documents import DocumentVersionResponse
 from app.services.delivery.base import DeliveryStrategy
+from app.services.audit import AuditService
 from app.services.event_dispatcher import EventDispatcher
 from app.services.file_storage import file_storage_service
 from app.services.notification_hub import NotificationHubService
@@ -227,6 +234,121 @@ class StudentDocumentsService:
         )
         return document
 
+    async def list_versions(
+        self,
+        *,
+        document_id: uuid.UUID,
+        school_id: uuid.UUID,
+        actor_id: uuid.UUID,
+        actor_role: str,
+    ) -> list[dict]:
+        document = await self.get_document_for_actor(
+            document_id=document_id,
+            school_id=school_id,
+            actor_id=actor_id,
+            actor_role=actor_role,
+        )
+        versions = await self.repo.list_document_versions(document_id=document.id)
+        return [self._version_to_response(version) for version in versions]
+
+    async def get_version(
+        self,
+        *,
+        document_id: uuid.UUID,
+        version_number: int,
+        school_id: uuid.UUID,
+        actor_id: uuid.UUID,
+        actor_role: str,
+    ) -> tuple[DocumentVersion, Path]:
+        document = await self.get_document_for_actor(
+            document_id=document_id,
+            school_id=school_id,
+            actor_id=actor_id,
+            actor_role=actor_role,
+        )
+        version = await self.repo.get_document_version(
+            document_id=document.id,
+            version_number=version_number,
+        )
+        if version is None:
+            raise NotFoundError("Document version not found", error_code="ERR-DOC-404")
+        return version, await file_storage_service.local_path(version.storage_path)
+
+    async def restore_version(
+        self,
+        *,
+        document_id: uuid.UUID,
+        version_number: int,
+        school_id: uuid.UUID,
+        actor_id: uuid.UUID,
+        actor_role: str,
+        ip_address: str | None,
+    ) -> dict:
+        document = await self.get_document_for_actor(
+            document_id=document_id,
+            school_id=school_id,
+            actor_id=actor_id,
+            actor_role=actor_role,
+        )
+        if actor_role not in {"ADM", "DIR"} and document.uploader_id != actor_id:
+            raise AuthorizationError(
+                "Only the uploader or an administrator can restore document versions",
+                error_code="ERR-DOC-403",
+            )
+
+        version = await self.repo.get_document_version(
+            document_id=document.id,
+            version_number=version_number,
+        )
+        if version is None:
+            raise NotFoundError("Document version not found", error_code="ERR-DOC-404")
+
+        content = (await file_storage_service.local_path(version.storage_path)).read_bytes()
+        async with UnitOfWork(self.db) as uow:
+            repo = DocumentsRepository(uow.session)
+            audit = AuditService(uow.session)
+            stored_document = await repo.get_document(document.id)
+            await self._capture_document_version(
+                repo=repo,
+                document=stored_document,
+                change_note=f"Snapshot before restoring v{version_number}",
+            )
+            storage_path, thumbnail_path = await file_storage_service.store_upload_copy(
+                content=content,
+                original_filename=version.original_filename,
+                mime_type=version.mime_type,
+            )
+            stored_document.uploader_id = actor_id
+            stored_document.filename = os.path.basename(storage_path)
+            stored_document.original_filename = version.original_filename
+            stored_document.mime_type = version.mime_type
+            stored_document.size_bytes = version.size_bytes
+            stored_document.sha256 = version.sha256
+            stored_document.storage_path = storage_path
+            stored_document.thumbnail_path = thumbnail_path or None
+            await repo.save_document(stored_document)
+            await audit.log_event(
+                school_id=school_id,
+                actor_id=actor_id,
+                action_type="document.version.restore",
+                target_type="document",
+                target_id=stored_document.id,
+                outcome="success",
+                entity_after={
+                    "document_id": str(stored_document.id),
+                    "restored_version": version_number,
+                },
+                ip_address=ip_address,
+            )
+            await uow.commit()
+
+        DOCUMENT_STORAGE_TOTAL_BYTES.labels(env=settings.app_env).inc(version.size_bytes)
+        return await self.serialize_document(
+            stored_document,
+            role=actor_role,
+            actor_id=actor_id,
+        )
+
     async def link_document_to_student(
         self,
         *,
@@ -372,6 +494,13 @@ class StudentDocumentsService:
         elif actor_role not in {"ADM", "DIR"} and document.uploader_id != actor_id:
             raise NotFoundError("Document not found", error_code="ERR-DOC-404")
 
+        version_assets = []
+        if hard_delete:
+            version_assets = [
+                (version.storage_path, version.size_bytes, version.thumbnail_path)
+                for version in await self.repo.list_document_versions(document_id=document.id)
+            ]
+
         async with UnitOfWork(self.db) as uow:
             repo = DocumentsRepository(uow.session)
             if hard_delete:
@@ -381,7 +510,22 @@ class StudentDocumentsService:
                 await repo.save_document(document)
             await uow.commit()
         if hard_delete:
-            await self._delete_underlying_files_if_unused(document=document)
+            seen_storage_paths = {document.storage_path}
+            await self._delete_underlying_files_if_unused(
+                storage_path=document.storage_path,
+                size_bytes=document.size_bytes,
+                thumbnail_path=document.thumbnail_path,
+                exclude_document_id=document.id,
+            )
+            for storage_path, size_bytes, thumbnail_path in version_assets:
+                if storage_path in seen_storage_paths:
+                    continue
+                seen_storage_paths.add(storage_path)
+                await self._delete_underlying_files_if_unused(
+                    storage_path=storage_path,
+                    size_bytes=size_bytes,
+                    thumbnail_path=thumbnail_path,
+                )
         return {
             "id": str(document.id),
             "deleted": True,
@@ -706,14 +850,37 @@ class StudentDocumentsService:
         cutoff = now - timedelta(days=settings.document_deleted_retention_days)
         documents = await self.repo.list_deleted_documents(before=cutoff)
         deleted = 0
+        asset_cleanup_queue: list[tuple[str, int, str | None, uuid.UUID | None]] = []
         async with UnitOfWork(self.db) as uow:
             repo = DocumentsRepository(uow.session)
             for document in documents:
+                versions = await repo.list_document_versions(document_id=document.id)
+                asset_cleanup_queue.append(
+                    (
+                        document.storage_path,
+                        document.size_bytes,
+                        document.thumbnail_path,
+                        document.id,
+                    )
+                )
+                asset_cleanup_queue.extend(
+                    (version.storage_path, version.size_bytes, version.thumbnail_path, None)
+                    for version in versions
+                )
                 await repo.hard_delete_document(document)
                 deleted += 1
             await uow.commit()
-        for document in documents:
-            await self._delete_underlying_files_if_unused(document=document)
+        seen_storage_paths: set[str] = set()
+        for storage_path, size_bytes, thumbnail_path, exclude_document_id in asset_cleanup_queue:
+            if storage_path in seen_storage_paths:
+                continue
+            seen_storage_paths.add(storage_path)
+            await self._delete_underlying_files_if_unused(
+                storage_path=storage_path,
+                size_bytes=size_bytes,
+                thumbnail_path=thumbnail_path,
+                exclude_document_id=exclude_document_id,
+            )
         return deleted
 
     async def serialize_document(
@@ -870,16 +1037,65 @@ class StudentDocumentsService:
         used_names.add(candidate)
         return candidate
 
-    async def _delete_underlying_files_if_unused(self, *, document: Document) -> None:
+    async def _delete_underlying_files_if_unused(
+        self,
+        *,
+        storage_path: str,
+        size_bytes: int,
+        thumbnail_path: str | None,
+        exclude_document_id: uuid.UUID | None = None,
+    ) -> None:
         remaining = await self.repo.count_documents_for_storage_path(
-            storage_path=document.storage_path,
-            exclude_document_id=document.id,
+            storage_path=storage_path,
+            exclude_document_id=exclude_document_id,
         )
         if remaining == 0:
-            await file_storage_service.delete(document.storage_path)
-            DOCUMENT_STORAGE_TOTAL_BYTES.labels(env=settings.app_env).dec(document.size_bytes)
-            if document.thumbnail_path:
-                await file_storage_service.delete(document.thumbnail_path)
+            await file_storage_service.delete(storage_path)
+            DOCUMENT_STORAGE_TOTAL_BYTES.labels(env=settings.app_env).dec(size_bytes)
+            if thumbnail_path:
+                thumb_refs = await self.repo.count_thumbnail_references(
+                    thumbnail_path=thumbnail_path,
+                    exclude_document_id=exclude_document_id,
+                )
+                if thumb_refs == 0:
+                    await file_storage_service.delete(thumbnail_path)
+
+    def _version_to_response(self, version: DocumentVersion) -> dict:
+        return DocumentVersionResponse(
+            document_id=str(version.document_id),
+            version_number=version.version_number,
+            uploader_id=str(version.uploader_id),
+            filename=version.filename,
+            original_filename=version.original_filename,
+            mime_type=version.mime_type,
+            size_bytes=version.size_bytes,
+            sha256=version.sha256,
+            change_note=version.change_note,
+            created_at=version.created_at.isoformat(),
+        ).model_dump()
+
+    async def _capture_document_version(
+        self,
+        *,
+        repo: DocumentsRepository,
+        document: Document,
+        change_note: str | None,
+    ) -> DocumentVersion:
+        version_number = await repo.get_next_document_version_number(document_id=document.id)
+        version = DocumentVersion(
+            document_id=document.id,
+            version_number=version_number,
+            uploader_id=document.uploader_id,
+            filename=document.filename,
+            original_filename=document.original_filename,
+            mime_type=document.mime_type,
+            storage_path=document.storage_path,
+            thumbnail_path=document.thumbnail_path,
+            size_bytes=document.size_bytes,
+            sha256=document.sha256,
+            change_note=change_note,
+        )
+        return await repo.create_document_version(version)
 
     async def _upload_document_with_repo(
         self,
@@ -907,6 +1123,20 @@ class StudentDocumentsService:
             )
 
         category = category or DocumentCategory.OTHER.value
+        existing_document: Document | None = None
+        if linked_student_id is not None:
+            await self._verify_student_access_for_link(
+                school_id=school_id,
+                actor_id=user_id,
+                actor_role=role,
+                student_id=linked_student_id,
+            )
+            existing_document = await repo.find_document_for_student_category(
+                school_id=school_id,
+                linked_student_id=linked_student_id,
+                category=category,
+            )
+
         content = file.read()
         if not isinstance(content, bytes):
             content = bytes(content)
@@ -929,30 +1159,40 @@ class StudentDocumentsService:
                 sha256=sha256,
             )
             thumbnail_path = thumbnail_path or None
-
-        if linked_student_id is not None:
-            await self._verify_student_access_for_link(
-                school_id=school_id,
-                actor_id=user_id,
-                actor_role=role,
-                student_id=linked_student_id,
+        if existing_document is not None:
+            await self._capture_document_version(
+                repo=repo,
+                document=existing_document,
+                change_note="Superseded by a newer upload",
             )
-
-        document = Document(
-            school_id=school_id,
-            uploader_id=user_id,
-            filename=os.path.basename(storage_path),
-            original_filename=original_filename,
-            mime_type=mime_type,
-            size_bytes=len(content),
-            sha256=sha256,
-            storage_path=storage_path,
-            thumbnail_path=thumbnail_path,
-            category=category,
-            linked_student_id=linked_student_id,
-            expires_at=expires_at,
-        )
-        await repo.create_document(document)
+            existing_document.uploader_id = user_id
+            existing_document.filename = os.path.basename(storage_path)
+            existing_document.original_filename = original_filename
+            existing_document.mime_type = mime_type
+            existing_document.size_bytes = len(content)
+            existing_document.sha256 = sha256
+            existing_document.storage_path = storage_path
+            existing_document.thumbnail_path = thumbnail_path
+            existing_document.category = category
+            existing_document.linked_student_id = linked_student_id
+            existing_document.expires_at = expires_at
+            document = await repo.save_document(existing_document)
+        else:
+            document = Document(
+                school_id=school_id,
+                uploader_id=user_id,
+                filename=os.path.basename(storage_path),
+                original_filename=original_filename,
+                mime_type=mime_type,
+                size_bytes=len(content),
+                sha256=sha256,
+                storage_path=storage_path,
+                thumbnail_path=thumbnail_path,
+                category=category,
+                linked_student_id=linked_student_id,
+                expires_at=expires_at,
+            )
+            await repo.create_document(document)
         DOCUMENT_UPLOAD_COUNT.labels(
             env=settings.app_env,
             mime_type=mime_type,

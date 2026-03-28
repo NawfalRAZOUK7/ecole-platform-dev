@@ -201,6 +201,35 @@ class MessagingRepository(BaseRepository):
         await self.db.flush()
         return message
 
+    async def search_messages(
+        self,
+        *,
+        school_id: uuid.UUID,
+        user_id: uuid.UUID,
+        query_text: str,
+        limit: int,
+    ) -> list[Message]:
+        conversation_ids = (
+            select(ConversationParticipant.conversation_id)
+            .where(ConversationParticipant.user_id == user_id)
+            .scalar_subquery()
+        )
+        ts_query = func.plainto_tsquery("simple", query_text)
+        ts_vector = func.to_tsvector("simple", func.coalesce(Message.body, ""))
+        rank = func.ts_rank(ts_vector, ts_query)
+        result = await self.db.execute(
+            select(Message)
+            .join(Conversation, Conversation.id == Message.conversation_id)
+            .where(
+                Conversation.school_id == school_id,
+                Message.conversation_id.in_(conversation_ids),
+                ts_vector.op("@@")(ts_query),
+            )
+            .order_by(rank.desc(), Message.sent_at.desc(), Message.id.desc())
+            .limit(limit)
+        )
+        return list(result.scalars().all())
+
     async def list_conversations_for_user(
         self,
         *,

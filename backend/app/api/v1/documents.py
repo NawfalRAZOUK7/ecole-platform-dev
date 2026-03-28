@@ -134,6 +134,78 @@ async def get_document_options(
 
 
 @router.get(
+    "/documents/{document_id}/versions",
+    summary="List stored versions for a document",
+    response_description="Document version history",
+)
+async def list_document_versions(
+    document_id: uuid.UUID,
+    auth: AuthContext = Depends(requires_permission(PERM_DOC_DOCUMENT_READ)),
+    db: AsyncSession = Depends(get_db),
+):
+    service = StudentDocumentsService(db)
+    return list_response(
+        await service.list_versions(
+            document_id=document_id,
+            school_id=auth.school_id,
+            actor_id=auth.user_id,
+            actor_role=auth.role,
+        )
+    )
+
+
+@router.get(
+    "/documents/{document_id}/versions/{version_number}",
+    summary="Download a specific document version",
+    response_description="Document version binary",
+)
+async def get_document_version(
+    document_id: uuid.UUID,
+    version_number: int,
+    auth: AuthContext = Depends(requires_permission(PERM_DOC_DOCUMENT_READ)),
+    db: AsyncSession = Depends(get_db),
+):
+    service = StudentDocumentsService(db)
+    version, abs_path = await service.get_version(
+        document_id=document_id,
+        version_number=version_number,
+        school_id=auth.school_id,
+        actor_id=auth.user_id,
+        actor_role=auth.role,
+    )
+    return FileResponse(
+        path=str(abs_path),
+        media_type=version.mime_type,
+        filename=version.original_filename,
+    )
+
+
+@router.post(
+    "/documents/{document_id}/versions/{version_number}/restore",
+    summary="Restore a previous document version",
+    response_description="Restored current document metadata",
+)
+async def restore_document_version(
+    document_id: uuid.UUID,
+    version_number: int,
+    request: Request,
+    auth: AuthContext = Depends(requires_permission(PERM_DOC_DOCUMENT_UPLOAD)),
+    db: AsyncSession = Depends(get_db),
+):
+    service = StudentDocumentsService(db)
+    return success_response(
+        await service.restore_version(
+            document_id=document_id,
+            version_number=version_number,
+            school_id=auth.school_id,
+            actor_id=auth.user_id,
+            actor_role=auth.role,
+            ip_address=get_client_ip(request),
+        )
+    )
+
+
+@router.get(
     "/documents/{document_id}",
     summary="Get document metadata",
     response_description="Single document metadata",

@@ -424,6 +424,10 @@ class Message(TimestampMixin, Base):
     sender_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
+    attachment_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("documents.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     body: Mapped[str] = mapped_column(Text, nullable=False)
     sent_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     edited_at: Mapped[datetime | None] = mapped_column(
@@ -439,6 +443,7 @@ class Message(TimestampMixin, Base):
     __table_args__ = (
         Index("idx_messages_conv_sent", "conversation_id", "sent_at"),
         Index("idx_messages_sender", "sender_id"),
+        Index("idx_messages_attachment_id", "attachment_id"),
     )
 
 

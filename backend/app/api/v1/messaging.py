@@ -65,6 +65,26 @@ async def list_conversations(
 
 
 @router.get(
+    "/search",
+    summary="Search messages across accessible conversations",
+    response_description="List of matching messages",
+)
+async def search_messages(
+    q: str = Query(..., min_length=1),
+    limit: int = Query(20, ge=1, le=100),
+    auth: AuthContext = Depends(requires_permission(PERM_COM_CONVERSATION_READ)),
+    db: AsyncSession = Depends(get_db),
+):
+    service = CommunicationService(db)
+    items = await service.search_messages(
+        query_text=q,
+        limit=clamp_page_size(limit),
+        auth=auth,
+    )
+    return list_response(items, next_cursor=None, has_more=False)
+
+
+@router.get(
     "/conversations/{conversation_id}/messages",
     summary="List messages in a conversation",
     response_description="Paginated list of messages",

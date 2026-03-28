@@ -54,3 +54,16 @@ class DocumentListItem(BaseModel):
     deduplicated: bool = False
     can_delete: bool = False
     can_hard_delete: bool = False
+
+
+class DocumentVersionResponse(BaseModel):
+    document_id: str
+    version_number: int
+    uploader_id: str
+    filename: str
+    original_filename: str
+    mime_type: str
+    size_bytes: int
+    sha256: str
+    change_note: str | None = None
+    created_at: str

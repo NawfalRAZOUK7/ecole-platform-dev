@@ -120,6 +120,7 @@ from app.models.reporting import (
 # G10 — Document management
 from app.models.documents import (
     Document,
+    DocumentVersion,
     Resource,
     ResourceRating,
     StudentDocumentRequirement,
@@ -215,6 +216,7 @@ __all__ = [
     "DataExport",
     # Documents
     "Document",
+    "DocumentVersion",
     "Resource",
     "ResourceRating",
     "StudentDocumentRequirement",

@@ -91,6 +91,39 @@ class Document(TimestampMixin, Base):
     )
 
 
+class DocumentVersion(TimestampMixin, Base):
+    """Historical version snapshot for a document."""
+
+    __tablename__ = "document_versions"
+
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("documents.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    version_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    uploader_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    original_filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    mime_type: Mapped[str] = mapped_column(String(150), nullable=False)
+    storage_path: Mapped[str] = mapped_column(String(500), nullable=False)
+    thumbnail_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    size_bytes: Mapped[int] = mapped_column(nullable=False)
+    sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    change_note: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint(
+            "document_id",
+            "version_number",
+            name="uq_doc_versions_doc_version",
+        ),
+        Index("idx_doc_versions_document", "document_id"),
+    )
+
+
 class Resource(TimestampMixin, Base):
     """Teacher/admin shared resource that points to a document asset."""
 

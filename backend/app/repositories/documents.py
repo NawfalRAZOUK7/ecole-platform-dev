@@ -12,6 +12,7 @@ from app.core.response import decode_cursor, encode_cursor
 from app.models.com import Notification
 from app.models.documents import (
     Document,
+    DocumentVersion,
     Resource,
     ResourceRating,
     StudentDocumentRequirement,
@@ -38,6 +39,14 @@ class DocumentsRepository(BaseRepository):
         self.db.add(document)
         await self.db.flush()
         return document
+
+    async def create_document_version(
+        self,
+        version: DocumentVersion,
+    ) -> DocumentVersion:
+        self.db.add(version)
+        await self.db.flush()
+        return version
 
     async def find_document_by_sha(
         self,
@@ -66,8 +75,74 @@ class DocumentsRepository(BaseRepository):
         query = select(func.count(Document.id)).where(Document.storage_path == storage_path)
         if exclude_document_id:
             query = query.where(Document.id != exclude_document_id)
-        result = await self.db.execute(query)
-        return int(result.scalar_one() or 0)
+        document_result = await self.db.execute(query)
+        version_result = await self.db.execute(
+            select(func.count(DocumentVersion.id)).where(
+                DocumentVersion.storage_path == storage_path
+            )
+        )
+        return int(document_result.scalar_one() or 0) + int(
+            version_result.scalar_one() or 0
+        )
+
+    async def get_next_document_version_number(
+        self,
+        *,
+        document_id: uuid.UUID,
+    ) -> int:
+        result = await self.db.execute(
+            select(func.max(DocumentVersion.version_number)).where(
+                DocumentVersion.document_id == document_id
+            )
+        )
+        return int(result.scalar_one() or 0) + 1
+
+    async def count_thumbnail_references(
+        self,
+        *,
+        thumbnail_path: str,
+        exclude_document_id: uuid.UUID | None = None,
+    ) -> int:
+        document_query = select(func.count(Document.id)).where(
+            Document.thumbnail_path == thumbnail_path
+        )
+        if exclude_document_id:
+            document_query = document_query.where(Document.id != exclude_document_id)
+        document_result = await self.db.execute(document_query)
+        version_result = await self.db.execute(
+            select(func.count(DocumentVersion.id)).where(
+                DocumentVersion.thumbnail_path == thumbnail_path
+            )
+        )
+        return int(document_result.scalar_one() or 0) + int(
+            version_result.scalar_one() or 0
+        )
+
+    async def get_document_version(
+        self,
+        *,
+        document_id: uuid.UUID,
+        version_number: int,
+    ) -> DocumentVersion | None:
+        result = await self.db.execute(
+            select(DocumentVersion).where(
+                DocumentVersion.document_id == document_id,
+                DocumentVersion.version_number == version_number,
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def list_document_versions(
+        self,
+        *,
+        document_id: uuid.UUID,
+    ) -> list[DocumentVersion]:
+        result = await self.db.execute(
+            select(DocumentVersion)
+            .where(DocumentVersion.document_id == document_id)
+            .order_by(DocumentVersion.version_number.desc())
+        )
+        return list(result.scalars().all())
 
     async def list_parent_child_ids(
         self,
@@ -190,6 +265,25 @@ class DocumentsRepository(BaseRepository):
             .order_by(User.full_name.asc())
         )
         return list(result.scalars().all())
+
+    async def find_document_for_student_category(
+        self,
+        *,
+        school_id: uuid.UUID,
+        linked_student_id: uuid.UUID,
+        category: str,
+    ) -> Document | None:
+        result = await self.db.execute(
+            select(Document).where(
+                Document.school_id == school_id,
+                Document.linked_student_id == linked_student_id,
+                Document.category == category,
+                Document.deleted_at.is_(None),
+            )
+            .order_by(Document.created_at.desc())
+            .limit(1)
+        )
+        return result.scalar_one_or_none()
 
     async def list_documents(
         self,

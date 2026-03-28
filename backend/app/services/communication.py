@@ -13,6 +13,7 @@ from app.core.filtering import FilterSpec, SortSpec
 from app.core.response import decode_cursor, encode_cursor
 from app.core.unit_of_work import UnitOfWork
 from app.models.com import Conversation, Message
+from app.repositories.documents import DocumentsRepository
 from app.repositories.messaging import MessagingRepository
 from app.schemas.com import (
     ConversationCreateRequest,
@@ -171,6 +172,27 @@ class CommunicationService:
                         "Teachers can only message parents, admins, directors, or other teachers",
                         error_code="ERR-COM-403",
                     )
+
+    async def _validate_attachment_ownership(
+        self,
+        *,
+        attachment_id: uuid.UUID | None,
+        auth: AuthContext,
+    ) -> None:
+        if attachment_id is None:
+            return
+        document = await DocumentsRepository(self.db).get_document(attachment_id)
+        if (
+            document is None
+            or document.school_id != auth.school_id
+            or document.deleted_at is not None
+        ):
+            raise NotFoundError("Attachment not found", error_code="ERR-DOC-404")
+        if document.uploader_id != auth.user_id:
+            raise ValidationError(
+                "Attachment must belong to the sender",
+                error_code="ERR-COM-403",
+            )
 
     async def create_conversation(
         self,
@@ -334,6 +356,10 @@ class CommunicationService:
             user_id=auth.user_id,
         )
         verify_school_boundary(conversation.school_id, auth)
+        await self._validate_attachment_ownership(
+            attachment_id=body.attachment_id,
+            auth=auth,
+        )
 
         async with UnitOfWork(self.db) as uow:
             repo = MessagingRepository(uow.session)
@@ -341,6 +367,7 @@ class CommunicationService:
             message = await repo.create_message(
                 conversation_id=conversation_id,
                 sender_id=auth.user_id,
+                attachment_id=body.attachment_id,
                 body=body.body,
                 sent_at=now,
             )
@@ -369,6 +396,26 @@ class CommunicationService:
                 )
 
         return response
+
+    async def search_messages(
+        self,
+        *,
+        query_text: str,
+        limit: int,
+        auth: AuthContext,
+    ) -> list[dict]:
+        if not query_text.strip():
+            raise ValidationError(
+                "Search query cannot be empty",
+                error_code="ERR-COM-422",
+            )
+        messages = await self.repo.search_messages(
+            school_id=auth.school_id,
+            user_id=auth.user_id,
+            query_text=query_text.strip(),
+            limit=limit,
+        )
+        return [self._message_to_response(message) for message in messages]
 
     async def mark_read(
         self,
