@@ -23,6 +23,7 @@ from app.models.iam import (
 from app.models.erp import (
     AbsenceJustification,
     AcademicYear,
+    AttendanceAlert,
     AttendanceRecord,
     AttendanceSession,
     Class,
@@ -144,6 +145,7 @@ __all__ = [
     "TeacherAssignment",
     "AttendanceSession",
     "AttendanceRecord",
+    "AttendanceAlert",
     "AbsenceJustification",
     "JustificationReview",
     "TimetableSlot",

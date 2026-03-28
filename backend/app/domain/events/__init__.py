@@ -19,6 +19,7 @@ from app.domain.events.documents import (
     DocumentUploaded,
     ResourceShared,
 )
+from app.domain.events.erp import AttendanceThresholdExceeded
 from app.domain.events.lms import (
     AssignmentCreated,
     ContentPublished,
@@ -44,6 +45,7 @@ __all__ = [
     "DocumentUploaded",
     "DocumentExpiring",
     "ResourceShared",
+    "AttendanceThresholdExceeded",
     "UserRegistered",
     "PasswordChanged",
     "TwoFactorEnabled",

@@ -297,18 +297,18 @@
 - [ ] **Review & commit myself**
 
 #### ENH-C2: Attendance Analytics + Alerts
-- [ ] Added AttendanceAlert model to erp.py
-- [ ] Updated models/__init__.py
-- [ ] Created migration G29a: attendance_alerts table
-- [ ] Created schemas/attendance_analytics.py
-- [ ] Created repositories/attendance_analytics.py (compute rates, trends, alerts)
-- [ ] Created services/attendance_analytics.py — AttendanceAnalyticsService
-- [ ] Added AttendanceThresholdExceeded domain event
-- [ ] Registered in EventDispatcher (push + email)
-- [ ] Added PERM_ERP_ATTENDANCE_ANALYTICS_READ, PERM_ERP_ATTENDANCE_ALERT_MANAGE to permissions.py
-- [ ] Created api/v1/attendance_analytics.py — all endpoints
-- [ ] Registered in router.py
-- [ ] Added ATTENDANCE_WARNING_THRESHOLD + ATTENDANCE_CRITICAL_THRESHOLD to config.py
+- [x] Added AttendanceAlert model to erp.py
+- [x] Updated models/__init__.py
+- [x] Created migration G29a: attendance_alerts table
+- [x] Created schemas/attendance_analytics.py
+- [x] Created repositories/attendance_analytics.py (compute rates, trends, alerts)
+- [x] Created services/attendance_analytics.py — AttendanceAnalyticsService
+- [x] Added AttendanceThresholdExceeded domain event
+- [x] Registered in EventDispatcher (push + email)
+- [x] Added PERM_ERP_ATTENDANCE_ANALYTICS_READ, PERM_ERP_ATTENDANCE_ALERT_MANAGE to permissions.py
+- [x] Created api/v1/attendance_analytics.py — all endpoints
+- [x] Registered in router.py
+- [x] Added ATTENDANCE_WARNING_THRESHOLD + ATTENDANCE_CRITICAL_THRESHOLD to config.py
 - [ ] **Review & commit myself**
 
 #### ENH-C3: Timetable Auto-Generation
@@ -381,7 +381,7 @@
 - [ ] Sibling Discounts: SiblingDiscountPolicy exists, generate_invoices applies discounts
 - [ ] Late Fees: LateFeePolicy exists, apply_late_fees() method exists
 - [ ] Payment Plans: PaymentPlan + Installment exist, /payment-plans endpoints registered
-- [ ] Attendance Analytics: AttendanceAlert exists, /analytics/attendance endpoints registered
+- [x] Attendance Analytics: AttendanceAlert exists, /analytics/attendance endpoints registered
 - [ ] Timetable Generation: 2 models exist, algorithm runs within 30s
 - [ ] Message Attachments: attachment_id on Message, /messages/search works
 - [ ] Document Versioning: DocumentVersion exists, /versions endpoints registered

@@ -3,6 +3,7 @@
 from app.repositories.admin import AdminRepository
 from app.repositories.ai import AIRepository
 from app.repositories.analytics import AnalyticsRepository
+from app.repositories.attendance_analytics import AttendanceAnalyticsRepository
 from app.repositories.base import BaseRepository
 from app.repositories.audit import AuditRepository
 from app.repositories.auth import AuthRepository
@@ -33,6 +34,7 @@ __all__ = [
     "AIRepository",
     "AuditRepository",
     "AuthRepository",
+    "AttendanceAnalyticsRepository",
     "BillingRepository",
     "BillingEnhancementsRepository",
     "CalendarRepository",

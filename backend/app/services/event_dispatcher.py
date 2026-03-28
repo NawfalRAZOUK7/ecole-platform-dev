@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.events import (
     AssignmentCreated,
+    AttendanceThresholdExceeded,
     ContentPublished,
     DocumentExpiring,
     DocumentUploaded,
@@ -90,6 +91,16 @@ EVENT_HANDLERS: dict[type[DomainEvent], list[dict[str, Any]]] = {
     DocumentExpiring: [
         {"strategy": PushDeliveryStrategy, "template": "document_expiring"},
         {"strategy": EmailDeliveryStrategy, "template": "document_expiring"},
+    ],
+    AttendanceThresholdExceeded: [
+        {
+            "strategy": PushDeliveryStrategy,
+            "template": "attendance_threshold_exceeded",
+        },
+        {
+            "strategy": EmailDeliveryStrategy,
+            "template": "attendance_threshold_exceeded",
+        },
     ],
     ResourceShared: [
         {"strategy": InAppDeliveryStrategy, "template": "resource_shared"},
@@ -266,6 +277,20 @@ class EventDispatcher:
                         student_id=event.student_id,
                     )
                 )
+        elif isinstance(event, AttendanceThresholdExceeded):
+            recipients.update(
+                await self._student_and_parent_recipients(
+                    school_id=school_id,
+                    student_id=event.student_id,
+                )
+            )
+            if school_id is not None:
+                recipients.update(
+                    await self._notification_repo.list_members_by_roles(
+                        school_id=school_id,
+                        role_codes=["ADM", "DIR"],
+                    )
+                )
         elif isinstance(event, ResourceShared):
             resource = (
                 await self._documents_repo.get_resource(event.resource_id)
@@ -439,6 +464,14 @@ class EventDispatcher:
                 "Document expiring",
                 f"{event.document_name or 'A document'} expires at {event.expires_at}.",
             )
+        if isinstance(event, AttendanceThresholdExceeded):
+            threshold_label = (event.threshold_exceeded or "warning").capitalize()
+            return (
+                f"{threshold_label} attendance alert",
+                f"{event.student_name or 'A student'} reached {event.absence_count} "
+                f"absences across {event.total_sessions} sessions "
+                f"({event.absence_rate:.0%}).",
+            )
         if isinstance(event, ResourceShared):
             return (
                 "New resource shared",
@@ -477,6 +510,7 @@ class EventDispatcher:
                 QuizCompleted,
                 SubmissionReceived,
                 ContentPublished,
+                AttendanceThresholdExceeded,
                 ResourceShared,
             ),
         ):
@@ -490,7 +524,13 @@ class EventDispatcher:
     def _priority_for_event(self, event: DomainEvent) -> str:
         if isinstance(
             event,
-            (InvoiceGenerated, DocumentExpiring, NewDeviceLogin, PaymentFailed),
+            (
+                InvoiceGenerated,
+                DocumentExpiring,
+                NewDeviceLogin,
+                PaymentFailed,
+                AttendanceThresholdExceeded,
+            ),
         ):
             return NotificationPriority.HIGH.value
         if isinstance(event, PaymentReceived):
@@ -515,6 +555,8 @@ class EventDispatcher:
             return "/billing"
         if isinstance(event, (DocumentUploaded, DocumentExpiring, ResourceShared)):
             return "/documents"
+        if isinstance(event, AttendanceThresholdExceeded):
+            return "/analytics/attendance"
         if isinstance(
             event,
             (UserRegistered, NewDeviceLogin, PasswordChanged, TwoFactorEnabled),

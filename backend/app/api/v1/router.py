@@ -10,6 +10,7 @@ Routes:
   /enrollments/*                — Enrollment endpoints (ERP)
   /class-assignments/*          — Teacher assignment endpoints (ERP)
   /attendance/*                 — Attendance + justifications (ERP)
+  /analytics/attendance/*       — Attendance analytics + alerts (ERP)
   /courses/*                    — Course endpoints (LMS)
   /assignments/*                — Assignment endpoints (LMS)
   /submissions/*                — Submission + grading (LMS)
@@ -50,6 +51,7 @@ from app.api.v1.recovery import router as recovery_router
 # Phase 3 — ERP routers
 from app.api.v1.class_assignments import router as class_assignments_router
 from app.api.v1.attendance import router as attendance_router
+from app.api.v1.attendance_analytics import router as attendance_analytics_router
 
 # Phase 3 — LMS routers
 from app.api.v1.courses import router as courses_router
@@ -160,6 +162,7 @@ router.include_router(enrollments_router)
 # Mount sub-routers — Phase 3 ERP
 router.include_router(class_assignments_router)
 router.include_router(attendance_router)
+router.include_router(attendance_analytics_router)
 
 # Mount sub-routers — Phase 3 LMS
 router.include_router(courses_router)

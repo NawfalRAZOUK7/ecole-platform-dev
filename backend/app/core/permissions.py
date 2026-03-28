@@ -66,6 +66,8 @@ PERM_ERP_ASSIGNMENT_UPDATE = "PERM-ERP:assignment:update"
 PERM_ERP_ATTENDANCE_MARK = "PERM-ERP:attendance:mark"
 PERM_ERP_ABSENCE_JUSTIFY = "PERM-ERP:absence:justify"
 PERM_ERP_ABSENCE_REVIEW = "PERM-ERP:absence:review"
+PERM_ERP_ATTENDANCE_ANALYTICS_READ = "PERM-ERP:attendance-analytics:read"
+PERM_ERP_ATTENDANCE_ALERT_MANAGE = "PERM-ERP:attendance-alert:manage"
 
 # ERP — Timetable (Phase 11A)
 PERM_ERP_TIMETABLE_CREATE = "PERM-ERP:timetable:create"
@@ -249,6 +251,8 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_ERP_ENROLLMENT_ASSIGN,
         PERM_ERP_ASSIGNMENT_UPDATE,
         PERM_ERP_ABSENCE_REVIEW,
+        PERM_ERP_ATTENDANCE_ANALYTICS_READ,
+        PERM_ERP_ATTENDANCE_ALERT_MANAGE,
         # ERP — Timetable (Phase 11A)
         PERM_ERP_TIMETABLE_CREATE,
         PERM_ERP_TIMETABLE_READ,
@@ -343,6 +347,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IAM_LOGIN_HISTORY_READ,
         # ERP — validate periods
         PERM_ERP_CLASS_READ,
+        PERM_ERP_ATTENDANCE_ANALYTICS_READ,
         # ERP — Timetable (Phase 11A)
         PERM_ERP_TIMETABLE_READ,
         PERM_ERP_TIMETABLE_EXCEPTION_READ,
@@ -403,6 +408,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # ERP — attendance mark
         PERM_ERP_CLASS_READ,
         PERM_ERP_ATTENDANCE_MARK,
+        PERM_ERP_ATTENDANCE_ANALYTICS_READ,
         # ERP — Timetable (Phase 11A)
         PERM_ERP_TIMETABLE_READ,
         PERM_ERP_TIMETABLE_EXCEPTION_CREATE,
@@ -481,6 +487,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IAM_LOGIN_HISTORY_READ,
         # ERP — justify absence
         PERM_ERP_ABSENCE_JUSTIFY,
+        PERM_ERP_ATTENDANCE_ANALYTICS_READ,
         # ERP — Timetable (Phase 11A)
         PERM_ERP_TIMETABLE_READ,
         PERM_ERP_TIMETABLE_EXCEPTION_READ,
@@ -537,6 +544,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IAM_RECOVERY_RESET,
         PERM_IAM_LOGIN_HISTORY_READ,
         # ERP — Timetable (Phase 11A)
+        PERM_ERP_ATTENDANCE_ANALYTICS_READ,
         PERM_ERP_TIMETABLE_READ,
         PERM_ERP_TIMETABLE_EXCEPTION_READ,
         # LMS — submit + read progress + files
@@ -598,6 +606,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_COM_NOTIFICATION_BATCH_CREATE,
         PERM_IA_WRITING_ATTEMPT_REVIEW,
         PERM_IAM_LOGIN_HISTORY_READ,
+        PERM_ERP_ATTENDANCE_ALERT_MANAGE,
         # Feature toggles (Phase 11E)
         PERM_SYS_FEATURE_MANAGE,
     },

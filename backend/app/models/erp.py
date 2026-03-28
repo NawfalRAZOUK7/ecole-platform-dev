@@ -7,13 +7,15 @@ Phase 11A: Added TimetableSlot, TimetableException models.
 
 import enum
 import uuid
-from datetime import date, time
+from datetime import date, datetime, time
 
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
     Date,
+    DateTime,
     ForeignKey,
+    Float,
     Index,
     Integer,
     String,
@@ -343,6 +345,56 @@ class JustificationReview(TimestampMixin, Base):
     # Relationships
     justification: Mapped["AbsenceJustification"] = relationship(
         back_populates="reviews"
+    )
+
+
+class AttendanceAlert(TimestampMixin, Base):
+    """Threshold-based attendance alert for a student within a period."""
+
+    __tablename__ = "attendance_alerts"
+
+    student_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    period_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("periods.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    absence_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    total_sessions: Mapped[int] = mapped_column(Integer, nullable=False)
+    absence_rate: Mapped[float] = mapped_column(Float, nullable=False)
+    threshold_exceeded: Mapped[str] = mapped_column(String(20), nullable=False)
+    notified_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "student_id",
+            "period_id",
+            "threshold_exceeded",
+            name="uq_aa_student_period_threshold",
+        ),
+        CheckConstraint(
+            "absence_count >= 0",
+            name="ck_attendance_alerts_absence_count",
+        ),
+        CheckConstraint(
+            "total_sessions >= 0",
+            name="ck_attendance_alerts_total_sessions",
+        ),
+        CheckConstraint(
+            "absence_rate >= 0 AND absence_rate <= 1",
+            name="ck_attendance_alerts_absence_rate",
+        ),
+        CheckConstraint(
+            "threshold_exceeded IN ('warning', 'critical')",
+            name="ck_attendance_alerts_threshold",
+        ),
+        Index("idx_attendance_alerts_school", "school_id"),
     )
 
 
