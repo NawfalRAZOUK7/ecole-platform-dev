@@ -84,6 +84,21 @@ class DocumentsRepository(BaseRepository):
         )
         return set(result.scalars().all())
 
+    async def list_parent_ids_for_student(
+        self,
+        *,
+        student_id: uuid.UUID,
+        school_id: uuid.UUID,
+    ) -> set[uuid.UUID]:
+        result = await self.db.execute(
+            select(ParentChildLink.parent_user_id).where(
+                ParentChildLink.child_user_id == student_id,
+                ParentChildLink.school_id == school_id,
+                ParentChildLink.status == "active",
+            )
+        )
+        return set(result.scalars().all())
+
     async def list_teacher_class_ids(
         self,
         *,
@@ -259,6 +274,25 @@ class DocumentsRepository(BaseRepository):
 
         return [(document, uploader_name, student_name) for document, uploader_name, student_name in rows], next_cursor, has_more
 
+    async def list_documents_by_ids(
+        self,
+        *,
+        school_id: uuid.UUID,
+        document_ids: Iterable[uuid.UUID],
+    ) -> list[Document]:
+        document_ids = list(document_ids)
+        if not document_ids:
+            return []
+        result = await self.db.execute(
+            select(Document)
+            .where(
+                Document.school_id == school_id,
+                Document.id.in_(document_ids),
+            )
+            .order_by(Document.created_at.desc(), Document.id.desc())
+        )
+        return list(result.scalars().all())
+
     async def list_student_documents(
         self,
         *,
@@ -384,10 +418,12 @@ class DocumentsRepository(BaseRepository):
         cursor: str | None,
         limit: int,
         visible_class_ids: set[uuid.UUID] | None = None,
-    ) -> tuple[list[tuple[Resource, Document]], str | None, bool]:
+    ) -> tuple[list[tuple[Resource, Document, str | None]], str | None, bool]:
+        uploader = User.__table__.alias("resource_uploader")
         query = (
-            select(Resource, Document)
+            select(Resource, Document, uploader.c.full_name)
             .join(Document, Document.id == Resource.file_id)
+            .outerjoin(uploader, uploader.c.id == Resource.uploader_id)
             .where(
                 Resource.school_id == school_id,
                 Resource.deleted_at.is_(None),
@@ -458,10 +494,12 @@ class DocumentsRepository(BaseRepository):
     async def get_resource_with_document(
         self,
         resource_id: uuid.UUID,
-    ) -> tuple[Resource, Document] | None:
+    ) -> tuple[Resource, Document, str | None] | None:
+        uploader = User.__table__.alias("resource_detail_uploader")
         result = await self.db.execute(
-            select(Resource, Document)
+            select(Resource, Document, uploader.c.full_name)
             .join(Document, Document.id == Resource.file_id)
+            .outerjoin(uploader, uploader.c.id == Resource.uploader_id)
             .where(Resource.id == resource_id)
         )
         return result.first()

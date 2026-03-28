@@ -359,13 +359,28 @@ export function DocumentsPage({ initialTab = 'mine' }: DocumentsPageProps) {
 
   async function handleDeleteDocuments(hard = false, ids = selectedDocumentIds) {
     try {
-      await Promise.all(
-        ids.map((id) =>
-          api.delete<{ deleted: boolean }>(`/documents/${id}${hard ? '?hard=true' : ''}`)
-        )
-      );
+      if (!hard && user?.role === 'ADM' && ids.length > 1) {
+        await api.post('/documents/bulk-delete', { document_ids: ids });
+      } else {
+        await Promise.all(
+          ids.map((id) =>
+            api.delete<{ deleted: boolean }>(`/documents/${id}${hard ? '?hard=true' : ''}`)
+          )
+        );
+      }
       setSelectedDocumentIds([]);
       await Promise.all([loadDocuments(), loadStudentDocuments()]);
+    } catch (err) {
+      setError(err instanceof ApiClientError ? err.message : t('app.error'));
+    }
+  }
+
+  async function handleBulkDownload(ids = selectedDocumentIds) {
+    try {
+      const response = await api.post<{ download_url: string }>('/documents/bulk-download', {
+        document_ids: ids,
+      });
+      openSignedUrl(response.data.download_url);
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : t('app.error'));
     }
@@ -506,11 +521,7 @@ export function DocumentsPage({ initialTab = 'mine' }: DocumentsPageProps) {
                     <button
                       type="button"
                       className="btn btn-secondary"
-                      onClick={() => {
-                        filteredDocuments
-                          .filter((item) => selectedDocumentIds.includes(item.id))
-                          .forEach((item) => openSignedUrl(item.download_url));
-                      }}
+                      onClick={() => void handleBulkDownload()}
                     >
                       {t('documents.bulk.download')}
                     </button>

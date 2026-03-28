@@ -121,10 +121,10 @@
 - [ ] **Review & commit myself**: `feat(backend): add holiday management and event color coding`
 
 ### Phase 16 Gaps
-- [ ] Implement `web/src/features/documents/ResourcesPage.tsx` (currently 137-byte stub)
-- [ ] Implement document expiry notifications (30-day warning)
-- [ ] Implement bulk document operations (multi-select → download ZIP, delete)
-- [ ] Add ClamAV setup guide in docs
+- [x] Implement `web/src/features/documents/ResourcesPage.tsx` (currently 137-byte stub)
+- [x] Implement document expiry notifications (30-day warning)
+- [x] Implement bulk document operations (multi-select → download ZIP, delete)
+- [x] Add ClamAV setup guide in docs
 - [ ] **Review & commit myself**: `feat: complete document management gaps (resources page, expiry, bulk ops)`
 
 ---

@@ -179,6 +179,8 @@ PERM_DOC_RESOURCE_READ = "PERM-DOC:resource:read"
 PERM_DOC_RESOURCE_UPDATE = "PERM-DOC:resource:update"
 PERM_DOC_RESOURCE_DELETE = "PERM-DOC:resource:delete"
 PERM_DOC_RESOURCE_RATE = "PERM-DOC:resource:rate"
+PERM_DOC_BULK_DOWNLOAD = "PERM-DOC:document-bulk:download"
+PERM_DOC_BULK_DELETE = "PERM-DOC:document-bulk:delete"
 
 # Support
 PERM_SUP_GRANT_REQUEST = "PERM-SUP:grant:request"
@@ -276,6 +278,8 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_DOC_RESOURCE_UPDATE,
         PERM_DOC_RESOURCE_DELETE,
         PERM_DOC_RESOURCE_RATE,
+        PERM_DOC_BULK_DOWNLOAD,
+        PERM_DOC_BULK_DELETE,
         # COM — config + messaging + announcements (Phase 11C)
         PERM_COM_CONSENT_UPDATE,
         PERM_COM_NOTIFICATION_READ,
@@ -339,6 +343,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_DOC_RESOURCE_UPDATE,
         PERM_DOC_RESOURCE_DELETE,
         PERM_DOC_RESOURCE_RATE,
+        PERM_DOC_BULK_DOWNLOAD,
         # COM — read + announcements (Phase 11C)
         PERM_COM_NOTIFICATION_READ,
         PERM_COM_CONVERSATION_READ,
@@ -405,6 +410,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_DOC_RESOURCE_UPDATE,
         PERM_DOC_RESOURCE_DELETE,
         PERM_DOC_RESOURCE_RATE,
+        PERM_DOC_BULK_DOWNLOAD,
         # COM — messaging (P1) + conversations (Phase 11C)
         PERM_COM_NOTIFICATION_READ,
         PERM_COM_MESSAGE_SEND,
@@ -457,6 +463,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_DOC_DOCUMENT_READ,
         PERM_DOC_STUDENT_DOCUMENT_LINK,
         PERM_DOC_RESOURCE_READ,
+        PERM_DOC_BULK_DOWNLOAD,
         # COM — consent + feed + messaging + announcements (Phase 11C)
         PERM_COM_CONSENT_UPDATE,
         PERM_COM_NOTIFICATION_READ,
@@ -511,6 +518,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # Document management (Phase 16)
         PERM_DOC_DOCUMENT_READ,
         PERM_DOC_RESOURCE_READ,
+        PERM_DOC_BULK_DOWNLOAD,
         # COM — read notifications + announcements (Phase 11C)
         PERM_COM_NOTIFICATION_READ,
         PERM_COM_ANNOUNCEMENT_READ,

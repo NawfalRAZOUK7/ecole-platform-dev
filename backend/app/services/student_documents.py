@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import os
+import tempfile
 import uuid
+import zipfile
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import BinaryIO, Iterable
 
 from jose import JWTError, jwt
@@ -26,6 +29,7 @@ from app.services.notification_hub import NotificationHubService
 
 DOCUMENT_DOWNLOAD_ACTION = "document.download"
 DOCUMENT_PREVIEW_ACTION = "document.preview"
+DOCUMENT_BULK_DOWNLOAD_ACTION = "document.bulk-download"
 
 
 def _utc_now() -> datetime:
@@ -392,6 +396,103 @@ class StudentDocumentsService:
             "hard_deleted": hard_delete,
         }
 
+    async def bulk_delete_documents(
+        self,
+        *,
+        document_ids: Iterable[uuid.UUID],
+        school_id: uuid.UUID,
+        actor_id: uuid.UUID,
+        actor_role: str,
+    ) -> dict:
+        if actor_role != "ADM":
+            raise AuthorizationError(
+                "Only administrators can bulk delete documents",
+                error_code="ERR-DOC-403",
+            )
+        unique_ids = list(dict.fromkeys(document_ids))
+        documents = {
+            document.id: document
+            for document in await self.repo.list_documents_by_ids(
+                school_id=school_id,
+                document_ids=unique_ids,
+            )
+        }
+
+        deleted_ids: list[str] = []
+        for document_id in unique_ids:
+            document = documents.get(document_id)
+            if document is None or document.deleted_at is not None:
+                raise NotFoundError("Document not found", error_code="ERR-DOC-404")
+            document.deleted_at = _utc_now()
+            await self.repo.save_document(document)
+            deleted_ids.append(str(document.id))
+
+        return {
+            "deleted": len(deleted_ids),
+            "ids": deleted_ids,
+            "hard_deleted": False,
+        }
+
+    async def create_bulk_download(
+        self,
+        *,
+        document_ids: Iterable[uuid.UUID],
+        school_id: uuid.UUID,
+        actor_id: uuid.UUID,
+        actor_role: str,
+    ) -> dict:
+        unique_ids = list(dict.fromkeys(document_ids))
+        if not unique_ids:
+            raise ValidationError("document_ids are required", error_code="ERR-DOC-422")
+
+        documents = {
+            document.id: document
+            for document in await self.repo.list_documents_by_ids(
+                school_id=school_id,
+                document_ids=unique_ids,
+            )
+        }
+        scoped_documents: list[Document] = []
+        for document_id in unique_ids:
+            document = documents.get(document_id)
+            if document is None or document.deleted_at is not None:
+                raise NotFoundError("Document not found", error_code="ERR-DOC-404")
+            await self._enforce_document_visibility(
+                document=document,
+                school_id=school_id,
+                actor_id=actor_id,
+                actor_role=actor_role,
+            )
+            scoped_documents.append(document)
+
+        archive_dir = Path(tempfile.gettempdir()) / "ecole-platform-bulk-downloads"
+        archive_dir.mkdir(parents=True, exist_ok=True)
+        archive_name = (
+            f"documents_{_utc_now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8]}.zip"
+        )
+        archive_path = archive_dir / archive_name
+        used_names: set[str] = set()
+        with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+            for document in scoped_documents:
+                local_path = await self.read_document_file(document=document)
+                archive.write(
+                    local_path,
+                    arcname=self._unique_archive_name(
+                        document.original_filename,
+                        used_names,
+                    ),
+                )
+
+        token = self.build_bulk_download_token(
+            archive_path=str(archive_path),
+            filename=archive_name,
+        )
+        return {
+            "document_count": len(scoped_documents),
+            "filename": archive_name,
+            "download_url": f"/api/v1/documents/bulk-download?token={token}",
+        }
+
     def build_access_token(
         self,
         *,
@@ -421,6 +522,40 @@ class StudentDocumentsService:
         if payload.get("action") != action:
             raise NotFoundError("Document not found", error_code="ERR-DOC-404")
         return uuid.UUID(payload["document_id"])
+
+    def build_bulk_download_token(
+        self,
+        *,
+        archive_path: str,
+        filename: str,
+    ) -> str:
+        exp = _utc_now() + timedelta(hours=settings.document_download_ttl_hours)
+        return jwt.encode(
+            {
+                "archive_path": archive_path,
+                "filename": filename,
+                "action": DOCUMENT_BULK_DOWNLOAD_ACTION,
+                "exp": exp,
+            },
+            settings.jwt_secret_key,
+            algorithm=settings.jwt_algorithm,
+        )
+
+    def parse_bulk_download_token(self, *, token: str) -> tuple[Path, str]:
+        try:
+            payload = jwt.decode(
+                token,
+                settings.jwt_secret_key,
+                algorithms=[settings.jwt_algorithm],
+            )
+        except JWTError as exc:
+            raise NotFoundError("Bulk download not found", error_code="ERR-DOC-404") from exc
+        if payload.get("action") != DOCUMENT_BULK_DOWNLOAD_ACTION:
+            raise NotFoundError("Bulk download not found", error_code="ERR-DOC-404")
+        archive_path = Path(str(payload["archive_path"]))
+        if not archive_path.exists():
+            raise NotFoundError("Bulk download not found", error_code="ERR-DOC-404")
+        return archive_path, str(payload.get("filename") or archive_path.name)
 
     async def get_document_for_token(
         self,
@@ -455,6 +590,13 @@ class StudentDocumentsService:
             return await file_storage_service.local_path(document.storage_path)
         raise NotFoundError("Preview not available", error_code="ERR-DOC-404")
 
+    async def get_bulk_download_archive(
+        self,
+        *,
+        token: str,
+    ) -> tuple[Path, str]:
+        return self.parse_bulk_download_token(token=token)
+
     async def ensure_default_requirements(
         self,
         *,
@@ -474,7 +616,7 @@ class StudentDocumentsService:
             )
         return await self.repo.list_student_requirements(school_id=school_id)
 
-    async def notify_expiring_documents(self, *, now: datetime | None = None) -> int:
+    async def check_expiring_documents(self, *, now: datetime | None = None) -> int:
         now = now or _utc_now()
         window_end = now + timedelta(days=settings.document_expiry_notice_days)
         documents = await self.repo.list_expiring_documents(
@@ -485,31 +627,46 @@ class StudentDocumentsService:
         for document in documents:
             if document.linked_student_id is None:
                 continue
-            idempotency_key = (
-                f"document-expiry:{document.id}:{document.expires_at.date().isoformat()}"
+            recipient_ids = {document.uploader_id}
+            recipient_ids.update(
+                await self.repo.list_parent_ids_for_student(
+                    student_id=document.linked_student_id,
+                    school_id=document.school_id,
+                )
+            )
+            message = (
+                f"Document {document.original_filename} expires on "
+                f"{document.expires_at.date().isoformat()}"
                 if document.expires_at
-                else f"document-expiry:{document.id}"
+                else f"Document {document.original_filename} expires soon"
             )
-            if await self.repo.notification_exists(idempotency_key=idempotency_key):
-                continue
-            await self.notification_hub.create_single_notification(
-                school_id=document.school_id,
-                user_id=document.uploader_id,
-                title="Document expiration reminder",
-                body=(
-                    f"{document.original_filename} expires on "
-                    f"{document.expires_at.date().isoformat()}"
-                    if document.expires_at
-                    else document.original_filename
-                ),
-                category=NotificationCategory.SYSTEM.value,
-                action_url=f"/documents?student={document.linked_student_id}",
-                event_ref="document.expiring",
-                preferred_channels=["in_app", "push"],
-                idempotency_key=idempotency_key,
+            expiry_key = (
+                document.expires_at.date().isoformat()
+                if document.expires_at
+                else "unknown"
             )
-            created += 1
+            for recipient_id in recipient_ids:
+                idempotency_key = (
+                    f"document-expiry:{document.id}:{recipient_id}:{expiry_key}"
+                )
+                if await self.repo.notification_exists(idempotency_key=idempotency_key):
+                    continue
+                await self.notification_hub.create_single_notification(
+                    school_id=document.school_id,
+                    user_id=recipient_id,
+                    title="Document expiration reminder",
+                    body=message,
+                    category=NotificationCategory.SYSTEM.value,
+                    action_url=f"/documents?student={document.linked_student_id}",
+                    event_ref="document.expiring",
+                    preferred_channels=["in_app", "push"],
+                    idempotency_key=idempotency_key,
+                )
+                created += 1
         return created
+
+    async def notify_expiring_documents(self, *, now: datetime | None = None) -> int:
+        return await self.check_expiring_documents(now=now)
 
     async def cleanup_deleted_documents(self, *, now: datetime | None = None) -> int:
         now = now or _utc_now()
@@ -664,6 +821,17 @@ class StudentDocumentsService:
             actor_role=actor_role,
             student_id=document.linked_student_id,
         )
+
+    def _unique_archive_name(self, original_filename: str, used_names: set[str]) -> str:
+        candidate = original_filename or "document"
+        stem = Path(candidate).stem or "document"
+        suffix = Path(candidate).suffix
+        counter = 1
+        while candidate in used_names:
+            candidate = f"{stem}_{counter}{suffix}"
+            counter += 1
+        used_names.add(candidate)
+        return candidate
 
     async def _delete_underlying_files_if_unused(self, *, document: Document) -> None:
         remaining = await self.repo.count_documents_for_storage_path(

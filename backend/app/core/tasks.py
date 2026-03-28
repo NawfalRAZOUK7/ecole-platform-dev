@@ -26,6 +26,7 @@ import time
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import redis.asyncio as aioredis
 from arq import cron
@@ -629,7 +630,7 @@ async def task_send_event_reminders(ctx: dict) -> int:
 # Task: notify_expiring_documents (Phase 16)
 # ---------------------------------------------------------------------------
 async def task_notify_expiring_documents(ctx: dict) -> int:
-    """Send in-app/push reminders for documents expiring soon."""
+    """Send in-app/push reminders for documents expiring soon at 08:00 Casablanca."""
     from app.core.metrics import TASK_COMPLETED_COUNT, TASK_DURATION, TASK_FAILED_COUNT
 
     start = time.perf_counter()
@@ -637,9 +638,15 @@ async def task_notify_expiring_documents(ctx: dict) -> int:
         from app.core.database import async_session
         from app.services.student_documents import StudentDocumentsService
 
+        local_now = datetime.now(ZoneInfo("Africa/Casablanca"))
+        if local_now.hour != 8:
+            return 0
+
         async with async_session() as db:
             service = StudentDocumentsService(db)
-            sent_count = await service.notify_expiring_documents()
+            sent_count = await service.check_expiring_documents(
+                now=local_now.astimezone(timezone.utc)
+            )
             await db.commit()
 
         duration = time.perf_counter() - start
@@ -805,8 +812,8 @@ class WorkerSettings:
         cron(task_refresh_kpi_views, hour=3, minute=30),
         # Cleanup expired report files daily at 04:00 UTC (Phase 14)
         cron(task_cleanup_expired_reports, hour=4, minute=0),
-        # Phase 16: Expiring document notifications daily at 04:15 UTC
-        cron(task_notify_expiring_documents, hour=4, minute=15),
+        # Phase 16: Evaluate hourly and only send at 08:00 Africa/Casablanca.
+        cron(task_notify_expiring_documents, minute=0),
         # Phase 16: Hard cleanup of deleted documents daily at 04:30 UTC
         cron(task_cleanup_deleted_documents, hour=4, minute=30),
         # Phase 15: Event reminder dispatch every 5 minutes

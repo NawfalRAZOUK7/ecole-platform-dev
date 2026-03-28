@@ -11,8 +11,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, requires_permission
-from app.core.exceptions import ValidationError
+from app.core.exceptions import AuthenticationError, ValidationError
 from app.core.permissions import (
+    PERM_DOC_BULK_DELETE,
+    PERM_DOC_BULK_DOWNLOAD,
     PERM_DOC_DOCUMENT_DELETE,
     PERM_DOC_DOCUMENT_READ,
     PERM_DOC_DOCUMENT_UPLOAD,
@@ -25,7 +27,7 @@ from app.core.permissions import (
 )
 from app.core.response import clamp_page_size, list_response, success_response
 from app.core.request_utils import get_client_ip, optional_current_user
-from app.schemas.documents import DocumentLinkRequest
+from app.schemas.documents import DocumentBulkRequest, DocumentLinkRequest
 from app.schemas.resources import (
     ResourceCreateRequest,
     ResourceRatingRequest,
@@ -34,6 +36,7 @@ from app.schemas.resources import (
 from app.services.audit import AuditService
 from app.services.resource_library import ResourceLibraryService
 from app.services.student_documents import (
+    DOCUMENT_BULK_DOWNLOAD_ACTION,
     DOCUMENT_DOWNLOAD_ACTION,
     DOCUMENT_PREVIEW_ACTION,
     StudentDocumentsService,
@@ -281,6 +284,90 @@ async def delete_document(
     )
     await db.commit()
     return success_response(result)
+
+
+@router.post(
+    "/documents/bulk-download",
+    summary="Prepare a bulk ZIP download",
+    response_description="Signed ZIP download URL",
+)
+async def create_bulk_download(
+    body: DocumentBulkRequest,
+    request: Request,
+    auth: AuthContext = Depends(requires_permission(PERM_DOC_BULK_DOWNLOAD)),
+    db: AsyncSession = Depends(get_db),
+):
+    service = StudentDocumentsService(db)
+    audit = AuditService(db)
+    payload = await service.create_bulk_download(
+        document_ids=body.document_ids,
+        school_id=auth.school_id,
+        actor_id=auth.user_id,
+        actor_role=auth.role,
+    )
+    await audit.log_event(
+        school_id=auth.school_id,
+        actor_id=auth.user_id,
+        action_type="document.bulk_download",
+        target_type="document",
+        target_id=auth.user_id,
+        outcome="success",
+        entity_after=payload,
+        ip_address=get_client_ip(request),
+    )
+    await db.commit()
+    return success_response(payload)
+
+
+@router.get(
+    "/documents/bulk-download",
+    summary="Download a prepared document ZIP",
+    response_description="ZIP file for multiple documents",
+)
+async def download_bulk_archive(
+    token: str = Query(...),
+    db: AsyncSession = Depends(get_db),
+):
+    service = StudentDocumentsService(db)
+    archive_path, filename = await service.get_bulk_download_archive(token=token)
+    return FileResponse(
+        path=str(archive_path),
+        media_type="application/zip",
+        filename=filename,
+    )
+
+
+@router.post(
+    "/documents/bulk-delete",
+    summary="Soft delete multiple documents",
+    response_description="Bulk deletion outcome",
+)
+async def bulk_delete_documents(
+    body: DocumentBulkRequest,
+    request: Request,
+    auth: AuthContext = Depends(requires_permission(PERM_DOC_BULK_DELETE)),
+    db: AsyncSession = Depends(get_db),
+):
+    service = StudentDocumentsService(db)
+    audit = AuditService(db)
+    payload = await service.bulk_delete_documents(
+        document_ids=body.document_ids,
+        school_id=auth.school_id,
+        actor_id=auth.user_id,
+        actor_role=auth.role,
+    )
+    await audit.log_event(
+        school_id=auth.school_id,
+        actor_id=auth.user_id,
+        action_type="document.bulk_delete",
+        target_type="document",
+        target_id=auth.user_id,
+        outcome="success",
+        entity_after=payload,
+        ip_address=get_client_ip(request),
+    )
+    await db.commit()
+    return success_response(payload)
 
 
 @router.post(

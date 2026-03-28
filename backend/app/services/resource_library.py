@@ -81,7 +81,13 @@ class ResourceLibraryService:
             class_id=payload.class_id,
         )
         await self.repo.create_resource(resource)
-        return await self.serialize_resource(resource=resource, document=document, actor_id=actor_id, actor_role=actor_role)
+        return await self.serialize_resource(
+            resource=resource,
+            document=document,
+            uploader_name=None,
+            actor_id=actor_id,
+            actor_role=actor_role,
+        )
 
     async def list_resources(
         self,
@@ -121,10 +127,11 @@ class ResourceLibraryService:
             await self.serialize_resource(
                 resource=resource,
                 document=document,
+                uploader_name=uploader_name,
                 actor_id=actor_id,
                 actor_role=actor_role,
             )
-            for resource, document in rows
+            for resource, document, uploader_name in rows
         ]
         return items, next_cursor, has_more
 
@@ -135,11 +142,11 @@ class ResourceLibraryService:
         school_id: uuid.UUID,
         actor_id: uuid.UUID,
         actor_role: str,
-    ) -> tuple[Resource, object]:
+    ) -> tuple[Resource, object, str | None]:
         row = await self.repo.get_resource_with_document(resource_id)
         if row is None:
             raise NotFoundError("Resource not found", error_code="ERR-DOC-404")
-        resource, document = row
+        resource, document, uploader_name = row
         if resource.school_id != school_id or resource.deleted_at is not None:
             raise NotFoundError("Resource not found", error_code="ERR-DOC-404")
         await self._enforce_resource_visibility(
@@ -148,7 +155,7 @@ class ResourceLibraryService:
             actor_id=actor_id,
             actor_role=actor_role,
         )
-        return resource, document
+        return resource, document, uploader_name
 
     async def get_resource_detail(
         self,
@@ -158,7 +165,7 @@ class ResourceLibraryService:
         actor_id: uuid.UUID,
         actor_role: str,
     ) -> dict:
-        resource, document = await self.get_resource_for_actor(
+        resource, document, uploader_name = await self.get_resource_for_actor(
             resource_id=resource_id,
             school_id=school_id,
             actor_id=actor_id,
@@ -167,6 +174,7 @@ class ResourceLibraryService:
         return await self.serialize_resource(
             resource=resource,
             document=document,
+            uploader_name=uploader_name,
             actor_id=actor_id,
             actor_role=actor_role,
             include_my_rating=True,
@@ -181,7 +189,7 @@ class ResourceLibraryService:
         actor_role: str,
         payload: ResourceUpdateRequest,
     ) -> dict:
-        resource, document = await self.get_resource_for_actor(
+        resource, document, uploader_name = await self.get_resource_for_actor(
             resource_id=resource_id,
             school_id=school_id,
             actor_id=actor_id,
@@ -198,6 +206,7 @@ class ResourceLibraryService:
         return await self.serialize_resource(
             resource=resource,
             document=document,
+            uploader_name=uploader_name,
             actor_id=actor_id,
             actor_role=actor_role,
             include_my_rating=True,
@@ -211,7 +220,7 @@ class ResourceLibraryService:
         actor_id: uuid.UUID,
         actor_role: str,
     ) -> dict:
-        resource, document = await self.get_resource_for_actor(
+        resource, document, _uploader_name = await self.get_resource_for_actor(
             resource_id=resource_id,
             school_id=school_id,
             actor_id=actor_id,
@@ -239,7 +248,7 @@ class ResourceLibraryService:
                 "Only teachers can rate resources",
                 error_code="ERR-DOC-403",
             )
-        resource, _document = await self.get_resource_for_actor(
+        resource, _document, _uploader_name = await self.get_resource_for_actor(
             resource_id=resource_id,
             school_id=school_id,
             actor_id=actor_id,
@@ -277,7 +286,7 @@ class ResourceLibraryService:
         actor_id: uuid.UUID,
         actor_role: str,
     ) -> dict:
-        resource, _document = await self.get_resource_for_actor(
+        resource, _document, _uploader_name = await self.get_resource_for_actor(
             resource_id=resource_id,
             school_id=school_id,
             actor_id=actor_id,
@@ -334,7 +343,7 @@ class ResourceLibraryService:
         row = await self.repo.get_resource_with_document(resource_id)
         if row is None:
             raise NotFoundError("Resource not found", error_code="ERR-DOC-404")
-        resource, document = row
+        resource, document, _uploader_name = row
         if resource.deleted_at is not None:
             raise NotFoundError("Resource not found", error_code="ERR-DOC-404")
         return resource, document
@@ -344,6 +353,7 @@ class ResourceLibraryService:
         *,
         resource: Resource,
         document,
+        uploader_name: str | None,
         actor_id: uuid.UUID,
         actor_role: str,
         include_my_rating: bool = False,
@@ -370,6 +380,7 @@ class ResourceLibraryService:
             "level": resource.level,
             "type": resource.type,
             "tags": resource.tags,
+            "author": uploader_name,
             "visibility": resource.visibility,
             "class_id": str(resource.class_id) if resource.class_id else None,
             "file_id": str(resource.file_id),

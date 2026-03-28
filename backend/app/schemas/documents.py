@@ -17,6 +17,10 @@ class DocumentLinkRequest(BaseModel):
     expires_at: datetime | None = None
 
 
+class DocumentBulkRequest(BaseModel):
+    document_ids: list[uuid.UUID] = Field(..., min_length=1, max_length=100)
+
+
 class StudentDocumentRequirementItem(BaseModel):
     category: str
     required: bool
@@ -50,4 +54,3 @@ class DocumentListItem(BaseModel):
     deduplicated: bool = False
     can_delete: bool = False
     can_hard_delete: bool = False
-
