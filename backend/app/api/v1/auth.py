@@ -13,13 +13,14 @@ from __future__ import annotations
 import uuid
 
 import redis.asyncio as aioredis
-from fastapi import APIRouter, Cookie, Depends, Header, Request, Response
+from fastapi import APIRouter, Cookie, Depends, Header, Query, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import AuthContext, get_current_user
+from app.core.dependencies import AuthContext, get_current_user, requires_permission
+from app.core.permissions import PERM_IAM_LOGIN_HISTORY_READ
 from app.core.redis import get_redis
-from app.core.response import success_response
+from app.core.response import list_response, success_response
 from app.core.request_utils import get_client_ip, parse_device_name
 from app.schemas.auth import (
     ChangePasswordRequest,
@@ -341,6 +342,29 @@ async def list_sessions(
         school_id=auth.school_id,
     )
     return success_response(sessions)
+
+
+@router.get(
+    "/login-history",
+    summary="List my login history",
+    response_description="Paginated login history for the authenticated user",
+)
+async def login_history(
+    auth: AuthContext = Depends(requires_permission(PERM_IAM_LOGIN_HISTORY_READ)),
+    db: AsyncSession = Depends(get_db),
+    redis: aioredis.Redis = Depends(get_redis),
+    cursor: str | None = Query(None),
+    limit: int = Query(20, ge=1, le=100),
+):
+    """List the authenticated user's login history for the last 90 days."""
+    service = AuthService(db, redis)
+    items, next_cursor, has_more = await service.list_login_history(
+        target_user_id=auth.user_id,
+        auth=auth,
+        limit=limit,
+        cursor=cursor,
+    )
+    return list_response(items, next_cursor=next_cursor, has_more=has_more)
 
 
 # ---------------------------------------------------------------------------

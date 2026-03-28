@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.orm import selectinload
 
 from app.models.iam import (
@@ -195,6 +195,37 @@ class AuthRepository(BaseRepository):
             .order_by(Session.created_at.desc())
         )
         return list(result.scalars().all())
+
+    async def count_active_sessions(
+        self,
+        user_id: uuid.UUID,
+        school_id: uuid.UUID,
+    ) -> int:
+        result = await self.db.execute(
+            select(func.count(Session.id)).where(
+                Session.user_id == user_id,
+                Session.school_id == school_id,
+                Session.revoke_at.is_(None),
+            )
+        )
+        return int(result.scalar_one() or 0)
+
+    async def get_oldest_active_session(
+        self,
+        user_id: uuid.UUID,
+        school_id: uuid.UUID,
+    ) -> Session | None:
+        result = await self.db.execute(
+            select(Session)
+            .where(
+                Session.user_id == user_id,
+                Session.school_id == school_id,
+                Session.revoke_at.is_(None),
+            )
+            .order_by(Session.created_at.asc(), Session.id.asc())
+            .limit(1)
+        )
+        return result.scalar_one_or_none()
 
     async def revoke_session(
         self,

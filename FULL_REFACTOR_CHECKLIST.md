@@ -204,25 +204,25 @@
 ### Phase ENH-A: IAM Enhancements
 
 #### ENH-A1: Admin Impersonation + Login History + Session Limits
-- [ ] Added LoginHistory model to iam.py
-- [ ] Added impersonator_id column to Session model
-- [ ] Updated models/__init__.py with LoginHistory export
-- [ ] Created migration G27a: login_history + Session.impersonator_id
-- [ ] Created repositories/login_history.py (create_login_record, list_user_login_history, get_device_fingerprints)
-- [ ] Updated repositories/auth.py (count_active_sessions, get_oldest_active_session)
-- [ ] Updated services/auth.py — login creates LoginHistory, checks concurrent sessions
-- [ ] Added impersonate() method to auth service
-- [ ] Added stop_impersonation() method to auth service
-- [ ] Added NewDeviceLogin event to domain/events/auth.py
-- [ ] Registered NewDeviceLogin in EventDispatcher
-- [ ] Added PERM_ADM_IMPERSONATE + PERM_IAM_LOGIN_HISTORY_READ to permissions.py
-- [ ] Assigned permissions to roles (ADM, DIR, SUP)
-- [ ] Added GET /auth/login-history endpoint
-- [ ] Added POST /admin/impersonate/{user_id} endpoint
-- [ ] Added POST /admin/stop-impersonation endpoint
-- [ ] Added GET /admin/users/{user_id}/login-history endpoint
-- [ ] Registered endpoints in router.py
-- [ ] Added MAX_SESSIONS_PER_USER = 5 to config.py
+- [x] Added LoginHistory model to iam.py
+- [x] Added impersonator_id column to Session model
+- [x] Updated models/__init__.py with LoginHistory export
+- [x] Created migration G27a: login_history + Session.impersonator_id
+- [x] Created repositories/login_history.py (create_login_record, list_user_login_history, get_device_fingerprints)
+- [x] Updated repositories/auth.py (count_active_sessions, get_oldest_active_session)
+- [x] Updated services/auth.py — login creates LoginHistory, checks concurrent sessions
+- [x] Added impersonate() method to auth service
+- [x] Added stop_impersonation() method to auth service
+- [x] Added NewDeviceLogin event to domain/events/auth.py
+- [x] Registered NewDeviceLogin in EventDispatcher
+- [x] Added PERM_ADM_IMPERSONATE + PERM_IAM_LOGIN_HISTORY_READ to permissions.py
+- [x] Assigned permissions to roles (ADM, DIR, SUP)
+- [x] Added GET /auth/login-history endpoint
+- [x] Added POST /admin/impersonate/{user_id} endpoint
+- [x] Added POST /admin/stop-impersonation endpoint
+- [x] Added GET /admin/users/{user_id}/login-history endpoint
+- [x] Registered endpoints in router.py
+- [x] Added MAX_SESSIONS_PER_USER = 5 to config.py
 - [ ] **Review & commit myself**
 
 ---
@@ -405,7 +405,7 @@
 | OOP | D — Evaluatable | OOP-D1, D2 | Not started |
 | OOP | E — LMS Split | OOP-E1 | Not started |
 | OOP | F — OOP Validation | OOP-F1 | Not started |
-| ENH | A — IAM | ENH-A1 | Not started |
+| ENH | A — IAM | ENH-A1 | Complete |
 | ENH | B — LMS | ENH-B1, B2, B3, B4 | Not started |
 | ENH | C — Billing/ERP | ENH-C1, C2, C3 | Not started |
 | ENH | D — Comms/Docs | ENH-D1, D2 | Not started |

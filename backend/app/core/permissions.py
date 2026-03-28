@@ -42,6 +42,7 @@ PERM_IAM_RECOVERY_RESET = "PERM-IAM:recovery:reset"
 PERM_IAM_PARENT_LINK_CREATE = "PERM-IAM:parent-link:create"
 PERM_IAM_PARENT_LINK_READ = "PERM-IAM:parent-link:read"
 PERM_IAM_PARENT_LINK_DELETE = "PERM-IAM:parent-link:delete"
+PERM_IAM_LOGIN_HISTORY_READ = "PERM-IAM:login-history:read"
 
 # Admin
 PERM_ADM_DASHBOARD_READ = "PERM-ADM:dashboard:read"
@@ -50,6 +51,7 @@ PERM_ADM_USER_CREATE = "PERM-ADM:user:create"
 PERM_ADM_USER_MANAGE = "PERM-ADM:user:manage"
 PERM_ADM_INVITATION_READ = "PERM-ADM:invitation:read"
 PERM_ADM_AUDIT_READ = "PERM-ADM:audit:read"
+PERM_ADM_IMPERSONATE = "PERM-ADM:impersonation:create"
 
 # Profiles / GDPR
 PERM_PROF_ADMIN_READ = "PERM-PROF:profile-admin:read"
@@ -207,6 +209,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_ADM_USER_MANAGE,
         PERM_ADM_INVITATION_READ,
         PERM_ADM_AUDIT_READ,
+        PERM_ADM_IMPERSONATE,
         PERM_PROF_ADMIN_READ,
         PERM_GDPR_DATA_DELETE,
         PERM_GDPR_CONSENT_MANAGE,
@@ -224,6 +227,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IAM_PARENT_LINK_CREATE,
         PERM_IAM_PARENT_LINK_READ,
         PERM_IAM_PARENT_LINK_DELETE,
+        PERM_IAM_LOGIN_HISTORY_READ,
         # ERP — full admin
         PERM_ERP_CLASS_READ,
         PERM_ERP_ENROLLMENT_ASSIGN,
@@ -300,6 +304,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_ADM_USER_CREATE,
         PERM_ADM_INVITATION_READ,
         PERM_ADM_AUDIT_READ,
+        PERM_ADM_IMPERSONATE,
         PERM_GDPR_DATA_DELETE,
         # IAM — read/validate
         PERM_IAM_SESSION_CREATE,
@@ -311,6 +316,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IAM_RECOVERY_VERIFY,
         PERM_IAM_RECOVERY_RESET,
         PERM_IAM_PARENT_LINK_READ,
+        PERM_IAM_LOGIN_HISTORY_READ,
         # ERP — validate periods
         PERM_ERP_CLASS_READ,
         # ERP — Timetable (Phase 11A)
@@ -362,6 +368,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IAM_RECOVERY_REQUEST,
         PERM_IAM_RECOVERY_VERIFY,
         PERM_IAM_RECOVERY_RESET,
+        PERM_IAM_LOGIN_HISTORY_READ,
         # ERP — attendance mark
         PERM_ERP_CLASS_READ,
         PERM_ERP_ATTENDANCE_MARK,
@@ -435,6 +442,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IAM_RECOVERY_REQUEST,
         PERM_IAM_RECOVERY_VERIFY,
         PERM_IAM_RECOVERY_RESET,
+        PERM_IAM_LOGIN_HISTORY_READ,
         # ERP — justify absence
         PERM_ERP_ABSENCE_JUSTIFY,
         # ERP — Timetable (Phase 11A)
@@ -489,6 +497,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IAM_RECOVERY_REQUEST,
         PERM_IAM_RECOVERY_VERIFY,
         PERM_IAM_RECOVERY_RESET,
+        PERM_IAM_LOGIN_HISTORY_READ,
         # ERP — Timetable (Phase 11A)
         PERM_ERP_TIMETABLE_READ,
         PERM_ERP_TIMETABLE_EXCEPTION_READ,
@@ -537,6 +546,8 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IAM_RECOVERY_REQUEST,
         PERM_IAM_RECOVERY_VERIFY,
         PERM_IAM_RECOVERY_RESET,
+        PERM_IAM_LOGIN_HISTORY_READ,
+        PERM_ADM_IMPERSONATE,
         # Support — grant lifecycle
         PERM_SUP_GRANT_REQUEST,
         PERM_SUP_GRANT_REVOKE,
@@ -547,6 +558,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_BIL_PAYMENT_RECONCILE,
         PERM_COM_NOTIFICATION_BATCH_CREATE,
         PERM_IA_WRITING_ATTEMPT_REVIEW,
+        PERM_IAM_LOGIN_HISTORY_READ,
         # Feature toggles (Phase 11E)
         PERM_SYS_FEATURE_MANAGE,
     },
@@ -560,6 +572,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IAM_RECOVERY_REQUEST,
         PERM_IAM_RECOVERY_VERIFY,
         PERM_IAM_RECOVERY_RESET,
+        PERM_IAM_LOGIN_HISTORY_READ,
         # CMS — full content management + review
         PERM_CMS_CONTENT_CREATE,
         PERM_CMS_CONTENT_PUBLISH,

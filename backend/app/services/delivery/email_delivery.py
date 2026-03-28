@@ -112,6 +112,7 @@ class EmailDeliveryStrategy(DeliveryStrategy):
             "grade_published": "grade_published",
             "invoice_generated": "invoice_reminder",
             "user_registered": "welcome",
+            "new_device_login": "notification_alert",
         }
         return template_map.get(template_key, "notification_alert")
 

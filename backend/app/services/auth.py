@@ -19,6 +19,7 @@ import redis.asyncio as aioredis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.core.dependencies import AuthContext
 from app.core.exceptions import (
     AuthenticationError,
     AuthorizationError,
@@ -28,7 +29,7 @@ from app.core.exceptions import (
     ValidationError,
 )
 from app.core.middleware import get_correlation_id
-from app.core.permissions import get_permissions_for_role
+from app.core.permissions import ADM, DIR, SUP, SYS, get_permissions_for_role
 from app.core.unit_of_work import UnitOfWork
 from app.core.security import (
     create_access_token,
@@ -39,8 +40,9 @@ from app.core.security import (
     verify_password,
 )
 from app.core.password_policy import password_validator
-from app.domain.events.auth import UserRegistered
+from app.domain.events.auth import NewDeviceLogin, UserRegistered
 from app.repositories.auth import AuthRepository
+from app.repositories.login_history import LoginHistoryRepository
 from app.schemas.profile import (
     ParentProfileUpdate,
     StudentProfileUpdate,
@@ -67,6 +69,7 @@ TOTP_TEMP_TOKEN_TTL = 300
 
 # Email verification OTP TTL
 EMAIL_VERIFY_EXPIRE_MINUTES = 30
+IMPERSONATION_ROLES = {ADM, DIR, SUP}
 
 
 def _normalize_profile_data(role: str, profile_data: dict[str, Any]) -> dict[str, Any]:
@@ -90,6 +93,111 @@ class AuthService:
         self.audit = AuditService(db)
         self._dispatcher = EventDispatcher(self.db)
 
+    def _trim_text(self, value: str | None, max_length: int) -> str | None:
+        if value is None:
+            return None
+        return value[:max_length]
+
+    def _session_ttl(self) -> int:
+        return settings.refresh_token_expire_days * 86400
+
+    def _network_fingerprint_source(self, ip_address: str | None) -> str:
+        if not ip_address:
+            return ""
+        if "." in ip_address:
+            parts = ip_address.split(".")
+            return ".".join(parts[:3]) if len(parts) >= 3 else ip_address
+        if ":" in ip_address:
+            parts = ip_address.split(":")
+            return ":".join(parts[:4]) if len(parts) >= 4 else ip_address
+        return ip_address
+
+    def _build_device_fingerprint(
+        self,
+        user_agent: str | None,
+        ip_address: str | None,
+    ) -> str | None:
+        if not user_agent and not ip_address:
+            return None
+        raw = f"{user_agent or ''}|{self._network_fingerprint_source(ip_address)}"
+        return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+    async def _store_tokens(
+        self,
+        *,
+        session_id: uuid.UUID,
+        refresh_jti: str,
+        csrf_token: str,
+    ) -> None:
+        ttl = self._session_ttl()
+        await self.redis.setex(f"refresh_jti:{session_id}", ttl, refresh_jti)
+        await self.redis.setex(f"csrf:{session_id}", ttl, csrf_token)
+
+    async def _clear_session_tokens(self, session_id: uuid.UUID) -> None:
+        await self.redis.delete(f"refresh_jti:{session_id}")
+        await self.redis.delete(f"csrf:{session_id}")
+
+    async def _issue_token_bundle(
+        self,
+        *,
+        user_id: uuid.UUID,
+        role: str,
+        school_id: uuid.UUID,
+        session_id: uuid.UUID,
+    ) -> dict[str, Any]:
+        access_token = create_access_token(user_id, role, school_id, session_id)
+        refresh_token, refresh_jti = create_refresh_token(user_id, school_id, session_id)
+        csrf_token = create_csrf_token()
+        await self._store_tokens(
+            session_id=session_id,
+            refresh_jti=refresh_jti,
+            csrf_token=csrf_token,
+        )
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "csrf_token": csrf_token,
+            "token_type": "bearer",
+            "expires_in": settings.access_token_expire_minutes * 60,
+            "session_id": session_id,
+        }
+
+    async def _record_login_history(
+        self,
+        *,
+        user_id: uuid.UUID | None,
+        school_id: uuid.UUID,
+        ip_address: str | None,
+        user_agent: str | None,
+        device_name: str | None,
+        device_fingerprint: str | None,
+        success: bool,
+        failure_reason: str | None = None,
+        is_new_device: bool = False,
+    ) -> None:
+        if user_id is None:
+            return
+        async with UnitOfWork(self.db) as uow:
+            repo = LoginHistoryRepository(uow.session)
+            await repo.create_login_record(
+                user_id=user_id,
+                school_id=school_id,
+                ip_address=self._trim_text(ip_address, 45),
+                user_agent=self._trim_text(user_agent, 500),
+                device_name=self._trim_text(device_name, 200),
+                device_fingerprint=device_fingerprint,
+                success=success,
+                failure_reason=failure_reason,
+                is_new_device=is_new_device,
+            )
+            await uow.commit()
+
+    async def _dispatch_event(self, event) -> None:
+        try:
+            await self._dispatcher.dispatch(event)
+        except Exception:
+            logger.exception("Failed to dispatch %s", type(event).__name__)
+
     # ------------------------------------------------------------------
     # Login (S-030, Phase 2A: device info)
     # ------------------------------------------------------------------
@@ -108,12 +216,26 @@ class AuthService:
         Returns dict with access_token, refresh_token, csrf_token, and metadata.
         Raises: AuthenticationError (401), AuthorizationError (403), RateLimitError (429)
         """
+        device_fingerprint = self._build_device_fingerprint(user_agent, ip_address)
+        user = await self.repo.get_user_by_email(email, school_id)
+
         # 1. Rate limiting — max 5 failed attempts per email per 15 minutes
         rate_key = f"login_attempts:{email}:{school_id}"
         attempt_count = await self.redis.get(rate_key)
         if attempt_count and int(attempt_count) >= RATE_LIMIT_MAX_ATTEMPTS:
+            await self._record_login_history(
+                user_id=user.id if user else None,
+                school_id=school_id,
+                ip_address=ip_address,
+                user_agent=user_agent,
+                device_name=device_name,
+                device_fingerprint=device_fingerprint,
+                success=False,
+                failure_reason="rate_limited",
+            )
             await self.audit.log_event(
                 school_id=school_id,
+                actor_id=user.id if user else None,
                 action_type="AUTH_LOGIN_RATE_LIMITED",
                 outcome="denied",
                 error_code="ERR-RATE-429",
@@ -124,9 +246,6 @@ class AuthService:
                 error_code="ERR-RATE-429",
             )
 
-        # 2. Find user by email + school_id
-        user = await self.repo.get_user_by_email(email, school_id)
-
         if user is None or not verify_password(password, user.password_hash):
             # Increment failed attempts
             pipe = self.redis.pipeline()
@@ -134,8 +253,19 @@ class AuthService:
             pipe.expire(rate_key, RATE_LIMIT_WINDOW_SECONDS)
             await pipe.execute()
 
+            await self._record_login_history(
+                user_id=user.id if user else None,
+                school_id=school_id,
+                ip_address=ip_address,
+                user_agent=user_agent,
+                device_name=device_name,
+                device_fingerprint=device_fingerprint,
+                success=False,
+                failure_reason="wrong_password",
+            )
             await self.audit.log_event(
                 school_id=school_id,
+                actor_id=user.id if user else None,
                 action_type="AUTH_LOGIN_FAILED",
                 outcome="denied",
                 error_code="ERR-IAM-401",
@@ -148,6 +278,16 @@ class AuthService:
 
         # 3. Check user status is active
         if user.status != "active":
+            await self._record_login_history(
+                user_id=user.id,
+                school_id=school_id,
+                ip_address=ip_address,
+                user_agent=user_agent,
+                device_name=device_name,
+                device_fingerprint=device_fingerprint,
+                success=False,
+                failure_reason="inactive",
+            )
             await self.audit.log_event(
                 school_id=school_id,
                 actor_id=user.id,
@@ -164,6 +304,16 @@ class AuthService:
         # 4. Check active membership for user + school
         membership = await self.repo.get_membership(user.id, school_id)
         if membership is None:
+            await self._record_login_history(
+                user_id=user.id,
+                school_id=school_id,
+                ip_address=ip_address,
+                user_agent=user_agent,
+                device_name=device_name,
+                device_fingerprint=device_fingerprint,
+                success=False,
+                failure_reason="no_membership",
+            )
             await self.audit.log_event(
                 school_id=school_id,
                 actor_id=user.id,
@@ -191,6 +341,7 @@ class AuthService:
                     "ip_address": ip_address,
                     "user_agent": user_agent,
                     "device_name": device_name,
+                    "device_fingerprint": device_fingerprint,
                 }
             )
             await self.redis.setex(
@@ -219,18 +370,52 @@ class AuthService:
 
         # 6. Create session record (Phase 2A: include device info)
         cid = get_correlation_id()
+        new_device_event = None
         async with UnitOfWork(self.db) as uow:
             repo = AuthRepository(uow.session)
             audit = AuditService(uow.session)
+            login_history_repo = LoginHistoryRepository(uow.session)
+            revoked_session_id = None
+            active_count = await repo.count_active_sessions(user.id, school_id)
+            if active_count >= settings.max_sessions_per_user:
+                oldest = await repo.get_oldest_active_session(user.id, school_id)
+                if oldest is not None:
+                    revoked_session_id = oldest.id
+                    await repo.revoke_session(oldest.id, datetime.now(timezone.utc))
+
+            known_fingerprints = await login_history_repo.get_device_fingerprints(user.id)
+            is_new_device = bool(
+                device_fingerprint and device_fingerprint not in known_fingerprints
+            )
             session = await repo.create_session(
                 user_id=user.id,
                 school_id=school_id,
                 source=source,
                 correlation_id=uuid.UUID(cid) if cid else None,
-                user_agent=user_agent[:500] if user_agent else None,
-                ip_address=ip_address[:45] if ip_address else None,
-                device_name=device_name[:200] if device_name else None,
+                user_agent=self._trim_text(user_agent, 500),
+                ip_address=self._trim_text(ip_address, 45),
+                device_name=self._trim_text(device_name, 200),
             )
+            await login_history_repo.create_login_record(
+                user_id=user.id,
+                school_id=school_id,
+                ip_address=self._trim_text(ip_address, 45),
+                user_agent=self._trim_text(user_agent, 500),
+                device_name=self._trim_text(device_name, 200),
+                device_fingerprint=device_fingerprint,
+                success=True,
+                is_new_device=is_new_device,
+            )
+            if revoked_session_id is not None:
+                await audit.log_event(
+                    school_id=school_id,
+                    actor_id=user.id,
+                    action_type="AUTH_SESSION_LIMIT_REACHED",
+                    outcome="success",
+                    target_type="session",
+                    target_id=revoked_session_id,
+                    ip_address=ip_address,
+                )
             await audit.log_event(
                 school_id=school_id,
                 actor_id=user.id,
@@ -241,39 +426,30 @@ class AuthService:
                 ip_address=ip_address,
             )
             await uow.commit()
+            if is_new_device:
+                new_device_event = NewDeviceLogin(
+                    school_id=school_id,
+                    actor_id=user.id,
+                    user_id=user.id,
+                    device_name=self._trim_text(device_name, 200),
+                    ip_address=self._trim_text(ip_address, 45),
+                    user_agent=self._trim_text(user_agent, 500),
+                )
 
-        # 7. Generate tokens
-        access_token = create_access_token(user.id, role, school_id, session.id)
-        refresh_token, refresh_jti = create_refresh_token(
-            user.id, school_id, session.id
-        )
-        csrf_token = create_csrf_token()
-
-        # 8. Store refresh JTI in Redis for rotation tracking
-        await self.redis.setex(
-            f"refresh_jti:{session.id}",
-            settings.refresh_token_expire_days * 86400,  # TTL in seconds
-            refresh_jti,
-        )
-
-        # 9. Store CSRF token in Redis
-        await self.redis.setex(
-            f"csrf:{session.id}",
-            settings.refresh_token_expire_days * 86400,
-            csrf_token,
+        token_bundle = await self._issue_token_bundle(
+            user_id=user.id,
+            role=role,
+            school_id=school_id,
+            session_id=session.id,
         )
 
         # 10. Clear rate limit on successful login
         await self.redis.delete(rate_key)
 
-        return {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "csrf_token": csrf_token,
-            "token_type": "bearer",
-            "expires_in": settings.access_token_expire_minutes * 60,
-            "session_id": session.id,
-        }
+        if new_device_event is not None:
+            await self._dispatch_event(new_device_event)
+
+        return token_bundle
 
     # ------------------------------------------------------------------
     # Register with invitation code (Phase 2C)
@@ -648,6 +824,227 @@ class AuthService:
             }
             for s in sessions
         ]
+
+    async def list_login_history(
+        self,
+        *,
+        target_user_id: uuid.UUID,
+        auth: AuthContext,
+        limit: int = 20,
+        cursor: str | None = None,
+    ) -> tuple[list[dict[str, Any]], str | None, bool]:
+        """List login history for the current user or an allowed admin target."""
+        if target_user_id != auth.user_id and auth.role not in IMPERSONATION_ROLES:
+            raise AuthorizationError(
+                "Insufficient permissions to view another user's login history",
+                error_code="ERR-AUTHZ-001",
+            )
+
+        target_user = await self.repo.get_user_in_school(target_user_id, auth.school_id)
+        if target_user is None:
+            raise NotFoundError("User not found", error_code="ERR-IAM-404")
+
+        history_repo = LoginHistoryRepository(self.db)
+        rows, next_cursor, has_more = await history_repo.list_user_login_history(
+            target_user_id,
+            limit,
+            cursor,
+        )
+        return (
+            [
+                {
+                    "id": row.id,
+                    "user_id": row.user_id,
+                    "school_id": row.school_id,
+                    "ip_address": row.ip_address,
+                    "user_agent": row.user_agent,
+                    "device_name": row.device_name,
+                    "device_fingerprint": row.device_fingerprint,
+                    "city": row.city,
+                    "country": row.country,
+                    "success": row.success,
+                    "failure_reason": row.failure_reason,
+                    "is_new_device": row.is_new_device,
+                    "created_at": row.created_at.isoformat() if row.created_at else None,
+                }
+                for row in rows
+            ],
+            next_cursor,
+            has_more,
+        )
+
+    async def impersonate(
+        self,
+        target_user_id: uuid.UUID,
+        admin_auth: AuthContext,
+        *,
+        source: str = "impersonation",
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+        device_name: str | None = None,
+    ) -> dict[str, Any]:
+        """Create a shadow session for an admin to impersonate another user."""
+        if admin_auth.role not in IMPERSONATION_ROLES:
+            raise AuthorizationError(
+                "Only ADM, DIR, or SUP can impersonate users",
+                error_code="ERR-AUTHZ-001",
+            )
+        if target_user_id == admin_auth.user_id:
+            raise ConflictError(
+                "Cannot impersonate your own account",
+                error_code="ERR-IAM-CONFLICT",
+            )
+
+        target_user = await self.repo.get_user_in_school(target_user_id, admin_auth.school_id)
+        if target_user is None:
+            raise NotFoundError("User not found", error_code="ERR-IAM-404")
+
+        target_membership = await self.repo.get_membership(
+            target_user_id,
+            admin_auth.school_id,
+        )
+        if target_membership is None:
+            raise NotFoundError(
+                "Target user has no active membership",
+                error_code="ERR-IAM-404",
+            )
+        if target_membership.role_code in {SUP, SYS}:
+            raise AuthorizationError(
+                "Cannot impersonate SUP or SYS accounts",
+                error_code="ERR-AUTHZ-001",
+            )
+
+        shadow_session = None
+        async with UnitOfWork(self.db) as uow:
+            repo = AuthRepository(uow.session)
+            audit = AuditService(uow.session)
+            shadow_session = await repo.create_session(
+                user_id=target_user.id,
+                school_id=admin_auth.school_id,
+                source=source,
+                correlation_id=admin_auth.session_id,
+                user_agent=self._trim_text(user_agent, 500),
+                ip_address=self._trim_text(ip_address, 45),
+                device_name=self._trim_text(device_name, 200),
+                impersonator_id=admin_auth.user_id,
+            )
+            await audit.log_event(
+                school_id=admin_auth.school_id,
+                actor_id=admin_auth.user_id,
+                action_type="ADMIN_IMPERSONATION_START",
+                outcome="success",
+                target_type="session",
+                target_id=shadow_session.id,
+                entity_after={
+                    "impersonator_id": str(admin_auth.user_id),
+                    "target_user_id": str(target_user.id),
+                    "target_role": target_membership.role_code,
+                    "original_session_id": str(admin_auth.session_id),
+                },
+                ip_address=ip_address,
+            )
+            await uow.commit()
+
+        token_bundle = await self._issue_token_bundle(
+            user_id=target_user.id,
+            role=target_membership.role_code,
+            school_id=admin_auth.school_id,
+            session_id=shadow_session.id,
+        )
+        token_bundle["impersonation_active"] = True
+        return token_bundle
+
+    async def stop_impersonation(
+        self,
+        session_id: uuid.UUID,
+        *,
+        source: str = "impersonation_return",
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+        device_name: str | None = None,
+    ) -> dict[str, Any]:
+        """End an impersonation session and return tokens for the impersonator."""
+        current_session = await self.repo.get_session_by_id(session_id, active_only=True)
+        if current_session is None or current_session.impersonator_id is None:
+            raise AuthorizationError(
+                "Current session is not an impersonation session",
+                error_code="ERR-AUTHZ-001",
+            )
+
+        restored_session = None
+        impersonator_id = current_session.impersonator_id
+        original_session_id = current_session.correlation_id
+        admin_role = None
+
+        async with UnitOfWork(self.db) as uow:
+            repo = AuthRepository(uow.session)
+            audit = AuditService(uow.session)
+            shadow_session = await repo.get_session_by_id(session_id, active_only=True)
+            if shadow_session is None or shadow_session.impersonator_id is None:
+                raise AuthorizationError(
+                    "Current session is not an impersonation session",
+                    error_code="ERR-AUTHZ-001",
+                )
+
+            admin_membership = await repo.get_membership(
+                shadow_session.impersonator_id,
+                shadow_session.school_id,
+            )
+            if admin_membership is None:
+                raise AuthenticationError(
+                    "Impersonator membership no longer exists",
+                    error_code="ERR-IAM-401",
+                )
+            admin_role = admin_membership.role_code
+
+            if original_session_id is not None:
+                candidate = await repo.get_session_by_id(original_session_id, active_only=True)
+                if (
+                    candidate is not None
+                    and candidate.user_id == shadow_session.impersonator_id
+                    and candidate.school_id == shadow_session.school_id
+                    and candidate.impersonator_id is None
+                ):
+                    restored_session = candidate
+
+            if restored_session is None:
+                cid = get_correlation_id()
+                restored_session = await repo.create_session(
+                    user_id=shadow_session.impersonator_id,
+                    school_id=shadow_session.school_id,
+                    source=source,
+                    correlation_id=uuid.UUID(cid) if cid else None,
+                    user_agent=self._trim_text(user_agent, 500),
+                    ip_address=self._trim_text(ip_address, 45),
+                    device_name=self._trim_text(device_name, 200),
+                )
+
+            await repo.revoke_session(shadow_session.id, datetime.now(timezone.utc))
+            await audit.log_event(
+                school_id=shadow_session.school_id,
+                actor_id=shadow_session.impersonator_id,
+                action_type="ADMIN_IMPERSONATION_END",
+                outcome="success",
+                target_type="session",
+                target_id=shadow_session.id,
+                entity_after={
+                    "impersonator_id": str(shadow_session.impersonator_id),
+                    "impersonated_user_id": str(shadow_session.user_id),
+                    "restored_session_id": str(restored_session.id),
+                },
+                ip_address=ip_address,
+            )
+            await uow.commit()
+
+        await self._clear_session_tokens(session_id)
+        token_bundle = await self._issue_token_bundle(
+            user_id=impersonator_id,
+            role=admin_role,
+            school_id=current_session.school_id,
+            session_id=restored_session.id,
+        )
+        token_bundle["impersonation_active"] = False
+        return token_bundle
 
     # ------------------------------------------------------------------
     # Session revocation (Phase 2A)
@@ -1426,6 +1823,8 @@ class TwoFactorService:
         stored_ip = temp_data.get("ip_address")
         user_agent = temp_data.get("user_agent")
         device_name = temp_data.get("device_name")
+        device_fingerprint = temp_data.get("device_fingerprint")
+        auth_service = AuthService(self.db, self.redis)
 
         # 2. Load user
         user = await self.repo.get_user_by_id(user_id)
@@ -1450,60 +1849,119 @@ class TwoFactorService:
                 # Consume the backup code
                 hashed_codes.pop(idx)
                 user.backup_codes = json.dumps(hashed_codes)
-                await self.repo.save_user(user)
 
         if not valid:
+            await auth_service._record_login_history(
+                user_id=user.id,
+                school_id=school_id,
+                ip_address=stored_ip,
+                user_agent=user_agent,
+                device_name=device_name,
+                device_fingerprint=device_fingerprint,
+                success=False,
+                failure_reason="invalid_2fa",
+            )
+            await self.audit.log_event(
+                school_id=school_id,
+                actor_id=user.id,
+                action_type="AUTH_2FA_FAILED",
+                outcome="denied",
+                error_code="ERR-2FA-INVALID",
+                ip_address=ip_address,
+            )
             raise AuthenticationError(
                 "Invalid TOTP code or backup code",
                 error_code="ERR-2FA-INVALID",
             )
 
-        # 4. Consume temp token (single use)
+        # 4. Create session (same logic as normal login)
+        cid = get_correlation_id()
+        new_device_event = None
+        async with UnitOfWork(self.db) as uow:
+            repo = AuthRepository(uow.session)
+            audit = AuditService(uow.session)
+            login_history_repo = LoginHistoryRepository(uow.session)
+            if used_backup:
+                await repo.save_user(user)
+
+            revoked_session_id = None
+            active_count = await repo.count_active_sessions(user.id, school_id)
+            if active_count >= settings.max_sessions_per_user:
+                oldest = await repo.get_oldest_active_session(user.id, school_id)
+                if oldest is not None:
+                    revoked_session_id = oldest.id
+                    await repo.revoke_session(oldest.id, datetime.now(timezone.utc))
+
+            known_fingerprints = await login_history_repo.get_device_fingerprints(user.id)
+            is_new_device = bool(
+                device_fingerprint and device_fingerprint not in known_fingerprints
+            )
+            session = await repo.create_session(
+                user_id=user.id,
+                school_id=school_id,
+                source=source,
+                correlation_id=uuid.UUID(cid) if cid else None,
+                user_agent=auth_service._trim_text(user_agent, 500),
+                ip_address=auth_service._trim_text(stored_ip, 45),
+                device_name=auth_service._trim_text(device_name, 200),
+            )
+            await login_history_repo.create_login_record(
+                user_id=user.id,
+                school_id=school_id,
+                ip_address=auth_service._trim_text(stored_ip, 45),
+                user_agent=auth_service._trim_text(user_agent, 500),
+                device_name=auth_service._trim_text(device_name, 200),
+                device_fingerprint=device_fingerprint,
+                success=True,
+                is_new_device=is_new_device,
+            )
+            if revoked_session_id is not None:
+                await audit.log_event(
+                    school_id=school_id,
+                    actor_id=user.id,
+                    action_type="AUTH_SESSION_LIMIT_REACHED",
+                    outcome="success",
+                    target_type="session",
+                    target_id=revoked_session_id,
+                    ip_address=ip_address,
+                )
+            if is_new_device:
+                new_device_event = NewDeviceLogin(
+                    school_id=school_id,
+                    actor_id=user.id,
+                    user_id=user.id,
+                    device_name=auth_service._trim_text(device_name, 200),
+                    ip_address=auth_service._trim_text(stored_ip, 45),
+                    user_agent=auth_service._trim_text(user_agent, 500),
+                )
+            action = (
+                "AUTH_2FA_VERIFIED_BACKUP"
+                if used_backup
+                else "AUTH_2FA_VERIFIED"
+            )
+            await audit.log_event(
+                school_id=school_id,
+                actor_id=user.id,
+                action_type=action,
+                outcome="success",
+                target_type="session",
+                target_id=session.id,
+                ip_address=ip_address,
+            )
+            await uow.commit()
+
+        # 5. Consume temp token only after the session transaction succeeds
         await self.redis.delete(f"2fa_temp:{temp_token}")
 
-        # 5. Create session (same logic as normal login)
-        cid = get_correlation_id()
-        session = await self.repo.create_session(
+        token_bundle = await auth_service._issue_token_bundle(
             user_id=user.id,
+            role=role,
             school_id=school_id,
-            source=source,
-            correlation_id=uuid.UUID(cid) if cid else None,
-            user_agent=user_agent[:500] if user_agent else None,
-            ip_address=stored_ip[:45] if stored_ip else None,
-            device_name=device_name[:200] if device_name else None,
+            session_id=session.id,
         )
-
-        # 6. Generate tokens
-        access_token = create_access_token(user.id, role, school_id, session.id)
-        refresh_token, refresh_jti = create_refresh_token(
-            user.id, school_id, session.id
-        )
-        csrf_token = create_csrf_token()
-
-        ttl = settings.refresh_token_expire_days * 86400
-        await self.redis.setex(f"refresh_jti:{session.id}", ttl, refresh_jti)
-        await self.redis.setex(f"csrf:{session.id}", ttl, csrf_token)
-
-        # 7. Audit
-        action = "AUTH_2FA_VERIFIED_BACKUP" if used_backup else "AUTH_2FA_VERIFIED"
-        await self.audit.log_event(
-            school_id=school_id,
-            actor_id=user.id,
-            action_type=action,
-            outcome="success",
-            target_type="session",
-            target_id=session.id,
-            ip_address=ip_address,
-        )
-
-        return {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "csrf_token": csrf_token,
-            "token_type": "bearer",
-            "expires_in": settings.access_token_expire_minutes * 60,
-            "session_id": session.id,
-        }
+        if new_device_event is not None:
+            await auth_service._dispatch_event(new_device_event)
+        return token_bundle
 
 
 class EmailVerificationService:

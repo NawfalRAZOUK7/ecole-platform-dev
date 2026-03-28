@@ -21,6 +21,7 @@ from app.domain.events import (
     GradePublished,
     HolidayAdded,
     InvoiceGenerated,
+    NewDeviceLogin,
     PasswordChanged,
     PaymentFailed,
     PaymentReceived,
@@ -95,6 +96,9 @@ EVENT_HANDLERS: dict[type[DomainEvent], list[dict[str, Any]]] = {
     ],
     UserRegistered: [
         {"strategy": EmailDeliveryStrategy, "template": "user_registered"},
+    ],
+    NewDeviceLogin: [
+        {"strategy": EmailDeliveryStrategy, "template": "new_device_login"},
     ],
     PasswordChanged: [
         {"strategy": InAppDeliveryStrategy, "template": "password_changed"},
@@ -288,7 +292,10 @@ class EventDispatcher:
                         school_id=school_id,
                     )
                 )
-        elif isinstance(event, (UserRegistered, PasswordChanged, TwoFactorEnabled)):
+        elif isinstance(
+            event,
+            (UserRegistered, NewDeviceLogin, PasswordChanged, TwoFactorEnabled),
+        ):
             self._add_uuid_if_present(recipients, event.user_id)
 
         return sorted(recipients, key=str)
@@ -442,6 +449,13 @@ class EventDispatcher:
                 "Welcome to Ecole Platform",
                 "Your account has been created successfully.",
             )
+        if isinstance(event, NewDeviceLogin):
+            device_name = event.device_name or "a new device"
+            location = f" from {event.ip_address}" if event.ip_address else ""
+            return (
+                "New device login detected",
+                f"We noticed a login from {device_name}{location}.",
+            )
         if isinstance(event, PasswordChanged):
             return (
                 "Password updated",
@@ -474,7 +488,10 @@ class EventDispatcher:
         return NotificationCategory.SYSTEM.value
 
     def _priority_for_event(self, event: DomainEvent) -> str:
-        if isinstance(event, (InvoiceGenerated, DocumentExpiring, PaymentFailed)):
+        if isinstance(
+            event,
+            (InvoiceGenerated, DocumentExpiring, NewDeviceLogin, PaymentFailed),
+        ):
             return NotificationPriority.HIGH.value
         if isinstance(event, PaymentReceived):
             return NotificationPriority.NORMAL.value
@@ -498,7 +515,10 @@ class EventDispatcher:
             return "/billing"
         if isinstance(event, (DocumentUploaded, DocumentExpiring, ResourceShared)):
             return "/documents"
-        if isinstance(event, (UserRegistered, PasswordChanged, TwoFactorEnabled)):
+        if isinstance(
+            event,
+            (UserRegistered, NewDeviceLogin, PasswordChanged, TwoFactorEnabled),
+        ):
             return "/profile"
         return None
 

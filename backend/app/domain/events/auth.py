@@ -23,3 +23,11 @@ class PasswordChanged(DomainEvent):
 @dataclass(frozen=True)
 class TwoFactorEnabled(DomainEvent):
     user_id: UUID = None
+
+
+@dataclass(frozen=True)
+class NewDeviceLogin(DomainEvent):
+    user_id: UUID = None
+    device_name: str | None = None
+    ip_address: str | None = None
+    user_agent: str | None = None

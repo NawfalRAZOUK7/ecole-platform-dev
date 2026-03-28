@@ -118,7 +118,14 @@ class User(TimestampMixin, Base):
         back_populates="user", cascade="all, delete-orphan"
     )
     sessions: Mapped[list["Session"]] = relationship(
-        back_populates="user", cascade="all, delete-orphan"
+        back_populates="user",
+        cascade="all, delete-orphan",
+        foreign_keys="Session.user_id",
+    )
+    login_history: Mapped[list["LoginHistory"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+        foreign_keys="LoginHistory.user_id",
     )
 
     __table_args__ = (
@@ -184,9 +191,17 @@ class Session(TimestampMixin, Base):
     user_agent: Mapped[str | None] = mapped_column(String(500), nullable=True)
     ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
     device_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    impersonator_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
 
     # Relationships
-    user: Mapped["User"] = relationship(back_populates="sessions")
+    user: Mapped["User"] = relationship(
+        back_populates="sessions",
+        foreign_keys=[user_id],
+    )
+    impersonator: Mapped["User | None"] = relationship(foreign_keys=[impersonator_id])
 
     __table_args__ = (
         # idx_sessions_school_user_active — active sessions per user in school
@@ -197,6 +212,42 @@ class Session(TimestampMixin, Base):
             postgresql_where="revoke_at IS NULL",
         ),
         Index("idx_sessions_correlation_id", "correlation_id"),
+        Index("idx_sessions_impersonator_id", "impersonator_id"),
+    )
+
+
+class LoginHistory(TimestampMixin, Base):
+    """Historical record of login attempts and successful device usage."""
+
+    __tablename__ = "login_history"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
+    user_agent: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    device_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    device_fingerprint: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    city: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    country: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    success: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    failure_reason: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    is_new_device: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+    )
+
+    user: Mapped["User"] = relationship(
+        back_populates="login_history",
+        foreign_keys=[user_id],
+    )
+
+    __table_args__ = (
+        Index("idx_login_history_user_created", "user_id", "created_at"),
+        Index("idx_login_history_school", "school_id"),
     )
 
 

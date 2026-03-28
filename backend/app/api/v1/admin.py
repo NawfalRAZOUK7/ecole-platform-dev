@@ -4,14 +4,23 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Depends, Query, Request
+import redis.asyncio as aioredis
+from fastapi import APIRouter, Depends, Query, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import AuthContext, requires_permission
+from app.core.dependencies import (
+    AuthContext,
+    get_current_user,
+    requires_permission,
+    requires_role,
+)
 from app.core.permissions import (
+    ADM,
+    DIR,
     PERM_ADM_AUDIT_READ,
     PERM_ADM_DASHBOARD_READ,
+    PERM_ADM_IMPERSONATE,
     PERM_ADM_INVITATION_READ,
     PERM_ADM_USER_CREATE,
     PERM_ADM_USER_MANAGE,
@@ -20,13 +29,37 @@ from app.core.permissions import (
     PERM_IAM_PARENT_LINK_CREATE,
     PERM_IAM_PARENT_LINK_DELETE,
     PERM_IAM_PARENT_LINK_READ,
+    SUP,
 )
-from app.core.request_utils import get_client_ip
+from app.core.redis import get_redis
+from app.core.request_utils import get_client_ip, parse_device_name
 from app.core.response import list_response, success_response
 from app.schemas.auth import BatchRegisterRequest
 from app.services.admin import AdminService
+from app.services.auth import AuthService
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+
+def _set_auth_cookies(response: Response, result: dict) -> None:
+    response.set_cookie(
+        key="refresh_token",
+        value=result["refresh_token"],
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        path="/api/v1/auth",
+        max_age=7 * 24 * 3600,
+    )
+    response.set_cookie(
+        key="csrf_token",
+        value=result["csrf_token"],
+        httponly=False,
+        secure=True,
+        samesite="lax",
+        path="/api/v1/auth",
+        max_age=7 * 24 * 3600,
+    )
 
 
 @router.get(
@@ -66,6 +99,95 @@ async def list_users(
         limit=limit,
     )
     return list_response(data, next_cursor=next_cursor, has_more=has_more)
+
+
+@router.post(
+    "/impersonate/{user_id}",
+    summary="Start impersonating a user",
+    response_description="Access token for the impersonated user",
+)
+async def impersonate_user(
+    user_id: uuid.UUID,
+    request: Request,
+    response: Response,
+    auth: AuthContext = Depends(requires_permission(PERM_ADM_IMPERSONATE)),
+    db: AsyncSession = Depends(get_db),
+    redis: aioredis.Redis = Depends(get_redis),
+):
+    service = AuthService(db, redis)
+    user_agent = request.headers.get("User-Agent")
+    result = await service.impersonate(
+        target_user_id=user_id,
+        admin_auth=auth,
+        source="impersonation",
+        ip_address=get_client_ip(request),
+        user_agent=user_agent,
+        device_name=parse_device_name(user_agent),
+    )
+    _set_auth_cookies(response, result)
+    return success_response(
+        {
+            "access_token": result["access_token"],
+            "token_type": result["token_type"],
+            "expires_in": result["expires_in"],
+            "impersonation_active": result["impersonation_active"],
+        }
+    )
+
+
+@router.post(
+    "/stop-impersonation",
+    summary="Stop impersonating and return to the admin session",
+    response_description="Access token for the admin user",
+)
+async def stop_impersonation(
+    request: Request,
+    response: Response,
+    auth: AuthContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    redis: aioredis.Redis = Depends(get_redis),
+):
+    service = AuthService(db, redis)
+    user_agent = request.headers.get("User-Agent")
+    result = await service.stop_impersonation(
+        auth.session_id,
+        source="impersonation_return",
+        ip_address=get_client_ip(request),
+        user_agent=user_agent,
+        device_name=parse_device_name(user_agent),
+    )
+    _set_auth_cookies(response, result)
+    return success_response(
+        {
+            "access_token": result["access_token"],
+            "token_type": result["token_type"],
+            "expires_in": result["expires_in"],
+            "impersonation_active": result["impersonation_active"],
+        }
+    )
+
+
+@router.get(
+    "/users/{user_id}/login-history",
+    summary="List a user's login history",
+    response_description="Paginated login history for the target user",
+)
+async def list_user_login_history(
+    user_id: uuid.UUID,
+    auth: AuthContext = Depends(requires_role(ADM, DIR, SUP)),
+    db: AsyncSession = Depends(get_db),
+    redis: aioredis.Redis = Depends(get_redis),
+    cursor: str | None = Query(None),
+    limit: int = Query(20, ge=1, le=100),
+):
+    service = AuthService(db, redis)
+    items, next_cursor, has_more = await service.list_login_history(
+        target_user_id=user_id,
+        auth=auth,
+        limit=limit,
+        cursor=cursor,
+    )
+    return list_response(items, next_cursor=next_cursor, has_more=has_more)
 
 
 @router.put(

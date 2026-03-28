@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
+    max_sessions_per_user: int = 5
 
     # Rate limiting (Phase 2A)
     enable_strict_rate_limit: bool = False  # True in production/staging

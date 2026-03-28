@@ -1,6 +1,11 @@
 """Domain event exports."""
 
-from app.domain.events.auth import PasswordChanged, TwoFactorEnabled, UserRegistered
+from app.domain.events.auth import (
+    NewDeviceLogin,
+    PasswordChanged,
+    TwoFactorEnabled,
+    UserRegistered,
+)
 from app.domain.events.base import DomainEvent
 from app.domain.events.billing import InvoiceGenerated, PaymentFailed, PaymentReceived
 from app.domain.events.calendar import (
@@ -42,4 +47,5 @@ __all__ = [
     "UserRegistered",
     "PasswordChanged",
     "TwoFactorEnabled",
+    "NewDeviceLogin",
 ]
