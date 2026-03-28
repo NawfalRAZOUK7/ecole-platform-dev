@@ -1,42 +1,34 @@
-/**
- * Parent justification page — submit absence justification for a child.
- *
- * Reference: Phase 4C — Parent absence justification form
- * Calls POST /attendance/justifications with attendance_record_id + reason.
- */
-
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { api, ApiClientError } from '@/services/api/client';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
+import { useSubmitJustification } from './useAttendance';
 
 type Step = 'form' | 'done';
 
 export function ParentJustificationPage() {
   const { t } = useTranslation();
+  const submitJustificationMutation = useSubmitJustification();
   const [step, setStep] = useState<Step>('form');
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
   const [attendanceRecordId, setAttendanceRecordId] = useState('');
   const [reason, setReason] = useState('');
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    if (!attendanceRecordId.trim() || !reason.trim()) return;
-    setLoading(true);
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    if (!attendanceRecordId.trim() || !reason.trim()) {
+      return;
+    }
+
     setError(null);
 
     try {
-      await api.post('/attendance/justifications', {
+      await submitJustificationMutation.mutateAsync({
         attendance_record_id: attendanceRecordId.trim(),
         reason: reason.trim(),
       });
       setStep('done');
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    } finally {
-      setLoading(false);
+    } catch (submissionError) {
+      setError(submissionError instanceof Error ? submissionError.message : t('app.error'));
     }
   }
 
@@ -53,24 +45,41 @@ export function ParentJustificationPage() {
 
       <ErrorBanner error={error} onDismiss={() => setError(null)} />
 
-      {step === 'done' && (
+      {step === 'done' ? (
         <div className="card" style={{ maxWidth: 500 }}>
-          <h3 style={{ color: 'var(--color-success)', marginBottom: 12, fontSize: 16, fontWeight: 600 }}>
+          <h3
+            style={{
+              color: 'var(--color-success)',
+              marginBottom: 12,
+              fontSize: 16,
+              fontWeight: 600,
+            }}
+          >
             {t('justification.success')}
           </h3>
-          <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', marginBottom: 16 }}>
+          <p
+            style={{
+              fontSize: 14,
+              color: 'var(--color-text-secondary)',
+              marginBottom: 16,
+            }}
+          >
             {t('justification.successMessage')}
           </p>
           <button className="btn btn-primary" onClick={handleReset}>
             {t('justification.submitAnother')}
           </button>
         </div>
-      )}
-
-      {step === 'form' && (
+      ) : (
         <form onSubmit={handleSubmit}>
           <div className="card" style={{ maxWidth: 500 }}>
-            <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 16 }}>
+            <p
+              style={{
+                fontSize: 13,
+                color: 'var(--color-text-secondary)',
+                marginBottom: 16,
+              }}
+            >
               {t('justification.instructions')}
             </p>
 
@@ -79,10 +88,10 @@ export function ParentJustificationPage() {
               <input
                 className="filter-input"
                 value={attendanceRecordId}
-                onChange={(e) => setAttendanceRecordId(e.target.value)}
+                onChange={(event) => setAttendanceRecordId(event.target.value)}
                 placeholder={t('justification.recordIdPlaceholder')}
                 required
-                disabled={loading}
+                disabled={submitJustificationMutation.isPending}
                 style={{ width: '100%' }}
               />
             </div>
@@ -92,10 +101,10 @@ export function ParentJustificationPage() {
               <textarea
                 className="filter-input"
                 value={reason}
-                onChange={(e) => setReason(e.target.value)}
+                onChange={(event) => setReason(event.target.value)}
                 placeholder={t('justification.reasonPlaceholder')}
                 required
-                disabled={loading}
+                disabled={submitJustificationMutation.isPending}
                 rows={4}
                 maxLength={2000}
                 style={{ width: '100%', resize: 'vertical' }}
@@ -108,9 +117,13 @@ export function ParentJustificationPage() {
             <button
               type="submit"
               className="btn btn-primary"
-              disabled={loading || !attendanceRecordId.trim() || !reason.trim()}
+              disabled={
+                submitJustificationMutation.isPending ||
+                !attendanceRecordId.trim() ||
+                !reason.trim()
+              }
             >
-              {loading ? t('app.loading') : t('justification.submit')}
+              {submitJustificationMutation.isPending ? t('app.loading') : t('justification.submit')}
             </button>
           </div>
         </form>

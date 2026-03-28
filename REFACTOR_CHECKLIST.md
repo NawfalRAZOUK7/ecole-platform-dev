@@ -157,10 +157,10 @@
 - [ ] **Review & commit myself**: `refactor(web): extract services and hooks for admin and teacher features`
 
 ### Batch 3 — All Remaining Features
-- [ ] Create services + hooks for: student, messages, progress, content, results, invoices, documents, submissions, reports, analytics, profile, family, timetable, cms
-- [ ] Update ALL remaining pages
-- [ ] Verify: ZERO `api.get(` in any `*Page.tsx`
-- [ ] Verify: `npm run build` passes
+- [x] Create services + hooks for: student, messages, progress, content, results, invoices, documents, submissions, reports, analytics, profile, family, timetable, cms
+- [x] Update ALL remaining pages
+- [x] Verify: ZERO `api.get(` in any `*Page.tsx`
+- [x] Verify: `npm run build` passes
 - [ ] **Review & commit myself**: `refactor(web): complete service/hook extraction for all features`
 
 ---

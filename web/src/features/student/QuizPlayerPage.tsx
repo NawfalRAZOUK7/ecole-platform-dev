@@ -8,38 +8,22 @@
  *      GET /attempts/{id}/results
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { api, ApiClientError } from '@/services/api/client';
-import { LoadingState } from '@/shared/ui/LoadingState';
-import { ErrorBanner } from '@/shared/ui/ErrorBanner';
+import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
 import { EmptyState } from '@/shared/ui/EmptyState';
-
-/* ------------------------------------------------------------------ */
-/* Types                                                               */
-/* ------------------------------------------------------------------ */
-interface QuizListItem {
-  id: string;
-  title: string;
-  description: string | null;
-  subject: string | null;
-  difficulty: string;
-  time_limit_minutes: number | null;
-  max_attempts: number;
-  question_count: number;
-  total_points: number;
-  status: string;
-}
-
-interface Question {
-  id: string;
-  question_type: string;
-  question_text: string;
-  question_media_path: string | null;
-  options: Record<string, unknown> | null;
-  points: number;
-  order: number;
-}
+import { ErrorBanner } from '@/shared/ui/ErrorBanner';
+import { LoadingState } from '@/shared/ui/LoadingState';
+import { toBannerError } from '@/shared/ui/errorUtils';
+import {
+  useAttemptResults,
+  usePublishedQuizzes,
+  useQuizDetail,
+  useRespondToAttempt,
+  useStartQuizAttempt,
+  useSubmitAttempt,
+} from './useStudent';
+import type { Attempt, AttemptResult, Question, QuizListItem } from './student.service';
 
 interface McqOptions {
   choices?: string[];
@@ -55,158 +39,116 @@ interface MatchingOptions {
   right?: string[];
 }
 
-interface Attempt {
-  id: string;
-  quiz_id: string;
-  attempt_no: number;
-  started_at: string | null;
-  completed_at: string | null;
-  score: number | null;
-  max_score: number | null;
-  status: string;
-}
-
-interface ResultResponse {
-  question_id: string;
-  question_type: string;
-  question_text: string;
-  student_answer: unknown;
-  correct_answer: unknown;
-  is_correct: boolean | null;
-  points_earned: number | null;
-  points: number;
-  explanation: string | null;
-}
-
-interface AttemptResult {
-  attempt: Attempt;
-  responses: ResultResponse[];
-}
-
 type View = 'list' | 'playing' | 'results';
 
-/* ------------------------------------------------------------------ */
-/* Main                                                                */
-/* ------------------------------------------------------------------ */
 export function QuizPlayerPage() {
   const { t } = useTranslation();
   const [view, setView] = useState<View>('list');
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  // List
-  const [quizzes, setQuizzes] = useState<QuizListItem[]>([]);
-
-  // Playing
   const [currentQuiz, setCurrentQuiz] = useState<QuizListItem | null>(null);
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [selectedQuizId, setSelectedQuizId] = useState<string | null>(null);
   const [attempt, setAttempt] = useState<Attempt | null>(null);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<string, unknown>>({});
-  const [submitting, setSubmitting] = useState(false);
-
-  // Results
-  const [results, setResults] = useState<AttemptResult | null>(null);
-
-  const fetchQuizzes = useCallback(async () => {
-    try {
-      const resp = await api.list<QuizListItem>('/quizzes', { status: 'published' });
-      setQuizzes(resp.data);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
-  }, [t]);
-
-  useEffect(() => {
-    setLoading(true);
-    fetchQuizzes().finally(() => setLoading(false));
-  }, [fetchQuizzes]);
+  const [resultAttemptId, setResultAttemptId] = useState<string | null>(null);
+  const quizzesQuery = usePublishedQuizzes();
+  const quizDetailQuery = useQuizDetail(selectedQuizId);
+  const startAttemptMutation = useStartQuizAttempt();
+  const respondMutation = useRespondToAttempt();
+  const submitAttemptMutation = useSubmitAttempt();
+  const resultsQuery = useAttemptResults(view === 'results' ? resultAttemptId : null);
+  const quizzes = quizzesQuery.data ?? [];
+  const questions: Question[] = quizDetailQuery.data?.questions ?? [];
+  const dismissibleError = useDismissibleError(
+    useMemo(
+      () =>
+        toBannerError(
+          quizzesQuery.error ??
+            quizDetailQuery.error ??
+            startAttemptMutation.error ??
+            respondMutation.error ??
+            submitAttemptMutation.error ??
+            resultsQuery.error,
+          t('app.error')
+        ),
+      [
+        quizDetailQuery.error,
+        quizzesQuery.error,
+        respondMutation.error,
+        resultsQuery.error,
+        startAttemptMutation.error,
+        submitAttemptMutation.error,
+        t,
+      ]
+    )
+  );
 
   async function handleStartQuiz(quiz: QuizListItem) {
-    setError(null);
-    try {
-      // Load quiz detail (questions)
-      const detail = await api.get<{
-        questions: Question[];
-        [k: string]: unknown;
-      }>(`/quizzes/${quiz.id}`);
-
-      // Start attempt
-      const attemptResp = await api.post<Attempt>(`/quizzes/${quiz.id}/start`);
-
-      setCurrentQuiz(quiz);
-      setQuestions(detail.data.questions);
-      setAttempt(attemptResp.data);
-      setCurrentIdx(0);
-      setAnswers({});
-      setView('playing');
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
+    const startedAttempt = await startAttemptMutation.mutateAsync(quiz.id);
+    setCurrentQuiz(quiz);
+    setSelectedQuizId(quiz.id);
+    setAttempt(startedAttempt);
+    setCurrentIdx(0);
+    setAnswers({});
+    setResultAttemptId(null);
+    setView('playing');
   }
 
-  async function handleSubmitAnswer(questionId: string, answer: unknown) {
-    if (!attempt) return;
-    setAnswers((prev) => ({ ...prev, [questionId]: answer }));
-    try {
-      await api.post(`/attempts/${attempt.id}/respond`, {
-        question_id: questionId,
-        student_answer: answer,
-      });
-    } catch { /* save locally, will be sent on submit */ }
+  function handleSubmitAnswer(questionId: string, answer: unknown) {
+    if (!attempt) {
+      return;
+    }
+    setAnswers((current) => ({ ...current, [questionId]: answer }));
+    void respondMutation.mutateAsync({
+      attemptId: attempt.id,
+      questionId,
+      studentAnswer: answer,
+    }).catch(() => null);
   }
 
   async function handleSubmitAttempt() {
-    if (!attempt) return;
-    setSubmitting(true);
-    try {
-      // Submit any remaining answers
-      for (const q of questions) {
-        if (answers[q.id] !== undefined) {
-          try {
-            await api.post(`/attempts/${attempt.id}/respond`, {
-              question_id: q.id,
-              student_answer: answers[q.id],
-            });
-          } catch { /* ignore duplicates */ }
-        }
-      }
-
-      // Submit attempt for grading
-      await api.post(`/attempts/${attempt.id}/submit`);
-
-      // Fetch results
-      const resultResp = await api.get<AttemptResult>(`/attempts/${attempt.id}/results`);
-      setResults(resultResp.data);
-      setView('results');
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    } finally {
-      setSubmitting(false);
+    if (!attempt) {
+      return;
     }
+
+    for (const question of questions) {
+      if (answers[question.id] !== undefined) {
+        await respondMutation.mutateAsync({
+          attemptId: attempt.id,
+          questionId: question.id,
+          studentAnswer: answers[question.id],
+        }).catch(() => null);
+      }
+    }
+
+    await submitAttemptMutation.mutateAsync(attempt.id);
+    setResultAttemptId(attempt.id);
+    setView('results');
   }
 
   function handleBackToList() {
     setView('list');
     setCurrentQuiz(null);
-    setQuestions([]);
+    setSelectedQuizId(null);
     setAttempt(null);
-    setResults(null);
+    setResultAttemptId(null);
     setAnswers({});
-    fetchQuizzes();
+    void quizzesQuery.refetch();
   }
 
-  if (loading) return <LoadingState />;
+  if ((view === 'list' && quizzesQuery.isLoading) || (view === 'playing' && quizDetailQuery.isLoading) || (view === 'results' && resultsQuery.isLoading)) {
+    return <LoadingState />;
+  }
 
   return (
     <div className="page">
       <h1 className="page-title">{t('studentQuiz.title')}</h1>
-      <ErrorBanner error={error} onDismiss={() => setError(null)} />
+      <ErrorBanner
+        error={dismissibleError.error}
+        onDismiss={dismissibleError.dismiss}
+        onRetry={() => void Promise.all([quizzesQuery.refetch(), selectedQuizId ? quizDetailQuery.refetch() : Promise.resolve(), resultAttemptId ? resultsQuery.refetch() : Promise.resolve()])}
+      />
 
-      {view === 'list' && (
-        <QuizList quizzes={quizzes} onStart={handleStartQuiz} />
-      )}
+      {view === 'list' && <QuizList quizzes={quizzes} onStart={(quiz) => void handleStartQuiz(quiz)} />}
 
       {view === 'playing' && attempt && currentQuiz && (
         <QuizPlay
@@ -215,24 +157,21 @@ export function QuizPlayerPage() {
           attempt={attempt}
           currentIdx={currentIdx}
           answers={answers}
-          submitting={submitting}
+          submitting={submitAttemptMutation.isPending}
           onNavigate={setCurrentIdx}
           onAnswer={handleSubmitAnswer}
-          onSubmit={handleSubmitAttempt}
+          onSubmit={() => {
+            void handleSubmitAttempt();
+          }}
         />
       )}
 
-      {view === 'results' && results && (
-        <QuizResults results={results} onBack={handleBackToList} />
-      )}
+      {view === 'results' && resultsQuery.data && <QuizResults results={resultsQuery.data} onBack={handleBackToList} />}
     </div>
   );
 }
 
-/* ================================================================== */
-/* Quiz List                                                           */
-/* ================================================================== */
-function QuizList({ quizzes, onStart }: { quizzes: QuizListItem[]; onStart: (q: QuizListItem) => void }) {
+function QuizList({ quizzes, onStart }: { quizzes: QuizListItem[]; onStart: (quiz: QuizListItem) => void }) {
   const { t } = useTranslation();
 
   if (quizzes.length === 0) {
@@ -241,21 +180,21 @@ function QuizList({ quizzes, onStart }: { quizzes: QuizListItem[]; onStart: (q: 
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
-      {quizzes.map((q) => (
-        <div key={q.id} className="card" style={{ padding: 16 }}>
-          <h4 style={{ margin: '0 0 6px', fontSize: 15 }}>{q.title}</h4>
-          {q.description && (
+      {quizzes.map((quiz) => (
+        <div key={quiz.id} className="card" style={{ padding: 16 }}>
+          <h4 style={{ margin: '0 0 6px', fontSize: 15 }}>{quiz.title}</h4>
+          {quiz.description && (
             <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', margin: '0 0 8px' }}>
-              {q.description.length > 100 ? q.description.slice(0, 100) + '...' : q.description}
+              {quiz.description.length > 100 ? `${quiz.description.slice(0, 100)}...` : quiz.description}
             </p>
           )}
           <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 12 }}>
-            {q.subject && <span style={{ marginRight: 8 }}>{t(`cms.subjects.${q.subject}`, q.subject)}</span>}
-            <span style={{ marginRight: 8 }}>{q.difficulty}</span>
-            <span>{q.question_count} {t('studentQuiz.questions')}</span>
-            {q.time_limit_minutes && <span style={{ marginLeft: 8 }}>{q.time_limit_minutes} min</span>}
+            {quiz.subject && <span style={{ marginRight: 8 }}>{t(`cms.subjects.${quiz.subject}`, quiz.subject)}</span>}
+            <span style={{ marginRight: 8 }}>{quiz.difficulty}</span>
+            <span>{quiz.question_count} {t('studentQuiz.questions')}</span>
+            {quiz.time_limit_minutes && <span style={{ marginLeft: 8 }}>{quiz.time_limit_minutes} min</span>}
           </div>
-          <button className="btn btn-primary" onClick={() => onStart(q)}>
+          <button className="btn btn-primary" onClick={() => onStart(quiz)}>
             {t('studentQuiz.startQuiz')}
           </button>
         </div>
@@ -264,9 +203,6 @@ function QuizList({ quizzes, onStart }: { quizzes: QuizListItem[]; onStart: (q: 
   );
 }
 
-/* ================================================================== */
-/* Quiz Play                                                           */
-/* ================================================================== */
 function QuizPlay({
   quiz,
   questions,
@@ -285,7 +221,7 @@ function QuizPlay({
   answers: Record<string, unknown>;
   submitting: boolean;
   onNavigate: (idx: number) => void;
-  onAnswer: (qid: string, answer: unknown) => void;
+  onAnswer: (questionId: string, answer: unknown) => void;
   onSubmit: () => void;
 }) {
   const { t } = useTranslation();
@@ -293,9 +229,10 @@ function QuizPlay({
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
 
-  // Timer
   useEffect(() => {
-    if (!quiz.time_limit_minutes || !attempt.started_at) return;
+    if (!quiz.time_limit_minutes || !attempt.started_at) {
+      return;
+    }
     const started = new Date(attempt.started_at).getTime();
     const endAt = started + quiz.time_limit_minutes * 60 * 1000;
 
@@ -307,108 +244,100 @@ function QuizPlay({
         onSubmit();
       }
     }
+
     tick();
     timerRef.current = setInterval(tick, 1000);
     return () => clearInterval(timerRef.current);
-  }, [quiz.time_limit_minutes, attempt.started_at, onSubmit]);
+  }, [attempt.started_at, onSubmit, quiz.time_limit_minutes]);
 
-  const formatTime = (secs: number) => {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  };
+  function formatTime(seconds: number) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  }
 
-  if (!question) return null;
+  if (!question) {
+    return null;
+  }
 
   return (
     <div>
-      {/* Header bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
         <h3 style={{ margin: 0 }}>{quiz.title}</h3>
         {timeLeft !== null && (
-          <span style={{
-            fontSize: 16,
-            fontWeight: 700,
-            color: timeLeft < 60 ? 'var(--color-error)' : 'var(--color-text)',
-            fontFamily: 'monospace',
-          }}>
+          <span
+            style={{
+              fontSize: 16,
+              fontWeight: 700,
+              color: timeLeft < 60 ? 'var(--color-error)' : 'var(--color-text)',
+              fontFamily: 'monospace',
+            }}
+          >
             {formatTime(timeLeft)}
           </span>
         )}
       </div>
 
-      {/* Question navigation */}
       <div style={{ display: 'flex', gap: 4, marginBottom: 16, flexWrap: 'wrap' }}>
-        {questions.map((q, idx) => (
+        {questions.map((item, index) => (
           <button
-            key={q.id}
-            className={`btn ${idx === currentIdx ? 'btn-primary' : answers[q.id] !== undefined ? 'btn-success' : 'btn-secondary'}`}
+            key={item.id}
+            className={`btn ${index === currentIdx ? 'btn-primary' : answers[item.id] !== undefined ? 'btn-success' : 'btn-secondary'}`}
             style={{ width: 36, height: 36, padding: 0, fontSize: 13 }}
-            onClick={() => onNavigate(idx)}
+            onClick={() => onNavigate(index)}
           >
-            {idx + 1}
+            {index + 1}
           </button>
         ))}
       </div>
 
-      {/* Question card */}
       <div className="card" style={{ padding: 20, marginBottom: 16 }}>
         <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 8 }}>
           {t('studentQuiz.question')} {currentIdx + 1}/{questions.length} — {question.points} {t('studentQuiz.pts')}
         </div>
         <h4 style={{ margin: '0 0 16px', fontSize: 16 }}>{question.question_text}</h4>
 
-        {/* MCQ */}
         {question.question_type === 'mcq' && (
           <McqInput
             options={(question.options as McqOptions | null)?.choices || []}
             value={answers[question.id] as number | undefined}
-            onChange={(v) => onAnswer(question.id, v)}
+            onChange={(value) => onAnswer(question.id, value)}
           />
         )}
 
-        {/* True/False */}
         {question.question_type === 'true_false' && (
           <TrueFalseInput
             value={answers[question.id] as boolean | undefined}
-            onChange={(v) => onAnswer(question.id, v)}
+            onChange={(value) => onAnswer(question.id, value)}
           />
         )}
 
-        {/* Fill in blank */}
         {question.question_type === 'fill_in_blank' && (
           <FillInInput
             value={answers[question.id] as string | undefined}
-            onChange={(v) => onAnswer(question.id, v)}
+            onChange={(value) => onAnswer(question.id, value)}
           />
         )}
 
-        {/* Drag & Drop */}
         {question.question_type === 'drag_drop' && (
           <DragDropInput
             options={question.options}
             value={answers[question.id] as Record<string, string> | undefined}
-            onChange={(v) => onAnswer(question.id, v)}
+            onChange={(value) => onAnswer(question.id, value)}
           />
         )}
 
-        {/* Matching */}
         {question.question_type === 'matching' && (
           <MatchingInput
             options={question.options}
             value={answers[question.id] as Record<string, string> | undefined}
-            onChange={(v) => onAnswer(question.id, v)}
+            onChange={(value) => onAnswer(question.id, value)}
           />
         )}
       </div>
 
-      {/* Navigation buttons */}
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <button
-          className="btn btn-secondary"
-          disabled={currentIdx === 0}
-          onClick={() => onNavigate(currentIdx - 1)}
-        >
+        <button className="btn btn-secondary" disabled={currentIdx === 0} onClick={() => onNavigate(currentIdx - 1)}>
           {t('studentQuiz.prev')}
         </button>
 
@@ -417,12 +346,7 @@ function QuizPlay({
             {t('studentQuiz.next')}
           </button>
         ) : (
-          <button
-            className="btn btn-primary"
-            onClick={onSubmit}
-            disabled={submitting}
-            style={{ background: 'var(--color-success)' }}
-          >
+          <button className="btn btn-primary" onClick={onSubmit} disabled={submitting} style={{ background: 'var(--color-success)' }}>
             {submitting ? t('app.loading') : t('studentQuiz.submit')}
           </button>
         )}
@@ -431,43 +355,39 @@ function QuizPlay({
   );
 }
 
-/* ================================================================== */
-/* Question Input Components                                           */
-/* ================================================================== */
-
-function McqInput({ options, value, onChange }: { options: string[]; value?: number; onChange: (v: number) => void }) {
+function McqInput({ options, value, onChange }: { options: string[]; value?: number; onChange: (value: number) => void }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {options.map((opt, idx) => (
+      {options.map((option, index) => (
         <label
-          key={idx}
+          key={index}
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: 10,
             padding: '10px 12px',
             borderRadius: 'var(--radius)',
-            background: value === idx ? 'var(--color-primary-light, #e3f2fd)' : 'var(--color-bg)',
-            border: `1px solid ${value === idx ? 'var(--color-primary)' : 'var(--color-border)'}`,
+            background: value === index ? 'var(--color-primary-light, #e3f2fd)' : 'var(--color-bg)',
+            border: `1px solid ${value === index ? 'var(--color-primary)' : 'var(--color-border)'}`,
             cursor: 'pointer',
             transition: 'all 0.2s',
           }}
         >
-          <input type="radio" checked={value === idx} onChange={() => onChange(idx)} style={{ margin: 0 }} />
-          <span style={{ fontSize: 14 }}>{opt}</span>
+          <input type="radio" checked={value === index} onChange={() => onChange(index)} style={{ margin: 0 }} />
+          <span style={{ fontSize: 14 }}>{option}</span>
         </label>
       ))}
     </div>
   );
 }
 
-function TrueFalseInput({ value, onChange }: { value?: boolean; onChange: (v: boolean) => void }) {
+function TrueFalseInput({ value, onChange }: { value?: boolean; onChange: (value: boolean) => void }) {
   const { t } = useTranslation();
   return (
     <div style={{ display: 'flex', gap: 16 }}>
-      {[true, false].map((v) => (
+      {[true, false].map((item) => (
         <label
-          key={String(v)}
+          key={String(item)}
           style={{
             flex: 1,
             display: 'flex',
@@ -476,29 +396,29 @@ function TrueFalseInput({ value, onChange }: { value?: boolean; onChange: (v: bo
             gap: 8,
             padding: '14px 16px',
             borderRadius: 'var(--radius)',
-            background: value === v ? 'var(--color-primary-light, #e3f2fd)' : 'var(--color-bg)',
-            border: `2px solid ${value === v ? 'var(--color-primary)' : 'var(--color-border)'}`,
+            background: value === item ? 'var(--color-primary-light, #e3f2fd)' : 'var(--color-bg)',
+            border: `2px solid ${value === item ? 'var(--color-primary)' : 'var(--color-border)'}`,
             cursor: 'pointer',
             fontWeight: 600,
             fontSize: 15,
             transition: 'all 0.2s',
           }}
         >
-          <input type="radio" checked={value === v} onChange={() => onChange(v)} style={{ display: 'none' }} />
-          {v ? t('studentQuiz.true') : t('studentQuiz.false')}
+          <input type="radio" checked={value === item} onChange={() => onChange(item)} style={{ display: 'none' }} />
+          {item ? t('studentQuiz.true') : t('studentQuiz.false')}
         </label>
       ))}
     </div>
   );
 }
 
-function FillInInput({ value, onChange }: { value?: string; onChange: (v: string) => void }) {
+function FillInInput({ value, onChange }: { value?: string; onChange: (value: string) => void }) {
   const { t } = useTranslation();
   return (
     <input
       className="filter-input"
       value={value || ''}
-      onChange={(e) => onChange(e.target.value)}
+      onChange={(event) => onChange(event.target.value)}
       placeholder={t('studentQuiz.typeAnswer')}
       style={{ width: '100%', fontSize: 15, padding: '10px 12px' }}
     />
@@ -512,7 +432,7 @@ function DragDropInput({
 }: {
   options: Record<string, unknown> | null;
   value?: Record<string, string>;
-  onChange: (v: Record<string, string>) => void;
+  onChange: (value: Record<string, string>) => void;
 }) {
   const { t } = useTranslation();
   const items = (options as DragDropOptions | null)?.items || [];
@@ -522,18 +442,18 @@ function DragDropInput({
   return (
     <div>
       <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 8 }}>{t('studentQuiz.dragDropHint')}</p>
-      {items.map((item: string, idx: number) => (
-        <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+      {items.map((item, index) => (
+        <div key={index} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
           <span style={{ fontSize: 13, fontWeight: 600, minWidth: 100 }}>{item}</span>
           <select
             className="filter-select"
             value={current[item] || ''}
-            onChange={(e) => onChange({ ...current, [item]: e.target.value })}
+            onChange={(event) => onChange({ ...current, [item]: event.target.value })}
             style={{ flex: 1 }}
           >
             <option value="">— {t('studentQuiz.selectZone')} —</option>
-            {zones.map((z: string) => (
-              <option key={z} value={z}>{z}</option>
+            {zones.map((zone) => (
+              <option key={zone} value={zone}>{zone}</option>
             ))}
           </select>
         </div>
@@ -549,7 +469,7 @@ function MatchingInput({
 }: {
   options: Record<string, unknown> | null;
   value?: Record<string, string>;
-  onChange: (v: Record<string, string>) => void;
+  onChange: (value: Record<string, string>) => void;
 }) {
   const { t } = useTranslation();
   const left = (options as MatchingOptions | null)?.left || [];
@@ -559,18 +479,18 @@ function MatchingInput({
   return (
     <div>
       <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 8 }}>{t('studentQuiz.matchHint')}</p>
-      {left.map((l: string, idx: number) => (
-        <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-          <span style={{ fontSize: 13, fontWeight: 600, minWidth: 120 }}>{l}</span>
+      {left.map((item, index) => (
+        <div key={index} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, minWidth: 120 }}>{item}</span>
           <select
             className="filter-select"
-            value={current[l] || ''}
-            onChange={(e) => onChange({ ...current, [l]: e.target.value })}
+            value={current[item] || ''}
+            onChange={(event) => onChange({ ...current, [item]: event.target.value })}
             style={{ flex: 1 }}
           >
             <option value="">— {t('studentQuiz.selectMatch')} —</option>
-            {right.map((r: string) => (
-              <option key={r} value={r}>{r}</option>
+            {right.map((option) => (
+              <option key={option} value={option}>{option}</option>
             ))}
           </select>
         </div>
@@ -579,9 +499,6 @@ function MatchingInput({
   );
 }
 
-/* ================================================================== */
-/* Quiz Results                                                        */
-/* ================================================================== */
 function QuizResults({ results, onBack }: { results: AttemptResult; onBack: () => void }) {
   const { t } = useTranslation();
   const { attempt, responses } = results;
@@ -595,7 +512,6 @@ function QuizResults({ results, onBack }: { results: AttemptResult; onBack: () =
         {t('studentQuiz.backToList')}
       </button>
 
-      {/* Score summary */}
       <div className="card" style={{ padding: 20, marginBottom: 16, textAlign: 'center' }}>
         <h2 style={{ margin: '0 0 8px' }}>{t('studentQuiz.resultsTitle')}</h2>
         <div style={{ fontSize: 40, fontWeight: 700, color: pct !== null && pct >= 50 ? 'var(--color-success)' : 'var(--color-error)' }}>
@@ -608,44 +524,29 @@ function QuizResults({ results, onBack }: { results: AttemptResult; onBack: () =
         )}
       </div>
 
-      {/* Question results */}
-      {responses.map((r, idx) => (
+      {responses.map((response, index) => (
         <div
-          key={r.question_id}
+          key={response.question_id}
           className="card"
           style={{
             padding: 16,
             marginBottom: 12,
-            borderLeft: `4px solid ${r.is_correct ? 'var(--color-success)' : 'var(--color-error)'}`,
+            borderLeft: `4px solid ${response.is_correct ? 'var(--color-success)' : 'var(--color-error)'}`,
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ fontWeight: 600, fontSize: 13 }}>Q{idx + 1} — {r.question_type}</span>
-            <span style={{
-              fontSize: 12,
-              fontWeight: 600,
-              color: r.is_correct ? 'var(--color-success)' : 'var(--color-error)',
-            }}>
-              {r.points_earned ?? 0}/{r.points} {t('studentQuiz.pts')}
-            </span>
+          <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 6 }}>
+            {t('studentQuiz.question')} {index + 1} — {response.points_earned ?? 0}/{response.points}
           </div>
-          <p style={{ margin: '0 0 8px', fontSize: 14 }}>{r.question_text}</p>
-
+          <h4 style={{ margin: '0 0 8px', fontSize: 15 }}>{response.question_text}</h4>
           <div style={{ fontSize: 13, marginBottom: 4 }}>
-            <strong>{t('studentQuiz.yourAnswer')}:</strong>{' '}
-            <span style={{ color: r.is_correct ? 'var(--color-success)' : 'var(--color-error)' }}>
-              {formatAnswer(r.student_answer)}
-            </span>
+            <strong>{t('studentQuiz.yourAnswer')}:</strong> {formatAnswer(response.student_answer)}
           </div>
-          {!r.is_correct && (
-            <div style={{ fontSize: 13, marginBottom: 4 }}>
-              <strong>{t('studentQuiz.correctAnswer')}:</strong>{' '}
-              <span style={{ color: 'var(--color-success)' }}>{formatAnswer(r.correct_answer)}</span>
-            </div>
-          )}
-          {r.explanation && (
-            <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 6, padding: 8, background: 'var(--color-bg)', borderRadius: 'var(--radius)' }}>
-              {r.explanation}
+          <div style={{ fontSize: 13, marginBottom: 4 }}>
+            <strong>{t('studentQuiz.correctAnswer')}:</strong> {formatAnswer(response.correct_answer)}
+          </div>
+          {response.explanation && (
+            <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginTop: 8, padding: 8, background: 'var(--color-bg)', borderRadius: 'var(--radius)' }}>
+              {response.explanation}
             </div>
           )}
         </div>
@@ -654,9 +555,12 @@ function QuizResults({ results, onBack }: { results: AttemptResult; onBack: () =
   );
 }
 
-function formatAnswer(answer: unknown): string {
-  if (answer === null || answer === undefined) return '—';
-  if (typeof answer === 'boolean') return answer ? 'True' : 'False';
-  if (typeof answer === 'object') return JSON.stringify(answer);
-  return String(answer);
+function formatAnswer(answer: unknown) {
+  if (answer === null || answer === undefined || answer === '') {
+    return '—';
+  }
+  if (typeof answer === 'string' || typeof answer === 'number' || typeof answer === 'boolean') {
+    return String(answer);
+  }
+  return JSON.stringify(answer);
 }

@@ -1,51 +1,16 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { api, ApiClientError } from '@/services/api/client';
 import { useAuth } from '@/services/auth/AuthContext';
+import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
 import { EmptyState } from '@/shared/ui/EmptyState';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
+import { toBannerError } from '@/shared/ui/errorUtils';
 import { formatDate } from '@/shared/i18n';
+import { useGenerateReport, useReportHistory, useReportOptions } from './useReports';
+import type { ReportJobItem, ReportStatus, ReportType } from './reports.service';
 
 type RoleCode = 'ADM' | 'DIR' | 'TCH' | 'PAR' | 'STD';
-
-type ReportType =
-  | 'student_report_card'
-  | 'class_summary'
-  | 'attendance_report'
-  | 'billing_statement'
-  | 'school_analytics';
-
-type ReportStatus = 'pending' | 'generating' | 'ready' | 'failed';
-
-interface ReportOption {
-  id: string;
-  label?: string;
-  code?: string;
-  name?: string;
-  full_name?: string;
-  email?: string;
-}
-
-interface ReportOptionsPayload {
-  classes: ReportOption[];
-  periods: ReportOption[];
-  students: ReportOption[];
-  parents: ReportOption[];
-}
-
-interface ReportJobItem {
-  id: string;
-  type: ReportType;
-  status: ReportStatus;
-  parameters: Record<string, string | boolean | null>;
-  created_at: string;
-  completed_at: string | null;
-  expires_at: string | null;
-  error_message: string | null;
-  download_url: string | null;
-  cache_hit: boolean;
-}
 
 const REPORT_TYPES_BY_ROLE: Record<RoleCode, ReportType[]> = {
   STD: ['student_report_card'],
@@ -103,56 +68,30 @@ export function ReportsPage() {
   const [compare, setCompare] = useState(false);
   const [historyTypeFilter, setHistoryTypeFilter] = useState<ReportType | ''>('');
   const [historyStatusFilter, setHistoryStatusFilter] = useState<ReportStatus | ''>('');
-  const [options, setOptions] = useState<ReportOptionsPayload>({
+  const [loadingMore, setLoadingMore] = useState(false);
+  const optionsQuery = useReportOptions(selectedType, classId);
+  const historyQuery = useReportHistory({
+    type: historyTypeFilter || undefined,
+    status: historyStatusFilter || undefined,
+  });
+  const generateReportMutation = useGenerateReport();
+  const options = optionsQuery.data ?? {
     classes: [],
     periods: [],
     students: [],
     parents: [],
-  });
-  const [history, setHistory] = useState<ReportJobItem[]>([]);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  };
+  const history: ReportJobItem[] = useMemo(
+    () => historyQuery.data?.pages.flatMap((page) => page.data) ?? [],
+    [historyQuery.data]
+  );
+  const dismissibleError = useDismissibleError(
+    toBannerError(optionsQuery.error ?? historyQuery.error ?? generateReportMutation.error, t('app.error'))
+  );
 
   const pendingJobs = useMemo(
     () => history.filter((item) => item.status === 'pending' || item.status === 'generating'),
     [history]
-  );
-
-  const loadOptions = useCallback(async () => {
-    try {
-      const response = await api.get<ReportOptionsPayload>('/reports/options', {
-        type: selectedType,
-        class_id: classId || undefined,
-      });
-      setOptions(response.data);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
-  }, [classId, selectedType, t]);
-
-  const loadHistory = useCallback(
-    async (cursor?: string, append = false) => {
-      try {
-        const response = await api.list<ReportJobItem>('/reports', {
-          limit: 12,
-          cursor,
-          type: historyTypeFilter || undefined,
-          status: historyStatusFilter || undefined,
-        });
-        setHistory((previous) => (append ? [...previous, ...response.data] : response.data));
-        setNextCursor(response.meta.next_cursor);
-        setHasMore(response.meta.has_more);
-        setError(null);
-      } catch (err) {
-        setError(err instanceof ApiClientError ? err.message : t('app.error'));
-      }
-    },
-    [historyStatusFilter, historyTypeFilter, t]
   );
 
   useEffect(() => {
@@ -165,13 +104,7 @@ export function ReportsPage() {
     if (!['class_summary', 'attendance_report'].includes(selectedType)) {
       setClassId('');
     }
-    void loadOptions();
-  }, [loadOptions, selectedType]);
-
-  useEffect(() => {
-    setLoading(true);
-    void loadHistory().finally(() => setLoading(false));
-  }, [loadHistory]);
+  }, [selectedType]);
 
   useEffect(() => {
     if (pendingJobs.length === 0) {
@@ -179,37 +112,29 @@ export function ReportsPage() {
     }
 
     const timer = window.setInterval(() => {
-      void loadHistory();
+      void historyQuery.refetch();
     }, 5000);
 
     return () => window.clearInterval(timer);
-  }, [loadHistory, pendingJobs.length]);
+  }, [historyQuery, pendingJobs.length]);
 
   const needsClass = selectedType === 'class_summary' || selectedType === 'attendance_report';
   const needsStudent = selectedType === 'student_report_card';
   const needsParent = selectedType === 'billing_statement';
 
   async function handleGenerate() {
-    setSubmitting(true);
-    try {
-      await api.post<ReportJobItem>('/reports/generate', {
-        type: selectedType,
-        locale,
-        compare: selectedType === 'school_analytics' ? compare : false,
-        period_id: periodId || undefined,
-        class_id: needsClass ? classId || undefined : undefined,
-        student_id: needsStudent ? studentId || undefined : undefined,
-        parent_id: needsParent ? parentId || undefined : undefined,
-        from_date: periodId ? undefined : fromDate || undefined,
-        to_date: periodId ? undefined : toDate || undefined,
-      });
-      await loadHistory();
-      setError(null);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    } finally {
-      setSubmitting(false);
-    }
+    await generateReportMutation.mutateAsync({
+      type: selectedType,
+      locale,
+      compare: selectedType === 'school_analytics' ? compare : false,
+      period_id: periodId || undefined,
+      class_id: needsClass ? classId || undefined : undefined,
+      student_id: needsStudent ? studentId || undefined : undefined,
+      parent_id: needsParent ? parentId || undefined : undefined,
+      from_date: periodId ? undefined : fromDate || undefined,
+      to_date: periodId ? undefined : toDate || undefined,
+    });
+    await historyQuery.refetch();
   }
 
   function describeScope(item: ReportJobItem) {
@@ -231,7 +156,7 @@ export function ReportsPage() {
     return '—';
   }
 
-  if (loading) {
+  if ((optionsQuery.isLoading && !optionsQuery.data) || (historyQuery.isLoading && !historyQuery.data)) {
     return <LoadingState />;
   }
 
@@ -244,7 +169,7 @@ export function ReportsPage() {
         </div>
       </div>
 
-      <ErrorBanner error={error} onDismiss={() => setError(null)} onRetry={() => void loadHistory()} />
+      <ErrorBanner error={dismissibleError.error} onDismiss={dismissibleError.dismiss} onRetry={() => void historyQuery.refetch()} />
 
       {pendingJobs.length > 0 && (
         <div className="card report-highlight">
@@ -356,8 +281,8 @@ export function ReportsPage() {
           </div>
 
           <div className="report-form-card__actions">
-            <button className="btn btn-primary" disabled={submitting} onClick={() => void handleGenerate()}>
-              {submitting ? t('reports.generating') : t('reports.generate')}
+            <button className="btn btn-primary" disabled={generateReportMutation.isPending} onClick={() => void handleGenerate()}>
+              {generateReportMutation.isPending ? t('reports.generating') : t('reports.generate')}
             </button>
           </div>
         </section>
@@ -435,17 +360,14 @@ export function ReportsPage() {
                 </table>
               </div>
 
-              {hasMore && (
+              {historyQuery.hasNextPage && (
                 <div className="report-load-more">
                   <button
                     className="btn btn-secondary"
                     disabled={loadingMore}
                     onClick={() => {
-                      if (!nextCursor) {
-                        return;
-                      }
                       setLoadingMore(true);
-                      void loadHistory(nextCursor, true).finally(() => setLoadingMore(false));
+                      void historyQuery.fetchNextPage().finally(() => setLoadingMore(false));
                     }}
                   >
                     {loadingMore ? t('app.loading') : t('reports.loadMore')}

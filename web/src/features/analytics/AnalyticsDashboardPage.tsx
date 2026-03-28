@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Bar,
@@ -14,74 +14,25 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { api, ApiClientError, getAccessToken } from '@/services/api/client';
+import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
-
-type RangePreset = 'this_week' | 'this_month' | 'this_period' | 'custom';
-type Bucket = 'daily' | 'weekly' | 'monthly';
-type ExportEntity = 'students' | 'grades' | 'attendance' | 'invoices' | 'payments';
-
-interface ComparisonMetric {
-  current: number;
-  previous: number | null;
-  change_percent: number | null;
-  trend: 'up' | 'down' | 'flat';
-}
-
-interface OverviewMetric {
-  key: string;
-  label: string;
-  value: ComparisonMetric;
-}
-
-interface OverviewPayload {
-  metrics: OverviewMetric[];
-}
-
-interface SeriesPoint {
-  label: string;
-  value: number;
-  extra?: Record<string, number>;
-}
-
-interface AttendancePayload {
-  summary: {
-    rate: ComparisonMetric;
-    total_records: number;
-  };
-  series: SeriesPoint[];
-}
-
-interface GradesPayload {
-  summary: {
-    average: ComparisonMetric;
-    count: number;
-  };
-  distribution: Array<{ label: string; count: number }>;
-}
-
-interface BillingPayload {
-  summary: {
-    invoiced: number;
-    paid: number;
-    outstanding: number;
-    collection_rate: ComparisonMetric;
-  };
-  series: SeriesPoint[];
-}
-
-interface EngagementPayload {
-  summary: {
-    registered_users: number;
-    dau: number;
-    mau: number;
-    active_users: ComparisonMetric;
-    engaged_users: number;
-  };
-  funnel: Array<{ label: string; value: number }>;
-  feature_adoption: Array<{ feature: string; users: number; adoption_rate: number }>;
-}
+import { toBannerError } from '@/shared/ui/errorUtils';
+import {
+  useAnalyticsDashboard,
+  useAnalyticsExport,
+} from './useAnalytics';
+import type {
+  AttendancePayload,
+  BillingPayload,
+  Bucket,
+  ComparisonMetric,
+  EngagementPayload,
+  ExportEntity,
+  GradesPayload,
+  OverviewPayload,
+  RangePreset,
+} from './analytics.service';
 
 const RANGE_PRESETS: RangePreset[] = ['this_week', 'this_month', 'this_period', 'custom'];
 const BUCKETS: Bucket[] = ['daily', 'weekly', 'monthly'];
@@ -165,43 +116,6 @@ async function exportChart(container: HTMLDivElement | null, filename: string) {
   });
 }
 
-async function downloadExport(
-  format: 'csv' | 'xlsx',
-  entity: ExportEntity,
-  filters: Record<string, string>
-) {
-  const url = new URL(`/api/v1/export/${format}`, window.location.origin);
-  url.searchParams.set('entity', entity);
-  url.searchParams.set('filters', JSON.stringify(filters));
-
-  const headers: Record<string, string> = {
-    Accept: '*/*',
-    'Accept-Language': navigator.language || 'fr',
-    'X-Correlation-Id': crypto.randomUUID(),
-    'X-Client-Version': '0.1.0',
-    'X-Client-Platform': 'web',
-  };
-
-  const token = getAccessToken();
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
-  const response = await fetch(url.toString(), {
-    method: 'GET',
-    headers,
-    credentials: 'include',
-  });
-
-  if (!response.ok) {
-    const body = await response.json().catch(() => null);
-    throw new Error(body?.error?.message || 'Export failed');
-  }
-
-  const blob = await response.blob();
-  downloadBlob(blob, `${entity}.${format}`);
-}
-
 export function AnalyticsDashboardPage() {
   const { t } = useTranslation();
   const attendanceChartRef = useRef<HTMLDivElement | null>(null);
@@ -218,13 +132,23 @@ export function AnalyticsDashboardPage() {
   const [billingBucket, setBillingBucket] = useState<Bucket>('monthly');
   const [subject, setSubject] = useState('');
   const [exportEntity, setExportEntity] = useState<ExportEntity>('attendance');
-  const [overview, setOverview] = useState<OverviewPayload | null>(null);
-  const [attendance, setAttendance] = useState<AttendancePayload | null>(null);
-  const [grades, setGrades] = useState<GradesPayload | null>(null);
-  const [billing, setBilling] = useState<BillingPayload | null>(null);
-  const [engagement, setEngagement] = useState<EngagementPayload | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const dashboardQuery = useAnalyticsDashboard({
+    fromDate,
+    toDate,
+    compare,
+    attendanceBucket,
+    billingBucket,
+    subject,
+  });
+  const exportMutation = useAnalyticsExport();
+  const overview: OverviewPayload | null = dashboardQuery.data?.overview ?? null;
+  const attendance: AttendancePayload | null = dashboardQuery.data?.attendance ?? null;
+  const grades: GradesPayload | null = dashboardQuery.data?.grades ?? null;
+  const billing: BillingPayload | null = dashboardQuery.data?.billing ?? null;
+  const engagement: EngagementPayload | null = dashboardQuery.data?.engagement ?? null;
+  const dismissibleError = useDismissibleError(
+    toBannerError(dashboardQuery.error ?? exportMutation.error, t('app.error'))
+  );
 
   useEffect(() => {
     if (rangePreset === 'custom') {
@@ -235,53 +159,6 @@ export function AnalyticsDashboardPage() {
     setFromDate(nextRange.fromDate);
     setToDate(nextRange.toDate);
   }, [rangePreset]);
-
-  const fetchDashboard = useCallback(async () => {
-    const baseParams = {
-      from: fromDate,
-      to: toDate,
-      compare: compare ? 'true' : 'false',
-    };
-
-    try {
-      const [
-        overviewResponse,
-        attendanceResponse,
-        gradesResponse,
-        billingResponse,
-        engagementResponse,
-      ] = await Promise.all([
-        api.get<OverviewPayload>('/analytics/overview', baseParams),
-        api.get<AttendancePayload>('/analytics/attendance', {
-          ...baseParams,
-          period: attendanceBucket,
-        }),
-        api.get<GradesPayload>('/analytics/grades', {
-          ...baseParams,
-          subject: subject || undefined,
-        }),
-        api.get<BillingPayload>('/analytics/billing', {
-          ...baseParams,
-          period: billingBucket,
-        }),
-        api.get<EngagementPayload>('/analytics/engagement', baseParams),
-      ]);
-
-      setOverview(overviewResponse.data);
-      setAttendance(attendanceResponse.data);
-      setGrades(gradesResponse.data);
-      setBilling(billingResponse.data);
-      setEngagement(engagementResponse.data);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
-  }, [attendanceBucket, billingBucket, compare, fromDate, subject, t, toDate]);
-
-  useEffect(() => {
-    setLoading(true);
-    void fetchDashboard().finally(() => setLoading(false));
-  }, [fetchDashboard]);
 
   const overviewMap = useMemo(() => {
     return Object.fromEntries(
@@ -301,7 +178,7 @@ export function AnalyticsDashboardPage() {
     ];
   }, [billing, t]);
 
-  if (loading || !overview || !attendance || !grades || !billing || !engagement) {
+  if (dashboardQuery.isLoading || !overview || !attendance || !grades || !billing || !engagement) {
     return <LoadingState />;
   }
 
@@ -331,7 +208,7 @@ export function AnalyticsDashboardPage() {
         </div>
       </div>
 
-      <ErrorBanner error={error} onDismiss={() => setError(null)} onRetry={() => void fetchDashboard()} />
+      <ErrorBanner error={dismissibleError.error} onDismiss={dismissibleError.dismiss} onRetry={() => void dashboardQuery.refetch()} />
 
       {rangePreset === 'custom' && (
         <div className="card analytics-filters">
@@ -480,11 +357,15 @@ export function AnalyticsDashboardPage() {
             <button
               className="btn btn-secondary"
               onClick={() => {
-                void downloadExport('csv', exportEntity, {
-                  from_date: fromDate,
-                  to_date: toDate,
-                  subject,
-                });
+                void exportMutation.mutateAsync({
+                  format: 'csv',
+                  entity: exportEntity,
+                  filters: {
+                    from_date: fromDate,
+                    to_date: toDate,
+                    subject,
+                  },
+                }).then((blob) => downloadBlob(blob, `${exportEntity}.csv`));
               }}
             >
               CSV
@@ -492,11 +373,15 @@ export function AnalyticsDashboardPage() {
             <button
               className="btn btn-primary"
               onClick={() => {
-                void downloadExport('xlsx', exportEntity, {
-                  from_date: fromDate,
-                  to_date: toDate,
-                  subject,
-                });
+                void exportMutation.mutateAsync({
+                  format: 'xlsx',
+                  entity: exportEntity,
+                  filters: {
+                    from_date: fromDate,
+                    to_date: toDate,
+                    subject,
+                  },
+                }).then((blob) => downloadBlob(blob, `${exportEntity}.xlsx`));
               }}
             >
               XLSX

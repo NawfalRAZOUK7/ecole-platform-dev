@@ -7,65 +7,23 @@
  * STD/PAR: class schedule (read-only)
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/services/auth/AuthContext';
-import { api, ApiClientError } from '@/services/api/client';
+import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
 import { EmptyState } from '@/shared/ui/EmptyState';
-
-interface TimetableSlot {
-  id: string;
-  day_of_week: number;
-  start_time: string;
-  end_time: string;
-  subject: string;
-  teacher_id: string;
-  room: string | null;
-  is_recurring: boolean;
-  class_id: string;
-  class_name?: string;
-  exception?: {
-    exception_type: string;
-    substitute_teacher_id?: string;
-    new_room?: string;
-    reason?: string;
-  } | null;
-}
-
-interface WeeklyResponse {
-  academic_year_id: string;
-  week_start: string;
-  week_end: string;
-  slots: TimetableSlot[];
-}
-
-interface SlotForm {
-  class_id: string;
-  academic_year_id: string;
-  day_of_week: number;
-  start_time: string;
-  end_time: string;
-  subject: string;
-  teacher_id: string;
-  room: string;
-}
-
-interface ExceptionForm {
-  timetable_slot_id: string;
-  exception_date: string;
-  exception_type: string;
-  substitute_teacher_id: string;
-  new_room: string;
-  reason: string;
-}
-
-interface ClassOption {
-  id: string;
-  code: string;
-  name: string;
-}
+import { toBannerError } from '@/shared/ui/errorUtils';
+import {
+  useCreateTimetableException,
+  useCreateTimetableSlot,
+  useDeleteTimetableSlot,
+  useTimetableClasses,
+  useUpdateTimetableSlot,
+  useWeeklyTimetable,
+} from './useTimetable';
+import type { ClassOption, ExceptionForm, SlotForm, TimetableSlot } from './timetable.service';
 
 const DAYS = [1, 2, 3, 4, 5, 6]; // Mon-Sat
 const SUBJECT_COLORS: Record<string, string> = {
@@ -112,61 +70,57 @@ export function TimetablePage() {
   const role = user?.role || '';
   const isAdmin = role === 'ADM' || role === 'DIR';
 
-  const [slots, setSlots] = useState<TimetableSlot[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [weekStart, setWeekStart] = useState('');
-  const [weekEnd, setWeekEnd] = useState('');
-
-  // ADM: class list for filtering and slot creation
-  const [classes, setClasses] = useState<ClassOption[]>([]);
   const [selectedClassId, setSelectedClassId] = useState('');
-
-  // Modal state
   const [showSlotModal, setShowSlotModal] = useState(false);
   const [slotForm, setSlotForm] = useState<SlotForm>(EMPTY_SLOT_FORM);
   const [editingSlotId, setEditingSlotId] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-
   const [showExceptionModal, setShowExceptionModal] = useState(false);
   const [exceptionForm, setExceptionForm] = useState<ExceptionForm>(EMPTY_EXCEPTION_FORM);
+  const classesQuery = useTimetableClasses(isAdmin);
+  const weeklyQuery = useWeeklyTimetable(selectedClassId || null, isAdmin);
+  const createSlotMutation = useCreateTimetableSlot();
+  const updateSlotMutation = useUpdateTimetableSlot();
+  const deleteSlotMutation = useDeleteTimetableSlot();
+  const createExceptionMutation = useCreateTimetableException();
+  const classes: ClassOption[] = classesQuery.data ?? [];
+  const slots: TimetableSlot[] = weeklyQuery.data?.slots ?? [];
+  const weekStart = weeklyQuery.data?.week_start ?? '';
+  const weekEnd = weeklyQuery.data?.week_end ?? '';
+  const saving =
+    createSlotMutation.isPending ||
+    updateSlotMutation.isPending ||
+    deleteSlotMutation.isPending ||
+    createExceptionMutation.isPending;
+  const dismissibleError = useDismissibleError(
+    useMemo(
+      () =>
+        toBannerError(
+          classesQuery.error ??
+            weeklyQuery.error ??
+            createSlotMutation.error ??
+            updateSlotMutation.error ??
+            deleteSlotMutation.error ??
+            createExceptionMutation.error,
+          t('app.error')
+        ),
+      [
+        classesQuery.error,
+        createExceptionMutation.error,
+        createSlotMutation.error,
+        deleteSlotMutation.error,
+        t,
+        updateSlotMutation.error,
+        weeklyQuery.error,
+      ]
+    )
+  );
 
-  // Fetch classes for ADM
   useEffect(() => {
-    if (isAdmin) {
-      api.list<ClassOption>('/classes').then((resp) => {
-        setClasses(resp.data);
-        if (resp.data.length > 0 && !selectedClassId) {
-          setSelectedClassId(resp.data[0].id);
-        }
-      }).catch(() => {});
+    if (isAdmin && !selectedClassId && classes.length > 0) {
+      setSelectedClassId(classes[0].id);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAdmin]);
+  }, [classes, isAdmin, selectedClassId]);
 
-  const fetchTimetable = useCallback(async () => {
-    try {
-      let resp;
-      if (isAdmin && selectedClassId) {
-        resp = await api.get<WeeklyResponse>(`/timetable/class/${selectedClassId}/weekly`);
-      } else {
-        resp = await api.get<WeeklyResponse>('/timetable/me/weekly');
-      }
-      setSlots(resp.data.slots || []);
-      setWeekStart(resp.data.week_start);
-      setWeekEnd(resp.data.week_end);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
-  }, [isAdmin, selectedClassId, t]);
-
-  useEffect(() => {
-    setLoading(true);
-    fetchTimetable().finally(() => setLoading(false));
-  }, [fetchTimetable]);
-
-  // Group slots by day
   const slotsByDay = new Map<number, TimetableSlot[]>();
   DAYS.forEach((d) => slotsByDay.set(d, []));
   slots.forEach((s) => {
@@ -177,51 +131,42 @@ export function TimetablePage() {
   // Sort by start_time
   slotsByDay.forEach((daySlots) => daySlots.sort((a, b) => a.start_time.localeCompare(b.start_time)));
 
-  // Slot CRUD (ADM)
   async function handleSaveSlot() {
-    setSaving(true);
-    try {
-      if (editingSlotId) {
-        await api.put(`/timetable/slots/${editingSlotId}`, {
+    if (editingSlotId) {
+      await updateSlotMutation.mutateAsync({
+        slotId: editingSlotId,
+        payload: {
           day_of_week: slotForm.day_of_week,
           start_time: slotForm.start_time,
           end_time: slotForm.end_time,
           subject: slotForm.subject,
           teacher_id: slotForm.teacher_id || undefined,
           room: slotForm.room || undefined,
-        });
-      } else {
-        await api.post('/timetable/slots', {
-          class_id: slotForm.class_id || selectedClassId,
-          academic_year_id: slotForm.academic_year_id || undefined,
-          day_of_week: slotForm.day_of_week,
-          start_time: slotForm.start_time,
-          end_time: slotForm.end_time,
-          subject: slotForm.subject,
-          teacher_id: slotForm.teacher_id || undefined,
-          room: slotForm.room || undefined,
-          is_recurring: true,
-        });
-      }
-      setShowSlotModal(false);
-      setSlotForm(EMPTY_SLOT_FORM);
-      setEditingSlotId(null);
-      await fetchTimetable();
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    } finally {
-      setSaving(false);
+        },
+      });
+    } else {
+      await createSlotMutation.mutateAsync({
+        class_id: slotForm.class_id || selectedClassId,
+        academic_year_id: slotForm.academic_year_id || undefined,
+        day_of_week: slotForm.day_of_week,
+        start_time: slotForm.start_time,
+        end_time: slotForm.end_time,
+        subject: slotForm.subject,
+        teacher_id: slotForm.teacher_id || undefined,
+        room: slotForm.room || undefined,
+        is_recurring: true,
+      });
     }
+    setShowSlotModal(false);
+    setSlotForm(EMPTY_SLOT_FORM);
+    setEditingSlotId(null);
+    await weeklyQuery.refetch();
   }
 
   async function handleDeleteSlot(slotId: string) {
     if (!confirm(t('timetable.confirmDelete'))) return;
-    try {
-      await api.delete(`/timetable/slots/${slotId}`);
-      await fetchTimetable();
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
+    await deleteSlotMutation.mutateAsync(slotId);
+    await weeklyQuery.refetch();
   }
 
   function openEditSlot(slot: TimetableSlot) {
@@ -248,27 +193,20 @@ export function TimetablePage() {
   }
 
   async function handleSaveException() {
-    setSaving(true);
-    try {
-      await api.post('/timetable/exceptions', {
-        timetable_slot_id: exceptionForm.timetable_slot_id,
-        exception_date: exceptionForm.exception_date,
-        exception_type: exceptionForm.exception_type,
-        substitute_teacher_id: exceptionForm.substitute_teacher_id || undefined,
-        new_room: exceptionForm.new_room || undefined,
-        reason: exceptionForm.reason || undefined,
-      });
-      setShowExceptionModal(false);
-      setExceptionForm(EMPTY_EXCEPTION_FORM);
-      await fetchTimetable();
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    } finally {
-      setSaving(false);
-    }
+    await createExceptionMutation.mutateAsync({
+      timetable_slot_id: exceptionForm.timetable_slot_id,
+      exception_date: exceptionForm.exception_date,
+      exception_type: exceptionForm.exception_type,
+      substitute_teacher_id: exceptionForm.substitute_teacher_id || undefined,
+      new_room: exceptionForm.new_room || undefined,
+      reason: exceptionForm.reason || undefined,
+    });
+    setShowExceptionModal(false);
+    setExceptionForm(EMPTY_EXCEPTION_FORM);
+    await weeklyQuery.refetch();
   }
 
-  if (loading) return <LoadingState />;
+  if ((isAdmin && classesQuery.isLoading) || weeklyQuery.isLoading) return <LoadingState />;
 
   return (
     <div className="page">
@@ -308,7 +246,7 @@ export function TimetablePage() {
         </div>
       )}
 
-      <ErrorBanner error={error} onDismiss={() => setError(null)} onRetry={fetchTimetable} />
+      <ErrorBanner error={dismissibleError.error} onDismiss={dismissibleError.dismiss} onRetry={() => void weeklyQuery.refetch()} />
 
       {slots.length === 0 ? (
         <EmptyState message={t('timetable.empty')} icon="📅" />

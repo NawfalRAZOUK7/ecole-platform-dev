@@ -5,12 +5,18 @@
  * Question reorder, preview mode, quiz metadata form.
  */
 
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { api, ApiClientError } from '@/services/api/client';
 import { LoadingState } from '@/shared/ui/LoadingState';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
+import {
+  useCmsQuiz,
+  useCmsQuizzes,
+  useCreateCmsQuiz,
+  usePublishCmsQuiz,
+  useUpdateCmsQuiz,
+} from './useCms';
 
 // --- Types ---
 
@@ -42,29 +48,6 @@ interface Question {
   explanation: string;
 }
 
-interface Quiz {
-  id: string;
-  title: string;
-  description: string | null;
-  subject: string | null;
-  level_band: string | null;
-  difficulty: string | null;
-  time_limit_minutes: number | null;
-  max_attempts: number;
-  shuffle_questions: boolean;
-  status: string;
-  questions?: Array<{
-    id: string;
-    question_type: string;
-    question_text: string;
-    options: unknown;
-    correct_answer: unknown;
-    points: number;
-    order: number;
-    explanation: string | null;
-  }>;
-}
-
 const QUESTION_TYPES: QuestionType[] = ['MCQ', 'TRUE_FALSE', 'FILL_IN', 'DRAG_DROP', 'MATCHING'];
 const SUBJECTS = ['math', 'french', 'arabic', 'science', 'history', 'geography', 'english'];
 const LEVELS = ['maternelle', 'cp', 'ce1', 'ce2', 'cm1', 'cm2', '6eme', '5eme', '4eme', '3eme', '2nde', '1ere', 'terminale'];
@@ -87,26 +70,10 @@ function defaultQuestion(type: QuestionType, order: number): Question {
 
 function QuizListView({ onEdit, onCreate }: { onEdit: (id: string) => void; onCreate: () => void }) {
   const { t } = useTranslation();
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const quizzesQuery = useCmsQuizzes();
+  const quizzes = quizzesQuery.data ?? [];
 
-  const fetchQuizzes = useCallback(async () => {
-    try {
-      const resp = await api.list<Quiz>('/quizzes', { limit: 50 });
-      setQuizzes(resp.data);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
-  }, [t]);
-
-  useEffect(() => {
-    setLoading(true);
-    fetchQuizzes().finally(() => setLoading(false));
-  }, [fetchQuizzes]);
-
-  if (loading) return <LoadingState />;
+  if (quizzesQuery.isLoading) return <LoadingState />;
 
   return (
     <div className="page">
@@ -114,7 +81,11 @@ function QuizListView({ onEdit, onCreate }: { onEdit: (id: string) => void; onCr
         <h1 className="page-title">{t('cms.quiz.title')}</h1>
         <button className="btn btn-primary" onClick={onCreate}>{t('cms.quiz.create')}</button>
       </div>
-      <ErrorBanner error={error} onDismiss={() => setError(null)} onRetry={fetchQuizzes} />
+      <ErrorBanner
+        error={quizzesQuery.error instanceof Error ? quizzesQuery.error.message : null}
+        onDismiss={() => {}}
+        onRetry={() => void quizzesQuery.refetch()}
+      />
 
       {quizzes.length === 0 ? (
         <p className="empty-state">{t('cms.quiz.empty')}</p>
@@ -484,6 +455,10 @@ export function CmsQuizBuilderPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const isEdit = !!quizId;
+  const quizQuery = useCmsQuiz(quizId);
+  const createQuizMutation = useCreateCmsQuiz();
+  const updateQuizMutation = useUpdateCmsQuiz();
+  const publishQuizMutation = usePublishCmsQuiz();
 
   // Quiz list vs builder
   const [showBuilder, setShowBuilder] = useState(isEdit);
@@ -502,43 +477,37 @@ export function CmsQuizBuilderPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [previewMode, setPreviewMode] = useState(false);
 
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
   // Load existing quiz
   useEffect(() => {
-    if (!quizId) return;
-    setLoading(true);
-    api.get<Quiz>(`/quizzes/${quizId}`)
-      .then((resp) => {
-        const q = resp.data;
-        setTitle(q.title);
-        setDescription(q.description || '');
-        setQuizSubject(q.subject || '');
-        setLevelBand(q.level_band || '');
-        setDifficulty(q.difficulty || 'MEDIUM');
-        setTimeLimit(q.time_limit_minutes ?? '');
-        setMaxAttempts(q.max_attempts);
-        setShuffle(q.shuffle_questions);
-        if (q.questions) {
-          setQuestions(q.questions.map((qq, i) => ({
-            _key: nextKey(),
-            question_type: qq.question_type as QuestionType,
-            question_text: qq.question_text,
-            options: qq.options,
-            correct_answer: qq.correct_answer,
-            points: qq.points,
-            order: i,
-            explanation: qq.explanation || '',
-          })));
-        }
-        setShowBuilder(true);
-      })
-      .catch((err) => setError(err instanceof ApiClientError ? err.message : t('app.error')))
-      .finally(() => setLoading(false));
-  }, [quizId, t]);
+    if (!quizQuery.data) return;
+    const q = quizQuery.data;
+    setTitle(q.title);
+    setDescription(q.description || '');
+    setQuizSubject(q.subject || '');
+    setLevelBand(q.level_band || '');
+    setDifficulty(q.difficulty || 'MEDIUM');
+    setTimeLimit(q.time_limit_minutes ?? '');
+    setMaxAttempts(q.max_attempts);
+    setShuffle(q.shuffle_questions);
+    if (q.questions) {
+      setQuestions(q.questions.map((qq, i) => ({
+        _key: nextKey(),
+        question_type: qq.question_type as QuestionType,
+        question_text: qq.question_text,
+        options: qq.options,
+        correct_answer: qq.correct_answer,
+        points: qq.points,
+        order: i,
+        explanation: qq.explanation || '',
+      })));
+    } else {
+      setQuestions([]);
+    }
+    setShowBuilder(true);
+  }, [quizQuery.data]);
 
   function addQuestion(type: QuestionType) {
     setQuestions((prev) => [...prev, defaultQuestion(type, prev.length)]);
@@ -564,7 +533,6 @@ export function CmsQuizBuilderPage() {
 
   async function handleSave(e: FormEvent) {
     e.preventDefault();
-    setSaving(true);
     setError(null);
     setSaved(false);
 
@@ -590,28 +558,32 @@ export function CmsQuizBuilderPage() {
 
     try {
       if (isEdit) {
-        await api.put(`/quizzes/${quizId}`, payload);
+        await updateQuizMutation.mutateAsync({
+          quizId: quizId!,
+          payload,
+        });
       } else {
-        const resp = await api.post<{ id: string }>('/quizzes', payload);
-        navigate(`/cms/quizzes/${resp.data.id}/edit`, { replace: true });
+        const createdQuiz = await createQuizMutation.mutateAsync(payload);
+        navigate(`/cms/quizzes/${createdQuiz.id}/edit`, { replace: true });
       }
       setSaved(true);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    } finally {
-      setSaving(false);
+      setError(err instanceof Error ? err.message : t('app.error'));
     }
   }
 
   async function handlePublish() {
     if (!quizId) return;
     try {
-      await api.post(`/quizzes/${quizId}/publish`);
+      await publishQuizMutation.mutateAsync(quizId);
       navigate('/cms/quizzes');
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
+      setError(err instanceof Error ? err.message : t('app.error'));
     }
   }
+
+  const saving = createQuizMutation.isPending || updateQuizMutation.isPending;
+  const loading = isEdit && quizQuery.isLoading;
 
   // Show quiz list if not in builder mode
   if (!showBuilder) {
@@ -642,7 +614,10 @@ export function CmsQuizBuilderPage() {
         </div>
       </div>
 
-      <ErrorBanner error={error} onDismiss={() => setError(null)} />
+      <ErrorBanner
+        error={error || (quizQuery.error instanceof Error ? quizQuery.error.message : null)}
+        onDismiss={() => setError(null)}
+      />
       {saved && <div className="alert alert-success" style={{ marginBottom: 16, padding: 12, borderRadius: 8 }}>{t('cms.quiz.saved')}</div>}
 
       <form onSubmit={handleSave}>

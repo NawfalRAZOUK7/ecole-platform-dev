@@ -6,9 +6,8 @@
  * PAR sees child progress via GET /progress/student/{id} (passed as ?studentId query param).
  */
 
-import { useCallback, useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   LineChart,
   Line,
@@ -24,93 +23,28 @@ import {
   Bar,
   Legend,
 } from 'recharts';
-import { api, ApiClientError } from '@/services/api/client';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
-
-/** A single labeled series of numeric data points for chart rendering. */
-interface ChartDataset {
-  label: string;
-  data: number[];
-}
-
-/** Generic chart payload with axis labels and one or more datasets. */
-interface ChartData {
-  labels: string[];
-  datasets: ChartDataset[];
-}
-
-/** Attendance data including an overview with summary stats and a trend series. */
-interface AttendanceData {
-  overview: ChartData & { summary: { total: number; present: number; attendance_rate: number } };
-  trend: ChartData;
-}
-
-/** Content completion chart data with an aggregate summary (total, completed, rate). */
-interface ContentCompletion extends ChartData {
-  summary: { total: number; completed: number; completion_rate: number };
-}
-
-/**
- * Full progress payload returned by the API.
- * Contains grade trends, content completion, activity scores, attendance, and assessment results.
- */
-interface ProgressData {
-  student_id: string;
-  student_name: string;
-  grade_trends: ChartData;
-  content_completion: ContentCompletion;
-  activity_scores: ChartData;
-  attendance: AttendanceData;
-  assessment_results: ChartData;
-}
+import { useProgressDashboard } from './useProgress';
 
 const PIE_COLORS = ['#10b981', '#f59e0b', '#ef4444'];
 const DONUT_COLORS = ['#10b981', '#ef4444', '#3b82f6', '#f59e0b'];
 
-/**
- * Student progress dashboard page with 5 chart panels.
- *
- * Displays grade trend (line), content completion (pie), activity scores (bar),
- * attendance (donut), and assessment results (grouped bar).
- *
- * @remarks
- * - Roles: STD (own progress), PAR (child progress via `?studentId` query param).
- * - API: `GET /progress/me` or `GET /progress/student/{id}`.
- */
 export function ProgressDashboardPage() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const studentId = searchParams.get('studentId');
-  const [data, setData] = useState<ProgressData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const progressQuery = useProgressDashboard(studentId);
+  const data = progressQuery.data;
 
-  const fetchProgress = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const endpoint = studentId
-        ? `/progress/student/${studentId}`
-        : '/progress/me';
-      const resp = await api.get<{ data: ProgressData }>(endpoint);
-      setData(resp.data.data);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    } finally {
-      setLoading(false);
-    }
-  }, [studentId, t]);
+  if (progressQuery.isLoading) {
+    return <LoadingState />;
+  }
 
-  useEffect(() => {
-    fetchProgress();
-  }, [fetchProgress]);
+  if (progressQuery.error || !data) {
+    return <ErrorBanner error={progressQuery.error instanceof Error ? progressQuery.error.message : t('app.error')} onRetry={() => void progressQuery.refetch()} />;
+  }
 
-  if (loading) return <LoadingState />;
-  if (error) return <ErrorBanner error={error} onRetry={fetchProgress} />;
-  if (!data) return null;
-
-  // Transform chart data for recharts
   const gradeTrendData = data.grade_trends.labels.map((label, i) => ({
     month: label,
     [data.grade_trends.datasets[0]?.label || 'avg']: data.grade_trends.datasets[0]?.data[i] ?? 0,
@@ -148,7 +82,6 @@ export function ProgressDashboardPage() {
         {studentId ? `${t('progress.title')} — ${data.student_name}` : t('progress.myProgress')}
       </h1>
 
-      {/* Summary cards */}
       <div className="progress-summary-cards">
         <div className="summary-card">
           <span className="summary-label">{t('progress.gradeAvg')}</span>
@@ -168,9 +101,7 @@ export function ProgressDashboardPage() {
         </div>
       </div>
 
-      {/* Charts grid */}
       <div className="progress-charts-grid">
-        {/* Grade Trend Line Chart */}
         <div className="chart-card">
           <h3 className="chart-title">{t('progress.gradeTrend')}</h3>
           {gradeTrendData.length > 0 ? (
@@ -188,10 +119,9 @@ export function ProgressDashboardPage() {
           )}
         </div>
 
-        {/* Content Completion Pie Chart */}
         <div className="chart-card">
           <h3 className="chart-title">{t('progress.contentCompletion')}</h3>
-          {contentPieData.some((d) => d.value > 0) ? (
+          {contentPieData.some((item) => item.value > 0) ? (
             <ResponsiveContainer width="100%" height={280}>
               <PieChart>
                 <Pie
@@ -204,8 +134,8 @@ export function ProgressDashboardPage() {
                   dataKey="value"
                   label={({ name, value }) => `${name}: ${value}`}
                 >
-                  {contentPieData.map((_, i) => (
-                    <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                  {contentPieData.map((_, index) => (
+                    <Cell key={index} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip />
@@ -216,7 +146,6 @@ export function ProgressDashboardPage() {
           )}
         </div>
 
-        {/* Activity Scores Bar Chart */}
         <div className="chart-card">
           <h3 className="chart-title">{t('progress.activityScores')}</h3>
           {activityBarData.length > 0 ? (
@@ -234,10 +163,9 @@ export function ProgressDashboardPage() {
           )}
         </div>
 
-        {/* Attendance Donut Chart */}
         <div className="chart-card">
           <h3 className="chart-title">{t('progress.attendance')}</h3>
-          {attendanceDonutData.some((d) => d.value > 0) ? (
+          {attendanceDonutData.some((item) => item.value > 0) ? (
             <ResponsiveContainer width="100%" height={280}>
               <PieChart>
                 <Pie
@@ -250,8 +178,8 @@ export function ProgressDashboardPage() {
                   dataKey="value"
                   label={({ name, value }) => `${name}: ${value}`}
                 >
-                  {attendanceDonutData.map((_, i) => (
-                    <Cell key={i} fill={DONUT_COLORS[i % DONUT_COLORS.length]} />
+                  {attendanceDonutData.map((_, index) => (
+                    <Cell key={index} fill={DONUT_COLORS[index % DONUT_COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip />
@@ -267,7 +195,6 @@ export function ProgressDashboardPage() {
           </div>
         </div>
 
-        {/* Assessment Results Bar Chart */}
         <div className="chart-card chart-card--wide">
           <h3 className="chart-title">{t('progress.assessmentResults')}</h3>
           {assessmentBarData.length > 0 ? (

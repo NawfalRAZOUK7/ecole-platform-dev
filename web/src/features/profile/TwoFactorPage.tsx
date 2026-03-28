@@ -5,11 +5,13 @@
  * Calls POST /auth/2fa/setup, /verify-setup, /disable.
  */
 
-import { useState, type FormEvent } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { api, ApiClientError } from '@/services/api/client';
 import { useAuth } from '@/services/auth/AuthContext';
+import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
+import { toBannerError } from '@/shared/ui/errorUtils';
+import { useDisableTwoFactor, useTwoFactorSetup, useVerifyTwoFactorSetup } from './useProfile';
 
 type Step = 'idle' | 'setup' | 'verify' | 'done' | 'disable';
 
@@ -17,68 +19,44 @@ export function TwoFactorPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [step, setStep] = useState<Step>('idle');
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  // Setup state
   const [provisioningUri, setProvisioningUri] = useState('');
   const [secret, setSecret] = useState('');
   const [code, setCode] = useState('');
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
-
-  // Disable state
   const [disableCode, setDisableCode] = useState('');
-
-  // Check if 2FA is already enabled (from user profile totp_enabled)
+  const setupMutation = useTwoFactorSetup();
+  const verifySetupMutation = useVerifyTwoFactorSetup();
+  const disableMutation = useDisableTwoFactor();
+  const dismissibleError = useDismissibleError(
+    useMemo(
+      () => toBannerError(setupMutation.error ?? verifySetupMutation.error ?? disableMutation.error, t('app.error')),
+      [disableMutation.error, setupMutation.error, t, verifySetupMutation.error]
+    )
+  );
   const is2faEnabled = user?.totp_enabled === true;
 
   async function handleStartSetup() {
-    setLoading(true);
-    setError(null);
-    try {
-      const resp = await api.post<{ provisioning_uri: string; secret: string }>('/auth/2fa/setup');
-      setProvisioningUri(resp.data.provisioning_uri);
-      setSecret(resp.data.secret);
-      setStep('setup');
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    } finally {
-      setLoading(false);
-    }
+    const response = await setupMutation.mutateAsync();
+    setProvisioningUri(response.provisioning_uri);
+    setSecret(response.secret);
+    setStep('setup');
   }
 
   async function handleVerifySetup(e: FormEvent) {
     e.preventDefault();
     if (!code.trim()) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const resp = await api.post<{ backup_codes: string[]; message: string }>('/auth/2fa/verify-setup', { code: code.trim() });
-      setBackupCodes(resp.data.backup_codes);
-      setStep('done');
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    } finally {
-      setLoading(false);
-    }
+    const response = await verifySetupMutation.mutateAsync(code.trim());
+    setBackupCodes(response.backup_codes);
+    setStep('done');
   }
 
   async function handleDisable(e: FormEvent) {
     e.preventDefault();
     if (!disableCode.trim()) return;
-    setLoading(true);
-    setError(null);
-    try {
-      await api.post('/auth/2fa/disable', { code: disableCode.trim() });
-      setStep('idle');
-      setDisableCode('');
-      // Reload page to refresh user profile
-      window.location.reload();
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    } finally {
-      setLoading(false);
-    }
+    await disableMutation.mutateAsync(disableCode.trim());
+    setStep('idle');
+    setDisableCode('');
+    window.location.reload();
   }
 
   function handleDownloadBackupCodes() {
@@ -96,7 +74,7 @@ export function TwoFactorPage() {
     <div className="page">
       <h1 className="page-title">{t('twoFactor.title')}</h1>
 
-      <ErrorBanner error={error} onDismiss={() => setError(null)} />
+      <ErrorBanner error={dismissibleError.error} onDismiss={dismissibleError.dismiss} />
 
       {/* Idle: show current status + action */}
       {step === 'idle' && (
@@ -114,8 +92,8 @@ export function TwoFactorPage() {
               {t('twoFactor.disableBtn')}
             </button>
           ) : (
-            <button className="btn btn-primary" onClick={handleStartSetup} disabled={loading}>
-              {loading ? t('app.loading') : t('twoFactor.enableBtn')}
+            <button className="btn btn-primary" onClick={() => void handleStartSetup()} disabled={setupMutation.isPending}>
+              {setupMutation.isPending ? t('app.loading') : t('twoFactor.enableBtn')}
             </button>
           )}
         </div>
@@ -165,8 +143,8 @@ export function TwoFactorPage() {
               />
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button className="btn btn-primary" type="submit" disabled={loading}>
-                {loading ? t('app.loading') : t('twoFactor.verify')}
+              <button className="btn btn-primary" type="submit" disabled={verifySetupMutation.isPending}>
+                {verifySetupMutation.isPending ? t('app.loading') : t('twoFactor.verify')}
               </button>
               <button className="btn btn-secondary" type="button" onClick={() => setStep('idle')}>
                 {t('app.cancel')}
@@ -224,8 +202,8 @@ export function TwoFactorPage() {
               />
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button className="btn btn-danger" type="submit" disabled={loading}>
-                {loading ? t('app.loading') : t('twoFactor.disableBtn')}
+              <button className="btn btn-danger" type="submit" disabled={disableMutation.isPending}>
+                {disableMutation.isPending ? t('app.loading') : t('twoFactor.disableBtn')}
               </button>
               <button className="btn btn-secondary" type="button" onClick={() => setStep('idle')}>
                 {t('app.cancel')}

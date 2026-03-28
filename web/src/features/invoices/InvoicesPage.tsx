@@ -6,119 +6,75 @@
  * Phase 12A: Overdue indicator (past due_date + pending), retry payment for failed.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/services/auth/AuthContext';
-import { api, ApiClientError } from '@/services/api/client';
+import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
+import { EmptyState } from '@/shared/ui/EmptyState';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
-import { EmptyState } from '@/shared/ui/EmptyState';
+import { toBannerError } from '@/shared/ui/errorUtils';
 import { formatDate, formatCurrency } from '@/shared/i18n';
+import { useInitiateInvoicePayment, useInvoices } from './useInvoices';
+import type { Invoice } from './invoices.service';
 
-interface Invoice {
-  id: string;
-  school_id: string;
-  student_id: string;
-  year_id: string;
-  label: string;
-  total_cents: number;
-  currency: string;
-  status: string;
-  issued_date: string;
-  due_date: string;
-  paid_at: string | null;
-}
-
-function isOverdue(inv: Invoice): boolean {
-  if (inv.status !== 'pending') return false;
-  return new Date(inv.due_date) < new Date();
+function isOverdue(invoice: Invoice): boolean {
+  return invoice.status === 'pending' && new Date(invoice.due_date) < new Date();
 }
 
 export function InvoicesPage() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const isPar = user?.role === 'PAR';
-  const [items, setItems] = useState<Invoice[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [retrying, setRetrying] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [retryingId, setRetryingId] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState('');
+  const invoicesQuery = useInvoices({
+    status: statusFilter && statusFilter !== 'overdue' ? statusFilter : undefined,
+  });
+  const initiatePaymentMutation = useInitiateInvoicePayment();
+  const items: Invoice[] = useMemo(
+    () => invoicesQuery.data?.pages.flatMap((page) => page.data) ?? [],
+    [invoicesQuery.data]
+  );
+  const overdueCount = items.filter(isOverdue).length;
+  const displayedItems = statusFilter === 'overdue' ? items.filter(isOverdue) : items;
+  const dismissibleError = useDismissibleError(
+    toBannerError(invoicesQuery.error ?? initiatePaymentMutation.error, t('app.error'))
+  );
 
   async function handleRetryPayment(invoiceId: string) {
-    setRetrying(invoiceId);
-    try {
-      await api.post('/payments/initiate', {
-        invoice_id: invoiceId,
-        idempotency_key: `retry-${invoiceId}-${Date.now()}`,
-      });
-      await fetchInvoices();
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    } finally {
-      setRetrying(null);
-    }
-  }
-
-  const fetchInvoices = useCallback(async (cursor?: string) => {
-    try {
-      const params: Record<string, string | number | undefined> = {};
-      if (cursor) params.cursor = cursor;
-      if (statusFilter && statusFilter !== 'overdue') params.status = statusFilter;
-
-      const resp = await api.list<Invoice>('/invoices', params);
-      if (cursor) {
-        setItems((prev) => [...prev, ...resp.data]);
-      } else {
-        setItems(resp.data);
-      }
-      setNextCursor(resp.meta.next_cursor);
-      setHasMore(resp.meta.has_more);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
-  }, [t, statusFilter]);
-
-  useEffect(() => {
-    setLoading(true);
-    fetchInvoices().finally(() => setLoading(false));
-  }, [fetchInvoices]);
-
-  async function handleLoadMore() {
-    if (!nextCursor) return;
-    setLoadingMore(true);
-    await fetchInvoices(nextCursor);
-    setLoadingMore(false);
+    setRetryingId(invoiceId);
+    await initiatePaymentMutation.mutateAsync(invoiceId);
+    await invoicesQuery.refetch();
+    setRetryingId(null);
   }
 
   function getStatusColor(status: string, overdue?: boolean): string {
     if (overdue) return '#ef4444';
     switch (status) {
-      case 'paid': return '#10b981';
-      case 'pending': return '#f59e0b';
-      case 'failed': return '#ef4444';
-      case 'canceled': return '#6b7280';
-      default: return '#6b7280';
+      case 'paid':
+        return '#10b981';
+      case 'pending':
+        return '#f59e0b';
+      case 'failed':
+        return '#ef4444';
+      case 'canceled':
+        return '#6b7280';
+      default:
+        return '#6b7280';
     }
   }
 
-  // Count overdue + client-side filter
-  const overdueCount = items.filter(isOverdue).length;
-  const displayedItems = statusFilter === 'overdue' ? items.filter(isOverdue) : items;
-
-  if (loading) return <LoadingState />;
+  if (invoicesQuery.isLoading && !invoicesQuery.data) {
+    return <LoadingState />;
+  }
 
   return (
     <div className="page">
       <h1 className="page-title">{t('invoices.title')}</h1>
 
       {overdueCount > 0 && (
-        <div className="invoice-overdue-banner">
-          ⚠️ {t('invoices.overdueCount', { count: overdueCount })}
-        </div>
+        <div className="invoice-overdue-banner">⚠️ {t('invoices.overdueCount', { count: overdueCount })}</div>
       )}
 
       <div className="filters-bar">
@@ -128,14 +84,13 @@ export function InvoicesPage() {
             { value: 'pending', label: t('invoices.statusLabels.pending') },
             { value: 'paid', label: t('invoices.statusLabels.paid') },
             { value: 'failed', label: t('invoices.statusLabels.failed') },
-          ].map((f) => (
+          ].map((filter) => (
             <button
-              key={f.value}
-              className={`filter-pill ${statusFilter === f.value ? 'filter-pill--active' : ''}`}
-              onClick={() => setStatusFilter(f.value)}
+              key={filter.value}
+              className={`filter-pill ${statusFilter === filter.value ? 'filter-pill--active' : ''}`}
+              onClick={() => setStatusFilter(filter.value)}
             >
-              {f.label}
-              {f.value === '' && overdueCount > 0 ? '' : ''}
+              {filter.label}
             </button>
           ))}
           {overdueCount > 0 && (
@@ -149,7 +104,11 @@ export function InvoicesPage() {
         </div>
       </div>
 
-      <ErrorBanner error={error} onDismiss={() => setError(null)} onRetry={() => fetchInvoices()} />
+      <ErrorBanner
+        error={dismissibleError.error}
+        onDismiss={dismissibleError.dismiss}
+        onRetry={() => void invoicesQuery.refetch()}
+      />
 
       {displayedItems.length === 0 ? (
         <EmptyState message={t('invoices.empty')} icon="💳" />
@@ -168,37 +127,31 @@ export function InvoicesPage() {
                 </tr>
               </thead>
               <tbody>
-                {displayedItems.map((inv) => {
-                  const overdue = isOverdue(inv);
+                {displayedItems.map((invoice) => {
+                  const overdue = isOverdue(invoice);
                   return (
-                    <tr key={inv.id} className={overdue ? 'invoice-row--overdue' : ''}>
-                      <td>{inv.label}</td>
-                      <td>{formatCurrency(inv.total_cents / 100, inv.currency)}</td>
+                    <tr key={invoice.id} className={overdue ? 'invoice-row--overdue' : ''}>
+                      <td>{invoice.label}</td>
+                      <td>{formatCurrency(invoice.total_cents / 100, invoice.currency)}</td>
                       <td>
-                        <span
-                          className="status-badge"
-                          style={{
-                            color: getStatusColor(inv.status, overdue),
-                            borderColor: getStatusColor(inv.status, overdue),
-                          }}
-                        >
-                          {overdue ? t('invoices.overdue') : t(`invoices.statusLabels.${inv.status}`, inv.status)}
+                        <span className="status-badge" style={{ color: getStatusColor(invoice.status, overdue), borderColor: getStatusColor(invoice.status, overdue) }}>
+                          {overdue ? t('invoices.overdue') : t(`invoices.statusLabels.${invoice.status}`, invoice.status)}
                         </span>
                       </td>
-                      <td>{formatDate(inv.issued_date, i18n.language)}</td>
+                      <td>{formatDate(invoice.issued_date, i18n.language)}</td>
                       <td>
-                        {formatDate(inv.due_date, i18n.language)}
+                        {formatDate(invoice.due_date, i18n.language)}
                         {overdue && <span style={{ color: 'var(--color-danger)', fontSize: 12, marginInlineStart: 4 }}>⚠️</span>}
                       </td>
                       {isPar && (
                         <td>
-                          {(inv.status === 'pending' || inv.status === 'failed') && (
+                          {(invoice.status === 'pending' || invoice.status === 'failed') && (
                             <button
                               className="btn btn-sm btn-primary"
-                              onClick={() => handleRetryPayment(inv.id)}
-                              disabled={retrying === inv.id}
+                              onClick={() => void handleRetryPayment(invoice.id)}
+                              disabled={retryingId === invoice.id}
                             >
-                              {retrying === inv.id ? '...' : inv.status === 'failed' ? t('invoices.retry') : t('invoices.pay')}
+                              {retryingId === invoice.id ? '...' : invoice.status === 'failed' ? t('invoices.retry') : t('invoices.pay')}
                             </button>
                           )}
                         </td>
@@ -210,14 +163,10 @@ export function InvoicesPage() {
             </table>
           </div>
 
-          {hasMore && (
+          {invoicesQuery.hasNextPage && (
             <div style={{ textAlign: 'center', marginTop: '16px' }}>
-              <button
-                className="btn btn-secondary"
-                onClick={handleLoadMore}
-                disabled={loadingMore}
-              >
-                {loadingMore ? t('app.loading') : t('feed.loadMore')}
+              <button className="btn btn-secondary" onClick={() => void invoicesQuery.fetchNextPage()} disabled={invoicesQuery.isFetchingNextPage}>
+                {invoicesQuery.isFetchingNextPage ? t('app.loading') : t('feed.loadMore')}
               </button>
             </div>
           )}

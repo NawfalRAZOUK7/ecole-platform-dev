@@ -1,81 +1,30 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { api, ApiClientError, getAccessToken } from '@/services/api/client';
 import { useAuth } from '@/services/auth/AuthContext';
+import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
 import { EmptyState } from '@/shared/ui/EmptyState';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
+import { toBannerError } from '@/shared/ui/errorUtils';
 import { formatDate } from '@/shared/i18n';
-
-type DocumentsTab = 'mine' | 'student' | 'resources';
-
-interface StudentOption {
-  id: string;
-  full_name: string;
-  email?: string;
-}
-
-interface DocumentItem {
-  id: string;
-  original_filename: string;
-  filename: string;
-  mime_type: string;
-  size_bytes: number;
-  category: string;
-  linked_student_id: string | null;
-  linked_student_name: string | null;
-  uploader_id: string;
-  uploader_name: string | null;
-  expires_at: string | null;
-  is_expired: boolean;
-  is_expiring_soon: boolean;
-  download_count: number;
-  thumbnail_url: string | null;
-  preview_url: string | null;
-  download_url: string | null;
-  created_at: string;
-  deduplicated: boolean;
-  can_delete: boolean;
-  can_hard_delete: boolean;
-}
-
-interface ChecklistItem {
-  category: string;
-  required: boolean;
-  description: string | null;
-  status: 'uploaded' | 'missing' | 'expired';
-  expires_at: string | null;
-  document: DocumentItem | null;
-}
-
-interface ResourceItem {
-  id: string;
-  title: string;
-  description: string | null;
-  subject: string | null;
-  level: string | null;
-  type: string;
-  tags: string[];
-  visibility: string;
-  class_id: string | null;
-  download_count: number;
-  avg_rating: number;
-  rating_count: number;
-  download_url: string | null;
-  preview_url: string | null;
-  thumbnail_url: string | null;
-  document: DocumentItem | null;
-  my_rating: number | null;
-  created_at: string;
-  can_edit: boolean;
-  can_delete: boolean;
-  can_rate: boolean;
-}
-
-interface DocumentsOptionsPayload {
-  students: StudentOption[];
-  categories: string[];
-}
+import {
+  useBulkDeleteDocuments,
+  useBulkDownloadDocuments,
+  useDocumentsOptions,
+  useMyDocuments,
+  useRateResource,
+  useResourceDetail,
+  useResources,
+  useStudentChecklist,
+  useStudentDocuments,
+  useUploadDocument,
+  useUploadResource,
+} from './useDocuments';
+import type {
+  DocumentItem,
+  DocumentsTab,
+  ResourceItem,
+} from './documents.service';
 
 interface DocumentsPageProps {
   initialTab?: DocumentsTab;
@@ -112,18 +61,8 @@ function openSignedUrl(url: string | null) {
 export function DocumentsPage({ initialTab = 'mine' }: DocumentsPageProps) {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const uploadXhrRef = useRef<{ abort: () => void } | null>(null);
   const [activeTab, setActiveTab] = useState<DocumentsTab>(initialTab);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [options, setOptions] = useState<DocumentsOptionsPayload>({ students: [], categories: [] });
-  const [documents, setDocuments] = useState<DocumentItem[]>([]);
-  const [studentDocuments, setStudentDocuments] = useState<DocumentItem[]>([]);
-  const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
-  const [resources, setResources] = useState<ResourceItem[]>([]);
-  const [resourcesCursor, setResourcesCursor] = useState<string | null>(null);
-  const [resourcesHasMore, setResourcesHasMore] = useState(false);
-  const [resourceModal, setResourceModal] = useState<ResourceItem | null>(null);
-  const [previewItem, setPreviewItem] = useState<DocumentItem | null>(null);
   const [selectedDocumentIds, setSelectedDocumentIds] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedStudentId, setSelectedStudentId] = useState('');
@@ -131,7 +70,6 @@ export function DocumentsPage({ initialTab = 'mine' }: DocumentsPageProps) {
   const [uploadCategory, setUploadCategory] = useState('other');
   const [uploadExpiry, setUploadExpiry] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploading, setUploading] = useState(false);
   const [resourceFormOpen, setResourceFormOpen] = useState(false);
   const [resourceTitle, setResourceTitle] = useState('');
   const [resourceDescription, setResourceDescription] = useState('');
@@ -149,92 +87,82 @@ export function DocumentsPage({ initialTab = 'mine' }: DocumentsPageProps) {
   const [documentTypeFilter, setDocumentTypeFilter] = useState('');
   const [documentFromDate, setDocumentFromDate] = useState('');
   const [documentToDate, setDocumentToDate] = useState('');
-  const uploadXhrRef = useRef<XMLHttpRequest | null>(null);
+  const [previewItem, setPreviewItem] = useState<DocumentItem | null>(null);
+  const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
 
   const canManageStudentDocs = ['PAR', 'ADM', 'DIR', 'TCH', 'STD'].includes(user?.role || '');
   const canUploadDocuments = user?.role !== 'STD';
   const canUploadResources = ['TCH', 'ADM', 'DIR'].includes(user?.role || '');
 
-  const loadOptions = useCallback(async () => {
-    try {
-      const response = await api.get<DocumentsOptionsPayload>('/documents/options');
-      setOptions(response.data);
-      if (!selectedStudentId && response.data.students.length > 0) {
-        setSelectedStudentId(response.data.students[0].id);
-      }
-      if (response.data.categories.length > 0 && !uploadCategory) {
-        setUploadCategory(response.data.categories[0]);
-      }
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
-  }, [selectedStudentId, t, uploadCategory]);
+  const optionsQuery = useDocumentsOptions();
+  const myDocumentsQuery = useMyDocuments();
+  const studentDocumentsQuery = useStudentDocuments(selectedStudentId, canManageStudentDocs);
+  const checklistQuery = useStudentChecklist(selectedStudentId, canManageStudentDocs);
+  const resourcesQuery = useResources({
+    q: resourceSearch || undefined,
+    type: resourceFilterType || undefined,
+    subject: resourceFilterSubject || undefined,
+    level: resourceFilterLevel || undefined,
+    rating: resourceFilterRating || undefined,
+  });
+  const resourceDetailQuery = useResourceDetail(selectedResourceId);
+  const uploadDocumentMutation = useUploadDocument();
+  const uploadResourceMutation = useUploadResource();
+  const deleteDocumentsMutation = useBulkDeleteDocuments();
+  const bulkDownloadMutation = useBulkDownloadDocuments();
+  const rateResourceMutation = useRateResource();
 
-  const loadDocuments = useCallback(async () => {
-    try {
-      const response = await api.list<DocumentItem>('/documents', {
-        owner: 'me',
-        limit: 100,
-      });
-      setDocuments(response.data);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
-  }, [t]);
-
-  const loadStudentDocuments = useCallback(async () => {
-    if (!selectedStudentId || !canManageStudentDocs) {
-      setStudentDocuments([]);
-      setChecklist([]);
-      return;
-    }
-    try {
-      const [documentsResponse, checklistResponse] = await Promise.all([
-        api.list<DocumentItem>(`/students/${selectedStudentId}/documents`),
-        api.get<ChecklistItem[]>(`/students/${selectedStudentId}/documents/checklist`),
-      ]);
-      setStudentDocuments(documentsResponse.data);
-      setChecklist(checklistResponse.data);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
-  }, [canManageStudentDocs, selectedStudentId, t]);
-
-  const loadResources = useCallback(
-    async (cursor?: string, append = false) => {
-      try {
-        const response = await api.list<ResourceItem>('/resources', {
-          cursor,
-          limit: 24,
-          q: resourceSearch || undefined,
-          type: resourceFilterType || undefined,
-          subject: resourceFilterSubject || undefined,
-          level: resourceFilterLevel || undefined,
-          rating: resourceFilterRating || undefined,
-        });
-        setResources((current) => (append ? [...current, ...response.data] : response.data));
-        setResourcesCursor(response.meta.next_cursor);
-        setResourcesHasMore(response.meta.has_more);
-      } catch (err) {
-        setError(err instanceof ApiClientError ? err.message : t('app.error'));
-      }
-    },
-    [resourceFilterLevel, resourceFilterRating, resourceFilterSubject, resourceFilterType, resourceSearch, t]
+  const options = optionsQuery.data ?? { students: [], categories: [] };
+  const documents = myDocumentsQuery.data ?? [];
+  const studentDocuments = studentDocumentsQuery.data ?? [];
+  const checklist = checklistQuery.data ?? [];
+  const resources: ResourceItem[] = useMemo(
+    () => resourcesQuery.data?.pages.flatMap((page) => page.data) ?? [],
+    [resourcesQuery.data]
+  );
+  const selectedResource = resourceDetailQuery.data ?? resources.find((resource) => resource.id === selectedResourceId) ?? null;
+  const dismissibleError = useDismissibleError(
+    useMemo(
+      () =>
+        toBannerError(
+          optionsQuery.error ??
+            myDocumentsQuery.error ??
+            studentDocumentsQuery.error ??
+            checklistQuery.error ??
+            resourcesQuery.error ??
+            resourceDetailQuery.error ??
+            uploadDocumentMutation.error ??
+            uploadResourceMutation.error ??
+            deleteDocumentsMutation.error ??
+            bulkDownloadMutation.error ??
+            rateResourceMutation.error,
+          t('app.error')
+        ),
+      [
+        bulkDownloadMutation.error,
+        checklistQuery.error,
+        deleteDocumentsMutation.error,
+        myDocumentsQuery.error,
+        optionsQuery.error,
+        rateResourceMutation.error,
+        resourceDetailQuery.error,
+        resourcesQuery.error,
+        studentDocumentsQuery.error,
+        t,
+        uploadDocumentMutation.error,
+        uploadResourceMutation.error,
+      ]
+    )
   );
 
   useEffect(() => {
-    setLoading(true);
-    Promise.all([loadOptions(), loadDocuments(), loadResources()])
-      .finally(() => setLoading(false));
-  }, [loadDocuments, loadOptions, loadResources]);
-
-  useEffect(() => {
-    void loadStudentDocuments();
-  }, [loadStudentDocuments]);
-
-  useEffect(() => {
-    void loadResources();
-  }, [loadResources]);
+    if (!selectedStudentId && options.students.length > 0) {
+      setSelectedStudentId(options.students[0].id);
+    }
+    if (options.categories.length > 0 && !uploadCategory) {
+      setUploadCategory(options.categories[0]);
+    }
+  }, [options.categories, options.students, selectedStudentId, uploadCategory]);
 
   const filteredDocuments = useMemo(() => {
     const items = activeTab === 'student' ? studentDocuments : documents;
@@ -243,10 +171,7 @@ export function DocumentsPage({ initialTab = 'mine' }: DocumentsPageProps) {
       if (documentTypeFilter && item.mime_type !== documentTypeFilter) return false;
       if (documentSearch) {
         const search = documentSearch.toLowerCase();
-        if (
-          !item.original_filename.toLowerCase().includes(search) &&
-          !item.category.toLowerCase().includes(search)
-        ) {
+        if (!item.original_filename.toLowerCase().includes(search) && !item.category.toLowerCase().includes(search)) {
           return false;
         }
       }
@@ -266,142 +191,75 @@ export function DocumentsPage({ initialTab = 'mine' }: DocumentsPageProps) {
   ]);
 
   const documentMimeOptions = useMemo(
-    () =>
-      Array.from(new Set([...(documents ?? []), ...(studentDocuments ?? [])].map((item) => item.mime_type))).sort(),
+    () => Array.from(new Set([...(documents ?? []), ...(studentDocuments ?? [])].map((item) => item.mime_type))).sort(),
     [documents, studentDocuments]
   );
-
-  async function performMultipartUpload(url: string, fields: Record<string, string>) {
-    const token = getAccessToken();
-    const formData = new FormData();
-    if (!uploadFile) return;
-    formData.append('file', uploadFile);
-    Object.entries(fields).forEach(([key, value]) => {
-      if (value) {
-        formData.append(key, value);
-      }
-    });
-
-    setUploading(true);
-    setUploadProgress(0);
-
-    await new Promise<void>((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      uploadXhrRef.current = xhr;
-      xhr.open('POST', `/api/v1${url}`);
-      xhr.setRequestHeader('Accept-Language', i18n.language || 'fr');
-      xhr.setRequestHeader('X-Correlation-Id', crypto.randomUUID());
-      xhr.setRequestHeader('X-Client-Version', '0.1.0');
-      xhr.setRequestHeader('X-Client-Platform', 'web');
-      if (token) {
-        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-      }
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-          setUploadProgress(Math.round((event.loaded / event.total) * 100));
-        }
-      };
-      xhr.onerror = () => reject(new Error(t('app.error')));
-      xhr.onabort = () => reject(new Error(t('documents.uploadCanceled')));
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          resolve();
-          return;
-        }
-        try {
-          const payload = JSON.parse(xhr.responseText);
-          reject(new Error(payload?.error?.message || t('app.error')));
-        } catch {
-          reject(new Error(t('app.error')));
-        }
-      };
-      xhr.send(formData);
-    })
-      .finally(() => {
-        uploadXhrRef.current = null;
-        setUploading(false);
-      });
-  }
 
   async function handleUpload() {
     if (!uploadFile) {
       return;
     }
-    try {
-      if (activeTab === 'resources') {
-        await performMultipartUpload('/resources', {
+
+    if (activeTab === 'resources') {
+      await uploadResourceMutation.mutateAsync({
+        payload: {
+          file: uploadFile,
           title: resourceTitle || uploadFile.name,
           description: resourceDescription,
           subject: resourceSubject,
           level: resourceLevel,
           type: resourceType,
-          visibility: 'school',
           tags: resourceTags,
-        });
-        await loadResources();
-        setResourceFormOpen(false);
-      } else {
-        await performMultipartUpload('/documents/upload', {
+          language: i18n.language || 'fr',
+        },
+        onProgress: setUploadProgress,
+        onRequestCreated: (xhr) => {
+          uploadXhrRef.current = xhr;
+        },
+      });
+      setResourceFormOpen(false);
+      await resourcesQuery.refetch();
+    } else {
+      await uploadDocumentMutation.mutateAsync({
+        payload: {
+          file: uploadFile,
           category: uploadCategory,
-          linked_student_id: activeTab === 'student' ? selectedStudentId : '',
-          expires_at: uploadExpiry || '',
-        });
-        await Promise.all([loadDocuments(), loadStudentDocuments()]);
-      }
-      setUploadFile(null);
-      setUploadExpiry('');
-      setUploadProgress(100);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('app.error'));
+          linkedStudentId: activeTab === 'student' ? selectedStudentId : undefined,
+          expiresAt: uploadExpiry || undefined,
+          language: i18n.language || 'fr',
+        },
+        onProgress: setUploadProgress,
+        onRequestCreated: (xhr) => {
+          uploadXhrRef.current = xhr;
+        },
+      });
+      await Promise.all([myDocumentsQuery.refetch(), studentDocumentsQuery.refetch(), checklistQuery.refetch()]);
     }
+
+    uploadXhrRef.current = null;
+    setUploadFile(null);
+    setUploadExpiry('');
+    setUploadProgress(0);
   }
 
   async function handleDeleteDocuments(hard = false, ids = selectedDocumentIds) {
-    try {
-      if (!hard && user?.role === 'ADM' && ids.length > 1) {
-        await api.post('/documents/bulk-delete', { document_ids: ids });
-      } else {
-        await Promise.all(
-          ids.map((id) =>
-            api.delete<{ deleted: boolean }>(`/documents/${id}${hard ? '?hard=true' : ''}`)
-          )
-        );
-      }
-      setSelectedDocumentIds([]);
-      await Promise.all([loadDocuments(), loadStudentDocuments()]);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
+    await deleteDocumentsMutation.mutateAsync({
+      documentIds: ids,
+      hard,
+      useBulkEndpoint: !hard && user?.role === 'ADM' && ids.length > 1,
+    });
+    setSelectedDocumentIds([]);
+    await Promise.all([myDocumentsQuery.refetch(), studentDocumentsQuery.refetch(), checklistQuery.refetch()]);
   }
 
   async function handleBulkDownload(ids = selectedDocumentIds) {
-    try {
-      const response = await api.post<{ download_url: string }>('/documents/bulk-download', {
-        document_ids: ids,
-      });
-      openSignedUrl(response.data.download_url);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
-  }
-
-  async function handleOpenResource(resourceId: string) {
-    try {
-      const response = await api.get<ResourceItem>(`/resources/${resourceId}`);
-      setResourceModal(response.data);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
+    const response = await bulkDownloadMutation.mutateAsync(ids);
+    openSignedUrl(response.download_url);
   }
 
   async function handleRateResource(resourceId: string, rating: number) {
-    try {
-      await api.post(`/resources/${resourceId}/rate`, { rating });
-      await Promise.all([loadResources(), handleOpenResource(resourceId)]);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
+    await rateResourceMutation.mutateAsync({ resourceId, rating });
+    await Promise.all([resourcesQuery.refetch(), resourceDetailQuery.refetch()]);
   }
 
   function toggleDocumentSelection(documentId: string) {
@@ -411,6 +269,12 @@ export function DocumentsPage({ initialTab = 'mine' }: DocumentsPageProps) {
         : [...current, documentId]
     );
   }
+
+  const loading =
+    optionsQuery.isLoading ||
+    myDocumentsQuery.isLoading ||
+    resourcesQuery.isLoading ||
+    (canManageStudentDocs && Boolean(selectedStudentId) && (studentDocumentsQuery.isLoading || checklistQuery.isLoading));
 
   if (loading) {
     return <LoadingState />;
@@ -440,7 +304,7 @@ export function DocumentsPage({ initialTab = 'mine' }: DocumentsPageProps) {
         </div>
       </div>
 
-      <ErrorBanner error={error} onDismiss={() => setError(null)} />
+      <ErrorBanner error={dismissibleError.error} onDismiss={dismissibleError.dismiss} />
 
       <div className="documents-layout">
         <section className="card documents-main-card">
@@ -448,11 +312,7 @@ export function DocumentsPage({ initialTab = 'mine' }: DocumentsPageProps) {
             <div className="documents-toolbar__filters">
               {activeTab !== 'resources' && (
                 <>
-                  <input
-                    value={documentSearch}
-                    onChange={(event) => setDocumentSearch(event.target.value)}
-                    placeholder={t('documents.filters.search')}
-                  />
+                  <input value={documentSearch} onChange={(event) => setDocumentSearch(event.target.value)} placeholder={t('documents.filters.search')} />
                   <select value={documentCategoryFilter} onChange={(event) => setDocumentCategoryFilter(event.target.value)}>
                     <option value="">{t('documents.filters.allCategories')}</option>
                     {options.categories.map((category) => (
@@ -464,9 +324,7 @@ export function DocumentsPage({ initialTab = 'mine' }: DocumentsPageProps) {
                   <select value={documentTypeFilter} onChange={(event) => setDocumentTypeFilter(event.target.value)}>
                     <option value="">{t('documents.filters.allTypes')}</option>
                     {documentMimeOptions.map((mime) => (
-                      <option key={mime} value={mime}>
-                        {mime}
-                      </option>
+                      <option key={mime} value={mime}>{mime}</option>
                     ))}
                   </select>
                   <input type="date" value={documentFromDate} onChange={(event) => setDocumentFromDate(event.target.value)} />
@@ -476,35 +334,19 @@ export function DocumentsPage({ initialTab = 'mine' }: DocumentsPageProps) {
 
               {activeTab === 'resources' && (
                 <>
-                  <input
-                    value={resourceSearch}
-                    onChange={(event) => setResourceSearch(event.target.value)}
-                    placeholder={t('documents.resources.searchPlaceholder')}
-                  />
-                  <input
-                    value={resourceFilterSubject}
-                    onChange={(event) => setResourceFilterSubject(event.target.value)}
-                    placeholder={t('documents.resources.subject')}
-                  />
-                  <input
-                    value={resourceFilterLevel}
-                    onChange={(event) => setResourceFilterLevel(event.target.value)}
-                    placeholder={t('documents.resources.level')}
-                  />
+                  <input value={resourceSearch} onChange={(event) => setResourceSearch(event.target.value)} placeholder={t('documents.resources.searchPlaceholder')} />
+                  <input value={resourceFilterSubject} onChange={(event) => setResourceFilterSubject(event.target.value)} placeholder={t('documents.resources.subject')} />
+                  <input value={resourceFilterLevel} onChange={(event) => setResourceFilterLevel(event.target.value)} placeholder={t('documents.resources.level')} />
                   <select value={resourceFilterType} onChange={(event) => setResourceFilterType(event.target.value)}>
                     <option value="">{t('documents.resources.allTypes')}</option>
                     {RESOURCE_TYPES.map((item) => (
-                      <option key={item} value={item}>
-                        {t(`documents.resourceTypes.${item}`)}
-                      </option>
+                      <option key={item} value={item}>{t(`documents.resourceTypes.${item}`)}</option>
                     ))}
                   </select>
                   <select value={resourceFilterRating} onChange={(event) => setResourceFilterRating(event.target.value)}>
                     <option value="">{t('documents.resources.allRatings')}</option>
                     {[5, 4, 3].map((rating) => (
-                      <option key={rating} value={rating}>
-                        {t('documents.resources.ratingAtLeast', { rating })}
-                      </option>
+                      <option key={rating} value={rating}>{t('documents.resources.ratingAtLeast', { rating })}</option>
                     ))}
                   </select>
                 </>
@@ -518,18 +360,10 @@ export function DocumentsPage({ initialTab = 'mine' }: DocumentsPageProps) {
                 </button>
                 {selectedDocumentIds.length > 0 && (
                   <>
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      onClick={() => void handleBulkDownload()}
-                    >
+                    <button type="button" className="btn btn-secondary" onClick={() => void handleBulkDownload()}>
                       {t('documents.bulk.download')}
                     </button>
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      onClick={() => void handleDeleteDocuments(false)}
-                    >
+                    <button type="button" className="btn btn-secondary" onClick={() => void handleDeleteDocuments(false)}>
                       {t('documents.bulk.delete')}
                     </button>
                     {['ADM', 'DIR'].includes(user?.role || '') && (
@@ -585,25 +419,18 @@ export function DocumentsPage({ initialTab = 'mine' }: DocumentsPageProps) {
               onDrop={(event) => {
                 event.preventDefault();
                 const dropped = event.dataTransfer.files?.[0];
-                if (dropped) {
-                  setUploadFile(dropped);
-                }
+                if (dropped) setUploadFile(dropped);
               }}
             >
               <strong>{t('documents.uploadTitle')}</strong>
               <p>{t('documents.uploadSubtitle')}</p>
-              <input
-                type="file"
-                onChange={(event) => setUploadFile(event.target.files?.[0] || null)}
-              />
+              <input type="file" onChange={(event) => setUploadFile(event.target.files?.[0] || null)} />
 
               {activeTab !== 'resources' && (
                 <div className="documents-upload-fields">
                   <select value={uploadCategory} onChange={(event) => setUploadCategory(event.target.value)}>
                     {options.categories.map((category) => (
-                      <option key={category} value={category}>
-                        {t(`documents.categories.${category}`)}
-                      </option>
+                      <option key={category} value={category}>{t(`documents.categories.${category}`)}</option>
                     ))}
                   </select>
                   <input type="date" value={uploadExpiry} onChange={(event) => setUploadExpiry(event.target.value)} />
@@ -617,9 +444,7 @@ export function DocumentsPage({ initialTab = 'mine' }: DocumentsPageProps) {
                   <input value={resourceLevel} onChange={(event) => setResourceLevel(event.target.value)} placeholder={t('documents.resources.level')} />
                   <select value={resourceType} onChange={(event) => setResourceType(event.target.value as (typeof RESOURCE_TYPES)[number])}>
                     {RESOURCE_TYPES.map((item) => (
-                      <option key={item} value={item}>
-                        {t(`documents.resourceTypes.${item}`)}
-                      </option>
+                      <option key={item} value={item}>{t(`documents.resourceTypes.${item}`)}</option>
                     ))}
                   </select>
                   <input value={resourceTags} onChange={(event) => setResourceTags(event.target.value)} placeholder={t('documents.resources.tags')} />
@@ -634,22 +459,23 @@ export function DocumentsPage({ initialTab = 'mine' }: DocumentsPageProps) {
                 </div>
               )}
 
-              {uploading && (
+              {(uploadDocumentMutation.isPending || uploadResourceMutation.isPending) && (
                 <div className="documents-upload-progress">
                   <div style={{ width: `${uploadProgress}%` }} />
                 </div>
               )}
 
               <div className="documents-upload-actions">
-                <button type="button" className="btn btn-primary" onClick={() => void handleUpload()} disabled={!uploadFile || uploading}>
-                  {uploading ? t('documents.uploading') : t('documents.uploadAction')}
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => void handleUpload()}
+                  disabled={!uploadFile || uploadDocumentMutation.isPending || uploadResourceMutation.isPending}
+                >
+                  {uploadDocumentMutation.isPending || uploadResourceMutation.isPending ? t('documents.uploading') : t('documents.uploadAction')}
                 </button>
-                {uploading && (
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => uploadXhrRef.current?.abort()}
-                  >
+                {(uploadDocumentMutation.isPending || uploadResourceMutation.isPending) && (
+                  <button type="button" className="btn btn-secondary" onClick={() => uploadXhrRef.current?.abort()}>
                     {t('documents.cancelUpload')}
                   </button>
                 )}
@@ -664,7 +490,7 @@ export function DocumentsPage({ initialTab = 'mine' }: DocumentsPageProps) {
               ) : (
                 <div className="documents-resource-grid">
                   {resources.map((resource) => (
-                    <button key={resource.id} type="button" className="documents-resource-card" onClick={() => void handleOpenResource(resource.id)}>
+                    <button key={resource.id} type="button" className="documents-resource-card" onClick={() => setSelectedResourceId(resource.id)}>
                       {resource.thumbnail_url ? (
                         <img src={resource.thumbnail_url} alt={resource.title} className="documents-resource-card__thumb" />
                       ) : (
@@ -679,9 +505,9 @@ export function DocumentsPage({ initialTab = 'mine' }: DocumentsPageProps) {
                   ))}
                 </div>
               )}
-              {resourcesHasMore && (
-                <button type="button" className="btn btn-secondary" onClick={() => void loadResources(resourcesCursor || undefined, true)}>
-                  {t('documents.resources.loadMore')}
+              {resourcesQuery.hasNextPage && (
+                <button type="button" className="btn btn-secondary" onClick={() => void resourcesQuery.fetchNextPage()} disabled={resourcesQuery.isFetchingNextPage}>
+                  {resourcesQuery.isFetchingNextPage ? t('documents.uploading') : t('documents.resources.loadMore')}
                 </button>
               )}
             </>
@@ -692,11 +518,7 @@ export function DocumentsPage({ initialTab = 'mine' }: DocumentsPageProps) {
               {filteredDocuments.map((item) => (
                 <article key={item.id} className="documents-card">
                   <label className="documents-card__select">
-                    <input
-                      type="checkbox"
-                      checked={selectedDocumentIds.includes(item.id)}
-                      onChange={() => toggleDocumentSelection(item.id)}
-                    />
+                    <input type="checkbox" checked={selectedDocumentIds.includes(item.id)} onChange={() => toggleDocumentSelection(item.id)} />
                   </label>
                   <button type="button" className="documents-card__preview" onClick={() => setPreviewItem(item)}>
                     {item.thumbnail_url ? (
@@ -725,11 +547,7 @@ export function DocumentsPage({ initialTab = 'mine' }: DocumentsPageProps) {
                       {t('documents.download')}
                     </button>
                     {item.can_delete && (
-                      <button
-                        type="button"
-                        className="dropdown-link"
-                        onClick={() => void handleDeleteDocuments(false, [item.id])}
-                      >
+                      <button type="button" className="dropdown-link" onClick={() => void handleDeleteDocuments(false, [item.id])}>
                         {t('documents.delete')}
                       </button>
                     )}
@@ -753,62 +571,73 @@ export function DocumentsPage({ initialTab = 'mine' }: DocumentsPageProps) {
               {previewItem.preview_url && isPdf(previewItem.mime_type) && (
                 <iframe src={previewItem.preview_url} title={previewItem.original_filename} className="documents-preview-card__frame" />
               )}
-              {!previewItem.preview_url && (
-                <div className="documents-preview-card__fallback">📄</div>
-              )}
+              {!previewItem.preview_url && <div className="documents-preview-card__fallback">📄</div>}
               <p>{previewItem.mime_type}</p>
               <p>{humanSize(previewItem.size_bytes)}</p>
               {previewItem.expires_at && (
                 <p>{t('documents.expiresAt')}: {formatDate(previewItem.expires_at, i18n.language, { dateStyle: 'medium' })}</p>
               )}
-              <div className="documents-preview-card__actions">
-                <button type="button" className="btn btn-secondary" onClick={() => openSignedUrl(previewItem.download_url)}>
-                  {t('documents.download')}
-                </button>
-              </div>
+              <button type="button" className="btn btn-primary" onClick={() => openSignedUrl(previewItem.download_url)}>
+                {t('documents.download')}
+              </button>
             </div>
           )}
         </aside>
       </div>
 
-      {resourceModal && (
+      {selectedResource && (
         <div className="calendar-modal-shell" role="dialog" aria-modal="true">
           <div className="calendar-modal-card documents-resource-modal">
             <div className="calendar-modal-card__header">
-              <h2>{resourceModal.title}</h2>
-              <button type="button" className="btn btn-secondary" onClick={() => setResourceModal(null)}>
+              <h2>{selectedResource.title}</h2>
+              <button type="button" className="btn btn-secondary" onClick={() => setSelectedResourceId(null)}>
                 {t('app.close')}
               </button>
             </div>
-            {resourceModal.preview_url && isImage(resourceModal.document?.mime_type || '') && (
-              <img src={resourceModal.preview_url} alt={resourceModal.title} className="documents-resource-modal__image" />
-            )}
-            {resourceModal.preview_url && isPdf(resourceModal.document?.mime_type || '') && (
-              <iframe src={resourceModal.preview_url} title={resourceModal.title} className="documents-resource-modal__frame" />
-            )}
-            <p>{resourceModal.description}</p>
-            <p>{[resourceModal.subject, resourceModal.level].filter(Boolean).join(' · ')}</p>
-            <p>{resourceModal.tags.join(', ')}</p>
-            <p>{t('documents.resources.rating', { rating: resourceModal.avg_rating.toFixed(1), count: resourceModal.rating_count })}</p>
-            <div className="calendar-modal-card__actions">
-              <button type="button" className="btn btn-primary" onClick={() => openSignedUrl(resourceModal.download_url)}>
-                {t('documents.download')}
-              </button>
-              {resourceModal.can_rate && (
-                <div className="documents-rating-group">
-                  {[1, 2, 3, 4, 5].map((rating) => (
-                    <button
-                      key={rating}
-                      type="button"
-                      className={`btn ${resourceModal.my_rating === rating ? 'btn-primary' : 'btn-secondary'}`}
-                      onClick={() => void handleRateResource(resourceModal.id, rating)}
-                    >
-                      {rating}★
-                    </button>
-                  ))}
+
+            {resourceDetailQuery.isLoading ? (
+              <LoadingState />
+            ) : (
+              <>
+                {selectedResource.preview_url && selectedResource.document && 'mime_type' in selectedResource.document && isImage(selectedResource.document.mime_type) && (
+                  <img src={selectedResource.preview_url} alt={selectedResource.title} className="documents-resource-modal__image" />
+                )}
+                {selectedResource.preview_url && selectedResource.document && 'mime_type' in selectedResource.document && isPdf(selectedResource.document.mime_type) && (
+                  <iframe src={selectedResource.preview_url} title={selectedResource.title} className="documents-resource-modal__frame" />
+                )}
+
+                <p>{selectedResource.description || '—'}</p>
+                <p>{[selectedResource.subject, selectedResource.level].filter(Boolean).join(' · ') || '—'}</p>
+                <p>{selectedResource.author || '—'}</p>
+                <p>{selectedResource.tags.join(', ') || '—'}</p>
+                <p>{t('documents.resources.rating', { rating: selectedResource.avg_rating.toFixed(1), count: selectedResource.rating_count })}</p>
+                <p>{t('documents.download', 'Download')} · {selectedResource.download_count}</p>
+                <p>{formatDate(selectedResource.created_at, i18n.language, { dateStyle: 'medium' })}</p>
+                {selectedResource.document && 'mime_type' in selectedResource.document && (
+                  <p>{selectedResource.document.mime_type} · {humanSize(selectedResource.document.size_bytes)}</p>
+                )}
+
+                <div className="calendar-modal-card__actions">
+                  <button type="button" className="btn btn-primary" onClick={() => openSignedUrl(selectedResource.download_url)}>
+                    {t('documents.download')}
+                  </button>
+                  {selectedResource.can_rate && (
+                    <div className="documents-rating-group">
+                      {[1, 2, 3, 4, 5].map((rating) => (
+                        <button
+                          key={rating}
+                          type="button"
+                          className={`btn ${selectedResource.my_rating === rating ? 'btn-primary' : 'btn-secondary'}`}
+                          onClick={() => void handleRateResource(selectedResource.id, rating)}
+                        >
+                          {rating}★
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </>
+            )}
           </div>
         </div>
       )}

@@ -6,101 +6,45 @@
  * Calls GET /results with cursor pagination. STD and PAR roles.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { api, ApiClientError } from '@/services/api/client';
+import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
+import { EmptyState } from '@/shared/ui/EmptyState';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
-import { EmptyState } from '@/shared/ui/EmptyState';
+import { toBannerError } from '@/shared/ui/errorUtils';
 import { formatDate } from '@/shared/i18n';
-
-interface Result {
-  assignment_id: string;
-  assignment_title: string;
-  course_title: string;
-  due_at: string | null;
-  submitted_at: string | null;
-  score: number | null;
-  out_of: number | null;
-  letter_grade: string | null;
-  feedback: string | null;
-  submission_status: string;
-}
-
-interface QuizAttemptResult {
-  id: string;
-  quiz_id: string;
-  quiz_title?: string;
-  attempt_no: number;
-  score: number | null;
-  max_score: number | null;
-  status: string;
-  completed_at: string | null;
-}
+import { useAssignmentResults, useQuizAttemptResults } from './useResults';
+import type { QuizAttemptResult, Result } from './results.service';
 
 export function ResultsPage() {
   const { t, i18n } = useTranslation();
-  const [items, setItems] = useState<Result[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
-
-  // Phase 10B — quiz results (PAR role shows children's quiz results)
-  const [quizResults, setQuizResults] = useState<QuizAttemptResult[]>([]);
   const [tab, setTab] = useState<'assignments' | 'quizzes'>('assignments');
+  const assignmentsQuery = useAssignmentResults();
+  const quizResultsQuery = useQuizAttemptResults();
+  const items: Result[] = useMemo(
+    () => assignmentsQuery.data?.pages.flatMap((page) => page.data) ?? [],
+    [assignmentsQuery.data]
+  );
+  const quizResults: QuizAttemptResult[] = quizResultsQuery.data ?? [];
+  const dismissibleError = useDismissibleError(
+    toBannerError(assignmentsQuery.error ?? quizResultsQuery.error, t('app.error'))
+  );
 
-  const fetchResults = useCallback(async (cursor?: string) => {
-    try {
-      const params: Record<string, string | number | undefined> = {};
-      if (cursor) params.cursor = cursor;
-
-      const resp = await api.list<Result>('/results', params);
-      if (cursor) {
-        setItems((prev) => [...prev, ...resp.data]);
-      } else {
-        setItems(resp.data);
-      }
-      setNextCursor(resp.meta.next_cursor);
-      setHasMore(resp.meta.has_more);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
-  }, [t]);
-
-  // Phase 10B — fetch quiz results
-  const fetchQuizResults = useCallback(async () => {
-    try {
-      const resp = await api.list<QuizAttemptResult>('/results/quizzes');
-      setQuizResults(resp.data);
-    } catch {
-      // quiz results endpoint may not exist yet — gracefully ignore
-    }
-  }, []);
-
-  useEffect(() => {
-    setLoading(true);
-    Promise.all([fetchResults(), fetchQuizResults()]).finally(() => setLoading(false));
-  }, [fetchResults, fetchQuizResults]);
-
-  async function handleLoadMore() {
-    if (!nextCursor) return;
-    setLoadingMore(true);
-    await fetchResults(nextCursor);
-    setLoadingMore(false);
+  if ((assignmentsQuery.isLoading && !assignmentsQuery.data) || quizResultsQuery.isLoading) {
+    return <LoadingState />;
   }
-
-  if (loading) return <LoadingState />;
 
   return (
     <div className="page">
       <h1 className="page-title">{t('results.title')}</h1>
 
-      <ErrorBanner error={error} onDismiss={() => setError(null)} onRetry={() => fetchResults()} />
+      <ErrorBanner
+        error={dismissibleError.error}
+        onDismiss={dismissibleError.dismiss}
+        onRetry={() => void Promise.all([assignmentsQuery.refetch(), quizResultsQuery.refetch()])}
+      />
 
-      {/* Phase 10B — Tab switcher for assignments vs quizzes */}
       {quizResults.length > 0 && (
         <div className="filters-bar" style={{ marginBottom: 16 }}>
           <button
@@ -110,16 +54,12 @@ export function ResultsPage() {
           >
             {t('results.tabAssignments')}
           </button>
-          <button
-            className={`btn ${tab === 'quizzes' ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setTab('quizzes')}
-          >
+          <button className={`btn ${tab === 'quizzes' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setTab('quizzes')}>
             {t('results.tabQuizzes')}
           </button>
         </div>
       )}
 
-      {/* Quiz results tab */}
       {tab === 'quizzes' && quizResults.length > 0 && (
         <div className="table-container">
           <table className="data-table">
@@ -133,25 +73,23 @@ export function ResultsPage() {
               </tr>
             </thead>
             <tbody>
-              {quizResults.map((qr) => {
-                const pct = qr.max_score && qr.score !== null
-                  ? Math.round((qr.score / qr.max_score) * 100)
+              {quizResults.map((result) => {
+                const pct = result.max_score && result.score !== null
+                  ? Math.round((result.score / result.max_score) * 100)
                   : null;
                 return (
-                  <tr key={qr.id}>
-                    <td style={{ fontWeight: 600 }}>{qr.quiz_title || qr.quiz_id.slice(0, 8)}</td>
-                    <td>#{qr.attempt_no}</td>
+                  <tr key={result.id}>
+                    <td style={{ fontWeight: 600 }}>{result.quiz_title || result.quiz_id.slice(0, 8)}</td>
+                    <td>#{result.attempt_no}</td>
                     <td>
-                      {qr.score !== null && qr.max_score !== null
-                        ? `${qr.score}/${qr.max_score}`
-                        : '—'}
+                      {result.score !== null && result.max_score !== null ? `${result.score}/${result.max_score}` : '—'}
                       {pct !== null && <span style={{ color: 'var(--color-text-secondary)', marginLeft: 4 }}>({pct}%)</span>}
                     </td>
                     <td>
-                      <span className={`status-badge status-${qr.status}`}>{qr.status}</span>
+                      <span className={`status-badge status-${result.status}`}>{result.status}</span>
                     </td>
                     <td style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
-                      {qr.completed_at ? formatDate(qr.completed_at, i18n.language) : '—'}
+                      {result.completed_at ? formatDate(result.completed_at, i18n.language) : '—'}
                     </td>
                   </tr>
                 );
@@ -161,7 +99,6 @@ export function ResultsPage() {
         </div>
       )}
 
-      {/* Assignment results tab */}
       {tab === 'assignments' && items.length === 0 ? (
         <EmptyState message={t('results.empty')} icon="📊" />
       ) : tab === 'assignments' ? (
@@ -179,39 +116,29 @@ export function ResultsPage() {
                 </tr>
               </thead>
               <tbody>
-                {items.map((r) => (
-                  <tr key={r.assignment_id}>
-                    <td>{r.assignment_title}</td>
-                    <td>{r.course_title}</td>
+                {items.map((item) => (
+                  <tr key={item.assignment_id}>
+                    <td>{item.assignment_title}</td>
+                    <td>{item.course_title}</td>
                     <td>
-                      {r.score !== null && r.out_of !== null
-                        ? `${r.score}/${r.out_of}`
-                        : '-'}
-                      {r.letter_grade && (
-                        <span className="letter-grade"> ({r.letter_grade})</span>
-                      )}
+                      {item.score !== null && item.out_of !== null ? `${item.score}/${item.out_of}` : '-'}
+                      {item.letter_grade && <span className="letter-grade"> ({item.letter_grade})</span>}
                     </td>
                     <td>
-                      <span className={`status-badge status-${r.submission_status}`}>
-                        {r.submission_status}
-                      </span>
+                      <span className={`status-badge status-${item.submission_status}`}>{item.submission_status}</span>
                     </td>
-                    <td>{formatDate(r.due_at, i18n.language)}</td>
-                    <td>{r.feedback || '-'}</td>
+                    <td>{formatDate(item.due_at, i18n.language)}</td>
+                    <td>{item.feedback || '-'}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
-          {hasMore && (
+          {assignmentsQuery.hasNextPage && (
             <div style={{ textAlign: 'center', marginTop: '16px' }}>
-              <button
-                className="btn btn-secondary"
-                onClick={handleLoadMore}
-                disabled={loadingMore}
-              >
-                {loadingMore ? t('app.loading') : t('feed.loadMore')}
+              <button className="btn btn-secondary" onClick={() => void assignmentsQuery.fetchNextPage()} disabled={assignmentsQuery.isFetchingNextPage}>
+                {assignmentsQuery.isFetchingNextPage ? t('app.loading') : t('feed.loadMore')}
               </button>
             </div>
           )}

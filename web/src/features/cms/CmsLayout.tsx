@@ -1,16 +1,8 @@
-/**
- * CMS Dashboard layout — separate sidebar for CONTENT_MGR role.
- *
- * Phase 10A — CMS route group /cms/* with own navigation.
- * Sidebar: Content, Upload, Review Queue (with pending badge), Quizzes, Analytics.
- */
-
-import { useCallback, useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/services/auth/AuthContext';
-import { api } from '@/services/api/client';
 import { LanguageSwitcher } from '@/shared/ui/LanguageSwitcher';
+import { useCmsPendingSubmissionBadge } from './useCms';
 
 interface CmsNavItem {
   to: string;
@@ -23,31 +15,8 @@ export function CmsLayout() {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [pendingCount, setPendingCount] = useState(0);
-
-  const fetchPendingCount = useCallback(async () => {
-    try {
-      const resp = await api.list<{ id: string }>('/cms/submissions', {
-        status: 'PENDING',
-        limit: 1,
-      });
-      // The meta may not have total_count, so we use has_more as a hint
-      // If has_more is true, there's at least 2; otherwise count the data
-      if (resp.meta.has_more) {
-        setPendingCount(99); // placeholder; real count would need a dedicated endpoint
-      } else {
-        setPendingCount(resp.data.length);
-      }
-    } catch {
-      // Silently fail — badge is non-critical
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchPendingCount();
-    const interval = setInterval(fetchPendingCount, 60000);
-    return () => clearInterval(interval);
-  }, [fetchPendingCount]);
+  const pendingSubmissionBadgeQuery = useCmsPendingSubmissionBadge();
+  const pendingCount = pendingSubmissionBadgeQuery.data ?? 0;
 
   const navItems: CmsNavItem[] = [
     { to: '/cms', labelKey: 'cms.nav.content', icon: '\uD83D\uDCDA' },
@@ -76,17 +45,13 @@ export function CmsLayout() {
               key={item.to}
               to={item.to}
               end={item.to === '/cms'}
-              className={({ isActive }) =>
-                `nav-link ${isActive ? 'nav-link--active' : ''}`
-              }
+              className={({ isActive }) => `nav-link ${isActive ? 'nav-link--active' : ''}`}
             >
               <span className="nav-icon">{item.icon}</span>
               <span className="nav-label">{t(item.labelKey)}</span>
-              {item.badge != null && item.badge > 0 && (
-                <span className="notif-badge">
-                  {item.badge > 99 ? '99+' : item.badge}
-                </span>
-              )}
+              {item.badge != null && item.badge > 0 ? (
+                <span className="notif-badge">{item.badge > 99 ? '99+' : item.badge}</span>
+              ) : null}
             </NavLink>
           ))}
         </nav>
@@ -96,7 +61,7 @@ export function CmsLayout() {
             <span className="user-name">{user?.full_name}</span>
             <span className="user-role">{t('roles.CONTENT_MGR')}</span>
           </div>
-          <button className="logout-btn" onClick={handleLogout}>
+          <button className="logout-btn" onClick={() => void handleLogout()}>
             {t('nav.logout')}
           </button>
         </div>

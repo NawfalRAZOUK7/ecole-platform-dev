@@ -1,16 +1,11 @@
-/**
- * CMS Content Upload — create new platform content with file upload.
- *
- * Phase 10A — form: title, description, content_type, level_band, subject,
- * language, thumbnail + main file with progress bar.
- * Also supports bulk upload (multiple files → multiple content items).
- */
-
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { api, ApiClientError, getAccessToken } from '@/services/api/client';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
+import {
+  useCreateCmsContent,
+  useUploadCmsContentAsset,
+} from './useCms';
 
 const CONTENT_TYPES = ['video', 'pdf', 'audio', 'interactive'];
 const LEVELS = ['maternelle', 'cp', 'ce1', 'ce2', 'cm1', 'cm2', '6eme', '5eme', '4eme', '3eme', '2nde', '1ere', 'terminale'];
@@ -26,6 +21,8 @@ const ACCEPT_MAP: Record<string, string> = {
 export function CmsContentUploadPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const createContentMutation = useCreateCmsContent();
+  const uploadContentAssetMutation = useUploadCmsContentAsset();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -41,47 +38,26 @@ export function CmsContentUploadPage() {
   const [success, setSuccess] = useState(false);
   const [createdId, setCreatedId] = useState<string | null>(null);
 
-  // Bulk upload
   const [bulkMode, setBulkMode] = useState(false);
   const [bulkFiles, setBulkFiles] = useState<File[]>([]);
   const [bulkResults, setBulkResults] = useState<Array<{ name: string; ok: boolean; error?: string }>>([]);
 
-  async function uploadFileWithProgress(contentId: string, file: File): Promise<void> {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', `/api/v1/content-items/${contentId}/assets`);
-
-      const token = getAccessToken();
-      if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) {
-          setProgress(Math.round((e.loaded / e.total) * 100));
-        }
-      };
-
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) resolve();
-        else reject(new Error(`Upload failed: ${xhr.status}`));
-      };
-
-      xhr.onerror = () => reject(new Error('Network error'));
-      xhr.send(formData);
+  async function uploadFileWithProgress(contentId: string, file: File) {
+    await uploadContentAssetMutation.mutateAsync({
+      contentId,
+      file,
+      onProgress: setProgress,
     });
   }
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
     setError(null);
     setUploading(true);
     setProgress(0);
 
     try {
-      // 1. Create content item
-      const resp = await api.post<{ id: string }>('/cms/content', {
+      const created = await createContentMutation.mutateAsync({
         title,
         content_type: contentType,
         level_band: levelBand || undefined,
@@ -90,23 +66,20 @@ export function CmsContentUploadPage() {
         description: description || undefined,
         status: 'draft',
       });
-      const contentId = resp.data.id;
-      setCreatedId(contentId);
+      setCreatedId(created.id);
 
-      // 2. Upload main file
       if (mainFile) {
-        await uploadFileWithProgress(contentId, mainFile);
+        await uploadFileWithProgress(created.id, mainFile);
       }
 
-      // 3. Upload thumbnail
       if (thumbnailFile) {
         setProgress(0);
-        await uploadFileWithProgress(contentId, thumbnailFile);
+        await uploadFileWithProgress(created.id, thumbnailFile);
       }
 
       setSuccess(true);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : t('app.error'));
     } finally {
       setUploading(false);
     }
@@ -114,19 +87,23 @@ export function CmsContentUploadPage() {
 
   async function handleBulkUpload() {
     if (bulkFiles.length === 0) return;
+
     setUploading(true);
     setError(null);
-    const results: typeof bulkResults = [];
+    const results: Array<{ name: string; ok: boolean; error?: string }> = [];
 
     for (const file of bulkFiles) {
       try {
-        const inferredType = file.type.startsWith('video/') ? 'video'
-          : file.type === 'application/pdf' ? 'pdf'
-          : file.type.startsWith('audio/') ? 'audio'
-          : 'interactive';
+        const inferredType = file.type.startsWith('video/')
+          ? 'video'
+          : file.type === 'application/pdf'
+            ? 'pdf'
+            : file.type.startsWith('audio/')
+              ? 'audio'
+              : 'interactive';
 
         const baseName = file.name.replace(/\.[^/.]+$/, '');
-        const resp = await api.post<{ id: string }>('/cms/content', {
+        const created = await createContentMutation.mutateAsync({
           title: baseName,
           content_type: inferredType,
           level_band: levelBand || undefined,
@@ -134,13 +111,13 @@ export function CmsContentUploadPage() {
           subject: subject || undefined,
           status: 'draft',
         });
-        await uploadFileWithProgress(resp.data.id, file);
+        await uploadFileWithProgress(created.id, file);
         results.push({ name: file.name, ok: true });
-      } catch (err) {
+      } catch (bulkError) {
         results.push({
           name: file.name,
           ok: false,
-          error: err instanceof ApiClientError ? err.message : String(err),
+          error: bulkError instanceof Error ? bulkError.message : t('app.error'),
         });
       }
     }
@@ -152,16 +129,26 @@ export function CmsContentUploadPage() {
   if (success) {
     return (
       <div className="page">
-        <h1 className="page-title">{t('cms.upload.successTitle')}</h1>
-        <div className="card" style={{ padding: 24, textAlign: 'center' }}>
-          <p style={{ fontSize: 16, marginBottom: 16 }}>{t('cms.upload.successMessage')}</p>
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-            {createdId && (
+        <div className="card" style={{ padding: 24, maxWidth: 600 }}>
+          <h1 className="page-title">{t('cms.upload.success')}</h1>
+          <p>{t('cms.upload.successMessage')}</p>
+          <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+            {createdId ? (
               <button className="btn btn-primary" onClick={() => navigate(`/cms/content/${createdId}/edit`)}>
                 {t('cms.upload.editContent')}
               </button>
-            )}
-            <button className="btn" onClick={() => { setSuccess(false); setTitle(''); setDescription(''); setMainFile(null); setThumbnailFile(null); setCreatedId(null); }}>
+            ) : null}
+            <button
+              className="btn"
+              onClick={() => {
+                setSuccess(false);
+                setTitle('');
+                setDescription('');
+                setMainFile(null);
+                setThumbnailFile(null);
+                setCreatedId(null);
+              }}
+            >
               {t('cms.upload.uploadAnother')}
             </button>
             <button className="btn" onClick={() => navigate('/cms')}>
@@ -178,7 +165,6 @@ export function CmsContentUploadPage() {
       <h1 className="page-title">{t('cms.upload.title')}</h1>
       <ErrorBanner error={error} onDismiss={() => setError(null)} />
 
-      {/* Toggle: single / bulk */}
       <div style={{ marginBottom: 16, display: 'flex', gap: 8 }}>
         <button className={`btn ${!bulkMode ? 'btn-primary' : ''}`} onClick={() => setBulkMode(false)}>
           {t('cms.upload.singleMode')}
@@ -194,15 +180,19 @@ export function CmsContentUploadPage() {
           <p style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>{t('cms.upload.bulkHint')}</p>
 
           <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
-            <select className="filter-select" value={levelBand} onChange={(e) => setLevelBand(e.target.value)}>
+            <select className="filter-select" value={levelBand} onChange={(event) => setLevelBand(event.target.value)}>
               <option value="">{t('cms.content.allLevels')}</option>
-              {LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
+              {LEVELS.map((level) => <option key={level} value={level}>{level}</option>)}
             </select>
-            <select className="filter-select" value={subject} onChange={(e) => setSubject(e.target.value)}>
+            <select className="filter-select" value={subject} onChange={(event) => setSubject(event.target.value)}>
               <option value="">{t('cms.content.allSubjects')}</option>
-              {SUBJECTS.map((s) => <option key={s} value={s}>{t(`cms.subjects.${s}`, s)}</option>)}
+              {SUBJECTS.map((currentSubject) => (
+                <option key={currentSubject} value={currentSubject}>
+                  {t(`cms.subjects.${currentSubject}`, currentSubject)}
+                </option>
+              ))}
             </select>
-            <select className="filter-select" value={language} onChange={(e) => setLanguage(e.target.value)}>
+            <select className="filter-select" value={language} onChange={(event) => setLanguage(event.target.value)}>
               <option value="fr">Francais</option>
               <option value="ar">Arabe</option>
               <option value="en">English</option>
@@ -212,36 +202,43 @@ export function CmsContentUploadPage() {
           <input
             type="file"
             multiple
-            onChange={(e) => setBulkFiles(Array.from(e.target.files || []))}
+            onChange={(event) => setBulkFiles(Array.from(event.target.files || []))}
             style={{ marginBottom: 12 }}
           />
 
-          {bulkFiles.length > 0 && (
+          {bulkFiles.length > 0 ? (
             <p style={{ fontSize: 13 }}>{t('cms.upload.bulkCount', { count: bulkFiles.length })}</p>
-          )}
+          ) : null}
 
           <button className="btn btn-primary" onClick={handleBulkUpload} disabled={uploading || bulkFiles.length === 0}>
             {uploading ? t('cms.upload.uploading') : t('cms.upload.bulkStart')}
           </button>
 
-          {uploading && (
+          {uploading ? (
             <div style={{ marginTop: 12 }}>
               <div className="progress-bar">
                 <div className="progress-bar-fill" style={{ width: `${progress}%` }} />
               </div>
             </div>
-          )}
+          ) : null}
 
-          {bulkResults.length > 0 && (
+          {bulkResults.length > 0 ? (
             <div style={{ marginTop: 16 }}>
               <h3>{t('cms.upload.bulkResults')}</h3>
-              {bulkResults.map((r, i) => (
-                <div key={i} style={{ fontSize: 13, padding: '4px 0', color: r.ok ? 'var(--color-success)' : 'var(--color-danger)' }}>
-                  {r.name}: {r.ok ? t('cms.upload.bulkOk') : r.error}
+              {bulkResults.map((result, index) => (
+                <div
+                  key={index}
+                  style={{
+                    fontSize: 13,
+                    padding: '4px 0',
+                    color: result.ok ? 'var(--color-success)' : 'var(--color-danger)',
+                  }}
+                >
+                  {result.name}: {result.ok ? t('cms.upload.bulkOk') : result.error}
                 </div>
               ))}
             </div>
-          )}
+          ) : null}
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="card" style={{ padding: 24 }}>
@@ -252,7 +249,7 @@ export function CmsContentUploadPage() {
               required
               maxLength={300}
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(event) => setTitle(event.target.value)}
               placeholder={t('cms.upload.titlePlaceholder')}
             />
           </div>
@@ -261,7 +258,7 @@ export function CmsContentUploadPage() {
             <label>{t('cms.upload.description')}</label>
             <textarea
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(event) => setDescription(event.target.value)}
               rows={3}
               placeholder={t('cms.upload.descriptionPlaceholder')}
             />
@@ -270,32 +267,38 @@ export function CmsContentUploadPage() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <div className="form-field">
               <label>{t('cms.upload.contentType')}</label>
-              <select required value={contentType} onChange={(e) => setContentType(e.target.value)}>
-                {CONTENT_TYPES.map((ct) => (
-                  <option key={ct} value={ct}>{t(`cms.contentTypes.${ct}`, ct)}</option>
+              <select required value={contentType} onChange={(event) => setContentType(event.target.value)}>
+                {CONTENT_TYPES.map((currentType) => (
+                  <option key={currentType} value={currentType}>
+                    {t(`cms.contentTypes.${currentType}`, currentType)}
+                  </option>
                 ))}
               </select>
             </div>
 
             <div className="form-field">
               <label>{t('cms.upload.level')}</label>
-              <select value={levelBand} onChange={(e) => setLevelBand(e.target.value)}>
+              <select value={levelBand} onChange={(event) => setLevelBand(event.target.value)}>
                 <option value="">{t('cms.content.allLevels')}</option>
-                {LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
+                {LEVELS.map((level) => <option key={level} value={level}>{level}</option>)}
               </select>
             </div>
 
             <div className="form-field">
               <label>{t('cms.upload.subject')}</label>
-              <select value={subject} onChange={(e) => setSubject(e.target.value)}>
+              <select value={subject} onChange={(event) => setSubject(event.target.value)}>
                 <option value="">{t('cms.content.allSubjects')}</option>
-                {SUBJECTS.map((s) => <option key={s} value={s}>{t(`cms.subjects.${s}`, s)}</option>)}
+                {SUBJECTS.map((currentSubject) => (
+                  <option key={currentSubject} value={currentSubject}>
+                    {t(`cms.subjects.${currentSubject}`, currentSubject)}
+                  </option>
+                ))}
               </select>
             </div>
 
             <div className="form-field">
               <label>{t('cms.upload.language')}</label>
-              <select value={language} onChange={(e) => setLanguage(e.target.value)}>
+              <select value={language} onChange={(event) => setLanguage(event.target.value)}>
                 <option value="fr">Francais</option>
                 <option value="ar">Arabe</option>
                 <option value="en">English</option>
@@ -308,13 +311,13 @@ export function CmsContentUploadPage() {
             <input
               type="file"
               accept={ACCEPT_MAP[contentType] || '*'}
-              onChange={(e) => setMainFile(e.target.files?.[0] || null)}
+              onChange={(event) => setMainFile(event.target.files?.[0] || null)}
             />
-            {mainFile && contentType === 'video' && mainFile.size > 100 * 1024 * 1024 && (
+            {mainFile && contentType === 'video' && mainFile.size > 100 * 1024 * 1024 ? (
               <p style={{ fontSize: 12, color: 'var(--color-warning)', marginTop: 4 }}>
                 {t('cms.upload.largeFileWarning')}
               </p>
-            )}
+            ) : null}
           </div>
 
           <div className="form-field">
@@ -322,18 +325,18 @@ export function CmsContentUploadPage() {
             <input
               type="file"
               accept="image/*"
-              onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)}
+              onChange={(event) => setThumbnailFile(event.target.files?.[0] || null)}
             />
           </div>
 
-          {uploading && (
+          {uploading ? (
             <div style={{ marginBottom: 12 }}>
               <div className="progress-bar">
                 <div className="progress-bar-fill" style={{ width: `${progress}%` }} />
               </div>
               <p style={{ fontSize: 12, textAlign: 'center', marginTop: 4 }}>{progress}%</p>
             </div>
-          )}
+          ) : null}
 
           <div style={{ display: 'flex', gap: 12 }}>
             <button type="submit" className="btn btn-primary" disabled={uploading || !title}>

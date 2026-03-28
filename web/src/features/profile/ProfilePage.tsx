@@ -8,13 +8,19 @@
  * Calls GET/PUT /me/profile for role-specific profile fields.
  */
 
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/services/auth/AuthContext';
 import { LanguageSwitcher } from '@/shared/ui/LanguageSwitcher';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
-import { api, ApiClientError } from '@/services/api/client';
+import {
+  useChangePassword,
+  useProfileChildren,
+  useProfileData,
+  useSaveProfileData,
+} from './useProfile';
+import type { ChildEntry, ProfileResponse } from './profile.service';
 
 /** Password policy rules — mirrors backend app/core/password_policy.py */
 const PASSWORD_RULES = [
@@ -25,116 +31,45 @@ const PASSWORD_RULES = [
   { key: 'special', test: (p: string) => /[^A-Za-z0-9]/.test(p) },
 ];
 
-type ProfileFieldValue = string | number | boolean | null | undefined;
-
-interface StudentProfileData {
-  student_number?: string | null;
-  date_of_birth?: string | null;
-  class_level?: string | null;
-  nationality?: string | null;
-  [key: string]: ProfileFieldValue;
-}
-
-interface ParentProfileData {
-  relationship_type?: string | null;
-  cin_number?: string | null;
-  address?: string | null;
-  profession?: string | null;
-  emergency_phone?: string | null;
-  [key: string]: ProfileFieldValue;
-}
-
-interface TeacherProfileData {
-  employee_id?: string | null;
-  subject_specialty?: string | null;
-  qualification?: string | null;
-  reward_points?: number | null;
-  [key: string]: ProfileFieldValue;
-}
-
-interface ProfileResponse {
-  student_profile?: StudentProfileData | null;
-  parent_profile?: ParentProfileData | null;
-  teacher_profile?: TeacherProfileData | null;
-}
-
 export function ProfilePage() {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  // Password change state
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
-
-  // Phase 4D — Role-specific profile state
-  const [profileData, setProfileData] = useState<ProfileResponse | null>(null);
-  const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [profileSuccess, setProfileSuccess] = useState(false);
   const [showProfileEdit, setShowProfileEdit] = useState(false);
   const [profileForm, setProfileForm] = useState<Record<string, string>>({});
+  const profileQuery = useProfileData();
+  const saveProfileMutation = useSaveProfileData();
+  const childrenQuery = useProfileChildren(user?.role === 'PAR');
+  const changePasswordMutation = useChangePassword();
+  const profileData: ProfileResponse | null = profileQuery.data ?? null;
+  const profileLoading = profileQuery.isLoading || saveProfileMutation.isPending;
+  const children: ChildEntry[] = childrenQuery.data ?? [];
+  const childrenLoading = childrenQuery.isLoading;
 
-  // Phase 4D-patch: My Children state (PAR only)
-  interface ChildEntry {
-    user_id: string;
-    full_name: string;
-    email: string;
-    link_id: string;
-    linked_at: string | null;
-    student_profile: {
-      class_level: string | null;
-      date_of_birth: string | null;
-      student_number: string | null;
-      nationality: string | null;
-    } | null;
-  }
-  const [children, setChildren] = useState<ChildEntry[]>([]);
-  const [childrenLoading, setChildrenLoading] = useState(false);
-
-  const fetchChildren = useCallback(async () => {
-    if (!user || user.role !== 'PAR') return;
-    setChildrenLoading(true);
-    try {
-      const res = await api.get<ChildEntry[]>('/me/children');
-      setChildren(res.data);
-    } catch { /* Parent may have no children linked */ }
-    finally { setChildrenLoading(false); }
-  }, [user]);
-
-  const fetchProfile = useCallback(async () => {
-    if (!user) return;
-    setProfileLoading(true);
-    try {
-      const res = await api.get<ProfileResponse>('/me/profile');
-      setProfileData(res.data);
-      // Init form from profile data
-      const p = res.data.student_profile || res.data.parent_profile || res.data.teacher_profile || {};
-      const form: Record<string, string> = {};
-      for (const [k, v] of Object.entries(p)) {
-        if (v !== null && v !== undefined && typeof v !== 'object') form[k] = String(v);
+  useEffect(() => {
+    const profile = profileData?.student_profile || profileData?.parent_profile || profileData?.teacher_profile || {};
+    const form: Record<string, string> = {};
+    for (const [key, value] of Object.entries(profile)) {
+      if (value !== null && value !== undefined && typeof value !== 'object') {
+        form[key] = String(value);
       }
-      setProfileForm(form);
-    } catch {
-      // Profile may not exist yet — that's OK
-    } finally {
-      setProfileLoading(false);
     }
-  }, [user]);
-
-  useEffect(() => { fetchProfile(); }, [fetchProfile]);
-  useEffect(() => { fetchChildren(); }, [fetchChildren]);
+    setProfileForm(form);
+  }, [profileData]);
 
   async function handleProfileSave(e: FormEvent) {
     e.preventDefault();
     setProfileError(null);
     setProfileSuccess(false);
-    setProfileLoading(true);
     try {
       const body: Record<string, string | null> = {};
       for (const [k, v] of Object.entries(profileForm)) {
@@ -142,14 +77,12 @@ export function ProfilePage() {
           body[k] = v || null;
         }
       }
-      await api.put('/me/profile', body);
+      await saveProfileMutation.mutateAsync(body);
       setProfileSuccess(true);
-      await fetchProfile();
+      await profileQuery.refetch();
       setShowProfileEdit(false);
     } catch (err) {
-      setProfileError(err instanceof ApiClientError ? err.message : t('app.error'));
-    } finally {
-      setProfileLoading(false);
+      setProfileError(err instanceof Error ? err.message : t('app.error'));
     }
   }
 
@@ -179,9 +112,8 @@ export function ProfilePage() {
       return;
     }
 
-    setPasswordLoading(true);
     try {
-      await api.post('/auth/change-password', {
+      await changePasswordMutation.mutateAsync({
         current_password: currentPassword,
         new_password: newPassword,
       });
@@ -190,9 +122,7 @@ export function ProfilePage() {
       setNewPassword('');
       setConfirmPassword('');
     } catch (err) {
-      setPasswordError(err instanceof ApiClientError ? err.message : t('app.error'));
-    } finally {
-      setPasswordLoading(false);
+      setPasswordError(err instanceof Error ? err.message : t('app.error'));
     }
   }
 
@@ -471,7 +401,7 @@ export function ProfilePage() {
                     onChange={(e) => setCurrentPassword(e.target.value)}
                     required
                     autoComplete="current-password"
-                    disabled={passwordLoading}
+                    disabled={changePasswordMutation.isPending}
                     style={{ width: '100%' }}
                   />
                 </div>
@@ -486,7 +416,7 @@ export function ProfilePage() {
                     required
                     minLength={12}
                     autoComplete="new-password"
-                    disabled={passwordLoading}
+                    disabled={changePasswordMutation.isPending}
                     style={{ width: '100%' }}
                   />
                 </div>
@@ -522,7 +452,7 @@ export function ProfilePage() {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
                     autoComplete="new-password"
-                    disabled={passwordLoading}
+                    disabled={changePasswordMutation.isPending}
                     style={{ width: '100%' }}
                   />
                   {confirmPassword.length > 0 && newPassword !== confirmPassword && (
@@ -536,9 +466,9 @@ export function ProfilePage() {
                   <button
                     type="submit"
                     className="btn btn-primary"
-                    disabled={passwordLoading || !currentPassword || !newPassword || newPassword !== confirmPassword}
+                    disabled={changePasswordMutation.isPending || !currentPassword || !newPassword || newPassword !== confirmPassword}
                   >
-                    {passwordLoading ? t('app.loading') : t('profile.changePassword')}
+                    {changePasswordMutation.isPending ? t('app.loading') : t('profile.changePassword')}
                   </button>
                   <button
                     type="button"

@@ -1,32 +1,15 @@
-/**
- * Fee Structures management page — CRUD for fee structures (ADM only).
- *
- * Reference: Phase 12A — Billing Management
- * Calls GET/POST/PUT /billing/fee-structures.
- */
-
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { api, ApiClientError } from '@/services/api/client';
+import { EmptyState } from '@/shared/ui/EmptyState';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
-import { EmptyState } from '@/shared/ui/EmptyState';
 import { formatCurrency } from '@/shared/i18n';
-
-interface FeeStructure {
-  id: string;
-  school_id: string;
-  academic_year_id: string;
-  name: string;
-  amount: number;
-  currency: string;
-  frequency: string;
-  due_day: number;
-  applies_to_level: string | null;
-  status: string;
-  created_at: string;
-  updated_at: string | null;
-}
+import {
+  useCreateFeeStructure,
+  useFeeStructures,
+  useUpdateFeeStructure,
+} from './useBilling';
+import type { FeeStructure } from './billing.service';
 
 interface FeeForm {
   academic_year_id: string;
@@ -50,129 +33,123 @@ const EMPTY_FEE_FORM: FeeForm = {
 
 export function FeeStructuresPage() {
   const { t } = useTranslation();
-  const [items, setItems] = useState<FeeStructure[]>([]);
-  const [loading, setLoading] = useState(true);
+  const feeStructuresQuery = useFeeStructures();
+  const createFeeStructureMutation = useCreateFeeStructure();
+  const updateFeeStructureMutation = useUpdateFeeStructure();
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<FeeForm>(EMPTY_FEE_FORM);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
 
-  const fetchFees = useCallback(async () => {
-    try {
-      const resp = await api.list<FeeStructure>('/billing/fee-structures');
-      setItems(resp.data);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
-  }, [t]);
+  if (feeStructuresQuery.isLoading) {
+    return <LoadingState />;
+  }
 
-  useEffect(() => {
-    setLoading(true);
-    fetchFees().finally(() => setLoading(false));
-  }, [fetchFees]);
+  const items = feeStructuresQuery.data ?? [];
+  const saving = createFeeStructureMutation.isPending || updateFeeStructureMutation.isPending;
+
+  function openCreate() {
+    setForm(EMPTY_FEE_FORM);
+    setEditingId(null);
+    setShowForm(true);
+    setError(null);
+  }
+
+  function openEdit(item: FeeStructure) {
+    setForm({
+      academic_year_id: item.academic_year_id,
+      name: item.name,
+      amount: String(item.amount),
+      currency: item.currency,
+      frequency: item.frequency,
+      due_day: String(item.due_day),
+      applies_to_level: item.applies_to_level || '',
+    });
+    setEditingId(item.id);
+    setShowForm(true);
+    setError(null);
+  }
 
   async function handleSave() {
-    setSaving(true);
-    try {
-      const payload = {
-        name: form.name,
-        amount: parseFloat(form.amount),
-        currency: form.currency,
-        frequency: form.frequency,
-        due_day: parseInt(form.due_day, 10),
-        applies_to_level: form.applies_to_level || undefined,
-        ...(editingId ? {} : { academic_year_id: form.academic_year_id || undefined }),
-        ...(editingId ? { status: undefined } : {}),
-      };
+    setError(null);
 
+    const payload = {
+      academic_year_id: form.academic_year_id || undefined,
+      name: form.name,
+      amount: Number.parseFloat(form.amount),
+      currency: form.currency,
+      frequency: form.frequency,
+      due_day: Number.parseInt(form.due_day, 10),
+      applies_to_level: form.applies_to_level || undefined,
+    };
+
+    try {
       if (editingId) {
-        await api.put(`/billing/fee-structures/${editingId}`, payload);
+        await updateFeeStructureMutation.mutateAsync({
+          feeStructureId: editingId,
+          payload,
+        });
       } else {
-        await api.post('/billing/fee-structures', payload);
+        await createFeeStructureMutation.mutateAsync(payload);
       }
       setShowForm(false);
       setForm(EMPTY_FEE_FORM);
       setEditingId(null);
-      await fetchFees();
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    } finally {
-      setSaving(false);
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : t('app.error'));
     }
   }
 
-  function openEdit(fee: FeeStructure) {
-    setForm({
-      academic_year_id: fee.academic_year_id,
-      name: fee.name,
-      amount: String(fee.amount),
-      currency: fee.currency,
-      frequency: fee.frequency,
-      due_day: String(fee.due_day),
-      applies_to_level: fee.applies_to_level || '',
-    });
-    setEditingId(fee.id);
-    setShowForm(true);
-  }
-
-  function getStatusColor(status: string): string {
-    return status === 'ACTIVE' ? '#10b981' : '#6b7280';
-  }
-
-  if (loading) return <LoadingState />;
-
   return (
     <div className="page">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <h1 className="page-title" style={{ marginBottom: 0 }}>{t('billing.feeStructures.title')}</h1>
-        <button
-          className="btn btn-primary"
-          onClick={() => {
-            setForm(EMPTY_FEE_FORM);
-            setEditingId(null);
-            setShowForm(true);
-          }}
-        >
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 24,
+        }}
+      >
+        <h1 className="page-title" style={{ marginBottom: 0 }}>
+          {t('billing.feeStructures.title')}
+        </h1>
+        <button className="btn btn-primary" onClick={openCreate}>
           + {t('billing.feeStructures.create')}
         </button>
       </div>
 
-      <ErrorBanner error={error} onDismiss={() => setError(null)} onRetry={fetchFees} />
+      <ErrorBanner
+        error={error || (feeStructuresQuery.error instanceof Error ? feeStructuresQuery.error.message : null)}
+        onDismiss={() => setError(null)}
+        onRetry={() => void feeStructuresQuery.refetch()}
+      />
 
       {items.length === 0 ? (
-        <EmptyState message={t('billing.feeStructures.empty')} icon="💰" />
+        <EmptyState message={t('billing.feeStructures.empty')} icon="💳" />
       ) : (
-        <div className="table-container">
+        <div className="card">
           <table className="data-table">
             <thead>
               <tr>
                 <th>{t('billing.feeStructures.name')}</th>
                 <th>{t('billing.feeStructures.amount')}</th>
                 <th>{t('billing.feeStructures.frequency')}</th>
-                <th>{t('billing.feeStructures.dueDay')}</th>
                 <th>{t('billing.feeStructures.level')}</th>
                 <th>{t('billing.feeStructures.status')}</th>
-                <th>{t('billing.feeStructures.actions')}</th>
+                <th>{t('app.actions')}</th>
               </tr>
             </thead>
             <tbody>
-              {items.map((fee) => (
-                <tr key={fee.id}>
-                  <td style={{ fontWeight: 600 }}>{fee.name}</td>
-                  <td>{formatCurrency(fee.amount, fee.currency)}</td>
-                  <td>{t(`billing.frequencies.${fee.frequency}`, fee.frequency)}</td>
-                  <td>{fee.due_day}</td>
-                  <td>{fee.applies_to_level || '—'}</td>
+              {items.map((item) => (
+                <tr key={item.id}>
+                  <td>{item.name}</td>
+                  <td>{formatCurrency(item.amount, item.currency)}</td>
+                  <td>{t(`billing.frequencies.${item.frequency}`, item.frequency)}</td>
+                  <td>{item.applies_to_level || '—'}</td>
+                  <td>{item.status}</td>
                   <td>
-                    <span className="status-badge" style={{ color: getStatusColor(fee.status), borderColor: getStatusColor(fee.status) }}>
-                      {t(`billing.statuses.${fee.status}`, fee.status)}
-                    </span>
-                  </td>
-                  <td>
-                    <button className="btn btn-sm btn-secondary" onClick={() => openEdit(fee)}>
-                      ✏️ {t('billing.feeStructures.edit')}
+                    <button className="btn btn-sm btn-secondary" onClick={() => openEdit(item)}>
+                      {t('billing.feeStructures.edit')}
                     </button>
                   </td>
                 </tr>
@@ -182,25 +159,37 @@ export function FeeStructuresPage() {
         </div>
       )}
 
-      {/* Create/Edit Modal */}
-      {showForm && (
+      {showForm ? (
         <div className="modal-overlay" onClick={() => setShowForm(false)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-card" onClick={(event) => event.stopPropagation()}>
             <h2 style={{ marginBottom: 16 }}>
               {editingId ? t('billing.feeStructures.edit') : t('billing.feeStructures.create')}
             </h2>
             <div className="form-field">
               <label>{t('billing.feeStructures.name')}</label>
-              <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <input
+                type="text"
+                value={form.name}
+                onChange={(event) => setForm({ ...form, name: event.target.value })}
+              />
             </div>
             <div style={{ display: 'flex', gap: 12 }}>
               <div className="form-field" style={{ flex: 1 }}>
                 <label>{t('billing.feeStructures.amount')}</label>
-                <input type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
+                <input
+                  type="number"
+                  step="0.01"
+                  value={form.amount}
+                  onChange={(event) => setForm({ ...form, amount: event.target.value })}
+                />
               </div>
               <div className="form-field" style={{ flex: 1 }}>
                 <label>{t('billing.feeStructures.currency')}</label>
-                <select className="filter-select" value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })}>
+                <select
+                  className="filter-select"
+                  value={form.currency}
+                  onChange={(event) => setForm({ ...form, currency: event.target.value })}
+                >
                   <option value="MAD">MAD</option>
                   <option value="EUR">EUR</option>
                   <option value="USD">USD</option>
@@ -210,7 +199,11 @@ export function FeeStructuresPage() {
             <div style={{ display: 'flex', gap: 12 }}>
               <div className="form-field" style={{ flex: 1 }}>
                 <label>{t('billing.feeStructures.frequency')}</label>
-                <select className="filter-select" value={form.frequency} onChange={(e) => setForm({ ...form, frequency: e.target.value })}>
+                <select
+                  className="filter-select"
+                  value={form.frequency}
+                  onChange={(event) => setForm({ ...form, frequency: event.target.value })}
+                >
                   <option value="monthly">{t('billing.frequencies.monthly')}</option>
                   <option value="trimester">{t('billing.frequencies.trimester')}</option>
                   <option value="annual">{t('billing.frequencies.annual')}</option>
@@ -219,21 +212,41 @@ export function FeeStructuresPage() {
               </div>
               <div className="form-field" style={{ flex: 1 }}>
                 <label>{t('billing.feeStructures.dueDay')}</label>
-                <input type="number" min="1" max="28" value={form.due_day} onChange={(e) => setForm({ ...form, due_day: e.target.value })} />
+                <input
+                  type="number"
+                  min="1"
+                  max="28"
+                  value={form.due_day}
+                  onChange={(event) => setForm({ ...form, due_day: event.target.value })}
+                />
               </div>
             </div>
             <div className="form-field">
               <label>{t('billing.feeStructures.level')}</label>
-              <input type="text" value={form.applies_to_level} onChange={(e) => setForm({ ...form, applies_to_level: e.target.value })} placeholder={t('billing.feeStructures.levelPlaceholder')} />
+              <input
+                type="text"
+                value={form.applies_to_level}
+                onChange={(event) => setForm({ ...form, applies_to_level: event.target.value })}
+                placeholder={t('billing.feeStructures.levelPlaceholder')}
+              />
             </div>
-            {!editingId && (
+            {!editingId ? (
               <div className="form-field">
                 <label>{t('billing.feeStructures.academicYear')}</label>
-                <input type="text" value={form.academic_year_id} onChange={(e) => setForm({ ...form, academic_year_id: e.target.value })} placeholder="UUID" />
+                <input
+                  type="text"
+                  value={form.academic_year_id}
+                  onChange={(event) => setForm({ ...form, academic_year_id: event.target.value })}
+                  placeholder="UUID"
+                />
               </div>
-            )}
+            ) : null}
             <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
-              <button className="btn btn-primary" onClick={handleSave} disabled={saving || !form.name || !form.amount}>
+              <button
+                className="btn btn-primary"
+                onClick={handleSave}
+                disabled={saving || !form.name || !form.amount}
+              >
                 {saving ? t('app.loading') : t('app.save')}
               </button>
               <button className="btn btn-secondary" onClick={() => setShowForm(false)}>
@@ -242,7 +255,7 @@ export function FeeStructuresPage() {
             </div>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

@@ -7,103 +7,113 @@
  * PRINTABLE_PDF: Download exercise → Upload solution → Finalize (POST /submissions/{id}/submit).
  */
 
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { api, ApiClientError, getAccessToken } from '@/services/api/client';
+import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
+import { EmptyState } from '@/shared/ui/EmptyState';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
-import { EmptyState } from '@/shared/ui/EmptyState';
 import { FileUpload } from '@/shared/ui/FileUpload';
-
-interface AssignmentOption {
-  id: string;
-  title: string;
-  course_id: string;
-  due_at: string | null;
-  total_points: number;
-  exercise_type?: string;
-  exercise_pdf_path?: string | null;
-}
+import { toBannerError } from '@/shared/ui/errorUtils';
+import {
+  useCreateStudentSubmission,
+  useDownloadExercisePdf,
+  useFinalizeStudentSubmission,
+  useSubmissionAssignments,
+  useUploadSubmissionFile,
+} from './useSubmissions';
+import type { AssignmentOption } from './submissions.service';
 
 type SubmitStep = 'select' | 'uploading' | 'done';
 
 export function StudentSubmissionPage() {
   const { t } = useTranslation();
-  const [assignments, setAssignments] = useState<AssignmentOption[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
   const [selectedAssignmentId, setSelectedAssignmentId] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [step, setStep] = useState<SubmitStep>('select');
-  const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [localError, setLocalError] = useState<string | null>(null);
+  const assignmentsQuery = useSubmissionAssignments();
+  const createSubmissionMutation = useCreateStudentSubmission();
+  const uploadFileMutation = useUploadSubmissionFile();
+  const finalizeSubmissionMutation = useFinalizeStudentSubmission();
+  const downloadExerciseMutation = useDownloadExercisePdf();
+  const assignments: AssignmentOption[] = useMemo(() => assignmentsQuery.data ?? [], [assignmentsQuery.data]);
+  const selectedAssignment = assignments.find((assignment) => assignment.id === selectedAssignmentId);
+  const dismissibleError = useDismissibleError(
+    useMemo(
+      () =>
+        localError ||
+        toBannerError(
+          assignmentsQuery.error ??
+            createSubmissionMutation.error ??
+            uploadFileMutation.error ??
+            finalizeSubmissionMutation.error ??
+            downloadExerciseMutation.error,
+          t('app.error')
+        ),
+      [
+        assignmentsQuery.error,
+        createSubmissionMutation.error,
+        downloadExerciseMutation.error,
+        finalizeSubmissionMutation.error,
+        localError,
+        t,
+        uploadFileMutation.error,
+      ]
+    )
+  );
 
-  const fetchAssignments = useCallback(async () => {
-    try {
-      const resp = await api.list<AssignmentOption>('/assignments');
-      setAssignments(resp.data);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    if (!selectedAssignmentId) {
+      return;
     }
-  }, [t]);
 
-  useEffect(() => {
-    setLoading(true);
-    fetchAssignments().finally(() => setLoading(false));
-  }, [fetchAssignments]);
-
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    if (!selectedAssignmentId) return;
-    setSubmitting(true);
-    setError(null);
+    setLocalError(null);
     setStep('uploading');
+    setUploadProgress(0);
 
     try {
-      // 1. Create submission
-      const resp = await api.post<{ id: string }>('/submissions', {
-        assignment_id: selectedAssignmentId,
-      });
-      const submissionId = resp.data.id;
-
-      // 2. Upload files one by one
+      const submission = await createSubmissionMutation.mutateAsync(selectedAssignmentId);
+      const submissionId = submission.id;
       const isPrintablePdf = selectedAssignment?.exercise_type === 'PRINTABLE_PDF';
-      for (let i = 0; i < files.length; i++) {
-        const formData = new FormData();
-        formData.append('file', files[i]);
-        // Phase 10B: add file_type_hint for PRINTABLE_PDF submissions
-        if (isPrintablePdf) {
-          const hint = files[i].type?.startsWith('image/') ? 'SOLUTION_PHOTO' : 'SOLUTION_SCAN';
-          formData.append('file_type_hint', hint);
-        }
 
-        const token = getAccessToken();
-        const headers: Record<string, string> = {};
-        if (token) headers['Authorization'] = `Bearer ${token}`;
+      for (let index = 0; index < files.length; index += 1) {
+        const file = files[index];
+        const fileTypeHint = isPrintablePdf
+          ? file.type?.startsWith('image/')
+            ? 'SOLUTION_PHOTO'
+            : 'SOLUTION_SCAN'
+          : undefined;
 
-        await fetch(`/api/v1/submissions/${submissionId}/files`, {
-          method: 'POST',
-          credentials: 'include',
-          headers,
-          body: formData,
+        await uploadFileMutation.mutateAsync({
+          submissionId,
+          file,
+          fileTypeHint,
         });
-        setUploadProgress(i + 1);
+        setUploadProgress(index + 1);
       }
 
-      // Phase 10B: finalize PRINTABLE_PDF draft submission
       if (isPrintablePdf) {
-        await api.post(`/submissions/${submissionId}/submit`);
+        await finalizeSubmissionMutation.mutateAsync(submissionId);
       }
 
       setStep('done');
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
+    } catch (error) {
+      setLocalError(error instanceof Error ? error.message : t('app.error'));
       setStep('select');
-    } finally {
-      setSubmitting(false);
     }
+  }
+
+  async function handleDownloadPdf(assignmentId: string) {
+    const blob = await downloadExerciseMutation.mutateAsync(assignmentId);
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `exercise_${assignmentId}.pdf`;
+    anchor.click();
+    URL.revokeObjectURL(url);
   }
 
   function handleReset() {
@@ -111,18 +121,18 @@ export function StudentSubmissionPage() {
     setFiles([]);
     setStep('select');
     setUploadProgress(0);
-    setError(null);
+    setLocalError(null);
   }
 
-  if (loading) return <LoadingState />;
-
-  const selectedAssignment = assignments.find((a) => a.id === selectedAssignmentId);
+  if (assignmentsQuery.isLoading) {
+    return <LoadingState />;
+  }
 
   return (
     <div className="page">
       <h1 className="page-title">{t('studentSubmission.title')}</h1>
 
-      <ErrorBanner error={error} onDismiss={() => setError(null)} />
+      <ErrorBanner error={dismissibleError.error} onDismiss={dismissibleError.dismiss} />
 
       {step === 'done' && (
         <div className="card" style={{ maxWidth: 500 }}>
@@ -143,29 +153,27 @@ export function StudentSubmissionPage() {
           {assignments.length === 0 ? (
             <EmptyState message={t('studentSubmission.noAssignments')} />
           ) : (
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={(event) => void handleSubmit(event)}>
               <div className="card" style={{ maxWidth: 600 }}>
-                {/* Assignment selection */}
                 <div className="form-field" style={{ marginBottom: 16 }}>
                   <label>{t('studentSubmission.selectAssignment')}</label>
                   <select
                     className="filter-select"
                     value={selectedAssignmentId}
-                    onChange={(e) => setSelectedAssignmentId(e.target.value)}
-                    disabled={submitting}
+                    onChange={(event) => setSelectedAssignmentId(event.target.value)}
+                    disabled={createSubmissionMutation.isPending || uploadFileMutation.isPending}
                     required
                     style={{ width: '100%' }}
                   >
                     <option value="">{t('studentSubmission.choosePlaceholder')}</option>
-                    {assignments.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.title} ({a.total_points} pts)
+                    {assignments.map((assignment) => (
+                      <option key={assignment.id} value={assignment.id}>
+                        {assignment.title} ({assignment.total_points} pts)
                       </option>
                     ))}
                   </select>
                 </div>
 
-                {/* Assignment info */}
                 {selectedAssignment && (
                   <div style={{ marginBottom: 16, padding: 12, background: 'var(--color-bg)', borderRadius: 'var(--radius)', fontSize: 13 }}>
                     <div><strong>{selectedAssignment.title}</strong></div>
@@ -185,46 +193,24 @@ export function StudentSubmissionPage() {
                   </div>
                 )}
 
-                {/* Phase 10B: PDF exercise download */}
                 {selectedAssignment?.exercise_type === 'PRINTABLE_PDF' && selectedAssignment.exercise_pdf_path && (
                   <div style={{ marginBottom: 16, padding: 12, background: 'var(--color-bg)', borderRadius: 'var(--radius)', border: '1px solid var(--color-primary)' }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
-                      {t('studentSubmission.pdfExercise')}
-                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{t('studentSubmission.pdfExercise')}</div>
                     <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', margin: '0 0 8px' }}>
                       {t('studentSubmission.pdfInstructions')}
                     </p>
-                    <a
-                      href={`/api/v1/assignments/${selectedAssignment.id}/exercise-pdf`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      type="button"
                       className="btn btn-primary"
-                      style={{ fontSize: 12, textDecoration: 'none', display: 'inline-block' }}
-                      onClick={(e) => {
-                        // Attach auth header via fetch download
-                        e.preventDefault();
-                        const token = getAccessToken();
-                        fetch(`/api/v1/assignments/${selectedAssignment.id}/exercise-pdf`, {
-                          headers: token ? { Authorization: `Bearer ${token}` } : {},
-                          credentials: 'include',
-                        })
-                          .then((r) => r.blob())
-                          .then((blob) => {
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = `exercise_${selectedAssignment.id}.pdf`;
-                            a.click();
-                            URL.revokeObjectURL(url);
-                          });
-                      }}
+                      style={{ fontSize: 12 }}
+                      onClick={() => void handleDownloadPdf(selectedAssignment.id)}
+                      disabled={downloadExerciseMutation.isPending}
                     >
-                      {t('studentSubmission.downloadPdf')}
-                    </a>
+                      {downloadExerciseMutation.isPending ? t('app.loading') : t('studentSubmission.downloadPdf')}
+                    </button>
                   </div>
                 )}
 
-                {/* File upload */}
                 <div className="form-field" style={{ marginBottom: 16 }}>
                   <label>{t('studentSubmission.attachFiles')}</label>
                   <FileUpload
@@ -232,11 +218,10 @@ export function StudentSubmissionPage() {
                     accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.zip"
                     maxFiles={5}
                     maxSizeMb={25}
-                    disabled={submitting}
+                    disabled={createSubmissionMutation.isPending || uploadFileMutation.isPending}
                   />
                 </div>
 
-                {/* Upload progress */}
                 {step === 'uploading' && files.length > 0 && (
                   <div style={{ marginBottom: 16 }}>
                     <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 4 }}>
@@ -256,13 +241,12 @@ export function StudentSubmissionPage() {
                   </div>
                 )}
 
-                {/* Submit */}
                 <button
                   type="submit"
                   className="btn btn-primary"
-                  disabled={submitting || !selectedAssignmentId}
+                  disabled={createSubmissionMutation.isPending || uploadFileMutation.isPending || !selectedAssignmentId}
                 >
-                  {submitting ? t('app.loading') : t('studentSubmission.submit')}
+                  {createSubmissionMutation.isPending || uploadFileMutation.isPending ? t('app.loading') : t('studentSubmission.submit')}
                 </button>
               </div>
             </form>
@@ -272,4 +256,3 @@ export function StudentSubmissionPage() {
     </div>
   );
 }
-

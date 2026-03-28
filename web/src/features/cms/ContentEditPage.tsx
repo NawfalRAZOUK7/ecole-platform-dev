@@ -1,31 +1,14 @@
-/**
- * CMS Content Edit — edit metadata, replace files, publish/archive.
- *
- * Phase 10A — loads content by ID, allows editing all metadata fields
- * and changing status (draft/published/archived).
- */
-
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { api, ApiClientError, getAccessToken } from '@/services/api/client';
-import { LoadingState } from '@/shared/ui/LoadingState';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
-
-interface ContentItem {
-  id: string;
-  title: string;
-  content_type: string;
-  level_band: string | null;
-  language: string | null;
-  subject: string | null;
-  description: string | null;
-  thumbnail_path: string | null;
-  origin: string;
-  status: string;
-  created_by: string | null;
-  original_content_id: string | null;
-}
+import { LoadingState } from '@/shared/ui/LoadingState';
+import {
+  useCmsContentItem,
+  useDeleteCmsContent,
+  useUpdateCmsContent,
+  useUploadCmsContentAsset,
+} from './useCms';
 
 const CONTENT_TYPES = ['video', 'pdf', 'audio', 'interactive'];
 const LEVELS = ['maternelle', 'cp', 'ce1', 'ce2', 'cm1', 'cm2', '6eme', '5eme', '4eme', '3eme', '2nde', '1ere', 'terminale'];
@@ -35,14 +18,11 @@ export function CmsContentEditPage() {
   const { contentId } = useParams<{ contentId: string }>();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const contentQuery = useCmsContentItem(contentId);
+  const updateContentMutation = useUpdateCmsContent();
+  const deleteContentMutation = useDeleteCmsContent();
+  const uploadContentAssetMutation = useUploadCmsContentAsset();
 
-  const [item, setItem] = useState<ContentItem | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
-
-  // Form state
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [contentType, setContentType] = useState('');
@@ -50,100 +30,83 @@ export function CmsContentEditPage() {
   const [subject, setSubject] = useState('');
   const [language, setLanguage] = useState('');
   const [status, setStatus] = useState('');
-
-  // File replacement
   const [newFile, setNewFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
-
-  const fetchContent = useCallback(async () => {
-    try {
-      // Use the cms endpoint to get full details
-      const resp = await api.list<ContentItem>('/cms/content', { limit: 50 });
-      const found = resp.data.find((c) => c.id === contentId);
-      if (!found) {
-        setError(t('errors.not_found'));
-        return;
-      }
-      setItem(found);
-      setTitle(found.title);
-      setDescription(found.description || '');
-      setContentType(found.content_type);
-      setLevelBand(found.level_band || '');
-      setSubject(found.subject || '');
-      setLanguage(found.language || '');
-      setStatus(found.status);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
-  }, [contentId, t]);
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    setLoading(true);
-    fetchContent().finally(() => setLoading(false));
-  }, [fetchContent]);
+    if (!contentQuery.data) return;
+    setTitle(contentQuery.data.title);
+    setDescription(contentQuery.data.description || '');
+    setContentType(contentQuery.data.content_type);
+    setLevelBand(contentQuery.data.level_band || '');
+    setSubject(contentQuery.data.subject || '');
+    setLanguage(contentQuery.data.language || '');
+    setStatus(contentQuery.data.status);
+  }, [contentQuery.data]);
 
-  async function handleSave(e: FormEvent) {
-    e.preventDefault();
-    setSaving(true);
+  if (contentQuery.isLoading) {
+    return <LoadingState />;
+  }
+
+  if (!contentQuery.data) {
+    return (
+      <div className="page">
+        <ErrorBanner error={error || (contentQuery.error instanceof Error ? contentQuery.error.message : t('errors.not_found'))} />
+        <button className="btn" onClick={() => navigate('/cms')}>{t('app.back')}</button>
+      </div>
+    );
+  }
+
+  const saving =
+    updateContentMutation.isPending ||
+    deleteContentMutation.isPending ||
+    uploadContentAssetMutation.isPending;
+
+  async function handleSave(event: FormEvent) {
+    event.preventDefault();
     setError(null);
     setSaved(false);
 
     try {
-      await api.put(`/cms/content/${contentId}`, {
-        title,
-        content_type: contentType,
-        level_band: levelBand || null,
-        language: language || null,
-        subject: subject || null,
-        description: description || null,
-        status,
+      await updateContentMutation.mutateAsync({
+        contentId: contentId!,
+        payload: {
+          title,
+          content_type: contentType,
+          level_band: levelBand || null,
+          language: language || null,
+          subject: subject || null,
+          description: description || null,
+          status,
+        },
       });
 
-      // Upload replacement file if provided
       if (newFile) {
         setUploadProgress(0);
-        const formData = new FormData();
-        formData.append('file', newFile);
-        await new Promise<void>((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          xhr.open('POST', `/api/v1/content-items/${contentId}/assets`);
-          const token = getAccessToken();
-          if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-          xhr.upload.onprogress = (ev) => {
-            if (ev.lengthComputable) setUploadProgress(Math.round((ev.loaded / ev.total) * 100));
-          };
-          xhr.onload = () => (xhr.status < 300 ? resolve() : reject(new Error(`Upload failed: ${xhr.status}`)));
-          xhr.onerror = () => reject(new Error('Network error'));
-          xhr.send(formData);
+        await uploadContentAssetMutation.mutateAsync({
+          contentId: contentId!,
+          file: newFile,
+          onProgress: setUploadProgress,
         });
         setNewFile(null);
       }
 
       setSaved(true);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    } finally {
-      setSaving(false);
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : t('app.error'));
     }
   }
 
   async function handleArchive() {
+    setError(null);
     try {
-      await api.delete(`/cms/content/${contentId}`);
+      await deleteContentMutation.mutateAsync(contentId!);
       navigate('/cms');
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
+    } catch (archiveError) {
+      setError(archiveError instanceof Error ? archiveError.message : t('app.error'));
     }
-  }
-
-  if (loading) return <LoadingState />;
-  if (!item && error) {
-    return (
-      <div className="page">
-        <ErrorBanner error={error} />
-        <button className="btn" onClick={() => navigate('/cms')}>{t('app.back')}</button>
-      </div>
-    );
   }
 
   return (
@@ -153,53 +116,54 @@ export function CmsContentEditPage() {
         <button className="btn" onClick={() => navigate('/cms')}>{t('app.back')}</button>
       </div>
 
-      <ErrorBanner error={error} onDismiss={() => setError(null)} />
-      {saved && (
-        <div className="alert alert-success" style={{ marginBottom: 16, padding: 12, borderRadius: 8 }}>
-          {t('cms.edit.saved')}
-        </div>
-      )}
+      <ErrorBanner
+        error={error || (contentQuery.error instanceof Error ? contentQuery.error.message : null)}
+        onDismiss={() => setError(null)}
+      />
+      {saved ? <div className="alert alert-success" style={{ marginBottom: 16, padding: 12, borderRadius: 8 }}>{t('app.saved')}</div> : null}
 
       <form onSubmit={handleSave} className="card" style={{ padding: 24 }}>
         <div className="form-field">
           <label>{t('cms.upload.titleLabel')}</label>
-          <input type="text" required maxLength={300} value={title} onChange={(e) => setTitle(e.target.value)} />
+          <input type="text" value={title} onChange={(event) => setTitle(event.target.value)} required />
         </div>
 
         <div className="form-field">
           <label>{t('cms.upload.description')}</label>
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+          <textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={4} />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
           <div className="form-field">
             <label>{t('cms.upload.contentType')}</label>
-            <select value={contentType} onChange={(e) => setContentType(e.target.value)}>
-              {CONTENT_TYPES.map((ct) => (
-                <option key={ct} value={ct}>{t(`cms.contentTypes.${ct}`, ct)}</option>
+            <select value={contentType} onChange={(event) => setContentType(event.target.value)}>
+              {CONTENT_TYPES.map((currentType) => (
+                <option key={currentType} value={currentType}>{t(`cms.contentTypes.${currentType}`, currentType)}</option>
               ))}
             </select>
           </div>
 
           <div className="form-field">
             <label>{t('cms.upload.level')}</label>
-            <select value={levelBand} onChange={(e) => setLevelBand(e.target.value)}>
+            <select value={levelBand} onChange={(event) => setLevelBand(event.target.value)}>
               <option value="">{t('cms.content.allLevels')}</option>
-              {LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
+              {LEVELS.map((level) => <option key={level} value={level}>{level}</option>)}
             </select>
           </div>
 
           <div className="form-field">
             <label>{t('cms.upload.subject')}</label>
-            <select value={subject} onChange={(e) => setSubject(e.target.value)}>
+            <select value={subject} onChange={(event) => setSubject(event.target.value)}>
               <option value="">{t('cms.content.allSubjects')}</option>
-              {SUBJECTS.map((s) => <option key={s} value={s}>{t(`cms.subjects.${s}`, s)}</option>)}
+              {SUBJECTS.map((currentSubject) => (
+                <option key={currentSubject} value={currentSubject}>{t(`cms.subjects.${currentSubject}`, currentSubject)}</option>
+              ))}
             </select>
           </div>
 
           <div className="form-field">
             <label>{t('cms.upload.language')}</label>
-            <select value={language} onChange={(e) => setLanguage(e.target.value)}>
+            <select value={language} onChange={(event) => setLanguage(event.target.value)}>
               <option value="fr">Francais</option>
               <option value="ar">Arabe</option>
               <option value="en">English</option>
@@ -209,7 +173,7 @@ export function CmsContentEditPage() {
 
         <div className="form-field">
           <label>{t('cms.edit.status')}</label>
-          <select value={status} onChange={(e) => setStatus(e.target.value)}>
+          <select value={status} onChange={(event) => setStatus(event.target.value)}>
             <option value="draft">{t('cms.statuses.draft')}</option>
             <option value="published">{t('cms.statuses.published')}</option>
             <option value="archived">{t('cms.statuses.archived')}</option>
@@ -218,32 +182,32 @@ export function CmsContentEditPage() {
 
         <div className="form-field">
           <label>{t('cms.edit.replaceFile')}</label>
-          <input type="file" onChange={(e) => setNewFile(e.target.files?.[0] || null)} />
+          <input type="file" onChange={(event) => setNewFile(event.target.files?.[0] || null)} />
         </div>
 
-        {saving && newFile && (
+        {saving && newFile ? (
           <div style={{ marginBottom: 12 }}>
             <div className="progress-bar">
               <div className="progress-bar-fill" style={{ width: `${uploadProgress}%` }} />
             </div>
           </div>
-        )}
+        ) : null}
 
-        {item?.origin === 'PROMOTED' && (
+        {contentQuery.data.origin === 'PROMOTED' ? (
           <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 12 }}>
             {t('cms.edit.promotedNote')}
           </p>
-        )}
+        ) : null}
 
         <div style={{ display: 'flex', gap: 12 }}>
           <button type="submit" className="btn btn-primary" disabled={saving}>
             {saving ? t('app.loading') : t('app.save')}
           </button>
-          {status !== 'archived' && (
-            <button type="button" className="btn btn-danger" onClick={handleArchive}>
+          {status !== 'archived' ? (
+            <button type="button" className="btn btn-danger" onClick={() => void handleArchive()}>
               {t('cms.edit.archive')}
             </button>
-          )}
+          ) : null}
         </div>
       </form>
     </div>
