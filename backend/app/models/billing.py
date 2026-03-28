@@ -10,6 +10,7 @@ import uuid
 from datetime import date, datetime
 
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     Date,
     DateTime,
@@ -114,6 +115,9 @@ class Invoice(TimestampMixin, Base):
 
     # Relationships
     items: Mapped[list["InvoiceItem"]] = relationship(
+        back_populates="invoice", cascade="all, delete-orphan"
+    )
+    payment_plans: Mapped[list["PaymentPlan"]] = relationship(
         back_populates="invoice", cascade="all, delete-orphan"
     )
     payment_attempts: Mapped[list["PaymentAttempt"]] = relationship(
@@ -364,4 +368,146 @@ class FeeAssignment(TimestampMixin, Base):
         ),
         Index("idx_fee_assignments_school", "school_id"),
         Index("idx_fee_assignments_student", "student_id"),
+    )
+
+
+class SiblingDiscountPolicy(TimestampMixin, Base):
+    """School-level sibling discount tiers for invoice generation."""
+
+    __tablename__ = "sibling_discount_policies"
+
+    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False, unique=True)
+    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    second_child_percent: Mapped[float] = mapped_column(
+        Numeric(5, 2), nullable=False, default=10.0
+    )
+    third_child_percent: Mapped[float] = mapped_column(
+        Numeric(5, 2), nullable=False, default=20.0
+    )
+    fourth_plus_percent: Mapped[float] = mapped_column(
+        Numeric(5, 2), nullable=False, default=30.0
+    )
+    apply_to_oldest_first: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "second_child_percent >= 0 AND second_child_percent <= 100",
+            name="ck_sibling_discount_second_percent",
+        ),
+        CheckConstraint(
+            "third_child_percent >= 0 AND third_child_percent <= 100",
+            name="ck_sibling_discount_third_percent",
+        ),
+        CheckConstraint(
+            "fourth_plus_percent >= 0 AND fourth_plus_percent <= 100",
+            name="ck_sibling_discount_fourth_percent",
+        ),
+        Index("idx_sdp_school", "school_id"),
+    )
+
+
+class LateFeePolicy(TimestampMixin, Base):
+    """School-level late-fee policy applied to overdue invoices."""
+
+    __tablename__ = "late_fee_policies"
+
+    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False, unique=True)
+    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    fee_type: Mapped[str] = mapped_column(String(20), nullable=False, default="fixed")
+    amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False, default=0.0)
+    frequency: Mapped[str] = mapped_column(String(20), nullable=False, default="once")
+    grace_days: Mapped[int] = mapped_column(Integer, nullable=False, default=5)
+    max_fee: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True)
+
+    __table_args__ = (
+        CheckConstraint(
+            "fee_type IN ('fixed', 'percent')",
+            name="ck_late_fee_policies_type",
+        ),
+        CheckConstraint(
+            "frequency IN ('once', 'daily', 'weekly')",
+            name="ck_late_fee_policies_frequency",
+        ),
+        CheckConstraint("amount >= 0", name="ck_late_fee_policies_amount"),
+        CheckConstraint(
+            "grace_days >= 0",
+            name="ck_late_fee_policies_grace_days",
+        ),
+        CheckConstraint(
+            "max_fee IS NULL OR max_fee >= 0",
+            name="ck_late_fee_policies_max_fee",
+        ),
+        Index("idx_late_fee_policies_school", "school_id"),
+    )
+
+
+class PaymentPlan(TimestampMixin, Base):
+    """Installment plan for an invoice."""
+
+    __tablename__ = "payment_plans"
+
+    invoice_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("invoices.id", ondelete="CASCADE"), nullable=False
+    )
+    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    total_installments: Mapped[int] = mapped_column(Integer, nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="active")
+
+    invoice: Mapped["Invoice"] = relationship(back_populates="payment_plans")
+    installments: Mapped[list["Installment"]] = relationship(
+        back_populates="plan",
+        cascade="all, delete-orphan",
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "total_installments > 0",
+            name="ck_payment_plans_total_installments",
+        ),
+        CheckConstraint(
+            "status IN ('active', 'completed', 'canceled')",
+            name="ck_payment_plans_status",
+        ),
+        Index("idx_payment_plans_school", "school_id"),
+        Index("idx_payment_plans_invoice", "invoice_id"),
+    )
+
+
+class Installment(TimestampMixin, Base):
+    """Individual installment within a payment plan."""
+
+    __tablename__ = "installments"
+
+    plan_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("payment_plans.id", ondelete="CASCADE"), nullable=False
+    )
+    installment_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    due_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    paid_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending")
+
+    plan: Mapped["PaymentPlan"] = relationship(back_populates="installments")
+
+    __table_args__ = (
+        UniqueConstraint(
+            "plan_id",
+            "installment_number",
+            name="uq_installments_plan_number",
+        ),
+        CheckConstraint(
+            "installment_number > 0",
+            name="ck_installments_number",
+        ),
+        CheckConstraint("amount >= 0", name="ck_installments_amount"),
+        CheckConstraint(
+            "status IN ('pending', 'paid', 'overdue')",
+            name="ck_installments_status",
+        ),
+        Index("idx_installments_plan", "plan_id"),
+        Index("idx_installments_due_status", "due_date", "status"),
     )

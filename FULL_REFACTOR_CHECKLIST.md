@@ -283,17 +283,17 @@
 ### Phase ENH-C: Billing & ERP Enhancements
 
 #### ENH-C1: Sibling Discounts + Late Fees + Payment Plans
-- [ ] Added SiblingDiscountPolicy, LateFeePolicy, PaymentPlan, Installment models to billing.py
-- [ ] Updated models/__init__.py
-- [ ] Created migration G27b: sibling_discount_policies + late_fee_policies + payment_plans + installments
-- [ ] Created schemas/billing_enhancements.py
-- [ ] Created repositories/billing_enhancements.py (CRUD policies, plans, installments, get_siblings)
-- [ ] Updated services/billing.py — generate_invoices() detects siblings, applies discounts
-- [ ] Added apply_late_fees() method for background processing
-- [ ] Created services/payment_plan.py — PaymentPlanService
-- [ ] Added new permissions to permissions.py
-- [ ] Added endpoints to billing router
-- [ ] Registered in router.py
+- [x] Added SiblingDiscountPolicy, LateFeePolicy, PaymentPlan, Installment models to billing.py
+- [x] Updated models/__init__.py
+- [x] Created migration G27b: sibling_discount_policies + late_fee_policies + payment_plans + installments
+- [x] Created schemas/billing_enhancements.py
+- [x] Created repositories/billing_enhancements.py (CRUD policies, plans, installments, get_siblings)
+- [x] Updated services/billing.py — generate_invoices() detects siblings, applies discounts
+- [x] Added apply_late_fees() method for background processing
+- [x] Created services/payment_plan.py — PaymentPlanService
+- [x] Added new permissions to permissions.py
+- [x] Added endpoints to billing router
+- [x] Registered in router.py
 - [ ] **Review & commit myself**
 
 #### ENH-C2: Attendance Analytics + Alerts

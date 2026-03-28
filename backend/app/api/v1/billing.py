@@ -9,6 +9,13 @@ Endpoints:
   POST   /billing/fee-assignments/bulk     — Bulk assign fee (ADM)
   GET    /billing/fee-assignments          — List fee assignments
   POST   /billing/generate-invoices        — Generate invoices from fee structure (ADM)
+  GET    /billing/sibling-policy           — Get sibling discount policy
+  PUT    /billing/sibling-policy           — Update sibling discount policy
+  GET    /billing/late-fee-policy          — Get late fee policy
+  PUT    /billing/late-fee-policy          — Update late fee policy
+  POST   /billing/payment-plans            — Create payment plan
+  GET    /billing/payment-plans            — List payment plans
+  GET    /billing/payment-plans/{id}       — Get payment plan details
 """
 
 from __future__ import annotations
@@ -29,7 +36,13 @@ from app.schemas.billing import (
     FeeStructureUpdateRequest,
     InvoiceGenerateRequest,
 )
+from app.schemas.billing_enhancements import (
+    LateFeePolicyUpdateRequest,
+    PaymentPlanCreateRequest,
+    SiblingDiscountPolicyUpdateRequest,
+)
 from app.services.billing import BillingService
+from app.services.payment_plan import PaymentPlanService
 
 router = APIRouter(prefix="/billing", tags=["billing-fees"])
 
@@ -239,3 +252,125 @@ async def generate_invoices(
         ip_address=get_client_ip(request),
     )
     return success_response(result)
+
+
+@router.get(
+    "/sibling-policy",
+    summary="Get sibling discount policy",
+    response_description="Current school sibling discount policy",
+)
+async def get_sibling_policy(
+    auth: AuthContext = Depends(requires_permission("PERM-BIL:sibling-policy:manage")),
+    db: AsyncSession = Depends(get_db),
+):
+    service = BillingService(db)
+    return success_response(await service.get_sibling_policy(auth=auth))
+
+
+@router.put(
+    "/sibling-policy",
+    summary="Update sibling discount policy",
+    response_description="Updated sibling discount policy",
+)
+async def update_sibling_policy(
+    body: SiblingDiscountPolicyUpdateRequest,
+    request: Request,
+    auth: AuthContext = Depends(requires_permission("PERM-BIL:sibling-policy:manage")),
+    db: AsyncSession = Depends(get_db),
+):
+    service = BillingService(db)
+    return success_response(
+        await service.update_sibling_policy(
+            body=body,
+            auth=auth,
+            ip_address=get_client_ip(request),
+        )
+    )
+
+
+@router.get(
+    "/late-fee-policy",
+    summary="Get late fee policy",
+    response_description="Current school late fee policy",
+)
+async def get_late_fee_policy(
+    auth: AuthContext = Depends(requires_permission("PERM-BIL:late-fee:manage")),
+    db: AsyncSession = Depends(get_db),
+):
+    service = BillingService(db)
+    return success_response(await service.get_late_fee_policy(auth=auth))
+
+
+@router.put(
+    "/late-fee-policy",
+    summary="Update late fee policy",
+    response_description="Updated late fee policy",
+)
+async def update_late_fee_policy(
+    body: LateFeePolicyUpdateRequest,
+    request: Request,
+    auth: AuthContext = Depends(requires_permission("PERM-BIL:late-fee:manage")),
+    db: AsyncSession = Depends(get_db),
+):
+    service = BillingService(db)
+    return success_response(
+        await service.update_late_fee_policy(
+            body=body,
+            auth=auth,
+            ip_address=get_client_ip(request),
+        )
+    )
+
+
+@router.post(
+    "/payment-plans",
+    status_code=201,
+    summary="Create payment plan",
+    response_description="Created payment plan with installments",
+)
+async def create_payment_plan(
+    body: PaymentPlanCreateRequest,
+    request: Request,
+    auth: AuthContext = Depends(requires_permission("PERM-BIL:payment-plan:create")),
+    db: AsyncSession = Depends(get_db),
+):
+    service = PaymentPlanService(db)
+    return success_response(
+        await service.create_plan(
+            body=body,
+            auth=auth,
+            ip_address=get_client_ip(request),
+        )
+    )
+
+
+@router.get(
+    "/payment-plans",
+    summary="List payment plans",
+    response_description="List of payment plans",
+)
+async def list_payment_plans(
+    parent_id: uuid.UUID | None = Query(None),
+    auth: AuthContext = Depends(requires_permission("PERM-BIL:payment-plan:read")),
+    db: AsyncSession = Depends(get_db),
+):
+    service = PaymentPlanService(db)
+    items = await service.list_plans(
+        auth=auth,
+        parent_id=parent_id,
+    )
+    return list_response(items, next_cursor=None, has_more=False)
+
+
+@router.get(
+    "/payment-plans/{plan_id}",
+    summary="Get payment plan details",
+    response_description="Payment plan with installments",
+)
+async def get_payment_plan(
+    plan_id: uuid.UUID,
+    auth: AuthContext = Depends(requires_permission("PERM-BIL:payment-plan:read")),
+    db: AsyncSession = Depends(get_db),
+):
+    service = PaymentPlanService(db)
+    return success_response(await service.get_plan(plan_id=plan_id, auth=auth))

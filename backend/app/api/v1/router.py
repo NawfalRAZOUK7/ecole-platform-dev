@@ -27,7 +27,7 @@ Routes:
   /consents/*                   — Consent preferences (COM)
   /feed/*                       — Parent feed (COM)
   /timetable/*                  — Timetable slots + exceptions (ERP, Phase 11A)
-  /billing/*                    — Fee structures, assignments, invoice generation (Phase 11B)
+  /billing/*                    — Fee structures, assignments, invoice generation, policies, payment plans
   /messages/*                   — Conversations + messaging (Phase 11C)
   /announcements/*              — Announcements CRUD + publish (Phase 11C)
   /progress/*                   — Student progress visualization (Phase 11D)

@@ -85,11 +85,15 @@ from app.models.com import (
 from app.models.billing import (
     FeeAssignment,
     FeeStructure,
+    Installment,
     Invoice,
     InvoiceItem,
+    LateFeePolicy,
     PaymentAttempt,
+    PaymentPlan,
     PaymentProof,
     ProviderWebhookEvent,
+    SiblingDiscountPolicy,
 )
 
 # G6 — Audit
@@ -184,8 +188,12 @@ __all__ = [
     # Billing
     "FeeStructure",
     "FeeAssignment",
+    "SiblingDiscountPolicy",
+    "LateFeePolicy",
     "Invoice",
     "InvoiceItem",
+    "PaymentPlan",
+    "Installment",
     "PaymentAttempt",
     "PaymentProof",
     "ProviderWebhookEvent",

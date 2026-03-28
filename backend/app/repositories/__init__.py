@@ -7,6 +7,7 @@ from app.repositories.base import BaseRepository
 from app.repositories.audit import AuditRepository
 from app.repositories.auth import AuthRepository
 from app.repositories.billing import BillingRepository
+from app.repositories.billing_enhancements import BillingEnhancementsRepository
 from app.repositories.calendar import CalendarRepository
 from app.repositories.cms import CMSRepository
 from app.repositories.documents import DocumentsRepository
@@ -33,6 +34,7 @@ __all__ = [
     "AuditRepository",
     "AuthRepository",
     "BillingRepository",
+    "BillingEnhancementsRepository",
     "CalendarRepository",
     "CMSRepository",
     "DocumentsRepository",

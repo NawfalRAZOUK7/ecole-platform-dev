@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import logging
+import math
 import uuid
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,9 +15,19 @@ from app.core.filtering import FilterSpec, SortSpec
 from app.core.response import clamp_page_size
 from app.core.unit_of_work import UnitOfWork
 from app.domain.events.billing import InvoiceGenerated, PaymentFailed, PaymentReceived
-from app.models.billing import FeeAssignment, FeeStructure, Invoice, PaymentAttempt, ProviderWebhookEvent
+from app.domain.value_objects.money import Money
+from app.models.billing import (
+    FeeAssignment,
+    FeeStructure,
+    Invoice,
+    LateFeePolicy,
+    PaymentAttempt,
+    ProviderWebhookEvent,
+    SiblingDiscountPolicy,
+)
 from app.models.iam import User
 from app.repositories.billing import BillingRepository
+from app.repositories.billing_enhancements import BillingEnhancementsRepository
 from app.schemas.billing import (
     FeeAssignmentBulkCreateRequest,
     FeeAssignmentCreateRequest,
@@ -32,11 +43,18 @@ from app.schemas.billing import (
     WebhookEventRequest,
     WebhookEventResponse,
 )
+from app.schemas.billing_enhancements import (
+    LateFeePolicyResponse,
+    LateFeePolicyUpdateRequest,
+    SiblingDiscountPolicyResponse,
+    SiblingDiscountPolicyUpdateRequest,
+)
 from app.services.audit import AuditService
 from app.services.event_dispatcher import EventDispatcher
 from app.services.realtime import publish_payment_updated
 
 logger = logging.getLogger(__name__)
+LATE_FEE_ITEM_PREFIX = "Late fee"
 
 
 class BillingService:
@@ -45,6 +63,7 @@ class BillingService:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
         self.repo = BillingRepository(db)
+        self.enhancements_repo = BillingEnhancementsRepository(db)
         self.audit = AuditService(db)
         self._dispatcher = EventDispatcher(self.db)
 
@@ -131,6 +150,167 @@ class BillingService:
     def _user_display_name(self, user: User) -> str:
         first_name = getattr(user, "first_name", None)
         return first_name or user.full_name or user.email
+
+    def _sibling_policy_to_response(
+        self,
+        policy: SiblingDiscountPolicy | None,
+        *,
+        school_id: uuid.UUID,
+    ) -> dict:
+        return SiblingDiscountPolicyResponse(
+            id=str(policy.id) if policy is not None else None,
+            school_id=str(school_id),
+            enabled=bool(policy.enabled) if policy is not None else True,
+            second_child_percent=float(policy.second_child_percent)
+            if policy is not None
+            else 10.0,
+            third_child_percent=float(policy.third_child_percent)
+            if policy is not None
+            else 20.0,
+            fourth_plus_percent=float(policy.fourth_plus_percent)
+            if policy is not None
+            else 30.0,
+            apply_to_oldest_first=bool(policy.apply_to_oldest_first)
+            if policy is not None
+            else True,
+            created_at=policy.created_at.isoformat() if policy is not None else None,
+            updated_at=policy.updated_at.isoformat()
+            if policy is not None and policy.updated_at
+            else None,
+        ).model_dump()
+
+    def _late_fee_policy_to_response(
+        self,
+        policy: LateFeePolicy | None,
+        *,
+        school_id: uuid.UUID,
+    ) -> dict:
+        return LateFeePolicyResponse(
+            id=str(policy.id) if policy is not None else None,
+            school_id=str(school_id),
+            enabled=bool(policy.enabled) if policy is not None else False,
+            fee_type=policy.fee_type if policy is not None else "fixed",
+            amount=float(policy.amount) if policy is not None else 0.0,
+            frequency=policy.frequency if policy is not None else "once",
+            grace_days=policy.grace_days if policy is not None else 5,
+            max_fee=float(policy.max_fee) if policy is not None and policy.max_fee is not None else None,
+            created_at=policy.created_at.isoformat() if policy is not None else None,
+            updated_at=policy.updated_at.isoformat()
+            if policy is not None and policy.updated_at
+            else None,
+        ).model_dump()
+
+    def _get_sibling_discount_percent(
+        self,
+        *,
+        policy: SiblingDiscountPolicy | None,
+        sibling_rank: int,
+    ) -> float:
+        if policy is None or not policy.enabled or sibling_rank <= 1:
+            return 0.0
+        if sibling_rank == 2:
+            return float(policy.second_child_percent)
+        if sibling_rank == 3:
+            return float(policy.third_child_percent)
+        return float(policy.fourth_plus_percent)
+
+    def _order_assigned_siblings(
+        self,
+        sibling_rows: list[tuple[uuid.UUID, str, date | None]],
+        *,
+        assigned_student_ids: set[uuid.UUID],
+        oldest_first: bool,
+    ) -> list[uuid.UUID]:
+        relevant = [
+            {
+                "student_id": student_id,
+                "full_name": full_name,
+                "date_of_birth": date_of_birth,
+            }
+            for student_id, full_name, date_of_birth in sibling_rows
+            if student_id in assigned_student_ids
+        ]
+
+        known_birth_dates = [
+            item for item in relevant if item["date_of_birth"] is not None
+        ]
+        known_birth_dates.sort(
+            key=lambda item: (
+                item["date_of_birth"],
+                item["full_name"].lower(),
+                str(item["student_id"]),
+            ),
+            reverse=not oldest_first,
+        )
+
+        missing_birth_dates = [
+            item for item in relevant if item["date_of_birth"] is None
+        ]
+        missing_birth_dates.sort(
+            key=lambda item: (item["full_name"].lower(), str(item["student_id"]))
+        )
+
+        ordered_ids = [
+            item["student_id"] for item in [*known_birth_dates, *missing_birth_dates]
+        ]
+        for student_id in sorted(assigned_student_ids, key=str):
+            if student_id not in ordered_ids:
+                ordered_ids.append(student_id)
+        return ordered_ids
+
+    def _existing_late_fee_total(self, invoice: Invoice) -> Money:
+        total = Money.zero(invoice.currency)
+        for item in invoice.items:
+            if item.description.startswith(LATE_FEE_ITEM_PREFIX):
+                total = total + Money.from_float(float(item.amount), invoice.currency)
+        return total
+
+    def _invoice_principal_total(self, invoice: Invoice) -> Money:
+        total = Money.zero(invoice.currency)
+        for item in invoice.items:
+            if item.description.startswith(LATE_FEE_ITEM_PREFIX):
+                continue
+            total = total + Money.from_float(float(item.amount), invoice.currency)
+        return total
+
+    def _late_fee_units(
+        self,
+        *,
+        policy: LateFeePolicy,
+        overdue_days: int,
+    ) -> int:
+        if overdue_days <= 0:
+            return 0
+        if policy.frequency == "once":
+            return 1
+        if policy.frequency == "daily":
+            return overdue_days
+        return math.ceil(overdue_days / 7)
+
+    def _calculate_late_fee_target(
+        self,
+        *,
+        invoice: Invoice,
+        policy: LateFeePolicy,
+        as_of_date: date,
+    ) -> tuple[Money, int, int]:
+        overdue_days = (as_of_date - invoice.due_date).days - policy.grace_days
+        fee_units = self._late_fee_units(policy=policy, overdue_days=overdue_days)
+        if fee_units <= 0:
+            return Money.zero(invoice.currency), 0, 0
+
+        invoice_principal = self._invoice_principal_total(invoice)
+        if policy.fee_type == "fixed":
+            target_fee = Money.from_float(float(policy.amount), invoice.currency) * fee_units
+        else:
+            target_fee = invoice_principal * ((float(policy.amount) * fee_units) / 100)
+
+        if policy.max_fee is not None:
+            capped_fee = Money.from_float(float(policy.max_fee), invoice.currency)
+            if target_fee.amount > capped_fee.amount:
+                target_fee = capped_fee
+
+        return target_fee, overdue_days, fee_units
 
     async def create_fee_structure(
         self,
@@ -394,6 +574,138 @@ class BillingService:
         )
         return [self._fee_assignment_to_response(item) for item in assignments]
 
+    async def get_sibling_policy(
+        self,
+        *,
+        auth: AuthContext,
+    ) -> dict:
+        policy = await self.enhancements_repo.get_sibling_discount_policy(
+            school_id=auth.school_id
+        )
+        return self._sibling_policy_to_response(policy, school_id=auth.school_id)
+
+    async def update_sibling_policy(
+        self,
+        *,
+        body: SiblingDiscountPolicyUpdateRequest,
+        auth: AuthContext,
+        ip_address: str | None,
+    ) -> dict:
+        async with UnitOfWork(self.db) as uow:
+            repo = BillingEnhancementsRepository(uow.session)
+            audit = AuditService(uow.session)
+            policy = await repo.get_sibling_discount_policy(school_id=auth.school_id)
+            entity_before = self._sibling_policy_to_response(
+                policy,
+                school_id=auth.school_id,
+            )
+
+            if policy is None:
+                policy = await repo.create_sibling_discount_policy(
+                    school_id=auth.school_id,
+                    enabled=body.enabled,
+                    second_child_percent=body.second_child_percent,
+                    third_child_percent=body.third_child_percent,
+                    fourth_plus_percent=body.fourth_plus_percent,
+                    apply_to_oldest_first=body.apply_to_oldest_first,
+                )
+            else:
+                policy.enabled = body.enabled
+                policy.second_child_percent = body.second_child_percent
+                policy.third_child_percent = body.third_child_percent
+                policy.fourth_plus_percent = body.fourth_plus_percent
+                policy.apply_to_oldest_first = body.apply_to_oldest_first
+                await repo.save_sibling_discount_policy(policy)
+
+            entity_after = self._sibling_policy_to_response(
+                policy,
+                school_id=auth.school_id,
+            )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="billing.sibling_policy.update",
+                target_type="sibling_discount_policy",
+                target_id=policy.id,
+                outcome="success",
+                entity_before=entity_before,
+                entity_after=entity_after,
+                ip_address=ip_address,
+            )
+            await uow.commit()
+
+        return entity_after
+
+    async def get_late_fee_policy(
+        self,
+        *,
+        auth: AuthContext,
+    ) -> dict:
+        policy = await self.enhancements_repo.get_late_fee_policy(
+            school_id=auth.school_id
+        )
+        return self._late_fee_policy_to_response(policy, school_id=auth.school_id)
+
+    async def update_late_fee_policy(
+        self,
+        *,
+        body: LateFeePolicyUpdateRequest,
+        auth: AuthContext,
+        ip_address: str | None,
+    ) -> dict:
+        if body.fee_type == "percent" and body.amount > 100:
+            raise ValidationError(
+                "Percent late fee cannot exceed 100",
+                error_code="ERR-BIL-422",
+            )
+
+        async with UnitOfWork(self.db) as uow:
+            repo = BillingEnhancementsRepository(uow.session)
+            audit = AuditService(uow.session)
+            policy = await repo.get_late_fee_policy(school_id=auth.school_id)
+            entity_before = self._late_fee_policy_to_response(
+                policy,
+                school_id=auth.school_id,
+            )
+
+            if policy is None:
+                policy = await repo.create_late_fee_policy(
+                    school_id=auth.school_id,
+                    enabled=body.enabled,
+                    fee_type=body.fee_type,
+                    amount=body.amount,
+                    frequency=body.frequency,
+                    grace_days=body.grace_days,
+                    max_fee=body.max_fee,
+                )
+            else:
+                policy.enabled = body.enabled
+                policy.fee_type = body.fee_type
+                policy.amount = body.amount
+                policy.frequency = body.frequency
+                policy.grace_days = body.grace_days
+                policy.max_fee = body.max_fee
+                await repo.save_late_fee_policy(policy)
+
+            entity_after = self._late_fee_policy_to_response(
+                policy,
+                school_id=auth.school_id,
+            )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="billing.late_fee_policy.update",
+                target_type="late_fee_policy",
+                target_id=policy.id,
+                outcome="success",
+                entity_before=entity_before,
+                entity_after=entity_after,
+                ip_address=ip_address,
+            )
+            await uow.commit()
+
+        return entity_after
+
     async def generate_invoices(
         self,
         *,
@@ -433,10 +745,42 @@ class BillingService:
             student_ids=[assignment.student_id for assignment in assignments],
             school_id=auth.school_id,
         )
+        sibling_policy = await self.enhancements_repo.get_sibling_discount_policy(
+            school_id=auth.school_id
+        )
         student_to_parent: dict[uuid.UUID, uuid.UUID] = {}
         for link in parent_links:
             if link.child_user_id not in student_to_parent:
                 student_to_parent[link.child_user_id] = link.parent_user_id
+
+        sibling_discount_map: dict[uuid.UUID, float] = {}
+        if sibling_policy is not None and sibling_policy.enabled:
+            parent_to_assigned_students: dict[uuid.UUID, set[uuid.UUID]] = {}
+            for assignment in assignments:
+                parent_id = student_to_parent.get(assignment.student_id)
+                if parent_id is None:
+                    continue
+                parent_to_assigned_students.setdefault(parent_id, set()).add(
+                    assignment.student_id
+                )
+
+            for parent_id, assigned_student_ids in parent_to_assigned_students.items():
+                sibling_rows = await self.enhancements_repo.get_siblings_by_parent(
+                    parent_id=parent_id,
+                    school_id=auth.school_id,
+                )
+                ordered_students = self._order_assigned_siblings(
+                    sibling_rows,
+                    assigned_student_ids=assigned_student_ids,
+                    oldest_first=bool(sibling_policy.apply_to_oldest_first),
+                )
+                for sibling_rank, student_id in enumerate(ordered_students, start=1):
+                    sibling_discount_map[student_id] = (
+                        self._get_sibling_discount_percent(
+                            policy=sibling_policy,
+                            sibling_rank=sibling_rank,
+                        )
+                    )
 
         generated = 0
         skipped = 0
@@ -453,14 +797,23 @@ class BillingService:
                     skipped += 1
                     continue
 
-                base_amount = float(fee_structure.amount)
-                if assignment.discount_percent:
-                    discount = base_amount * float(assignment.discount_percent) / 100
-                    final_amount = round(base_amount - discount, 2)
-                else:
-                    final_amount = base_amount
+                base_amount = Money.from_float(
+                    float(fee_structure.amount),
+                    fee_structure.currency,
+                )
+                manual_discount_percent = float(assignment.discount_percent or 0)
+                sibling_discount_percent = sibling_discount_map.get(
+                    assignment.student_id,
+                    0.0,
+                )
+                total_discount_percent = min(
+                    100.0,
+                    manual_discount_percent + sibling_discount_percent,
+                )
+                discount_amount = base_amount * (total_discount_percent / 100)
+                final_amount = base_amount - discount_amount
 
-                if final_amount <= 0:
+                if final_amount.amount <= 0:
                     skipped += 1
                     continue
 
@@ -469,7 +822,7 @@ class BillingService:
                     parent_id=parent_id,
                     period_id=body.period_id,
                     status="pending",
-                    total_amount=final_amount,
+                    total_amount=float(final_amount.amount),
                     currency=fee_structure.currency,
                     issued_date=body.issued_date,
                     due_date=body.due_date,
@@ -477,14 +830,23 @@ class BillingService:
                 )
 
                 description = fee_structure.name
-                if assignment.discount_percent:
-                    description += f" (remise {float(assignment.discount_percent):.0f}%)"
+                applied_discounts: list[str] = []
+                if manual_discount_percent:
+                    applied_discounts.append(
+                        f"manual {manual_discount_percent:.0f}%"
+                    )
+                if sibling_discount_percent:
+                    applied_discounts.append(
+                        f"sibling {sibling_discount_percent:.0f}%"
+                    )
+                if applied_discounts:
+                    description += f" ({', '.join(applied_discounts)})"
 
                 await repo.create_invoice_item(
                     invoice_id=invoice.id,
                     description=description,
-                    amount=final_amount,
-                    unit_price=base_amount,
+                    amount=float(final_amount.amount),
+                    unit_price=float(base_amount.amount),
                     quantity=1,
                 )
                 generated_events.append(
@@ -493,13 +855,13 @@ class BillingService:
                         actor_id=auth.user_id,
                         invoice_id=invoice.id,
                         student_id=assignment.student_id,
-                        amount=final_amount,
+                        amount=float(final_amount.amount),
                         due_date=body.due_date.isoformat(),
                     )
                 )
 
                 generated += 1
-                total_generated_amount += final_amount
+                total_generated_amount += float(final_amount.amount)
 
             await audit.log_event(
                 school_id=auth.school_id,
@@ -532,6 +894,100 @@ class BillingService:
             "skipped": skipped,
             "total_amount": total_generated_amount,
             "currency": fee_structure.currency,
+        }
+
+    async def apply_late_fees(
+        self,
+        *,
+        school_id: uuid.UUID,
+        actor_id: uuid.UUID | None = None,
+        as_of_date: date | None = None,
+        limit: int = 500,
+    ) -> dict:
+        effective_date = as_of_date or datetime.now(timezone.utc).date()
+        policy = await self.enhancements_repo.get_late_fee_policy(school_id=school_id)
+        if policy is None or not policy.enabled or float(policy.amount) <= 0:
+            return {
+                "checked": 0,
+                "updated": 0,
+                "total_fee_applied": 0.0,
+            }
+
+        async with UnitOfWork(self.db) as uow:
+            repo = BillingRepository(uow.session)
+            enhancements_repo = BillingEnhancementsRepository(uow.session)
+            audit = AuditService(uow.session)
+            policy = await enhancements_repo.get_late_fee_policy(school_id=school_id)
+            if policy is None or not policy.enabled or float(policy.amount) <= 0:
+                return {
+                    "checked": 0,
+                    "updated": 0,
+                    "total_fee_applied": 0.0,
+                }
+
+            overdue_invoices = await enhancements_repo.list_overdue_invoices_for_late_fees(
+                school_id=school_id,
+                overdue_before=effective_date,
+                limit=limit,
+            )
+            updated = 0
+            total_fee_applied = 0.0
+
+            for invoice in overdue_invoices:
+                target_fee, overdue_days, fee_units = self._calculate_late_fee_target(
+                    invoice=invoice,
+                    policy=policy,
+                    as_of_date=effective_date,
+                )
+                if target_fee.amount <= 0:
+                    continue
+
+                existing_fee = self._existing_late_fee_total(invoice)
+                if target_fee.amount <= existing_fee.amount:
+                    continue
+
+                delta_fee = target_fee - existing_fee
+                description = (
+                    f"{LATE_FEE_ITEM_PREFIX} ({policy.frequency}, "
+                    f"{overdue_days} days overdue, {fee_units} charge units)"
+                )
+                await repo.create_invoice_item(
+                    invoice_id=invoice.id,
+                    description=description,
+                    amount=float(delta_fee.amount),
+                    unit_price=float(delta_fee.amount),
+                    quantity=1,
+                )
+
+                current_total = Money.from_float(
+                    float(invoice.total_amount),
+                    invoice.currency,
+                )
+                invoice.total_amount = float((current_total + delta_fee).amount)
+                await repo.save_invoice(invoice)
+                updated += 1
+                total_fee_applied += float(delta_fee.amount)
+
+            if updated:
+                await audit.log_event(
+                    school_id=school_id,
+                    actor_id=actor_id,
+                    action_type="billing.late_fees.apply",
+                    target_type="invoice_batch",
+                    outcome="success",
+                    entity_after={
+                        "checked": len(overdue_invoices),
+                        "updated": updated,
+                        "total_fee_applied": round(total_fee_applied, 2),
+                        "as_of_date": effective_date.isoformat(),
+                    },
+                )
+            await uow.commit()
+
+        return {
+            "checked": len(overdue_invoices),
+            "updated": updated,
+            "total_fee_applied": round(total_fee_applied, 2),
         }
 
     async def initiate_payment(
