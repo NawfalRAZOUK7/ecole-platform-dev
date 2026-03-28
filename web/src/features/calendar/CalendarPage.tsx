@@ -1,10 +1,19 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { api, ApiClientError } from '@/services/api/client';
+import { ApiClientError, type ApiError } from '@/services/api/client';
 import { useAuth } from '@/services/auth/AuthContext';
 import { EmptyState } from '@/shared/ui/EmptyState';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
+import {
+  useCalendarEvent,
+  useCalendarEventRsvp,
+  useCalendarEvents,
+  useCalendarOptions,
+  useCreateCalendarEvent,
+  useDeleteCalendarEvent,
+  useUpdateCalendarEvent,
+} from './useCalendar';
 import { EventDetailView, EventEditorModal, eventTitle, eventTypeColor } from './shared';
 import type {
   CalendarEventItem,
@@ -15,6 +24,19 @@ import type {
 } from './types';
 
 const EVENT_TYPES: EventType[] = ['holiday', 'exam', 'meeting', 'excursion', 'ceremony', 'custom'];
+
+function toBannerError(error: unknown, fallback: string): ApiError | string | null {
+  if (!error) {
+    return null;
+  }
+  if (error instanceof ApiClientError) {
+    return error.apiError;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return fallback;
+}
 
 function cloneDate(value: Date) {
   return new Date(value.getFullYear(), value.getMonth(), value.getDate());
@@ -82,33 +104,60 @@ export function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [selectedTypes, setSelectedTypes] = useState<EventType[]>(EVENT_TYPES);
   const [selectedClassId, setSelectedClassId] = useState('');
-  const [items, setItems] = useState<CalendarEventItem[]>([]);
-  const [options, setOptions] = useState<CalendarOptionsPayload>({
-    classes: [],
-    ical_url: '',
-    reminder_preferences: [],
-  });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [detailEvent, setDetailEvent] = useState<CalendarEventItem | null>(null);
-  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailSeedEvent, setDetailSeedEvent] = useState<CalendarEventItem | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorEvent, setEditorEvent] = useState<CalendarEventItem | null>(null);
   const [copyState, setCopyState] = useState<string | null>(null);
+  const [dismissedError, setDismissedError] = useState(false);
 
   const range = useMemo(() => rangeForView(view, anchorDate), [anchorDate, view]);
   const canCreate = ['ADM', 'DIR', 'TCH'].includes(user?.role || '');
+  const calendarFilters = useMemo(
+    () => ({
+      from: dayKey(range.from),
+      to: dayKey(range.to),
+      class_id: selectedClassId || undefined,
+    }),
+    [range.from, range.to, selectedClassId]
+  );
+
+  const eventsQuery = useCalendarEvents(calendarFilters);
+  const optionsQuery = useCalendarOptions();
+  const createEventMutation = useCreateCalendarEvent();
+  const updateEventMutation = useUpdateCalendarEvent();
+  const deleteEventMutation = useDeleteCalendarEvent();
+  const rsvpMutation = useCalendarEventRsvp();
+
+  const items = useMemo(
+    () => eventsQuery.data?.pages.flatMap((page) => page.data) ?? [],
+    [eventsQuery.data]
+  );
+  const options: CalendarOptionsPayload = optionsQuery.data ?? {
+    classes: [],
+    ical_url: '',
+    reminder_preferences: [],
+  };
+  const detailEventId = detailSeedEvent?.source === 'event' ? detailSeedEvent.id : null;
+  const detailQuery = useCalendarEvent(detailEventId, { enabled: Boolean(detailEventId) });
+  const detailEvent = useMemo<CalendarEventItem | null>(() => {
+    if (!detailSeedEvent) {
+      return null;
+    }
+    if (detailSeedEvent.source !== 'event') {
+      return detailSeedEvent;
+    }
+    return detailQuery.data ?? detailSeedEvent;
+  }, [detailQuery.data, detailSeedEvent]);
+  const detailLoading = Boolean(detailSeedEvent?.source === 'event' && detailQuery.isLoading && !detailQuery.data);
 
   const filteredItems = useMemo(
     () => items.filter((item) => selectedTypes.includes(item.type)),
     [items, selectedTypes]
   );
-
   const selectedDayItems = useMemo(
     () => filteredItems.filter((item) => occursOnDay(item, selectedDate)),
     [filteredItems, selectedDate]
   );
-
   const monthDays = useMemo(() => {
     const days: Date[] = [];
     let cursor = cloneDate(range.from);
@@ -118,68 +167,53 @@ export function CalendarPage() {
     }
     return days;
   }, [range.from, range.to]);
-
   const weekDays = useMemo(() => {
     const from = startOfWeek(anchorDate);
     return Array.from({ length: 7 }, (_, index) => addDays(from, index));
   }, [anchorDate]);
-
-  const loadCalendar = useCallback(async () => {
-    try {
-      const [eventsResponse, optionsResponse] = await Promise.all([
-        api.list<CalendarEventItem>('/events', {
-          from: dayKey(range.from),
-          to: dayKey(range.to),
-          class_id: selectedClassId || undefined,
-        }),
-        api.get<CalendarOptionsPayload>('/calendar/options'),
-      ]);
-      setItems(eventsResponse.data);
-      setOptions(optionsResponse.data);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    } finally {
-      setLoading(false);
-    }
-  }, [range.from, range.to, selectedClassId, t]);
+  const bannerError = useMemo(
+    () =>
+      toBannerError(
+        eventsQuery.error ??
+          optionsQuery.error ??
+          detailQuery.error ??
+          createEventMutation.error ??
+          updateEventMutation.error ??
+          deleteEventMutation.error ??
+          rsvpMutation.error,
+        t('app.error')
+      ),
+    [
+      createEventMutation.error,
+      deleteEventMutation.error,
+      detailQuery.error,
+      eventsQuery.error,
+      optionsQuery.error,
+      rsvpMutation.error,
+      t,
+      updateEventMutation.error,
+    ]
+  );
 
   useEffect(() => {
-    setLoading(true);
-    void loadCalendar();
-  }, [loadCalendar]);
+    setDismissedError(false);
+  }, [bannerError]);
 
   async function openDetails(item: CalendarEventItem) {
-    if (item.source !== 'event') {
-      setDetailEvent(item);
-      return;
-    }
-
-    setDetailLoading(true);
-    try {
-      const response = await api.get<CalendarEventItem>(`/events/${item.id}`);
-      setDetailEvent(response.data);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    } finally {
-      setDetailLoading(false);
-    }
+    setDetailSeedEvent(item);
   }
 
   async function handleSaveEvent(payload: Record<string, unknown>) {
-    try {
-      if (editorEvent) {
-        await api.put(`/events/${editorEvent.id}`, payload);
-      } else {
-        await api.post('/events', payload);
+    if (editorEvent) {
+      const updatedEvent = await updateEventMutation.mutateAsync({ id: editorEvent.id, payload });
+      if (detailSeedEvent?.id === updatedEvent.id) {
+        setDetailSeedEvent(updatedEvent);
       }
-      setEditorOpen(false);
-      setEditorEvent(null);
-      await loadCalendar();
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-      throw err;
+    } else {
+      await createEventMutation.mutateAsync(payload);
     }
+    setEditorOpen(false);
+    setEditorEvent(null);
   }
 
   async function handleDeleteEvent() {
@@ -189,25 +223,15 @@ export function CalendarPage() {
     if (!window.confirm(t('calendar.confirmDelete'))) {
       return;
     }
-    try {
-      await api.delete(`/events/${detailEvent.id}`);
-      setDetailEvent(null);
-      await loadCalendar();
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
+    await deleteEventMutation.mutateAsync(detailEvent.id);
+    setDetailSeedEvent(null);
   }
 
   async function handleRsvp(status: EventRsvpStatus) {
     if (!detailEvent || detailEvent.source !== 'event') {
       return;
     }
-    try {
-      await api.post(`/events/${detailEvent.id}/rsvp`, { status });
-      await Promise.all([loadCalendar(), openDetails(detailEvent)]);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
+    await rsvpMutation.mutateAsync({ id: detailEvent.id, status });
   }
 
   async function handleCopyIcal() {
@@ -225,7 +249,7 @@ export function CalendarPage() {
     );
   }
 
-  if (loading) {
+  if ((eventsQuery.isLoading && items.length === 0) || (optionsQuery.isLoading && !optionsQuery.data)) {
     return <LoadingState />;
   }
 
@@ -264,7 +288,15 @@ export function CalendarPage() {
         </div>
       </div>
 
-      <ErrorBanner error={error} onDismiss={() => setError(null)} onRetry={() => void loadCalendar()} />
+      <ErrorBanner
+        error={dismissedError ? null : bannerError}
+        onDismiss={() => setDismissedError(true)}
+        onRetry={() => void Promise.all([
+          eventsQuery.refetch(),
+          optionsQuery.refetch(),
+          detailEventId ? detailQuery.refetch() : Promise.resolve(null),
+        ])}
+      />
 
       <div className="calendar-layout">
         <aside className="calendar-sidebar card">
@@ -470,14 +502,14 @@ export function CalendarPage() {
       </div>
 
       {detailEvent && (
-        <div className="modal-overlay" onClick={() => setDetailEvent(null)}>
+        <div className="modal-overlay" onClick={() => setDetailSeedEvent(null)}>
           <div className="modal-card calendar-modal-card" onClick={(event) => event.stopPropagation()}>
             {detailLoading ? (
               <LoadingState />
             ) : (
               <EventDetailView
                 event={detailEvent}
-                onClose={() => setDetailEvent(null)}
+                onClose={() => setDetailSeedEvent(null)}
                 onRsvp={(status) => void handleRsvp(status)}
                 onEdit={() => {
                   setEditorEvent(detailEvent);

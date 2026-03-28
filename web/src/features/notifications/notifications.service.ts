@@ -1,0 +1,63 @@
+import { api } from '@/services/api/client';
+import type {
+  DeviceItem,
+  NotificationDigestResponse,
+  NotificationItem,
+  NotificationPreference,
+  NotificationPreferencesResponse,
+} from './types';
+
+export interface NotificationListFilters extends Record<string, string | number | undefined> {
+  limit?: number;
+  cursor?: string;
+  category?: string;
+  channel?: string;
+  read?: string;
+  from?: string;
+  to?: string;
+}
+
+export interface NotificationSettingsInput {
+  preferences: NotificationPreference[];
+  digestFrequency: string;
+}
+
+export const notificationsService = {
+  list(params: NotificationListFilters) {
+    return api.list<NotificationItem>('/notifications', params);
+  },
+
+  markRead(id: string, read: boolean) {
+    return api.patch<NotificationItem>(`/notifications/${id}/read`, { read });
+  },
+
+  markAllRead() {
+    return api.patch<void>('/notifications/mark-all-read', {});
+  },
+
+  getPreferences() {
+    return api.get<NotificationPreferencesResponse>('/notifications/preferences');
+  },
+
+  updatePreferences(preferences: NotificationPreference[]) {
+    return api.post<void>('/notifications/preferences', { preferences });
+  },
+
+  getDigestPreferences() {
+    return api.get<NotificationDigestResponse>('/notifications/digest/preferences');
+  },
+
+  updateDigestPreferences(digestFrequency: string) {
+    return api.post<void>('/notifications/digest/preferences', {
+      digest_frequency: digestFrequency,
+    });
+  },
+
+  listDevices() {
+    return api.list<DeviceItem>('/devices');
+  },
+
+  removeDevice(deviceId: string) {
+    return api.delete<void>(`/devices/${deviceId}`);
+  },
+};

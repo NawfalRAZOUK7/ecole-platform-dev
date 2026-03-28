@@ -1,101 +1,102 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { api, ApiClientError } from '@/services/api/client';
+import { ApiClientError, type ApiError } from '@/services/api/client';
 import { useAuth } from '@/services/auth/AuthContext';
 import { EmptyState } from '@/shared/ui/EmptyState';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
+import {
+  useCalendarEvent,
+  useCalendarEventRsvp,
+  useCalendarOptions,
+  useDeleteCalendarEvent,
+  useUpdateCalendarEvent,
+} from './useCalendar';
 import { EventDetailView, EventEditorModal } from './shared';
 import type { CalendarEventItem, CalendarOptionsPayload, EventRsvpStatus } from './types';
+
+function toBannerError(error: unknown, fallback: string): ApiError | string | null {
+  if (!error) {
+    return null;
+  }
+  if (error instanceof ApiClientError) {
+    return error.apiError;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return fallback;
+}
 
 export function EventDetailPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { id } = useParams();
-  const [event, setEvent] = useState<CalendarEventItem | null>(null);
-  const [options, setOptions] = useState<CalendarOptionsPayload>({
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [dismissedError, setDismissedError] = useState(false);
+
+  const eventQuery = useCalendarEvent(id, { enabled: Boolean(id), refetchInterval: 5000 });
+  const optionsQuery = useCalendarOptions();
+  const updateEventMutation = useUpdateCalendarEvent();
+  const deleteEventMutation = useDeleteCalendarEvent();
+  const rsvpMutation = useCalendarEventRsvp();
+
+  const event: CalendarEventItem | null = eventQuery.data ?? null;
+  const options: CalendarOptionsPayload = optionsQuery.data ?? {
     classes: [],
     ical_url: '',
     reminder_preferences: [],
-  });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [editorOpen, setEditorOpen] = useState(false);
-
-  const loadEvent = useCallback(async () => {
-    if (!id) {
-      return;
-    }
-    try {
-      const [eventResponse, optionsResponse] = await Promise.all([
-        api.get<CalendarEventItem>(`/events/${id}`),
-        api.get<CalendarOptionsPayload>('/calendar/options'),
-      ]);
-      setEvent(eventResponse.data);
-      setOptions(optionsResponse.data);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    } finally {
-      setLoading(false);
-    }
-  }, [id, t]);
+  };
+  const bannerError = useMemo(
+    () =>
+      toBannerError(
+        eventQuery.error ??
+          optionsQuery.error ??
+          updateEventMutation.error ??
+          deleteEventMutation.error ??
+          rsvpMutation.error,
+        t('app.error')
+      ),
+    [
+      deleteEventMutation.error,
+      eventQuery.error,
+      optionsQuery.error,
+      rsvpMutation.error,
+      t,
+      updateEventMutation.error,
+    ]
+  );
 
   useEffect(() => {
-    void loadEvent();
-  }, [loadEvent]);
-
-  useEffect(() => {
-    if (!event?.source || event.source !== 'event') {
-      return undefined;
-    }
-    const timer = window.setInterval(() => {
-      void loadEvent();
-    }, 5000);
-    return () => window.clearInterval(timer);
-  }, [event?.source, loadEvent]);
+    setDismissedError(false);
+  }, [bannerError]);
 
   async function handleRsvp(status: EventRsvpStatus) {
     if (!id) {
       return;
     }
-    try {
-      await api.post(`/events/${id}/rsvp`, { status });
-      await loadEvent();
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
+    await rsvpMutation.mutateAsync({ id, status });
   }
 
   async function handleSaveEvent(payload: Record<string, unknown>) {
     if (!id) {
       return;
     }
-    try {
-      await api.put(`/events/${id}`, payload);
-      setEditorOpen(false);
-      await loadEvent();
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-      throw err;
-    }
+    await updateEventMutation.mutateAsync({ id, payload });
+    setEditorOpen(false);
   }
 
   async function handleDeleteEvent() {
     if (!id || !window.confirm(t('calendar.confirmDelete'))) {
       return;
     }
-    try {
-      await api.delete(`/events/${id}`);
-      navigate('/calendar');
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
+    await deleteEventMutation.mutateAsync(id);
+    navigate('/calendar');
   }
 
-  if (loading) {
+  if ((eventQuery.isLoading && !event) || (optionsQuery.isLoading && !optionsQuery.data)) {
     return <LoadingState />;
   }
 
@@ -117,7 +118,11 @@ export function EventDetailPage() {
         </div>
       </div>
 
-      <ErrorBanner error={error} onDismiss={() => setError(null)} onRetry={() => void loadEvent()} />
+      <ErrorBanner
+        error={dismissedError ? null : bannerError}
+        onDismiss={() => setDismissedError(true)}
+        onRetry={() => void Promise.all([eventQuery.refetch(), optionsQuery.refetch()])}
+      />
 
       <div className="card">
         <EventDetailView

@@ -5,72 +5,60 @@
  * Calls GET /feed with cursor pagination. Parent role only.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { api, ApiClientError } from '@/services/api/client';
+import { ApiClientError, type ApiError } from '@/services/api/client';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
 import { EmptyState } from '@/shared/ui/EmptyState';
 import { formatDate } from '@/shared/i18n';
+import type { FeedItem } from './types';
+import { useFeed } from './useFeed';
 
-interface FeedItem {
-  id: string;
-  school_id: string;
-  item_type: string;
-  title: string;
-  summary: string | null;
-  reference_type: string | null;
-  reference_id: string | null;
-  published_at: string;
+function toBannerError(error: unknown, fallback: string): ApiError | string | null {
+  if (!error) {
+    return null;
+  }
+  if (error instanceof ApiClientError) {
+    return error.apiError;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return fallback;
 }
 
 export function FeedPage() {
   const { t, i18n } = useTranslation();
-  const [items, setItems] = useState<FeedItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(false);
+  const feedQuery = useFeed();
+  const [dismissedError, setDismissedError] = useState(false);
 
-  const fetchFeed = useCallback(async (cursor?: string) => {
-    try {
-      const params: Record<string, string | number | undefined> = {};
-      if (cursor) params.cursor = cursor;
-
-      const resp = await api.list<FeedItem>('/feed', params);
-      if (cursor) {
-        setItems((prev) => [...prev, ...resp.data]);
-      } else {
-        setItems(resp.data);
-      }
-      setNextCursor(resp.meta.next_cursor);
-      setHasMore(resp.meta.has_more);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
-  }, [t]);
+  const items: FeedItem[] = useMemo(
+    () => feedQuery.data?.pages.flatMap((page) => page.data) ?? [],
+    [feedQuery.data]
+  );
+  const bannerError = useMemo(
+    () => toBannerError(feedQuery.error, t('app.error')),
+    [feedQuery.error, t]
+  );
 
   useEffect(() => {
-    setLoading(true);
-    fetchFeed().finally(() => setLoading(false));
-  }, [fetchFeed]);
+    setDismissedError(false);
+  }, [bannerError]);
 
-  async function handleLoadMore() {
-    if (!nextCursor) return;
-    setLoadingMore(true);
-    await fetchFeed(nextCursor);
-    setLoadingMore(false);
+  if (feedQuery.isLoading) {
+    return <LoadingState />;
   }
-
-  if (loading) return <LoadingState />;
 
   return (
     <div className="page">
       <h1 className="page-title">{t('feed.title')}</h1>
 
-      <ErrorBanner error={error} onDismiss={() => setError(null)} onRetry={() => fetchFeed()} />
+      <ErrorBanner
+        error={dismissedError ? null : bannerError}
+        onDismiss={() => setDismissedError(true)}
+        onRetry={() => void feedQuery.refetch()}
+      />
 
       {items.length === 0 ? (
         <EmptyState message={t('feed.empty')} icon="📰" />
@@ -89,14 +77,14 @@ export function FeedPage() {
             ))}
           </div>
 
-          {hasMore && (
+          {feedQuery.hasNextPage && (
             <div style={{ textAlign: 'center', marginTop: '16px' }}>
               <button
                 className="btn btn-secondary"
-                onClick={handleLoadMore}
-                disabled={loadingMore}
+                onClick={() => void feedQuery.fetchNextPage()}
+                disabled={feedQuery.isFetchingNextPage}
               >
-                {loadingMore ? t('app.loading') : t('feed.loadMore')}
+                {feedQuery.isFetchingNextPage ? t('app.loading') : t('feed.loadMore')}
               </button>
             </div>
           )}

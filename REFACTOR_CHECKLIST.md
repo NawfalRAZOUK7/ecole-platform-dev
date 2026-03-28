@@ -139,13 +139,13 @@
 - [ ] **Review & commit myself**: `feat(web): add React Query and shared query configuration`
 
 ### Batch 1 — Notifications, Feed, Calendar
-- [ ] Create `notifications.service.ts` + `useNotifications.ts`
-- [ ] Create `feed.service.ts` + `useFeed.ts`
-- [ ] Create `calendar.service.ts` + `useCalendar.ts`
-- [ ] Update `NotificationsPage.tsx` — no direct API calls
-- [ ] Update `FeedPage.tsx` — no direct API calls
-- [ ] Update `CalendarPage.tsx` — no direct API calls
-- [ ] Verify: `npm run build` passes
+- [x] Create `notifications.service.ts` + `useNotifications.ts`
+- [x] Create `feed.service.ts` + `useFeed.ts`
+- [x] Create `calendar.service.ts` + `useCalendar.ts`
+- [x] Update `NotificationsPage.tsx` — no direct API calls
+- [x] Update `FeedPage.tsx` — no direct API calls
+- [x] Update `CalendarPage.tsx` — no direct API calls
+- [x] Verify: `npm run build` passes
 - [ ] **Review & commit myself**: `refactor(web): extract services and hooks for notifications, feed, calendar`
 
 ### Batch 2 — Teacher & Admin

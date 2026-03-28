@@ -1,98 +1,105 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { api, ApiClientError } from '@/services/api/client';
+import { ApiClientError, type ApiError } from '@/services/api/client';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
 import { EmptyState } from '@/shared/ui/EmptyState';
 import { formatDate } from '@/shared/i18n';
+import { useMarkAllNotificationsRead, useMarkNotificationRead, useNotifications } from './useNotifications';
 import type { NotificationItem } from './types';
 
 const CATEGORY_OPTIONS = ['academic', 'billing', 'attendance', 'system', 'announcement'] as const;
 const CHANNEL_OPTIONS = ['in_app', 'push', 'email', 'sms'] as const;
 
+function toBannerError(error: unknown, fallback: string): ApiError | string | null {
+  if (!error) {
+    return null;
+  }
+  if (error instanceof ApiClientError) {
+    return error.apiError;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return fallback;
+}
+
 export function NotificationsPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const sentinelRef = useRef<HTMLDivElement | null>(null);
-  const [items, setItems] = useState<NotificationItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [category, setCategory] = useState('');
   const [channel, setChannel] = useState('');
   const [readFilter, setReadFilter] = useState('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [dismissedError, setDismissedError] = useState(false);
 
-  const filters = useMemo(
-    () => ({ category, channel, readFilter, fromDate, toDate }),
-    [category, channel, readFilter, fromDate, toDate]
-  );
-
-  const fetchNotifications = useCallback(async (cursor?: string, append = false) => {
-    const params: Record<string, string | number | undefined> = {
+  const queryFilters = useMemo(
+    () => ({
       limit: 20,
-      cursor,
       category: category || undefined,
       channel: channel || undefined,
       read: readFilter === '' ? undefined : readFilter,
       from: fromDate || undefined,
       to: toDate || undefined,
-    };
+    }),
+    [category, channel, fromDate, readFilter, toDate]
+  );
 
-    try {
-      const resp = await api.list<NotificationItem>('/notifications', params);
-      setItems((prev) => (append ? [...prev, ...resp.data] : resp.data));
-      setNextCursor(resp.meta.next_cursor);
-      setHasMore(resp.meta.has_more);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
+  const notificationsQuery = useNotifications(queryFilters);
+  const markReadMutation = useMarkNotificationRead();
+  const markAllReadMutation = useMarkAllNotificationsRead();
+
+  const items = useMemo(
+    () => notificationsQuery.data?.pages.flatMap((page) => page.data) ?? [],
+    [notificationsQuery.data]
+  );
+  const bannerError = useMemo(
+    () =>
+      toBannerError(
+        notificationsQuery.error ?? markReadMutation.error ?? markAllReadMutation.error,
+        t('app.error')
+      ),
+    [markAllReadMutation.error, markReadMutation.error, notificationsQuery.error, t]
+  );
+
+  useEffect(() => {
+    setDismissedError(false);
+  }, [bannerError]);
+
+  useEffect(() => {
+    if (
+      !notificationsQuery.hasNextPage ||
+      notificationsQuery.isLoading ||
+      notificationsQuery.isFetchingNextPage ||
+      !sentinelRef.current
+    ) {
+      return undefined;
     }
-  }, [category, channel, fromDate, readFilter, t, toDate]);
-
-  useEffect(() => {
-    setLoading(true);
-    void fetchNotifications().finally(() => setLoading(false));
-  }, [fetchNotifications, filters]);
-
-  useEffect(() => {
-    if (!hasMore || loading || loadingMore || !sentinelRef.current) return;
 
     const observer = new IntersectionObserver((entries) => {
-      if (entries[0]?.isIntersecting && nextCursor) {
-        setLoadingMore(true);
-        void fetchNotifications(nextCursor, true).finally(() => setLoadingMore(false));
+      if (entries[0]?.isIntersecting) {
+        void notificationsQuery.fetchNextPage();
       }
     }, { threshold: 0.2 });
 
     observer.observe(sentinelRef.current);
     return () => observer.disconnect();
-  }, [fetchNotifications, hasMore, loading, loadingMore, nextCursor]);
+  }, [
+    notificationsQuery.fetchNextPage,
+    notificationsQuery.hasNextPage,
+    notificationsQuery.isFetchingNextPage,
+    notificationsQuery.isLoading,
+  ]);
 
   async function handleMarkRead(notification: NotificationItem, read = true) {
-    await api.patch(`/notifications/${notification.id}/read`, { read });
-    setItems((prev) => prev.map((item) => (
-      item.id === notification.id
-        ? {
-            ...item,
-            is_read: read,
-            read_at: read ? new Date().toISOString() : null,
-          }
-        : item
-    )));
+    await markReadMutation.mutateAsync({ id: notification.id, read });
   }
 
   async function handleMarkAllRead() {
-    await api.patch('/notifications/mark-all-read');
-    setItems((prev) => prev.map((item) => ({
-      ...item,
-      is_read: true,
-      read_at: item.read_at || new Date().toISOString(),
-    })));
+    await markAllReadMutation.mutateAsync();
   }
 
   async function handleNotificationClick(notification: NotificationItem) {
@@ -110,7 +117,7 @@ export function NotificationsPage() {
     setToDate('');
   }
 
-  if (loading) {
+  if (notificationsQuery.isLoading) {
     return <LoadingState />;
   }
 
@@ -173,7 +180,11 @@ export function NotificationsPage() {
         />
       </div>
 
-      <ErrorBanner error={error} onDismiss={() => setError(null)} onRetry={() => void fetchNotifications()} />
+      <ErrorBanner
+        error={dismissedError ? null : bannerError}
+        onDismiss={() => setDismissedError(true)}
+        onRetry={() => void notificationsQuery.refetch()}
+      />
 
       {items.length === 0 ? (
         <EmptyState message={t('notifications.empty')} icon="🔔" />
@@ -229,7 +240,7 @@ export function NotificationsPage() {
           ))}
 
           <div ref={sentinelRef} className="notifications-sentinel">
-            {loadingMore && <span>{t('app.loading')}</span>}
+            {notificationsQuery.isFetchingNextPage && <span>{t('app.loading')}</span>}
           </div>
         </div>
       )}
