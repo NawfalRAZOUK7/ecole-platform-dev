@@ -17,6 +17,7 @@ from app.repositories.lms import LMSRepository
 from app.repositories.messaging import MessagingRepository
 from app.repositories.notifications import NotificationRepository
 from app.repositories.profile import ProfileRepository
+from app.repositories.profile_loader import ProfileLoaderRepository
 from app.repositories.progress import ProgressRepository
 from app.repositories.quiz import QuizRepository
 from app.repositories.reports import ReportsRepository
@@ -38,6 +39,7 @@ __all__ = [
     "MessagingRepository",
     "NotificationRepository",
     "ProfileRepository",
+    "ProfileLoaderRepository",
     "ProgressRepository",
     "QuizRepository",
     "AnalyticsRepository",

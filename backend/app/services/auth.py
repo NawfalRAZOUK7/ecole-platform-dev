@@ -46,6 +46,7 @@ from app.schemas.profile import (
     TeacherProfileUpdate,
 )
 from app.services.audit import AuditService
+from app.services.profile_loader import ProfileLoader
 
 logger = logging.getLogger(__name__)
 
@@ -334,6 +335,7 @@ class AuthService:
         async with UnitOfWork(self.db) as uow:
             repo = AuthRepository(uow.session)
             audit = AuditService(uow.session)
+            profile_loader = ProfileLoader(uow.session)
 
             # 4. Create user
             user = await repo.create_user(
@@ -354,24 +356,10 @@ class AuthService:
             )
 
             # 6. Create role-specific profile
-            if role == "STD":
-                await repo.create_student_profile(
-                    user_id=user.id,
-                    school_id=school_id,
-                    **profile_data,
-                )
-            elif role == "PAR":
-                await repo.create_parent_profile(
-                    user_id=user.id,
-                    school_id=school_id,
-                    **profile_data,
-                )
-            elif role == "TCH":
-                await repo.create_teacher_profile(
-                    user_id=user.id,
-                    school_id=school_id,
-                    **profile_data,
-                )
+            profile = await profile_loader.ensure_profile(user.id, school_id, role)
+            if profile is not None:
+                for field, value in profile_data.items():
+                    setattr(profile, field, value)
 
             # 7. Auto-create parent_child_link if code has target_student_id
             if role == "PAR" and invite.target_student_id:
@@ -583,6 +571,17 @@ class AuthService:
 
         # 2. Load all memberships for this user
         memberships = await self.repo.list_memberships(user_id, active_only=True)
+        profile_loader = ProfileLoader(self.db)
+        # /auth/me keeps its existing response shape, but now sources role-profile
+        # composition through ProfileLoader rather than scattered direct queries.
+        await profile_loader.load(
+            user_id,
+            [
+                membership.role_code
+                for membership in memberships
+                if membership.school_id == school_id
+            ],
+        )
 
         # 3. Get permissions for current role
         permissions = sorted(get_permissions_for_role(role))

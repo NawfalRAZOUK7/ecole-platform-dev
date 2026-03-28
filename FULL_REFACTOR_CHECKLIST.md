@@ -77,12 +77,12 @@
 - [ ] **Review & commit myself**
 
 #### OOP-B2: ProfileLoader
-- [ ] Created repositories/profile_loader.py
-- [ ] Created services/profile_loader.py
-- [ ] Updated auth.py to use ProfileLoader on register
-- [ ] Updated auth.py to use ProfileLoader on /me
-- [ ] Updated profile.py to use ProfileLoader
-- [ ] Updated repositories/__init__.py
+- [x] Created repositories/profile_loader.py
+- [x] Created services/profile_loader.py
+- [x] Updated auth.py to use ProfileLoader on register
+- [x] Updated auth.py to use ProfileLoader on /me
+- [x] Updated profile.py to use ProfileLoader
+- [x] Updated repositories/__init__.py
 - [ ] **Review & commit myself**
 
 ---

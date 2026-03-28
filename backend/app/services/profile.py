@@ -16,7 +16,6 @@ from app.core.dependencies import (
 )
 from app.core.exceptions import NotFoundError, ValidationError
 from app.core.unit_of_work import UnitOfWork
-from app.models.iam import ParentProfile, StudentProfile, TeacherProfile
 from app.repositories.profile import ProfileRepository
 from app.schemas.profile import (
     ParentProfileResponse,
@@ -27,11 +26,12 @@ from app.schemas.profile import (
     TeacherProfileUpdate,
 )
 from app.services.audit import AuditService
+from app.services.profile_loader import ProfileLoader
 
 _ROLE_PROFILE_MAP = {
-    "STD": StudentProfile,
-    "PAR": ParentProfile,
-    "TCH": TeacherProfile,
+    "STD": "student",
+    "PAR": "parent",
+    "TCH": "teacher",
 }
 
 
@@ -75,23 +75,21 @@ class ProfileService:
             "teacher_profile": None,
         }
 
-        profile_cls = _ROLE_PROFILE_MAP.get(role)
-        if not profile_cls:
+        profile_type = _ROLE_PROFILE_MAP.get(role)
+        if not profile_type:
             return result
 
-        profile = await self.repo.get_role_profile(
-            profile_cls=profile_cls,
-            user_id=user_id,
-            school_id=school_id,
-        )
-        if not profile:
+        loader = ProfileLoader(self.db)
+        profiles = await loader.load(user_id, [role])
+        profile = profiles.get(profile_type)
+        if profile is None:
             return result
 
-        if role == "STD":
+        if profile_type == "student":
             result["student_profile"] = StudentProfileResponse.model_validate(profile)
-        elif role == "PAR":
+        elif profile_type == "parent":
             result["parent_profile"] = ParentProfileResponse.model_validate(profile)
-        elif role == "TCH":
+        elif profile_type == "teacher":
             result["teacher_profile"] = TeacherProfileResponse.model_validate(profile)
 
         return result
@@ -111,8 +109,8 @@ class ProfileService:
         client_ip: str,
     ) -> dict:
         role = auth.role
-        profile_cls = _ROLE_PROFILE_MAP.get(role)
-        if not profile_cls:
+        profile_type = _ROLE_PROFILE_MAP.get(role)
+        if not profile_type:
             raise ValidationError(
                 f"Role '{role}' does not have an extended profile",
                 error_code="ERR-PROF-001",
@@ -128,27 +126,20 @@ class ProfileService:
         if not update_data:
             raise ValidationError("No fields to update", error_code="ERR-PROF-002")
 
-        profile = await self.repo.get_role_profile(
-            profile_cls=profile_cls,
-            user_id=auth.user_id,
-            school_id=auth.school_id,
-        )
-        entity_before = None
-        if profile:
+        async with UnitOfWork(self.db) as uow:
+            repo = ProfileRepository(uow.session)
+            audit = AuditService(uow.session)
+            loader = ProfileLoader(uow.session)
+            profile = await loader.ensure_profile(auth.user_id, auth.school_id, role)
+            if profile is None:
+                raise ValidationError(
+                    f"Role '{role}' does not have an extended profile",
+                    error_code="ERR-PROF-001",
+                )
             entity_before = {key: getattr(profile, key) for key in update_data}
             for field, value in update_data.items():
                 setattr(profile, field, value)
             profile.updated_at = datetime.now(timezone.utc)
-        else:
-            profile = profile_cls(
-                user_id=auth.user_id,
-                school_id=auth.school_id,
-                **update_data,
-            )
-
-        async with UnitOfWork(self.db) as uow:
-            repo = ProfileRepository(uow.session)
-            audit = AuditService(uow.session)
             saved_profile = await repo.save_profile(profile)
             await audit.log_event(
                 school_id=auth.school_id,
