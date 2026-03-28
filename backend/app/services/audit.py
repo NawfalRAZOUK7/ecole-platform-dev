@@ -17,6 +17,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.unit_of_work import UnitOfWork
 from app.core.middleware import get_correlation_id
 from app.models.audit import AuditLog
 from app.repositories.audit import AuditRepository
@@ -61,19 +62,38 @@ class AuditService:
                 except ValueError:
                     cid = None
 
-        entry = await self.repo.create_log(
-            school_id=school_id,
-            actor_id=actor_id,
-            action_type=action_type,
-            target_type=target_type,
-            target_id=target_id,
-            entity_before=entity_before,
-            entity_after=entity_after,
-            outcome=outcome,
-            error_code=error_code,
-            correlation_id=cid,
-            ip_address=ip_address,
-        )
+        if self.db.info.get("_uow_depth"):
+            repo = AuditRepository(self.db)
+            entry = await repo.create_log(
+                school_id=school_id,
+                actor_id=actor_id,
+                action_type=action_type,
+                target_type=target_type,
+                target_id=target_id,
+                entity_before=entity_before,
+                entity_after=entity_after,
+                outcome=outcome,
+                error_code=error_code,
+                correlation_id=cid,
+                ip_address=ip_address,
+            )
+        else:
+            async with UnitOfWork(self.db) as uow:
+                repo = AuditRepository(uow.session)
+                entry = await repo.create_log(
+                    school_id=school_id,
+                    actor_id=actor_id,
+                    action_type=action_type,
+                    target_type=target_type,
+                    target_id=target_id,
+                    entity_before=entity_before,
+                    entity_after=entity_after,
+                    outcome=outcome,
+                    error_code=error_code,
+                    correlation_id=cid,
+                    ip_address=ip_address,
+                )
+                await uow.commit()
 
         logger.info(
             "Audit: action=%s outcome=%s actor=%s target=%s/%s cid=%s",

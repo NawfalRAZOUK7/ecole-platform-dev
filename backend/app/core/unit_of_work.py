@@ -19,6 +19,7 @@ class UnitOfWork:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
         self._committed = False
+        self._info_key = "_uow_depth"
 
     @property
     def session(self) -> AsyncSession:
@@ -32,8 +33,17 @@ class UnitOfWork:
         await self._session.rollback()
 
     async def __aenter__(self) -> UnitOfWork:
+        depth = int(self._session.info.get(self._info_key, 0))
+        self._session.info[self._info_key] = depth + 1
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
-        if exc_type is not None and not self._committed:
-            await self.rollback()
+        try:
+            if exc_type is not None and not self._committed:
+                await self.rollback()
+        finally:
+            depth = int(self._session.info.get(self._info_key, 0))
+            if depth <= 1:
+                self._session.info.pop(self._info_key, None)
+            else:
+                self._session.info[self._info_key] = depth - 1

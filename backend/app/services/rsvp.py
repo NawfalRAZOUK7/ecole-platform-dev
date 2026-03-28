@@ -9,6 +9,7 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import AuthorizationError, ConflictError
+from app.core.unit_of_work import UnitOfWork
 from app.models.calendar import EventRsvpStatus, EventRSVP
 from app.repositories.calendar import CalendarRepository
 from app.services.calendar import CalendarService
@@ -94,9 +95,13 @@ class RSVPService:
         else:
             existing.status = status
             existing.responded_at = now
-        await self.repo.save_rsvp(existing)
 
-        counts = (await self.repo.list_rsvp_counts([event.id])).get(event.id, {})
+        async with UnitOfWork(self.db) as uow:
+            repo = CalendarRepository(uow.session)
+            await repo.save_rsvp(existing)
+            counts = (await repo.list_rsvp_counts([event.id])).get(event.id, {})
+            await uow.commit()
+
         payload = {
             "event_id": str(event.id),
             "status": existing.status,

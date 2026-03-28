@@ -15,6 +15,7 @@ from typing import Any, AsyncIterator
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ValidationError
+from app.core.unit_of_work import UnitOfWork
 from app.models.reporting import DataExport
 from app.repositories.reports import ReportsRepository
 from app.schemas.reports import ExportFilters
@@ -96,7 +97,10 @@ class DataExportService:
             format=export_format,
             row_count=row_count,
         )
-        await self.repo.create_export_log(export_log)
+        async with UnitOfWork(self.db) as uow:
+            repo = ReportsRepository(uow.session)
+            await repo.create_export_log(export_log)
+            await uow.commit()
         return export_log
 
     async def prepare_csv_download(
@@ -116,21 +120,23 @@ class DataExportService:
             filters=parsed_filters,
             export_format="csv",
         )
-        await self.audit.log_event(
-            school_id=school_id,
-            actor_id=requester_id,
-            action_type="export.csv.download",
-            target_type="data_export",
-            target_id=export_log.id,
-            outcome="success",
-            entity_after={
-                "entity": entity,
-                "filters": parsed_filters,
-                "row_count": export_log.row_count,
-            },
-            ip_address=ip_address,
-        )
-        await self.db.commit()
+        async with UnitOfWork(self.db) as uow:
+            audit = AuditService(uow.session)
+            await audit.log_event(
+                school_id=school_id,
+                actor_id=requester_id,
+                action_type="export.csv.download",
+                target_type="data_export",
+                target_id=export_log.id,
+                outcome="success",
+                entity_after={
+                    "entity": entity,
+                    "filters": parsed_filters,
+                    "row_count": export_log.row_count,
+                },
+                ip_address=ip_address,
+            )
+            await uow.commit()
         return {
             "filename": f"{entity}.csv",
             "stream": self.stream_csv(
@@ -162,21 +168,23 @@ class DataExportService:
             entity=entity,
             filters=parsed_filters,
         )
-        await self.audit.log_event(
-            school_id=school_id,
-            actor_id=requester_id,
-            action_type="export.xlsx.download",
-            target_type="data_export",
-            target_id=export_log.id,
-            outcome="success",
-            entity_after={
-                "entity": entity,
-                "filters": parsed_filters,
-                "row_count": export_log.row_count,
-            },
-            ip_address=ip_address,
-        )
-        await self.db.commit()
+        async with UnitOfWork(self.db) as uow:
+            audit = AuditService(uow.session)
+            await audit.log_event(
+                school_id=school_id,
+                actor_id=requester_id,
+                action_type="export.xlsx.download",
+                target_type="data_export",
+                target_id=export_log.id,
+                outcome="success",
+                entity_after={
+                    "entity": entity,
+                    "filters": parsed_filters,
+                    "row_count": export_log.row_count,
+                },
+                ip_address=ip_address,
+            )
+            await uow.commit()
         return {
             "filename": f"{entity}.xlsx",
             "path": xlsx_path,

@@ -20,6 +20,7 @@ from app.core.metrics import (
     DOCUMENT_UPLOAD_COUNT,
     DOCUMENT_UPLOAD_SIZE_BYTES,
 )
+from app.core.unit_of_work import UnitOfWork
 from app.models.com import NotificationCategory
 from app.models.documents import Document, DocumentCategory, StudentDocumentRequirement
 from app.repositories.documents import DocumentsRepository
@@ -63,81 +64,35 @@ class StudentDocumentsService:
         linked_student_id: uuid.UUID | None = None,
         expires_at: datetime | None = None,
     ) -> dict:
-        if role == "STD":
-            raise AuthorizationError(
-                "Students cannot upload documents",
-                error_code="ERR-DOC-403",
-            )
-        if linked_student_id is not None and role not in {"PAR", "ADM", "DIR"}:
-            raise AuthorizationError(
-                "Only parents and administrators can link uploads to students",
-                error_code="ERR-DOC-403",
-            )
-
-        category = category or DocumentCategory.OTHER.value
-        content = file.read()
-        if not isinstance(content, bytes):
-            content = bytes(content)
-        sha256 = file_storage_service.compute_sha256(content)
-        deduplicated = False
-        existing = await self.repo.find_document_by_sha(school_id=school_id, sha256=sha256)
-
-        thumbnail_path: str | None = None
-        if existing:
-            storage_path, thumbnail_path = await file_storage_service.reuse_upload(
-                storage_path=existing.storage_path,
-                thumbnail_path=existing.thumbnail_path,
-            )
-            deduplicated = True
-        else:
-            storage_path, thumbnail_path = await file_storage_service.store_upload(
-                content=content,
+        if self.db.info.get("_uow_depth"):
+            return await self._upload_document_with_repo(
+                repo=DocumentsRepository(self.db),
+                school_id=school_id,
+                user_id=user_id,
+                role=role,
+                file=file,
                 original_filename=original_filename,
                 mime_type=mime_type,
-                sha256=sha256,
+                category=category,
+                linked_student_id=linked_student_id,
+                expires_at=expires_at,
             )
-            thumbnail_path = thumbnail_path or None
 
-        if linked_student_id is not None:
-            await self._verify_student_access_for_link(
+        async with UnitOfWork(self.db) as uow:
+            payload = await self._upload_document_with_repo(
+                repo=DocumentsRepository(uow.session),
                 school_id=school_id,
-                actor_id=user_id,
-                actor_role=role,
-                student_id=linked_student_id,
+                user_id=user_id,
+                role=role,
+                file=file,
+                original_filename=original_filename,
+                mime_type=mime_type,
+                category=category,
+                linked_student_id=linked_student_id,
+                expires_at=expires_at,
             )
-
-        document = Document(
-            school_id=school_id,
-            uploader_id=user_id,
-            filename=os.path.basename(storage_path),
-            original_filename=original_filename,
-            mime_type=mime_type,
-            size_bytes=len(content),
-            sha256=sha256,
-            storage_path=storage_path,
-            thumbnail_path=thumbnail_path,
-            category=category,
-            linked_student_id=linked_student_id,
-            expires_at=expires_at,
-        )
-        await self.repo.create_document(document)
-        DOCUMENT_UPLOAD_COUNT.labels(
-            env=settings.app_env,
-            mime_type=mime_type,
-            deduplicated=str(deduplicated).lower(),
-        ).inc()
-        DOCUMENT_UPLOAD_SIZE_BYTES.labels(
-            env=settings.app_env,
-            mime_type=mime_type,
-        ).inc(len(content))
-        if not deduplicated:
-            DOCUMENT_STORAGE_TOTAL_BYTES.labels(env=settings.app_env).inc(len(content))
-        return await self.serialize_document(
-            document,
-            role=role,
-            actor_id=user_id,
-            deduplicated=deduplicated,
-        )
+            await uow.commit()
+            return payload
 
     async def list_documents(
         self,
@@ -272,7 +227,10 @@ class StudentDocumentsService:
         document.linked_student_id = student_id
         document.category = category
         document.expires_at = expires_at
-        await self.repo.save_document(document)
+        async with UnitOfWork(self.db) as uow:
+            repo = DocumentsRepository(uow.session)
+            await repo.save_document(document)
+            await uow.commit()
         return await self.serialize_document(
             document,
             role=actor_role,
@@ -383,12 +341,16 @@ class StudentDocumentsService:
         elif actor_role not in {"ADM", "DIR"} and document.uploader_id != actor_id:
             raise NotFoundError("Document not found", error_code="ERR-DOC-404")
 
+        async with UnitOfWork(self.db) as uow:
+            repo = DocumentsRepository(uow.session)
+            if hard_delete:
+                await repo.hard_delete_document(document)
+            else:
+                document.deleted_at = _utc_now()
+                await repo.save_document(document)
+            await uow.commit()
         if hard_delete:
-            await self.repo.hard_delete_document(document)
             await self._delete_underlying_files_if_unused(document=document)
-        else:
-            document.deleted_at = _utc_now()
-            await self.repo.save_document(document)
         return {
             "id": str(document.id),
             "deleted": True,
@@ -418,13 +380,16 @@ class StudentDocumentsService:
         }
 
         deleted_ids: list[str] = []
-        for document_id in unique_ids:
-            document = documents.get(document_id)
-            if document is None or document.deleted_at is not None:
-                raise NotFoundError("Document not found", error_code="ERR-DOC-404")
-            document.deleted_at = _utc_now()
-            await self.repo.save_document(document)
-            deleted_ids.append(str(document.id))
+        async with UnitOfWork(self.db) as uow:
+            repo = DocumentsRepository(uow.session)
+            for document_id in unique_ids:
+                document = documents.get(document_id)
+                if document is None or document.deleted_at is not None:
+                    raise NotFoundError("Document not found", error_code="ERR-DOC-404")
+                document.deleted_at = _utc_now()
+                await repo.save_document(document)
+                deleted_ids.append(str(document.id))
+            await uow.commit()
 
         return {
             "deleted": len(deleted_ids),
@@ -573,9 +538,17 @@ class StudentDocumentsService:
         *,
         document: Document,
     ):
-        document.download_count += 1
-        await self.repo.save_document(document)
-        return await file_storage_service.local_path(document.storage_path)
+        if self.db.info.get("_uow_depth"):
+            document.download_count += 1
+            await DocumentsRepository(self.db).save_document(document)
+            return await file_storage_service.local_path(document.storage_path)
+
+        async with UnitOfWork(self.db) as uow:
+            repo = DocumentsRepository(uow.session)
+            document.download_count += 1
+            await repo.save_document(document)
+            await uow.commit()
+            return await file_storage_service.local_path(document.storage_path)
 
     async def read_document_preview(
         self,
@@ -601,19 +574,20 @@ class StudentDocumentsService:
         *,
         school_id: uuid.UUID,
     ) -> list[StudentDocumentRequirement]:
-        existing = await self.repo.list_student_requirements(school_id=school_id)
-        if existing:
-            return existing
-        for category, required, description in DEFAULT_REQUIREMENTS:
-            await self.repo.save_requirement(
-                StudentDocumentRequirement(
-                    school_id=school_id,
-                    category=category,
-                    required=required,
-                    description=description,
-                )
+        if self.db.info.get("_uow_depth"):
+            return await self._ensure_default_requirements_with_repo(
+                repo=DocumentsRepository(self.db),
+                school_id=school_id,
             )
-        return await self.repo.list_student_requirements(school_id=school_id)
+
+        async with UnitOfWork(self.db) as uow:
+            repo = DocumentsRepository(uow.session)
+            requirements = await self._ensure_default_requirements_with_repo(
+                repo=repo,
+                school_id=school_id,
+            )
+            await uow.commit()
+            return requirements
 
     async def check_expiring_documents(self, *, now: datetime | None = None) -> int:
         now = now or _utc_now()
@@ -672,10 +646,14 @@ class StudentDocumentsService:
         cutoff = now - timedelta(days=settings.document_deleted_retention_days)
         documents = await self.repo.list_deleted_documents(before=cutoff)
         deleted = 0
+        async with UnitOfWork(self.db) as uow:
+            repo = DocumentsRepository(uow.session)
+            for document in documents:
+                await repo.hard_delete_document(document)
+                deleted += 1
+            await uow.commit()
         for document in documents:
-            await self.repo.hard_delete_document(document)
             await self._delete_underlying_files_if_unused(document=document)
-            deleted += 1
         return deleted
 
     async def serialize_document(
@@ -842,3 +820,113 @@ class StudentDocumentsService:
             DOCUMENT_STORAGE_TOTAL_BYTES.labels(env=settings.app_env).dec(document.size_bytes)
             if document.thumbnail_path:
                 await file_storage_service.delete(document.thumbnail_path)
+
+    async def _upload_document_with_repo(
+        self,
+        *,
+        repo: DocumentsRepository,
+        school_id: uuid.UUID,
+        user_id: uuid.UUID,
+        role: str,
+        file: BinaryIO,
+        original_filename: str,
+        mime_type: str,
+        category: str | None,
+        linked_student_id: uuid.UUID | None,
+        expires_at: datetime | None,
+    ) -> dict:
+        if role == "STD":
+            raise AuthorizationError(
+                "Students cannot upload documents",
+                error_code="ERR-DOC-403",
+            )
+        if linked_student_id is not None and role not in {"PAR", "ADM", "DIR"}:
+            raise AuthorizationError(
+                "Only parents and administrators can link uploads to students",
+                error_code="ERR-DOC-403",
+            )
+
+        category = category or DocumentCategory.OTHER.value
+        content = file.read()
+        if not isinstance(content, bytes):
+            content = bytes(content)
+        sha256 = file_storage_service.compute_sha256(content)
+        deduplicated = False
+        existing = await repo.find_document_by_sha(school_id=school_id, sha256=sha256)
+
+        thumbnail_path: str | None = None
+        if existing:
+            storage_path, thumbnail_path = await file_storage_service.reuse_upload(
+                storage_path=existing.storage_path,
+                thumbnail_path=existing.thumbnail_path,
+            )
+            deduplicated = True
+        else:
+            storage_path, thumbnail_path = await file_storage_service.store_upload(
+                content=content,
+                original_filename=original_filename,
+                mime_type=mime_type,
+                sha256=sha256,
+            )
+            thumbnail_path = thumbnail_path or None
+
+        if linked_student_id is not None:
+            await self._verify_student_access_for_link(
+                school_id=school_id,
+                actor_id=user_id,
+                actor_role=role,
+                student_id=linked_student_id,
+            )
+
+        document = Document(
+            school_id=school_id,
+            uploader_id=user_id,
+            filename=os.path.basename(storage_path),
+            original_filename=original_filename,
+            mime_type=mime_type,
+            size_bytes=len(content),
+            sha256=sha256,
+            storage_path=storage_path,
+            thumbnail_path=thumbnail_path,
+            category=category,
+            linked_student_id=linked_student_id,
+            expires_at=expires_at,
+        )
+        await repo.create_document(document)
+        DOCUMENT_UPLOAD_COUNT.labels(
+            env=settings.app_env,
+            mime_type=mime_type,
+            deduplicated=str(deduplicated).lower(),
+        ).inc()
+        DOCUMENT_UPLOAD_SIZE_BYTES.labels(
+            env=settings.app_env,
+            mime_type=mime_type,
+        ).inc(len(content))
+        if not deduplicated:
+            DOCUMENT_STORAGE_TOTAL_BYTES.labels(env=settings.app_env).inc(len(content))
+        return await self.serialize_document(
+            document,
+            role=role,
+            actor_id=user_id,
+            deduplicated=deduplicated,
+        )
+
+    async def _ensure_default_requirements_with_repo(
+        self,
+        *,
+        repo: DocumentsRepository,
+        school_id: uuid.UUID,
+    ) -> list[StudentDocumentRequirement]:
+        existing = await repo.list_student_requirements(school_id=school_id)
+        if existing:
+            return existing
+        for category, required, description in DEFAULT_REQUIREMENTS:
+            await repo.save_requirement(
+                StudentDocumentRequirement(
+                    school_id=school_id,
+                    category=category,
+                    required=required,
+                    description=description,
+                )
+            )
+        return await repo.list_student_requirements(school_id=school_id)

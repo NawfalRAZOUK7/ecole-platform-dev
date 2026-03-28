@@ -35,31 +35,31 @@
 - [ ] **Review & commit myself**
 
 #### OOP-A3: UnitOfWork (All Services)
-- [ ] Updated admin.py with UoW
-- [ ] Updated ai.py with UoW
-- [ ] Updated audit.py with UoW
-- [ ] Updated calendar.py with UoW
-- [ ] Updated cms.py with UoW
-- [ ] Updated communication.py with UoW
-- [ ] Updated data_export.py with UoW
-- [ ] Updated email_digest.py with UoW
-- [ ] Updated feature.py with UoW
-- [ ] Updated gdpr.py with UoW
-- [ ] Updated lms.py with UoW
-- [ ] Updated notification_hub.py with UoW
-- [ ] Updated overdue_reminders.py with UoW
-- [ ] Updated payment_retry.py with UoW
-- [ ] Updated profile.py with UoW
-- [ ] Updated progress.py with UoW
-- [ ] Updated push_config.py with UoW
-- [ ] Updated quiz_grading.py with UoW
-- [ ] Updated realtime.py with UoW
-- [ ] Updated reminders.py with UoW
-- [ ] Updated reports.py with UoW
-- [ ] Updated resource_library.py with UoW
-- [ ] Updated rsvp.py with UoW
-- [ ] Updated student_documents.py with UoW
-- [ ] Zero db.commit() calls remain in services (only uow.commit)
+- [x] Updated admin.py with UoW
+- [x] Updated ai.py with UoW
+- [x] Updated audit.py with UoW
+- [x] Updated calendar.py with UoW
+- [x] Updated cms.py with UoW
+- [x] Updated communication.py with UoW
+- [x] Updated data_export.py with UoW
+- [x] Updated email_digest.py with UoW
+- [x] Updated feature.py with UoW
+- [x] Updated gdpr.py with UoW
+- [x] Updated lms.py with UoW
+- [x] Updated notification_hub.py with UoW
+- [x] Updated overdue_reminders.py with UoW
+- [x] Updated payment_retry.py with UoW
+- [x] Updated profile.py with UoW
+- [x] Reviewed progress.py (read-only, no DB transaction writes)
+- [x] Updated push_config.py with UoW
+- [x] Updated quiz_grading.py with UoW
+- [x] Reviewed realtime.py (no DB transaction writes)
+- [x] Updated reminders.py with UoW
+- [x] Updated reports.py with UoW
+- [x] Updated resource_library.py with UoW
+- [x] Updated rsvp.py with UoW
+- [x] Updated student_documents.py with UoW
+- [x] Zero db.commit() calls remain in services (only uow.commit)
 - [ ] **Review & commit myself**
 
 ---

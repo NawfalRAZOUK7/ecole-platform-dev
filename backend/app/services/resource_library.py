@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.exceptions import AuthorizationError, NotFoundError, ValidationError
+from app.core.unit_of_work import UnitOfWork
 from app.models.documents import DocumentCategory, Resource, ResourceRating
 from app.repositories.documents import DocumentsRepository
 from app.schemas.resources import ResourceCreateRequest, ResourceUpdateRequest
@@ -25,6 +26,7 @@ def _utc_now() -> datetime:
 
 class ResourceLibraryService:
     def __init__(self, db: AsyncSession) -> None:
+        self.db = db
         self.repo = DocumentsRepository(db)
         self.documents = StudentDocumentsService(db)
 
@@ -54,33 +56,38 @@ class ResourceLibraryService:
                 class_id=payload.class_id,
             )
 
-        upload = await self.documents.upload_document(
-            school_id=school_id,
-            user_id=actor_id,
-            role=actor_role,
-            file=file,
-            original_filename=original_filename,
-            mime_type=mime_type,
-            category=DocumentCategory.OTHER.value,
-        )
-        document = await self.repo.get_document(uuid.UUID(upload["id"]))
-        if document is None:
-            raise NotFoundError("Document not found", error_code="ERR-DOC-404")
+        async with UnitOfWork(self.db) as uow:
+            repo = DocumentsRepository(uow.session)
+            documents = StudentDocumentsService(uow.session)
+            upload = await documents.upload_document(
+                school_id=school_id,
+                user_id=actor_id,
+                role=actor_role,
+                file=file,
+                original_filename=original_filename,
+                mime_type=mime_type,
+                category=DocumentCategory.OTHER.value,
+            )
+            document = await repo.get_document(uuid.UUID(upload["id"]))
+            if document is None:
+                raise NotFoundError("Document not found", error_code="ERR-DOC-404")
 
-        resource = Resource(
-            school_id=school_id,
-            uploader_id=actor_id,
-            title=payload.title,
-            description=payload.description,
-            subject=payload.subject,
-            level=payload.level,
-            type=payload.type,
-            tags=payload.tags,
-            file_id=document.id,
-            visibility=payload.visibility,
-            class_id=payload.class_id,
-        )
-        await self.repo.create_resource(resource)
+            resource = Resource(
+                school_id=school_id,
+                uploader_id=actor_id,
+                title=payload.title,
+                description=payload.description,
+                subject=payload.subject,
+                level=payload.level,
+                type=payload.type,
+                tags=payload.tags,
+                file_id=document.id,
+                visibility=payload.visibility,
+                class_id=payload.class_id,
+            )
+            await repo.create_resource(resource)
+            await uow.commit()
+
         return await self.serialize_resource(
             resource=resource,
             document=document,
@@ -202,7 +209,10 @@ class ResourceLibraryService:
             setattr(resource, field, value)
         if resource.visibility == "class" and resource.class_id is None:
             raise ValidationError("class_id is required", error_code="ERR-DOC-422")
-        await self.repo.save_resource(resource)
+        async with UnitOfWork(self.db) as uow:
+            repo = DocumentsRepository(uow.session)
+            await repo.save_resource(resource)
+            await uow.commit()
         return await self.serialize_resource(
             resource=resource,
             document=document,
@@ -230,8 +240,11 @@ class ResourceLibraryService:
             raise NotFoundError("Resource not found", error_code="ERR-DOC-404")
         resource.deleted_at = _utc_now()
         document.deleted_at = _utc_now()
-        await self.repo.save_resource(resource)
-        await self.repo.save_document(document)
+        async with UnitOfWork(self.db) as uow:
+            repo = DocumentsRepository(uow.session)
+            await repo.save_resource(resource)
+            await repo.save_document(document)
+            await uow.commit()
         return {"id": str(resource.id), "deleted": True}
 
     async def rate_resource(
@@ -266,11 +279,14 @@ class ResourceLibraryService:
             )
         else:
             rating.rating = rating_value
-        await self.repo.save_resource_rating(rating)
-        average, count = await self.repo.calculate_resource_rating_stats(resource_id=resource.id)
-        resource.avg_rating = average
-        resource.rating_count = count
-        await self.repo.save_resource(resource)
+        async with UnitOfWork(self.db) as uow:
+            repo = DocumentsRepository(uow.session)
+            await repo.save_resource_rating(rating)
+            average, count = await repo.calculate_resource_rating_stats(resource_id=resource.id)
+            resource.avg_rating = average
+            resource.rating_count = count
+            await repo.save_resource(resource)
+            await uow.commit()
         return {
             "resource_id": str(resource.id),
             "rating": rating_value,
@@ -309,9 +325,14 @@ class ResourceLibraryService:
         resource: Resource,
         document,
     ):
-        resource.download_count += 1
-        await self.repo.save_resource(resource)
-        return await self.documents.read_document_file(document=document)
+        async with UnitOfWork(self.db) as uow:
+            repo = DocumentsRepository(uow.session)
+            documents = StudentDocumentsService(uow.session)
+            resource.download_count += 1
+            await repo.save_resource(resource)
+            path = await documents.read_document_file(document=document)
+            await uow.commit()
+            return path
 
     def build_download_token(self, *, resource_id: uuid.UUID) -> str:
         exp = _utc_now() + timedelta(hours=settings.document_download_ttl_hours)

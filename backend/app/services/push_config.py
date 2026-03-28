@@ -11,6 +11,7 @@ from pathlib import Path
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.core.unit_of_work import UnitOfWork
 from app.models.com import DeliveryStatus, DeviceToken, Notification, NotificationDelivery
 from app.repositories.notifications import NotificationDeliveryRepository, NotificationRepository
 
@@ -60,26 +61,31 @@ class PushConfigService:
         platform: str,
         device_name: str | None,
     ) -> DeviceToken:
-        existing = await self.notification_repo.find_device_by_token(token)
-        now = _utc_now()
+        async with UnitOfWork(self.db) as uow:
+            notification_repo = NotificationRepository(uow.session)
+            existing = await notification_repo.find_device_by_token(token)
+            now = _utc_now()
 
-        if existing:
-            existing.school_id = school_id
-            existing.user_id = user_id
-            existing.platform = platform
-            existing.device_name = device_name
-            existing.last_active_at = now
-            return await self.notification_repo.save_device(existing)
+            if existing:
+                existing.school_id = school_id
+                existing.user_id = user_id
+                existing.platform = platform
+                existing.device_name = device_name
+                existing.last_active_at = now
+                saved = await notification_repo.save_device(existing)
+            else:
+                device = DeviceToken(
+                    school_id=school_id,
+                    user_id=user_id,
+                    token=token,
+                    platform=platform,
+                    device_name=device_name,
+                    last_active_at=now,
+                )
+                saved = await notification_repo.save_device(device)
 
-        device = DeviceToken(
-            school_id=school_id,
-            user_id=user_id,
-            token=token,
-            platform=platform,
-            device_name=device_name,
-            last_active_at=now,
-        )
-        return await self.notification_repo.save_device(device)
+            await uow.commit()
+            return saved
 
     async def deregister_device(
         self,
@@ -88,15 +94,18 @@ class PushConfigService:
         user_id: uuid.UUID,
         device_id: uuid.UUID,
     ) -> DeviceToken | None:
-        device = await self.notification_repo.find_device(
-            school_id=school_id,
-            user_id=user_id,
-            device_id=device_id,
-        )
-        if device is None:
-            return None
-        await self.notification_repo.delete_device(device)
-        return device
+        async with UnitOfWork(self.db) as uow:
+            notification_repo = NotificationRepository(uow.session)
+            device = await notification_repo.find_device(
+                school_id=school_id,
+                user_id=user_id,
+                device_id=device_id,
+            )
+            if device is None:
+                return None
+            await notification_repo.delete_device(device)
+            await uow.commit()
+            return device
 
     async def send_push_for_notification(
         self,
@@ -115,8 +124,6 @@ class PushConfigService:
                 channel="push",
                 status=DeliveryStatus.QUEUED.value,
             )
-            self.db.add(delivery)
-            await self.db.flush()
 
         devices = await self.notification_repo.list_push_devices_for_user(
             school_id=notification.school_id,

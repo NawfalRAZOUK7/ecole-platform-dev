@@ -12,6 +12,7 @@ from jose import JWTError, jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.core.unit_of_work import UnitOfWork
 from app.models.com import (
     DeliveryStatus,
     DigestFrequency,
@@ -72,37 +73,24 @@ class EmailDigestService:
         user_id: uuid.UUID,
         digest_frequency: str,
     ) -> str:
-        prefs = await self.notification_repo.list_preferences(
-            school_id=school_id,
-            user_id=user_id,
-        )
-        email_prefs = [pref for pref in prefs if pref.channel == "email"]
-
-        if not email_prefs:
-            email_prefs = [
-                NotificationPreference(
-                    school_id=school_id,
-                    user_id=user_id,
-                    channel="email",
-                    category=category,
-                    enabled=digest_frequency != DigestFrequency.OFF.value,
-                    digest_frequency=digest_frequency,
-                )
-                for category in NOTIFICATION_CATEGORIES
-            ]
-            await self.notification_repo.upsert_preferences(
+        if self.db.info.get("_uow_depth"):
+            return await self._update_digest_frequency_with_repo(
+                notification_repo=self.notification_repo,
                 school_id=school_id,
                 user_id=user_id,
-                preferences=email_prefs,
+                digest_frequency=digest_frequency,
             )
-            return digest_frequency
 
-        for pref in email_prefs:
-            pref.digest_frequency = digest_frequency
-            if digest_frequency == DigestFrequency.OFF.value:
-                pref.enabled = False
-        await self.db.flush()
-        return digest_frequency
+        async with UnitOfWork(self.db) as uow:
+            notification_repo = NotificationRepository(uow.session)
+            updated = await self._update_digest_frequency_with_repo(
+                notification_repo=notification_repo,
+                school_id=school_id,
+                user_id=user_id,
+                digest_frequency=digest_frequency,
+            )
+            await uow.commit()
+            return updated
 
     async def unsubscribe_all_email(
         self,
@@ -110,15 +98,22 @@ class EmailDigestService:
         school_id: uuid.UUID,
         user_id: uuid.UUID,
     ) -> None:
-        prefs = await self.notification_repo.list_preferences(
-            school_id=school_id,
-            user_id=user_id,
-        )
-        for pref in prefs:
-            if pref.channel == "email":
-                pref.enabled = False
-                pref.digest_frequency = DigestFrequency.OFF.value
-        await self.db.flush()
+        if self.db.info.get("_uow_depth"):
+            await self._unsubscribe_all_email_with_repo(
+                notification_repo=self.notification_repo,
+                school_id=school_id,
+                user_id=user_id,
+            )
+            return
+
+        async with UnitOfWork(self.db) as uow:
+            notification_repo = NotificationRepository(uow.session)
+            await self._unsubscribe_all_email_with_repo(
+                notification_repo=notification_repo,
+                school_id=school_id,
+                user_id=user_id,
+            )
+            await uow.commit()
 
     async def send_notification_email(
         self,
@@ -138,8 +133,6 @@ class EmailDigestService:
                 channel="email",
                 status=DeliveryStatus.QUEUED.value,
             )
-            self.db.add(delivery)
-            await self.db.flush()
 
         if not user.email:
             delivery.status = DeliveryStatus.FAILED.value
@@ -186,52 +179,52 @@ class EmailDigestService:
         if not notifications or not user.email:
             return False
 
-        deliveries = await self._ensure_email_deliveries(notifications)
-        primary_delivery = deliveries[0]
-        tracking_token = self.build_open_tracking_token(
-            delivery_id=primary_delivery.id,
-            school_id=school_id,
-            user_id=user.id,
-        )
-        unsubscribe_token = self.build_unsubscribe_token(
-            school_id=school_id,
-            user_id=user.id,
-        )
-
-        grouped = self._group_notifications(notifications)
-        success = await email_service.send_email(
-            to=user.email,
-            template_name="notification_digest",
-            lang=locale,
-            grouped_notifications=grouped,
-            generated_at=_utc_now(),
-            title=self._digest_title(locale),
-            unsubscribe_url=self.unsubscribe_url(unsubscribe_token),
-            open_tracking_url=self.open_tracking_url(tracking_token),
-            action_base_url=settings.web_app_base_url.rstrip("/"),
-            is_rtl=locale == "ar",
-        )
-
-        for delivery in deliveries:
-            delivery.status = (
-                DeliveryStatus.SENT.value if success else DeliveryStatus.BOUNCED.value
+        if self.db.info.get("_uow_depth"):
+            return await self._send_digest_email_with_repos(
+                notification_repo=self.notification_repo,
+                delivery_repo=self.delivery_repo,
+                user=user,
+                school_id=school_id,
+                notifications=notifications,
+                locale=locale,
             )
-            delivery.delivered_at = _utc_now() if success else None
-            delivery.last_error = None if success else "SMTP delivery failed"
-        return success
+
+        async with UnitOfWork(self.db) as uow:
+            notification_repo = NotificationRepository(uow.session)
+            delivery_repo = NotificationDeliveryRepository(uow.session)
+            success = await self._send_digest_email_with_repos(
+                notification_repo=notification_repo,
+                delivery_repo=delivery_repo,
+                user=user,
+                school_id=school_id,
+                notifications=notifications,
+                locale=locale,
+            )
+            await uow.commit()
+            return success
 
     async def mark_email_opened(
         self,
         *,
         delivery_id: uuid.UUID,
     ) -> NotificationDelivery | None:
-        delivery = await self.delivery_repo.get_delivery_by_id(delivery_id)
-        if delivery is None:
-            return None
-        delivery.status = DeliveryStatus.OPENED.value
-        delivery.clicked_at = _utc_now()
-        await self.db.flush()
-        return delivery
+        if self.db.info.get("_uow_depth"):
+            delivery = await self.delivery_repo.get_delivery_by_id(delivery_id)
+            if delivery is None:
+                return None
+            delivery.status = DeliveryStatus.OPENED.value
+            delivery.clicked_at = _utc_now()
+            return delivery
+
+        async with UnitOfWork(self.db) as uow:
+            delivery_repo = NotificationDeliveryRepository(uow.session)
+            delivery = await delivery_repo.get_delivery_by_id(delivery_id)
+            if delivery is None:
+                return None
+            delivery.status = DeliveryStatus.OPENED.value
+            delivery.clicked_at = _utc_now()
+            await uow.commit()
+            return delivery
 
     async def users_due_for_digest(
         self,
@@ -330,11 +323,15 @@ class EmailDigestService:
 
     async def _ensure_email_deliveries(
         self,
+        *,
+        notification_repo: NotificationRepository,
+        delivery_repo: NotificationDeliveryRepository,
         notifications: list[Notification],
     ) -> list[NotificationDelivery]:
         deliveries: list[NotificationDelivery] = []
+        pending: list[NotificationDelivery] = []
         for notification in notifications:
-            delivery = await self.delivery_repo.get_delivery(
+            delivery = await delivery_repo.get_delivery(
                 notification_id=notification.id,
                 channel="email",
             )
@@ -345,10 +342,114 @@ class EmailDigestService:
                     channel="email",
                     status=DeliveryStatus.QUEUED.value,
                 )
-                self.db.add(delivery)
-                await self.db.flush()
+                pending.append(delivery)
             deliveries.append(delivery)
+        if pending:
+            await notification_repo.create_deliveries(pending)
         return deliveries
+
+    async def _update_digest_frequency_with_repo(
+        self,
+        *,
+        notification_repo: NotificationRepository,
+        school_id: uuid.UUID,
+        user_id: uuid.UUID,
+        digest_frequency: str,
+    ) -> str:
+        prefs = await notification_repo.list_preferences(
+            school_id=school_id,
+            user_id=user_id,
+        )
+        email_prefs = [pref for pref in prefs if pref.channel == "email"]
+
+        if not email_prefs:
+            email_prefs = [
+                NotificationPreference(
+                    school_id=school_id,
+                    user_id=user_id,
+                    channel="email",
+                    category=category,
+                    enabled=digest_frequency != DigestFrequency.OFF.value,
+                    digest_frequency=digest_frequency,
+                )
+                for category in NOTIFICATION_CATEGORIES
+            ]
+            await notification_repo.upsert_preferences(
+                school_id=school_id,
+                user_id=user_id,
+                preferences=email_prefs,
+            )
+            return digest_frequency
+
+        for pref in email_prefs:
+            pref.digest_frequency = digest_frequency
+            if digest_frequency == DigestFrequency.OFF.value:
+                pref.enabled = False
+        return digest_frequency
+
+    async def _unsubscribe_all_email_with_repo(
+        self,
+        *,
+        notification_repo: NotificationRepository,
+        school_id: uuid.UUID,
+        user_id: uuid.UUID,
+    ) -> None:
+        prefs = await notification_repo.list_preferences(
+            school_id=school_id,
+            user_id=user_id,
+        )
+        for pref in prefs:
+            if pref.channel == "email":
+                pref.enabled = False
+                pref.digest_frequency = DigestFrequency.OFF.value
+
+    async def _send_digest_email_with_repos(
+        self,
+        *,
+        notification_repo: NotificationRepository,
+        delivery_repo: NotificationDeliveryRepository,
+        user: User,
+        school_id: uuid.UUID,
+        notifications: list[Notification],
+        locale: str,
+    ) -> bool:
+        deliveries = await self._ensure_email_deliveries(
+            notification_repo=notification_repo,
+            delivery_repo=delivery_repo,
+            notifications=notifications,
+        )
+        primary_delivery = deliveries[0]
+        tracking_token = self.build_open_tracking_token(
+            delivery_id=primary_delivery.id,
+            school_id=school_id,
+            user_id=user.id,
+        )
+        unsubscribe_token = self.build_unsubscribe_token(
+            school_id=school_id,
+            user_id=user.id,
+        )
+
+        grouped = self._group_notifications(notifications)
+        success = await email_service.send_email(
+            to=user.email,
+            template_name="notification_digest",
+            lang=locale,
+            grouped_notifications=grouped,
+            generated_at=_utc_now(),
+            title=self._digest_title(locale),
+            unsubscribe_url=self.unsubscribe_url(unsubscribe_token),
+            open_tracking_url=self.open_tracking_url(tracking_token),
+            action_base_url=settings.web_app_base_url.rstrip("/"),
+            is_rtl=locale == "ar",
+        )
+
+        for delivery in deliveries:
+            delivery.status = (
+                DeliveryStatus.SENT.value if success else DeliveryStatus.BOUNCED.value
+            )
+            delivery.delivered_at = _utc_now() if success else None
+            delivery.last_error = None if success else "SMTP delivery failed"
+        return success
 
     def _group_notifications(
         self,

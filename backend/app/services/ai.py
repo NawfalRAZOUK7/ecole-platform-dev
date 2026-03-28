@@ -37,6 +37,7 @@ from app.core.metrics import (
 from prometheus_client import Counter, Histogram
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.unit_of_work import UnitOfWork
 from app.models.ai import AIPreference, WritingAttempt
 from app.repositories.ai import AIRepository
 from app.services.analytics import (
@@ -590,24 +591,26 @@ class AIService:
         opt_out = await self.repo.get_opt_out_preference(target_user_id=auth.user_id)
         if opt_out is not None:
             fallback = get_fallback_response("writing_assist", "opt_out")
-            attempt = await self.repo.create_writing_attempt(
-                WritingAttempt(
-                    student_id=auth.user_id,
-                    school_id=auth.school_id,
-                    subject=body.subject,
-                    input_text="[opted_out]",
-                    input_word_count=len(body.text.split()),
-                    status="fallback",
-                    prompt_id=None,
+            async with UnitOfWork(self.db) as uow:
+                repo = AIRepository(uow.session)
+                attempt = await repo.create_writing_attempt(
+                    WritingAttempt(
+                        student_id=auth.user_id,
+                        school_id=auth.school_id,
+                        subject=body.subject,
+                        input_text="[opted_out]",
+                        input_word_count=len(body.text.split()),
+                        status="fallback",
+                        prompt_id=None,
+                    )
                 )
-            )
+                await uow.commit()
             emit_event(
                 "ai_fallback_used",
                 actor_id=auth.user_id,
                 actor_role=auth.role,
                 properties={"reason": "opt_out", "request_type": "writing_assist"},
             )
-            await self.db.commit()
             return {
                 "id": str(attempt.id),
                 "student_id": str(auth.user_id),
@@ -626,36 +629,40 @@ class AIService:
             student_id=auth.user_id,
             school_id=auth.school_id,
         )
-        attempt = await self.repo.create_writing_attempt(
-            WritingAttempt(
-                student_id=auth.user_id,
-                school_id=auth.school_id,
-                subject=body.subject,
-                input_text=body.text[:500],
-                input_word_count=len(body.text.split()),
-                status=result.get("status", "completed"),
-                suggestion=result.get("suggestion"),
-                hints=result.get("hints"),
-                prompt_id=result.get("prompt_id"),
-                prompt_version=result.get("prompt_version"),
-                warnings=result.get("warnings"),
+        async with UnitOfWork(self.db) as uow:
+            repo = AIRepository(uow.session)
+            audit = AuditService(uow.session)
+            attempt = await repo.create_writing_attempt(
+                WritingAttempt(
+                    student_id=auth.user_id,
+                    school_id=auth.school_id,
+                    subject=body.subject,
+                    input_text=body.text[:500],
+                    input_word_count=len(body.text.split()),
+                    status=result.get("status", "completed"),
+                    suggestion=result.get("suggestion"),
+                    hints=result.get("hints"),
+                    prompt_id=result.get("prompt_id"),
+                    prompt_version=result.get("prompt_version"),
+                    warnings=result.get("warnings"),
+                )
             )
-        )
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="WRITING_ATTEMPT_CREATED",
-            outcome="success",
-            target_type="writing_attempt",
-            target_id=attempt.id,
-            entity_after={
-                "subject": body.subject,
-                "word_count": attempt.input_word_count,
-                "status": attempt.status,
-                "prompt_id": attempt.prompt_id,
-            },
-            ip_address=client_ip,
-        )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="WRITING_ATTEMPT_CREATED",
+                outcome="success",
+                target_type="writing_attempt",
+                target_id=attempt.id,
+                entity_after={
+                    "subject": body.subject,
+                    "word_count": attempt.input_word_count,
+                    "status": attempt.status,
+                    "prompt_id": attempt.prompt_id,
+                },
+                ip_address=client_ip,
+            )
+            await uow.commit()
         emit_event(
             "writing_attempt_created",
             actor_id=auth.user_id,
@@ -665,7 +672,6 @@ class AIService:
                 "word_count": attempt.input_word_count,
             },
         )
-        await self.db.commit()
         return {
             "id": str(attempt.id),
             "student_id": str(auth.user_id),
@@ -693,31 +699,36 @@ class AIService:
         if existing is not None:
             old_value = existing.opt_out
             existing.opt_out = body.opt_out
-            preference = await self.repo.save_ai_preference(existing)
         else:
             old_value = None
-            preference = await self.repo.save_ai_preference(
-                AIPreference(
-                    user_id=auth.user_id,
-                    target_user_id=target_user_id,
-                    school_id=auth.school_id,
-                    opt_out=body.opt_out,
-                )
+            existing = AIPreference(
+                user_id=auth.user_id,
+                target_user_id=target_user_id,
+                school_id=auth.school_id,
+                opt_out=body.opt_out,
             )
 
         action = "opt_out" if body.opt_out else "opt_in"
         AI_OPT_OUT_COUNT.labels(env=settings.app_env, action=action).inc()
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="AI_OPT_OUT_UPDATED",
-            outcome="success",
-            target_type="ai_preference",
-            target_id=preference.id,
-            entity_before={"opt_out": old_value} if old_value is not None else None,
-            entity_after={"opt_out": body.opt_out, "target_user_id": str(target_user_id)},
-            ip_address=client_ip,
-        )
+        async with UnitOfWork(self.db) as uow:
+            repo = AIRepository(uow.session)
+            audit = AuditService(uow.session)
+            preference = await repo.save_ai_preference(existing)
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="AI_OPT_OUT_UPDATED",
+                outcome="success",
+                target_type="ai_preference",
+                target_id=preference.id,
+                entity_before={"opt_out": old_value} if old_value is not None else None,
+                entity_after={
+                    "opt_out": body.opt_out,
+                    "target_user_id": str(target_user_id),
+                },
+                ip_address=client_ip,
+            )
+            await uow.commit()
         emit_event(
             "ai_opt_out_updated",
             actor_id=auth.user_id,
@@ -727,7 +738,6 @@ class AIService:
                 "target_user_id_hash": pseudonymize_actor_id(target_user_id),
             },
         )
-        await self.db.commit()
         return {
             "id": str(preference.id),
             "user_id": str(preference.user_id),

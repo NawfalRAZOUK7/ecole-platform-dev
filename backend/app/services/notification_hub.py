@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import AuthorizationError, NotFoundError
 from app.core.redis import redis_client
+from app.core.unit_of_work import UnitOfWork
 from app.models.com import (
     DeliveryChannel,
     DeliveryStatus,
@@ -119,32 +120,40 @@ class NotificationHubService:
         user_id: uuid.UUID,
         items: Iterable[NotificationPreferenceItem],
     ) -> list[dict]:
-        await self.ensure_default_preferences(school_id=school_id, user_id=user_id)
-
-        preferences: list[NotificationPreference] = []
-        for item in items:
-            pref = await self.repo.find_preference(
+        async with UnitOfWork(self.db) as uow:
+            repo = NotificationRepository(uow.session)
+            await self._ensure_default_preferences_with_repo(
+                repo=repo,
                 school_id=school_id,
                 user_id=user_id,
-                channel=item.channel,
-                category=item.category,
             )
-            if pref is None:
-                pref = NotificationPreference(
+
+            preferences: list[NotificationPreference] = []
+            for item in items:
+                pref = await repo.find_preference(
                     school_id=school_id,
                     user_id=user_id,
                     channel=item.channel,
                     category=item.category,
                 )
-            pref.enabled = item.enabled
-            pref.digest_frequency = item.digest_frequency
-            preferences.append(pref)
+                if pref is None:
+                    pref = NotificationPreference(
+                        school_id=school_id,
+                        user_id=user_id,
+                        channel=item.channel,
+                        category=item.category,
+                    )
+                pref.enabled = item.enabled
+                pref.digest_frequency = item.digest_frequency
+                preferences.append(pref)
 
-        updated = await self.repo.upsert_preferences(
-            school_id=school_id,
-            user_id=user_id,
-            preferences=preferences,
-        )
+            updated = await repo.upsert_preferences(
+                school_id=school_id,
+                user_id=user_id,
+                preferences=preferences,
+            )
+            await uow.commit()
+
         return [
             NotificationPreferenceItem(
                 channel=pref.channel,
@@ -184,14 +193,19 @@ class NotificationHubService:
         role: str,
         read: bool,
     ) -> dict:
-        notification = await self._get_scoped_notification(
-            notification_id=notification_id,
-            school_id=school_id,
-            user_id=user_id,
-            role=role,
-        )
-        notification.read_at = _utc_now() if read else None
-        await self.repo.save_notification(notification)
+        async with UnitOfWork(self.db) as uow:
+            repo = NotificationRepository(uow.session)
+            notification = await self._get_scoped_notification_with_repo(
+                repo=repo,
+                notification_id=notification_id,
+                school_id=school_id,
+                user_id=user_id,
+                role=role,
+            )
+            notification.read_at = _utc_now() if read else None
+            await repo.save_notification(notification)
+            await uow.commit()
+
         await self.invalidate_unread_count(notification.parent_id)
         return {
             "id": str(notification.id),
@@ -206,11 +220,14 @@ class NotificationHubService:
         school_id: uuid.UUID,
         user_id: uuid.UUID,
     ) -> dict:
-        updated = await self.repo.mark_all_read(
-            school_id=school_id,
-            user_id=user_id,
-            read_at=_utc_now(),
-        )
+        async with UnitOfWork(self.db) as uow:
+            repo = NotificationRepository(uow.session)
+            updated = await repo.mark_all_read(
+                school_id=school_id,
+                user_id=user_id,
+                read_at=_utc_now(),
+            )
+            await uow.commit()
         await self.invalidate_unread_count(user_id)
         return {
             "updated": updated,
@@ -226,22 +243,27 @@ class NotificationHubService:
         role: str,
         hard_delete: bool,
     ) -> dict:
-        notification = await self._get_scoped_notification(
-            notification_id=notification_id,
-            school_id=school_id,
-            user_id=user_id,
-            role=role,
-        )
-        if hard_delete:
-            if role != "ADM":
-                raise AuthorizationError(
-                    "Only administrators can hard delete notifications",
-                    error_code="ERR-COM-403",
-                )
-            await self.repo.hard_delete(notification)
-        else:
-            notification.deleted_at = _utc_now()
-            await self.repo.save_notification(notification)
+        async with UnitOfWork(self.db) as uow:
+            repo = NotificationRepository(uow.session)
+            notification = await self._get_scoped_notification_with_repo(
+                repo=repo,
+                notification_id=notification_id,
+                school_id=school_id,
+                user_id=user_id,
+                role=role,
+            )
+            if hard_delete:
+                if role != "ADM":
+                    raise AuthorizationError(
+                        "Only administrators can hard delete notifications",
+                        error_code="ERR-COM-403",
+                    )
+                await repo.hard_delete(notification)
+            else:
+                notification.deleted_at = _utc_now()
+                await repo.save_notification(notification)
+            await uow.commit()
+
         await self.invalidate_unread_count(notification.parent_id)
         return {
             "id": str(notification.id),
@@ -262,52 +284,55 @@ class NotificationHubService:
             role_codes=request.role_codes,
             class_ids=request.class_ids,
         )
-        users = await self.repo.list_user_contacts(list(recipient_ids))
+        async with UnitOfWork(self.db) as uow:
+            repo = NotificationRepository(uow.session)
+            users = await repo.list_user_contacts(list(recipient_ids))
 
-        routed_channels: set[str] = set()
-        notifications: list[Notification] = []
-        deliveries: list[NotificationDelivery] = []
-        for recipient_id in recipient_ids:
-            idempotency_key = request.idempotency_key or (
-                f"batch:{request.category}:{request.title}:{recipient_id}:{uuid.uuid4()}"
-            )
-            notification = Notification(
-                school_id=school_id,
-                parent_id=recipient_id,
-                event_ref=request.event_ref,
-                idempotency_key=idempotency_key,
-                title=request.title,
-                body=request.body,
-                category=request.category,
-                priority=request.priority,
-                action_url=request.action_url,
-                action_payload=request.action_payload,
-            )
-            notifications.append(notification)
-
-        await self.repo.create_notifications(notifications)
-
-        for notification in notifications:
-            user = users.get(notification.parent_id)
-            channels = await self.route_channels(
-                school_id=school_id,
-                user_id=notification.parent_id,
-                category=notification.category,
-                priority=notification.priority,
-                preferred_channels=request.channels,
-            )
-            routed_channels.update(channels)
-            deliveries.extend(
-                await self._deliver_notification(
-                    notification=notification,
-                    channels=channels,
-                    user=user,
-                    silent_push=request.silent_push,
+            routed_channels: set[str] = set()
+            notifications: list[Notification] = []
+            deliveries: list[NotificationDelivery] = []
+            for recipient_id in recipient_ids:
+                idempotency_key = request.idempotency_key or (
+                    f"batch:{request.category}:{request.title}:{recipient_id}:{uuid.uuid4()}"
                 )
-            )
+                notification = Notification(
+                    school_id=school_id,
+                    parent_id=recipient_id,
+                    event_ref=request.event_ref,
+                    idempotency_key=idempotency_key,
+                    title=request.title,
+                    body=request.body,
+                    category=request.category,
+                    priority=request.priority,
+                    action_url=request.action_url,
+                    action_payload=request.action_payload,
+                )
+                notifications.append(notification)
 
-        if deliveries:
-            await self.repo.create_deliveries(deliveries)
+            await repo.create_notifications(notifications)
+
+            for notification in notifications:
+                user = users.get(notification.parent_id)
+                channels = await self.route_channels(
+                    school_id=school_id,
+                    user_id=notification.parent_id,
+                    category=notification.category,
+                    priority=notification.priority,
+                    preferred_channels=request.channels,
+                )
+                routed_channels.update(channels)
+                deliveries.extend(
+                    await self._deliver_notification(
+                        notification=notification,
+                        channels=channels,
+                        user=user,
+                        silent_push=request.silent_push,
+                    )
+                )
+
+            if deliveries:
+                await repo.create_deliveries(deliveries)
+            await uow.commit()
 
         return {
             "requested_recipients": len(recipient_ids),
@@ -331,37 +356,40 @@ class NotificationHubService:
         idempotency_key: str | None = None,
         silent_push: bool = False,
     ) -> Notification:
-        notification = Notification(
-            school_id=school_id,
-            parent_id=user_id,
-            event_ref=event_ref,
-            idempotency_key=idempotency_key
-            or f"{category}:{user_id}:{uuid.uuid4()}",
-            title=title,
-            body=body,
-            category=category,
-            priority=priority,
-            action_url=action_url,
-            action_payload=action_payload,
-        )
-        await self.repo.create_notifications([notification])
-        users = await self.repo.list_user_contacts([user_id])
-        channels = await self.route_channels(
-            school_id=school_id,
-            user_id=user_id,
-            category=category,
-            priority=priority,
-            preferred_channels=preferred_channels,
-        )
-        deliveries = await self._deliver_notification(
-            notification=notification,
-            channels=channels,
-            user=users.get(user_id),
-            silent_push=silent_push,
-        )
-        if deliveries:
-            await self.repo.create_deliveries(deliveries)
-        return notification
+        async with UnitOfWork(self.db) as uow:
+            repo = NotificationRepository(uow.session)
+            notification = Notification(
+                school_id=school_id,
+                parent_id=user_id,
+                event_ref=event_ref,
+                idempotency_key=idempotency_key
+                or f"{category}:{user_id}:{uuid.uuid4()}",
+                title=title,
+                body=body,
+                category=category,
+                priority=priority,
+                action_url=action_url,
+                action_payload=action_payload,
+            )
+            await repo.create_notifications([notification])
+            users = await repo.list_user_contacts([user_id])
+            channels = await self.route_channels(
+                school_id=school_id,
+                user_id=user_id,
+                category=category,
+                priority=priority,
+                preferred_channels=preferred_channels,
+            )
+            deliveries = await self._deliver_notification(
+                notification=notification,
+                channels=channels,
+                user=users.get(user_id),
+                silent_push=silent_push,
+            )
+            if deliveries:
+                await repo.create_deliveries(deliveries)
+            await uow.commit()
+            return notification
 
     async def resolve_recipient_ids(
         self,
@@ -412,34 +440,23 @@ class NotificationHubService:
         school_id: uuid.UUID,
         user_id: uuid.UUID,
     ) -> list[NotificationPreference]:
-        prefs = await self.repo.list_preferences(school_id=school_id, user_id=user_id)
-        existing = {(pref.channel, pref.category) for pref in prefs}
-        created = False
-
-        for category in DEFAULT_CATEGORIES:
-            for channel in DEFAULT_CHANNELS:
-                if (channel, category) in existing:
-                    continue
-                prefs.append(
-                    NotificationPreference(
-                        school_id=school_id,
-                        user_id=user_id,
-                        channel=channel,
-                        category=category,
-                        enabled=self._default_enabled(channel),
-                        digest_frequency=DigestFrequency.DAILY.value
-                        if channel == DeliveryChannel.EMAIL.value
-                        else DigestFrequency.OFF.value,
-                    )
-                )
-                created = True
-        if created:
-            await self.repo.upsert_preferences(
+        if self.db.info.get("_uow_depth"):
+            repo = NotificationRepository(self.db)
+            return await self._ensure_default_preferences_with_repo(
+                repo=repo,
                 school_id=school_id,
                 user_id=user_id,
-                preferences=prefs,
             )
-        return await self.repo.list_preferences(school_id=school_id, user_id=user_id)
+
+        async with UnitOfWork(self.db) as uow:
+            repo = NotificationRepository(uow.session)
+            prefs = await self._ensure_default_preferences_with_repo(
+                repo=repo,
+                school_id=school_id,
+                user_id=user_id,
+            )
+            await uow.commit()
+            return prefs
 
     async def route_channels(
         self,
@@ -450,7 +467,17 @@ class NotificationHubService:
         priority: str,
         preferred_channels: list[str] | None = None,
     ) -> list[str]:
-        prefs = await self.ensure_default_preferences(school_id=school_id, user_id=user_id)
+        if self.db.info.get("_uow_depth"):
+            prefs = await self._ensure_default_preferences_with_repo(
+                repo=NotificationRepository(self.db),
+                school_id=school_id,
+                user_id=user_id,
+            )
+        else:
+            prefs = await self.ensure_default_preferences(
+                school_id=school_id,
+                user_id=user_id,
+            )
         enabled_channels = {
             pref.channel
             for pref in prefs
@@ -600,12 +627,65 @@ class NotificationHubService:
         user_id: uuid.UUID,
         role: str,
     ) -> Notification:
-        notification = await self.repo.get_notification(notification_id)
+        return await self._get_scoped_notification_with_repo(
+            repo=self.repo,
+            notification_id=notification_id,
+            school_id=school_id,
+            user_id=user_id,
+            role=role,
+        )
+
+    async def _get_scoped_notification_with_repo(
+        self,
+        *,
+        repo: NotificationRepository,
+        notification_id: uuid.UUID,
+        school_id: uuid.UUID,
+        user_id: uuid.UUID,
+        role: str,
+    ) -> Notification:
+        notification = await repo.get_notification(notification_id)
         if notification is None or notification.school_id != school_id:
             raise NotFoundError("Notification not found", error_code="ERR-COM-404")
         if role not in {"ADM", "DIR"} and notification.parent_id != user_id:
             raise NotFoundError("Notification not found", error_code="ERR-COM-404")
         return notification
+
+    async def _ensure_default_preferences_with_repo(
+        self,
+        *,
+        repo: NotificationRepository,
+        school_id: uuid.UUID,
+        user_id: uuid.UUID,
+    ) -> list[NotificationPreference]:
+        prefs = await repo.list_preferences(school_id=school_id, user_id=user_id)
+        existing = {(pref.channel, pref.category) for pref in prefs}
+        created = False
+
+        for category in DEFAULT_CATEGORIES:
+            for channel in DEFAULT_CHANNELS:
+                if (channel, category) in existing:
+                    continue
+                prefs.append(
+                    NotificationPreference(
+                        school_id=school_id,
+                        user_id=user_id,
+                        channel=channel,
+                        category=category,
+                        enabled=self._default_enabled(channel),
+                        digest_frequency=DigestFrequency.DAILY.value
+                        if channel == DeliveryChannel.EMAIL.value
+                        else DigestFrequency.OFF.value,
+                    )
+                )
+                created = True
+        if created:
+            await repo.upsert_preferences(
+                school_id=school_id,
+                user_id=user_id,
+                preferences=prefs,
+            )
+        return await repo.list_preferences(school_id=school_id, user_id=user_id)
 
     def _default_enabled(self, channel: str) -> bool:
         return channel != DeliveryChannel.SMS.value

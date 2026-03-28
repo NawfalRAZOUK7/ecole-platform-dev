@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.dependencies import AuthContext, verify_school_boundary
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.core.response import encode_cursor
+from app.core.unit_of_work import UnitOfWork
 from app.models.com import Announcement
 from app.models.lms import ContentItem
 from app.repositories.cms import CMSRepository
@@ -81,30 +82,33 @@ class CMSService:
         auth: AuthContext,
         ip_address: str | None,
     ) -> dict:
-        content_item = await self.repo.create_content_item(
-            school_id=None,
-            title=body.title,
-            content_type=body.content_type,
-            level_band=body.level_band,
-            language=body.language,
-            subject=body.subject,
-            description=body.description,
-            status=body.status,
-            origin="PLATFORM",
-            created_by=auth.user_id,
-        )
-        response = self._content_to_dict(content_item)
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="CMS_CONTENT_CREATED",
-            outcome="success",
-            target_type="content_item",
-            target_id=content_item.id,
-            entity_after=response,
-            ip_address=ip_address,
-        )
-        await self.db.commit()
+        async with UnitOfWork(self.db) as uow:
+            repo = CMSRepository(uow.session)
+            audit = AuditService(uow.session)
+            content_item = await repo.create_content_item(
+                school_id=None,
+                title=body.title,
+                content_type=body.content_type,
+                level_band=body.level_band,
+                language=body.language,
+                subject=body.subject,
+                description=body.description,
+                status=body.status,
+                origin="PLATFORM",
+                created_by=auth.user_id,
+            )
+            response = self._content_to_dict(content_item)
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="CMS_CONTENT_CREATED",
+                outcome="success",
+                target_type="content_item",
+                target_id=content_item.id,
+                entity_after=response,
+                ip_address=ip_address,
+            )
+            await uow.commit()
         return response
 
     async def list_platform_content(
@@ -146,21 +150,23 @@ class CMSService:
         entity_before = self._content_to_dict(content_item)
         for field, value in body.model_dump(exclude_unset=True).items():
             setattr(content_item, field, value)
-        await self.repo.save_content_item(content_item)
-        response = self._content_to_dict(content_item)
-
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="CMS_CONTENT_UPDATED",
-            outcome="success",
-            target_type="content_item",
-            target_id=content_item.id,
-            entity_before=entity_before,
-            entity_after=response,
-            ip_address=ip_address,
-        )
-        await self.db.commit()
+        async with UnitOfWork(self.db) as uow:
+            repo = CMSRepository(uow.session)
+            audit = AuditService(uow.session)
+            await repo.save_content_item(content_item)
+            response = self._content_to_dict(content_item)
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="CMS_CONTENT_UPDATED",
+                outcome="success",
+                target_type="content_item",
+                target_id=content_item.id,
+                entity_before=entity_before,
+                entity_after=response,
+                ip_address=ip_address,
+            )
+            await uow.commit()
         return response
 
     async def archive_platform_content(
@@ -176,20 +182,22 @@ class CMSService:
 
         entity_before = self._content_to_dict(content_item)
         content_item.status = "archived"
-        await self.repo.save_content_item(content_item)
-
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="CMS_CONTENT_ARCHIVED",
-            outcome="success",
-            target_type="content_item",
-            target_id=content_item.id,
-            entity_before=entity_before,
-            entity_after=self._content_to_dict(content_item),
-            ip_address=ip_address,
-        )
-        await self.db.commit()
+        async with UnitOfWork(self.db) as uow:
+            repo = CMSRepository(uow.session)
+            audit = AuditService(uow.session)
+            await repo.save_content_item(content_item)
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="CMS_CONTENT_ARCHIVED",
+                outcome="success",
+                target_type="content_item",
+                target_id=content_item.id,
+                entity_before=entity_before,
+                entity_after=self._content_to_dict(content_item),
+                ip_address=ip_address,
+            )
+            await uow.commit()
         return {"deleted": True, "id": str(content_id)}
 
     async def list_review_submissions(
@@ -263,86 +271,90 @@ class CMSService:
         if original is None:
             raise NotFoundError("Original content not found", error_code="ERR-CMS-404")
 
-        if body.decision == "APPROVED":
-            submission.status = "APPROVED"
-            promoted = await self.repo.create_content_item(
-                school_id=None,
-                title=original.title,
-                content_type=original.content_type,
-                level_band=original.level_band,
-                language=original.language,
-                subject=original.subject,
-                description=original.description,
-                status="published",
-                origin="PROMOTED",
-                created_by=original.created_by,
-                original_content_id=original.id,
+        async with UnitOfWork(self.db) as uow:
+            repo = CMSRepository(uow.session)
+            audit = AuditService(uow.session)
+
+            if body.decision == "APPROVED":
+                submission.status = "APPROVED"
+                promoted = await repo.create_content_item(
+                    school_id=None,
+                    title=original.title,
+                    content_type=original.content_type,
+                    level_band=original.level_band,
+                    language=original.language,
+                    subject=original.subject,
+                    description=original.description,
+                    status="published",
+                    origin="PROMOTED",
+                    created_by=original.created_by,
+                    original_content_id=original.id,
+                )
+                submission.promoted_content_id = promoted.id
+
+                teacher_profile = await repo.get_teacher_profile(submission.submitted_by)
+                if teacher_profile is not None:
+                    teacher_profile.reward_points += body.reward_points
+
+                try:
+                    await repo.create_notification(
+                        school_id=submission.school_id,
+                        parent_id=submission.submitted_by,
+                        event_ref=f"content:submission:approved:{submission.id}",
+                        idempotency_key=f"cms-approved-{submission.id}",
+                        title="Contenu approuve",
+                        body=(
+                            f'Votre contenu "{original.title}" a ete approuve et ajoute '
+                            "a la bibliotheque de la plateforme."
+                        ),
+                    )
+                except Exception:
+                    pass
+            else:
+                submission.status = "REJECTED"
+                try:
+                    feedback_text = (
+                        f" Retour: {body.review_notes}" if body.review_notes else ""
+                    )
+                    await repo.create_notification(
+                        school_id=submission.school_id,
+                        parent_id=submission.submitted_by,
+                        event_ref=f"content:submission:rejected:{submission.id}",
+                        idempotency_key=f"cms-rejected-{submission.id}",
+                        title="Contenu non retenu",
+                        body=(
+                            f'Votre contenu "{original.title}" n\'a pas ete retenu '
+                            f"pour la bibliotheque.{feedback_text}"
+                        ),
+                    )
+                except Exception:
+                    pass
+
+            await repo.save_content_submission(submission)
+
+            response = {
+                "id": str(submission.id),
+                "status": submission.status,
+                "reviewed_by": str(submission.reviewed_by),
+                "reviewed_at": submission.reviewed_at.isoformat()
+                if submission.reviewed_at
+                else None,
+                "review_notes": submission.review_notes,
+                "promoted_content_id": str(submission.promoted_content_id)
+                if submission.promoted_content_id
+                else None,
+            }
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type=f"CMS_SUBMISSION_{body.decision}",
+                outcome="success",
+                target_type="content_submission",
+                target_id=submission.id,
+                entity_after=response,
+                ip_address=ip_address,
             )
-            submission.promoted_content_id = promoted.id
-
-            teacher_profile = await self.repo.get_teacher_profile(submission.submitted_by)
-            if teacher_profile is not None:
-                teacher_profile.reward_points += body.reward_points
-
-            try:
-                await self.repo.create_notification(
-                    school_id=submission.school_id,
-                    parent_id=submission.submitted_by,
-                    event_ref=f"content:submission:approved:{submission.id}",
-                    idempotency_key=f"cms-approved-{submission.id}",
-                    title="Contenu approuve",
-                    body=(
-                        f'Votre contenu "{original.title}" a ete approuve et ajoute '
-                        "a la bibliotheque de la plateforme."
-                    ),
-                )
-            except Exception:
-                pass
-        else:
-            submission.status = "REJECTED"
-            try:
-                feedback_text = (
-                    f" Retour: {body.review_notes}" if body.review_notes else ""
-                )
-                await self.repo.create_notification(
-                    school_id=submission.school_id,
-                    parent_id=submission.submitted_by,
-                    event_ref=f"content:submission:rejected:{submission.id}",
-                    idempotency_key=f"cms-rejected-{submission.id}",
-                    title="Contenu non retenu",
-                    body=(
-                        f'Votre contenu "{original.title}" n\'a pas ete retenu '
-                        f"pour la bibliotheque.{feedback_text}"
-                    ),
-                )
-            except Exception:
-                pass
-
-        await self.repo.save_content_submission(submission)
-
-        response = {
-            "id": str(submission.id),
-            "status": submission.status,
-            "reviewed_by": str(submission.reviewed_by),
-            "reviewed_at": submission.reviewed_at.isoformat()
-            if submission.reviewed_at
-            else None,
-            "review_notes": submission.review_notes,
-            "promoted_content_id": str(submission.promoted_content_id)
-            if submission.promoted_content_id
-            else None,
-        }
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type=f"CMS_SUBMISSION_{body.decision}",
-            outcome="success",
-            target_type="content_submission",
-            target_id=submission.id,
-            entity_after=response,
-            ip_address=ip_address,
-        )
-        await self.db.commit()
+            await uow.commit()
         return response
 
     async def create_announcement(
@@ -360,29 +372,32 @@ class CMSService:
                     error_code="ERR-COM-422",
                 )
 
-        announcement = await self.repo.create_announcement(
-            school_id=auth.school_id,
-            author_id=auth.user_id,
-            title=body.title,
-            body=body.body,
-            target_roles=body.target_roles,
-            target_class_ids=[str(class_id) for class_id in body.target_class_ids]
-            if body.target_class_ids
-            else None,
-            status="DRAFT",
-        )
-        response = self._announcement_to_response(announcement)
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="announcement.create",
-            target_type="announcement",
-            target_id=announcement.id,
-            outcome="success",
-            entity_after=response,
-            ip_address=ip_address,
-        )
-        await self.db.commit()
+        async with UnitOfWork(self.db) as uow:
+            repo = CMSRepository(uow.session)
+            audit = AuditService(uow.session)
+            announcement = await repo.create_announcement(
+                school_id=auth.school_id,
+                author_id=auth.user_id,
+                title=body.title,
+                body=body.body,
+                target_roles=body.target_roles,
+                target_class_ids=[str(class_id) for class_id in body.target_class_ids]
+                if body.target_class_ids
+                else None,
+                status="DRAFT",
+            )
+            response = self._announcement_to_response(announcement)
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="announcement.create",
+                target_type="announcement",
+                target_id=announcement.id,
+                outcome="success",
+                entity_after=response,
+                ip_address=ip_address,
+            )
+            await uow.commit()
         return response
 
     async def list_announcements(
@@ -439,20 +454,23 @@ class CMSService:
         if body.target_class_ids is not None:
             announcement.target_class_ids = [str(class_id) for class_id in body.target_class_ids]
 
-        await self.repo.save_announcement(announcement)
-        response = self._announcement_to_response(announcement)
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="announcement.update",
-            target_type="announcement",
-            target_id=announcement.id,
-            outcome="success",
-            entity_before=entity_before,
-            entity_after=response,
-            ip_address=ip_address,
-        )
-        await self.db.commit()
+        async with UnitOfWork(self.db) as uow:
+            repo = CMSRepository(uow.session)
+            audit = AuditService(uow.session)
+            await repo.save_announcement(announcement)
+            response = self._announcement_to_response(announcement)
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="announcement.update",
+                target_type="announcement",
+                target_id=announcement.id,
+                outcome="success",
+                entity_before=entity_before,
+                entity_after=response,
+                ip_address=ip_address,
+            )
+            await uow.commit()
         return response
 
     async def publish_announcement(
@@ -476,7 +494,6 @@ class CMSService:
         now = datetime.now(timezone.utc)
         announcement.status = "PUBLISHED"
         announcement.published_at = now
-        await self.repo.save_announcement(announcement)
 
         target_user_ids = set(
             await self.repo.list_membership_user_ids_by_roles(
@@ -513,25 +530,29 @@ class CMSService:
             for user_id in target_user_ids
             if user_id != auth.user_id
         ]
-        await self.repo.create_notifications(notification_data)
-        notifications_sent = len(notification_data)
+        async with UnitOfWork(self.db) as uow:
+            repo = CMSRepository(uow.session)
+            audit = AuditService(uow.session)
+            await repo.save_announcement(announcement)
+            await repo.create_notifications(notification_data)
+            notifications_sent = len(notification_data)
 
-        response = {
-            **self._announcement_to_response(announcement),
-            "notifications_sent": notifications_sent,
-        }
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="announcement.publish",
-            target_type="announcement",
-            target_id=announcement.id,
-            outcome="success",
-            entity_before=entity_before,
-            entity_after=response,
-            ip_address=ip_address,
-        )
-        await self.db.commit()
+            response = {
+                **self._announcement_to_response(announcement),
+                "notifications_sent": notifications_sent,
+            }
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="announcement.publish",
+                target_type="announcement",
+                target_id=announcement.id,
+                outcome="success",
+                entity_before=entity_before,
+                entity_after=response,
+                ip_address=ip_address,
+            )
+            await uow.commit()
 
         for user_id in target_user_ids:
             if user_id != auth.user_id:

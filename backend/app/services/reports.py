@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.exceptions import AuthorizationError, NotFoundError, ValidationError
 from app.core.storage import storage
+from app.core.unit_of_work import UnitOfWork
 from app.models.erp import Class
 from app.models.iam import User
 from app.models.reporting import ReportJob, ReportJobStatus, ReportType
@@ -168,16 +169,19 @@ class ReportsService:
         if cached_job and cached_job.file_path and await storage.exists(cached_job.file_path):
             return self.serialize_job(cached_job, cache_hit=True), True
 
-        job = ReportJob(
-            school_id=school_id,
-            requester_id=requester_id,
-            type=request.type,
-            parameters=parameters,
-            parameters_hash=parameters_hash,
-            status=ReportJobStatus.PENDING.value,
-        )
-        await self.repo.create_report_job(job)
-        return self.serialize_job(job), False
+        async with UnitOfWork(self.db) as uow:
+            repo = ReportsRepository(uow.session)
+            job = ReportJob(
+                school_id=school_id,
+                requester_id=requester_id,
+                type=request.type,
+                parameters=parameters,
+                parameters_hash=parameters_hash,
+                status=ReportJobStatus.PENDING.value,
+            )
+            await repo.create_report_job(job)
+            await uow.commit()
+            return self.serialize_job(job), False
 
     async def list_report_jobs(
         self,
@@ -365,13 +369,15 @@ class ReportsService:
         return uuid.UUID(payload["job_id"])
 
     async def generate_report_job(self, job_id: uuid.UUID) -> ReportJob | None:
-        job = await self.repo.get_report_job(job_id)
-        if job is None:
-            return None
-
-        job.status = ReportJobStatus.GENERATING.value
-        job.error_message = None
-        await self.repo.save_report_job(job)
+        async with UnitOfWork(self.db) as uow:
+            repo = ReportsRepository(uow.session)
+            job = await repo.get_report_job(job_id)
+            if job is None:
+                return None
+            job.status = ReportJobStatus.GENERATING.value
+            job.error_message = None
+            await repo.save_report_job(job)
+            await uow.commit()
 
         try:
             context = await self._build_context(job)
@@ -382,19 +388,31 @@ class ReportsService:
                 f"{job.type}_{job.id}.pdf",
                 subdirectory=settings.report_storage_subdirectory,
             )
-            job.status = ReportJobStatus.READY.value
-            job.file_path = relative_path
-            job.file_size = file_size
-            job.mime_type = "application/pdf"
-            job.completed_at = _utc_now()
-            job.expires_at = _utc_now() + timedelta(hours=settings.report_download_ttl_hours)
-            await self.repo.save_report_job(job)
+            async with UnitOfWork(self.db) as uow:
+                repo = ReportsRepository(uow.session)
+                job = await repo.get_report_job(job_id)
+                if job is None:
+                    return None
+                job.status = ReportJobStatus.READY.value
+                job.file_path = relative_path
+                job.file_size = file_size
+                job.mime_type = "application/pdf"
+                job.completed_at = _utc_now()
+                job.expires_at = _utc_now() + timedelta(hours=settings.report_download_ttl_hours)
+                await repo.save_report_job(job)
+                await uow.commit()
             await self._notify_report_ready(job)
         except Exception as exc:
-            job.status = ReportJobStatus.FAILED.value
-            job.error_message = str(exc)
-            job.completed_at = _utc_now()
-            await self.repo.save_report_job(job)
+            async with UnitOfWork(self.db) as uow:
+                repo = ReportsRepository(uow.session)
+                job = await repo.get_report_job(job_id)
+                if job is None:
+                    return None
+                job.status = ReportJobStatus.FAILED.value
+                job.error_message = str(exc)
+                job.completed_at = _utc_now()
+                await repo.save_report_job(job)
+                await uow.commit()
             await self._notify_report_failed(job)
 
         return job
@@ -402,13 +420,16 @@ class ReportsService:
     async def cleanup_expired_reports(self) -> int:
         jobs = await self.repo.list_expired_report_jobs(now=_utc_now())
         cleaned = 0
-        for job in jobs:
-            if job.file_path:
-                await storage.delete(job.file_path)
-                job.file_path = None
-                await self.repo.save_report_job(job)
-                cleaned += 1
-        return cleaned
+        async with UnitOfWork(self.db) as uow:
+            repo = ReportsRepository(uow.session)
+            for job in jobs:
+                if job.file_path:
+                    await storage.delete(job.file_path)
+                    job.file_path = None
+                    await repo.save_report_job(job)
+                    cleaned += 1
+            await uow.commit()
+            return cleaned
 
     async def _resolve_parameters(
         self,

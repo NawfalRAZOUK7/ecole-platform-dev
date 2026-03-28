@@ -16,6 +16,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.unit_of_work import UnitOfWork
 from app.repositories.quiz import QuizRepository
 
 logger = logging.getLogger(__name__)
@@ -99,39 +100,46 @@ async def grade_attempt(attempt_id, db: AsyncSession) -> tuple[float, int]:
     Updates each QuizResponse with is_correct and points_earned.
     Updates the QuizAttempt with score, max_score, and status=COMPLETED.
     """
-    repo = QuizRepository(db)
-    attempt = await repo.get_quiz_attempt(attempt_id)
-    if attempt is None:
-        raise ValueError(f"Attempt {attempt_id} not found")
+    async def _grade_with_repo(repo: QuizRepository) -> tuple[float, int]:
+        attempt = await repo.get_quiz_attempt(attempt_id)
+        if attempt is None:
+            raise ValueError(f"Attempt {attempt_id} not found")
 
-    questions = {
-        question.id: question
-        for question in await repo.list_quiz_questions(attempt.quiz_id)
-    }
-    responses = await repo.list_attempt_responses(attempt_id)
+        questions = {
+            question.id: question
+            for question in await repo.list_quiz_questions(attempt.quiz_id)
+        }
+        responses = await repo.list_attempt_responses(attempt_id)
 
-    total_score = 0.0
-    max_score = sum(q.points for q in questions.values())
+        total_score = 0.0
+        max_score = sum(q.points for q in questions.values())
 
-    for resp in responses:
-        question = questions.get(resp.question_id)
-        if question is None:
-            continue
-        is_correct, points_earned = grade_response(
-            question.question_type,
-            resp.student_answer,
-            question.correct_answer,
-            question.points,
-        )
-        resp.is_correct = is_correct
-        resp.points_earned = points_earned
-        total_score += points_earned
+        for resp in responses:
+            question = questions.get(resp.question_id)
+            if question is None:
+                continue
+            is_correct, points_earned = grade_response(
+                question.question_type,
+                resp.student_answer,
+                question.correct_answer,
+                question.points,
+            )
+            resp.is_correct = is_correct
+            resp.points_earned = points_earned
+            total_score += points_earned
 
-    # Update attempt
-    attempt.score = total_score
-    attempt.max_score = max_score
-    attempt.status = "COMPLETED"
-    attempt.completed_at = datetime.now(timezone.utc)
+        attempt.score = total_score
+        attempt.max_score = max_score
+        attempt.status = "COMPLETED"
+        attempt.completed_at = datetime.now(timezone.utc)
 
-    await repo.save_quiz_attempt(attempt)
-    return total_score, max_score
+        await repo.save_quiz_attempt(attempt)
+        return total_score, max_score
+
+    if db.info.get("_uow_depth"):
+        return await _grade_with_repo(QuizRepository(db))
+
+    async with UnitOfWork(db) as uow:
+        scores = await _grade_with_repo(QuizRepository(uow.session))
+        await uow.commit()
+        return scores

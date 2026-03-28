@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.dependencies import AuthContext
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.core.security import hash_password
+from app.core.unit_of_work import UnitOfWork
 from app.models.iam import InvitationCode, Membership, ParentChildLink, User
 from app.repositories.admin import AdminRepository
 from app.services.audit import AuditService
@@ -113,17 +114,20 @@ class AdminService:
         if user.id == auth.user_id:
             raise ValidationError("Cannot suspend yourself", error_code="ERR-ADMIN-422")
 
-        await self.repo.set_user_status(user, "suspended")
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="USER_SUSPENDED",
-            outcome="success",
-            target_type="user",
-            target_id=user_id,
-            ip_address=client_ip,
-        )
-        await self.db.commit()
+        async with UnitOfWork(self.db) as uow:
+            repo = AdminRepository(uow.session)
+            audit = AuditService(uow.session)
+            await repo.set_user_status(user, "suspended")
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="USER_SUSPENDED",
+                outcome="success",
+                target_type="user",
+                target_id=user_id,
+                ip_address=client_ip,
+            )
+            await uow.commit()
         return {"id": str(user_id), "status": "suspended"}
 
     async def activate_user(
@@ -140,17 +144,20 @@ class AdminService:
         if user is None:
             raise NotFoundError("User not found", error_code="ERR-ADMIN-404")
 
-        await self.repo.set_user_status(user, "active")
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="USER_ACTIVATED",
-            outcome="success",
-            target_type="user",
-            target_id=user_id,
-            ip_address=client_ip,
-        )
-        await self.db.commit()
+        async with UnitOfWork(self.db) as uow:
+            repo = AdminRepository(uow.session)
+            audit = AuditService(uow.session)
+            await repo.set_user_status(user, "active")
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="USER_ACTIVATED",
+                outcome="success",
+                target_type="user",
+                target_id=user_id,
+                ip_address=client_ip,
+            )
+            await uow.commit()
         return {"id": str(user_id), "status": "active"}
 
     async def change_user_role(
@@ -177,22 +184,25 @@ class AdminService:
         if user.id == auth.user_id:
             raise ValidationError("Cannot change your own role", error_code="ERR-ADMIN-422")
 
-        await self.repo.update_active_membership_role(
-            user_id=user_id,
-            school_id=auth.school_id,
-            role_code=role,
-        )
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="USER_ROLE_CHANGED",
-            outcome="success",
-            target_type="user",
-            target_id=user_id,
-            entity_after={"role": role},
-            ip_address=client_ip,
-        )
-        await self.db.commit()
+        async with UnitOfWork(self.db) as uow:
+            repo = AdminRepository(uow.session)
+            audit = AuditService(uow.session)
+            await repo.update_active_membership_role(
+                user_id=user_id,
+                school_id=auth.school_id,
+                role_code=role,
+            )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="USER_ROLE_CHANGED",
+                outcome="success",
+                target_type="user",
+                target_id=user_id,
+                entity_after={"role": role},
+                ip_address=client_ip,
+            )
+            await uow.commit()
         return {"id": str(user_id), "role": role}
 
     async def list_invitations(
@@ -338,100 +348,109 @@ class AdminService:
         valid_roles = {"STD", "PAR", "TCH", "ADM", "DIR"}
         now = datetime.now(timezone.utc)
 
-        for item in items:
-            existing = await self.repo.get_user_by_email_in_school(
-                email=item.email,
-                school_id=school_id,
-            )
-            if existing is not None:
-                errors.append(
-                    {
-                        "email": item.email,
-                        "error": "Email already exists for this school",
-                    }
-                )
-                continue
+        async with UnitOfWork(self.db) as uow:
+            repo = AdminRepository(uow.session)
+            audit = AuditService(uow.session)
 
-            if item.role not in valid_roles:
-                errors.append(
-                    {
-                        "email": item.email,
-                        "error": f"Invalid role: {item.role}",
-                    }
-                )
-                continue
-
-            temp_password = secrets.token_urlsafe(12) + "A1!"
-            user = await self.repo.create_user(
-                User(
+            for item in items:
+                existing = await repo.get_user_by_email_in_school(
                     email=item.email,
-                    full_name=item.full_name,
-                    phone=item.phone,
-                    password_hash=hash_password(temp_password),
-                    status="active",
                     school_id=school_id,
                 )
-            )
-            await self.repo.create_membership(
-                Membership(
-                    user_id=user.id,
-                    school_id=school_id,
-                    role_code=item.role,
-                    status="active",
-                )
-            )
-            code_hash = hashlib.sha256(secrets.token_hex(4).upper().encode()).hexdigest()
-            await self.repo.create_invitation(
-                InvitationCode(
-                    school_id=school_id,
-                    issuer_user_id=auth.user_id,
-                    code_hash=code_hash,
-                    role_target=item.role,
-                    consumed_by=user.id,
-                    consumed_at=now,
-                    expires_at=now,
-                    target_student_id=item.target_student_id if item.role == "PAR" else None,
-                )
-            )
-
-            if item.role == "PAR" and item.target_student_id:
-                student = await self.repo.get_user_with_role(
-                    user_id=item.target_student_id,
-                    school_id=school_id,
-                    role_code="STD",
-                )
-                if student is not None:
-                    await self.repo.create_parent_child_link(
-                        ParentChildLink(
-                            parent_user_id=user.id,
-                            child_user_id=item.target_student_id,
-                            school_id=school_id,
-                            status="active",
-                            linked_at=now,
-                            linked_by=auth.user_id,
-                        )
+                if existing is not None:
+                    errors.append(
+                        {
+                            "email": item.email,
+                            "error": "Email already exists for this school",
+                        }
                     )
+                    continue
 
-            await self.audit.log_event(
-                school_id=school_id,
-                actor_id=auth.user_id,
-                action_type="USER_BATCH_REGISTERED",
-                outcome="success",
-                target_type="user",
-                target_id=user.id,
-                ip_address=client_ip,
-            )
-            results.append(
-                {
-                    "user_id": str(user.id),
-                    "email": item.email,
-                    "full_name": item.full_name,
-                    "role": item.role,
-                    "temp_password": temp_password,
-                }
-            )
+                if item.role not in valid_roles:
+                    errors.append(
+                        {
+                            "email": item.email,
+                            "error": f"Invalid role: {item.role}",
+                        }
+                    )
+                    continue
 
-        await self.db.commit()
+                temp_password = secrets.token_urlsafe(12) + "A1!"
+                user = await repo.create_user(
+                    User(
+                        email=item.email,
+                        full_name=item.full_name,
+                        phone=item.phone,
+                        password_hash=hash_password(temp_password),
+                        status="active",
+                        school_id=school_id,
+                    )
+                )
+                await repo.create_membership(
+                    Membership(
+                        user_id=user.id,
+                        school_id=school_id,
+                        role_code=item.role,
+                        status="active",
+                    )
+                )
+                code_hash = hashlib.sha256(
+                    secrets.token_hex(4).upper().encode()
+                ).hexdigest()
+                await repo.create_invitation(
+                    InvitationCode(
+                        school_id=school_id,
+                        issuer_user_id=auth.user_id,
+                        code_hash=code_hash,
+                        role_target=item.role,
+                        consumed_by=user.id,
+                        consumed_at=now,
+                        expires_at=now,
+                        target_student_id=item.target_student_id
+                        if item.role == "PAR"
+                        else None,
+                    )
+                )
+
+                if item.role == "PAR" and item.target_student_id:
+                    student = await repo.get_user_with_role(
+                        user_id=item.target_student_id,
+                        school_id=school_id,
+                        role_code="STD",
+                    )
+                    if student is not None:
+                        await repo.create_parent_child_link(
+                            ParentChildLink(
+                                parent_user_id=user.id,
+                                child_user_id=item.target_student_id,
+                                school_id=school_id,
+                                status="active",
+                                linked_at=now,
+                                linked_by=auth.user_id,
+                            )
+                        )
+
+                await audit.log_event(
+                    school_id=school_id,
+                    actor_id=auth.user_id,
+                    action_type="USER_BATCH_REGISTERED",
+                    outcome="success",
+                    target_type="user",
+                    target_id=user.id,
+                    ip_address=client_ip,
+                )
+                results.append(
+                    {
+                        "user_id": str(user.id),
+                        "email": item.email,
+                        "full_name": item.full_name,
+                        "role": item.role,
+                        "temp_password": temp_password,
+                    }
+                )
+
+            await uow.commit()
+
         return {
             "created": results,
             "errors": errors,
@@ -481,26 +500,29 @@ class AdminService:
                 error_code="ERR-CONFLICT-001",
             )
 
-        link = await self.repo.create_parent_child_link(
-            ParentChildLink(
-                parent_user_id=parent_user_id,
-                child_user_id=child_user_id,
-                school_id=school_id,
-                status="active",
-                linked_at=datetime.now(timezone.utc),
-                linked_by=auth.user_id,
+        async with UnitOfWork(self.db) as uow:
+            repo = AdminRepository(uow.session)
+            audit = AuditService(uow.session)
+            link = await repo.create_parent_child_link(
+                ParentChildLink(
+                    parent_user_id=parent_user_id,
+                    child_user_id=child_user_id,
+                    school_id=school_id,
+                    status="active",
+                    linked_at=datetime.now(timezone.utc),
+                    linked_by=auth.user_id,
+                )
             )
-        )
-        await self.audit.log_event(
-            school_id=school_id,
-            actor_id=auth.user_id,
-            action_type="PARENT_CHILD_LINKED",
-            outcome="success",
-            target_type="parent_child_link",
-            target_id=link.id,
-            ip_address=client_ip,
-        )
-        await self.db.commit()
+            await audit.log_event(
+                school_id=school_id,
+                actor_id=auth.user_id,
+                action_type="PARENT_CHILD_LINKED",
+                outcome="success",
+                target_type="parent_child_link",
+                target_id=link.id,
+                ip_address=client_ip,
+            )
+            await uow.commit()
         return {
             "id": str(link.id),
             "parent_user_id": str(link.parent_user_id),
@@ -564,17 +586,20 @@ class AdminService:
         if link.status == "revoked":
             return {"message": "Link already revoked", "id": str(link.id)}
 
-        await self.repo.revoke_parent_child_link(link)
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="PARENT_CHILD_UNLINKED",
-            outcome="success",
-            target_type="parent_child_link",
-            target_id=link.id,
-            ip_address=client_ip,
-        )
-        await self.db.commit()
+        async with UnitOfWork(self.db) as uow:
+            repo = AdminRepository(uow.session)
+            audit = AuditService(uow.session)
+            await repo.revoke_parent_child_link(link)
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="PARENT_CHILD_UNLINKED",
+                outcome="success",
+                target_type="parent_child_link",
+                target_id=link.id,
+                ip_address=client_ip,
+            )
+            await uow.commit()
         return {
             "id": str(link.id),
             "status": link.status,

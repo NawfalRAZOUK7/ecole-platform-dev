@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.exceptions import AuthorizationError, NotFoundError, ValidationError
+from app.core.unit_of_work import UnitOfWork
 from app.models.calendar import (
     Event,
     EventReminderPreference,
@@ -231,16 +232,20 @@ class CalendarService:
                 "Holiday already exists for this date",
                 error_code="ERR-CAL-422",
             )
-        holiday = MoroccanHoliday(
-            code=body.code,
-            holiday_date=body.holiday_date,
-            name_fr=body.name_fr,
-            name_ar=body.name_ar,
-            name_en=body.name_en,
-            description=body.description,
-            is_all_day=body.is_all_day,
-        )
-        return await self.repo.create_holiday(holiday)
+        async with UnitOfWork(self.db) as uow:
+            repo = CalendarRepository(uow.session)
+            holiday = MoroccanHoliday(
+                code=body.code,
+                holiday_date=body.holiday_date,
+                name_fr=body.name_fr,
+                name_ar=body.name_ar,
+                name_en=body.name_en,
+                description=body.description,
+                is_all_day=body.is_all_day,
+            )
+            created = await repo.create_holiday(holiday)
+            await uow.commit()
+            return created
 
     async def update_holiday(
         self,
@@ -265,20 +270,30 @@ class CalendarService:
                 "Holiday already exists for this date",
                 error_code="ERR-CAL-422",
             )
-        for field, value in payload.items():
-            setattr(holiday, field, value)
-        return await self.repo.save_holiday(holiday)
+        async with UnitOfWork(self.db) as uow:
+            repo = CalendarRepository(uow.session)
+            holiday = await repo.get_holiday(holiday_id)
+            if holiday is None:
+                raise NotFoundError("Holiday not found", error_code="ERR-CAL-404")
+            for field, value in payload.items():
+                setattr(holiday, field, value)
+            saved = await repo.save_holiday(holiday)
+            await uow.commit()
+            return saved
 
     async def delete_holiday(
         self,
         *,
         holiday_id: uuid.UUID,
     ) -> MoroccanHoliday:
-        holiday = await self.repo.get_holiday(holiday_id)
-        if holiday is None:
-            raise NotFoundError("Holiday not found", error_code="ERR-CAL-404")
-        await self.repo.delete_holiday(holiday)
-        return holiday
+        async with UnitOfWork(self.db) as uow:
+            repo = CalendarRepository(uow.session)
+            holiday = await repo.get_holiday(holiday_id)
+            if holiday is None:
+                raise NotFoundError("Holiday not found", error_code="ERR-CAL-404")
+            await repo.delete_holiday(holiday)
+            await uow.commit()
+            return holiday
 
     async def create_event(
         self,
@@ -291,30 +306,34 @@ class CalendarService:
         actor = CalendarActor(user_id=user_id, role=role, school_id=school_id)
         await self._validate_create_request(actor, body)
 
-        event = Event(
-            school_id=school_id,
-            title_fr=body.title_fr,
-            title_ar=body.title_ar,
-            title_en=body.title_en,
-            description=body.description,
-            type=body.type,
-            visibility=body.visibility,
-            start_at=body.start_at,
-            end_at=body.end_at,
-            location=body.location,
-            latitude=body.latitude,
-            longitude=body.longitude,
-            capacity=body.capacity,
-            rsvp_deadline=body.rsvp_deadline,
-            recurrence_rule=body.recurrence_rule.model_dump(mode="json")
-            if body.recurrence_rule
-            else None,
-            created_by=user_id,
-            class_id=body.class_id,
-            role_codes=body.role_codes,
-            is_all_day=body.is_all_day,
-        )
-        return await self.repo.create_event(event)
+        async with UnitOfWork(self.db) as uow:
+            repo = CalendarRepository(uow.session)
+            event = Event(
+                school_id=school_id,
+                title_fr=body.title_fr,
+                title_ar=body.title_ar,
+                title_en=body.title_en,
+                description=body.description,
+                type=body.type,
+                visibility=body.visibility,
+                start_at=body.start_at,
+                end_at=body.end_at,
+                location=body.location,
+                latitude=body.latitude,
+                longitude=body.longitude,
+                capacity=body.capacity,
+                rsvp_deadline=body.rsvp_deadline,
+                recurrence_rule=body.recurrence_rule.model_dump(mode="json")
+                if body.recurrence_rule
+                else None,
+                created_by=user_id,
+                class_id=body.class_id,
+                role_codes=body.role_codes,
+                is_all_day=body.is_all_day,
+            )
+            created = await repo.create_event(event)
+            await uow.commit()
+            return created
 
     async def update_event(
         self,
@@ -344,34 +363,41 @@ class CalendarService:
         if next_visibility == EventVisibility.ROLE.value and not next_role_codes:
             raise ValidationError("role_codes are required for role visibility", error_code="ERR-CAL-422")
 
-        for field, value in payload.items():
-            if field == "recurrence_rule" and value is not None:
-                setattr(event, field, value)
-            else:
-                setattr(event, field, value)
+        async with UnitOfWork(self.db) as uow:
+            repo = CalendarRepository(uow.session)
+            event = await repo.get_event(event_id)
+            if event is None or event.deleted_at is not None or event.school_id != school_id:
+                raise NotFoundError("Event not found", error_code="ERR-CAL-404")
+            for field, value in payload.items():
+                if field == "recurrence_rule" and value is not None:
+                    setattr(event, field, value)
+                else:
+                    setattr(event, field, value)
 
-        if event.end_at < event.start_at:
-            raise ValidationError("end_at must be after start_at", error_code="ERR-CAL-422")
-        if event.rsvp_deadline and event.rsvp_deadline > event.start_at:
-            raise ValidationError("rsvp_deadline must be before start_at", error_code="ERR-CAL-422")
-        if role == "TCH" and event.visibility != EventVisibility.CLASS.value:
-            raise AuthorizationError(
-                "Teachers can only create class events",
-                error_code="ERR-CAL-403",
-            )
-        if event.class_id:
-            class_obj = await self.repo.get_class(event.class_id)
-            if class_obj is None or class_obj.school_id != school_id:
-                raise NotFoundError("Class not found", error_code="ERR-CAL-404")
-            if role == "TCH":
-                teacher_classes = await self.repo.list_teacher_class_ids(
-                    teacher_id=user_id,
-                    school_id=school_id,
+            if event.end_at < event.start_at:
+                raise ValidationError("end_at must be after start_at", error_code="ERR-CAL-422")
+            if event.rsvp_deadline and event.rsvp_deadline > event.start_at:
+                raise ValidationError("rsvp_deadline must be before start_at", error_code="ERR-CAL-422")
+            if role == "TCH" and event.visibility != EventVisibility.CLASS.value:
+                raise AuthorizationError(
+                    "Teachers can only create class events",
+                    error_code="ERR-CAL-403",
                 )
-                if event.class_id not in teacher_classes:
+            if event.class_id:
+                class_obj = await repo.get_class(event.class_id)
+                if class_obj is None or class_obj.school_id != school_id:
                     raise NotFoundError("Class not found", error_code="ERR-CAL-404")
+                if role == "TCH":
+                    teacher_classes = await repo.list_teacher_class_ids(
+                        teacher_id=user_id,
+                        school_id=school_id,
+                    )
+                    if event.class_id not in teacher_classes:
+                        raise NotFoundError("Class not found", error_code="ERR-CAL-404")
 
-        return await self.repo.save_event(event)
+            saved = await repo.save_event(event)
+            await uow.commit()
+            return saved
 
     async def delete_event(
         self,
@@ -379,11 +405,15 @@ class CalendarService:
         event_id: uuid.UUID,
         school_id: uuid.UUID,
     ) -> Event:
-        event = await self.repo.get_event(event_id)
-        if event is None or event.school_id != school_id or event.deleted_at is not None:
-            raise NotFoundError("Event not found", error_code="ERR-CAL-404")
-        event.deleted_at = _utc_now()
-        return await self.repo.save_event(event)
+        async with UnitOfWork(self.db) as uow:
+            repo = CalendarRepository(uow.session)
+            event = await repo.get_event(event_id)
+            if event is None or event.school_id != school_id or event.deleted_at is not None:
+                raise NotFoundError("Event not found", error_code="ERR-CAL-404")
+            event.deleted_at = _utc_now()
+            saved = await repo.save_event(event)
+            await uow.commit()
+            return saved
 
     async def get_accessible_event(
         self,
@@ -435,14 +465,30 @@ class CalendarService:
         school_id: uuid.UUID,
         user_id: uuid.UUID,
     ) -> list[dict[str, Any]]:
-        await self._ensure_default_reminder_preferences(
-            school_id=school_id,
-            user_id=user_id,
-        )
-        preferences = await self.repo.list_reminder_preferences(
-            school_id=school_id,
-            user_id=user_id,
-        )
+        if self.db.info.get("_uow_depth"):
+            repo = CalendarRepository(self.db)
+            await self._ensure_default_reminder_preferences_with_repo(
+                repo=repo,
+                school_id=school_id,
+                user_id=user_id,
+            )
+            preferences = await repo.list_reminder_preferences(
+                school_id=school_id,
+                user_id=user_id,
+            )
+        else:
+            async with UnitOfWork(self.db) as uow:
+                repo = CalendarRepository(uow.session)
+                await self._ensure_default_reminder_preferences_with_repo(
+                    repo=repo,
+                    school_id=school_id,
+                    user_id=user_id,
+                )
+                preferences = await repo.list_reminder_preferences(
+                    school_id=school_id,
+                    user_id=user_id,
+                )
+                await uow.commit()
         return [
             {
                 "event_type": item.event_type,
@@ -458,30 +504,42 @@ class CalendarService:
         user_id: uuid.UUID,
         preferences: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
-        await self._ensure_default_reminder_preferences(
-            school_id=school_id,
-            user_id=user_id,
-        )
-        for item in preferences:
-            pref = await self.repo.find_reminder_preference(
+        async with UnitOfWork(self.db) as uow:
+            repo = CalendarRepository(uow.session)
+            await self._ensure_default_reminder_preferences_with_repo(
+                repo=repo,
                 school_id=school_id,
                 user_id=user_id,
-                event_type=item["event_type"],
             )
-            if pref is None:
-                pref = EventReminderPreference(
+            for item in preferences:
+                pref = await repo.find_reminder_preference(
                     school_id=school_id,
                     user_id=user_id,
                     event_type=item["event_type"],
-                    enabled=item["enabled"],
                 )
-            else:
-                pref.enabled = item["enabled"]
-            await self.repo.save_reminder_preference(pref)
-        return await self.list_reminder_preferences(
-            school_id=school_id,
-            user_id=user_id,
-        )
+                if pref is None:
+                    pref = EventReminderPreference(
+                        school_id=school_id,
+                        user_id=user_id,
+                        event_type=item["event_type"],
+                        enabled=item["enabled"],
+                    )
+                else:
+                    pref.enabled = item["enabled"]
+                await repo.save_reminder_preference(pref)
+            updated = await repo.list_reminder_preferences(
+                school_id=school_id,
+                user_id=user_id,
+            )
+            await uow.commit()
+
+        return [
+            {
+                "event_type": item.event_type,
+                "enabled": item.enabled,
+            }
+            for item in updated
+        ]
 
     def build_ical_token(
         self,
@@ -973,7 +1031,20 @@ class CalendarService:
         school_id: uuid.UUID,
         user_id: uuid.UUID,
     ) -> None:
-        existing = await self.repo.list_reminder_preferences(
+        await self._ensure_default_reminder_preferences_with_repo(
+            repo=self.repo,
+            school_id=school_id,
+            user_id=user_id,
+        )
+
+    async def _ensure_default_reminder_preferences_with_repo(
+        self,
+        *,
+        repo: CalendarRepository,
+        school_id: uuid.UUID,
+        user_id: uuid.UUID,
+    ) -> None:
+        existing = await repo.list_reminder_preferences(
             school_id=school_id,
             user_id=user_id,
         )
@@ -981,7 +1052,7 @@ class CalendarService:
         for event_type in DEFAULT_EVENT_TYPES:
             if event_type in existing_types:
                 continue
-            await self.repo.save_reminder_preference(
+            await repo.save_reminder_preference(
                 EventReminderPreference(
                     school_id=school_id,
                     user_id=user_id,

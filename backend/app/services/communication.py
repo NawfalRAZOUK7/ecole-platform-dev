@@ -11,6 +11,7 @@ from app.core.dependencies import AuthContext, verify_school_boundary
 from app.core.exceptions import NotFoundError, ValidationError
 from app.core.filtering import FilterSpec, SortSpec
 from app.core.response import decode_cursor, encode_cursor
+from app.core.unit_of_work import UnitOfWork
 from app.models.com import Conversation, Message
 from app.repositories.messaging import MessagingRepository
 from app.schemas.com import (
@@ -203,59 +204,58 @@ class CommunicationService:
 
         await self._validate_messaging_abac(auth=auth, participant_ids=body.participant_ids)
 
-        conversation = await self.repo.create_conversation(
-            school_id=auth.school_id,
-            type=body.type,
-            created_by=auth.user_id,
-            subject=body.subject,
-        )
-        await self.repo.create_conversation_participants(
-            [
-                {
-                    "conversation_id": conversation.id,
-                    "user_id": auth.user_id,
-                    "role_in_conversation": "INITIATOR",
-                    "joined_at": now,
-                    "muted": False,
-                },
-                *[
+        async with UnitOfWork(self.db) as uow:
+            repo = MessagingRepository(uow.session)
+            audit = AuditService(uow.session)
+            conversation = await repo.create_conversation(
+                school_id=auth.school_id,
+                type=body.type,
+                created_by=auth.user_id,
+                subject=body.subject,
+            )
+            await repo.create_conversation_participants(
+                [
                     {
                         "conversation_id": conversation.id,
-                        "user_id": participant_id,
-                        "role_in_conversation": "PARTICIPANT",
+                        "user_id": auth.user_id,
+                        "role_in_conversation": "INITIATOR",
                         "joined_at": now,
                         "muted": False,
-                    }
-                    for participant_id in body.participant_ids
-                ],
-            ]
-        )
-        message = await self.repo.create_message(
-            conversation_id=conversation.id,
-            sender_id=auth.user_id,
-            body=body.initial_message,
-            sent_at=now,
-        )
-        conversation = await self._verify_participant(
-            conversation_id=conversation.id,
-            user_id=auth.user_id,
-        )
-        response = self._conversation_to_response(
-            conversation,
-            last_message_at=now.isoformat(),
-        )
-
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="conversation.create",
-            target_type="conversation",
-            target_id=conversation.id,
-            outcome="success",
-            entity_after=response,
-            ip_address=ip_address,
-        )
-        await self.db.commit()
+                    },
+                    *[
+                        {
+                            "conversation_id": conversation.id,
+                            "user_id": participant_id,
+                            "role_in_conversation": "PARTICIPANT",
+                            "joined_at": now,
+                            "muted": False,
+                        }
+                        for participant_id in body.participant_ids
+                    ],
+                ]
+            )
+            message = await repo.create_message(
+                conversation_id=conversation.id,
+                sender_id=auth.user_id,
+                body=body.initial_message,
+                sent_at=now,
+            )
+            conversation = await repo.get_conversation(conversation.id)
+            response = self._conversation_to_response(
+                conversation,
+                last_message_at=now.isoformat(),
+            )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="conversation.create",
+                target_type="conversation",
+                target_id=conversation.id,
+                outcome="success",
+                entity_after=response,
+                ip_address=ip_address,
+            )
+            await uow.commit()
 
         for participant_id in body.participant_ids:
             await publish_message_created(
@@ -335,25 +335,27 @@ class CommunicationService:
         )
         verify_school_boundary(conversation.school_id, auth)
 
-        message = await self.repo.create_message(
-            conversation_id=conversation_id,
-            sender_id=auth.user_id,
-            body=body.body,
-            sent_at=now,
-        )
-        response = self._message_to_response(message)
-
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="message.send",
-            target_type="message",
-            target_id=message.id,
-            outcome="success",
-            entity_after=response,
-            ip_address=ip_address,
-        )
-        await self.db.commit()
+        async with UnitOfWork(self.db) as uow:
+            repo = MessagingRepository(uow.session)
+            audit = AuditService(uow.session)
+            message = await repo.create_message(
+                conversation_id=conversation_id,
+                sender_id=auth.user_id,
+                body=body.body,
+                sent_at=now,
+            )
+            response = self._message_to_response(message)
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="message.send",
+                target_type="message",
+                target_id=message.id,
+                outcome="success",
+                entity_after=response,
+                ip_address=ip_address,
+            )
+            await uow.commit()
 
         for participant in conversation.participants:
             if participant.user_id != auth.user_id and not participant.muted:
@@ -394,17 +396,19 @@ class CommunicationService:
             user_id=auth.user_id,
             up_to_sent_at=message.sent_at,
         )
-        await self.repo.create_read_receipts(
-            [
-                {
-                    "message_id": message_id,
-                    "user_id": auth.user_id,
-                    "read_at": now,
-                }
-                for message_id in unread_message_ids
-            ]
-        )
-        await self.db.commit()
+        async with UnitOfWork(self.db) as uow:
+            repo = MessagingRepository(uow.session)
+            await repo.create_read_receipts(
+                [
+                    {
+                        "message_id": message_id,
+                        "user_id": auth.user_id,
+                        "read_at": now,
+                    }
+                    for message_id in unread_message_ids
+                ]
+            )
+            await uow.commit()
         return {
             "marked_read": len(unread_message_ids),
             "up_to_message_id": str(body.message_id),

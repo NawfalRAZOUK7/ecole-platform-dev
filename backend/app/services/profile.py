@@ -15,6 +15,7 @@ from app.core.dependencies import (
     verify_teacher_assignment,
 )
 from app.core.exceptions import NotFoundError, ValidationError
+from app.core.unit_of_work import UnitOfWork
 from app.models.iam import ParentProfile, StudentProfile, TeacherProfile
 from app.repositories.profile import ProfileRepository
 from app.schemas.profile import (
@@ -145,19 +146,22 @@ class ProfileService:
                 **update_data,
             )
 
-        saved_profile = await self.repo.save_profile(profile)
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="PROFILE_UPDATED",
-            target_type="profile",
-            target_id=saved_profile.id,
-            entity_before=jsonable_encoder(entity_before),
-            entity_after=jsonable_encoder(update_data),
-            outcome="success",
-            ip_address=client_ip,
-        )
-        await self.db.commit()
+        async with UnitOfWork(self.db) as uow:
+            repo = ProfileRepository(uow.session)
+            audit = AuditService(uow.session)
+            saved_profile = await repo.save_profile(profile)
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="PROFILE_UPDATED",
+                target_type="profile",
+                target_id=saved_profile.id,
+                entity_before=jsonable_encoder(entity_before),
+                entity_after=jsonable_encoder(update_data),
+                outcome="success",
+                ip_address=client_ip,
+            )
+            await uow.commit()
         return await self.get_my_profile(auth)
 
     async def get_admin_user_profile(

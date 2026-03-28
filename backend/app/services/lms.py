@@ -18,6 +18,7 @@ from app.core.exceptions import AuthorizationError, ConflictError, NotFoundError
 from app.core.filtering import FilterSpec, SortSpec
 from app.core.response import encode_cursor
 from app.core.storage import storage, validate_mime_type
+from app.core.unit_of_work import UnitOfWork
 from app.models.lms import (
     Activity,
     ActivitySession,
@@ -235,29 +236,33 @@ class LMSService:
         )
         verify_teacher_assignment(body.class_id, teacher_classes)
 
-        course = await self.repo.create_course(
-            school_id=auth.school_id,
-            class_id=body.class_id,
-            teacher_id=auth.user_id,
-            title=body.title,
-            description=body.description,
-            status=body.status,
-        )
+        async with UnitOfWork(self.db) as uow:
+            repo = LMSRepository(uow.session)
+            audit = AuditService(uow.session)
+            course = await repo.create_course(
+                school_id=auth.school_id,
+                class_id=body.class_id,
+                teacher_id=auth.user_id,
+                title=body.title,
+                description=body.description,
+                status=body.status,
+            )
 
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="COURSE_CREATED",
-            outcome="success",
-            target_type="course",
-            target_id=course.id,
-            entity_after={
-                "class_id": str(body.class_id),
-                "title": body.title,
-                "status": body.status,
-            },
-            ip_address=ip_address,
-        )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="COURSE_CREATED",
+                outcome="success",
+                target_type="course",
+                target_id=course.id,
+                entity_after={
+                    "class_id": str(body.class_id),
+                    "title": body.title,
+                    "status": body.status,
+                },
+                ip_address=ip_address,
+            )
+            await uow.commit()
 
         return self._course_to_dict(course)
 
@@ -304,25 +309,29 @@ class LMSService:
             student_id=auth.user_id,
             activity_id=body.activity_id,
         )
-        session = await self.repo.create_activity_session(
-            student_id=auth.user_id,
-            activity_id=body.activity_id,
-            status="started",
-            attempt_no=attempt_no,
-        )
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="ACTIVITY_SESSION_STARTED",
-            outcome="success",
-            target_type="activity_session",
-            target_id=session.id,
-            entity_after={
-                "activity_id": str(body.activity_id),
-                "attempt_no": session.attempt_no,
-            },
-            ip_address=ip_address,
-        )
+        async with UnitOfWork(self.db) as uow:
+            repo = LMSRepository(uow.session)
+            audit = AuditService(uow.session)
+            session = await repo.create_activity_session(
+                student_id=auth.user_id,
+                activity_id=body.activity_id,
+                status="started",
+                attempt_no=attempt_no,
+            )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="ACTIVITY_SESSION_STARTED",
+                outcome="success",
+                target_type="activity_session",
+                target_id=session.id,
+                entity_after={
+                    "activity_id": str(body.activity_id),
+                    "attempt_no": session.attempt_no,
+                },
+                ip_address=ip_address,
+            )
+            await uow.commit()
         return self._activity_session_to_dict(session)
 
     async def complete_activity_session(
@@ -345,23 +354,27 @@ class LMSService:
                 details={"current_status": session.status},
             )
 
-        session.status = "completed"
-        if body.score is not None:
-            session.score = body.score
-        await self.repo.save_activity_session(session)
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="ACTIVITY_SESSION_COMPLETED",
-            outcome="success",
-            target_type="activity_session",
-            target_id=session.id,
-            entity_after={
-                "status": "completed",
-                "score": float(body.score) if body.score is not None else None,
-            },
-            ip_address=ip_address,
-        )
+        async with UnitOfWork(self.db) as uow:
+            repo = LMSRepository(uow.session)
+            audit = AuditService(uow.session)
+            session.status = "completed"
+            if body.score is not None:
+                session.score = body.score
+            await repo.save_activity_session(session)
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="ACTIVITY_SESSION_COMPLETED",
+                outcome="success",
+                target_type="activity_session",
+                target_id=session.id,
+                entity_after={
+                    "status": "completed",
+                    "score": float(body.score) if body.score is not None else None,
+                },
+                ip_address=ip_address,
+            )
+            await uow.commit()
         return self._activity_session_to_dict(session)
 
     async def list_courses(
@@ -414,32 +427,36 @@ class LMSService:
                 error_code="ERR-AUTHZ-001",
             )
 
-        assignment = await self.repo.create_assignment(
-            course_id=body.course_id,
-            teacher_id=auth.user_id,
-            title=body.title,
-            description=body.description,
-            due_at=body.due_at,
-            total_points=body.total_points,
-            exercise_type=body.exercise_type,
-            quiz_id=body.quiz_id,
-        )
+        async with UnitOfWork(self.db) as uow:
+            repo = LMSRepository(uow.session)
+            audit = AuditService(uow.session)
+            assignment = await repo.create_assignment(
+                course_id=body.course_id,
+                teacher_id=auth.user_id,
+                title=body.title,
+                description=body.description,
+                due_at=body.due_at,
+                total_points=body.total_points,
+                exercise_type=body.exercise_type,
+                quiz_id=body.quiz_id,
+            )
 
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="ASSIGNMENT_CREATED",
-            outcome="success",
-            target_type="assignment",
-            target_id=assignment.id,
-            entity_after={
-                "course_id": str(body.course_id),
-                "title": body.title,
-                "total_points": body.total_points,
-                "exercise_type": body.exercise_type,
-            },
-            ip_address=ip_address,
-        )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="ASSIGNMENT_CREATED",
+                outcome="success",
+                target_type="assignment",
+                target_id=assignment.id,
+                entity_after={
+                    "course_id": str(body.course_id),
+                    "title": body.title,
+                    "total_points": body.total_points,
+                    "exercise_type": body.exercise_type,
+                },
+                ip_address=ip_address,
+            )
+            await uow.commit()
 
         return self._assignment_to_dict(assignment)
 
@@ -517,23 +534,27 @@ class LMSService:
             filename or "exercise.pdf",
             subdirectory=f"exercises/{assignment_id}",
         )
-        assignment.exercise_pdf_path = relative_path
-        await self.repo.save_assignment(assignment)
+        async with UnitOfWork(self.db) as uow:
+            repo = LMSRepository(uow.session)
+            audit = AuditService(uow.session)
+            assignment.exercise_pdf_path = relative_path
+            await repo.save_assignment(assignment)
 
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="EXERCISE_PDF_UPLOADED",
-            outcome="success",
-            target_type="assignment",
-            target_id=assignment.id,
-            entity_after={
-                "exercise_pdf_path": relative_path,
-                "checksum": checksum,
-                "file_size": file_size,
-            },
-            ip_address=ip_address,
-        )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="EXERCISE_PDF_UPLOADED",
+                outcome="success",
+                target_type="assignment",
+                target_id=assignment.id,
+                entity_after={
+                    "exercise_pdf_path": relative_path,
+                    "checksum": checksum,
+                    "file_size": file_size,
+                },
+                ip_address=ip_address,
+            )
+            await uow.commit()
 
         return {
             "id": str(assignment.id),
@@ -595,26 +616,30 @@ class LMSService:
         now = _utc_now()
         is_pdf_exercise = assignment.exercise_type == "PRINTABLE_PDF"
         initial_status = "draft" if is_pdf_exercise else "submitted"
-        submission = await self.repo.create_submission(
-            assignment_id=body.assignment_id,
-            student_id=auth.user_id,
-            status=initial_status,
-            submitted_at=None if is_pdf_exercise else now,
-        )
+        async with UnitOfWork(self.db) as uow:
+            repo = LMSRepository(uow.session)
+            audit = AuditService(uow.session)
+            submission = await repo.create_submission(
+                assignment_id=body.assignment_id,
+                student_id=auth.user_id,
+                status=initial_status,
+                submitted_at=None if is_pdf_exercise else now,
+            )
 
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="SUBMISSION_CREATED",
-            outcome="success",
-            target_type="submission",
-            target_id=submission.id,
-            entity_after={
-                "assignment_id": str(body.assignment_id),
-                "status": initial_status,
-            },
-            ip_address=ip_address,
-        )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="SUBMISSION_CREATED",
+                outcome="success",
+                target_type="submission",
+                target_id=submission.id,
+                entity_after={
+                    "assignment_id": str(body.assignment_id),
+                    "status": initial_status,
+                },
+                ip_address=ip_address,
+            )
+            await uow.commit()
 
         return self._submission_to_dict(submission)
 
@@ -650,41 +675,45 @@ class LMSService:
                 error_code="ERR-LMS-422",
             )
 
-        grade = await self.repo.get_grade_for_submission(submission_id)
         published_at = _utc_now() if body.publish else None
+        async with UnitOfWork(self.db) as uow:
+            repo = LMSRepository(uow.session)
+            audit = AuditService(uow.session)
+            grade = await repo.get_grade_for_submission(submission_id)
 
-        if grade is not None:
-            grade.score = body.score
-            grade.feedback_text = body.feedback_text
-            if body.publish:
-                grade.published_at = published_at
-            await self.repo.save_grade(grade)
-        else:
-            grade = await self.repo.create_grade(
-                submission_id=submission_id,
-                teacher_id=auth.user_id,
-                score=body.score,
-                feedback_text=body.feedback_text,
-                published_at=published_at,
+            if grade is not None:
+                grade.score = body.score
+                grade.feedback_text = body.feedback_text
+                if body.publish:
+                    grade.published_at = published_at
+                await repo.save_grade(grade)
+            else:
+                grade = await repo.create_grade(
+                    submission_id=submission_id,
+                    teacher_id=auth.user_id,
+                    score=body.score,
+                    feedback_text=body.feedback_text,
+                    published_at=published_at,
+                )
+
+            submission.status = "graded"
+            await repo.save_submission(submission)
+
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="SUBMISSION_GRADED",
+                outcome="success",
+                target_type="grade",
+                target_id=grade.id,
+                entity_after={
+                    "submission_id": str(submission_id),
+                    "score": float(body.score),
+                    "published": body.publish,
+                },
+                ip_address=ip_address,
             )
-
-        submission.status = "graded"
-        await self.repo.save_submission(submission)
-
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="SUBMISSION_GRADED",
-            outcome="success",
-            target_type="grade",
-            target_id=grade.id,
-            entity_after={
-                "submission_id": str(submission_id),
-                "score": float(body.score),
-                "published": body.publish,
-            },
-            ip_address=ip_address,
-        )
+            await uow.commit()
 
         if body.publish:
             await publish_grade_published(
@@ -766,32 +795,36 @@ class LMSService:
             filename or "upload",
             subdirectory=f"submissions/{submission_id}",
         )
-        submission_file = await self.repo.create_submission_file(
-            submission_id=submission_id,
-            file_path=relative_path,
-            checksum=checksum,
-            mime_type=mime_type,
-            file_size=file_size,
-            file_type_hint=file_type_hint,
-        )
+        async with UnitOfWork(self.db) as uow:
+            repo = LMSRepository(uow.session)
+            audit = AuditService(uow.session)
+            submission_file = await repo.create_submission_file(
+                submission_id=submission_id,
+                file_path=relative_path,
+                checksum=checksum,
+                mime_type=mime_type,
+                file_size=file_size,
+                file_type_hint=file_type_hint,
+            )
 
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="SUBMISSION_FILE_UPLOADED",
-            outcome="success",
-            target_type="submission_file",
-            target_id=submission_file.id,
-            entity_after={
-                "submission_id": str(submission_id),
-                "file_path": relative_path,
-                "mime_type": mime_type,
-                "file_size": file_size,
-                "checksum": checksum,
-                "file_type_hint": file_type_hint,
-            },
-            ip_address=ip_address,
-        )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="SUBMISSION_FILE_UPLOADED",
+                outcome="success",
+                target_type="submission_file",
+                target_id=submission_file.id,
+                entity_after={
+                    "submission_id": str(submission_id),
+                    "file_path": relative_path,
+                    "mime_type": mime_type,
+                    "file_size": file_size,
+                    "checksum": checksum,
+                    "file_type_hint": file_type_hint,
+                },
+                ip_address=ip_address,
+            )
+            await uow.commit()
 
         return {
             "id": str(submission_file.id),
@@ -865,24 +898,28 @@ class LMSService:
                     error_code="ERR-LMS-422",
                 )
 
-        submission.status = "submitted"
-        submission.submitted_at = _utc_now()
-        await self.repo.save_submission(submission)
+        async with UnitOfWork(self.db) as uow:
+            repo = LMSRepository(uow.session)
+            audit = AuditService(uow.session)
+            submission.status = "submitted"
+            submission.submitted_at = _utc_now()
+            await repo.save_submission(submission)
 
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="SUBMISSION_FINALIZED",
-            outcome="success",
-            target_type="submission",
-            target_id=submission.id,
-            entity_after={
-                "assignment_id": str(submission.assignment_id),
-                "status": "submitted",
-                "exercise_type": assignment.exercise_type,
-            },
-            ip_address=ip_address,
-        )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="SUBMISSION_FINALIZED",
+                outcome="success",
+                target_type="submission",
+                target_id=submission.id,
+                entity_after={
+                    "assignment_id": str(submission.assignment_id),
+                    "status": "submitted",
+                    "exercise_type": assignment.exercise_type,
+                },
+                ip_address=ip_address,
+            )
+            await uow.commit()
 
         return self._submission_to_dict(submission)
 
@@ -988,33 +1025,37 @@ class LMSService:
         if content_item.school_id is not None:
             verify_school_boundary(content_item.school_id, auth)
 
-        progress = await self.repo.get_content_progress(
-            student_id=auth.user_id,
-            content_item_id=content_item_id,
-        )
-        if progress is not None:
-            progress.status = body.status
-            await self.repo.save_content_progress(progress)
-        else:
-            progress = await self.repo.create_content_progress(
+        async with UnitOfWork(self.db) as uow:
+            repo = LMSRepository(uow.session)
+            audit = AuditService(uow.session)
+            progress = await repo.get_content_progress(
                 student_id=auth.user_id,
                 content_item_id=content_item_id,
-                status=body.status,
             )
+            if progress is not None:
+                progress.status = body.status
+                await repo.save_content_progress(progress)
+            else:
+                progress = await repo.create_content_progress(
+                    student_id=auth.user_id,
+                    content_item_id=content_item_id,
+                    status=body.status,
+                )
 
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="CONTENT_PROGRESS_UPDATED",
-            outcome="success",
-            target_type="content_progress",
-            target_id=progress.id,
-            entity_after={
-                "content_item_id": str(content_item_id),
-                "status": body.status,
-            },
-            ip_address=ip_address,
-        )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="CONTENT_PROGRESS_UPDATED",
+                outcome="success",
+                target_type="content_progress",
+                target_id=progress.id,
+                entity_after={
+                    "content_item_id": str(content_item_id),
+                    "status": body.status,
+                },
+                ip_address=ip_address,
+            )
+            await uow.commit()
 
         return {
             "id": str(progress.id),
@@ -1046,30 +1087,34 @@ class LMSService:
             filename or "asset",
             subdirectory=f"content/{content_item_id}",
         )
-        asset = await self.repo.create_content_asset(
-            content_item_id=content_item_id,
-            file_path=relative_path,
-            checksum=checksum,
-            mime_type=mime_type,
-            file_size=file_size,
-        )
+        async with UnitOfWork(self.db) as uow:
+            repo = LMSRepository(uow.session)
+            audit = AuditService(uow.session)
+            asset = await repo.create_content_asset(
+                content_item_id=content_item_id,
+                file_path=relative_path,
+                checksum=checksum,
+                mime_type=mime_type,
+                file_size=file_size,
+            )
 
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="CONTENT_ASSET_UPLOADED",
-            outcome="success",
-            target_type="content_item_asset",
-            target_id=asset.id,
-            entity_after={
-                "content_item_id": str(content_item_id),
-                "file_path": relative_path,
-                "mime_type": mime_type,
-                "file_size": file_size,
-                "checksum": checksum,
-            },
-            ip_address=ip_address,
-        )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="CONTENT_ASSET_UPLOADED",
+                outcome="success",
+                target_type="content_item_asset",
+                target_id=asset.id,
+                entity_after={
+                    "content_item_id": str(content_item_id),
+                    "file_path": relative_path,
+                    "mime_type": mime_type,
+                    "file_size": file_size,
+                    "checksum": checksum,
+                },
+                ip_address=ip_address,
+            )
+            await uow.commit()
 
         return {
             "id": str(asset.id),
@@ -1126,25 +1171,29 @@ class LMSService:
         if content_item.school_id is not None:
             verify_school_boundary(content_item.school_id, auth)
 
-        await storage.delete(asset.file_path)
         entity_before = {
             "id": str(asset.id),
             "file_path": asset.file_path,
             "mime_type": asset.mime_type,
             "file_size": asset.file_size,
         }
-        await self.repo.delete_content_asset(asset)
+        await storage.delete(asset.file_path)
+        async with UnitOfWork(self.db) as uow:
+            repo = LMSRepository(uow.session)
+            audit = AuditService(uow.session)
+            await repo.delete_content_asset(asset)
 
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="CONTENT_ASSET_DELETED",
-            outcome="success",
-            target_type="content_item_asset",
-            target_id=asset.id,
-            entity_before=entity_before,
-            ip_address=ip_address,
-        )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="CONTENT_ASSET_DELETED",
+                outcome="success",
+                target_type="content_item_asset",
+                target_id=asset.id,
+                entity_before=entity_before,
+                ip_address=ip_address,
+            )
+            await uow.commit()
 
         return {"deleted": True, "id": entity_before["id"]}
 
@@ -1219,28 +1268,32 @@ class LMSService:
                 error_code="ERR-CMS-409",
             )
 
-        assignment = await self.repo.create_class_content_assignment(
-            teacher_id=auth.user_id,
-            class_id=body.class_id,
-            content_item_id=body.content_item_id,
-            school_id=auth.school_id,
-            assigned_at=_utc_now(),
-            notes=body.notes,
-        )
+        async with UnitOfWork(self.db) as uow:
+            repo = LMSRepository(uow.session)
+            audit = AuditService(uow.session)
+            assignment = await repo.create_class_content_assignment(
+                teacher_id=auth.user_id,
+                class_id=body.class_id,
+                content_item_id=body.content_item_id,
+                school_id=auth.school_id,
+                assigned_at=_utc_now(),
+                notes=body.notes,
+            )
 
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="CONTENT_ASSIGNED_TO_CLASS",
-            outcome="success",
-            target_type="class_content_assignment",
-            target_id=assignment.id,
-            entity_after={
-                "class_id": str(body.class_id),
-                "content_item_id": str(body.content_item_id),
-            },
-            ip_address=ip_address,
-        )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="CONTENT_ASSIGNED_TO_CLASS",
+                outcome="success",
+                target_type="class_content_assignment",
+                target_id=assignment.id,
+                entity_after={
+                    "class_id": str(body.class_id),
+                    "content_item_id": str(body.content_item_id),
+                },
+                ip_address=ip_address,
+            )
+            await uow.commit()
 
         return {
             "id": str(assignment.id),
@@ -1275,18 +1328,22 @@ class LMSService:
             "class_id": str(assignment.class_id),
             "content_item_id": str(assignment.content_item_id),
         }
-        await self.repo.delete_class_content_assignment(assignment)
+        async with UnitOfWork(self.db) as uow:
+            repo = LMSRepository(uow.session)
+            audit = AuditService(uow.session)
+            await repo.delete_class_content_assignment(assignment)
 
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="CONTENT_UNASSIGNED_FROM_CLASS",
-            outcome="success",
-            target_type="class_content_assignment",
-            target_id=assignment.id,
-            entity_before=entity_before,
-            ip_address=ip_address,
-        )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="CONTENT_UNASSIGNED_FROM_CLASS",
+                outcome="success",
+                target_type="class_content_assignment",
+                target_id=assignment.id,
+                entity_before=entity_before,
+                ip_address=ip_address,
+            )
+            await uow.commit()
 
         return {"deleted": True, "id": entity_before["id"]}
 
@@ -1317,27 +1374,31 @@ class LMSService:
                 error_code="ERR-CMS-409",
             )
 
-        submission = await self.repo.create_content_submission(
-            content_item_id=body.content_item_id,
-            submitted_by=auth.user_id,
-            school_id=auth.school_id,
-            status="PENDING",
-            submitted_at=_utc_now(),
-        )
+        async with UnitOfWork(self.db) as uow:
+            repo = LMSRepository(uow.session)
+            audit = AuditService(uow.session)
+            submission = await repo.create_content_submission(
+                content_item_id=body.content_item_id,
+                submitted_by=auth.user_id,
+                school_id=auth.school_id,
+                status="PENDING",
+                submitted_at=_utc_now(),
+            )
 
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="CONTENT_SUBMITTED_FOR_REVIEW",
-            outcome="success",
-            target_type="content_submission",
-            target_id=submission.id,
-            entity_after={
-                "content_item_id": str(body.content_item_id),
-                "status": "PENDING",
-            },
-            ip_address=ip_address,
-        )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="CONTENT_SUBMITTED_FOR_REVIEW",
+                outcome="success",
+                target_type="content_submission",
+                target_id=submission.id,
+                entity_after={
+                    "content_item_id": str(body.content_item_id),
+                    "status": "PENDING",
+                },
+                ip_address=ip_address,
+            )
+            await uow.commit()
 
         return {
             "id": str(submission.id),
@@ -1434,30 +1495,34 @@ class LMSService:
             )
             verify_teacher_assignment(body.class_id, teacher_classes)
 
-        assessment = await self.repo.create_assessment(
-            class_id=body.class_id,
-            teacher_id=auth.user_id,
-            title=body.title,
-            due_at=body.due_at,
-            window_end=body.window_end,
-            total_points=body.total_points,
-            status=body.status,
-        )
+        async with UnitOfWork(self.db) as uow:
+            repo = LMSRepository(uow.session)
+            audit = AuditService(uow.session)
+            assessment = await repo.create_assessment(
+                class_id=body.class_id,
+                teacher_id=auth.user_id,
+                title=body.title,
+                due_at=body.due_at,
+                window_end=body.window_end,
+                total_points=body.total_points,
+                status=body.status,
+            )
 
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="ASSESSMENT_CREATED",
-            outcome="success",
-            target_type="assessment",
-            target_id=assessment.id,
-            entity_after={
-                "class_id": str(body.class_id),
-                "title": body.title,
-                "status": body.status,
-            },
-            ip_address=ip_address,
-        )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="ASSESSMENT_CREATED",
+                outcome="success",
+                target_type="assessment",
+                target_id=assessment.id,
+                entity_after={
+                    "class_id": str(body.class_id),
+                    "title": body.title,
+                    "status": body.status,
+                },
+                ip_address=ip_address,
+            )
+            await uow.commit()
 
         return self._assessment_to_dict(assessment)
 
@@ -1517,19 +1582,23 @@ class LMSService:
                 details={"current_status": assessment.status},
             )
 
-        assessment.status = "published"
-        await self.repo.save_assessment(assessment)
+        async with UnitOfWork(self.db) as uow:
+            repo = LMSRepository(uow.session)
+            audit = AuditService(uow.session)
+            assessment.status = "published"
+            await repo.save_assessment(assessment)
 
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="ASSESSMENT_PUBLISHED",
-            outcome="success",
-            target_type="assessment",
-            target_id=assessment.id,
-            entity_after={"status": "published"},
-            ip_address=ip_address,
-        )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="ASSESSMENT_PUBLISHED",
+                outcome="success",
+                target_type="assessment",
+                target_id=assessment.id,
+                entity_after={"status": "published"},
+                ip_address=ip_address,
+            )
+            await uow.commit()
 
         return self._assessment_to_dict(assessment)
 
@@ -1566,26 +1635,30 @@ class LMSService:
                 "status": existing.status,
             }
 
-        result_obj = await self.repo.create_assessment_result(
-            assessment_id=assessment_id,
-            student_id=auth.user_id,
-            score=body.score,
-            status="submitted",
-        )
+        async with UnitOfWork(self.db) as uow:
+            repo = LMSRepository(uow.session)
+            audit = AuditService(uow.session)
+            result_obj = await repo.create_assessment_result(
+                assessment_id=assessment_id,
+                student_id=auth.user_id,
+                score=body.score,
+                status="submitted",
+            )
 
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="ASSESSMENT_RESULT_SUBMITTED",
-            outcome="success",
-            target_type="assessment_result",
-            target_id=result_obj.id,
-            entity_after={
-                "assessment_id": str(assessment_id),
-                "score": float(body.score) if body.score is not None else None,
-            },
-            ip_address=ip_address,
-        )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="ASSESSMENT_RESULT_SUBMITTED",
+                outcome="success",
+                target_type="assessment_result",
+                target_id=result_obj.id,
+                entity_after={
+                    "assessment_id": str(assessment_id),
+                    "score": float(body.score) if body.score is not None else None,
+                },
+                ip_address=ip_address,
+            )
+            await uow.commit()
 
         return {
             "id": str(result_obj.id),
@@ -1651,46 +1724,50 @@ class LMSService:
         ip_address: str | None,
     ) -> dict:
         school_id = None if auth.role == "CONTENT_MGR" else auth.school_id
-        quiz = await self.quiz_repo.create_quiz(
-            school_id=school_id,
-            created_by=auth.user_id,
-            title=body.title,
-            description=body.description,
-            subject=body.subject,
-            level_band=body.level_band,
-            difficulty=body.difficulty,
-            time_limit_minutes=body.time_limit_minutes,
-            max_attempts=body.max_attempts,
-            shuffle_questions=body.shuffle_questions,
-            status="draft",
-        )
-        questions = await self.quiz_repo.create_quiz_questions(
-            [
-                {
-                    "quiz_id": quiz.id,
-                    "question_type": question.question_type,
-                    "question_text": question.question_text,
-                    "question_media_path": question.question_media_path,
-                    "options": question.options,
-                    "correct_answer": question.correct_answer,
-                    "points": question.points,
-                    "order": question.order if question.order > 0 else index,
-                    "explanation": question.explanation,
-                }
-                for index, question in enumerate(body.questions)
-            ]
-        )
+        async with UnitOfWork(self.db) as uow:
+            quiz_repo = QuizRepository(uow.session)
+            audit = AuditService(uow.session)
+            quiz = await quiz_repo.create_quiz(
+                school_id=school_id,
+                created_by=auth.user_id,
+                title=body.title,
+                description=body.description,
+                subject=body.subject,
+                level_band=body.level_band,
+                difficulty=body.difficulty,
+                time_limit_minutes=body.time_limit_minutes,
+                max_attempts=body.max_attempts,
+                shuffle_questions=body.shuffle_questions,
+                status="draft",
+            )
+            questions = await quiz_repo.create_quiz_questions(
+                [
+                    {
+                        "quiz_id": quiz.id,
+                        "question_type": question.question_type,
+                        "question_text": question.question_text,
+                        "question_media_path": question.question_media_path,
+                        "options": question.options,
+                        "correct_answer": question.correct_answer,
+                        "points": question.points,
+                        "order": question.order if question.order > 0 else index,
+                        "explanation": question.explanation,
+                    }
+                    for index, question in enumerate(body.questions)
+                ]
+            )
 
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="QUIZ_CREATED",
-            outcome="success",
-            target_type="quiz",
-            target_id=quiz.id,
-            entity_after={"title": quiz.title, "question_count": len(questions)},
-            ip_address=ip_address,
-        )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="QUIZ_CREATED",
+                outcome="success",
+                target_type="quiz",
+                target_id=quiz.id,
+                entity_after={"title": quiz.title, "question_count": len(questions)},
+                ip_address=ip_address,
+            )
+            await uow.commit()
 
         payload = self._quiz_to_dict(quiz, questions)
         payload["questions"] = [
@@ -1788,41 +1865,45 @@ class LMSService:
             raise NotFoundError("Quiz not found", error_code="ERR-QUIZ-404")
 
         update_data = body.model_dump(exclude_unset=True, exclude={"questions"})
-        for field, value in update_data.items():
-            setattr(quiz, field, value)
-        await self.quiz_repo.save_quiz(quiz)
+        async with UnitOfWork(self.db) as uow:
+            quiz_repo = QuizRepository(uow.session)
+            audit = AuditService(uow.session)
+            for field, value in update_data.items():
+                setattr(quiz, field, value)
+            await quiz_repo.save_quiz(quiz)
 
-        if body.questions is not None:
-            await self.quiz_repo.delete_quiz_questions(quiz_id)
-            await self.quiz_repo.create_quiz_questions(
-                [
-                    {
-                        "quiz_id": quiz.id,
-                        "question_type": question.question_type,
-                        "question_text": question.question_text,
-                        "question_media_path": question.question_media_path,
-                        "options": question.options,
-                        "correct_answer": question.correct_answer,
-                        "points": question.points,
-                        "order": question.order if question.order > 0 else index,
-                        "explanation": question.explanation,
-                    }
-                    for index, question in enumerate(body.questions)
-                ]
+            if body.questions is not None:
+                await quiz_repo.delete_quiz_questions(quiz_id)
+                await quiz_repo.create_quiz_questions(
+                    [
+                        {
+                            "quiz_id": quiz.id,
+                            "question_type": question.question_type,
+                            "question_text": question.question_text,
+                            "question_media_path": question.question_media_path,
+                            "options": question.options,
+                            "correct_answer": question.correct_answer,
+                            "points": question.points,
+                            "order": question.order if question.order > 0 else index,
+                            "explanation": question.explanation,
+                        }
+                        for index, question in enumerate(body.questions)
+                    ]
+                )
+
+            questions = await quiz_repo.list_quiz_questions(quiz_id)
+
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="QUIZ_UPDATED",
+                outcome="success",
+                target_type="quiz",
+                target_id=quiz.id,
+                entity_after={"title": quiz.title},
+                ip_address=ip_address,
             )
-
-        questions = await self.quiz_repo.list_quiz_questions(quiz_id)
-
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="QUIZ_UPDATED",
-            outcome="success",
-            target_type="quiz",
-            target_id=quiz.id,
-            entity_after={"title": quiz.title},
-            ip_address=ip_address,
-        )
+            await uow.commit()
 
         payload = self._quiz_to_dict(quiz, questions)
         payload["questions"] = [
@@ -1853,19 +1934,23 @@ class LMSService:
                 error_code="ERR-QUIZ-400",
             )
 
-        quiz.status = "published"
-        await self.quiz_repo.save_quiz(quiz)
+        async with UnitOfWork(self.db) as uow:
+            quiz_repo = QuizRepository(uow.session)
+            audit = AuditService(uow.session)
+            quiz.status = "published"
+            await quiz_repo.save_quiz(quiz)
 
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="QUIZ_PUBLISHED",
-            outcome="success",
-            target_type="quiz",
-            target_id=quiz.id,
-            entity_after={"status": "published"},
-            ip_address=ip_address,
-        )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="QUIZ_PUBLISHED",
+                outcome="success",
+                target_type="quiz",
+                target_id=quiz.id,
+                entity_after={"status": "published"},
+                ip_address=ip_address,
+            )
+            await uow.commit()
 
         return {"id": str(quiz.id), "status": "published"}
 
@@ -1899,26 +1984,30 @@ class LMSService:
         if active is not None:
             return self._attempt_to_dict(active)
 
-        max_score = await self.quiz_repo.sum_quiz_points(quiz_id)
-        attempt = await self.quiz_repo.create_quiz_attempt(
-            quiz_id=quiz_id,
-            student_id=auth.user_id,
-            attempt_no=existing_count + 1,
-            started_at=_utc_now(),
-            max_score=max_score,
-            status="STARTED",
-        )
+        async with UnitOfWork(self.db) as uow:
+            quiz_repo = QuizRepository(uow.session)
+            audit = AuditService(uow.session)
+            max_score = await quiz_repo.sum_quiz_points(quiz_id)
+            attempt = await quiz_repo.create_quiz_attempt(
+                quiz_id=quiz_id,
+                student_id=auth.user_id,
+                attempt_no=existing_count + 1,
+                started_at=_utc_now(),
+                max_score=max_score,
+                status="STARTED",
+            )
 
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="QUIZ_ATTEMPT_STARTED",
-            outcome="success",
-            target_type="quiz_attempt",
-            target_id=attempt.id,
-            entity_after={"quiz_id": str(quiz_id), "attempt_no": attempt.attempt_no},
-            ip_address=ip_address,
-        )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="QUIZ_ATTEMPT_STARTED",
+                outcome="success",
+                target_type="quiz_attempt",
+                target_id=attempt.id,
+                entity_after={"quiz_id": str(quiz_id), "attempt_no": attempt.attempt_no},
+                ip_address=ip_address,
+            )
+            await uow.commit()
 
         return self._attempt_to_dict(attempt)
 
@@ -1944,9 +2033,12 @@ class LMSService:
         if quiz.time_limit_minutes and quiz.time_limit_minutes > 0:
             elapsed = (_utc_now() - attempt.started_at).total_seconds()
             if elapsed > quiz.time_limit_minutes * 60:
-                attempt.status = "TIMED_OUT"
-                attempt.completed_at = _utc_now()
-                await self.quiz_repo.save_quiz_attempt(attempt)
+                async with UnitOfWork(self.db) as uow:
+                    quiz_repo = QuizRepository(uow.session)
+                    attempt.status = "TIMED_OUT"
+                    attempt.completed_at = _utc_now()
+                    await quiz_repo.save_quiz_attempt(attempt)
+                    await uow.commit()
                 raise ValidationError("Time limit exceeded", error_code="ERR-QUIZ-408")
 
         question = await self.quiz_repo.get_quiz_question(
@@ -1964,19 +2056,22 @@ class LMSService:
             question_id=body.question_id,
         )
         now = _utc_now()
-        if response is not None:
-            response.student_answer = body.student_answer
-            response.answered_at = now
-            response.is_correct = None
-            response.points_earned = None
-            await self.quiz_repo.save_quiz_response(response)
-        else:
-            response = await self.quiz_repo.create_quiz_response(
-                attempt_id=attempt_id,
-                question_id=body.question_id,
-                student_answer=body.student_answer,
-                answered_at=now,
-            )
+        async with UnitOfWork(self.db) as uow:
+            quiz_repo = QuizRepository(uow.session)
+            if response is not None:
+                response.student_answer = body.student_answer
+                response.answered_at = now
+                response.is_correct = None
+                response.points_earned = None
+                await quiz_repo.save_quiz_response(response)
+            else:
+                response = await quiz_repo.create_quiz_response(
+                    attempt_id=attempt_id,
+                    question_id=body.question_id,
+                    student_answer=body.student_answer,
+                    answered_at=now,
+                )
+            await uow.commit()
 
         return {
             "id": str(response.id),
@@ -2000,25 +2095,29 @@ class LMSService:
         if attempt.status != "STARTED":
             raise ValidationError("Attempt already completed", error_code="ERR-QUIZ-400")
 
-        total_score, max_score = await grade_attempt(attempt_id, self.db)
-        attempt = await self.quiz_repo.get_quiz_attempt(attempt_id)
-        if attempt is None:
-            raise NotFoundError("Attempt not found", error_code="ERR-QUIZ-404")
+        async with UnitOfWork(self.db) as uow:
+            quiz_repo = QuizRepository(uow.session)
+            audit = AuditService(uow.session)
+            total_score, max_score = await grade_attempt(attempt_id, uow.session)
+            attempt = await quiz_repo.get_quiz_attempt(attempt_id)
+            if attempt is None:
+                raise NotFoundError("Attempt not found", error_code="ERR-QUIZ-404")
 
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="QUIZ_ATTEMPT_SUBMITTED",
-            outcome="success",
-            target_type="quiz_attempt",
-            target_id=attempt.id,
-            entity_after={
-                "score": float(total_score),
-                "max_score": max_score,
-                "status": "COMPLETED",
-            },
-            ip_address=ip_address,
-        )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="QUIZ_ATTEMPT_SUBMITTED",
+                outcome="success",
+                target_type="quiz_attempt",
+                target_id=attempt.id,
+                entity_after={
+                    "score": float(total_score),
+                    "max_score": max_score,
+                    "status": "COMPLETED",
+                },
+                ip_address=ip_address,
+            )
+            await uow.commit()
 
         return self._attempt_to_dict(attempt)
 

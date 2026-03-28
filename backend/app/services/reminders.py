@@ -10,6 +10,7 @@ from zoneinfo import ZoneInfo
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.core.unit_of_work import UnitOfWork
 from app.models.calendar import Event, EventReminder, EventReminderChannel, EventVisibility
 from app.models.com import DeliveryChannel, NotificationCategory, NotificationPriority
 from app.repositories.calendar import CalendarRepository
@@ -55,8 +56,6 @@ class ReminderService:
         event: Event,
         reminder_offsets_minutes: list[int] | None = None,
     ) -> int:
-        await self.repo.delete_unsent_reminders_for_event(event.id)
-
         offsets = sorted({offset for offset in (reminder_offsets_minutes or _default_offsets()) if offset > 0}, reverse=True)
         if not offsets:
             return 0
@@ -85,12 +84,19 @@ class ReminderService:
                         )
                     )
 
-        if reminders:
-            await self.repo.create_event_reminders(reminders)
-        return len(reminders)
+        async with UnitOfWork(self.db) as uow:
+            repo = CalendarRepository(uow.session)
+            await repo.delete_unsent_reminders_for_event(event.id)
+            if reminders:
+                await repo.create_event_reminders(reminders)
+            await uow.commit()
+            return len(reminders)
 
     async def clear_event_reminders(self, *, event_id: uuid.UUID) -> None:
-        await self.repo.delete_unsent_reminders_for_event(event_id)
+        async with UnitOfWork(self.db) as uow:
+            repo = CalendarRepository(uow.session)
+            await repo.delete_unsent_reminders_for_event(event_id)
+            await uow.commit()
 
     async def send_due_reminders(self, *, now: datetime | None = None) -> int:
         current = now or _utc_now()
@@ -115,54 +121,57 @@ class ReminderService:
             )
             grouped[group_key]["channels"].add(reminder.channel)
             grouped[group_key]["reminder_ids"].append(reminder.id)
-
         notifications_sent = 0
-        for payload in grouped.values():
-            event = payload["event"]
-            channels = sorted(payload["channels"])
-            reminder_ids = payload["reminder_ids"]
-            occurrence_start_at = payload["occurrence_start_at"]
+        async with UnitOfWork(self.db) as uow:
+            repo = CalendarRepository(uow.session)
+            notifications = NotificationHubService(uow.session)
+            for payload in grouped.values():
+                event = payload["event"]
+                channels = sorted(payload["channels"])
+                reminder_ids = payload["reminder_ids"]
+                occurrence_start_at = payload["occurrence_start_at"]
 
-            recipient_ids = await self._resolve_recipient_ids(event)
-            if not recipient_ids:
-                await self.repo.mark_reminders_sent(reminder_ids, sent_at=current)
-                continue
+                recipient_ids = await self._resolve_recipient_ids(event)
+                if not recipient_ids:
+                    await repo.mark_reminders_sent(reminder_ids, sent_at=current)
+                    continue
 
-            disabled_ids = await self.repo.list_disabled_reminder_user_ids(
-                school_id=event.school_id,
-                event_type=event.type,
-                user_ids=recipient_ids,
-            )
-            active_recipient_ids = sorted(recipient_ids - disabled_ids)
-            if not active_recipient_ids:
-                await self.repo.mark_reminders_sent(reminder_ids, sent_at=current)
-                continue
-
-            for recipient_id in active_recipient_ids:
-                await self.notifications.create_single_notification(
+                disabled_ids = await repo.list_disabled_reminder_user_ids(
                     school_id=event.school_id,
-                    user_id=recipient_id,
-                    title=self._notification_title(event),
-                    body=self._notification_body(event, occurrence_start_at),
-                    category=self._notification_category(event.type),
-                    priority=NotificationPriority.HIGH.value,
-                    action_url=f"/events/{event.id}",
-                    action_payload={
-                        "event_id": str(event.id),
-                        "occurrence_start_at": occurrence_start_at.isoformat(),
-                    },
-                    event_ref=f"calendar.reminder:{event.id}",
-                    preferred_channels=self._preferred_delivery_channels(channels),
-                    idempotency_key=(
-                        f"calendar-reminder:{event.id}:{occurrence_start_at.isoformat()}:{recipient_id}"
-                    ),
-                    silent_push=False,
+                    event_type=event.type,
+                    user_ids=recipient_ids,
                 )
-                notifications_sent += 1
+                active_recipient_ids = sorted(recipient_ids - disabled_ids)
+                if not active_recipient_ids:
+                    await repo.mark_reminders_sent(reminder_ids, sent_at=current)
+                    continue
 
-            await self.repo.mark_reminders_sent(reminder_ids, sent_at=current)
+                for recipient_id in active_recipient_ids:
+                    await notifications.create_single_notification(
+                        school_id=event.school_id,
+                        user_id=recipient_id,
+                        title=self._notification_title(event),
+                        body=self._notification_body(event, occurrence_start_at),
+                        category=self._notification_category(event.type),
+                        priority=NotificationPriority.HIGH.value,
+                        action_url=f"/events/{event.id}",
+                        action_payload={
+                            "event_id": str(event.id),
+                            "occurrence_start_at": occurrence_start_at.isoformat(),
+                        },
+                        event_ref=f"calendar.reminder:{event.id}",
+                        preferred_channels=self._preferred_delivery_channels(channels),
+                        idempotency_key=(
+                            f"calendar-reminder:{event.id}:{occurrence_start_at.isoformat()}:{recipient_id}"
+                        ),
+                        silent_push=False,
+                    )
+                    notifications_sent += 1
 
-        return notifications_sent
+                await repo.mark_reminders_sent(reminder_ids, sent_at=current)
+
+            await uow.commit()
+            return notifications_sent
 
     async def _resolve_recipient_ids(self, event: Event) -> set[uuid.UUID]:
         if event.visibility == EventVisibility.SCHOOL.value:

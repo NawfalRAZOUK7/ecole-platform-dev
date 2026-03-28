@@ -12,6 +12,7 @@ from app.core.dependencies import AuthContext, verify_school_boundary
 from app.core.exceptions import AuthorizationError, NotFoundError
 from app.core.permissions import PERM_GDPR_CONSENT_MANAGE, PERM_GDPR_DATA_DELETE
 from app.core.response import clamp_page_size, decode_cursor, encode_cursor
+from app.core.unit_of_work import UnitOfWork
 from app.repositories.gdpr import GDPRRepository
 from app.services.audit import AuditService
 
@@ -251,28 +252,30 @@ class GDPRService:
         user.backup_codes = None
 
         anonymized_at = datetime.now(timezone.utc)
-        await self.repo.save_user(user)
-        await self.repo.revoke_active_sessions(user_id=user_id, revoked_at=anonymized_at)
-        await self.repo.deactivate_active_memberships(user_id)
-
         entity_after = {
             "email": user.email,
             "full_name": user.full_name,
             "phone": user.phone,
             "status": user.status,
         }
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="GDPR_DATA_DELETION",
-            outcome="success",
-            target_type="user",
-            target_id=user_id,
-            entity_before=entity_before,
-            entity_after=entity_after,
-            ip_address=client_ip,
-        )
-        await self.db.commit()
+        async with UnitOfWork(self.db) as uow:
+            repo = GDPRRepository(uow.session)
+            audit = AuditService(uow.session)
+            await repo.save_user(user)
+            await repo.revoke_active_sessions(user_id=user_id, revoked_at=anonymized_at)
+            await repo.deactivate_active_memberships(user_id)
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="GDPR_DATA_DELETION",
+                outcome="success",
+                target_type="user",
+                target_id=user_id,
+                entity_before=entity_before,
+                entity_after=entity_after,
+                ip_address=client_ip,
+            )
+            await uow.commit()
         return {
             "user_id": str(user_id),
             "anonymized_at": anonymized_at.isoformat(),
@@ -391,19 +394,22 @@ class GDPRService:
 
         old_status = consent.status
         consent.status = status
-        await self.repo.save_consent_preference(consent)
-        await self.audit.log_event(
-            school_id=auth.school_id,
-            actor_id=auth.user_id,
-            action_type="CONSENT_UPDATED",
-            outcome="success",
-            target_type="consent_preference",
-            target_id=consent.id,
-            entity_before={"status": old_status},
-            entity_after={"status": status},
-            ip_address=client_ip,
-        )
-        await self.db.commit()
+        async with UnitOfWork(self.db) as uow:
+            repo = GDPRRepository(uow.session)
+            audit = AuditService(uow.session)
+            await repo.save_consent_preference(consent)
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="CONSENT_UPDATED",
+                outcome="success",
+                target_type="consent_preference",
+                target_id=consent.id,
+                entity_before={"status": old_status},
+                entity_after={"status": status},
+                ip_address=client_ip,
+            )
+            await uow.commit()
         return {
             "id": str(consent.id),
             "user_id": str(consent.user_id),

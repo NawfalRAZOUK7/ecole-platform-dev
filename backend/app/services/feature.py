@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ConflictError, NotFoundError
 from app.core.feature_flags import invalidate_feature_cache
+from app.core.unit_of_work import UnitOfWork
 from app.models.feature import FeatureToggle
 from app.repositories.feature import FeatureRepository
 from app.services.audit import AuditService
@@ -94,26 +95,29 @@ class FeatureService:
                 error_code="ERR-FEATURE-409",
             )
 
-        toggle = await self.repo.create_toggle(
-            FeatureToggle(
-                feature_key=feature_key,
-                display_name=display_name,
-                description=description,
-                enabled_globally=enabled_globally,
-                enabled_school_ids=enabled_school_ids,
-                enabled_role_codes=enabled_role_codes,
+        async with UnitOfWork(self.db) as uow:
+            repo = FeatureRepository(uow.session)
+            audit = AuditService(uow.session)
+            toggle = await repo.create_toggle(
+                FeatureToggle(
+                    feature_key=feature_key,
+                    display_name=display_name,
+                    description=description,
+                    enabled_globally=enabled_globally,
+                    enabled_school_ids=enabled_school_ids,
+                    enabled_role_codes=enabled_role_codes,
+                )
             )
-        )
-        await self.audit.log_event(
-            school_id=school_id,
-            actor_id=actor_id,
-            action_type="feature_toggle.create",
-            outcome="success",
-            target_type="feature_toggle",
-            target_id=toggle.id,
-            entity_after=_toggle_snapshot(toggle),
-        )
-        await self.db.commit()
+            await audit.log_event(
+                school_id=school_id,
+                actor_id=actor_id,
+                action_type="feature_toggle.create",
+                outcome="success",
+                target_type="feature_toggle",
+                target_id=toggle.id,
+                entity_after=_toggle_snapshot(toggle),
+            )
+            await uow.commit()
         return _toggle_to_response(toggle)
 
     async def list_feature_toggles(self) -> list[dict]:
@@ -154,19 +158,22 @@ class FeatureService:
         if enabled_role_codes is not None:
             toggle.enabled_role_codes = enabled_role_codes
 
-        await self.repo.save_toggle(toggle)
+        async with UnitOfWork(self.db) as uow:
+            repo = FeatureRepository(uow.session)
+            audit = AuditService(uow.session)
+            await repo.save_toggle(toggle)
+            await audit.log_event(
+                school_id=school_id,
+                actor_id=actor_id,
+                action_type="feature_toggle.update",
+                outcome="success",
+                target_type="feature_toggle",
+                target_id=toggle.id,
+                entity_before=before,
+                entity_after=_toggle_snapshot(toggle),
+            )
+            await uow.commit()
         await invalidate_feature_cache(toggle.feature_key)
-        await self.audit.log_event(
-            school_id=school_id,
-            actor_id=actor_id,
-            action_type="feature_toggle.update",
-            outcome="success",
-            target_type="feature_toggle",
-            target_id=toggle.id,
-            entity_before=before,
-            entity_after=_toggle_snapshot(toggle),
-        )
-        await self.db.commit()
         return _toggle_to_response(toggle)
 
     async def delete_feature_toggle(
@@ -182,16 +189,19 @@ class FeatureService:
 
         before = _toggle_snapshot(toggle)
         feature_key = toggle.feature_key
-        await self.repo.delete_toggle(toggle)
+        async with UnitOfWork(self.db) as uow:
+            repo = FeatureRepository(uow.session)
+            audit = AuditService(uow.session)
+            await repo.delete_toggle(toggle)
+            await audit.log_event(
+                school_id=school_id,
+                actor_id=actor_id,
+                action_type="feature_toggle.delete",
+                outcome="success",
+                target_type="feature_toggle",
+                target_id=toggle_id,
+                entity_before=before,
+            )
+            await uow.commit()
         await invalidate_feature_cache(feature_key)
-        await self.audit.log_event(
-            school_id=school_id,
-            actor_id=actor_id,
-            action_type="feature_toggle.delete",
-            outcome="success",
-            target_type="feature_toggle",
-            target_id=toggle_id,
-            entity_before=before,
-        )
-        await self.db.commit()
         return {"deleted": True, "feature_key": feature_key}
