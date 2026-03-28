@@ -373,14 +373,14 @@
 ### Phase ENH-E: Enhancement Validation
 
 #### ENH-E1: Full Enhancement Validation
-- [ ] IAM: impersonator_id on Session, LoginHistory exists, MAX_SESSIONS_PER_USER in config
-- [ ] Rubric: 4 models exist, rubric_id on Assignment, /rubrics endpoints registered
-- [ ] Gradebook: 2 models exist, grade_category_id on Assignment, /gradebook endpoints registered
-- [ ] Question Bank: model exists, /question-bank endpoints registered, generate-quiz works
-- [ ] Late Penalties: Assignment has grace/penalty fields, Grade has original_score/late_penalty
-- [ ] Sibling Discounts: SiblingDiscountPolicy exists, generate_invoices applies discounts
-- [ ] Late Fees: LateFeePolicy exists, apply_late_fees() method exists
-- [ ] Payment Plans: PaymentPlan + Installment exist, /payment-plans endpoints registered
+- [x] IAM: impersonator_id on Session, LoginHistory exists, MAX_SESSIONS_PER_USER in config
+- [x] Rubric: 4 models exist, rubric_id on Assignment, /rubrics endpoints registered
+- [x] Gradebook: 2 models exist, grade_category_id on Assignment, /gradebook endpoints registered
+- [x] Question Bank: model exists, /question-bank endpoints registered, generate-quiz works
+- [x] Late Penalties: Assignment has grace/penalty fields, Grade has original_score/late_penalty
+- [x] Sibling Discounts: SiblingDiscountPolicy exists, generate_invoices applies discounts
+- [x] Late Fees: LateFeePolicy exists, apply_late_fees() method exists
+- [x] Payment Plans: PaymentPlan + Installment exist, /payment-plans endpoints registered
 - [x] Attendance Analytics: AttendanceAlert exists, /analytics/attendance endpoints registered
 - [x] Timetable Generation: 2 models exist, algorithm runs within 30s
 - [x] Message Attachments: attachment_id on Message, /messages/search works
@@ -388,9 +388,9 @@
 - [x] Report Scheduling: ReportSchedule exists, /schedules endpoints registered
 - [x] AI Provider: services/ai/ exists, MockProvider realistic, ClaudeProvider ready
 - [ ] All new permissions registered with correct role assignments
-- [ ] All migrations (G27a-G30c) exist and are valid
-- [ ] All new endpoints registered in router.py
-- [ ] All import health checks pass
+- [x] All migrations (G27a-G30c) exist and are valid
+- [x] All new endpoints registered in router.py
+- [x] All import health checks pass
 - [ ] **Review & commit myself**
 
 ---
