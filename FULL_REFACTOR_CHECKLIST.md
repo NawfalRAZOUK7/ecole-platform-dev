@@ -395,20 +395,200 @@
 
 ---
 
+## PART 3: MODEL & ROLE ENHANCEMENTS (Prompts MR-A1 through MR-F1)
+
+> Reference: MODEL_ROLE_ARCHITECTURE.md + MODEL_ROLE_PROMPTS.md
+
+---
+
+### Phase MR-A: School Model + Model Mixins
+
+#### MR-A1: School Model + SchoolScopedMixin + SoftDeleteMixin
+- [ ] Created backend/app/models/school.py with School model
+- [ ] School has: name, name_ar, code, massar_code, status, address, city, region, phone, email, website, logo_path
+- [ ] School has: max_students, max_teachers, subscription_plan, subscription_expires_at
+- [ ] School has: timezone (Africa/Casablanca), default_language (fr), grading_scale (moroccan_20), settings (JSONB)
+- [ ] SchoolStatus enum defined (active, suspended, trial)
+- [ ] School has is_active, is_subscription_valid properties
+- [ ] School has __repr__ and email validator
+- [ ] Added SchoolScopedMixin to backend/app/core/database.py (school_id FK → schools.id)
+- [ ] Added SoftDeleteMixin to backend/app/core/database.py (deleted_at, is_deleted, soft_delete, restore)
+- [ ] Replaced school_id in ~40 models with SchoolScopedMixin inheritance
+- [ ] Replaced deleted_at in Document, Resource, Event, Notification with SoftDeleteMixin inheritance
+- [ ] Updated models/__init__.py with School, SchoolStatus exports
+- [ ] Created migration G31a: schools table + FK constraints + data population
+- [ ] Created repositories/school.py (CRUD)
+- [ ] Created services/school.py (SchoolService with UoW)
+- [ ] Created schemas/school.py (request/response)
+- [ ] Created api/v1/schools.py (POST, GET, PATCH, DELETE endpoints)
+- [ ] Added PERM_ADM_SCHOOL_MANAGE, PERM_ADM_SCHOOL_READ to permissions.py
+- [ ] Assigned permissions: SUP (manage+read), ADM/DIR (read)
+- [ ] Registered /schools endpoints in router.py
+- [ ] All composite indexes still reference school_id correctly
+- [ ] **Review & commit myself**
+
+---
+
+### Phase MR-B: Helper Properties + Repr + Validators
+
+#### MR-B1: Helper Properties on All Models
+- [ ] User: is_active, has_2fa, is_email_verified
+- [ ] Membership: is_active
+- [ ] Session: is_expired, is_impersonated, is_revoked
+- [ ] InvitationCode: is_expired, is_fully_used
+- [ ] AccountRecoveryRequest: is_expired
+- [ ] Invoice: is_overdue, is_paid
+- [ ] PaymentPlan: is_completed
+- [ ] Installment: is_overdue
+- [ ] Assignment: is_past_due, accepts_late
+- [ ] Submission: is_graded
+- [ ] Quiz: is_active
+- [ ] Enrollment: is_active
+- [ ] AttendanceAlert: is_resolved
+- [ ] Conversation: is_group
+- [ ] ReportJob: is_complete, is_expired
+- [ ] Document: is_expired
+- [ ] Event: is_past, is_all_day
+- [ ] All properties are pure (no DB access, no side effects)
+- [ ] **Review & commit myself**
+
+#### MR-B2: __repr__ Methods on All Models
+- [ ] All IAM models (12 models) have __repr__
+- [ ] All LMS models (25+ models) have __repr__
+- [ ] All ERP models (14 models) have __repr__
+- [ ] All Billing models have __repr__
+- [ ] All COM models have __repr__
+- [ ] All Documents models have __repr__
+- [ ] All Calendar models have __repr__
+- [ ] All Reporting models have __repr__
+- [ ] AuditLog has __repr__
+- [ ] No sensitive data in any __repr__ (no password_hash, tokens, secrets)
+- [ ] **Review & commit myself**
+
+#### MR-B3: SQLAlchemy Validators
+- [ ] User: email validator (contains @, lowercase, strip)
+- [ ] User: phone validator (starts with +, strip)
+- [ ] Invoice: total validator (>= 0)
+- [ ] Invoice: currency validator (must be MAD/EUR/USD)
+- [ ] InvoiceItem: amount validator (>= 0)
+- [ ] Installment: amount validator (> 0)
+- [ ] SiblingDiscountPolicy: discount_percent validator (0-100)
+- [ ] Grade: score validator (0-20 Moroccan scale)
+- [ ] Grade: late_penalty validator (>= 0)
+- [ ] Assignment: max_score validator (> 0)
+- [ ] Assignment: late_penalty_per_day validator (0-100)
+- [ ] GradeCategory: weight validator (0-1)
+- [ ] ResourceRating: rating validator (1-5)
+- [ ] All validators raise ValueError with descriptive messages
+- [ ] **Review & commit myself**
+
+---
+
+### Phase MR-C: Enum Columns
+
+#### MR-C1: PG Enum Types + Column Conversions
+- [ ] Defined all missing Python enums (AssignmentType, SubmissionStatus, QuizAttemptStatus, TimetableJobStatus, EnrollmentStatus, AttendanceStatus, InvoiceStatus, PaymentStatus, PaymentMethod)
+- [ ] Created migration G31b: creates ~30 PostgreSQL ENUM types
+- [ ] Migration alters ~30 String columns to PgEnum columns
+- [ ] Migration is reversible (downgrade converts back to VARCHAR)
+- [ ] All model columns updated to use PgEnum(..., create_type=False)
+- [ ] Verified: all existing data values are valid enum members
+- [ ] **Review & commit myself**
+
+---
+
+### Phase MR-D: Permission Fixes
+
+#### MR-D1: DIR + SUP + CONTENT_MGR + Role Hierarchy
+- [ ] DIR: added billing management permissions (fee structure, invoice void, discounts, late fees, payment plans)
+- [ ] DIR: added timetable permissions (generate, constraint manage)
+- [ ] DIR: added admin permissions (settings read/update, announcement manage)
+- [ ] DIR: added report schedule manage, document requirement manage
+- [ ] SUP: added cross-school read access (class, enrollment, attendance, course, invoice, payment, notification, document, report, event)
+- [ ] SUP: added PERM_ADM_SCHOOL_MANAGE, PERM_ADM_PLATFORM_STATS, PERM_SYS_AUDIT_LOG_READ
+- [ ] CONTENT_MGR: PLATFORM_ROLES constant added ("SUP", "SYS", "CONTENT_MGR")
+- [ ] CONTENT_MGR: added cross-school content permissions
+- [ ] ROLE_HIERARCHY dict added to permissions.py
+- [ ] get_effective_permissions(role) function implemented
+- [ ] role_has_permission() updated to use effective permissions
+- [ ] Redundant permission assignments cleaned up (inherited ones removed)
+- [ ] No circular references in hierarchy
+- [ ] DIR inherits TCH permissions (verified)
+- [ ] SUP inherits ADM → DIR → TCH permissions (verified)
+- [ ] **Review & commit myself**
+
+---
+
+### Phase MR-E: ABAC Validation + Hardcoded Role Removal
+
+#### MR-E1: ABAC Helpers + PAR/STD Validation
+- [ ] Created backend/app/core/abac.py
+- [ ] apply_owner_scope() function implemented
+- [ ] validate_parent_child_access() function implemented
+- [ ] validate_teacher_class_access() function implemented
+- [ ] validate_student_teacher_access() function implemented
+- [ ] Added PERM_COM_STD_MESSAGE_SEND, PERM_COM_STD_MESSAGE_READ to permissions.py
+- [ ] Assigned STD messaging permissions to STD role
+- [ ] Updated communication service: STD can create DIRECT conversations only
+- [ ] STD messaging validates student-teacher class relationship
+- [ ] PAR access validates parent-child link in all service methods
+- [ ] Audited: lms/, erp, billing, communication, reports, student_documents services
+- [ ] **Review & commit myself**
+
+#### MR-E2: Replace Hardcoded Role Strings
+- [ ] Searched all services for auth.role == / != patterns
+- [ ] Category A (authorization) replaced with require_permission()
+- [ ] Category B (data scoping) replaced with apply_owner_scope() or validators
+- [ ] Processed: lms/ sub-services (5 files)
+- [ ] Processed: erp, billing, communication, notification_hub
+- [ ] Processed: calendar, reports, student_documents, resource_library
+- [ ] Processed: admin, timetable_generator, data_export, profile, attendance_analytics
+- [ ] Checked router files in api/v1/ for hardcoded role checks
+- [ ] Zero hardcoded role string comparisons remaining in services
+- [ ] All replacements are semantically equivalent (no functionality broken)
+- [ ] **Review & commit myself**
+
+---
+
+### Phase MR-F: Model & Role Validation
+
+#### MR-F1: Full Model & Role Validation
+- [ ] SchoolScopedMixin: exists in database.py, ~40 models use it, no duplicate school_id
+- [ ] SoftDeleteMixin: exists, 4 models use it, no duplicate deleted_at
+- [ ] Helper properties: all specified properties exist and are pure
+- [ ] __repr__: every model has one, no sensitive data exposed
+- [ ] Validators: all specified validators exist and raise ValueError
+- [ ] Enum columns: G31b migration exists, ~30 columns use PgEnum
+- [ ] School model: exists with all fields, CRUD stack complete, endpoints registered
+- [ ] Permissions: DIR/SUP/CONTENT_MGR expanded correctly
+- [ ] Role hierarchy: ROLE_HIERARCHY + get_effective_permissions() work correctly
+- [ ] ABAC: abac.py exists, PAR validates links, STD validates class membership
+- [ ] Hardcoded roles: zero remaining in services
+- [ ] Import health: all model/core/permission imports succeed
+- [ ] **Review & commit myself**
+
+---
+
 ## Progress Summary
 
 | Part | Phase | Prompts | Status |
 |------|-------|---------|--------|
-| OOP | A — Foundation | OOP-A1, A2, A3 | Not started |
-| OOP | B — Profiles | OOP-B1, B2 | Not started |
-| OOP | C — Events | OOP-C1, C2, C3 | Not started |
-| OOP | D — Evaluatable | OOP-D1, D2 | Not started |
-| OOP | E — LMS Split | OOP-E1 | Not started |
-| OOP | F — OOP Validation | OOP-F1 | Not started |
+| OOP | A — Foundation | OOP-A1, A2, A3 | Complete |
+| OOP | B — Profiles | OOP-B1, B2 | Complete |
+| OOP | C — Events | OOP-C1, C2, C3 | Complete |
+| OOP | D — Evaluatable | OOP-D1, D2 | Complete |
+| OOP | E — LMS Split | OOP-E1 | Complete |
+| OOP | F — OOP Validation | OOP-F1 | Complete |
 | ENH | A — IAM | ENH-A1 | Complete |
-| ENH | B — LMS | ENH-B1, B2, B3, B4 | Not started |
-| ENH | C — Billing/ERP | ENH-C1, C2, C3 | Not started |
-| ENH | D — Comms/Docs | ENH-D1, D2 | Not started |
-| ENH | E — Validation | ENH-E1 | Not started |
+| ENH | B — LMS | ENH-B1, B2, B3, B4 | Complete |
+| ENH | C — Billing/ERP | ENH-C1, C2, C3 | Complete |
+| ENH | D — Comms/Docs | ENH-D1, D2 | Complete |
+| ENH | E — Validation | ENH-E1 | Complete |
+| MR | A — School + Mixins | MR-A1 | Not started |
+| MR | B — Props/Repr/Valid | MR-B1, B2, B3 | Not started |
+| MR | C — Enum Columns | MR-C1 | Not started |
+| MR | D — Permissions | MR-D1 | Not started |
+| MR | E — ABAC + Roles | MR-E1, E2 | Not started |
+| MR | F — MR Validation | MR-F1 | Not started |
 
-**Total: 23 prompts, ~120+ files to create/modify, 8 migrations (G26-G30c)**
+**Total: 30 prompts (23 complete + 7 new), ~160+ files to create/modify, 10 migrations (G26-G31b)**

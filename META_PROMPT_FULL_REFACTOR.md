@@ -1,6 +1,6 @@
 # Meta Prompt: Full Backend Refactor — Ecole Platform
 
-> Single unified meta prompt that chains OOP refactoring (Phases A-F) and Feature Enhancements (Phases A-E) into one execution flow.
+> Single unified meta prompt that chains OOP refactoring (Phases A-F), Feature Enhancements (Phases A-E), and Model/Role Enhancements (Phases MR-A through MR-F) into one execution flow.
 
 ---
 
@@ -105,6 +105,20 @@ For each prompt:
 7. Move to the next prompt only after the current one is fully complete.
 8. If a prompt references files that don't exist yet (from a previous prompt), check that the previous prompt was executed first.
 
+### Part 3: Model & Role Enhancements (from MODEL_ROLE_PROMPTS.md)
+
+| Order | Prompt | Description |
+|-------|--------|-------------|
+| 24 | MR-A1 | School Model + SchoolScopedMixin + SoftDeleteMixin |
+| 25 | MR-B1 | Helper Properties on All Models |
+| 26 | MR-B2 | __repr__ Methods on All Models |
+| 27 | MR-B3 | SQLAlchemy Validators |
+| 28 | MR-C1 | PG Enum Types + Column Conversions |
+| 29 | MR-D1 | DIR + SUP + CONTENT_MGR Permissions + Role Hierarchy |
+| 30 | MR-E1 | ABAC Helpers + PAR/STD Validation |
+| 31 | MR-E2 | Replace Hardcoded Role Strings with Permissions |
+| 32 | MR-F1 | Full Model & Role Validation |
+
 ### After Each Prompt
 
 Say: **"Prompt [ID] complete. Files changed: [list]. Ready for next prompt."**
@@ -115,9 +129,10 @@ Then **wait for my confirmation** before proceeding.
 
 ## Step 6: Final Verification
 
-After ALL 23 prompts are complete, run the verification checks from:
+After ALL 32 prompts are complete, run the verification checks from:
 1. `META_PROMPT_OOP_3_VERIFY.md` — 10 OOP verification checks
 2. `ENHANCEMENT_PROMPTS.md` → ENH-E1 — 18 enhancement verification checks
+3. `MODEL_ROLE_PROMPTS.md` → MR-F1 — 12 model/role verification checks
 
 Report results in a single PASS/FAIL summary table.
 
@@ -133,7 +148,9 @@ Report results in a single PASS/FAIL summary table.
 6. **Use Value Objects** (MoroccanGrade, Money) wherever grades or amounts are calculated.
 7. **Follow 3-tier pattern** for all new code: Router → Service → Repository.
 8. **AI Provider**: MockProvider must return realistic, useful responses. ClaudeProvider should be fully coded but inactive (activated by setting AI_PROVIDER=claude in .env).
-9. **Migrations**: G26 (OOP profiles), G27a-b (IAM + Billing), G28a-d (LMS), G29a-b (ERP), G30a-c (Comms/Docs).
+9. **Migrations**: G26 (OOP profiles), G27a-b (IAM + Billing), G28a-d (LMS), G29a-b (ERP), G30a-c (Comms/Docs), G31a-b (School + Enums).
+10. **SchoolScopedMixin** replacement must not change actual DB columns — only Python declarations.
+11. **ABAC helpers** must not break existing role-scoped queries — augment, don't replace.
 
 ---
 
@@ -145,6 +162,8 @@ Report results in a single PASS/FAIL summary table.
 | `OOP_REFACTOR_PROMPTS.md` | 12 OOP execution prompts (A1-F1) |
 | `ENHANCEMENT_ARCHITECTURE.md` | Feature enhancement design specs |
 | `ENHANCEMENT_PROMPTS.md` | 11 enhancement execution prompts (A1-E1) |
-| `FULL_REFACTOR_CHECKLIST.md` | Unified progress tracking (~130 items) |
+| `MODEL_ROLE_ARCHITECTURE.md` | Model OOP + Role/Permission design specs |
+| `MODEL_ROLE_PROMPTS.md` | 9 model/role execution prompts (MR-A1 to MR-F1) |
+| `FULL_REFACTOR_CHECKLIST.md` | Unified progress tracking (~170 items) |
 | `META_PROMPT_OOP_3_VERIFY.md` | OOP verification checks |
 | `ARCHITECTURE_STANDARD.md` | Existing 3-tier architecture reference |
