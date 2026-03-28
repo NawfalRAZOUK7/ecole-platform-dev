@@ -140,12 +140,12 @@
 - [ ] **Review & commit myself**
 
 #### OOP-D2: StudentWork Service
-- [ ] Created services/student_work.py
-- [ ] Created schemas/student_work.py
-- [ ] Added GET /student-work endpoint
-- [ ] Added GET /student-work/class/{class_id} endpoint
-- [ ] Registered in router.py
-- [ ] Added permissions
+- [x] Created services/student_work.py
+- [x] Created schemas/student_work.py
+- [x] Added GET /student-work endpoint
+- [x] Added GET /student-work/class/{class_id} endpoint
+- [x] Registered in router.py
+- [x] Added permissions
 - [ ] **Review & commit myself**
 
 ---

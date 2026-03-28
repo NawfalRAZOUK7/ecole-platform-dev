@@ -15,6 +15,7 @@ Routes:
   /submissions/*                — Submission + grading (LMS)
   /results/*                    — Results listing (LMS)
   /content-items/*              — Content items + progress (LMS)
+  /student-work/*               — Unified student work views (LMS)
   /activities/*                 — Activities + sessions (LMS)
   /assessments/*                — Assessments + results (LMS)
   /invoices/*                   — Invoice listing (Billing)
@@ -54,6 +55,7 @@ from app.api.v1.submissions import router as submissions_router
 from app.api.v1.results import router as results_router
 from app.api.v1.content import legacy_router as legacy_content_router
 from app.api.v1.content import router as content_router
+from app.api.v1.content import student_work_router
 from app.api.v1.activities import router as activities_router
 from app.api.v1.assessments import router as assessments_router
 
@@ -160,6 +162,7 @@ router.include_router(submissions_router)
 router.include_router(results_router)
 router.include_router(content_router)
 router.include_router(legacy_content_router)
+router.include_router(student_work_router)
 router.include_router(activities_router)
 router.include_router(assessments_router)
 

@@ -9,7 +9,12 @@ from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import AuthContext, requires_permission
+from app.core.dependencies import (
+    AuthContext,
+    get_teacher_class_ids,
+    requires_permission,
+    verify_teacher_assignment,
+)
 from app.core.filtering import FilterSpec, SortSpec, parse_filters, parse_sort
 from app.core.permissions import (
     PERM_LMS_CONTENT_ASSET_DELETE,
@@ -22,10 +27,13 @@ from app.core.request_utils import get_client_ip
 from app.core.response import clamp_page_size, list_response, success_response
 from app.core.search import parse_search
 from app.schemas.lms import ContentProgressRequest
+from app.schemas.student_work import StudentWorkListResponse
 from app.services.lms import LMSService
+from app.services.student_work import StudentWorkService
 
 router = APIRouter(prefix="/content-items", tags=["lms-content"])
 legacy_router = APIRouter(prefix="/content", tags=["lms-content"])
+student_work_router = APIRouter(prefix="/student-work", tags=["student-work"])
 
 
 @router.get(
@@ -210,3 +218,47 @@ async def delete_content_asset(
             ip_address=get_client_ip(request),
         )
     )
+
+
+@student_work_router.get(
+    "",
+    response_model=StudentWorkListResponse,
+    summary="List current student's work",
+    response_description="Unified assignments, quizzes, and assessments for the student",
+)
+async def list_student_work(
+    auth: AuthContext = Depends(requires_permission(PERM_LMS_CONTENT_READ)),
+    db: AsyncSession = Depends(get_db),
+):
+    service = StudentWorkService(db)
+    items = await service.list_all_for_student(
+        school_id=auth.school_id,
+        student_id=auth.user_id,
+    )
+    return StudentWorkListResponse(items=items, total=len(items))
+
+
+@student_work_router.get(
+    "/class/{class_id}",
+    response_model=StudentWorkListResponse,
+    summary="List class work for an assigned teacher",
+    response_description="Unified assignments, quizzes, and assessments for a class",
+)
+async def list_class_student_work(
+    class_id: uuid.UUID,
+    auth: AuthContext = Depends(requires_permission(PERM_LMS_CONTENT_READ)),
+    db: AsyncSession = Depends(get_db),
+):
+    allowed_class_ids = await get_teacher_class_ids(
+        teacher_user_id=auth.user_id,
+        school_id=auth.school_id,
+        db=db,
+    )
+    verify_teacher_assignment(class_id, allowed_class_ids)
+
+    service = StudentWorkService(db)
+    items = await service.list_all_for_class(
+        school_id=auth.school_id,
+        class_id=class_id,
+    )
+    return StudentWorkListResponse(items=items, total=len(items))
