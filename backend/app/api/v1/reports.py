@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, requires_permission
-from app.core.exceptions import ValidationError
+from app.core.exceptions import AuthenticationError, ValidationError
 from app.core.permissions import PERM_REP_REPORT_GENERATE, PERM_REP_REPORT_READ
 from app.core.request_utils import get_client_ip, optional_current_user
 from app.core.response import clamp_page_size, list_response, success_response

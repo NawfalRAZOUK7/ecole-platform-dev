@@ -182,36 +182,36 @@
 ## Phase 5: Final Full-Stack Validation
 
 ### Backend
-- [ ] `from sqlalchemy import` in routers → ZERO matches
-- [ ] `select(` in services → ZERO matches
-- [ ] All repos extend BaseRepository
+- [x] `from sqlalchemy import` in routers → ZERO matches
+- [x] `select(` in services → ZERO matches
+- [x] All repos extend BaseRepository
 - [ ] All services use repos in `__init__`
 - [ ] All endpoints have permission checks
-- [ ] Run `ruff check backend/` → clean
-- [ ] Run `pytest --collect-only` → all tests collected
+- [x] Run `ruff check backend/` → clean
+- [x] Run `pytest --collect-only` → all tests collected
 
 ### Web
-- [ ] `api.get(` in `*Page.tsx` → ZERO matches
-- [ ] Every feature has `.service.ts` + `use*.ts`
-- [ ] QueryClientProvider in `main.tsx`
-- [ ] `npm run build` → clean
-- [ ] `npx tsc --noEmit` → clean
+- [x] `api.get(` in `*Page.tsx` → ZERO matches
+- [x] Every feature has `.service.ts` + `use*.ts`
+- [x] QueryClientProvider in `main.tsx`
+- [x] `npm run build` → clean
+- [x] `npx tsc --noEmit` → clean
 
 ### Mobile
-- [ ] `flutter analyze` → clean
+- [x] `flutter analyze` → clean
 - [ ] No deprecated `value:` in DropdownButtonFormField
 
 ### Infra
-- [ ] `.env` in `.gitignore`
-- [ ] No real secrets in committed files
-- [ ] Redis has `requirepass`
-- [ ] PostgreSQL has no hardcoded passwords
+- [x] `.env` in `.gitignore`
+- [x] No real secrets in committed files
+- [x] Redis has `requirepass`
+- [x] PostgreSQL has no hardcoded passwords
 
 ### Integration
-- [ ] Docker stack starts: `make up`
-- [ ] Health check passes: `curl http://localhost:8000/api/v1/health`
+- [x] Docker stack starts: `make up`
+- [x] Health check passes: `curl http://localhost:8000/api/v1/health`
 - [ ] Backend tests pass: `pytest tests -q`
-- [ ] Web builds and serves
+- [x] Web builds and serves
 - [ ] **Review & commit myself**: `chore: final validation pass — full-stack architecture refactor complete`
 
 ---

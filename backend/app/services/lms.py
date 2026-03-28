@@ -24,17 +24,12 @@ from app.models.lms import (
     Assessment,
     Assignment,
     ContentItem,
-    ContentItemAsset,
-    ContentProgress,
-    ContentSubmission,
     Course,
     Grade,
     Quiz,
     QuizAttempt,
     QuizQuestion,
-    QuizResponse,
     Submission,
-    SubmissionFile,
 )
 from app.repositories.lms import LMSRepository
 from app.repositories.quiz import QuizRepository

@@ -22,7 +22,6 @@ from app.core.metrics import (
 )
 from app.models.com import NotificationCategory
 from app.models.documents import Document, DocumentCategory, StudentDocumentRequirement
-from app.models.iam import User
 from app.repositories.documents import DocumentsRepository
 from app.services.file_storage import file_storage_service
 from app.services.notification_hub import NotificationHubService

@@ -36,7 +36,6 @@ from app.schemas.resources import (
 from app.services.audit import AuditService
 from app.services.resource_library import ResourceLibraryService
 from app.services.student_documents import (
-    DOCUMENT_BULK_DOWNLOAD_ACTION,
     DOCUMENT_DOWNLOAD_ACTION,
     DOCUMENT_PREVIEW_ACTION,
     StudentDocumentsService,

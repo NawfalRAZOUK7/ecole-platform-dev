@@ -13,7 +13,7 @@ from app.core.database import get_db
 from app.core.dependencies import AuthContext, get_current_user, requires_permission
 from app.core.exceptions import AuthorizationError
 from app.core.response import clamp_page_size, list_response, success_response
-from app.core.request_utils import get_client_ip, request_locale
+from app.core.request_utils import get_client_ip
 from app.schemas.notifications import (
     DigestPreferenceRequest,
     NotificationBatchRequest,

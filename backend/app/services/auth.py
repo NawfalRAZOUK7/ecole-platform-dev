@@ -339,7 +339,7 @@ class AuthService:
         )
 
         # 5. Create membership
-        membership = await self.repo.create_membership(
+        await self.repo.create_membership(
             user_id=user.id,
             school_id=school_id,
             role_code=role,

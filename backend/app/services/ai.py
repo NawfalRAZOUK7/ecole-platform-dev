@@ -26,11 +26,11 @@ import logging
 import re
 import time
 import uuid
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
 from app.core.config import settings
-from app.core.permissions import PERM_IA_PREFERENCE_UPDATE
 from app.core.metrics import (
     REGISTRY,
 )

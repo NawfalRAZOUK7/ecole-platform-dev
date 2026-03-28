@@ -11,7 +11,7 @@ from app.core.dependencies import AuthContext, verify_school_boundary
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.core.response import encode_cursor
 from app.models.com import Announcement
-from app.models.lms import ContentItem, ContentSubmission
+from app.models.lms import ContentItem
 from app.repositories.cms import CMSRepository
 from app.schemas.cms import (
     CmsContentCreateRequest,

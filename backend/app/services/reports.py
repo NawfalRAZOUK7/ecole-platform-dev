@@ -19,7 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.exceptions import AuthorizationError, NotFoundError, ValidationError
 from app.core.storage import storage
-from app.models.erp import Class, Period
+from app.models.erp import Class
 from app.models.iam import User
 from app.models.reporting import ReportJob, ReportJobStatus, ReportType
 from app.repositories.reports import ReportsRepository
