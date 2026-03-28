@@ -31,6 +31,8 @@ from app.models.erp import (
     JustificationReview,
     Period,
     TeacherAssignment,
+    TimetableConstraint,
+    TimetableGenerationJob,
     TimetableException,
     TimetableSlot,
 )
@@ -148,6 +150,8 @@ __all__ = [
     "AttendanceAlert",
     "AbsenceJustification",
     "JustificationReview",
+    "TimetableConstraint",
+    "TimetableGenerationJob",
     "TimetableSlot",
     "TimetableException",
     "Event",

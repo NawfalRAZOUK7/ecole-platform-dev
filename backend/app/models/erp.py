@@ -23,6 +23,7 @@ from sqlalchemy import (
     Time,
     UniqueConstraint,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base, TimestampMixin
@@ -395,6 +396,74 @@ class AttendanceAlert(TimestampMixin, Base):
             name="ck_attendance_alerts_threshold",
         ),
         Index("idx_attendance_alerts_school", "school_id"),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Timetable (Phase 11A / ENH-C3)
+# ---------------------------------------------------------------------------
+
+
+class TimetableConstraint(TimestampMixin, Base):
+    """School timetable generation constraint."""
+
+    __tablename__ = "timetable_constraints"
+
+    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    academic_year_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("academic_years.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    constraint_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    entity_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True)
+    params: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+
+    __table_args__ = (
+        CheckConstraint(
+            "constraint_type IN ("
+            "'teacher_unavailable',"
+            "'room_capacity',"
+            "'max_hours_per_day',"
+            "'subject_hours_per_week',"
+            "'no_consecutive_same_subject'"
+            ")",
+            name="ck_timetable_constraints_type",
+        ),
+        Index("idx_tc_school_year", "school_id", "academic_year_id"),
+    )
+
+
+class TimetableGenerationJob(TimestampMixin, Base):
+    """Stored result of a timetable generation run."""
+
+    __tablename__ = "timetable_generation_jobs"
+
+    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    academic_year_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("academic_years.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending")
+    constraints_snapshot: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    result_payload: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    result_slot_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    conflicts_found: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    completed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('pending', 'running', 'completed', 'failed', 'applied')",
+            name="ck_timetable_generation_jobs_status",
+        ),
+        Index("idx_tgj_school_year", "school_id", "academic_year_id"),
     )
 
 

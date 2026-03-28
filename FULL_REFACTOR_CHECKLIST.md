@@ -312,17 +312,17 @@
 - [ ] **Review & commit myself**
 
 #### ENH-C3: Timetable Auto-Generation
-- [ ] Added TimetableConstraint, TimetableGenerationJob models to erp.py
-- [ ] Updated models/__init__.py
-- [ ] Created migration G29b: timetable_constraints + timetable_generation_jobs
-- [ ] Created schemas/timetable_generation.py
-- [ ] Created repositories/timetable_generation.py
-- [ ] Created services/timetable_generator.py — greedy backtracking algorithm
-- [ ] Algorithm handles 20 classes x 10 teachers within 30 seconds
-- [ ] preview() shows slots without committing, apply() creates real rows
-- [ ] Added PERM_ERP_TIMETABLE_GENERATE, PERM_ERP_TIMETABLE_CONSTRAINT_MANAGE to permissions.py
-- [ ] Created api/v1/timetable_generation.py — all endpoints
-- [ ] Registered in router.py
+- [x] Added TimetableConstraint, TimetableGenerationJob models to erp.py
+- [x] Updated models/__init__.py
+- [x] Created migration G29b: timetable_constraints + timetable_generation_jobs
+- [x] Created schemas/timetable_generation.py
+- [x] Created repositories/timetable_generation.py
+- [x] Created services/timetable_generator.py — greedy backtracking algorithm
+- [x] Algorithm handles 20 classes x 10 teachers within 30 seconds
+- [x] preview() shows slots without committing, apply() creates real rows
+- [x] Added PERM_ERP_TIMETABLE_GENERATE, PERM_ERP_TIMETABLE_CONSTRAINT_MANAGE to permissions.py
+- [x] Created api/v1/timetable_generation.py — all endpoints
+- [x] Registered in router.py
 - [ ] **Review & commit myself**
 
 ---
@@ -382,7 +382,7 @@
 - [ ] Late Fees: LateFeePolicy exists, apply_late_fees() method exists
 - [ ] Payment Plans: PaymentPlan + Installment exist, /payment-plans endpoints registered
 - [x] Attendance Analytics: AttendanceAlert exists, /analytics/attendance endpoints registered
-- [ ] Timetable Generation: 2 models exist, algorithm runs within 30s
+- [x] Timetable Generation: 2 models exist, algorithm runs within 30s
 - [ ] Message Attachments: attachment_id on Message, /messages/search works
 - [ ] Document Versioning: DocumentVersion exists, /versions endpoints registered
 - [ ] Report Scheduling: ReportSchedule exists, /schedules endpoints registered
