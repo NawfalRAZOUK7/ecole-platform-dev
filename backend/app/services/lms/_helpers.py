@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import logging
+import math
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -41,6 +42,63 @@ logger = logging.getLogger(__name__)
 
 def _utc_now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def calculate_late_penalty(
+    *,
+    assignment: Assignment,
+    submission: Submission,
+    original_score: float,
+) -> dict[str, float | int]:
+    """Apply assignment late rules to a raw score and return penalty metadata."""
+
+    penalty = 0.0
+    late_days = 0
+    adjusted_score = float(original_score)
+
+    if submission.submitted_at is None or assignment.due_at is None:
+        return {
+            "original_score": float(original_score),
+            "adjusted_score": adjusted_score,
+            "late_penalty": penalty,
+            "late_days": late_days,
+        }
+
+    late_delta = submission.submitted_at - assignment.due_at
+    grace = timedelta(hours=assignment.grace_period_hours or 0)
+    if late_delta <= grace:
+        return {
+            "original_score": float(original_score),
+            "adjusted_score": adjusted_score,
+            "late_penalty": penalty,
+            "late_days": late_days,
+        }
+
+    if not assignment.allow_late:
+        raise ValidationError(
+            "Late submissions are not allowed for this assignment",
+            error_code="ERR-LMS-422",
+        )
+
+    late_days = math.ceil((late_delta - grace).total_seconds() / 86400)
+    if assignment.max_late_days is not None and late_days > assignment.max_late_days:
+        raise ValidationError(
+            "Submission exceeded the maximum allowed late days",
+            error_code="ERR-LMS-422",
+            details={
+                "late_days": late_days,
+                "max_late_days": assignment.max_late_days,
+            },
+        )
+
+    penalty = round(late_days * float(assignment.late_penalty_per_day or 0.0), 2)
+    adjusted_score = round(max(0.0, float(original_score) - penalty), 2)
+    return {
+        "original_score": round(float(original_score), 2),
+        "adjusted_score": adjusted_score,
+        "late_penalty": penalty,
+        "late_days": late_days,
+    }
 
 
 class LMSServiceBase:

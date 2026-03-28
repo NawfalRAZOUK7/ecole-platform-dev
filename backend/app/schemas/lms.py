@@ -40,6 +40,10 @@ class AssignmentCreateRequest(BaseModel):
     description: str | None = None
     due_at: datetime | None = None
     total_points: int = Field(default=0, ge=0)
+    grace_period_hours: int = Field(default=0, ge=0)
+    late_penalty_per_day: float = Field(default=0.0, ge=0)
+    max_late_days: int | None = Field(default=None, ge=0)
+    allow_late: bool = True
     # Phase 9B
     exercise_type: str = Field(
         default="STANDARD", pattern="^(STANDARD|PRINTABLE_PDF|QUIZ)$"

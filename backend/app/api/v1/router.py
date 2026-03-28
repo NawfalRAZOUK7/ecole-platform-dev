@@ -20,6 +20,7 @@ Routes:
   /assessments/*                — Assessments + results (LMS)
   /rubrics/*                    — Rubric engine (LMS)
   /gradebook/*                  — Weighted gradebook (LMS)
+  /question-bank/*              — Reusable quiz question bank (LMS)
   /invoices/*                   — Invoice listing (Billing)
   /payments/*                   — Payment + webhook (Billing)
   /notifications/*              — Notifications (COM)
@@ -61,6 +62,7 @@ from app.api.v1.content import student_work_router
 from app.api.v1.activities import router as activities_router
 from app.api.v1.assessments import router as assessments_router
 from app.api.v1.gradebook import router as gradebook_router
+from app.api.v1.question_bank import router as question_bank_router
 from app.api.v1.rubrics import router as rubrics_router
 
 # Phase 3 — Billing routers
@@ -171,6 +173,7 @@ router.include_router(activities_router)
 router.include_router(assessments_router)
 router.include_router(rubrics_router)
 router.include_router(gradebook_router)
+router.include_router(question_bank_router)
 
 # Mount sub-routers — Phase 3 Billing
 router.include_router(invoices_router)

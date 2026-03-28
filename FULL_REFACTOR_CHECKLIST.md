@@ -262,20 +262,20 @@
 - [ ] **Review & commit myself**
 
 #### ENH-B4: Question Bank + Late Submission Penalties
-- [ ] Added QuestionBankItem model to lms.py
-- [ ] Created migration G28c: question_bank_items table
-- [ ] Created schemas/question_bank.py
-- [ ] Created repositories/question_bank.py
-- [ ] Created services/question_bank.py — QuestionBankService
-- [ ] Added PERM_LMS_QUESTION_BANK_MANAGE, PERM_LMS_QUESTION_BANK_READ to permissions.py
-- [ ] Created api/v1/question_bank.py — all endpoints
-- [ ] Registered in router.py
-- [ ] Added grace_period_hours, late_penalty_per_day, max_late_days, allow_late to Assignment
-- [ ] Added original_score, late_penalty, late_days, penalty_overridden to Grade
-- [ ] Created migration G28d: Assignment + Grade column additions
-- [ ] Updated AssignmentService.grade_submission() with late penalty calculation
-- [ ] Added override_late_penalty() method to AssignmentService
-- [ ] Added POST /submissions/{id}/override-penalty endpoint
+- [x] Added QuestionBankItem model to lms.py
+- [x] Created migration G28c: question_bank_items table
+- [x] Created schemas/question_bank.py
+- [x] Created repositories/question_bank.py
+- [x] Created services/question_bank.py — QuestionBankService
+- [x] Added PERM_LMS_QUESTION_BANK_MANAGE, PERM_LMS_QUESTION_BANK_READ to permissions.py
+- [x] Created api/v1/question_bank.py — all endpoints
+- [x] Registered in router.py
+- [x] Added grace_period_hours, late_penalty_per_day, max_late_days, allow_late to Assignment
+- [x] Added original_score, late_penalty, late_days, penalty_overridden to Grade
+- [x] Created migration G28d: Assignment + Grade column additions
+- [x] Updated AssignmentService.grade_submission() with late penalty calculation
+- [x] Added override_late_penalty() method to AssignmentService
+- [x] Added POST /submissions/{id}/override-penalty endpoint
 - [ ] **Review & commit myself**
 
 ---

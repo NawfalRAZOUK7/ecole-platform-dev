@@ -71,6 +71,27 @@ async def grade_submission(
 
 
 @router.post(
+    "/{submission_id}/override-penalty",
+    summary="Override a late submission penalty",
+    response_description="Updated grade without penalty deduction",
+)
+async def override_late_penalty(
+    submission_id: uuid.UUID,
+    request: Request,
+    auth: AuthContext = Depends(requires_permission(PERM_LMS_SUBMISSION_GRADE)),
+    db: AsyncSession = Depends(get_db),
+):
+    service = AssignmentService(db)
+    return success_response(
+        await service.override_late_penalty(
+            submission_id=submission_id,
+            auth=auth,
+            ip_address=get_client_ip(request),
+        )
+    )
+
+
+@router.post(
     "/{submission_id}/files",
     status_code=201,
     summary="Upload a submission file",

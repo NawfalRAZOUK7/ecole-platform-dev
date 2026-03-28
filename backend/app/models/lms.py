@@ -9,6 +9,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
+    ARRAY,
     BigInteger,
     Boolean,
     CheckConstraint,
@@ -247,6 +248,12 @@ class Assignment(TimestampMixin, Base):
         DateTime(timezone=True), nullable=True
     )
     total_points: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    grace_period_hours: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    late_penalty_per_day: Mapped[float] = mapped_column(
+        Float, nullable=False, default=0.0
+    )
+    max_late_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    allow_late: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     # Phase 9B — exercise type + quiz link
     exercise_type: Mapped[str] = mapped_column(
         String(20), nullable=False, default=ExerciseType.STANDARD.value
@@ -396,6 +403,12 @@ class Grade(TimestampMixin, Base):
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     score: Mapped[float] = mapped_column(Numeric(6, 2), nullable=False)
+    original_score: Mapped[float | None] = mapped_column(Numeric(6, 2), nullable=True)
+    late_penalty: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    late_days: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    penalty_overridden: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False
+    )
     feedback_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     published_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
@@ -906,4 +919,33 @@ class QuizResponse(TimestampMixin, Base):
             name="uq_quiz_responses_attempt_question",
         ),
         Index("idx_quiz_responses_attempt", "attempt_id"),
+    )
+
+
+class QuestionBankItem(TimestampMixin, Base):
+    """Reusable school question bank item for quiz generation."""
+
+    __tablename__ = "question_bank_items"
+
+    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    teacher_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    subject: Mapped[str] = mapped_column(String(120), nullable=False)
+    level: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    difficulty: Mapped[str] = mapped_column(String(20), nullable=False)
+    question_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    question_data: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    tags: Mapped[list[str]] = mapped_column(
+        ARRAY(String(80)),
+        nullable=False,
+        default=list,
+    )
+    usage_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    is_archived: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+    __table_args__ = (
+        Index("idx_qb_school_subject", "school_id", "subject"),
+        Index("idx_qb_school_difficulty", "school_id", "difficulty"),
+        Index("idx_qb_teacher", "teacher_id"),
     )

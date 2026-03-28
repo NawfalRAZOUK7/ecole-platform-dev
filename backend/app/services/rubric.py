@@ -17,7 +17,7 @@ from app.repositories.lms import LMSRepository
 from app.repositories.rubric import RubricRepository
 from app.schemas.rubric import RubricCreateRequest, RubricScoreInput
 from app.services.audit import AuditService
-from app.services.lms._helpers import LMSServiceBase, _utc_now
+from app.services.lms._helpers import LMSServiceBase, calculate_late_penalty, _utc_now
 
 
 class RubricService(LMSServiceBase):
@@ -347,6 +347,11 @@ class RubricService(LMSServiceBase):
 
         rubric = await self.rubric_repo.get_rubric(rubric.id)
         grade_value = self._calculate_grade(rubric=rubric, scores=scores)
+        penalty_data = calculate_late_penalty(
+            assignment=assignment,
+            submission=submission,
+            original_score=float(grade_value),
+        )
         published_at = _utc_now()
         feedback_text = self._rubric_feedback_summary(grade_value)
 
@@ -367,7 +372,11 @@ class RubricService(LMSServiceBase):
                 )
 
             if grade is not None:
-                grade.score = float(grade_value)
+                grade.score = penalty_data["adjusted_score"]
+                grade.original_score = penalty_data["original_score"]
+                grade.late_penalty = penalty_data["late_penalty"]
+                grade.late_days = penalty_data["late_days"]
+                grade.penalty_overridden = False
                 grade.feedback_text = feedback_text
                 grade.published_at = published_at
                 await lms_repo.save_grade(grade)
@@ -375,7 +384,11 @@ class RubricService(LMSServiceBase):
                 grade = await lms_repo.create_grade(
                     submission_id=submission_id,
                     teacher_id=auth.user_id,
-                    score=float(grade_value),
+                    score=penalty_data["adjusted_score"],
+                    original_score=penalty_data["original_score"],
+                    late_penalty=penalty_data["late_penalty"],
+                    late_days=penalty_data["late_days"],
+                    penalty_overridden=False,
                     feedback_text=feedback_text,
                     published_at=published_at,
                 )
@@ -392,7 +405,10 @@ class RubricService(LMSServiceBase):
                 entity_after={
                     "submission_id": str(submission_id),
                     "rubric_id": str(rubric.id),
-                    "score": float(grade_value),
+                    "score": float(penalty_data["adjusted_score"]),
+                    "original_score": float(penalty_data["original_score"]),
+                    "late_penalty": float(penalty_data["late_penalty"]),
+                    "late_days": int(penalty_data["late_days"]),
                     "mention": grade_value.mention,
                 },
                 ip_address=ip_address,
@@ -405,7 +421,7 @@ class RubricService(LMSServiceBase):
             assignment=assignment,
             course=course,
             actor_id=auth.user_id,
-            score=float(grade_value),
+            score=float(penalty_data["adjusted_score"]),
             feedback_text=feedback_text,
         )
         return await self.get_rubric_results(submission_id=submission_id, auth=auth)

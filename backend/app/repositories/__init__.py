@@ -21,6 +21,7 @@ from app.repositories.notifications import NotificationRepository
 from app.repositories.profile import ProfileRepository
 from app.repositories.profile_loader import ProfileLoaderRepository
 from app.repositories.progress import ProgressRepository
+from app.repositories.question_bank import QuestionBankRepository
 from app.repositories.quiz import QuizRepository
 from app.repositories.reports import ReportsRepository
 from app.repositories.rubric import RubricRepository
@@ -48,6 +49,7 @@ __all__ = [
     "ProfileRepository",
     "ProfileLoaderRepository",
     "ProgressRepository",
+    "QuestionBankRepository",
     "QuizRepository",
     "RubricRepository",
     "AnalyticsRepository",

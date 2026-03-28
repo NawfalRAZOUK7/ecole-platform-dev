@@ -98,6 +98,8 @@ PERM_LMS_RUBRIC_CREATE = "PERM-LMS:rubric:create"
 PERM_LMS_RUBRIC_READ = "PERM-LMS:rubric:read"
 PERM_LMS_GRADEBOOK_MANAGE = "PERM-LMS:gradebook:manage"
 PERM_LMS_GRADEBOOK_READ = "PERM-LMS:gradebook:read"
+PERM_LMS_QUESTION_BANK_MANAGE = "PERM-LMS:question-bank:manage"
+PERM_LMS_QUESTION_BANK_READ = "PERM-LMS:question-bank:read"
 
 # Billing
 PERM_BIL_INVOICE_READ = "PERM-BIL:invoice:read"
@@ -255,6 +257,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_LMS_RUBRIC_CREATE,
         PERM_LMS_RUBRIC_READ,
         PERM_LMS_GRADEBOOK_READ,
+        PERM_LMS_QUESTION_BANK_READ,
         # Billing — read global + fee management (Phase 11B)
         PERM_BIL_INVOICE_READ,
         PERM_BIL_PAYMENT_READ,
@@ -332,6 +335,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # LMS — read analytics
         PERM_LMS_ASSESSMENT_READ,
         PERM_LMS_GRADEBOOK_READ,
+        PERM_LMS_QUESTION_BANK_READ,
         # Progress (Phase 11D)
         PERM_PROGRESS_READ,
         PERM_PROGRESS_CLASS_READ,
@@ -399,6 +403,8 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_LMS_RUBRIC_CREATE,
         PERM_LMS_RUBRIC_READ,
         PERM_LMS_GRADEBOOK_MANAGE,
+        PERM_LMS_QUESTION_BANK_MANAGE,
+        PERM_LMS_QUESTION_BANK_READ,
         # CMS — assign content to class + submit for review
         PERM_CMS_CONTENT_ASSIGN,
         PERM_CMS_CONTENT_SUBMIT,
