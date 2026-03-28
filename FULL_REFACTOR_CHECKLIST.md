@@ -248,17 +248,17 @@
 - [ ] **Review & commit myself**
 
 #### ENH-B3: Weighted Gradebook + GPA
-- [ ] Added GradeCategory, StudentPeriodAverage models to lms.py
-- [ ] Added grade_category_id FK to Assignment model
-- [ ] Created migration G28b: grade_categories + student_period_averages + Assignment.grade_category_id
-- [ ] Created schemas/gradebook.py
-- [ ] Created repositories/gradebook.py (CRUD categories, student grades, class averages, transcripts)
-- [ ] Created services/gradebook.py — GradebookService with MoroccanGrade mentions
-- [ ] Added PERM_LMS_GRADEBOOK_MANAGE, PERM_LMS_GRADEBOOK_READ to permissions.py
-- [ ] Assigned to roles (TCH manage, PAR/STD/ADM/DIR read)
-- [ ] Created api/v1/gradebook.py — all endpoints
-- [ ] Registered in router.py
-- [ ] Validated weights sum to 1.0 (with 0.01 tolerance)
+- [x] Added GradeCategory, StudentPeriodAverage models to lms.py
+- [x] Added grade_category_id FK to Assignment model
+- [x] Created migration G28b: grade_categories + student_period_averages + Assignment.grade_category_id
+- [x] Created schemas/gradebook.py
+- [x] Created repositories/gradebook.py (CRUD categories, student grades, class averages, transcripts)
+- [x] Created services/gradebook.py — GradebookService with MoroccanGrade mentions
+- [x] Added PERM_LMS_GRADEBOOK_MANAGE, PERM_LMS_GRADEBOOK_READ to permissions.py
+- [x] Assigned to roles (TCH manage, PAR/STD/ADM/DIR read)
+- [x] Created api/v1/gradebook.py — all endpoints
+- [x] Registered in router.py
+- [x] Validated weights sum to 1.0 (with 0.01 tolerance)
 - [ ] **Review & commit myself**
 
 #### ENH-B4: Question Bank + Late Submission Penalties

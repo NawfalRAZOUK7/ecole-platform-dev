@@ -96,6 +96,8 @@ PERM_LMS_ASSESSMENT_PUBLISH = "PERM-LMS:assessment:publish"
 PERM_LMS_ASSESSMENT_SUBMIT = "PERM-LMS:assessment:submit"
 PERM_LMS_RUBRIC_CREATE = "PERM-LMS:rubric:create"
 PERM_LMS_RUBRIC_READ = "PERM-LMS:rubric:read"
+PERM_LMS_GRADEBOOK_MANAGE = "PERM-LMS:gradebook:manage"
+PERM_LMS_GRADEBOOK_READ = "PERM-LMS:gradebook:read"
 
 # Billing
 PERM_BIL_INVOICE_READ = "PERM-BIL:invoice:read"
@@ -252,6 +254,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_LMS_ASSESSMENT_PUBLISH,
         PERM_LMS_RUBRIC_CREATE,
         PERM_LMS_RUBRIC_READ,
+        PERM_LMS_GRADEBOOK_READ,
         # Billing — read global + fee management (Phase 11B)
         PERM_BIL_INVOICE_READ,
         PERM_BIL_PAYMENT_READ,
@@ -328,6 +331,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_ERP_TIMETABLE_EXCEPTION_READ,
         # LMS — read analytics
         PERM_LMS_ASSESSMENT_READ,
+        PERM_LMS_GRADEBOOK_READ,
         # Progress (Phase 11D)
         PERM_PROGRESS_READ,
         PERM_PROGRESS_CLASS_READ,
@@ -394,6 +398,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_LMS_ASSESSMENT_PUBLISH,
         PERM_LMS_RUBRIC_CREATE,
         PERM_LMS_RUBRIC_READ,
+        PERM_LMS_GRADEBOOK_MANAGE,
         # CMS — assign content to class + submit for review
         PERM_CMS_CONTENT_ASSIGN,
         PERM_CMS_CONTENT_SUBMIT,
@@ -456,6 +461,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_ERP_TIMETABLE_EXCEPTION_READ,
         # LMS — read child results + content assets
         PERM_LMS_RESULT_READ,
+        PERM_LMS_GRADEBOOK_READ,
         PERM_LMS_CONTENT_READ,
         PERM_LMS_CONTENT_ASSET_READ,
         # Billing — invoice/payment + fee read (Phase 11B)
@@ -512,6 +518,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_LMS_SUBMISSION_FILE_UPLOAD,
         PERM_LMS_SUBMISSION_FILE_READ,
         PERM_LMS_RESULT_READ,
+        PERM_LMS_GRADEBOOK_READ,
         PERM_LMS_CONTENT_READ,
         PERM_LMS_CONTENT_ASSET_READ,
         PERM_LMS_CONTENT_PROGRESS_WRITE,

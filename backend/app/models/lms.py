@@ -113,6 +113,37 @@ class Course(TimestampMixin, Base):
     __table_args__ = (Index("idx_courses_school_class", "school_id", "class_id"),)
 
 
+class GradeCategory(TimestampMixin, Base):
+    """Weighted grade category for a class and period."""
+
+    __tablename__ = "grade_categories"
+
+    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    class_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("classes.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    period_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("periods.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    weight: Mapped[float] = mapped_column(Float, nullable=False)
+    position: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+    assignments: Mapped[list["Assignment"]] = relationship(
+        back_populates="grade_category"
+    )
+
+    __table_args__ = (
+        Index("idx_grade_categories_class_period", "class_id", "period_id"),
+        CheckConstraint(
+            "weight > 0 AND weight <= 1",
+            name="ck_grade_categories_weight",
+        ),
+    )
+
+
 class Rubric(TimestampMixin, Base):
     """Structured grading rubric owned by a teacher or reused as a template."""
 
@@ -224,6 +255,10 @@ class Assignment(TimestampMixin, Base):
         ForeignKey("rubrics.id", ondelete="SET NULL"),
         nullable=True,
     )
+    grade_category_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("grade_categories.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     quiz_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("quizzes.id", ondelete="SET NULL"), nullable=True
     )
@@ -233,6 +268,9 @@ class Assignment(TimestampMixin, Base):
     # Relationships
     course: Mapped["Course"] = relationship(back_populates="assignments")
     rubric: Mapped["Rubric | None"] = relationship(back_populates="assignments")
+    grade_category: Mapped["GradeCategory | None"] = relationship(
+        back_populates="assignments"
+    )
     submissions: Mapped[list["Submission"]] = relationship(
         back_populates="assignment", cascade="all, delete-orphan"
     )
@@ -241,6 +279,7 @@ class Assignment(TimestampMixin, Base):
         CheckConstraint("total_points >= 0", name="ck_assignments_total_points"),
         Index("idx_assignments_course_due", "course_id", "due_at"),
         Index("idx_assignments_rubric", "rubric_id"),
+        Index("idx_assignments_grade_category", "grade_category_id"),
         Index("idx_assignments_quiz", "quiz_id"),
     )
 
@@ -367,6 +406,44 @@ class Grade(TimestampMixin, Base):
 
     __table_args__ = (
         Index("idx_grades_submission_published", "submission_id", "published_at"),
+    )
+
+
+class StudentPeriodAverage(TimestampMixin, Base):
+    """Cached weighted average per student, class, and period."""
+
+    __tablename__ = "student_period_averages"
+
+    student_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    class_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("classes.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    period_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("periods.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    weighted_average: Mapped[float] = mapped_column(Float, nullable=False)
+    mention: Mapped[str] = mapped_column(String(30), nullable=False)
+    class_rank: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    total_students: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    computed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "student_id",
+            "class_id",
+            "period_id",
+            name="uq_spa_student_class_period",
+        ),
+        Index("idx_spa_class_period", "class_id", "period_id"),
     )
 
 
