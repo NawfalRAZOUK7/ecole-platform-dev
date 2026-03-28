@@ -348,24 +348,24 @@
 - [ ] **Review & commit myself**
 
 #### ENH-D2: Report Scheduling + AI Provider Abstraction
-- [ ] Added ReportSchedule model to reporting.py
-- [ ] Created migration G30c: report_schedules table
-- [ ] Created schemas/report_schedule.py
-- [ ] Created repositories/report_schedule.py
-- [ ] Created services/report_scheduler.py — ReportSchedulerService
-- [ ] Added PERM_RPT_SCHEDULE_MANAGE to permissions.py
-- [ ] Created report schedule endpoints
-- [ ] Added process_due_schedules() background task trigger
-- [ ] Created services/ai/ directory
-- [ ] Moved ai.py to services/ai/ai_service.py
-- [ ] Created services/ai/__init__.py (re-exports)
-- [ ] Created services/ai/provider_base.py (AIProvider Protocol)
-- [ ] Created services/ai/mock_provider.py — MockProvider with realistic responses
-- [ ] Created services/ai/claude_provider.py — ClaudeProvider (ready, not active)
-- [ ] Created services/ai/provider_factory.py — create_ai_provider(settings)
-- [ ] Added AI_PROVIDER, AI_API_KEY, AI_MODEL to config.py (defaults: mock)
-- [ ] Updated ai_service.py to use provider factory
-- [ ] Updated routers that use AIService
+- [x] Added ReportSchedule model to reporting.py
+- [x] Created migration G30c: report_schedules table
+- [x] Created schemas/report_schedule.py
+- [x] Created repositories/report_schedule.py
+- [x] Created services/report_scheduler.py — ReportSchedulerService
+- [x] Added PERM_RPT_SCHEDULE_MANAGE to permissions.py
+- [x] Created report schedule endpoints
+- [x] Added process_due_schedules() background task trigger
+- [x] Created services/ai/ directory
+- [x] Moved ai.py to services/ai/ai_service.py
+- [x] Created services/ai/__init__.py (re-exports)
+- [x] Created services/ai/provider_base.py (AIProvider Protocol)
+- [x] Created services/ai/mock_provider.py — MockProvider with realistic responses
+- [x] Created services/ai/claude_provider.py — ClaudeProvider (ready, not active)
+- [x] Created services/ai/provider_factory.py — create_ai_provider(settings)
+- [x] Added AI_PROVIDER, AI_API_KEY, AI_MODEL to config.py (defaults: mock)
+- [x] Updated ai_service.py to use provider factory
+- [x] Updated routers that use AIService
 - [ ] **Review & commit myself**
 
 ---
@@ -385,8 +385,8 @@
 - [x] Timetable Generation: 2 models exist, algorithm runs within 30s
 - [x] Message Attachments: attachment_id on Message, /messages/search works
 - [x] Document Versioning: DocumentVersion exists, /versions endpoints registered
-- [ ] Report Scheduling: ReportSchedule exists, /schedules endpoints registered
-- [ ] AI Provider: services/ai/ exists, MockProvider realistic, ClaudeProvider ready
+- [x] Report Scheduling: ReportSchedule exists, /schedules endpoints registered
+- [x] AI Provider: services/ai/ exists, MockProvider realistic, ClaudeProvider ready
 - [ ] All new permissions registered with correct role assignments
 - [ ] All migrations (G27a-G30c) exist and are valid
 - [ ] All new endpoints registered in router.py

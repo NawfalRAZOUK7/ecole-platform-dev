@@ -1,24 +1,4 @@
-"""AI service — request orchestration with PII guardrails per G3.
-
-Reference: S-142 — AI request endpoint with guardrails, Pack G3 — AI Governance
-Policy rules:
-  POL-G3-001 — Block raw PII in prompt payloads (pre-request validator)
-  POL-G3-002 — Enforce opt-out for personalization flows (request orchestrator)
-  POL-G3-003 — Validate structured outputs before use (post-response validator)
-
-Guardrails (G3.7):
-  - Input validation + PII redaction on all AI requests
-  - Output schema validation for structured responses
-  - Safety content check for generated text
-  - Role/permission check before write actions
-  - Fail-closed policy: disable AI feature path if policy service unavailable
-
-Design:
-  - AI service is a stateless orchestrator
-  - Actual model calls are stubbed (placeholder for provider integration)
-  - All guardrail checks happen synchronously before/after model calls
-  - Metrics emitted for monitoring (G3.8)
-"""
+"""AI service — request orchestration with provider abstraction and guardrails."""
 
 from __future__ import annotations
 
@@ -30,16 +10,15 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
-from app.core.config import settings
-from app.core.metrics import (
-    REGISTRY,
-)
 from prometheus_client import Counter, Histogram
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
+from app.core.metrics import REGISTRY
 from app.core.unit_of_work import UnitOfWork
 from app.models.ai import AIPreference, WritingAttempt
 from app.repositories.ai import AIRepository
+from app.services.ai.provider_factory import create_ai_provider
 from app.services.analytics import (
     SCHEMA_VERSION,
     _EVENT_PROPERTY_WHITELIST,
@@ -51,9 +30,6 @@ from app.services.kpi import compute_all_kpis
 
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# AI-specific Prometheus metrics (G3.8)
-# ---------------------------------------------------------------------------
 AI_REQUEST_COUNT = Counter(
     "ai_request_count",
     "AI request count by type and status",
@@ -86,14 +62,11 @@ AI_LATENCY = Histogram(
 AI_OPT_OUT_COUNT = Counter(
     "ai_opt_out_count",
     "AI opt-out preference changes",
-    ["env", "action"],  # action: opt_out, opt_in
+    ["env", "action"],
     registry=REGISTRY,
 )
 
 
-# ---------------------------------------------------------------------------
-# Enums
-# ---------------------------------------------------------------------------
 class AIRequestType(str, Enum):
     WRITING_ASSIST = "writing_assist"
     RECOMMENDATION = "recommendation"
@@ -108,21 +81,13 @@ class AIRequestStatus(str, Enum):
     FALLBACK = "fallback"
 
 
-# ---------------------------------------------------------------------------
-# PII Detection — POL-G3-001
-# ---------------------------------------------------------------------------
-# Patterns that indicate raw PII in text
 _PII_PATTERNS = [
-    # Email
     re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}", re.IGNORECASE),
-    # Phone (Moroccan +212, or generic international)
     re.compile(r"(?:\+?212|0)[5-7]\d{8}"),
     re.compile(r"\+?\d{1,3}[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,4}"),
-    # National ID (Moroccan CIN pattern)
     re.compile(r"\b[A-Z]{1,2}\d{5,7}\b"),
 ]
 
-# Fields that MUST NOT appear in AI prompt payloads
 _PII_FIELD_NAMES = frozenset(
     {
         "email",
@@ -142,7 +107,6 @@ _PII_FIELD_NAMES = frozenset(
 
 
 def detect_pii_in_text(text: str) -> list[str]:
-    """Detect PII patterns in free text. Returns list of detected PII types."""
     detected: list[str] = []
     for pattern in _PII_PATTERNS:
         if pattern.search(text):
@@ -151,7 +115,6 @@ def detect_pii_in_text(text: str) -> list[str]:
 
 
 def detect_pii_in_payload(payload: dict[str, Any]) -> list[str]:
-    """Check payload fields for PII field names (POL-G3-001)."""
     violations: list[str] = []
     for key in payload:
         if key.lower() in _PII_FIELD_NAMES:
@@ -160,114 +123,72 @@ def detect_pii_in_payload(payload: dict[str, Any]) -> list[str]:
 
 
 def redact_pii_from_text(text: str) -> str:
-    """Redact detected PII patterns from text."""
     result = text
     for pattern in _PII_PATTERNS:
         result = pattern.sub("[REDACTED]", result)
     return result
 
 
-# ---------------------------------------------------------------------------
-# Input Validation — G3.7 Guardrail 1
-# ---------------------------------------------------------------------------
 def validate_ai_input(
     text: str,
     context: dict[str, Any] | None = None,
     request_type: str = "general",
 ) -> tuple[str, dict[str, Any] | None, list[str]]:
-    """Validate and sanitize AI request input.
-
-    Returns:
-        (sanitized_text, sanitized_context, warnings)
-    Raises:
-        ValueError if critical PII detected and cannot be safely redacted.
-    """
     warnings: list[str] = []
-
-    # Check text for PII
     text_pii = detect_pii_in_text(text)
     if text_pii:
         warnings.append(f"pii_detected_in_text:{len(text_pii)}_patterns")
         text = redact_pii_from_text(text)
 
-    # Check context payload for PII fields
     sanitized_context = context
     if context:
         payload_pii = detect_pii_in_payload(context)
         if payload_pii:
             warnings.extend(payload_pii)
-            # Remove PII fields from context
             sanitized_context = {
-                k: v for k, v in context.items() if k.lower() not in _PII_FIELD_NAMES
+                key: value
+                for key, value in context.items()
+                if key.lower() not in _PII_FIELD_NAMES
             }
 
-    # Length limits
     max_length = 5000 if request_type == "writing_assist" else 2000
     if len(text) > max_length:
         text = text[:max_length]
         warnings.append(f"text_truncated_to_{max_length}")
-
     return text, sanitized_context, warnings
 
 
-# ---------------------------------------------------------------------------
-# Output Validation — POL-G3-003, G3.7 Guardrail 2
-# ---------------------------------------------------------------------------
 def validate_ai_output(
     output: dict[str, Any],
     expected_fields: set[str] | None = None,
 ) -> tuple[dict[str, Any], bool]:
-    """Validate structured AI output.
-
-    Returns:
-        (validated_output, is_valid)
-    """
     if not isinstance(output, dict):
         return {"error": "invalid_output_type"}, False
-
-    # Check for required fields if specified
     if expected_fields:
         missing = expected_fields - set(output.keys())
         if missing:
             return {"error": "missing_fields", "missing": list(missing)}, False
-
-    # Safety check: scan text fields for unsafe content
     for key, value in output.items():
         if isinstance(value, str):
-            # Check for PII leakage in output
             pii = detect_pii_in_text(value)
             if pii:
                 output[key] = redact_pii_from_text(value)
-
     return output, True
 
 
-# ---------------------------------------------------------------------------
-# Safety Content Check — G3.7 Guardrail 3
-# ---------------------------------------------------------------------------
 _UNSAFE_PATTERNS = [
-    re.compile(
-        r"(?:password|mot de passe|كلمة المرور)\s*(?:is|est|هي)\s*[:=]", re.IGNORECASE
-    ),
+    re.compile(r"(?:password|mot de passe|كلمة المرور)\s*(?:is|est|هي)\s*[:=]", re.IGNORECASE),
     re.compile(r"(?:hack|exploit|inject|xss|sql\s*injection)", re.IGNORECASE),
 ]
 
 
 def check_content_safety(text: str) -> tuple[bool, str | None]:
-    """Check generated text for safety violations.
-
-    Returns:
-        (is_safe, violation_reason)
-    """
     for pattern in _UNSAFE_PATTERNS:
         if pattern.search(text):
             return False, f"unsafe_pattern:{pattern.pattern[:30]}"
     return True, None
 
 
-# ---------------------------------------------------------------------------
-# Fallback Responses — G3.9 incident playbook
-# ---------------------------------------------------------------------------
 _FALLBACK_RESPONSES: dict[str, dict[str, Any]] = {
     "writing_assist": {
         "status": "fallback",
@@ -295,69 +216,50 @@ _FALLBACK_RESPONSES: dict[str, dict[str, Any]] = {
 
 
 def get_fallback_response(request_type: str, reason: str = "unknown") -> dict[str, Any]:
-    """Get safe fallback response when AI service fails (G3.9)."""
     AI_FALLBACK_COUNT.labels(env=settings.app_env, reason=reason).inc()
     return _FALLBACK_RESPONSES.get(request_type, _FALLBACK_RESPONSES["general"])
 
 
-# ---------------------------------------------------------------------------
-# Prompt Templates — G3.4 Prompt Inventory
-# ---------------------------------------------------------------------------
 _PROMPT_TEMPLATES: dict[str, dict[str, Any]] = {
     "PROMPT-G3-001": {
         "purpose": "Recommendation summary",
         "version": 1,
-        "template": (
-            "Based on the student's learning activity:\n"
-            "- Completed items: {completed_count}\n"
-            "- Current level: {level_band}\n"
-            "- Recent topics: {recent_topics}\n\n"
-            "Suggest 3 learning recommendations with reason codes. "
-            "Format as JSON array with fields: title, reason_code, priority."
-        ),
     },
     "PROMPT-G3-002": {
         "purpose": "Writing assist",
         "version": 1,
-        "template": (
-            "You are a pedagogical writing assistant for a K-12 school in Morocco.\n"
-            "Subject: {subject}\n"
-            "Student text:\n{text}\n\n"
-            "Provide constructive feedback with:\n"
-            "1. A brief suggestion for improvement\n"
-            "2. Up to 3 specific hints\n"
-            "Respond in the same language as the student text. "
-            "Do NOT rewrite the text. Do NOT include any personal information."
-        ),
     },
     "PROMPT-G3-003": {
         "purpose": "Safety fallback response",
         "version": 1,
-        "template": "Return a safe, neutral fallback message for: {error_class}",
     },
 }
 
 
 def get_prompt_template(prompt_id: str) -> dict[str, Any] | None:
-    """Get a prompt template by ID."""
     return _PROMPT_TEMPLATES.get(prompt_id)
 
 
-# ---------------------------------------------------------------------------
-# AI Service — Orchestrator
-# ---------------------------------------------------------------------------
 class AIService:
-    """AI request orchestrator with guardrails.
-
-    Handles the full lifecycle: validate → check opt-out → prepare prompt →
-    call model (stubbed) → validate output → return result.
-    """
+    """AI request orchestrator with pluggable provider backends."""
 
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
         self.env = settings.app_env
         self.repo = AIRepository(db)
         self.audit = AuditService(db)
+        self._provider = create_ai_provider(settings)
+
+    def _resolve_language(self, text: str, explicit_language: str | None = None) -> str:
+        normalized = str(explicit_language or "").lower()
+        if normalized in {"fr", "ar", "en"}:
+            return normalized
+        if any("\u0600" <= char <= "\u06ff" for char in text):
+            return "ar"
+        lowered = text.lower()
+        if any(token in lowered for token in (" le ", " la ", " les ", " pour ", " avec ")):
+            return "fr"
+        return "en"
 
     async def process_writing_assist(
         self,
@@ -366,47 +268,34 @@ class AIService:
         subject: str | None = None,
         student_id: uuid.UUID,
         school_id: uuid.UUID,
+        language: str | None = None,
     ) -> dict[str, Any]:
-        """Process a writing assistance request (PROMPT-G3-002).
-
-        Guardrails applied:
-          1. Input validation + PII redaction
-          2. Output validation
-          3. Safety content check
-          4. Metrics emission
-        """
         start = time.perf_counter()
         request_type = "writing_assist"
 
         try:
-            # Step 1: Validate input (POL-G3-001)
-            sanitized_text, _, warnings = validate_ai_input(
-                text, request_type=request_type
-            )
-
-            # Step 2: Build prompt from template
+            sanitized_text, _, warnings = validate_ai_input(text, request_type=request_type)
             prompt_template = get_prompt_template("PROMPT-G3-002")
             if prompt_template is None:
                 return get_fallback_response(request_type, "missing_prompt_template")
 
-            # Step 3: Simulate model call (stubbed for MVP)
-            # In production, this calls the AI provider API
-            result = self._stub_writing_assist(sanitized_text, subject)
-
-            # Step 4: Validate output (POL-G3-003)
+            resolved_language = self._resolve_language(sanitized_text, language)
+            result = await self._provider.analyze_writing(sanitized_text, resolved_language)
             validated, is_valid = validate_ai_output(
                 result,
                 expected_fields={"suggestion", "hints"},
             )
             if not is_valid:
                 AI_ERROR_COUNT.labels(
-                    env=self.env, request_type=request_type, error_type="invalid_output"
+                    env=self.env,
+                    request_type=request_type,
+                    error_type="invalid_output",
                 ).inc()
                 return get_fallback_response(request_type, "invalid_output")
 
-            # Step 5: Safety check
-            if validated.get("suggestion"):
-                is_safe, violation = check_content_safety(validated["suggestion"])
+            suggestion = validated.get("suggestion") or ""
+            if suggestion:
+                is_safe, violation = check_content_safety(suggestion)
                 if not is_safe:
                     AI_ERROR_COUNT.labels(
                         env=self.env,
@@ -415,11 +304,11 @@ class AIService:
                     ).inc()
                     return get_fallback_response(request_type, f"safety:{violation}")
 
-            # Success
             AI_REQUEST_COUNT.labels(
-                env=self.env, request_type=request_type, status="completed"
+                env=self.env,
+                request_type=request_type,
+                status="completed",
             ).inc()
-
             return {
                 "status": "completed",
                 "suggestion": validated.get("suggestion"),
@@ -428,17 +317,18 @@ class AIService:
                 "prompt_version": prompt_template["version"],
                 "warnings": warnings,
             }
-
-        except Exception as exc:
-            logger.exception("AI writing assist failed: %s", exc)
+        except Exception:
+            logger.exception("AI writing assist failed")
             AI_ERROR_COUNT.labels(
-                env=self.env, request_type=request_type, error_type="exception"
+                env=self.env,
+                request_type=request_type,
+                error_type="exception",
             ).inc()
             return get_fallback_response(request_type, "exception")
-
         finally:
-            duration = time.perf_counter() - start
-            AI_LATENCY.labels(env=self.env, request_type=request_type).observe(duration)
+            AI_LATENCY.labels(env=self.env, request_type=request_type).observe(
+                time.perf_counter() - start
+            )
 
     async def process_recommendation(
         self,
@@ -448,28 +338,29 @@ class AIService:
         completed_count: int = 0,
         level_band: str | None = None,
         recent_topics: list[str] | None = None,
+        average_grade: float | None = None,
     ) -> dict[str, Any]:
-        """Process a learning recommendation request (PROMPT-G3-001).
-
-        Returns a list of recommendations with mandatory reason_codes.
-        """
         start = time.perf_counter()
         request_type = "recommendation"
 
         try:
-            # Build context
             prompt_template = get_prompt_template("PROMPT-G3-001")
             if prompt_template is None:
                 return get_fallback_response(request_type, "missing_prompt_template")
 
-            # Simulate model call (stubbed for MVP)
-            result = self._stub_recommendations(
-                completed_count, level_band, recent_topics or []
+            recommendations = await self._provider.generate_recommendations(
+                {
+                    "student_id": str(student_id),
+                    "school_id": str(school_id),
+                    "completed_count": completed_count,
+                    "level_band": level_band,
+                    "recent_topics": recent_topics or [],
+                    "average_grade": average_grade,
+                }
             )
 
-            # Validate output
-            for rec in result.get("recommendations", []):
-                if "reason_code" not in rec:
+            for item in recommendations:
+                if "reason_code" not in item:
                     AI_ERROR_COUNT.labels(
                         env=self.env,
                         request_type=request_type,
@@ -478,108 +369,29 @@ class AIService:
                     return get_fallback_response(request_type, "missing_reason_code")
 
             AI_REQUEST_COUNT.labels(
-                env=self.env, request_type=request_type, status="completed"
+                env=self.env,
+                request_type=request_type,
+                status="completed",
             ).inc()
-
             return {
                 "status": "completed",
-                "recommendations": result["recommendations"],
+                "recommendations": recommendations,
                 "prompt_id": "PROMPT-G3-001",
                 "prompt_version": prompt_template["version"],
-                "expires_at": None,  # Expiration policy per G3 surfaces
+                "expires_at": None,
             }
-
-        except Exception as exc:
-            logger.exception("AI recommendation failed: %s", exc)
+        except Exception:
+            logger.exception("AI recommendation failed")
             AI_ERROR_COUNT.labels(
-                env=self.env, request_type=request_type, error_type="exception"
+                env=self.env,
+                request_type=request_type,
+                error_type="exception",
             ).inc()
             return get_fallback_response(request_type, "exception")
-
         finally:
-            duration = time.perf_counter() - start
-            AI_LATENCY.labels(env=self.env, request_type=request_type).observe(duration)
-
-    # ------------------------------------------------------------------
-    # Stub implementations (replaced by real AI provider in production)
-    # ------------------------------------------------------------------
-    def _stub_writing_assist(self, text: str, subject: str | None) -> dict[str, Any]:
-        """Stub: return a pedagogical writing hint based on text length."""
-        word_count = len(text.split())
-        hints = []
-        suggestion = None
-
-        if word_count < 20:
-            suggestion = "Consider expanding your ideas with more details and examples."
-            hints = [
-                "Try adding a specific example to support your main point.",
-                "Consider using transition words to connect your ideas.",
-            ]
-        elif word_count < 100:
-            suggestion = "Good start! Review your structure and add a conclusion."
-            hints = [
-                "Check that each paragraph has a clear topic sentence.",
-                "Consider adding a concluding sentence that summarizes your argument.",
-            ]
-        else:
-            suggestion = "Well-developed text. Focus on refining language and flow."
-            hints = [
-                "Review for repetitive word choices and vary your vocabulary.",
-                "Check punctuation and sentence variety for better readability.",
-                "Ensure your introduction clearly states your thesis.",
-            ]
-
-        return {"suggestion": suggestion, "hints": hints}
-
-    def _stub_recommendations(
-        self,
-        completed_count: int,
-        level_band: str | None,
-        recent_topics: list[str],
-    ) -> dict[str, Any]:
-        """Stub: return static recommendations based on progress."""
-        recommendations = []
-
-        if completed_count < 5:
-            recommendations.append(
-                {
-                    "title": "Complete your first learning module",
-                    "reason_code": "LOW_COMPLETION",
-                    "priority": "high",
-                    "content_type": "module",
-                }
+            AI_LATENCY.labels(env=self.env, request_type=request_type).observe(
+                time.perf_counter() - start
             )
-        if level_band and level_band in ("CP", "CE1", "CE2"):
-            recommendations.append(
-                {
-                    "title": "Practice reading comprehension exercises",
-                    "reason_code": "LEVEL_APPROPRIATE",
-                    "priority": "medium",
-                    "content_type": "activity",
-                }
-            )
-        if recent_topics:
-            recommendations.append(
-                {
-                    "title": f"Continue exploring: {recent_topics[0] if recent_topics else 'new topics'}",
-                    "reason_code": "TOPIC_CONTINUATION",
-                    "priority": "medium",
-                    "content_type": "content",
-                }
-            )
-
-        # Always provide at least one recommendation
-        if not recommendations:
-            recommendations.append(
-                {
-                    "title": "Explore the content library for new materials",
-                    "reason_code": "GENERAL_EXPLORATION",
-                    "priority": "low",
-                    "content_type": "library",
-                }
-            )
-
-        return {"recommendations": recommendations[:3]}
 
     async def create_writing_attempt(
         self,
@@ -628,6 +440,7 @@ class AIService:
             subject=body.subject,
             student_id=auth.user_id,
             school_id=auth.school_id,
+            language=getattr(body, "language", None),
         )
         async with UnitOfWork(self.db) as uow:
             repo = AIRepository(uow.session)
@@ -743,9 +556,11 @@ class AIService:
             "user_id": str(preference.user_id),
             "target_user_id": str(preference.target_user_id),
             "opt_out": preference.opt_out,
-            "updated_at": preference.updated_at.isoformat()
-            if preference.updated_at
-            else preference.created_at.isoformat(),
+            "updated_at": (
+                preference.updated_at.isoformat()
+                if preference.updated_at
+                else preference.created_at.isoformat()
+            ),
         }
 
     async def get_recommendations_for_user(self, *, auth) -> dict[str, Any]:
@@ -794,6 +609,11 @@ class AIService:
         period: int,
     ) -> dict[str, Any]:
         kpis = await compute_all_kpis(self.db, school_id=school_id, period_days=period)
+        try:
+            insights = await self._provider.compute_kpi_insights({"kpis": kpis, "period": period})
+            logger.debug("Computed %d KPI insights from provider", len(insights))
+        except Exception:
+            logger.exception("AI KPI insights failed; returning raw KPIs only")
         return {
             "kpis": kpis,
             "period": f"{period}d",
@@ -809,9 +629,11 @@ class AIService:
                     "event_version": 1,
                     "schema_version": SCHEMA_VERSION,
                     "required_properties": sorted(properties),
-                    "pii_risk": "medium"
-                    if "invoice" in event_name or "payment" in event_name
-                    else "low",
+                    "pii_risk": (
+                        "medium"
+                        if "invoice" in event_name or "payment" in event_name
+                        else "low"
+                    ),
                     "status": "known",
                 }
             )

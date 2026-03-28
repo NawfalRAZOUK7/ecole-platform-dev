@@ -181,6 +181,7 @@ PERM_REP_REPORT_GENERATE = "PERM-REP:report:generate"
 PERM_REP_REPORT_READ = "PERM-REP:report:read"
 PERM_REP_ANALYTICS_READ = "PERM-REP:analytics:read"
 PERM_REP_EXPORT_CREATE = "PERM-REP:export:create"
+PERM_RPT_SCHEDULE_MANAGE = "PERM-RPT:schedule:manage"
 
 # Calendar & Events (Phase 15)
 PERM_CAL_EVENT_CREATE = "PERM-CAL:event:create"
@@ -297,6 +298,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_REP_REPORT_READ,
         PERM_REP_ANALYTICS_READ,
         PERM_REP_EXPORT_CREATE,
+        PERM_RPT_SCHEDULE_MANAGE,
         # Calendar & Events (Phase 15)
         PERM_CAL_EVENT_CREATE,
         PERM_CAL_EVENT_READ,
@@ -372,6 +374,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_REP_REPORT_READ,
         PERM_REP_ANALYTICS_READ,
         PERM_REP_EXPORT_CREATE,
+        PERM_RPT_SCHEDULE_MANAGE,
         # Calendar & Events (Phase 15)
         PERM_CAL_EVENT_CREATE,
         PERM_CAL_EVENT_READ,

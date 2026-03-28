@@ -589,6 +589,48 @@ async def task_cleanup_expired_reports(ctx: dict) -> int:
 
 
 # ---------------------------------------------------------------------------
+# Task: process_due_report_schedules (Phase ENH-D2)
+# ---------------------------------------------------------------------------
+async def task_process_due_report_schedules(ctx: dict) -> int:
+    """Generate and deliver all due scheduled reports."""
+    from app.core.metrics import TASK_COMPLETED_COUNT, TASK_DURATION, TASK_FAILED_COUNT
+
+    start = time.perf_counter()
+    try:
+        from app.core.database import async_session
+        from app.services.report_scheduler import ReportSchedulerService
+
+        async with async_session() as db:
+            service = ReportSchedulerService(db)
+            count = await service.process_due_schedules()
+            await db.commit()
+
+        duration = time.perf_counter() - start
+        TASK_DURATION.labels(
+            env=settings.app_env,
+            task="process_due_report_schedules",
+        ).observe(duration)
+        TASK_COMPLETED_COUNT.labels(
+            env=settings.app_env,
+            task="process_due_report_schedules",
+        ).inc()
+        logger.info("Processed %d due report schedules", count)
+        return count
+    except Exception:
+        duration = time.perf_counter() - start
+        TASK_DURATION.labels(
+            env=settings.app_env,
+            task="process_due_report_schedules",
+        ).observe(duration)
+        TASK_FAILED_COUNT.labels(
+            env=settings.app_env,
+            task="process_due_report_schedules",
+        ).inc()
+        logger.exception("task_process_due_report_schedules failed")
+        return 0
+
+
+# ---------------------------------------------------------------------------
 # Task: send_event_reminders
 # ---------------------------------------------------------------------------
 async def task_send_event_reminders(ctx: dict) -> int:
@@ -797,6 +839,7 @@ class WorkerSettings:
         task_send_overdue_reminders,
         task_generate_report,
         task_cleanup_expired_reports,
+        task_process_due_report_schedules,
         task_send_event_reminders,
         task_notify_expiring_documents,
         task_cleanup_deleted_documents,
@@ -812,6 +855,8 @@ class WorkerSettings:
         cron(task_refresh_kpi_views, hour=3, minute=30),
         # Cleanup expired report files daily at 04:00 UTC (Phase 14)
         cron(task_cleanup_expired_reports, hour=4, minute=0),
+        # Evaluate scheduled reports every 15 minutes.
+        cron(task_process_due_report_schedules, minute=set(range(0, 60, 15))),
         # Phase 16: Evaluate hourly and only send at 08:00 Africa/Casablanca.
         cron(task_notify_expiring_documents, minute=0),
         # Phase 16: Hard cleanup of deleted documents daily at 04:30 UTC

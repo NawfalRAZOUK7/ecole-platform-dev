@@ -118,6 +118,9 @@ class Settings(BaseSettings):
     report_storage_subdirectory: str = "reports"
     report_download_ttl_hours: int = 24
     report_cache_ttl_hours: int = 1
+    ai_provider: str = "mock"
+    ai_api_key: str = ""
+    ai_model: str = ""
     analytics_cache_ttl_seconds: int = 300
     attendance_warning_threshold: float = 0.15
     attendance_critical_threshold: float = 0.25

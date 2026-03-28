@@ -26,6 +26,7 @@ from app.repositories.progress import ProgressRepository
 from app.repositories.question_bank import QuestionBankRepository
 from app.repositories.quiz import QuizRepository
 from app.repositories.reports import ReportsRepository
+from app.repositories.report_schedule import ReportScheduleRepository
 from app.repositories.rubric import RubricRepository
 from app.repositories.timetable_generation import TimetableGenerationRepository
 
@@ -60,4 +61,5 @@ __all__ = [
     "TimetableGenerationRepository",
     "AnalyticsRepository",
     "ReportsRepository",
+    "ReportScheduleRepository",
 ]

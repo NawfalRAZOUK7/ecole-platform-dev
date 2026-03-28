@@ -9,8 +9,8 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base, TimestampMixin
@@ -34,6 +34,40 @@ class ReportJobStatus(str, enum.Enum):
 class DataExportFormat(str, enum.Enum):
     CSV = "csv"
     XLSX = "xlsx"
+
+
+class ReportSchedule(TimestampMixin, Base):
+    """Scheduled report generation with role-targeted email delivery."""
+
+    __tablename__ = "report_schedules"
+
+    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    created_by: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    report_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    frequency: Mapped[str] = mapped_column(String(20), nullable=False)
+    parameters: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    recipient_roles: Mapped[list[str]] = mapped_column(
+        ARRAY(String(20)),
+        nullable=False,
+        default=list,
+    )
+    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    last_run_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    next_run_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    __table_args__ = (
+        Index("idx_report_schedules_school", "school_id"),
+        Index("idx_report_schedules_next_run", "next_run_at"),
+    )
 
 
 class ReportJob(TimestampMixin, Base):

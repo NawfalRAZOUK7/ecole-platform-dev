@@ -11,13 +11,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, requires_permission
 from app.core.exceptions import AuthenticationError, ValidationError
-from app.core.permissions import PERM_REP_REPORT_GENERATE, PERM_REP_REPORT_READ
+from app.core.permissions import (
+    PERM_REP_REPORT_GENERATE,
+    PERM_REP_REPORT_READ,
+    PERM_RPT_SCHEDULE_MANAGE,
+)
 from app.core.request_utils import get_client_ip, optional_current_user
 from app.core.response import clamp_page_size, list_response, success_response
 from app.core.storage import storage
 from app.core.tasks import enqueue_task
+from app.schemas.report_schedule import (
+    ReportScheduleCreateRequest,
+    ReportScheduleUpdateRequest,
+)
 from app.schemas.reports import ReportGenerateRequest
 from app.services.audit import AuditService
+from app.services.report_scheduler import ReportSchedulerService
 from app.services.reports import ReportsService
 
 router = APIRouter(prefix="/reports", tags=["reports"])
@@ -105,6 +114,106 @@ async def get_report_options(
             requester_role=auth.role,
             report_type=type,
             class_id=class_id,
+        )
+    )
+
+
+@router.post(
+    "/schedules",
+    summary="Create a report schedule",
+    response_description="Report schedule metadata",
+)
+async def create_report_schedule(
+    body: ReportScheduleCreateRequest,
+    request: Request,
+    auth: AuthContext = Depends(requires_permission(PERM_RPT_SCHEDULE_MANAGE)),
+    db: AsyncSession = Depends(get_db),
+):
+    service = ReportSchedulerService(db)
+    return success_response(
+        await service.create_schedule(
+            body=body,
+            auth=auth,
+            ip_address=get_client_ip(request),
+        )
+    )
+
+
+@router.get(
+    "/schedules",
+    summary="List report schedules",
+    response_description="Report schedules for the current school",
+)
+async def list_report_schedules(
+    auth: AuthContext = Depends(requires_permission(PERM_RPT_SCHEDULE_MANAGE)),
+    db: AsyncSession = Depends(get_db),
+):
+    service = ReportSchedulerService(db)
+    items = await service.list_schedules(auth=auth)
+    return list_response(items, next_cursor=None, has_more=False)
+
+
+@router.put(
+    "/schedules/{schedule_id}",
+    summary="Update a report schedule",
+    response_description="Updated schedule metadata",
+)
+async def update_report_schedule(
+    schedule_id: uuid.UUID,
+    body: ReportScheduleUpdateRequest,
+    request: Request,
+    auth: AuthContext = Depends(requires_permission(PERM_RPT_SCHEDULE_MANAGE)),
+    db: AsyncSession = Depends(get_db),
+):
+    service = ReportSchedulerService(db)
+    return success_response(
+        await service.update_schedule(
+            schedule_id=schedule_id,
+            body=body,
+            auth=auth,
+            ip_address=get_client_ip(request),
+        )
+    )
+
+
+@router.delete(
+    "/schedules/{schedule_id}",
+    summary="Disable a report schedule",
+    response_description="Disabled schedule metadata",
+)
+async def disable_report_schedule(
+    schedule_id: uuid.UUID,
+    request: Request,
+    auth: AuthContext = Depends(requires_permission(PERM_RPT_SCHEDULE_MANAGE)),
+    db: AsyncSession = Depends(get_db),
+):
+    service = ReportSchedulerService(db)
+    return success_response(
+        await service.disable_schedule(
+            schedule_id=schedule_id,
+            auth=auth,
+            ip_address=get_client_ip(request),
+        )
+    )
+
+
+@router.post(
+    "/schedules/{schedule_id}/run",
+    summary="Run a report schedule immediately",
+    response_description="Generated report job metadata",
+)
+async def run_report_schedule(
+    schedule_id: uuid.UUID,
+    request: Request,
+    auth: AuthContext = Depends(requires_permission(PERM_RPT_SCHEDULE_MANAGE)),
+    db: AsyncSession = Depends(get_db),
+):
+    service = ReportSchedulerService(db)
+    return success_response(
+        await service.run_schedule(
+            schedule_id=schedule_id,
+            auth=auth,
+            ip_address=get_client_ip(request),
         )
     )
 

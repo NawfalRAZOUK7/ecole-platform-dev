@@ -115,6 +115,7 @@ from app.models.feature import FeatureToggle
 from app.models.reporting import (
     DataExport,
     ReportJob,
+    ReportSchedule,
 )
 
 # G10 — Document management
@@ -214,6 +215,7 @@ __all__ = [
     # Reporting
     "ReportJob",
     "DataExport",
+    "ReportSchedule",
     # Documents
     "Document",
     "DocumentVersion",
