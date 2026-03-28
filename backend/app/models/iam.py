@@ -400,3 +400,47 @@ class TeacherProfile(TimestampMixin, Base):
         Index("idx_teacher_profiles_user", "user_id"),
         Index("idx_teacher_profiles_school", "school_id"),
     )
+
+
+class AdminProfile(TimestampMixin, Base):
+    """Extended profile for ADM/DIR roles."""
+
+    __tablename__ = "admin_profiles"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True
+    )
+    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    department: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    management_level: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    can_approve_budgets: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False
+    )
+
+    user: Mapped["User"] = relationship(foreign_keys=[user_id])
+
+    __table_args__ = (
+        Index("idx_admin_profiles_user", "user_id"),
+        Index("idx_admin_profiles_school", "school_id"),
+    )
+
+
+class ContentManagerProfile(TimestampMixin, Base):
+    """Extended profile for CONTENT_MGR role."""
+
+    __tablename__ = "content_manager_profiles"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True
+    )
+    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    specialization: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    languages_managed: Mapped[str | None] = mapped_column(Text, nullable=True)
+    approved_subjects: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    user: Mapped["User"] = relationship(foreign_keys=[user_id])
+
+    __table_args__ = (
+        Index("idx_content_manager_profiles_user", "user_id"),
+        Index("idx_content_manager_profiles_school", "school_id"),
+    )

@@ -6,6 +6,8 @@ Migration group order: G1-IAM -> G2-ERP -> G3-LMS -> G4-COM -> G5-Billing -> G6-
 # G1 — IAM
 from app.models.iam import (
     AccountRecoveryRequest,
+    AdminProfile,
+    ContentManagerProfile,
     InvitationCode,
     Membership,
     ParentChildLink,
@@ -119,6 +121,8 @@ __all__ = [
     "StudentProfile",
     "ParentProfile",
     "TeacherProfile",
+    "AdminProfile",
+    "ContentManagerProfile",
     # ERP
     "AcademicYear",
     "Period",

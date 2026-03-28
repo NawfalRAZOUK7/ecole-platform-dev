@@ -67,13 +67,13 @@
 ### Phase OOP-B: Profile System
 
 #### OOP-B1: Profile Models + Migration
-- [ ] Added AdminProfile model to iam.py
-- [ ] Added ContentManagerProfile model to iam.py
-- [ ] Updated models/__init__.py with new exports
-- [ ] Created Alembic migration g26_oop_profiles
-- [ ] Migration creates admin_profiles table
-- [ ] Migration creates content_manager_profiles table
-- [ ] Migration adds correct indexes
+- [x] Added AdminProfile model to iam.py
+- [x] Added ContentManagerProfile model to iam.py
+- [x] Updated models/__init__.py with new exports
+- [x] Created Alembic migration g26_oop_profiles
+- [x] Migration creates admin_profiles table
+- [x] Migration creates content_manager_profiles table
+- [x] Migration adds correct indexes
 - [ ] **Review & commit myself**
 
 #### OOP-B2: ProfileLoader
