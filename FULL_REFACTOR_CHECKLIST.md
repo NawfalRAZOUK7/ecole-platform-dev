@@ -180,19 +180,19 @@
 ### Phase OOP-F: OOP Validation
 
 #### OOP-F1: Full Validation
-- [ ] Zero db.commit() in services (only uow.commit)
-- [ ] All value objects validate correctly
-- [ ] Both new profile tables exist in migration
-- [ ] ProfileLoader works for 5 role types
-- [ ] All domain event files exist
-- [ ] EventDispatcher has all events registered
-- [ ] 5+ services emit events
-- [ ] All 3 repos satisfy Evaluatable protocol
-- [ ] StudentWorkService combines all types
-- [ ] /student-work endpoint registered
-- [ ] LMS split into 5 sub-services
-- [ ] All router imports resolve
-- [ ] All import health checks pass
+- [x] Zero db.commit() in services (only uow.commit)
+- [x] All value objects validate correctly
+- [x] Both new profile tables exist in migration
+- [x] ProfileLoader works for 5 role types
+- [x] All domain event files exist
+- [x] EventDispatcher has all events registered
+- [x] 5+ services emit events
+- [x] All 3 repos satisfy Evaluatable protocol
+- [x] StudentWorkService combines all types
+- [x] /student-work endpoint registered
+- [x] LMS split into 5 sub-services
+- [x] All router imports resolve
+- [x] All import health checks pass
 - [ ] **Review & commit myself**
 
 ---
