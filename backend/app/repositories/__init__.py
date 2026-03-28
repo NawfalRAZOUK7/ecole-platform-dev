@@ -13,7 +13,7 @@ from app.repositories.documents import DocumentsRepository
 from app.repositories.erp import ERPRepository
 from app.repositories.feature import FeatureRepository
 from app.repositories.gdpr import GDPRRepository
-from app.repositories.lms import LMSRepository
+from app.repositories.lms import AssessmentRepository, AssignmentRepository, LMSRepository
 from app.repositories.messaging import MessagingRepository
 from app.repositories.notifications import NotificationRepository
 from app.repositories.profile import ProfileRepository
@@ -36,6 +36,8 @@ __all__ = [
     "FeatureRepository",
     "GDPRRepository",
     "LMSRepository",
+    "AssignmentRepository",
+    "AssessmentRepository",
     "MessagingRepository",
     "NotificationRepository",
     "ProfileRepository",

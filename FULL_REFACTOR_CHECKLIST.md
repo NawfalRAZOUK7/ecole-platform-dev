@@ -130,13 +130,13 @@
 ### Phase OOP-D: Evaluatable Protocol
 
 #### OOP-D1: Protocols + Strategies
-- [ ] Created domain/protocols/evaluatable.py
-- [ ] Created domain/protocols/grading.py
-- [ ] QuizAutoGradeStrategy implemented
-- [ ] ManualGradeStrategy implemented
-- [ ] QuizRepository satisfies Evaluatable
-- [ ] Assignment repo methods satisfy Evaluatable
-- [ ] Assessment repo methods satisfy Evaluatable
+- [x] Created domain/protocols/evaluatable.py
+- [x] Created domain/protocols/grading.py
+- [x] QuizAutoGradeStrategy implemented
+- [x] ManualGradeStrategy implemented
+- [x] QuizRepository satisfies Evaluatable
+- [x] Assignment repo methods satisfy Evaluatable
+- [x] Assessment repo methods satisfy Evaluatable
 - [ ] **Review & commit myself**
 
 #### OOP-D2: StudentWork Service

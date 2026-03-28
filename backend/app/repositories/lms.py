@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy import exists, func, select
@@ -844,3 +845,248 @@ class LMSRepository(BaseRepository):
             query = query.where(Assignment.id > last_id)
 
         return await self._paginate_rows(query, limit=limit)
+
+
+class AssignmentRepository(LMSRepository):
+    """Evaluatable-compatible repository view over assignments."""
+
+    async def list_for_class(
+        self,
+        school_id: uuid.UUID,
+        class_id: uuid.UUID,
+        *,
+        status: str | None = None,
+    ) -> list[dict]:
+        if status not in {None, "assigned"}:
+            return []
+
+        result = await self.db.execute(
+            select(Assignment)
+            .join(Course, Course.id == Assignment.course_id)
+            .where(
+                Course.school_id == school_id,
+                Course.class_id == class_id,
+                Assignment.quiz_id.is_(None),
+            )
+            .order_by(Assignment.due_at.asc(), Assignment.id.asc())
+        )
+        assignments = list(result.scalars().all())
+        return [self._serialize_assignment(assignment=assignment) for assignment in assignments]
+
+    async def list_for_student(
+        self,
+        school_id: uuid.UUID,
+        student_id: uuid.UUID,
+    ) -> list[dict]:
+        class_ids = await self.list_student_class_ids(
+            student_id=student_id,
+            school_id=school_id,
+        )
+        if not class_ids:
+            return []
+
+        result = await self.db.execute(
+            select(Assignment)
+            .join(Course, Course.id == Assignment.course_id)
+            .where(
+                Course.school_id == school_id,
+                Course.class_id.in_(class_ids),
+                Assignment.quiz_id.is_(None),
+            )
+            .order_by(Assignment.due_at.asc(), Assignment.id.asc())
+        )
+        assignments = list(result.scalars().all())
+
+        items: list[dict] = []
+        for assignment in assignments:
+            submission = await self._get_latest_submission_for_student(
+                assignment_id=assignment.id,
+                student_id=student_id,
+            )
+            items.append(
+                self._serialize_assignment(
+                    assignment=assignment,
+                    status=submission.status if submission is not None else "assigned",
+                )
+            )
+        return items
+
+    async def get_detail(self, item_id: uuid.UUID) -> dict | None:
+        bundle = await self.get_assignment_with_course(item_id)
+        if bundle is None:
+            return None
+        assignment, course = bundle
+        return {
+            **self._serialize_assignment(assignment=assignment),
+            "course_id": str(course.id),
+            "class_id": str(course.class_id),
+            "teacher_id": str(assignment.teacher_id),
+            "description": assignment.description,
+            "exercise_type": assignment.exercise_type,
+            "exercise_pdf_path": assignment.exercise_pdf_path,
+        }
+
+    async def get_results(self, item_id: uuid.UUID) -> list[dict]:
+        result = await self.db.execute(
+            select(Submission, Grade)
+            .outerjoin(Grade, Grade.submission_id == Submission.id)
+            .where(Submission.assignment_id == item_id)
+            .order_by(Submission.created_at.desc())
+        )
+        rows = list(result.all())
+        return [
+            {
+                "student_id": str(submission.student_id),
+                "submission_id": str(submission.id),
+                "status": submission.status,
+                "submitted_at": _dt_to_iso(submission.submitted_at),
+                "score": float(grade.score) if grade is not None else None,
+                "feedback_text": grade.feedback_text if grade is not None else None,
+                "published_at": _dt_to_iso(grade.published_at) if grade is not None else None,
+            }
+            for submission, grade in rows
+        ]
+
+    async def _get_latest_submission_for_student(
+        self,
+        *,
+        assignment_id: uuid.UUID,
+        student_id: uuid.UUID,
+    ) -> Submission | None:
+        result = await self.db.execute(
+            select(Submission)
+            .where(
+                Submission.assignment_id == assignment_id,
+                Submission.student_id == student_id,
+            )
+            .order_by(Submission.created_at.desc())
+        )
+        return result.scalars().first()
+
+    def _serialize_assignment(
+        self,
+        *,
+        assignment: Assignment,
+        status: str = "assigned",
+    ) -> dict:
+        return {
+            "id": str(assignment.id),
+            "title": assignment.title,
+            "type": "assignment",
+            "due_at": _dt_to_iso(assignment.due_at),
+            "status": status,
+            "total_points": int(assignment.total_points or 0),
+        }
+
+
+class AssessmentRepository(LMSRepository):
+    """Evaluatable-compatible repository view over assessments."""
+
+    async def list_for_class(
+        self,
+        school_id: uuid.UUID,
+        class_id: uuid.UUID,
+        *,
+        status: str | None = None,
+    ) -> list[dict]:
+        result = await self.db.execute(
+            select(Assessment)
+            .join(Class, Class.id == Assessment.class_id)
+            .where(
+                Class.school_id == school_id,
+                Assessment.class_id == class_id,
+            )
+            .order_by(Assessment.due_at.asc(), Assessment.id.asc())
+        )
+        assessments = list(result.scalars().all())
+        if status is not None:
+            assessments = [assessment for assessment in assessments if assessment.status == status]
+        return [self._serialize_assessment(assessment=assessment) for assessment in assessments]
+
+    async def list_for_student(
+        self,
+        school_id: uuid.UUID,
+        student_id: uuid.UUID,
+    ) -> list[dict]:
+        class_ids = await self.list_student_class_ids(
+            student_id=student_id,
+            school_id=school_id,
+        )
+        if not class_ids:
+            return []
+
+        result = await self.db.execute(
+            select(Assessment)
+            .join(Class, Class.id == Assessment.class_id)
+            .where(
+                Class.school_id == school_id,
+                Assessment.class_id.in_(class_ids),
+            )
+            .order_by(Assessment.due_at.asc(), Assessment.id.asc())
+        )
+        assessments = list(result.scalars().all())
+        items: list[dict] = []
+        for assessment in assessments:
+            assessment_result = await self.get_assessment_result(
+                assessment_id=assessment.id,
+                student_id=student_id,
+            )
+            items.append(
+                self._serialize_assessment(
+                    assessment=assessment,
+                    status=(
+                        assessment_result.status
+                        if assessment_result is not None
+                        else assessment.status
+                    ),
+                )
+            )
+        return items
+
+    async def get_detail(self, item_id: uuid.UUID) -> dict | None:
+        bundle = await self.get_assessment_with_class(item_id)
+        if bundle is None:
+            return None
+        assessment, class_room = bundle
+        return {
+            **self._serialize_assessment(assessment=assessment),
+            "class_id": str(class_room.id),
+            "teacher_id": str(assessment.teacher_id),
+            "window_end": _dt_to_iso(assessment.window_end),
+        }
+
+    async def get_results(self, item_id: uuid.UUID) -> list[dict]:
+        result = await self.db.execute(
+            select(AssessmentResult)
+            .where(AssessmentResult.assessment_id == item_id)
+            .order_by(AssessmentResult.created_at.desc())
+        )
+        rows = list(result.scalars().all())
+        return [
+            {
+                "student_id": str(row.student_id),
+                "status": row.status,
+                "score": float(row.score) if row.score is not None else None,
+                "created_at": _dt_to_iso(row.created_at),
+            }
+            for row in rows
+        ]
+
+    def _serialize_assessment(
+        self,
+        *,
+        assessment: Assessment,
+        status: str | None = None,
+    ) -> dict:
+        return {
+            "id": str(assessment.id),
+            "title": assessment.title,
+            "type": "assessment",
+            "due_at": _dt_to_iso(assessment.due_at),
+            "status": status or assessment.status,
+            "total_points": int(assessment.total_points or 0),
+        }
+
+
+def _dt_to_iso(value: datetime | None) -> str | None:
+    return value.isoformat() if value is not None else None

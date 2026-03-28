@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy import func, select
 
 from app.core.response import decode_cursor
-from app.models.lms import Quiz, QuizAttempt, QuizQuestion, QuizResponse
+from app.models.erp import Enrollment
+from app.models.lms import Assignment, Course, Quiz, QuizAttempt, QuizQuestion, QuizResponse
 from app.repositories.base import BaseRepository
 
 
@@ -186,6 +188,22 @@ class QuizRepository(BaseRepository):
         )
         return result.scalar_one_or_none()
 
+    async def get_latest_attempt_for_student(
+        self,
+        *,
+        quiz_id: uuid.UUID,
+        student_id: uuid.UUID,
+    ) -> QuizAttempt | None:
+        result = await self.db.execute(
+            select(QuizAttempt)
+            .where(
+                QuizAttempt.quiz_id == quiz_id,
+                QuizAttempt.student_id == student_id,
+            )
+            .order_by(QuizAttempt.attempt_no.desc(), QuizAttempt.started_at.desc())
+        )
+        return result.scalars().first()
+
     async def create_quiz_attempt(
         self,
         **kwargs: Any,
@@ -318,3 +336,151 @@ class QuizRepository(BaseRepository):
         )
         total_responses, correct_responses = result.one()
         return int(total_responses or 0), int(correct_responses or 0)
+
+    async def list_for_class(
+        self,
+        school_id: uuid.UUID,
+        class_id: uuid.UUID,
+        *,
+        status: str | None = None,
+    ) -> list[dict]:
+        query = (
+            select(Quiz, Assignment)
+            .join(Assignment, Assignment.quiz_id == Quiz.id)
+            .join(Course, Course.id == Assignment.course_id)
+            .where(
+                Course.school_id == school_id,
+                Course.class_id == class_id,
+            )
+            .order_by(Assignment.due_at.asc(), Quiz.id.asc())
+        )
+        if status is not None:
+            query = query.where(Quiz.status == status)
+
+        result = await self.db.execute(query)
+        rows = list(result.all())
+        question_counts = await self.get_question_counts([quiz.id for quiz, _assignment in rows])
+        return [
+            self._serialize_evaluatable(
+                quiz=quiz,
+                due_at=assignment.due_at,
+                total_points=question_counts.get(quiz.id, (0, 0))[1],
+                status=quiz.status,
+                assignment_id=assignment.id,
+            )
+            for quiz, assignment in rows
+        ]
+
+    async def list_for_student(
+        self,
+        school_id: uuid.UUID,
+        student_id: uuid.UUID,
+    ) -> list[dict]:
+        class_result = await self.db.execute(
+            select(Enrollment.class_id).where(
+                Enrollment.student_id == student_id,
+                Enrollment.school_id == school_id,
+                Enrollment.status == "active",
+            )
+        )
+        class_ids = list(class_result.scalars().all())
+        if not class_ids:
+            return []
+
+        result = await self.db.execute(
+            select(Quiz, Assignment)
+            .join(Assignment, Assignment.quiz_id == Quiz.id)
+            .join(Course, Course.id == Assignment.course_id)
+            .where(
+                Course.school_id == school_id,
+                Course.class_id.in_(class_ids),
+            )
+            .order_by(Assignment.due_at.asc(), Quiz.id.asc())
+        )
+        rows = list(result.all())
+        question_counts = await self.get_question_counts([quiz.id for quiz, _assignment in rows])
+
+        items: list[dict] = []
+        for quiz, assignment in rows:
+            attempt = await self.get_latest_attempt_for_student(
+                quiz_id=quiz.id,
+                student_id=student_id,
+            )
+            items.append(
+                self._serialize_evaluatable(
+                    quiz=quiz,
+                    due_at=assignment.due_at,
+                    total_points=question_counts.get(quiz.id, (0, 0))[1],
+                    status=attempt.status if attempt is not None else quiz.status,
+                    assignment_id=assignment.id,
+                )
+            )
+        return items
+
+    async def get_detail(self, item_id: uuid.UUID) -> dict | None:
+        quiz = await self.get_quiz(item_id)
+        if quiz is None:
+            return None
+
+        question_count, total_points = (await self.get_question_counts([item_id])).get(
+            item_id,
+            (0, 0),
+        )
+        return {
+            **self._serialize_evaluatable(
+                quiz=quiz,
+                due_at=None,
+                total_points=total_points,
+                status=quiz.status,
+            ),
+            "description": quiz.description,
+            "subject": quiz.subject,
+            "level_band": quiz.level_band,
+            "difficulty": quiz.difficulty,
+            "max_attempts": quiz.max_attempts,
+            "question_count": question_count,
+        }
+
+    async def get_results(self, item_id: uuid.UUID) -> list[dict]:
+        result = await self.db.execute(
+            select(QuizAttempt)
+            .where(QuizAttempt.quiz_id == item_id)
+            .order_by(QuizAttempt.started_at.desc(), QuizAttempt.attempt_no.desc())
+        )
+        attempts = list(result.scalars().all())
+        return [
+            {
+                "student_id": str(attempt.student_id),
+                "attempt_id": str(attempt.id),
+                "attempt_no": attempt.attempt_no,
+                "status": attempt.status,
+                "score": float(attempt.score) if attempt.score is not None else None,
+                "max_score": int(attempt.max_score or 0),
+                "started_at": _dt_to_iso(attempt.started_at),
+                "completed_at": _dt_to_iso(attempt.completed_at),
+            }
+            for attempt in attempts
+        ]
+
+    def _serialize_evaluatable(
+        self,
+        *,
+        quiz: Quiz,
+        due_at: datetime | None,
+        total_points: int,
+        status: str,
+        assignment_id: uuid.UUID | None = None,
+    ) -> dict:
+        return {
+            "id": str(quiz.id),
+            "title": quiz.title,
+            "type": "quiz",
+            "due_at": _dt_to_iso(due_at),
+            "status": status,
+            "total_points": int(total_points or 0),
+            "assignment_id": str(assignment_id) if assignment_id else None,
+        }
+
+
+def _dt_to_iso(value: datetime | None) -> str | None:
+    return value.isoformat() if value is not None else None
