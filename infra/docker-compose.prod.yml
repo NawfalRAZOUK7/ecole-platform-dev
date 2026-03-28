@@ -8,8 +8,13 @@
 #      OR run ssl-renew.sh to obtain certs from Let's Encrypt
 #   3. Create Docker secrets files in ./secrets/:
 #        openssl rand -hex 32 > infra/secrets/jwt_secret_key.txt
-#        echo "your-db-password" > infra/secrets/db_password.txt
-#        echo "your-smtp-password" > infra/secrets/smtp_password.txt
+#        openssl rand -base64 24 > infra/secrets/db_password.txt
+#        openssl rand -base64 24 > infra/secrets/app_db_password.txt
+#        openssl rand -base64 24 > infra/secrets/app_readonly_password.txt
+#        printf '%s' 'postgresql+asyncpg://ecole:<db-password>@postgres:5432/ecole_platform' > infra/secrets/database_url.txt
+#        openssl rand -base64 24 > infra/secrets/redis_password.txt
+#        printf '%s' 'redis://:<redis-password>@redis:6379/0' > infra/secrets/redis_url.txt
+#        printf '%s' 'your-smtp-password' > infra/secrets/smtp_password.txt
 #
 # Usage:
 #   docker compose -f infra/docker-compose.prod.yml --env-file .env.prod up -d
@@ -33,10 +38,10 @@ services:
       target: production
     # Note: no container_name to allow scaling with --scale backend=N
     environment:
-      # Database — use managed PostgreSQL URL in production
-      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://ecole:ecole@postgres:5432/ecole_platform}
-      # Cache — use managed Redis URL in production
-      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      # Database — use Docker secret or managed PostgreSQL URL secret in production
+      DATABASE_URL_FILE: /run/secrets/database_url
+      # Cache — use Docker secret or managed Redis URL secret in production
+      REDIS_URL_FILE: /run/secrets/redis_url
       # Auth
       JWT_SECRET_KEY_FILE: /run/secrets/jwt_secret_key
       JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
@@ -68,6 +73,8 @@ services:
     volumes:
       - backend_uploads:/app/uploads
     secrets:
+      - database_url
+      - redis_url
       - jwt_secret_key
       - smtp_password
     depends_on:
@@ -108,6 +115,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-ecole}
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
       POSTGRES_DB: ${POSTGRES_DB:-ecole_platform}
+      APP_DB_PASSWORD_FILE: /run/secrets/app_db_password
+      APP_READONLY_PASSWORD_FILE: /run/secrets/app_readonly_password
     volumes:
       - prod_postgres_data:/var/lib/postgresql/data
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
@@ -140,6 +149,8 @@ services:
       - "shared_preload_libraries=pg_stat_statements"
     secrets:
       - db_password
+      - app_db_password
+      - app_readonly_password
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ecole} -d ${POSTGRES_DB:-ecole_platform}"]
       interval: 10s
@@ -171,12 +182,22 @@ services:
     volumes:
       - prod_redis_data:/data
       - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
-    command: redis-server /usr/local/etc/redis/redis.conf --maxmemory 512mb --maxmemory-policy allkeys-lru
+    command:
+      - /bin/sh
+      - -c
+      - |
+          REDIS_PASSWORD="$$(cat /run/secrets/redis_password)"
+          exec redis-server /usr/local/etc/redis/redis.conf \
+            --requirepass "$$REDIS_PASSWORD" \
+            --maxmemory 512mb \
+            --maxmemory-policy allkeys-lru
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "REDIS_PASSWORD=\"$$(cat /run/secrets/redis_password)\" && redis-cli -a \"$$REDIS_PASSWORD\" ping | grep PONG"]
       interval: 10s
       timeout: 5s
       retries: 5
+    secrets:
+      - redis_password
     networks:
       - ecole-prod-network
     restart: unless-stopped
@@ -260,8 +281,8 @@ services:
     container_name: ecole-prod-worker
     command: ["python", "-m", "arq", "app.worker.WorkerSettings"]
     environment:
-      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://ecole:ecole@postgres:5432/ecole_platform}
-      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      DATABASE_URL_FILE: /run/secrets/database_url
+      REDIS_URL_FILE: /run/secrets/redis_url
       JWT_SECRET_KEY_FILE: /run/secrets/jwt_secret_key
       JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
       APP_ENV: production
@@ -275,6 +296,8 @@ services:
       S3_REGION: ${S3_REGION:-auto}
       TZ: ${TZ:-Africa/Casablanca}
     secrets:
+      - database_url
+      - redis_url
       - jwt_secret_key
       - smtp_password
     depends_on:
@@ -332,6 +355,16 @@ secrets:
     file: ./secrets/jwt_secret_key.txt
   db_password:
     file: ./secrets/db_password.txt
+  app_db_password:
+    file: ./secrets/app_db_password.txt
+  app_readonly_password:
+    file: ./secrets/app_readonly_password.txt
+  database_url:
+    file: ./secrets/database_url.txt
+  redis_password:
+    file: ./secrets/redis_password.txt
+  redis_url:
+    file: ./secrets/redis_url.txt
   smtp_password:
     file: ./secrets/smtp_password.txt
 

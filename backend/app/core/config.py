@@ -3,7 +3,23 @@
 Reference: Pack D3 — Runtime Configuration
 """
 
+import os
+from pathlib import Path
+
 from pydantic_settings import BaseSettings
+
+
+def _read_secret_file(env_name: str) -> str | None:
+    """Load an optional Docker secret from ENV_NAME_FILE if present."""
+    file_path = os.getenv(f"{env_name}_FILE")
+    if not file_path:
+        return None
+
+    path = Path(file_path)
+    if not path.exists():
+        return None
+
+    return path.read_text(encoding="utf-8").strip()
 
 
 class Settings(BaseSettings):
@@ -15,10 +31,10 @@ class Settings(BaseSettings):
     log_level: str = "DEBUG"
 
     # Database (PostgreSQL)
-    database_url: str = "postgresql+asyncpg://ecole:ecole@localhost:5432/ecole_platform"
+    database_url: str = "postgresql+asyncpg://ecole:change-me@localhost:5432/ecole_platform"
 
     # Cache (Redis)
-    redis_url: str = "redis://localhost:6379/0"
+    redis_url: str = "redis://:change-me@localhost:6379/0"
 
     # Authentication (JWT)
     jwt_secret_key: str = "change-me-in-production"
@@ -112,6 +128,17 @@ class Settings(BaseSettings):
     @property
     def cors_origins_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",")]
+
+    def model_post_init(self, __context: object) -> None:
+        secret_overrides = {
+            "database_url": _read_secret_file("DATABASE_URL"),
+            "redis_url": _read_secret_file("REDIS_URL"),
+            "jwt_secret_key": _read_secret_file("JWT_SECRET_KEY"),
+            "smtp_password": _read_secret_file("SMTP_PASSWORD"),
+        }
+        for field_name, value in secret_overrides.items():
+            if value:
+                object.__setattr__(self, field_name, value)
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

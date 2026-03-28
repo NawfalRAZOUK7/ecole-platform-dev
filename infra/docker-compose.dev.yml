@@ -5,8 +5,10 @@ services:
     container_name: ecole-postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-ecole}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ecole}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
       POSTGRES_DB: ${POSTGRES_DB:-ecole_platform}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:-change-me-app-user}
+      APP_READONLY_PASSWORD: ${APP_READONLY_PASSWORD:-change-me-readonly}
     ports:
       - "5432:5432"
     volumes:
@@ -36,14 +38,19 @@ services:
   redis:
     image: redis:7-alpine
     container_name: ecole-redis
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-change-me-dev-redis}
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
       - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
-    command: redis-server /usr/local/etc/redis/redis.conf
+    command:
+      - /bin/sh
+      - -c
+      - exec redis-server /usr/local/etc/redis/redis.conf --requirepass "$${REDIS_PASSWORD}"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" ping | grep PONG"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -70,8 +77,8 @@ services:
       target: development
     container_name: ecole-backend
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-ecole}:${POSTGRES_PASSWORD:-ecole}@postgres:5432/${POSTGRES_DB:-ecole_platform}
-      REDIS_URL: redis://redis:6379/0
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-ecole}:${POSTGRES_PASSWORD:-change-me}@postgres:5432/${POSTGRES_DB:-ecole_platform}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-change-me-dev-redis}@redis:6379/0
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-me-in-production}
       JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
@@ -124,8 +131,8 @@ services:
       target: development
     container_name: ecole-worker
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-ecole}:${POSTGRES_PASSWORD:-ecole}@postgres:5432/${POSTGRES_DB:-ecole_platform}
-      REDIS_URL: redis://redis:6379/0
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-ecole}:${POSTGRES_PASSWORD:-change-me}@postgres:5432/${POSTGRES_DB:-ecole_platform}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-change-me-dev-redis}@redis:6379/0
       APP_ENV: development
       LOG_LEVEL: DEBUG
       SMTP_HOST: ${SMTP_HOST:-localhost}

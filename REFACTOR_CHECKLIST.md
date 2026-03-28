@@ -167,14 +167,14 @@
 
 ## Phase 4: Infrastructure Security (1 batch)
 
-- [ ] Add `.env` to `.gitignore`
-- [ ] Create proper `.env.example` with placeholder values
-- [ ] Redis: `protected-mode yes` + `requirepass` + `bind 127.0.0.1`
-- [ ] PostgreSQL: remove hardcoded passwords from `init.sql`
-- [ ] Grafana: replace hardcoded password with env variable
-- [ ] Alertmanager: uncomment webhook receivers with placeholder
-- [ ] Update `infra/secrets/README.md` with secret generation guide
-- [ ] Verify: no real secrets in any committed file
+- [x] Add `.env` to `.gitignore`
+- [x] Create proper `.env.example` with placeholder values
+- [x] Redis: `protected-mode yes` + `requirepass` + `bind 127.0.0.1`
+- [x] PostgreSQL: remove hardcoded passwords from `init.sql`
+- [x] Grafana: replace hardcoded password with env variable
+- [x] Alertmanager: uncomment webhook receivers with placeholder
+- [x] Update `infra/secrets/README.md` with secret generation guide
+- [x] Verify: no real secrets in any committed file
 - [ ] **Review & commit myself**: `security(infra): harden Redis, PostgreSQL, monitoring configs`
 
 ---

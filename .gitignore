@@ -55,6 +55,9 @@ pubspec.lock
 
 # ==================== Docker ====================
 .env
+.env.dev
+.env.prod
+.env.staging
 docker-compose.override.yml
 
 # ==================== IDE ====================

@@ -26,6 +26,7 @@ import time
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any
+from urllib.parse import unquote, urlparse
 from zoneinfo import ZoneInfo
 
 import redis.asyncio as aioredis
@@ -43,18 +44,17 @@ logger = logging.getLogger(__name__)
 def get_redis_settings() -> RedisSettings:
     """Parse REDIS_URL into ARQ RedisSettings."""
     url = settings.redis_url
-    # redis://host:port/db
-    if url.startswith("redis://"):
-        parts = url.replace("redis://", "").split("/")
-        host_port = parts[0]
-        db = int(parts[1]) if len(parts) > 1 else 0
-        if ":" in host_port:
-            host, port_str = host_port.rsplit(":", 1)
-            port = int(port_str)
-        else:
-            host = host_port
-            port = 6379
-        return RedisSettings(host=host, port=port, database=db)
+    if url.startswith(("redis://", "rediss://")):
+        parsed = urlparse(url)
+        db = int(parsed.path.lstrip("/") or "0")
+        return RedisSettings(
+            host=parsed.hostname or "localhost",
+            port=parsed.port or 6379,
+            database=db,
+            username=unquote(parsed.username) if parsed.username else None,
+            password=unquote(parsed.password) if parsed.password else None,
+            ssl=parsed.scheme == "rediss",
+        )
     return RedisSettings()
 
 
