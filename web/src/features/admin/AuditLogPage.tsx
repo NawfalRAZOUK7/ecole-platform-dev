@@ -5,86 +5,59 @@
  * Calls GET /admin/audit-logs with filters.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { api, ApiClientError } from '@/services/api/client';
+import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
+import { EmptyState } from '@/shared/ui/EmptyState';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
-import { EmptyState } from '@/shared/ui/EmptyState';
+import { toBannerError } from '@/shared/ui/errorUtils';
 import { formatDate } from '@/shared/i18n';
-
-interface AuditEntry {
-  id: string;
-  action_type: string;
-  outcome: string;
-  actor_id: string | null;
-  target_type: string | null;
-  target_id: string | null;
-  error_code: string | null;
-  correlation_id: string | null;
-  ip_address: string | null;
-  created_at: string | null;
-}
+import { useAdminAuditLogs } from './useAdmin';
+import type { AuditEntry } from './admin.service';
 
 export function AuditLogPage() {
   const { t, i18n } = useTranslation();
-  const [items, setItems] = useState<AuditEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [correlationId, setCorrelationId] = useState('');
   const [actionType, setActionType] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
-  const fetchLogs = useCallback(async (cursor?: string) => {
-    try {
-      const params: Record<string, string | number | undefined> = {};
-      if (cursor) params.cursor = cursor;
-      if (correlationId) params.correlation_id = correlationId;
-      if (actionType) params.action_type = actionType;
-      if (dateFrom) params.date_from = dateFrom;
-      if (dateTo) params.date_to = dateTo;
-
-      const resp = await api.list<AuditEntry>('/admin/audit-logs', params);
-      if (cursor) {
-        setItems((prev) => [...prev, ...resp.data]);
-      } else {
-        setItems(resp.data);
-      }
-      setNextCursor(resp.meta.next_cursor);
-      setHasMore(resp.meta.has_more);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
-  }, [t, correlationId, actionType, dateFrom, dateTo]);
-
-  useEffect(() => {
-    setLoading(true);
-    fetchLogs().finally(() => setLoading(false));
-  }, [fetchLogs]);
-
-  async function handleLoadMore() {
-    if (!nextCursor) return;
-    setLoadingMore(true);
-    await fetchLogs(nextCursor);
-    setLoadingMore(false);
-  }
+  const filters = useMemo(
+    () => ({
+      correlation_id: correlationId || undefined,
+      action_type: actionType || undefined,
+      date_from: dateFrom || undefined,
+      date_to: dateTo || undefined,
+    }),
+    [actionType, correlationId, dateFrom, dateTo]
+  );
+  const auditLogsQuery = useAdminAuditLogs(filters);
+  const items: AuditEntry[] = useMemo(
+    () => auditLogsQuery.data?.pages.flatMap((page) => page.data) ?? [],
+    [auditLogsQuery.data]
+  );
+  const dismissibleError = useDismissibleError(
+    useMemo(() => toBannerError(auditLogsQuery.error, t('app.error')), [auditLogsQuery.error, t])
+  );
 
   function getOutcomeColor(outcome: string): string {
     return outcome === 'success' ? '#10b981' : '#ef4444';
   }
 
-  if (loading) return <LoadingState />;
+  if (auditLogsQuery.isLoading) {
+    return <LoadingState />;
+  }
 
   return (
     <div className="page">
       <h1 className="page-title">{t('admin.audit.title')}</h1>
 
-      <ErrorBanner error={error} onDismiss={() => setError(null)} onRetry={() => fetchLogs()} />
+      <ErrorBanner
+        error={dismissibleError.error}
+        onDismiss={dismissibleError.dismiss}
+        onRetry={() => void auditLogsQuery.refetch()}
+      />
 
       <div className="filters-bar">
         <input
@@ -176,10 +149,14 @@ export function AuditLogPage() {
             </table>
           </div>
 
-          {hasMore && (
+          {auditLogsQuery.hasNextPage && (
             <div style={{ textAlign: 'center', marginTop: 16 }}>
-              <button className="btn btn-secondary" onClick={handleLoadMore} disabled={loadingMore}>
-                {loadingMore ? t('app.loading') : t('feed.loadMore')}
+              <button
+                className="btn btn-secondary"
+                onClick={() => void auditLogsQuery.fetchNextPage()}
+                disabled={auditLogsQuery.isFetchingNextPage}
+              >
+                {auditLogsQuery.isFetchingNextPage ? t('app.loading') : t('feed.loadMore')}
               </button>
             </div>
           )}

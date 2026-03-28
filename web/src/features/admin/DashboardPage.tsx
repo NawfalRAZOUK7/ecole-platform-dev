@@ -5,49 +5,37 @@
  * Calls GET /admin/dashboard. ADM and DIR roles.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { api, ApiClientError } from '@/services/api/client';
+import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
-
-interface DashboardData {
-  users: number;
-  active_sessions: number;
-  active_invitations: number;
-  audit_events_24h: number;
-  pending_justifications: number;
-  users_by_role: Record<string, number>;
-}
+import { toBannerError } from '@/shared/ui/errorUtils';
+import { useAdminDashboard } from './useAdmin';
 
 export function DashboardPage() {
   const { t } = useTranslation();
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const dashboardQuery = useAdminDashboard();
+  const bannerError = useMemo(
+    () => toBannerError(dashboardQuery.error, t('app.error')),
+    [dashboardQuery.error, t]
+  );
+  const dismissibleError = useDismissibleError(bannerError);
+  const data = dashboardQuery.data;
 
-  const fetchDashboard = useCallback(async () => {
-    try {
-      const resp = await api.get<DashboardData>('/admin/dashboard');
-      setData(resp.data);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
-  }, [t]);
-
-  useEffect(() => {
-    setLoading(true);
-    fetchDashboard().finally(() => setLoading(false));
-  }, [fetchDashboard]);
-
-  if (loading) return <LoadingState />;
+  if (dashboardQuery.isLoading) {
+    return <LoadingState />;
+  }
 
   return (
     <div className="page">
       <h1 className="page-title">{t('admin.dashboard.title')}</h1>
 
-      <ErrorBanner error={error} onDismiss={() => setError(null)} onRetry={fetchDashboard} />
+      <ErrorBanner
+        error={dismissibleError.error}
+        onDismiss={dismissibleError.dismiss}
+        onRetry={() => void dashboardQuery.refetch()}
+      />
 
       {data && (
         <>

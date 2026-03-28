@@ -5,141 +5,116 @@
  * Calls GET /admin/invitations, POST /invites/create, POST /invites/revoke.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { api, ApiClientError } from '@/services/api/client';
+import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
+import { EmptyState } from '@/shared/ui/EmptyState';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
-import { EmptyState } from '@/shared/ui/EmptyState';
+import { toBannerError } from '@/shared/ui/errorUtils';
 import { formatDate } from '@/shared/i18n';
-
-interface Invitation {
-  id: string;
-  role_target: string;
-  consumed_at: string | null;
-  consumed_by: string | null;
-  expires_at: string;
-  created_at: string | null;
-  issuer_user_id: string | null;
-  status: string;
-}
+import {
+  useAdminInvitations,
+  useAdminUserSearch,
+  useCreateInvitation,
+  useRevokeInvitation,
+} from './useAdmin';
+import type { Invitation, UserItem } from './admin.service';
 
 export function InvitationsPage() {
   const { t, i18n } = useTranslation();
-  const [items, setItems] = useState<Invitation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(false);
   const [statusFilter, setStatusFilter] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [createRole, setCreateRole] = useState('STD');
   const [createHours, setCreateHours] = useState(48);
-  const [creating, setCreating] = useState(false);
   const [createdCode, setCreatedCode] = useState<string | null>(null);
   const [revoking, setRevoking] = useState<string | null>(null);
-
-  // Phase 4D-patch: target student for PAR invitations
   const [targetStudentSearch, setTargetStudentSearch] = useState('');
-  const [targetStudentResults, setTargetStudentResults] = useState<{ id: string; full_name: string; email: string }[]>([]);
-  const [selectedTargetStudent, setSelectedTargetStudent] = useState<{ id: string; full_name: string; email: string } | null>(null);
+  const [studentSearchQuery, setStudentSearchQuery] = useState('');
+  const [selectedTargetStudent, setSelectedTargetStudent] = useState<UserItem | null>(null);
 
-  const fetchInvitations = useCallback(async (cursor?: string) => {
-    try {
-      const params: Record<string, string | number | undefined> = {};
-      if (cursor) params.cursor = cursor;
-      if (statusFilter) params.status = statusFilter;
+  const invitationsQuery = useAdminInvitations({
+    status: statusFilter || undefined,
+  });
+  const createInvitationMutation = useCreateInvitation();
+  const revokeInvitationMutation = useRevokeInvitation();
+  const targetStudentQuery = useAdminUserSearch(
+    createRole === 'PAR' ? studentSearchQuery : '',
+    'STD'
+  );
 
-      const resp = await api.list<Invitation>('/admin/invitations', params);
-      if (cursor) {
-        setItems((prev) => [...prev, ...resp.data]);
-      } else {
-        setItems(resp.data);
-      }
-      setNextCursor(resp.meta.next_cursor);
-      setHasMore(resp.meta.has_more);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
-  }, [t, statusFilter]);
+  const items: Invitation[] = useMemo(
+    () => invitationsQuery.data?.pages.flatMap((page) => page.data) ?? [],
+    [invitationsQuery.data]
+  );
+  const targetStudentResults = targetStudentQuery.data ?? [];
+  const dismissibleError = useDismissibleError(
+    useMemo(
+      () =>
+        toBannerError(
+          invitationsQuery.error ?? createInvitationMutation.error ?? revokeInvitationMutation.error,
+          t('app.error')
+        ),
+      [createInvitationMutation.error, invitationsQuery.error, revokeInvitationMutation.error, t]
+    )
+  );
 
-  useEffect(() => {
-    setLoading(true);
-    fetchInvitations().finally(() => setLoading(false));
-  }, [fetchInvitations]);
-
-  // Phase 4D-patch: search students for pre-link when role=PAR
   useEffect(() => {
     if (createRole !== 'PAR' || targetStudentSearch.length < 2) {
-      setTargetStudentResults([]);
+      setStudentSearchQuery('');
       return;
     }
-    const timer = setTimeout(async () => {
-      try {
-        const resp = await api.list<{ id: string; full_name: string; email: string }>('/admin/users', {
-          search: targetStudentSearch,
-          role: 'STD',
-        });
-        setTargetStudentResults(resp.data);
-      } catch { /* ignore */ }
+    const timer = window.setTimeout(() => {
+      setStudentSearchQuery(targetStudentSearch);
     }, 300);
-    return () => clearTimeout(timer);
-  }, [targetStudentSearch, createRole]);
+    return () => window.clearTimeout(timer);
+  }, [createRole, targetStudentSearch]);
 
-  // Clear target student when role changes away from PAR
   useEffect(() => {
     if (createRole !== 'PAR') {
       setSelectedTargetStudent(null);
       setTargetStudentSearch('');
+      setStudentSearchQuery('');
     }
   }, [createRole]);
 
   async function handleCreate() {
-    setCreating(true);
     setCreatedCode(null);
-    try {
-      const body: Record<string, unknown> = {
-        role_target: createRole,
-        expires_in_hours: createHours,
-      };
-      if (createRole === 'PAR' && selectedTargetStudent) {
-        body.target_student_id = selectedTargetStudent.id;
-      }
-      const resp = await api.post<{ code: string }>('/invites/create', body);
-      setCreatedCode(resp.data.code);
-      setSelectedTargetStudent(null);
-      setTargetStudentSearch('');
-      fetchInvitations();
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
-    setCreating(false);
+    const response = await createInvitationMutation.mutateAsync({
+      role_target: createRole,
+      expires_in_hours: createHours,
+      target_student_id: createRole === 'PAR' && selectedTargetStudent ? selectedTargetStudent.id : undefined,
+    });
+    setCreatedCode(response.code);
+    setSelectedTargetStudent(null);
+    setTargetStudentSearch('');
+    setStudentSearchQuery('');
+    await invitationsQuery.refetch();
   }
 
   async function handleRevoke(inviteId: string) {
     setRevoking(inviteId);
-    try {
-      await api.post('/invites/revoke', { invite_id: inviteId });
-      setItems((prev) => prev.map((inv) =>
-        inv.id === inviteId ? { ...inv, status: 'expired' } : inv
-      ));
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
+    await revokeInvitationMutation.mutateAsync(inviteId);
+    await invitationsQuery.refetch();
     setRevoking(null);
   }
 
   function getStatusColor(status: string): string {
     switch (status) {
-      case 'active': return '#10b981';
-      case 'consumed': return '#2563eb';
-      case 'expired': return '#6b7280';
-      default: return '#6b7280';
+      case 'active':
+        return '#10b981';
+      case 'consumed':
+        return '#2563eb';
+      case 'expired':
+        return '#6b7280';
+      default:
+        return '#6b7280';
     }
   }
 
-  if (loading) return <LoadingState />;
+  if (invitationsQuery.isLoading) {
+    return <LoadingState />;
+  }
 
   return (
     <div className="page">
@@ -150,7 +125,11 @@ export function InvitationsPage() {
         </button>
       </div>
 
-      <ErrorBanner error={error} onDismiss={() => setError(null)} onRetry={() => fetchInvitations()} />
+      <ErrorBanner
+        error={dismissibleError.error}
+        onDismiss={dismissibleError.dismiss}
+        onRetry={() => void invitationsQuery.refetch()}
+      />
 
       {showCreate && (
         <div className="card" style={{ marginBottom: 20 }}>
@@ -168,11 +147,11 @@ export function InvitationsPage() {
               <option value={72}>72h</option>
               <option value={168}>7 {t('admin.invitations.days')}</option>
             </select>
-            <button className="btn btn-primary" onClick={handleCreate} disabled={creating}>
-              {creating ? t('app.loading') : t('admin.invitations.generate')}
+            <button className="btn btn-primary" onClick={() => void handleCreate()} disabled={createInvitationMutation.isPending}>
+              {createInvitationMutation.isPending ? t('app.loading') : t('admin.invitations.generate')}
             </button>
           </div>
-          {/* Phase 4D-patch: Pre-link to student when role=PAR */}
+
           {createRole === 'PAR' && (
             <div style={{ marginTop: 12 }}>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 4, color: 'var(--color-text-secondary)' }}>
@@ -181,7 +160,13 @@ export function InvitationsPage() {
               {selectedTargetStudent ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', fontSize: 13 }}>
                   <span>{selectedTargetStudent.full_name} ({selectedTargetStudent.email})</span>
-                  <button className="btn btn-sm" onClick={() => { setSelectedTargetStudent(null); setTargetStudentSearch(''); }} style={{ marginLeft: 'auto', fontSize: 11, padding: '2px 6px' }}>&times;</button>
+                  <button
+                    className="btn btn-sm"
+                    onClick={() => { setSelectedTargetStudent(null); setTargetStudentSearch(''); }}
+                    style={{ marginLeft: 'auto', fontSize: 11, padding: '2px 6px' }}
+                  >
+                    &times;
+                  </button>
                 </div>
               ) : (
                 <div style={{ position: 'relative' }}>
@@ -193,17 +178,20 @@ export function InvitationsPage() {
                     onChange={(e) => setTargetStudentSearch(e.target.value)}
                     style={{ width: '100%' }}
                   />
+                  {targetStudentQuery.isFetching && (
+                    <span style={{ position: 'absolute', right: 8, top: 8, fontSize: 12 }}>{t('app.loading')}</span>
+                  )}
                   {targetStudentResults.length > 0 && (
                     <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', maxHeight: 180, overflowY: 'auto', zIndex: 10 }}>
-                      {targetStudentResults.map((u) => (
+                      {targetStudentResults.map((user) => (
                         <div
-                          key={u.id}
-                          onClick={() => { setSelectedTargetStudent(u); setTargetStudentResults([]); setTargetStudentSearch(''); }}
+                          key={user.id}
+                          onClick={() => { setSelectedTargetStudent(user); setTargetStudentSearch(''); setStudentSearchQuery(''); }}
                           style={{ padding: '6px 10px', cursor: 'pointer', fontSize: 13, borderBottom: '1px solid var(--color-border)' }}
-                          onMouseOver={(e) => (e.currentTarget.style.background = 'var(--color-surface)')}
-                          onMouseOut={(e) => (e.currentTarget.style.background = 'transparent')}
+                          onMouseOver={(event) => { event.currentTarget.style.background = 'var(--color-surface)'; }}
+                          onMouseOut={(event) => { event.currentTarget.style.background = 'transparent'; }}
                         >
-                          {u.full_name} — {u.email}
+                          {user.full_name} — {user.email}
                         </div>
                       ))}
                     </div>
@@ -212,6 +200,7 @@ export function InvitationsPage() {
               )}
             </div>
           )}
+
           {createdCode && (
             <div className="code-display">
               <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{t('admin.invitations.codeLabel')}</span>
@@ -246,25 +235,25 @@ export function InvitationsPage() {
                 </tr>
               </thead>
               <tbody>
-                {items.map((inv) => (
-                  <tr key={inv.id}>
-                    <td><span className="role-badge">{t(`roles.${inv.role_target}`, inv.role_target)}</span></td>
+                {items.map((item) => (
+                  <tr key={item.id}>
+                    <td><span className="role-badge">{t(`roles.${item.role_target}`, item.role_target)}</span></td>
                     <td>
                       <span
                         className="status-badge"
-                        style={{ color: getStatusColor(inv.status), borderColor: getStatusColor(inv.status) }}
+                        style={{ color: getStatusColor(item.status), borderColor: getStatusColor(item.status) }}
                       >
-                        {t(`admin.invitations.status${inv.status.charAt(0).toUpperCase() + inv.status.slice(1)}`, inv.status)}
+                        {t(`admin.invitations.status${item.status.charAt(0).toUpperCase() + item.status.slice(1)}`, item.status)}
                       </span>
                     </td>
-                    <td>{formatDate(inv.expires_at, i18n.language)}</td>
-                    <td>{formatDate(inv.created_at, i18n.language)}</td>
+                    <td>{formatDate(item.expires_at, i18n.language)}</td>
+                    <td>{formatDate(item.created_at, i18n.language)}</td>
                     <td>
-                      {inv.status === 'active' && (
+                      {item.status === 'active' && (
                         <button
                           className="btn btn-danger btn-sm"
-                          onClick={() => handleRevoke(inv.id)}
-                          disabled={revoking === inv.id}
+                          onClick={() => void handleRevoke(item.id)}
+                          disabled={revoking === item.id}
                         >
                           {t('admin.invitations.revoke')}
                         </button>
@@ -276,10 +265,14 @@ export function InvitationsPage() {
             </table>
           </div>
 
-          {hasMore && (
+          {invitationsQuery.hasNextPage && (
             <div style={{ textAlign: 'center', marginTop: 16 }}>
-              <button className="btn btn-secondary" onClick={() => fetchInvitations(nextCursor!)}>
-                {t('feed.loadMore')}
+              <button
+                className="btn btn-secondary"
+                onClick={() => void invitationsQuery.fetchNextPage()}
+                disabled={invitationsQuery.isFetchingNextPage}
+              >
+                {invitationsQuery.isFetchingNextPage ? t('app.loading') : t('feed.loadMore')}
               </button>
             </div>
           )}

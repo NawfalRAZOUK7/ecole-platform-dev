@@ -6,30 +6,19 @@
  *        GET /teacher/periods, POST /attendance/sessions.
  */
 
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { api, ApiClientError } from '@/services/api/client';
+import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
-
-interface ClassOption {
-  id: string;
-  code: string;
-  name: string;
-}
-
-interface PeriodOption {
-  id: string;
-  label: string | null;
-  date_start: string;
-  date_end: string;
-}
-
-interface StudentItem {
-  id: string;
-  full_name: string;
-  email: string;
-}
+import { toBannerError } from '@/shared/ui/errorUtils';
+import {
+  useCreateAttendanceSession,
+  useTeacherClasses,
+  useTeacherClassStudents,
+  useTeacherPeriods,
+} from './useTeacher';
+import type { StudentItem } from './teacher.service';
 
 interface StudentRecord {
   student_id: string;
@@ -42,106 +31,93 @@ const STATUS_OPTIONS = ['present', 'absent', 'late', 'excused'];
 
 export function AttendancePage() {
   const { t } = useTranslation();
-  const [classes, setClasses] = useState<ClassOption[]>([]);
-  const [periods, setPeriods] = useState<PeriodOption[]>([]);
-  const [students, setStudents] = useState<StudentItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-
-  // Form
   const [selectedClassId, setSelectedClassId] = useState('');
   const [selectedPeriodId, setSelectedPeriodId] = useState('');
   const [sessionDate, setSessionDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [slot, setSlot] = useState('slot_1');
   const [records, setRecords] = useState<StudentRecord[]>([]);
-  const [submitting, setSubmitting] = useState(false);
 
-  const fetchInitial = useCallback(async () => {
-    try {
-      const [classesResp, periodsResp] = await Promise.all([
-        api.get<ClassOption[]>('/teacher/classes'),
-        api.get<PeriodOption[]>('/teacher/periods'),
-      ]);
-      setClasses(classesResp.data);
-      setPeriods(periodsResp.data);
-      if (periodsResp.data.length > 0) {
-        setSelectedPeriodId(periodsResp.data[0].id);
-      }
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
+  const classesQuery = useTeacherClasses();
+  const periodsQuery = useTeacherPeriods();
+  const studentsQuery = useTeacherClassStudents(selectedClassId || null);
+  const createSessionMutation = useCreateAttendanceSession();
+
+  const classes = classesQuery.data ?? [];
+  const periods = periodsQuery.data ?? [];
+  const students: StudentItem[] = studentsQuery.data ?? [];
+  const dismissibleError = useDismissibleError(
+    useMemo(
+      () =>
+        toBannerError(
+          classesQuery.error ?? periodsQuery.error ?? studentsQuery.error ?? createSessionMutation.error,
+          t('app.error')
+        ),
+      [classesQuery.error, createSessionMutation.error, periodsQuery.error, studentsQuery.error, t]
+    )
+  );
+
+  useEffect(() => {
+    if (periods.length > 0 && !selectedPeriodId) {
+      setSelectedPeriodId(periods[0].id);
     }
-  }, [t]);
+  }, [periods, selectedPeriodId]);
 
   useEffect(() => {
-    setLoading(true);
-    fetchInitial().finally(() => setLoading(false));
-  }, [fetchInitial]);
-
-  // When class changes, fetch students
-  useEffect(() => {
-    if (!selectedClassId) {
-      setStudents([]);
+    if (!students.length) {
       setRecords([]);
       return;
     }
-    api.get<StudentItem[]>(`/teacher/classes/${selectedClassId}/students`)
-      .then((resp) => {
-        setStudents(resp.data);
-        setRecords(resp.data.map((s) => ({
-          student_id: s.id,
-          status: 'present',
-          absence_reason: '',
-        })));
-      })
-      .catch(() => {
-        setStudents([]);
-        setRecords([]);
-      });
-  }, [selectedClassId]);
+    setRecords(students.map((student) => ({
+      student_id: student.id,
+      status: 'present',
+      absence_reason: '',
+    })));
+  }, [students]);
 
   function updateRecord(index: number, field: keyof StudentRecord, value: string) {
-    setRecords((prev) => {
-      const next = [...prev];
+    setRecords((current) => {
+      const next = [...current];
       next[index] = { ...next[index], [field]: value };
       return next;
     });
   }
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
     if (!selectedClassId || !selectedPeriodId || records.length === 0) return;
-    setSubmitting(true);
-    setSuccess(null);
-    try {
-      await api.post('/attendance/sessions', {
-        class_id: selectedClassId,
-        period_id: selectedPeriodId,
-        session_date: sessionDate,
-        slot,
-        records: records.map((r) => ({
-          student_id: r.student_id,
-          status: r.status,
-          absence_reason: r.status === 'absent' ? r.absence_reason || null : null,
-        })),
-      });
-      setSuccess(t('teacher.attendance.saved'));
-      setError(null);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-      setSuccess(null);
-    } finally {
-      setSubmitting(false);
-    }
+    await createSessionMutation.mutateAsync({
+      class_id: selectedClassId,
+      period_id: selectedPeriodId,
+      session_date: sessionDate,
+      slot,
+      records: records.map((record) => ({
+        student_id: record.student_id,
+        status: record.status,
+        absence_reason: record.status === 'absent' ? record.absence_reason || null : null,
+      })),
+    });
+    setSuccess(t('teacher.attendance.saved'));
   }
 
-  if (loading) return <LoadingState />;
+  if (classesQuery.isLoading || periodsQuery.isLoading) {
+    return <LoadingState />;
+  }
 
   return (
     <div className="page">
       <h1 className="page-title">{t('teacher.attendance.title')}</h1>
 
-      <ErrorBanner error={error} onDismiss={() => setError(null)} />
+      <ErrorBanner
+        error={dismissibleError.error}
+        onDismiss={dismissibleError.dismiss}
+        onRetry={() => void Promise.all([
+          classesQuery.refetch(),
+          periodsQuery.refetch(),
+          selectedClassId ? studentsQuery.refetch() : Promise.resolve(null),
+        ])}
+      />
+
       {success && (
         <div className="card" style={{ background: '#ecfdf5', borderColor: 'var(--color-success)', marginBottom: 16, padding: 12, fontSize: 14 }}>
           {success}
@@ -150,46 +126,28 @@ export function AttendancePage() {
 
       <form onSubmit={handleSubmit}>
         <div className="filters-bar">
-          <select
-            className="filter-select"
-            value={selectedClassId}
-            onChange={(e) => setSelectedClassId(e.target.value)}
-            required
-          >
+          <select className="filter-select" value={selectedClassId} onChange={(e) => setSelectedClassId(e.target.value)} required>
             <option value="">{t('teacher.attendance.selectClass')}</option>
-            {classes.map((c) => (
-              <option key={c.id} value={c.id}>{c.code} — {c.name}</option>
+            {classes.map((item) => (
+              <option key={item.id} value={item.id}>{item.code} — {item.name}</option>
             ))}
           </select>
-          <select
-            className="filter-select"
-            value={selectedPeriodId}
-            onChange={(e) => setSelectedPeriodId(e.target.value)}
-            required
-          >
-            {periods.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.label || `${p.date_start} → ${p.date_end}`}
+          <select className="filter-select" value={selectedPeriodId} onChange={(e) => setSelectedPeriodId(e.target.value)} required>
+            {periods.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.label || `${item.date_start} → ${item.date_end}`}
               </option>
             ))}
           </select>
-          <input
-            type="date"
-            className="filter-input"
-            value={sessionDate}
-            onChange={(e) => setSessionDate(e.target.value)}
-            required
-          />
-          <select
-            className="filter-select"
-            value={slot}
-            onChange={(e) => setSlot(e.target.value)}
-          >
-            {SLOTS.map((s) => (
-              <option key={s} value={s}>{t(`teacher.attendance.${s}`)}</option>
+          <input type="date" className="filter-input" value={sessionDate} onChange={(e) => setSessionDate(e.target.value)} required />
+          <select className="filter-select" value={slot} onChange={(e) => setSlot(e.target.value)}>
+            {SLOTS.map((item) => (
+              <option key={item} value={item}>{t(`teacher.attendance.${item}`)}</option>
             ))}
           </select>
         </div>
+
+        {studentsQuery.isLoading && <LoadingState />}
 
         {students.length > 0 && (
           <>
@@ -203,29 +161,29 @@ export function AttendancePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {students.map((student, i) => (
+                  {students.map((student, index) => (
                     <tr key={student.id}>
                       <td style={{ fontWeight: 600 }}>{student.full_name}</td>
                       <td>
                         <select
                           className="filter-select"
-                          value={records[i]?.status || 'present'}
-                          onChange={(e) => updateRecord(i, 'status', e.target.value)}
+                          value={records[index]?.status || 'present'}
+                          onChange={(e) => updateRecord(index, 'status', e.target.value)}
                           style={{ minWidth: 120 }}
                         >
-                          {STATUS_OPTIONS.map((s) => (
-                            <option key={s} value={s}>
-                              {t(`teacher.attendance.status_${s}`)}
+                          {STATUS_OPTIONS.map((item) => (
+                            <option key={item} value={item}>
+                              {t(`teacher.attendance.status_${item}`)}
                             </option>
                           ))}
                         </select>
                       </td>
                       <td>
-                        {records[i]?.status === 'absent' && (
+                        {records[index]?.status === 'absent' && (
                           <input
                             className="filter-input"
-                            value={records[i]?.absence_reason || ''}
-                            onChange={(e) => updateRecord(i, 'absence_reason', e.target.value)}
+                            value={records[index]?.absence_reason || ''}
+                            onChange={(e) => updateRecord(index, 'absence_reason', e.target.value)}
                             placeholder={t('teacher.attendance.reasonPlaceholder')}
                             style={{ minWidth: 200 }}
                           />
@@ -238,8 +196,8 @@ export function AttendancePage() {
             </div>
 
             <div style={{ marginTop: 16 }}>
-              <button className="btn btn-primary" type="submit" disabled={submitting}>
-                {submitting ? t('app.loading') : t('teacher.attendance.submit')}
+              <button className="btn btn-primary" type="submit" disabled={createSessionMutation.isPending}>
+                {createSessionMutation.isPending ? t('app.loading') : t('teacher.attendance.submit')}
               </button>
             </div>
           </>

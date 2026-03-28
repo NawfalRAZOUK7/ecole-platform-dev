@@ -5,125 +5,39 @@
  * Calls GET /progress/class/{classId}. Class selector from existing teacher classes.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
-import { api, ApiClientError } from '@/services/api/client';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
-
-/** Per-student row in the class progress table. */
-interface StudentRow {
-  student_id: string;
-  student_name: string;
-  grade_average: number;
-  attendance_rate: number;
-  content_completion_rate: number;
-}
-
-/** Aggregate averages across all students in a class. */
-interface ClassAverages {
-  grade_average: number;
-  attendance_rate: number;
-  content_completion_rate: number;
-}
-
-interface ChartDataset {
-  label: string;
-  data: number[];
-}
-
-/** Full class progress payload from `GET /progress/class/{classId}`. */
-interface ClassProgressData {
-  class_id: string;
-  class_name: string;
-  student_count: number;
-  students: StudentRow[];
-  class_averages: ClassAverages;
-  charts: {
-    grade_comparison: { labels: string[]; datasets: ChartDataset[] };
-    attendance_comparison: { labels: string[]; datasets: ChartDataset[] };
-  };
-}
-
-/** Minimal class descriptor used to populate the class selector dropdown. */
-interface ClassOption {
-  id: string;
-  name: string;
-  code: string;
-}
+import { toBannerError } from '@/shared/ui/errorUtils';
+import { useTeacherClassProgress, useTeacherClasses } from './useTeacher';
 
 type SortKey = 'student_name' | 'grade_average' | 'attendance_rate' | 'content_completion_rate';
 
-/**
- * Teacher class progress page.
- *
- * Displays class-wide averages, a per-student sortable table, and a grade
- * comparison bar chart. The teacher selects a class from a dropdown populated
- * via `GET /teacher/classes`.
- *
- * @remarks
- * - Role: TCH only.
- * - API: `GET /teacher/classes` (class list), `GET /progress/class/{classId}` (progress data).
- */
 export function ClassProgressPage() {
   const { t } = useTranslation();
-  const [classes, setClasses] = useState<ClassOption[]>([]);
-  const [selectedClass, setSelectedClass] = useState<string>('');
-  const [data, setData] = useState<ClassProgressData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [selectedClass, setSelectedClass] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('student_name');
   const [sortAsc, setSortAsc] = useState(true);
 
-  // Fetch teacher's classes
-  useEffect(() => {
-    (async () => {
-      try {
-        const resp = await api.list<ClassOption>('/teacher/classes');
-        const items = resp.data;
-        setClasses(items);
-        if (items.length > 0) setSelectedClass(items[0].id);
-      } catch {
-        setClasses([]);
-      }
-    })();
-  }, []);
-
-  const fetchClassProgress = useCallback(async () => {
-    if (!selectedClass) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const resp = await api.get<{ data: ClassProgressData }>(`/progress/class/${selectedClass}`);
-      setData(resp.data.data);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedClass, t]);
+  const classesQuery = useTeacherClasses();
+  const progressQuery = useTeacherClassProgress(selectedClass || null);
+  const classes = classesQuery.data ?? [];
+  const data = progressQuery.data ?? null;
+  const dismissibleError = useDismissibleError(
+    useMemo(
+      () => toBannerError(classesQuery.error ?? progressQuery.error, t('app.error')),
+      [classesQuery.error, progressQuery.error, t]
+    )
+  );
 
   useEffect(() => {
-    fetchClassProgress();
-  }, [fetchClassProgress]);
-
-  const handleSort = (key: SortKey) => {
-    if (sortKey === key) {
-      setSortAsc(!sortAsc);
-    } else {
-      setSortKey(key);
-      setSortAsc(key === 'student_name');
+    if (!selectedClass && classes.length > 0) {
+      setSelectedClass(classes[0].id);
     }
-  };
+  }, [classes, selectedClass]);
 
   const sortedStudents = data
     ? [...data.students].sort((a, b) => {
@@ -137,38 +51,49 @@ export function ClassProgressPage() {
     : [];
 
   const gradeChartData = data
-    ? data.charts.grade_comparison.labels.map((label, i) => ({
+    ? data.charts.grade_comparison.labels.map((label, index) => ({
         name: label,
-        [data.charts.grade_comparison.datasets[0]?.label || 'grade']: data.charts.grade_comparison.datasets[0]?.data[i] ?? 0,
+        [data.charts.grade_comparison.datasets[0]?.label || 'grade']: data.charts.grade_comparison.datasets[0]?.data[index] ?? 0,
       }))
     : [];
 
-  const sortArrow = (key: SortKey) =>
-    sortKey === key ? (sortAsc ? ' ▲' : ' ▼') : '';
+  const sortArrow = (key: SortKey) => (sortKey === key ? (sortAsc ? ' ▲' : ' ▼') : '');
+  const colorForGrade = (value: number) => (value >= 80 ? '#10b981' : value >= 50 ? '#f59e0b' : '#ef4444');
 
-  const colorForGrade = (v: number) =>
-    v >= 80 ? '#10b981' : v >= 50 ? '#f59e0b' : '#ef4444';
+  function handleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortAsc(!sortAsc);
+      return;
+    }
+    setSortKey(key);
+    setSortAsc(key === 'student_name');
+  }
+
+  if (classesQuery.isLoading || progressQuery.isLoading) {
+    return <LoadingState />;
+  }
 
   return (
     <div className="class-progress">
       <h1 className="page-title">{t('progress.classTitle')}</h1>
 
-      {/* Class selector */}
+      <ErrorBanner
+        error={dismissibleError.error}
+        onDismiss={dismissibleError.dismiss}
+        onRetry={() => void Promise.all([classesQuery.refetch(), selectedClass ? progressQuery.refetch() : Promise.resolve(null)])}
+      />
+
       <div className="class-selector">
         <label>{t('progress.selectClass')}</label>
         <select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)}>
-          {classes.map((c) => (
-            <option key={c.id} value={c.id}>{c.name} ({c.code})</option>
+          {classes.map((item) => (
+            <option key={item.id} value={item.id}>{item.name} ({item.code})</option>
           ))}
         </select>
       </div>
 
-      {loading && <LoadingState />}
-      {error && <ErrorBanner error={error} onRetry={fetchClassProgress} />}
-
-      {data && !loading && (
+      {data && (
         <>
-          {/* Class averages */}
           <div className="progress-summary-cards">
             <div className="summary-card">
               <span className="summary-label">{t('progress.classGradeAvg')}</span>
@@ -188,7 +113,6 @@ export function ClassProgressPage() {
             </div>
           </div>
 
-          {/* Grade comparison bar chart */}
           {gradeChartData.length > 0 && (
             <div className="chart-card">
               <h3 className="chart-title">{t('progress.gradeComparison')}</h3>
@@ -198,17 +122,12 @@ export function ClassProgressPage() {
                   <XAxis dataKey="name" tick={{ fontSize: 10 }} angle={-30} textAnchor="end" height={60} />
                   <YAxis domain={[0, 100]} />
                   <Tooltip />
-                  <Bar
-                    dataKey={data.charts.grade_comparison.datasets[0]?.label || 'grade'}
-                    fill="#2563eb"
-                    radius={[4, 4, 0, 0]}
-                  />
+                  <Bar dataKey={data.charts.grade_comparison.datasets[0]?.label || 'grade'} fill="#2563eb" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           )}
 
-          {/* Student table */}
           <div className="progress-table-card">
             <h3 className="chart-title">{t('progress.perStudent')}</h3>
             <table className="progress-table">
@@ -229,16 +148,16 @@ export function ClassProgressPage() {
                 </tr>
               </thead>
               <tbody>
-                {sortedStudents.map((s) => (
-                  <tr key={s.student_id}>
-                    <td>{s.student_name}</td>
+                {sortedStudents.map((student) => (
+                  <tr key={student.student_id}>
+                    <td>{student.student_name}</td>
                     <td>
-                      <span className="sparkline-value" style={{ color: colorForGrade(s.grade_average) }}>
-                        {s.grade_average.toFixed(1)}
+                      <span className="sparkline-value" style={{ color: colorForGrade(student.grade_average) }}>
+                        {student.grade_average.toFixed(1)}
                       </span>
                     </td>
-                    <td>{s.attendance_rate.toFixed(0)}%</td>
-                    <td>{s.content_completion_rate.toFixed(0)}%</td>
+                    <td>{student.attendance_rate.toFixed(0)}%</td>
+                    <td>{student.content_completion_rate.toFixed(0)}%</td>
                   </tr>
                 ))}
               </tbody>

@@ -6,40 +6,15 @@
  * API: POST /quizzes, GET /quizzes, PUT /quizzes/{id}, POST /quizzes/{id}/publish
  */
 
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { api, ApiClientError } from '@/services/api/client';
-import { LoadingState } from '@/shared/ui/LoadingState';
-import { ErrorBanner } from '@/shared/ui/ErrorBanner';
+import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
 import { EmptyState } from '@/shared/ui/EmptyState';
-
-/* ------------------------------------------------------------------ */
-/* Types                                                               */
-/* ------------------------------------------------------------------ */
-interface Quiz {
-  id: string;
-  school_id: string | null;
-  title: string;
-  description: string | null;
-  subject: string | null;
-  level_band: string | null;
-  difficulty: string;
-  status: string;
-  question_count: number;
-  total_points: number;
-  time_limit_minutes: number | null;
-  max_attempts: number;
-}
-
-interface QuestionInput {
-  question_type: string;
-  question_text: string;
-  options: Record<string, unknown> | null;
-  correct_answer: unknown;
-  points: number;
-  order: number;
-  explanation: string;
-}
+import { ErrorBanner } from '@/shared/ui/ErrorBanner';
+import { LoadingState } from '@/shared/ui/LoadingState';
+import { toBannerError } from '@/shared/ui/errorUtils';
+import { useCreateQuiz, usePublishQuiz, useTeacherQuizzes } from './useTeacher';
+import type { QuestionInput, Quiz } from './teacher.service';
 
 interface McqOptions {
   choices?: string[];
@@ -47,46 +22,41 @@ interface McqOptions {
 
 type View = 'list' | 'create';
 
-/* ------------------------------------------------------------------ */
-/* Main                                                                */
-/* ------------------------------------------------------------------ */
 export function QuizManagerPage() {
   const { t } = useTranslation();
   const [view, setView] = useState<View>('list');
-  const [error, setError] = useState<string | null>(null);
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  const fetchQuizzes = useCallback(async () => {
-    try {
-      const resp = await api.list<Quiz>('/quizzes');
-      setQuizzes(resp.data);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
-  }, [t]);
-
-  useEffect(() => {
-    setLoading(true);
-    fetchQuizzes().finally(() => setLoading(false));
-  }, [fetchQuizzes]);
+  const quizzesQuery = useTeacherQuizzes();
+  const createQuizMutation = useCreateQuiz();
+  const publishQuizMutation = usePublishQuiz();
+  const quizzes: Quiz[] = useMemo(
+    () => quizzesQuery.data?.pages.flatMap((page) => page.data) ?? [],
+    [quizzesQuery.data]
+  );
+  const dismissibleError = useDismissibleError(
+    useMemo(
+      () => toBannerError(quizzesQuery.error ?? createQuizMutation.error ?? publishQuizMutation.error, t('app.error')),
+      [createQuizMutation.error, publishQuizMutation.error, quizzesQuery.error, t]
+    )
+  );
 
   async function handlePublish(quizId: string) {
-    try {
-      await api.post(`/quizzes/${quizId}/publish`);
-      await fetchQuizzes();
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
+    await publishQuizMutation.mutateAsync(quizId);
+    await quizzesQuery.refetch();
   }
 
-  if (loading) return <LoadingState />;
+  if (quizzesQuery.isLoading) {
+    return <LoadingState />;
+  }
 
   return (
     <div className="page">
       <h1 className="page-title">{t('teacherQuiz.title')}</h1>
-      <ErrorBanner error={error} onDismiss={() => setError(null)} onRetry={fetchQuizzes} />
+      <ErrorBanner
+        error={dismissibleError.error}
+        onDismiss={dismissibleError.dismiss}
+        onRetry={() => void quizzesQuery.refetch()}
+      />
 
       {view === 'list' && (
         <>
@@ -99,48 +69,54 @@ export function QuizManagerPage() {
           {quizzes.length === 0 ? (
             <EmptyState message={t('teacherQuiz.empty')} />
           ) : (
-            <div className="table-container">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>{t('teacherQuiz.quizTitle')}</th>
-                    <th>{t('teacherQuiz.subject')}</th>
-                    <th>{t('teacherQuiz.difficulty')}</th>
-                    <th>{t('teacherQuiz.questions')}</th>
-                    <th>{t('teacherQuiz.points')}</th>
-                    <th>{t('teacherQuiz.status')}</th>
-                    <th>{t('teacherQuiz.actions')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {quizzes.map((q) => (
-                    <tr key={q.id}>
-                      <td style={{ fontWeight: 600 }}>{q.title}</td>
-                      <td>{q.subject ? t(`cms.subjects.${q.subject}`, q.subject) : '—'}</td>
-                      <td>{q.difficulty}</td>
-                      <td>{q.question_count}</td>
-                      <td>{q.total_points}</td>
-                      <td>
-                        <span className={`status-badge status-${q.status}`}>
-                          {q.status}
-                        </span>
-                      </td>
-                      <td>
-                        {q.status === 'draft' && q.school_id && (
-                          <button
-                            className="btn btn-primary"
-                            style={{ fontSize: 12, padding: '4px 10px' }}
-                            onClick={() => handlePublish(q.id)}
-                          >
-                            {t('teacherQuiz.publish')}
-                          </button>
-                        )}
-                      </td>
+            <>
+              <div className="table-container">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>{t('teacherQuiz.quizTitle')}</th>
+                      <th>{t('teacherQuiz.subject')}</th>
+                      <th>{t('teacherQuiz.difficulty')}</th>
+                      <th>{t('teacherQuiz.questions')}</th>
+                      <th>{t('teacherQuiz.points')}</th>
+                      <th>{t('teacherQuiz.status')}</th>
+                      <th>{t('teacherQuiz.actions')}</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {quizzes.map((quiz) => (
+                      <tr key={quiz.id}>
+                        <td style={{ fontWeight: 600 }}>{quiz.title}</td>
+                        <td>{quiz.subject ? t(`cms.subjects.${quiz.subject}`, quiz.subject) : '—'}</td>
+                        <td>{quiz.difficulty}</td>
+                        <td>{quiz.question_count}</td>
+                        <td>{quiz.total_points}</td>
+                        <td><span className={`status-badge status-${quiz.status}`}>{quiz.status}</span></td>
+                        <td>
+                          {quiz.status === 'draft' && quiz.school_id && (
+                            <button
+                              className="btn btn-primary"
+                              style={{ fontSize: 12, padding: '4px 10px' }}
+                              onClick={() => void handlePublish(quiz.id)}
+                            >
+                              {t('teacherQuiz.publish')}
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {quizzesQuery.hasNextPage && (
+                <div style={{ textAlign: 'center', marginTop: 16 }}>
+                  <button className="btn btn-secondary" onClick={() => void quizzesQuery.fetchNextPage()} disabled={quizzesQuery.isFetchingNextPage}>
+                    {quizzesQuery.isFetchingNextPage ? t('app.loading') : t('feed.loadMore')}
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </>
       )}
@@ -148,27 +124,25 @@ export function QuizManagerPage() {
       {view === 'create' && (
         <QuizCreateForm
           onCancel={() => setView('list')}
-          onCreated={() => { setView('list'); fetchQuizzes(); }}
-          onError={setError}
+          onCreated={async () => {
+            setView('list');
+            await quizzesQuery.refetch();
+          }}
         />
       )}
     </div>
   );
 }
 
-/* ================================================================== */
-/* Quick Create Form — simplified for teacher (no drag-drop editors)  */
-/* ================================================================== */
 function QuizCreateForm({
   onCancel,
   onCreated,
-  onError,
 }: {
   onCancel: () => void;
-  onCreated: () => void;
-  onError: (e: string | null) => void;
+  onCreated: () => Promise<void>;
 }) {
   const { t } = useTranslation();
+  const createQuizMutation = useCreateQuiz();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [subject, setSubject] = useState('');
@@ -177,13 +151,10 @@ function QuizCreateForm({
   const [timeLimit, setTimeLimit] = useState('');
   const [maxAttempts, setMaxAttempts] = useState('3');
   const [shuffle, setShuffle] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-
-  // Questions
   const [questions, setQuestions] = useState<QuestionInput[]>([]);
 
   function addQuestion(type: string) {
-    const q: QuestionInput = {
+    const question: QuestionInput = {
       question_type: type,
       question_text: '',
       options: type === 'mcq' ? { choices: ['', ''] } : null,
@@ -192,44 +163,38 @@ function QuizCreateForm({
       order: questions.length,
       explanation: '',
     };
-    setQuestions([...questions, q]);
+    setQuestions([...questions, question]);
   }
 
-  function updateQuestion<K extends keyof QuestionInput>(idx: number, field: K, value: QuestionInput[K]) {
-    const copy = [...questions];
-    copy[idx] = { ...copy[idx], [field]: value };
-    setQuestions(copy);
+  function updateQuestion<K extends keyof QuestionInput>(index: number, field: K, value: QuestionInput[K]) {
+    const next = [...questions];
+    next[index] = { ...next[index], [field]: value };
+    setQuestions(next);
   }
 
-  function removeQuestion(idx: number) {
-    setQuestions(questions.filter((_, i) => i !== idx));
+  function removeQuestion(index: number) {
+    setQuestions(questions.filter((_, itemIndex) => itemIndex !== index));
   }
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
     if (!title.trim() || questions.length === 0) return;
-    setSubmitting(true);
-    try {
-      await api.post('/quizzes', {
-        title: title.trim(),
-        description: description.trim() || null,
-        subject: subject || null,
-        level_band: levelBand || null,
-        difficulty,
-        time_limit_minutes: timeLimit ? parseInt(timeLimit, 10) : null,
-        max_attempts: parseInt(maxAttempts, 10) || 3,
-        shuffle_questions: shuffle,
-        questions: questions.map((q, i) => ({
-          ...q,
-          order: i,
-        })),
-      });
-      onCreated();
-    } catch (err) {
-      onError(err instanceof ApiClientError ? err.message : t('app.error'));
-    } finally {
-      setSubmitting(false);
-    }
+
+    await createQuizMutation.mutateAsync({
+      title: title.trim(),
+      description: description.trim() || null,
+      subject: subject || null,
+      level_band: levelBand || null,
+      difficulty,
+      time_limit_minutes: timeLimit ? parseInt(timeLimit, 10) : null,
+      max_attempts: parseInt(maxAttempts, 10) || 3,
+      shuffle_questions: shuffle,
+      questions: questions.map((question, index) => ({
+        ...question,
+        order: index,
+      })),
+    });
+    await onCreated();
   }
 
   return (
@@ -245,8 +210,8 @@ function QuizCreateForm({
           <label>{t('teacherQuiz.subject')}</label>
           <select className="filter-select" value={subject} onChange={(e) => setSubject(e.target.value)} style={{ width: '100%' }}>
             <option value="">—</option>
-            {['math', 'french', 'arabic', 'science', 'history', 'geography', 'english'].map((s) => (
-              <option key={s} value={s}>{t(`cms.subjects.${s}`, s)}</option>
+            {['math', 'french', 'arabic', 'science', 'history', 'geography', 'english'].map((item) => (
+              <option key={item} value={item}>{t(`cms.subjects.${item}`, item)}</option>
             ))}
           </select>
         </div>
@@ -272,23 +237,20 @@ function QuizCreateForm({
         </div>
       </div>
 
-      {description !== undefined && (
-        <div className="form-field" style={{ marginBottom: 16 }}>
-          <label>{t('teacherQuiz.description')}</label>
-          <input className="filter-input" value={description} onChange={(e) => setDescription(e.target.value)} style={{ width: '100%' }} />
-        </div>
-      )}
+      <div className="form-field" style={{ marginBottom: 16 }}>
+        <label>{t('teacherQuiz.description')}</label>
+        <input className="filter-input" value={description} onChange={(e) => setDescription(e.target.value)} style={{ width: '100%' }} />
+      </div>
 
-      {/* Questions */}
       <h4 style={{ margin: '0 0 8px' }}>{t('teacherQuiz.questions')} ({questions.length})</h4>
 
-      {questions.map((q, idx) => (
-        <div key={idx} className="card" style={{ padding: 12, marginBottom: 12, background: 'var(--color-bg)' }}>
+      {questions.map((question, index) => (
+        <div key={index} className="card" style={{ padding: 12, marginBottom: 12, background: 'var(--color-bg)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
             <span style={{ fontWeight: 600, fontSize: 13 }}>
-              Q{idx + 1} — {t(`teacherQuiz.type_${q.question_type}`, q.question_type)}
+              Q{index + 1} — {t(`teacherQuiz.type_${question.question_type}`, question.question_type)}
             </span>
-            <button type="button" className="btn btn-danger" style={{ fontSize: 11, padding: '2px 8px' }} onClick={() => removeQuestion(idx)}>
+            <button type="button" className="btn btn-danger" style={{ fontSize: 11, padding: '2px 8px' }} onClick={() => removeQuestion(index)}>
               {t('teacherQuiz.remove')}
             </button>
           </div>
@@ -296,8 +258,8 @@ function QuizCreateForm({
             <input
               className="filter-input"
               placeholder={t('teacherQuiz.questionText')}
-              value={q.question_text}
-              onChange={(e) => updateQuestion(idx, 'question_text', e.target.value)}
+              value={question.question_text}
+              onChange={(e) => updateQuestion(index, 'question_text', e.target.value)}
               required
               style={{ width: '100%' }}
             />
@@ -305,30 +267,29 @@ function QuizCreateForm({
           <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
             <div className="form-field">
               <label style={{ fontSize: 11 }}>{t('teacherQuiz.points')}</label>
-              <input type="number" className="filter-input" value={q.points} onChange={(e) => updateQuestion(idx, 'points', parseInt(e.target.value, 10) || 1)} min="1" style={{ width: 60 }} />
+              <input type="number" className="filter-input" value={question.points} onChange={(e) => updateQuestion(index, 'points', parseInt(e.target.value, 10) || 1)} min="1" style={{ width: 60 }} />
             </div>
           </div>
 
-          {/* MCQ options */}
-          {q.question_type === 'mcq' && (
+          {question.question_type === 'mcq' && (
             <div style={{ marginBottom: 8 }}>
-              {((q.options as McqOptions | null)?.choices || []).map((c: string, ci: number) => (
-                <div key={ci} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+              {((question.options as McqOptions | null)?.choices || []).map((choice: string, choiceIndex: number) => (
+                <div key={choiceIndex} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                   <input
                     type="radio"
-                    name={`q${idx}_correct`}
-                    checked={q.correct_answer === ci}
-                    onChange={() => updateQuestion(idx, 'correct_answer', ci)}
+                    name={`q${index}_correct`}
+                    checked={question.correct_answer === choiceIndex}
+                    onChange={() => updateQuestion(index, 'correct_answer', choiceIndex)}
                   />
                   <input
                     className="filter-input"
-                    value={c}
+                    value={choice}
                     onChange={(e) => {
-                      const choices = [...((q.options as McqOptions | null)?.choices || [])];
-                      choices[ci] = e.target.value;
-                      updateQuestion(idx, 'options', { choices });
+                      const choices = [...((question.options as McqOptions | null)?.choices || [])];
+                      choices[choiceIndex] = e.target.value;
+                      updateQuestion(index, 'options', { choices });
                     }}
-                    placeholder={`${t('teacherQuiz.option')} ${ci + 1}`}
+                    placeholder={`${t('teacherQuiz.option')} ${choiceIndex + 1}`}
                     style={{ flex: 1 }}
                   />
                 </div>
@@ -338,8 +299,8 @@ function QuizCreateForm({
                 className="btn btn-secondary"
                 style={{ fontSize: 11, padding: '2px 8px', marginTop: 4 }}
                 onClick={() => {
-                  const choices = [...((q.options as McqOptions | null)?.choices || []), ''];
-                  updateQuestion(idx, 'options', { choices });
+                  const choices = [...((question.options as McqOptions | null)?.choices || []), ''];
+                  updateQuestion(index, 'options', { choices });
                 }}
               >
                 + {t('teacherQuiz.addOption')}
@@ -347,22 +308,20 @@ function QuizCreateForm({
             </div>
           )}
 
-          {/* True/False */}
-          {q.question_type === 'true_false' && (
+          {question.question_type === 'true_false' && (
             <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
-              <label><input type="radio" checked={q.correct_answer === true} onChange={() => updateQuestion(idx, 'correct_answer', true)} /> {t('teacherQuiz.true')}</label>
-              <label><input type="radio" checked={q.correct_answer === false} onChange={() => updateQuestion(idx, 'correct_answer', false)} /> {t('teacherQuiz.false')}</label>
+              <label><input type="radio" checked={question.correct_answer === true} onChange={() => updateQuestion(index, 'correct_answer', true)} /> {t('teacherQuiz.true')}</label>
+              <label><input type="radio" checked={question.correct_answer === false} onChange={() => updateQuestion(index, 'correct_answer', false)} /> {t('teacherQuiz.false')}</label>
             </div>
           )}
 
-          {/* Fill-in */}
-          {q.question_type === 'fill_in_blank' && (
+          {question.question_type === 'fill_in_blank' && (
             <div className="form-field" style={{ marginBottom: 8 }}>
               <label style={{ fontSize: 11 }}>{t('teacherQuiz.correctAnswer')}</label>
               <input
                 className="filter-input"
-                value={typeof q.correct_answer === 'string' ? q.correct_answer : ''}
-                onChange={(e) => updateQuestion(idx, 'correct_answer', e.target.value)}
+                value={typeof question.correct_answer === 'string' ? question.correct_answer : ''}
+                onChange={(e) => updateQuestion(index, 'correct_answer', e.target.value)}
                 style={{ width: '100%' }}
               />
             </div>
@@ -372,15 +331,14 @@ function QuizCreateForm({
             <input
               className="filter-input"
               placeholder={t('teacherQuiz.explanation')}
-              value={q.explanation}
-              onChange={(e) => updateQuestion(idx, 'explanation', e.target.value)}
+              value={question.explanation}
+              onChange={(e) => updateQuestion(index, 'explanation', e.target.value)}
               style={{ width: '100%', fontSize: 12 }}
             />
           </div>
         </div>
       ))}
 
-      {/* Add question buttons */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
         {[
           { type: 'mcq', label: t('teacherQuiz.type_mcq') },
@@ -394,8 +352,8 @@ function QuizCreateForm({
       </div>
 
       <div style={{ display: 'flex', gap: 8 }}>
-        <button type="submit" className="btn btn-primary" disabled={submitting || !title.trim() || questions.length === 0}>
-          {submitting ? t('app.loading') : t('teacherQuiz.save')}
+        <button type="submit" className="btn btn-primary" disabled={createQuizMutation.isPending || !title.trim() || questions.length === 0}>
+          {createQuizMutation.isPending ? t('app.loading') : t('teacherQuiz.save')}
         </button>
         <button type="button" className="btn btn-secondary" onClick={onCancel}>
           {t('app.cancel')}

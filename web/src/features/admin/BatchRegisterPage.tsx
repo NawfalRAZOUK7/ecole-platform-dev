@@ -6,26 +6,14 @@
  * ADM-only route. Parses CSV, shows preview table, submits to backend.
  */
 
-import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { api, ApiClientError } from '@/services/api/client';
+import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
-
-interface CsvRow {
-  email: string;
-  full_name: string;
-  role: string;
-  phone?: string;
-  class_code?: string;
-}
-
-interface BatchResult {
-  created: Array<{ user_id: string; email: string; full_name: string; role: string; temp_password: string }>;
-  errors: Array<{ email: string; error: string }>;
-  total_created: number;
-  total_errors: number;
-}
+import { toBannerError } from '@/shared/ui/errorUtils';
+import { useAdminBatchRegister } from './useAdmin';
+import type { BatchResult, CsvRow } from './admin.service';
 
 function parseCsv(text: string): CsvRow[] {
   const lines = text.trim().split('\n');
@@ -41,7 +29,7 @@ function parseCsv(text: string): CsvRow[] {
   if (emailIdx === -1 || nameIdx === -1 || roleIdx === -1) return [];
 
   const rows: CsvRow[] = [];
-  for (let i = 1; i < lines.length; i++) {
+  for (let i = 1; i < lines.length; i += 1) {
     const cols = lines[i].split(',').map((c) => c.trim());
     if (!cols[emailIdx] || !cols[nameIdx] || !cols[roleIdx]) continue;
     rows.push({
@@ -57,35 +45,41 @@ function parseCsv(text: string): CsvRow[] {
 
 export function BatchRegisterPage() {
   const { t } = useTranslation();
-
+  const batchRegisterMutation = useAdminBatchRegister();
   const [rows, setRows] = useState<CsvRow[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
   const [result, setResult] = useState<BatchResult | null>(null);
   const [fileName, setFileName] = useState('');
 
-  function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
-    setError(null);
+  const dismissibleError = useDismissibleError(
+    useMemo(
+      () => localError ?? toBannerError(batchRegisterMutation.error, t('app.error')),
+      [batchRegisterMutation.error, localError, t]
+    )
+  );
+
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    setLocalError(null);
     setResult(null);
-    const file = e.target.files?.[0];
+    const file = event.target.files?.[0];
     if (!file) return;
 
     if (!file.name.endsWith('.csv')) {
-      setError(t('register.csvInvalidFormat'));
+      setLocalError(t('register.csvInvalidFormat'));
       return;
     }
 
     setFileName(file.name);
     const reader = new FileReader();
-    reader.onload = (ev) => {
-      const text = ev.target?.result as string;
+    reader.onload = (loadEvent) => {
+      const text = loadEvent.target?.result as string;
       const parsed = parseCsv(text);
       if (parsed.length === 0) {
-        setError(t('register.csvEmpty'));
+        setLocalError(t('register.csvEmpty'));
         return;
       }
       if (parsed.length > 100) {
-        setError(t('register.csvTooMany'));
+        setLocalError(t('register.csvTooMany'));
         return;
       }
       setRows(parsed);
@@ -93,30 +87,22 @@ export function BatchRegisterPage() {
     reader.readAsText(file);
   }
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
     if (rows.length === 0) return;
-    setError(null);
-    setLoading(true);
 
-    try {
-      const res = await api.post<BatchResult>('/admin/register-batch', { users: rows });
-      setResult(res.data);
-      setRows([]);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    } finally {
-      setLoading(false);
-    }
+    setLocalError(null);
+    const batchResult = await batchRegisterMutation.mutateAsync(rows);
+    setResult(batchResult);
+    setRows([]);
   }
 
   return (
     <div className="page">
       <h1 className="page-title">{t('register.batchTitle')}</h1>
 
-      <ErrorBanner error={error} onDismiss={() => setError(null)} />
+      <ErrorBanner error={dismissibleError.error} onDismiss={dismissibleError.dismiss} />
 
-      {/* CSV Upload */}
       <div className="card" style={{ marginBottom: 16 }}>
         <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', marginBottom: 12 }}>
           {t('register.batchInstructions')}
@@ -125,16 +111,10 @@ export function BatchRegisterPage() {
           email,full_name,role,phone,class_code
         </p>
 
-        <input
-          type="file"
-          accept=".csv"
-          onChange={handleFileChange}
-          style={{ marginBottom: 12 }}
-        />
+        <input type="file" accept=".csv" onChange={handleFileChange} style={{ marginBottom: 12 }} />
         {fileName && <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{fileName}</span>}
       </div>
 
-      {/* Preview Table */}
       {rows.length > 0 && !result && (
         <div className="card" style={{ marginBottom: 16 }}>
           <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>
@@ -151,8 +131,8 @@ export function BatchRegisterPage() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row, i) => (
-                  <tr key={i}>
+                {rows.map((row, index) => (
+                  <tr key={`${row.email}-${index}`}>
                     <td>{row.email}</td>
                     <td>{row.full_name}</td>
                     <td><span className="role-badge">{row.role}</span></td>
@@ -164,16 +144,15 @@ export function BatchRegisterPage() {
           </div>
 
           <form onSubmit={handleSubmit} style={{ marginTop: 12 }}>
-            <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? t('app.loading') : t('register.batchSubmit')}
+            <button type="submit" className="btn btn-primary" disabled={batchRegisterMutation.isPending}>
+              {batchRegisterMutation.isPending ? t('app.loading') : t('register.batchSubmit')}
             </button>
           </form>
         </div>
       )}
 
-      {loading && <LoadingState />}
+      {batchRegisterMutation.isPending && <LoadingState />}
 
-      {/* Results */}
       {result && (
         <div className="card">
           <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>
@@ -193,7 +172,6 @@ export function BatchRegisterPage() {
             )}
           </div>
 
-          {/* Created accounts with temp passwords */}
           {result.created.length > 0 && (
             <div style={{ overflowX: 'auto', marginBottom: 12 }}>
               <table className="data-table">
@@ -206,12 +184,12 @@ export function BatchRegisterPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {result.created.map((u) => (
-                    <tr key={u.user_id}>
-                      <td>{u.email}</td>
-                      <td>{u.full_name}</td>
-                      <td><span className="role-badge">{u.role}</span></td>
-                      <td style={{ fontFamily: 'monospace', fontSize: 13 }}>{u.temp_password}</td>
+                  {result.created.map((user) => (
+                    <tr key={user.user_id}>
+                      <td>{user.email}</td>
+                      <td>{user.full_name}</td>
+                      <td><span className="role-badge">{user.role}</span></td>
+                      <td style={{ fontFamily: 'monospace', fontSize: 13 }}>{user.temp_password}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -219,15 +197,14 @@ export function BatchRegisterPage() {
             </div>
           )}
 
-          {/* Errors */}
           {result.errors.length > 0 && (
             <div>
               <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 8, color: 'var(--color-danger)' }}>
                 {t('register.batchErrorList')}
               </h4>
-              {result.errors.map((err, i) => (
-                <div key={i} style={{ fontSize: 13, color: 'var(--color-danger)', marginBottom: 4 }}>
-                  {err.email}: {err.error}
+              {result.errors.map((item, index) => (
+                <div key={`${item.email}-${index}`} style={{ fontSize: 13, color: 'var(--color-danger)', marginBottom: 4 }}>
+                  {item.email}: {item.error}
                 </div>
               ))}
             </div>

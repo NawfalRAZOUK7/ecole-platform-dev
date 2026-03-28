@@ -7,43 +7,26 @@
  * Date range selector: 7d, 30d, 90d.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  LineChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
   Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  Legend,
 } from 'recharts';
-import { api, ApiClientError } from '@/services/api/client';
+import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
-
-interface KpiItem {
-  kpi_id: string;
-  name: string;
-  value: number | null;
-  unit: string;
-  numerator?: number;
-  denominator?: number;
-  period: string;
-  threshold?: string;
-  data_source?: string;
-  note?: string;
-  computed_at?: string;
-}
-
-interface KpisResponse {
-  kpis: KpiItem[];
-  period: string;
-  computed_at: string;
-}
+import { toBannerError } from '@/shared/ui/errorUtils';
+import { useAdminAnalytics } from './useAdmin';
+import type { KpiItem } from './admin.service';
 
 const PERIODS = [
   { label: '7d', days: 7 },
@@ -51,49 +34,16 @@ const PERIODS = [
   { label: '90d', days: 90 },
 ] as const;
 
-const AUTO_REFRESH_MS = 5 * 60 * 1000; // 5 minutes
-
 export function AnalyticsPage() {
   const { t } = useTranslation();
-  const [kpis, setKpis] = useState<KpiItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState(7);
-  const [history, setHistory] = useState<KpiItem[][]>([]);
-  const refreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const analyticsQuery = useAdminAnalytics(period);
+  const dismissibleError = useDismissibleError(
+    useMemo(() => toBannerError(analyticsQuery.error, t('app.error')), [analyticsQuery.error, t])
+  );
+  const kpis = analyticsQuery.data?.kpis ?? [];
+  const history = analyticsQuery.history;
 
-  const fetchKpis = useCallback(async () => {
-    try {
-      const resp = await api.get<KpisResponse>('/kpis', { period: period });
-      setKpis(resp.data.kpis);
-      setError(null);
-      // Append to history for trend (keep last 10 data points)
-      setHistory((prev) => {
-        const next = [...prev, resp.data.kpis];
-        return next.length > 10 ? next.slice(-10) : next;
-      });
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : t('app.error'));
-    }
-  }, [period, t]);
-
-  useEffect(() => {
-    setLoading(true);
-    setHistory([]);
-    fetchKpis().finally(() => setLoading(false));
-  }, [fetchKpis]);
-
-  // Auto-refresh every 5 minutes
-  useEffect(() => {
-    refreshRef.current = setInterval(() => {
-      fetchKpis();
-    }, AUTO_REFRESH_MS);
-    return () => {
-      if (refreshRef.current) clearInterval(refreshRef.current);
-    };
-  }, [fetchKpis]);
-
-  // Build chart data from KPI items
   const adoptionKpi = kpis.find((k) => k.kpi_id === 'KPI-G1-001');
   const usageKpi = kpis.find((k) => k.kpi_id === 'KPI-G1-002');
   const authErrorKpi = kpis.find((k) => k.kpi_id === 'KPI-G1-003');
@@ -101,20 +51,18 @@ export function AnalyticsPage() {
   const incidentKpi = kpis.find((k) => k.kpi_id === 'KPI-G1-005');
   const conversionKpi = kpis.find((k) => k.kpi_id === 'KPI-G1-006');
 
-  // Build trend data from history
-  const trendData = history.map((snapshot, idx) => {
+  const trendData = history.map((snapshot, index) => {
     const adoption = snapshot.find((k) => k.kpi_id === 'KPI-G1-001');
     const authErr = snapshot.find((k) => k.kpi_id === 'KPI-G1-003');
     const usage = snapshot.find((k) => k.kpi_id === 'KPI-G1-002');
     return {
-      point: idx + 1,
+      point: index + 1,
       adoption: adoption?.value ?? 0,
       authErrors: authErr?.value ?? 0,
       usage: usage?.value ?? 0,
     };
   });
 
-  // Bar chart data for current KPI breakdown
   const barData = [
     {
       name: t('analytics.adoption'),
@@ -136,66 +84,48 @@ export function AnalyticsPage() {
     },
   ];
 
-  if (loading) return <LoadingState />;
+  if (analyticsQuery.isLoading) {
+    return <LoadingState />;
+  }
 
   return (
     <div className="page">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h1 className="page-title" style={{ margin: 0 }}>{t('analytics.title')}</h1>
 
-        {/* Period selector */}
         <div style={{ display: 'flex', gap: 8 }}>
-          {PERIODS.map((p) => (
+          {PERIODS.map((item) => (
             <button
-              key={p.days}
-              className={`btn ${period === p.days ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => setPeriod(p.days)}
+              key={item.days}
+              className={`btn ${period === item.days ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setPeriod(item.days)}
             >
-              {p.label}
+              {item.label}
             </button>
           ))}
         </div>
       </div>
 
-      <ErrorBanner error={error} onDismiss={() => setError(null)} onRetry={fetchKpis} />
+      <ErrorBanner
+        error={dismissibleError.error}
+        onDismiss={dismissibleError.dismiss}
+        onRetry={() => void analyticsQuery.refetch()}
+      />
 
-      {/* KPI Cards */}
       <div className="stats-grid">
-        <KpiCard
-          title={t('analytics.adoption')}
-          kpi={adoptionKpi}
-          color="#4CAF50"
-        />
-        <KpiCard
-          title={t('analytics.usage')}
-          kpi={usageKpi}
-          color="#2196F3"
-        />
+        <KpiCard title={t('analytics.adoption')} kpi={adoptionKpi} color="#4CAF50" />
+        <KpiCard title={t('analytics.usage')} kpi={usageKpi} color="#2196F3" />
         <KpiCard
           title={t('analytics.authErrors')}
           kpi={authErrorKpi}
           color={authErrorKpi && authErrorKpi.value !== null && authErrorKpi.value > 1 ? '#F44336' : '#4CAF50'}
         />
-        <KpiCard
-          title={t('analytics.latency')}
-          kpi={latencyKpi}
-          color="#FF9800"
-        />
-        <KpiCard
-          title={t('analytics.incidents')}
-          kpi={incidentKpi}
-          color="#9C27B0"
-        />
-        <KpiCard
-          title={t('analytics.conversion')}
-          kpi={conversionKpi}
-          color="#009688"
-        />
+        <KpiCard title={t('analytics.latency')} kpi={latencyKpi} color="#FF9800" />
+        <KpiCard title={t('analytics.incidents')} kpi={incidentKpi} color="#9C27B0" />
+        <KpiCard title={t('analytics.conversion')} kpi={conversionKpi} color="#009688" />
       </div>
 
-      {/* Charts */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginTop: 24 }}>
-        {/* Trend Chart */}
         <div className="card" style={{ padding: 16 }}>
           <h3 style={{ marginBottom: 12, fontSize: 14, fontWeight: 600 }}>
             {t('analytics.trendTitle')}
@@ -207,32 +137,13 @@ export function AnalyticsPage() {
               <YAxis unit="%" />
               <Tooltip />
               <Legend />
-              <Line
-                type="monotone"
-                dataKey="adoption"
-                stroke="#4CAF50"
-                name={t('analytics.adoption')}
-                strokeWidth={2}
-              />
-              <Line
-                type="monotone"
-                dataKey="usage"
-                stroke="#2196F3"
-                name={t('analytics.usage')}
-                strokeWidth={2}
-              />
-              <Line
-                type="monotone"
-                dataKey="authErrors"
-                stroke="#F44336"
-                name={t('analytics.authErrors')}
-                strokeWidth={2}
-              />
+              <Line type="monotone" dataKey="adoption" stroke="#4CAF50" name={t('analytics.adoption')} strokeWidth={2} />
+              <Line type="monotone" dataKey="usage" stroke="#2196F3" name={t('analytics.usage')} strokeWidth={2} />
+              <Line type="monotone" dataKey="authErrors" stroke="#F44336" name={t('analytics.authErrors')} strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Bar Chart */}
         <div className="card" style={{ padding: 16 }}>
           <h3 style={{ marginBottom: 12, fontSize: 14, fontWeight: 600 }}>
             {t('analytics.breakdownTitle')}
@@ -247,10 +158,7 @@ export function AnalyticsPage() {
                   const payload = entry?.payload as
                     | { numerator?: number; denominator?: number }
                     | undefined;
-                  return [
-                    `${value}% (${payload?.numerator ?? 0}/${payload?.denominator ?? 0})`,
-                    '',
-                  ];
+                  return [`${value}% (${payload?.numerator ?? 0}/${payload?.denominator ?? 0})`, ''];
                 }}
               />
               <Bar dataKey="value" fill="#2196F3" radius={[4, 4, 0, 0]} />
@@ -259,7 +167,6 @@ export function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Auto-refresh indicator */}
       <div style={{ textAlign: 'center', marginTop: 16, color: '#999', fontSize: 12 }}>
         {t('analytics.autoRefresh')}
         {kpis.length > 0 && kpis[0].computed_at && (

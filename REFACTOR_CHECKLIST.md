@@ -149,11 +149,11 @@
 - [ ] **Review & commit myself**: `refactor(web): extract services and hooks for notifications, feed, calendar`
 
 ### Batch 2 — Teacher & Admin
-- [ ] Create `admin.service.ts` + `useAdmin*.ts` hooks
-- [ ] Create `teacher.service.ts` + `useTeacher*.ts` hooks
-- [ ] Update all admin pages — no direct API calls
-- [ ] Update all teacher pages — no direct API calls
-- [ ] Verify: `npm run build` passes
+- [x] Create `admin.service.ts` + `useAdmin*.ts` hooks
+- [x] Create `teacher.service.ts` + `useTeacher*.ts` hooks
+- [x] Update all admin pages — no direct API calls
+- [x] Update all teacher pages — no direct API calls
+- [x] Verify: `npm run build` passes
 - [ ] **Review & commit myself**: `refactor(web): extract services and hooks for admin and teacher features`
 
 ### Batch 3 — All Remaining Features
