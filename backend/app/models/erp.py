@@ -191,6 +191,10 @@ class Enrollment(TimestampMixin, SchoolScopedMixin, Base):
         ),
     )
 
+    @property
+    def is_active(self) -> bool:
+        return self.status == EnrollmentStatus.ACTIVE.value
+
 
 class TeacherAssignment(TimestampMixin, SchoolScopedMixin, Base):
     """Teacher assignment to a class for a period."""
@@ -386,6 +390,10 @@ class AttendanceAlert(TimestampMixin, SchoolScopedMixin, Base):
         ),
         Index("idx_attendance_alerts_school", "school_id"),
     )
+
+    @property
+    def is_resolved(self) -> bool:
+        return getattr(self, "resolved_at", None) is not None
 
 
 # ---------------------------------------------------------------------------

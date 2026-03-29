@@ -8,7 +8,7 @@ Migration group: G1-IAM (no dependencies).
 
 import enum
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import (
     Boolean,
@@ -131,6 +131,18 @@ class User(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_users_school_id", "school_id"),
     )
 
+    @property
+    def is_active(self) -> bool:
+        return self.status == UserStatus.ACTIVE.value
+
+    @property
+    def has_2fa(self) -> bool:
+        return self.totp_secret is not None
+
+    @property
+    def is_email_verified(self) -> bool:
+        return self.email_verified_at is not None
+
 
 class Membership(TimestampMixin, SchoolScopedMixin, Base):
     """Role assignment — links a user to a school with a specific role.
@@ -162,6 +174,10 @@ class Membership(TimestampMixin, SchoolScopedMixin, Base):
             postgresql_where="status = 'active'",
         ),
     )
+
+    @property
+    def is_active(self) -> bool:
+        return self.status == MembershipStatus.ACTIVE.value
 
 
 class Session(TimestampMixin, SchoolScopedMixin, Base):
@@ -209,6 +225,24 @@ class Session(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_sessions_correlation_id", "correlation_id"),
         Index("idx_sessions_impersonator_id", "impersonator_id"),
     )
+
+    @property
+    def is_expired(self) -> bool:
+        expires_at = getattr(self, "expires_at", None)
+        return expires_at is not None and expires_at < datetime.now(timezone.utc)
+
+    @property
+    def is_impersonated(self) -> bool:
+        return self.impersonator_id is not None
+
+    @property
+    def is_revoked(self) -> bool:
+        revoked_at = getattr(self, "revoke_at", None) or getattr(
+            self,
+            "revoked_at",
+            None,
+        )
+        return revoked_at is not None
 
 
 class LoginHistory(TimestampMixin, SchoolScopedMixin, Base):
@@ -285,6 +319,18 @@ class InvitationCode(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_invitation_codes_school_expires", "school_id", "expires_at"),
     )
 
+    @property
+    def is_expired(self) -> bool:
+        return self.expires_at < datetime.now(timezone.utc)
+
+    @property
+    def is_fully_used(self) -> bool:
+        current_uses = getattr(self, "current_uses", None)
+        max_uses = getattr(self, "max_uses", None)
+        if current_uses is not None and max_uses is not None:
+            return current_uses >= max_uses
+        return self.consumed_at is not None or self.consumed_by is not None
+
 
 class AccountRecoveryRequest(TimestampMixin, SchoolScopedMixin, Base):
     """Account recovery — password reset flow with OTP and attempt tracking."""
@@ -309,6 +355,10 @@ class AccountRecoveryRequest(TimestampMixin, SchoolScopedMixin, Base):
     user: Mapped["User"] = relationship()
 
     __table_args__ = (Index("idx_recovery_user_status", "user_id", "status"),)
+
+    @property
+    def is_expired(self) -> bool:
+        return self.expires_at < datetime.now(timezone.utc)
 
 
 class ParentChildLink(TimestampMixin, SchoolScopedMixin, Base):

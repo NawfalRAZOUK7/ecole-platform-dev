@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import enum
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import (
     Boolean,
@@ -83,6 +83,10 @@ class Document(TimestampMixin, SchoolScopedMixin, SoftDeleteMixin, Base):
         Index("idx_documents_deleted_at", "deleted_at"),
         Index("idx_documents_expires_at", "expires_at"),
     )
+
+    @property
+    def is_expired(self) -> bool:
+        return self.expires_at is not None and self.expires_at < datetime.now(timezone.utc)
 
 
 class DocumentVersion(TimestampMixin, Base):

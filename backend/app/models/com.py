@@ -370,6 +370,10 @@ class Conversation(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_conversations_created_by", "created_by"),
     )
 
+    @property
+    def is_group(self) -> bool:
+        return self.type == ConversationType.GROUP.value
+
 
 class ConversationParticipant(TimestampMixin, Base):
     """Participant in a conversation."""

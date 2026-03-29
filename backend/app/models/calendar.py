@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import enum
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 from sqlalchemy import (
     JSON,
@@ -90,6 +90,10 @@ class Event(TimestampMixin, SchoolScopedMixin, SoftDeleteMixin, Base):
         Index("idx_events_school_class_start", "school_id", "class_id", "start_at"),
         Index("idx_events_school_visibility_start", "school_id", "visibility", "start_at"),
     )
+
+    @property
+    def is_past(self) -> bool:
+        return self.end_at < datetime.now(timezone.utc)
 
 
 class EventRSVP(TimestampMixin, Base):

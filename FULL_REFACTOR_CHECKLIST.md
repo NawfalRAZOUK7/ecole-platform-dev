@@ -432,24 +432,24 @@
 ### Phase MR-B: Helper Properties + Repr + Validators
 
 #### MR-B1: Helper Properties on All Models
-- [ ] User: is_active, has_2fa, is_email_verified
-- [ ] Membership: is_active
-- [ ] Session: is_expired, is_impersonated, is_revoked
-- [ ] InvitationCode: is_expired, is_fully_used
-- [ ] AccountRecoveryRequest: is_expired
-- [ ] Invoice: is_overdue, is_paid
-- [ ] PaymentPlan: is_completed
-- [ ] Installment: is_overdue
-- [ ] Assignment: is_past_due, accepts_late
-- [ ] Submission: is_graded
-- [ ] Quiz: is_active
-- [ ] Enrollment: is_active
-- [ ] AttendanceAlert: is_resolved
-- [ ] Conversation: is_group
-- [ ] ReportJob: is_complete, is_expired
-- [ ] Document: is_expired
-- [ ] Event: is_past, is_all_day
-- [ ] All properties are pure (no DB access, no side effects)
+- [x] User: is_active, has_2fa, is_email_verified
+- [x] Membership: is_active
+- [x] Session: is_expired, is_impersonated, is_revoked
+- [x] InvitationCode: is_expired, is_fully_used
+- [x] AccountRecoveryRequest: is_expired
+- [x] Invoice: is_overdue, is_paid
+- [x] PaymentPlan: is_completed
+- [x] Installment: is_overdue
+- [x] Assignment: is_past_due, accepts_late
+- [x] Submission: is_graded
+- [x] Quiz: is_active
+- [x] Enrollment: is_active
+- [x] AttendanceAlert: is_resolved
+- [x] Conversation: is_group
+- [x] ReportJob: is_complete, is_expired
+- [x] Document: is_expired
+- [x] Event: is_past, is_all_day
+- [x] All properties are pure (no DB access, no side effects)
 - [ ] **Review & commit myself**
 
 #### MR-B2: __repr__ Methods on All Models

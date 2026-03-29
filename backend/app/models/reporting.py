@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import enum
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
@@ -105,6 +105,14 @@ class ReportJob(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_report_jobs_school_params_hash_created", "school_id", "parameters_hash", "created_at"),
         Index("idx_report_jobs_expires_at", "expires_at"),
     )
+
+    @property
+    def is_complete(self) -> bool:
+        return self.status == ReportJobStatus.READY.value
+
+    @property
+    def is_expired(self) -> bool:
+        return self.expires_at is not None and self.expires_at < datetime.now(timezone.utc)
 
 
 class DataExport(TimestampMixin, SchoolScopedMixin, Base):

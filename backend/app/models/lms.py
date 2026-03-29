@@ -6,7 +6,7 @@ Migration group: G3-LMS (depends on G1-IAM, G2-ERP).
 
 import enum
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import (
     ARRAY,
@@ -292,6 +292,22 @@ class Assignment(TimestampMixin, Base):
         Index("idx_assignments_quiz", "quiz_id"),
     )
 
+    @property
+    def is_past_due(self) -> bool:
+        return self.due_at is not None and self.due_at < datetime.now(timezone.utc)
+
+    @property
+    def accepts_late(self) -> bool:
+        if not self.allow_late or self.due_at is None:
+            return False
+        grace_deadline = self.due_at + timedelta(hours=self.grace_period_hours or 0)
+        now = datetime.now(timezone.utc)
+        if now <= grace_deadline:
+            return False
+        if self.max_late_days is None:
+            return True
+        return now <= grace_deadline + timedelta(days=self.max_late_days)
+
 
 class Submission(TimestampMixin, Base):
     """Student submission for an assignment.
@@ -337,6 +353,13 @@ class Submission(TimestampMixin, Base):
             postgresql_where="status IN ('draft', 'submitted')",
         ),
     )
+
+    @property
+    def is_graded(self) -> bool:
+        return self.status in {
+            SubmissionStatus.GRADED.value,
+            SubmissionStatus.RETURNED.value,
+        }
 
 
 class SubmissionFile(TimestampMixin, Base):
@@ -813,6 +836,19 @@ class Quiz(TimestampMixin, NullableSchoolScopedMixin, Base):
         Index("idx_quizzes_created_by", "created_by"),
         Index("idx_quizzes_subject", "subject"),
     )
+
+    @property
+    def is_active(self) -> bool:
+        if self.status != QuizStatus.PUBLISHED.value:
+            return False
+        now = datetime.now(timezone.utc)
+        start_at = getattr(self, "start_at", None) or getattr(self, "starts_at", None)
+        end_at = getattr(self, "end_at", None) or getattr(self, "ends_at", None)
+        if start_at is not None and now < start_at:
+            return False
+        if end_at is not None and now > end_at:
+            return False
+        return True
 
 
 class QuizQuestion(TimestampMixin, Base):

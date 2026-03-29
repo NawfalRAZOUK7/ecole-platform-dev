@@ -137,6 +137,14 @@ class Invoice(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_invoices_due_date_status", "due_date", "status"),
     )
 
+    @property
+    def is_overdue(self) -> bool:
+        return self.status == InvoiceStatus.PENDING.value and self.due_date < date.today()
+
+    @property
+    def is_paid(self) -> bool:
+        return self.status == InvoiceStatus.PAID.value
+
 
 class InvoiceItem(TimestampMixin, Base):
     """Line item on an invoice."""
@@ -468,6 +476,10 @@ class PaymentPlan(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_payment_plans_invoice", "invoice_id"),
     )
 
+    @property
+    def is_completed(self) -> bool:
+        return self.status == "completed"
+
 
 class Installment(TimestampMixin, Base):
     """Individual installment within a payment plan."""
@@ -505,3 +517,7 @@ class Installment(TimestampMixin, Base):
         Index("idx_installments_plan", "plan_id"),
         Index("idx_installments_due_status", "due_date", "status"),
     )
+
+    @property
+    def is_overdue(self) -> bool:
+        return self.paid_at is None and self.due_date.date() < date.today()
