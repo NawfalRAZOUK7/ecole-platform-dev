@@ -70,15 +70,15 @@
 ---
 
 ### T-04: Permission + ABAC Unit Tests (~40 tests)
-- [ ] **ANALYZE** — Read permissions.py (622 lines), abac.py
-  - [ ] Created permission matrix (20+ permissions × 8 roles)
-- [ ] **EXECUTE** — Create tests
-  - [ ] Created `test_permissions.py` (~25 tests: hierarchy, effective perms, role_has_permission)
-  - [ ] Created `test_abac.py` (~15 tests: owner scope, parent-child, teacher-class, student-teacher)
-- [ ] **VERIFY** — ~40 tests pass
-  - [ ] Permission count sanity check per role
-  - [ ] All core tests pass
-- [ ] **GIT** — Committed (Codex only)
+- [x] **ANALYZE** — Read permissions.py (622 lines), abac.py
+  - [x] Created permission matrix (20+ permissions × 8 roles)
+- [x] **EXECUTE** — Create tests
+  - [x] Created `test_permissions.py` (~25 tests: hierarchy, effective perms, role_has_permission)
+  - [x] Created `test_abac.py` (~15 tests: owner scope, parent-child, teacher-class, student-teacher)
+- [x] **VERIFY** — ~40 tests pass
+  - [x] Permission count sanity check per role
+  - [x] All core tests pass
+- [x] **GIT** — Committed (Codex only)
 
 ---
 
