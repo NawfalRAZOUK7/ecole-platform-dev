@@ -23,6 +23,8 @@ SYS = "SYS"
 CONTENT_MGR = "CONTENT_MGR"  # Platform-wide content manager (not school-scoped)
 PUBLIC = "PUBLIC"  # pseudo-role for unauthenticated entry endpoints
 
+PLATFORM_ROLES: set[str] = {SUP, SYS, CONTENT_MGR}
+
 # ---------------------------------------------------------------------------
 # Permission constants — organised by domain
 # ---------------------------------------------------------------------------
@@ -54,6 +56,10 @@ PERM_ADM_AUDIT_READ = "PERM-ADM:audit:read"
 PERM_ADM_IMPERSONATE = "PERM-ADM:impersonation:create"
 PERM_ADM_SCHOOL_MANAGE = "PERM-ADM:school:manage"
 PERM_ADM_SCHOOL_READ = "PERM-ADM:school:read"
+PERM_ADM_SETTINGS_READ = "PERM-ADM:settings:read"
+PERM_ADM_SETTINGS_UPDATE = "PERM-ADM:settings:update"
+PERM_ADM_ANNOUNCEMENT_MANAGE = "PERM-ADM:announcement:manage"
+PERM_ADM_PLATFORM_STATS = "PERM-ADM:platform-stats:read"
 
 # Profiles / GDPR
 PERM_PROF_ADMIN_READ = "PERM-PROF:profile-admin:read"
@@ -62,9 +68,12 @@ PERM_GDPR_DATA_DELETE = "PERM-GDPR:data-deletion:create"
 PERM_GDPR_CONSENT_MANAGE = "PERM-GDPR:consent:manage"
 
 # ERP
+PERM_ERP_SCHOOL_READ = "PERM-ERP:school:read"
 PERM_ERP_CLASS_READ = "PERM-ERP:class:read"
+PERM_ERP_ENROLLMENT_READ = "PERM-ERP:enrollment:read"
 PERM_ERP_ENROLLMENT_ASSIGN = "PERM-ERP:enrollment:assign"
 PERM_ERP_ASSIGNMENT_UPDATE = "PERM-ERP:assignment:update"
+PERM_ERP_ATTENDANCE_READ = "PERM-ERP:attendance:read"
 PERM_ERP_ATTENDANCE_MARK = "PERM-ERP:attendance:mark"
 PERM_ERP_ABSENCE_JUSTIFY = "PERM-ERP:absence:justify"
 PERM_ERP_ABSENCE_REVIEW = "PERM-ERP:absence:review"
@@ -82,6 +91,7 @@ PERM_ERP_TIMETABLE_EXCEPTION_CREATE = "PERM-ERP:timetable-exception:create"
 PERM_ERP_TIMETABLE_EXCEPTION_READ = "PERM-ERP:timetable-exception:read"
 
 # LMS
+PERM_LMS_COURSE_READ = "PERM-LMS:course:read"
 PERM_LMS_COURSE_PUBLISH = "PERM-LMS:course:publish"
 PERM_LMS_ASSIGNMENT_CREATE = "PERM-LMS:assignment:create"
 PERM_LMS_SUBMISSION_CREATE = "PERM-LMS:submission:create"
@@ -109,6 +119,7 @@ PERM_LMS_QUESTION_BANK_READ = "PERM-LMS:question-bank:read"
 
 # Billing
 PERM_BIL_INVOICE_READ = "PERM-BIL:invoice:read"
+PERM_BIL_INVOICE_VOID = "PERM-BIL:invoice:void"
 PERM_BIL_PAYMENT_INITIATE = "PERM-BIL:payment:initiate"
 PERM_BIL_PAYMENT_READ = "PERM-BIL:payment:read"
 PERM_BIL_PAYMENT_RECONCILE = "PERM-BIL:payment:reconcile"
@@ -118,12 +129,17 @@ PERM_BIL_PROOF_READ = "PERM-BIL:proof:read"
 PERM_BIL_FEE_CREATE = "PERM-BIL:fee:create"
 PERM_BIL_FEE_READ = "PERM-BIL:fee:read"
 PERM_BIL_FEE_UPDATE = "PERM-BIL:fee:update"
+PERM_BIL_FEE_STRUCTURE_CREATE = PERM_BIL_FEE_CREATE
+PERM_BIL_FEE_STRUCTURE_UPDATE = PERM_BIL_FEE_UPDATE
+PERM_BIL_FEE_STRUCTURE_DELETE = "PERM-BIL:fee:delete"
 PERM_BIL_FEE_ASSIGN = "PERM-BIL:fee:assign"
 PERM_BIL_INVOICE_GENERATE = "PERM-BIL:invoice:generate"
 PERM_BIL_SIBLING_POLICY_MANAGE = "PERM-BIL:sibling-policy:manage"
+PERM_BIL_DISCOUNT_MANAGE = PERM_BIL_SIBLING_POLICY_MANAGE
 PERM_BIL_LATE_FEE_MANAGE = "PERM-BIL:late-fee:manage"
 PERM_BIL_PAYMENT_PLAN_CREATE = "PERM-BIL:payment-plan:create"
 PERM_BIL_PAYMENT_PLAN_READ = "PERM-BIL:payment-plan:read"
+PERM_BIL_PAYMENT_PLAN_MANAGE = "PERM-BIL:payment-plan:manage"
 
 # Billing — Enhancement aliases (ENH-C1 architecture naming)
 PERM_BILLING_SIBLING_POLICY_MANAGE = PERM_BIL_SIBLING_POLICY_MANAGE
@@ -181,6 +197,7 @@ PERM_SYS_FEATURE_MANAGE = "PERM-SYS:feature:manage"
 # Reporting & Analytics (Phase 14)
 PERM_REP_REPORT_GENERATE = "PERM-REP:report:generate"
 PERM_REP_REPORT_READ = "PERM-REP:report:read"
+PERM_RPT_REPORT_READ = PERM_REP_REPORT_READ
 PERM_REP_ANALYTICS_READ = "PERM-REP:analytics:read"
 PERM_REP_EXPORT_CREATE = "PERM-REP:export:create"
 PERM_RPT_SCHEDULE_MANAGE = "PERM-RPT:schedule:manage"
@@ -203,7 +220,9 @@ PERM_DOC_RESOURCE_CREATE = "PERM-DOC:resource:create"
 PERM_DOC_RESOURCE_READ = "PERM-DOC:resource:read"
 PERM_DOC_RESOURCE_UPDATE = "PERM-DOC:resource:update"
 PERM_DOC_RESOURCE_DELETE = "PERM-DOC:resource:delete"
+PERM_DOC_RESOURCE_MANAGE = "PERM-DOC:resource:manage"
 PERM_DOC_RESOURCE_RATE = "PERM-DOC:resource:rate"
+PERM_DOC_REQUIREMENT_MANAGE = "PERM-DOC:requirement:manage"
 PERM_DOC_BULK_DOWNLOAD = "PERM-DOC:document-bulk:download"
 PERM_DOC_BULK_DELETE = "PERM-DOC:document-bulk:delete"
 
@@ -212,6 +231,7 @@ PERM_SUP_GRANT_REQUEST = "PERM-SUP:grant:request"
 PERM_SUP_GRANT_APPROVE = "PERM-SUP:grant:approve"
 PERM_SUP_GRANT_REVOKE = "PERM-SUP:grant:revoke"
 PERM_SUP_AUDIT_READ = "PERM-SUP:audit:read"
+PERM_SYS_AUDIT_LOG_READ = "PERM-SYS:audit-log:read"
 
 # ---------------------------------------------------------------------------
 # Role → Permissions mapping (C6 complete catalog)
@@ -226,112 +246,28 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
     },
     ADM: {
         # Admin
-        PERM_ADM_DASHBOARD_READ,
-        PERM_ADM_USER_READ,
-        PERM_ADM_USER_CREATE,
         PERM_ADM_USER_MANAGE,
-        PERM_ADM_INVITATION_READ,
-        PERM_ADM_AUDIT_READ,
-        PERM_ADM_IMPERSONATE,
         PERM_ADM_SCHOOL_MANAGE,
-        PERM_ADM_SCHOOL_READ,
         PERM_PROF_ADMIN_READ,
-        PERM_GDPR_DATA_DELETE,
         PERM_GDPR_CONSENT_MANAGE,
-        # IAM — full admin
-        PERM_IAM_SESSION_CREATE,
-        PERM_IAM_SESSION_REFRESH,
-        PERM_IAM_SESSION_REVOKE,
-        PERM_IAM_SESSION_LIST,
-        PERM_IAM_PASSWORD_CHANGE,
+        # IAM — admin-only operations
         PERM_IAM_INVITE_CREATE,
-        PERM_IAM_INVITE_REVOKE,
-        PERM_IAM_RECOVERY_REQUEST,
-        PERM_IAM_RECOVERY_VERIFY,
-        PERM_IAM_RECOVERY_RESET,
         PERM_IAM_PARENT_LINK_CREATE,
-        PERM_IAM_PARENT_LINK_READ,
         PERM_IAM_PARENT_LINK_DELETE,
-        PERM_IAM_LOGIN_HISTORY_READ,
-        # ERP — full admin
-        PERM_ERP_CLASS_READ,
+        # ERP — admin-only school management
         PERM_ERP_ENROLLMENT_ASSIGN,
         PERM_ERP_ASSIGNMENT_UPDATE,
         PERM_ERP_ABSENCE_REVIEW,
-        PERM_ERP_ATTENDANCE_ANALYTICS_READ,
         PERM_ERP_ATTENDANCE_ALERT_MANAGE,
-        # ERP — Timetable (Phase 11A)
+        # ERP — Timetable administration beyond DIR/TCH inherited baseline
         PERM_ERP_TIMETABLE_CREATE,
-        PERM_ERP_TIMETABLE_READ,
         PERM_ERP_TIMETABLE_UPDATE,
         PERM_ERP_TIMETABLE_DELETE,
-        PERM_ERP_TIMETABLE_GENERATE,
-        PERM_ERP_TIMETABLE_CONSTRAINT_MANAGE,
-        PERM_ERP_TIMETABLE_EXCEPTION_CREATE,
-        PERM_ERP_TIMETABLE_EXCEPTION_READ,
-        # LMS — read + supervision + file management
-        PERM_LMS_SUBMISSION_FILE_READ,
-        PERM_LMS_CONTENT_ASSET_UPLOAD,
-        PERM_LMS_CONTENT_ASSET_READ,
-        PERM_LMS_CONTENT_ASSET_DELETE,
-        PERM_LMS_ASSESSMENT_CREATE,
-        PERM_LMS_ASSESSMENT_READ,
-        PERM_LMS_ASSESSMENT_PUBLISH,
-        PERM_LMS_RUBRIC_CREATE,
-        PERM_LMS_RUBRIC_READ,
-        PERM_LMS_GRADEBOOK_MANAGE,
-        PERM_LMS_GRADEBOOK_READ,
-        PERM_LMS_QUESTION_BANK_READ,
-        # Billing — read global + fee management (Phase 11B)
-        PERM_BIL_INVOICE_READ,
-        PERM_BIL_PAYMENT_READ,
-        PERM_BIL_PROOF_READ,
-        PERM_BIL_FEE_CREATE,
-        PERM_BIL_FEE_READ,
-        PERM_BIL_FEE_UPDATE,
-        PERM_BIL_FEE_ASSIGN,
-        PERM_BIL_INVOICE_GENERATE,
-        PERM_BIL_SIBLING_POLICY_MANAGE,
-        PERM_BIL_LATE_FEE_MANAGE,
-        PERM_BIL_PAYMENT_PLAN_CREATE,
-        PERM_BIL_PAYMENT_PLAN_READ,
-        # Progress (Phase 11D)
-        PERM_PROGRESS_READ,
-        PERM_PROGRESS_CLASS_READ,
-        # Reporting & Analytics (Phase 14)
-        PERM_REP_REPORT_GENERATE,
-        PERM_REP_REPORT_READ,
-        PERM_REP_ANALYTICS_READ,
-        PERM_REP_EXPORT_CREATE,
-        PERM_RPT_SCHEDULE_MANAGE,
-        # Calendar & Events (Phase 15)
-        PERM_CAL_EVENT_CREATE,
-        PERM_CAL_EVENT_READ,
-        PERM_CAL_EVENT_UPDATE,
-        PERM_CAL_EVENT_DELETE,
-        PERM_CAL_HOLIDAY_MANAGE,
-        PERM_CAL_RSVP_READ,
-        # Document management (Phase 16)
-        PERM_DOC_DOCUMENT_UPLOAD,
-        PERM_DOC_DOCUMENT_READ,
-        PERM_DOC_DOCUMENT_DELETE,
-        PERM_DOC_STUDENT_DOCUMENT_LINK,
-        PERM_DOC_RESOURCE_CREATE,
-        PERM_DOC_RESOURCE_READ,
-        PERM_DOC_RESOURCE_UPDATE,
-        PERM_DOC_RESOURCE_DELETE,
-        PERM_DOC_RESOURCE_RATE,
-        PERM_DOC_BULK_DOWNLOAD,
+        # Document management (Phase 16) — destructive bulk action stays ADM-only
         PERM_DOC_BULK_DELETE,
-        # COM — config + messaging + announcements (Phase 11C)
+        # COM — config/broadcast operations
         PERM_COM_CONSENT_UPDATE,
-        PERM_COM_NOTIFICATION_READ,
         PERM_COM_NOTIFICATION_BATCH_CREATE,
-        PERM_COM_CONVERSATION_CREATE,
-        PERM_COM_CONVERSATION_READ,
-        PERM_COM_ANNOUNCEMENT_CREATE,
-        PERM_COM_ANNOUNCEMENT_READ,
-        PERM_COM_ANNOUNCEMENT_PUBLISH,
         # Support
         PERM_SUP_GRANT_APPROVE,
         PERM_SUP_GRANT_REVOKE,
@@ -345,61 +281,49 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_ADM_AUDIT_READ,
         PERM_ADM_IMPERSONATE,
         PERM_ADM_SCHOOL_READ,
+        PERM_ADM_SETTINGS_READ,
+        PERM_ADM_SETTINGS_UPDATE,
+        PERM_ADM_ANNOUNCEMENT_MANAGE,
         PERM_GDPR_DATA_DELETE,
-        # IAM — read/validate
-        PERM_IAM_SESSION_CREATE,
-        PERM_IAM_SESSION_REFRESH,
-        PERM_IAM_SESSION_REVOKE,
-        PERM_IAM_SESSION_LIST,
-        PERM_IAM_PASSWORD_CHANGE,
-        PERM_IAM_RECOVERY_REQUEST,
-        PERM_IAM_RECOVERY_VERIFY,
-        PERM_IAM_RECOVERY_RESET,
+        # IAM — role-specific oversight
         PERM_IAM_PARENT_LINK_READ,
         PERM_IAM_LOGIN_HISTORY_READ,
-        # ERP — validate periods
-        PERM_ERP_CLASS_READ,
-        PERM_ERP_ATTENDANCE_ANALYTICS_READ,
-        # ERP — Timetable (Phase 11A)
-        PERM_ERP_TIMETABLE_READ,
-        PERM_ERP_TIMETABLE_EXCEPTION_READ,
-        # LMS — read analytics
-        PERM_LMS_ASSESSMENT_READ,
-        PERM_LMS_RUBRIC_READ,
-        PERM_LMS_GRADEBOOK_READ,
-        # Billing — policy oversight + plans (ENH-C1)
-        # Progress (Phase 11D)
-        PERM_PROGRESS_READ,
-        PERM_PROGRESS_CLASS_READ,
+        # ERP / LMS oversight
+        PERM_ERP_TIMETABLE_GENERATE,
+        PERM_ERP_TIMETABLE_CONSTRAINT_MANAGE,
+        PERM_LMS_COURSE_READ,
         # Reporting & Analytics (Phase 14)
-        PERM_REP_REPORT_GENERATE,
-        PERM_REP_REPORT_READ,
         PERM_REP_ANALYTICS_READ,
         PERM_REP_EXPORT_CREATE,
         PERM_RPT_SCHEDULE_MANAGE,
+        # Billing — school finance management
+        PERM_BIL_INVOICE_READ,
+        PERM_BIL_INVOICE_VOID,
+        PERM_BIL_PAYMENT_READ,
+        PERM_BIL_PROOF_READ,
+        PERM_BIL_FEE_CREATE,
+        PERM_BIL_FEE_READ,
+        PERM_BIL_FEE_UPDATE,
+        PERM_BIL_FEE_ASSIGN,
+        PERM_BIL_FEE_STRUCTURE_CREATE,
+        PERM_BIL_FEE_STRUCTURE_UPDATE,
+        PERM_BIL_FEE_STRUCTURE_DELETE,
+        PERM_BIL_INVOICE_GENERATE,
+        PERM_BIL_SIBLING_POLICY_MANAGE,
+        PERM_BIL_DISCOUNT_MANAGE,
+        PERM_BIL_LATE_FEE_MANAGE,
+        PERM_BIL_PAYMENT_PLAN_CREATE,
+        PERM_BIL_PAYMENT_PLAN_READ,
+        PERM_BIL_PAYMENT_PLAN_MANAGE,
         # Calendar & Events (Phase 15)
-        PERM_CAL_EVENT_CREATE,
-        PERM_CAL_EVENT_READ,
-        PERM_CAL_EVENT_UPDATE,
         PERM_CAL_EVENT_DELETE,
         PERM_CAL_HOLIDAY_MANAGE,
-        PERM_CAL_RSVP_READ,
         # Document management (Phase 16)
-        PERM_DOC_DOCUMENT_UPLOAD,
-        PERM_DOC_DOCUMENT_READ,
         PERM_DOC_DOCUMENT_DELETE,
         PERM_DOC_STUDENT_DOCUMENT_LINK,
-        PERM_DOC_RESOURCE_CREATE,
-        PERM_DOC_RESOURCE_READ,
-        PERM_DOC_RESOURCE_UPDATE,
-        PERM_DOC_RESOURCE_DELETE,
-        PERM_DOC_RESOURCE_RATE,
-        PERM_DOC_BULK_DOWNLOAD,
+        PERM_DOC_REQUIREMENT_MANAGE,
         # COM — read + announcements (Phase 11C)
-        PERM_COM_NOTIFICATION_READ,
-        PERM_COM_CONVERSATION_READ,
         PERM_COM_ANNOUNCEMENT_CREATE,
-        PERM_COM_ANNOUNCEMENT_READ,
         PERM_COM_ANNOUNCEMENT_PUBLISH,
     },
     TCH: {
@@ -589,22 +513,14 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IA_RECOMMENDATION_READ,
     },
     SUP: {
-        # IAM
-        PERM_IAM_SESSION_CREATE,
-        PERM_IAM_SESSION_REFRESH,
-        PERM_IAM_SESSION_REVOKE,
-        PERM_IAM_SESSION_LIST,
-        PERM_IAM_PASSWORD_CHANGE,
-        PERM_IAM_RECOVERY_REQUEST,
-        PERM_IAM_RECOVERY_VERIFY,
-        PERM_IAM_RECOVERY_RESET,
-        PERM_IAM_LOGIN_HISTORY_READ,
-        PERM_ADM_IMPERSONATE,
-        PERM_ADM_SCHOOL_MANAGE,
-        PERM_ADM_SCHOOL_READ,
+        # Platform-wide read / oversight beyond inherited ADM → DIR → TCH
+        PERM_ERP_SCHOOL_READ,
+        PERM_ERP_ENROLLMENT_READ,
+        PERM_ERP_ATTENDANCE_READ,
+        PERM_ADM_PLATFORM_STATS,
+        PERM_SYS_AUDIT_LOG_READ,
         # Support — grant lifecycle
         PERM_SUP_GRANT_REQUEST,
-        PERM_SUP_GRANT_REVOKE,
         PERM_SUP_AUDIT_READ,
     },
     SYS: {
@@ -646,6 +562,12 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # LMS enhancement permissions
         PERM_LMS_QUESTION_BANK_MANAGE,
         PERM_LMS_QUESTION_BANK_READ,
+        # Cross-school resources
+        PERM_DOC_RESOURCE_CREATE,
+        PERM_DOC_RESOURCE_READ,
+        PERM_DOC_RESOURCE_UPDATE,
+        PERM_DOC_RESOURCE_DELETE,
+        PERM_DOC_RESOURCE_MANAGE,
         # COM — notifications
         PERM_COM_NOTIFICATION_READ,
         # Feature toggles (Phase 11E)
@@ -653,15 +575,44 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
     },
 }
 
+ROLE_HIERARCHY: dict[str, list[str]] = {
+    SYS: [SUP],
+    SUP: [ADM],
+    ADM: [DIR],
+    DIR: [TCH],
+}
+
+# Direct assignments above intentionally omit inherited permissions after the
+# hierarchy cleanup:
+# - DIR now inherits the teacher baseline from TCH.
+# - ADM now inherits the shared DIR/TCH baseline and keeps only ADM-only extras.
+# - SUP now inherits the shared ADM/DIR/TCH baseline and keeps only platform extras.
+
 
 # ---------------------------------------------------------------------------
 # Lookup helpers
 # ---------------------------------------------------------------------------
+def get_effective_permissions(
+    role_code: str,
+    _stack: set[str] | None = None,
+) -> set[str]:
+    """Return direct and inherited permissions for a role code."""
+    stack = set() if _stack is None else set(_stack)
+    if role_code in stack:
+        raise ValueError(f"Circular role hierarchy detected at role {role_code}")
+
+    stack.add(role_code)
+    permissions = set(ROLE_PERMISSIONS.get(role_code, set()))
+    for inherited_role in ROLE_HIERARCHY.get(role_code, []):
+        permissions |= get_effective_permissions(inherited_role, stack)
+    return permissions
+
+
 def get_permissions_for_role(role_code: str) -> set[str]:
-    """Return the set of permissions for a given role code."""
-    return ROLE_PERMISSIONS.get(role_code, set())
+    """Return the effective permission set for a given role code."""
+    return get_effective_permissions(role_code)
 
 
 def role_has_permission(role_code: str, permission: str) -> bool:
     """Check if a role has a specific permission."""
-    return permission in ROLE_PERMISSIONS.get(role_code, set())
+    return permission in get_effective_permissions(role_code)

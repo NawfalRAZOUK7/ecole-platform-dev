@@ -500,21 +500,21 @@
 ### Phase MR-D: Permission Fixes
 
 #### MR-D1: DIR + SUP + CONTENT_MGR + Role Hierarchy
-- [ ] DIR: added billing management permissions (fee structure, invoice void, discounts, late fees, payment plans)
-- [ ] DIR: added timetable permissions (generate, constraint manage)
-- [ ] DIR: added admin permissions (settings read/update, announcement manage)
-- [ ] DIR: added report schedule manage, document requirement manage
-- [ ] SUP: added cross-school read access (class, enrollment, attendance, course, invoice, payment, notification, document, report, event)
-- [ ] SUP: added PERM_ADM_SCHOOL_MANAGE, PERM_ADM_PLATFORM_STATS, PERM_SYS_AUDIT_LOG_READ
-- [ ] CONTENT_MGR: PLATFORM_ROLES constant added ("SUP", "SYS", "CONTENT_MGR")
-- [ ] CONTENT_MGR: added cross-school content permissions
-- [ ] ROLE_HIERARCHY dict added to permissions.py
-- [ ] get_effective_permissions(role) function implemented
-- [ ] role_has_permission() updated to use effective permissions
-- [ ] Redundant permission assignments cleaned up (inherited ones removed)
-- [ ] No circular references in hierarchy
-- [ ] DIR inherits TCH permissions (verified)
-- [ ] SUP inherits ADM → DIR → TCH permissions (verified)
+- [x] DIR: added billing management permissions (fee structure, invoice void, discounts, late fees, payment plans)
+- [x] DIR: added timetable permissions (generate, constraint manage)
+- [x] DIR: added admin permissions (settings read/update, announcement manage)
+- [x] DIR: added report schedule manage, document requirement manage
+- [x] SUP: added cross-school read access (class, enrollment, attendance, course, invoice, payment, notification, document, report, event)
+- [x] SUP: added PERM_ADM_SCHOOL_MANAGE, PERM_ADM_PLATFORM_STATS, PERM_SYS_AUDIT_LOG_READ
+- [x] CONTENT_MGR: PLATFORM_ROLES constant added ("SUP", "SYS", "CONTENT_MGR")
+- [x] CONTENT_MGR: added cross-school content permissions
+- [x] ROLE_HIERARCHY dict added to permissions.py
+- [x] get_effective_permissions(role) function implemented
+- [x] role_has_permission() updated to use effective permissions
+- [x] Redundant permission assignments cleaned up (inherited ones removed)
+- [x] No circular references in hierarchy
+- [x] DIR inherits TCH permissions (verified)
+- [x] SUP inherits ADM → DIR → TCH permissions (verified)
 - [ ] **Review & commit myself**
 
 ---
@@ -587,7 +587,7 @@
 | MR | A — School + Mixins | MR-A1 | Not started |
 | MR | B — Props/Repr/Valid | MR-B1, B2, B3 | Not started |
 | MR | C — Enum Columns | MR-C1 | Complete |
-| MR | D — Permissions | MR-D1 | Not started |
+| MR | D — Permissions | MR-D1 | Complete |
 | MR | E — ABAC + Roles | MR-E1, E2 | Not started |
 | MR | F — MR Validation | MR-F1 | Not started |
 
