@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.abac import validate_parent_child_access, validate_student_teacher_access
 from app.core.dependencies import AuthContext, verify_school_boundary
 from app.core.exceptions import NotFoundError, ValidationError
 from app.core.filtering import FilterSpec, SortSpec
@@ -172,6 +173,32 @@ class CommunicationService:
                         "Teachers can only message parents, admins, directors, or other teachers",
                         error_code="ERR-COM-403",
                     )
+            return
+
+        if auth.role == "STD":
+            for participant_id in participant_ids:
+                user = await self.repo.get_user(participant_id)
+                if user is None:
+                    raise NotFoundError("User not found", error_code="ERR-COM-404")
+                role = await self.repo.get_membership_role(
+                    user_id=participant_id,
+                    school_id=auth.school_id,
+                )
+                if role != "TCH":
+                    raise ValidationError(
+                        "Students can only message teachers",
+                        error_code="ERR-COM-403",
+                    )
+                is_valid = await validate_student_teacher_access(
+                    self.db,
+                    student_id=auth.user_id,
+                    teacher_id=participant_id,
+                )
+                if not is_valid:
+                    raise ValidationError(
+                        "Students can only message teachers of their classes",
+                        error_code="ERR-COM-403",
+                    )
 
     async def _validate_attachment_ownership(
         self,
@@ -202,6 +229,11 @@ class CommunicationService:
         ip_address: str | None,
     ) -> dict:
         now = datetime.now(timezone.utc)
+        if auth.role == "STD" and body.type != "DIRECT":
+            raise ValidationError(
+                "Students can only create direct conversations",
+                error_code="ERR-COM-422",
+            )
         if body.type == "DIRECT" and len(body.participant_ids) != 1:
             raise ValidationError(
                 "DIRECT conversations require exactly 1 other participant",
@@ -497,6 +529,14 @@ class CommunicationService:
         limit: int,
         auth: AuthContext,
     ) -> tuple[list[dict], str | None, bool]:
+        if auth.role == "PAR" and student_id is not None:
+            has_access = await validate_parent_child_access(
+                self.db,
+                parent_id=auth.user_id,
+                student_id=student_id,
+            )
+            if not has_access:
+                raise NotFoundError("Student not found", error_code="ERR-COM-404")
         items_list, has_more = await self.repo.list_parent_feed_items(
             school_id=auth.school_id,
             parent_id=auth.user_id,

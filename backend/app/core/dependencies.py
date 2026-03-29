@@ -136,6 +136,33 @@ def requires_permission(*permissions: str) -> RequiresPermission:
     return RequiresPermission(*permissions)
 
 
+class RequiresAnyPermission:
+    """FastAPI dependency that accepts any one of the given permissions."""
+
+    def __init__(self, *permissions: str) -> None:
+        self.allowed_permissions = permissions
+
+    async def __call__(
+        self,
+        auth: AuthContext = Depends(get_current_user),
+    ) -> AuthContext:
+        if not any(role_has_permission(auth.role, perm) for perm in self.allowed_permissions):
+            raise AuthorizationError(
+                "Insufficient permissions",
+                error_code="ERR-AUTHZ-001",
+                details={
+                    "required_any": list(self.allowed_permissions),
+                    "role": auth.role,
+                },
+            )
+        return auth
+
+
+def requires_any_permission(*permissions: str) -> RequiresAnyPermission:
+    """Create a RequiresAnyPermission dependency for the given permission codes."""
+    return RequiresAnyPermission(*permissions)
+
+
 class RequiresRole:
     """FastAPI dependency that restricts access to one or more role codes."""
 

@@ -9,6 +9,7 @@ from datetime import date, datetime, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.abac import validate_parent_child_access
 from app.core.dependencies import AuthContext, verify_school_boundary
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.core.filtering import FilterSpec, SortSpec
@@ -564,6 +565,15 @@ class BillingService:
             )
             if not student_ids:
                 return []
+            if student_id is not None:
+                has_access = await validate_parent_child_access(
+                    self.db,
+                    parent_id=auth.user_id,
+                    student_id=student_id,
+                )
+                if not has_access:
+                    raise NotFoundError("Student not found", error_code="ERR-BIL-404")
+                student_ids = {student_id}
 
         assignments = await self.repo.list_fee_assignments(
             school_id=auth.school_id,

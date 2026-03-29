@@ -152,6 +152,8 @@ PERM_COM_CONSENT_UPDATE = "PERM-COM:consent:update"
 PERM_COM_NOTIFICATION_READ = "PERM-COM:notification:read"
 PERM_COM_NOTIFICATION_BATCH_CREATE = "PERM-COM:notification:batch-create"
 PERM_COM_MESSAGE_SEND = "PERM-COM:message:send"
+PERM_COM_STD_MESSAGE_SEND = "com:std_message:send"
+PERM_COM_STD_MESSAGE_READ = "com:std_message:read"
 
 # Progress (Phase 11D)
 PERM_PROGRESS_READ = "PERM-LMS:progress:read"
@@ -506,6 +508,8 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_DOC_BULK_DOWNLOAD,
         # COM — read notifications + announcements (Phase 11C)
         PERM_COM_NOTIFICATION_READ,
+        PERM_COM_STD_MESSAGE_SEND,
+        PERM_COM_STD_MESSAGE_READ,
         PERM_COM_ANNOUNCEMENT_READ,
         # IA (P1)
         PERM_IA_WRITING_ATTEMPT_CREATE,

@@ -8,11 +8,13 @@ from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import AuthContext, requires_permission
+from app.core.dependencies import AuthContext, requires_any_permission
 from app.core.permissions import (
     PERM_COM_CONVERSATION_CREATE,
     PERM_COM_CONVERSATION_READ,
     PERM_COM_MESSAGE_SEND,
+    PERM_COM_STD_MESSAGE_READ,
+    PERM_COM_STD_MESSAGE_SEND,
 )
 from app.core.request_utils import get_client_ip
 from app.core.response import clamp_page_size, list_response, success_response
@@ -31,7 +33,12 @@ router = APIRouter(prefix="/messages", tags=["messaging"])
 async def create_conversation(
     body: ConversationCreateRequest,
     request: Request,
-    auth: AuthContext = Depends(requires_permission(PERM_COM_CONVERSATION_CREATE)),
+    auth: AuthContext = Depends(
+        requires_any_permission(
+            PERM_COM_CONVERSATION_CREATE,
+            PERM_COM_STD_MESSAGE_SEND,
+        )
+    ),
     db: AsyncSession = Depends(get_db),
 ):
     service = CommunicationService(db)
@@ -52,7 +59,12 @@ async def create_conversation(
 async def list_conversations(
     limit: int = Query(20, ge=1, le=100),
     cursor: str | None = Query(None),
-    auth: AuthContext = Depends(requires_permission(PERM_COM_CONVERSATION_READ)),
+    auth: AuthContext = Depends(
+        requires_any_permission(
+            PERM_COM_CONVERSATION_READ,
+            PERM_COM_STD_MESSAGE_READ,
+        )
+    ),
     db: AsyncSession = Depends(get_db),
 ):
     service = CommunicationService(db)
@@ -72,7 +84,12 @@ async def list_conversations(
 async def search_messages(
     q: str = Query(..., min_length=1),
     limit: int = Query(20, ge=1, le=100),
-    auth: AuthContext = Depends(requires_permission(PERM_COM_CONVERSATION_READ)),
+    auth: AuthContext = Depends(
+        requires_any_permission(
+            PERM_COM_CONVERSATION_READ,
+            PERM_COM_STD_MESSAGE_READ,
+        )
+    ),
     db: AsyncSession = Depends(get_db),
 ):
     service = CommunicationService(db)
@@ -93,7 +110,12 @@ async def list_messages(
     conversation_id: uuid.UUID,
     limit: int = Query(50, ge=1, le=100),
     cursor: str | None = Query(None),
-    auth: AuthContext = Depends(requires_permission(PERM_COM_CONVERSATION_READ)),
+    auth: AuthContext = Depends(
+        requires_any_permission(
+            PERM_COM_CONVERSATION_READ,
+            PERM_COM_STD_MESSAGE_READ,
+        )
+    ),
     db: AsyncSession = Depends(get_db),
 ):
     service = CommunicationService(db)
@@ -116,7 +138,12 @@ async def send_message(
     conversation_id: uuid.UUID,
     body: MessageCreateRequest,
     request: Request,
-    auth: AuthContext = Depends(requires_permission(PERM_COM_MESSAGE_SEND)),
+    auth: AuthContext = Depends(
+        requires_any_permission(
+            PERM_COM_MESSAGE_SEND,
+            PERM_COM_STD_MESSAGE_SEND,
+        )
+    ),
     db: AsyncSession = Depends(get_db),
 ):
     service = CommunicationService(db)
@@ -138,7 +165,12 @@ async def send_message(
 async def mark_read(
     conversation_id: uuid.UUID,
     body: MarkReadRequest,
-    auth: AuthContext = Depends(requires_permission(PERM_COM_CONVERSATION_READ)),
+    auth: AuthContext = Depends(
+        requires_any_permission(
+            PERM_COM_CONVERSATION_READ,
+            PERM_COM_STD_MESSAGE_READ,
+        )
+    ),
     db: AsyncSession = Depends(get_db),
 ):
     service = CommunicationService(db)
@@ -159,7 +191,12 @@ async def mark_read(
 async def get_read_status(
     conversation_id: uuid.UUID,
     message_id: uuid.UUID | None = Query(None, description="Filter by specific message"),
-    auth: AuthContext = Depends(requires_permission(PERM_COM_CONVERSATION_READ)),
+    auth: AuthContext = Depends(
+        requires_any_permission(
+            PERM_COM_CONVERSATION_READ,
+            PERM_COM_STD_MESSAGE_READ,
+        )
+    ),
     db: AsyncSession = Depends(get_db),
 ):
     service = CommunicationService(db)

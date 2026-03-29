@@ -522,17 +522,17 @@
 ### Phase MR-E: ABAC Validation + Hardcoded Role Removal
 
 #### MR-E1: ABAC Helpers + PAR/STD Validation
-- [ ] Created backend/app/core/abac.py
-- [ ] apply_owner_scope() function implemented
-- [ ] validate_parent_child_access() function implemented
-- [ ] validate_teacher_class_access() function implemented
-- [ ] validate_student_teacher_access() function implemented
-- [ ] Added PERM_COM_STD_MESSAGE_SEND, PERM_COM_STD_MESSAGE_READ to permissions.py
-- [ ] Assigned STD messaging permissions to STD role
-- [ ] Updated communication service: STD can create DIRECT conversations only
-- [ ] STD messaging validates student-teacher class relationship
-- [ ] PAR access validates parent-child link in all service methods
-- [ ] Audited: lms/, erp, billing, communication, reports, student_documents services
+- [x] Created backend/app/core/abac.py
+- [x] apply_owner_scope() function implemented
+- [x] validate_parent_child_access() function implemented
+- [x] validate_teacher_class_access() function implemented
+- [x] validate_student_teacher_access() function implemented
+- [x] Added PERM_COM_STD_MESSAGE_SEND, PERM_COM_STD_MESSAGE_READ to permissions.py
+- [x] Assigned STD messaging permissions to STD role
+- [x] Updated communication service: STD can create DIRECT conversations only
+- [x] STD messaging validates student-teacher class relationship
+- [x] PAR access validates parent-child link in all service methods
+- [x] Audited: lms/, erp, billing, communication, reports, student_documents services
 - [ ] **Review & commit myself**
 
 #### MR-E2: Replace Hardcoded Role Strings
@@ -588,7 +588,7 @@
 | MR | B — Props/Repr/Valid | MR-B1, B2, B3 | Not started |
 | MR | C — Enum Columns | MR-C1 | Complete |
 | MR | D — Permissions | MR-D1 | Complete |
-| MR | E — ABAC + Roles | MR-E1, E2 | Not started |
+| MR | E — ABAC + Roles | MR-E1, E2 | In progress |
 | MR | F — MR Validation | MR-F1 | Not started |
 
 **Total: 30 prompts (23 complete + 7 new), ~160+ files to create/modify, 10 migrations (G26-G31b)**
