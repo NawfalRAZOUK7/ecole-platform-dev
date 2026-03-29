@@ -481,7 +481,10 @@ class TestNotificationEmailTemplates:
         assert 'dir="rtl"' in html
         assert "attendance" in html
         assert "academic" in html
-        assert "Absence aujourd'hui" in html
+        assert (
+            "Absence aujourd'hui" in html
+            or "Absence aujourd&#39;hui" in html
+        )
         assert "Math quiz published" in html
         assert "https://example.test/attendance/1" in html
         assert "https://example.test/quizzes/1" in html

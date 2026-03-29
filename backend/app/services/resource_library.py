@@ -29,6 +29,10 @@ def _utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _api_url(path: str) -> str:
+    return f"{settings.api_base_url.rstrip('/')}/{path.lstrip('/')}"
+
+
 class ResourceLibraryService:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
@@ -436,7 +440,9 @@ class ResourceLibraryService:
             "download_count": resource.download_count,
             "avg_rating": resource.avg_rating,
             "rating_count": resource.rating_count,
-            "download_url": f"/api/v1/resources/{resource.id}/download?token={download_token}",
+            "download_url": _api_url(
+                f"resources/{resource.id}/download?token={download_token}"
+            ),
             "preview_url": preview.get("preview_url") if preview else None,
             "thumbnail_url": preview.get("thumbnail_url") if preview else None,
             "document": preview,

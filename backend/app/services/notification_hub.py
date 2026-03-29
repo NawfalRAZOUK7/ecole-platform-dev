@@ -359,12 +359,17 @@ class NotificationHubService:
     ) -> Notification:
         async with UnitOfWork(self.db) as uow:
             repo = NotificationRepository(uow.session)
+            resolved_idempotency_key = idempotency_key or f"{category}:{user_id}:{uuid.uuid4()}"
+            existing = await repo.find_notification_by_idempotency_key(
+                resolved_idempotency_key
+            )
+            if existing is not None:
+                return existing
             notification = Notification(
                 school_id=school_id,
                 parent_id=user_id,
                 event_ref=event_ref,
-                idempotency_key=idempotency_key
-                or f"{category}:{user_id}:{uuid.uuid4()}",
+                idempotency_key=resolved_idempotency_key,
                 title=title,
                 body=body,
                 category=category,

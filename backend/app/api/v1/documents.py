@@ -15,7 +15,6 @@ from app.core.exceptions import AuthenticationError, ValidationError
 from app.core.permissions import (
     PERM_DOC_BULK_DELETE,
     PERM_DOC_BULK_DOWNLOAD,
-    PERM_DOC_DOCUMENT_DELETE,
     PERM_DOC_DOCUMENT_READ,
     PERM_DOC_DOCUMENT_UPLOAD,
     PERM_DOC_RESOURCE_CREATE,
@@ -331,7 +330,7 @@ async def delete_document(
     document_id: uuid.UUID,
     request: Request,
     hard: bool = Query(False),
-    auth: AuthContext = Depends(requires_permission(PERM_DOC_DOCUMENT_DELETE)),
+    auth: AuthContext = Depends(requires_permission(PERM_DOC_DOCUMENT_READ)),
     db: AsyncSession = Depends(get_db),
 ):
     service = StudentDocumentsService(db)

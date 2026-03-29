@@ -2,7 +2,8 @@
        staging-up staging-down prod-up prod-down monitoring-up monitoring-down \
        shell-db redis-cli backup restore docker-prune version \
        migrate-new migrate-down migrate-status test-cov lint-fix format web-install web-lint \
-       openapi openapi-check worker worker-logs
+       openapi openapi-check worker worker-logs test-unit test-integration test-security \
+       test-full test-perf
 
 # ==================== Compose Files ====================
 COMPOSE_FILE = infra/docker-compose.dev.yml
@@ -198,3 +199,20 @@ version:
 	@docker images --format "  {{.Repository}}:{{.Tag}} ({{.Size}})" 2>/dev/null | grep ecole || echo "  (no images)"
 	@echo "Compose services:"
 	@$(DC) ps --format "  {{.Name}}: {{.Status}}" 2>/dev/null || echo "  (not running)"
+
+# ==================== Test Matrix ====================
+
+test-unit:
+	cd backend && .venv/bin/python -m pytest tests/unit -m unit --timeout=10 -q
+
+test-integration:
+	cd backend && .venv/bin/python -m pytest tests/unit tests/integration -m "unit or integration" --timeout=30
+
+test-security:
+	cd backend && .venv/bin/python -m pytest tests/security -m security --timeout=60
+
+test-full:
+	cd backend && .venv/bin/python -m pytest --cov=app --cov-branch --cov-report=html --cov-report=term-missing
+
+test-perf:
+	cd backend && .venv/bin/python -m pytest tests/performance -m performance --timeout=300 --benchmark-enable

@@ -348,9 +348,30 @@ class TestWorkerSettings:
         assert "task_send_notification_digest" in func_names
 
     def test_worker_settings_has_cron_jobs(self):
+        from app.core.config import settings
         from app.core.tasks import WorkerSettings
 
-        assert len(WorkerSettings.cron_jobs) == 3
+        cron_job_names = {job.name for job in WorkerSettings.cron_jobs}
+        expected_names = {
+            "cron:task_cleanup_expired_sessions",
+            "cron:task_cleanup_expired_cache",
+            "cron:task_refresh_kpi_views",
+            "cron:task_cleanup_expired_reports",
+            "cron:task_process_due_report_schedules",
+            "cron:task_notify_expiring_documents",
+            "cron:task_cleanup_deleted_documents",
+            "cron:task_send_event_reminders",
+        }
+        if settings.app_env in ("staging", "production"):
+            expected_names.update(
+                {
+                    "cron:task_send_notification_digest",
+                    "cron:task_retry_failed_payments",
+                    "cron:task_send_overdue_reminders",
+                }
+            )
+
+        assert cron_job_names == expected_names
 
     def test_redis_settings_parses_url(self):
         from app.core.tasks import get_redis_settings

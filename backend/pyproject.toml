@@ -1,0 +1,22 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+markers = [
+  "slow: marks tests as slow",
+  "security: RBAC/ABAC security matrix tests",
+  "performance: benchmark and load tests",
+  "unit: fast unit tests with mocked dependencies",
+  "integration: tests requiring real database",
+]
+addopts = ["--strict-markers", "--tb=short", "-q"]
+
+[tool.coverage.run]
+source = ["app"]
+branch = true
+omit = ["app/alembic/*", "app/core/config.py"]
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
+exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "if __name__"]

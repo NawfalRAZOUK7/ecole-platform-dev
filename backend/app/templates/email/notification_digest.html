@@ -17,8 +17,8 @@
     {% for item in items %}
       <tr>
         <td>
-          <strong>{{ item.title }}</strong><br>
-          {% if item.body %}<span>{{ item.body }}</span><br>{% endif %}
+          <strong>{{ item.title | e | replace('&#39;', "'") | safe }}</strong><br>
+          {% if item.body %}<span>{{ item.body | e | replace('&#39;', "'") | safe }}</span><br>{% endif %}
           {% if item.action_url %}
             <a href="{{ item.action_url }}">
               {% if lang == 'ar' %}فتح{% elif lang == 'fr' %}Ouvrir{% else %}Open{% endif %}

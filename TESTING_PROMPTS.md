@@ -10,7 +10,7 @@
 
 ### Prompt T-A1: Infrastructure Setup
 
-```
+```yaml
 CONTEXT: Read TESTING_ARCHITECTURE.md sections "Test Infrastructure" and "Directory Structure".
 
 TASK: Set up the test infrastructure: conftest, factories, configuration, directory structure.
@@ -107,7 +107,7 @@ RULES:
 
 ### Prompt T-B1: Domain Value Object Tests
 
-```
+```jl
 CONTEXT: Read TESTING_ARCHITECTURE.md section "Category 1: Unit Tests — 1A".
 
 TASK: Create comprehensive unit tests for all domain value objects.
@@ -150,7 +150,7 @@ RULES:
 
 ### Prompt T-B2: Model Validator + Property Tests
 
-```
+```yaml
 CONTEXT: Read TESTING_ARCHITECTURE.md sections "1C" and "M3 Helper Properties".
 
 TASK: Test all SQLAlchemy validators and helper properties on models.
@@ -200,7 +200,7 @@ RULES:
 
 ### Prompt T-B3: Permission + ABAC Unit Tests
 
-```
+```yaml
 CONTEXT: Read TESTING_ARCHITECTURE.md sections "1D" and "Category 3".
 
 TASK: Test role hierarchy, effective permissions, and ABAC helper functions.
@@ -247,7 +247,7 @@ RULES:
 
 ### Prompt T-C1: LMS Service Unit Tests
 
-```
+```yaml
 CONTEXT: Read TESTING_ARCHITECTURE.md "1B Service Unit Tests".
 
 TASK: Create unit tests for LMS services (grading, assignment, quiz) with mocked repositories.
@@ -299,7 +299,7 @@ RULES:
 
 ### Prompt T-C2: Billing + Auth Service Unit Tests
 
-```
+```yaml
 CONTEXT: Read TESTING_ARCHITECTURE.md "1B Service Unit Tests".
 
 TASK: Create unit tests for billing, attendance, and auth services.
@@ -344,7 +344,7 @@ RULES:
 
 ### Prompt T-C3: Communication + School + Other Service Tests
 
-```
+```yaml
 CONTEXT: Read TESTING_ARCHITECTURE.md.
 
 TASK: Create unit tests for remaining services.
@@ -396,7 +396,7 @@ RULES:
 
 ### Prompt T-D1: API Integration Tests
 
-```
+```yaml
 CONTEXT: Read TESTING_ARCHITECTURE.md "Category 2: Integration Tests".
 
 TASK: Create API integration tests for all new endpoints.
@@ -432,7 +432,7 @@ RULES:
 
 ### Prompt T-D2: Database Repository Integration Tests
 
-```
+```yaml
 CONTEXT: Read TESTING_ARCHITECTURE.md.
 
 TASK: Create repository integration tests against real PostgreSQL.
@@ -467,7 +467,7 @@ RULES:
 
 ### Prompt T-E1: RBAC + ABAC Security Matrix
 
-```
+```yaml
 CONTEXT: Read TESTING_ARCHITECTURE.md "Category 3: Security Tests".
 
 TASK: Create comprehensive RBAC matrix and ABAC validation tests.
@@ -512,7 +512,7 @@ RULES:
 
 ### Prompt T-F1: Edge Case + Boundary Tests
 
-```
+```yaml
 CONTEXT: Read TESTING_ARCHITECTURE.md "Category 4: Edge Case Tests".
 
 TASK: Create edge case, boundary value, and time-dependent tests.
@@ -551,7 +551,7 @@ RULES:
 
 ### Prompt T-F2: Performance + Contract Tests
 
-```
+```yaml
 CONTEXT: Read TESTING_ARCHITECTURE.md sections 5 and 6.
 
 TASK: Create performance benchmarks and API contract tests.
@@ -593,7 +593,7 @@ RULES:
 
 ### Prompt T-G1: Coverage Analysis + Gap Fill
 
-```
+```yaml
 CONTEXT: All previous test phases (T-A through T-F) are complete.
 
 TASK: Run coverage analysis, identify remaining gaps, and write tests to reach 90%+.

@@ -55,6 +55,19 @@ def _utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _normalize_report_type(value: str | ReportType) -> str:
+    if isinstance(value, ReportType):
+        return value.value
+    if isinstance(value, str):
+        if value in ReportType._value2member_map_:
+            return value
+        if value.startswith("ReportType."):
+            member_name = value.split(".", 1)[1]
+            if member_name in ReportType.__members__:
+                return ReportType[member_name].value
+    return str(value)
+
+
 def _datetime_bounds(from_date: date, to_date: date) -> tuple[datetime, datetime]:
     start_dt = datetime.combine(from_date, time.min, tzinfo=timezone.utc)
     end_dt = datetime.combine(to_date + timedelta(days=1), time.min, tzinfo=timezone.utc)
@@ -155,6 +168,7 @@ class ReportsService:
             requester_role=requester_role,
             request=request,
         )
+        report_type = _normalize_report_type(request.type)
         parameters_hash = hashlib.sha256(
             json.dumps(parameters, sort_keys=True).encode("utf-8")
         ).hexdigest()
@@ -162,7 +176,7 @@ class ReportsService:
         cached_job = await self.repo.find_cached_report(
             school_id=school_id,
             requester_id=requester_id,
-            report_type=request.type,
+            report_type=report_type,
             parameters_hash=parameters_hash,
             since=now - timedelta(hours=settings.report_cache_ttl_hours),
             now=now,
@@ -175,7 +189,7 @@ class ReportsService:
             job = ReportJob(
                 school_id=school_id,
                 requester_id=requester_id,
-                type=request.type,
+                type=report_type,
                 parameters=parameters,
                 parameters_hash=parameters_hash,
                 status=ReportJobStatus.PENDING.value,
@@ -321,6 +335,7 @@ class ReportsService:
         return job
 
     def serialize_job(self, job: ReportJob, *, cache_hit: bool = False) -> dict[str, Any]:
+        report_type = _normalize_report_type(job.type)
         download_url = None
         if (
             job.status == ReportJobStatus.READY.value
@@ -331,7 +346,7 @@ class ReportsService:
             download_url = f"/api/v1/reports/{job.id}/download?token={token}"
         return {
             "id": str(job.id),
-            "type": job.type,
+            "type": report_type,
             "status": job.status,
             "parameters": job.parameters,
             "file_path": job.file_path,
@@ -382,11 +397,12 @@ class ReportsService:
 
         try:
             context = await self._build_context(job)
-            html = self._render_template(job.type, context)
+            report_type = _normalize_report_type(job.type)
+            html = self._render_template(report_type, context)
             pdf_bytes = self._render_pdf_bytes(html)
             relative_path, _checksum, file_size = await storage.save(
                 io.BytesIO(pdf_bytes),
-                f"{job.type}_{job.id}.pdf",
+                f"{report_type}_{job.id}.pdf",
                 subdirectory=settings.report_storage_subdirectory,
             )
             async with UnitOfWork(self.db) as uow:
@@ -449,6 +465,7 @@ class ReportsService:
             if period is None:
                 raise NotFoundError("Period not found", error_code="ERR-REPORT-404")
 
+        report_type = _normalize_report_type(request.type)
         parameters: dict[str, Any] = {
             "locale": request.locale,
             "compare": request.compare,
@@ -457,7 +474,7 @@ class ReportsService:
             "to_date": request.to_date.isoformat() if request.to_date else None,
         }
 
-        if request.type == ReportType.STUDENT_REPORT_CARD.value:
+        if report_type == ReportType.STUDENT_REPORT_CARD.value:
             if requester_role not in {STD, PAR, ADM, DIR}:
                 raise AuthorizationError(
                     "This role cannot generate report cards",
@@ -471,7 +488,7 @@ class ReportsService:
             )
             parameters["student_id"] = str(target_student_id)
 
-        elif request.type in {
+        elif report_type in {
             ReportType.CLASS_SUMMARY.value,
             ReportType.ATTENDANCE_REPORT.value,
         }:
@@ -500,7 +517,7 @@ class ReportsService:
                     raise NotFoundError("Class not found", error_code="ERR-REPORT-404")
             parameters["class_id"] = str(request.class_id)
 
-        elif request.type == ReportType.BILLING_STATEMENT.value:
+        elif report_type == ReportType.BILLING_STATEMENT.value:
             if requester_role not in {PAR, ADM, DIR}:
                 raise AuthorizationError(
                     "This role cannot generate billing statements",
@@ -525,7 +542,7 @@ class ReportsService:
                 target_parent_id = request.parent_id
             parameters["parent_id"] = str(target_parent_id)
 
-        elif request.type == ReportType.SCHOOL_ANALYTICS.value:
+        elif report_type == ReportType.SCHOOL_ANALYTICS.value:
             if requester_role not in {ADM, DIR}:
                 raise AuthorizationError(
                     "This role cannot generate school analytics reports",
@@ -588,15 +605,16 @@ class ReportsService:
         return requested_student_id
 
     async def _build_context(self, job: ReportJob) -> dict[str, Any]:
-        if job.type == ReportType.STUDENT_REPORT_CARD.value:
+        report_type = _normalize_report_type(job.type)
+        if report_type == ReportType.STUDENT_REPORT_CARD.value:
             return await self._student_report_context(job)
-        if job.type == ReportType.CLASS_SUMMARY.value:
+        if report_type == ReportType.CLASS_SUMMARY.value:
             return await self._class_summary_context(job)
-        if job.type == ReportType.ATTENDANCE_REPORT.value:
+        if report_type == ReportType.ATTENDANCE_REPORT.value:
             return await self._attendance_report_context(job)
-        if job.type == ReportType.BILLING_STATEMENT.value:
+        if report_type == ReportType.BILLING_STATEMENT.value:
             return await self._billing_statement_context(job)
-        if job.type == ReportType.SCHOOL_ANALYTICS.value:
+        if report_type == ReportType.SCHOOL_ANALYTICS.value:
             return await self._school_analytics_context(job)
         raise ValidationError("Unsupported report type", error_code="ERR-REPORT-422")
 
@@ -1044,7 +1062,9 @@ class ReportsService:
         return f"{_format_report_date(from_date)} → {_format_report_date(to_date)}"
 
     def _render_template(self, report_type: str, context: dict[str, Any]) -> str:
-        template = _jinja_env.get_template(f"reports/{report_type}.html")
+        template = _jinja_env.get_template(
+            f"reports/{_normalize_report_type(report_type)}.html"
+        )
         return template.render(**context)
 
     def _render_pdf_bytes(self, html: str) -> bytes:
@@ -1104,6 +1124,7 @@ class ReportsService:
         )
 
     def _report_title(self, report_type: str, locale: str) -> str:
+        normalized_report_type = _normalize_report_type(report_type)
         titles = {
             "fr": {
                 ReportType.STUDENT_REPORT_CARD.value: "Bulletin de l'élève",
@@ -1127,4 +1148,4 @@ class ReportsService:
                 ReportType.SCHOOL_ANALYTICS.value: "School analytics report",
             },
         }
-        return titles.get(locale, titles["fr"]).get(report_type, "Report")
+        return titles.get(locale, titles["fr"]).get(normalized_report_type, "Report")

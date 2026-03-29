@@ -163,7 +163,7 @@ class TestWebSocketRealtime:
                 assert msg["event"] == "test:ping"
                 assert msg["data"]["message"] == "integration-test"
             finally:
-                await r.close()
+                await r.aclose()
 
     @pytest.mark.asyncio
     async def test_admin_ws_connection(self):

@@ -180,6 +180,11 @@ class ProfileService:
         )
 
     async def get_my_children(self, auth: AuthContext) -> list[dict]:
+        if auth.role != PAR:
+            raise ValidationError(
+                "Only parents can access linked children",
+                error_code="ERR-VAL-422",
+            )
         rows = await self.repo.list_parent_children(
             parent_id=auth.user_id,
             school_id=auth.school_id,

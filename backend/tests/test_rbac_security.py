@@ -436,10 +436,10 @@ class TestContentItemsRBAC:
         assert resp.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_admin_cannot_list_content(self, client, admin_token):
-        """ADM lacks PERM-LMS:content:read — 403."""
+    async def test_admin_can_list_content(self, client, admin_token):
+        """ADM inherits PERM-LMS:content:read through the school hierarchy."""
         resp = await client.get("/content-items", headers=auth(admin_token))
-        assert resp.status_code == 403
+        assert resp.status_code == 200
 
 
 # ======================================================================

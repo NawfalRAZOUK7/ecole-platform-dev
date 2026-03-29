@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, get_current_user, requires_permission
-from app.core.permissions import PERM_PROF_ADMIN_READ, PERM_PROF_CHILD_READ
+from app.core.permissions import PERM_PROF_ADMIN_READ
 from app.core.request_utils import get_client_ip
 from app.core.response import success_response
 from app.services.profile import ProfileService
@@ -72,7 +72,7 @@ async def admin_get_user_profile(
     response_description="Linked children with student profile data",
 )
 async def get_my_children(
-    auth: AuthContext = Depends(requires_permission(PERM_PROF_CHILD_READ)),
+    auth: AuthContext = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     service = ProfileService(db)

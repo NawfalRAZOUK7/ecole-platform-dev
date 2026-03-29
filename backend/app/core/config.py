@@ -29,12 +29,13 @@ class Settings(BaseSettings):
     app_env: str = "development"
     app_port: int = 8000
     log_level: str = "DEBUG"
+    api_base_url: str = "http://localhost:8000/api/v1"
 
     # Database (PostgreSQL)
     database_url: str = "postgresql+asyncpg://ecole:change-me@localhost:5432/ecole_platform"
 
     # Cache (Redis)
-    redis_url: str = "redis://:change-me@localhost:6379/0"
+    redis_url: str = "redis://:change-me-dev-redis@localhost:6379/0"
 
     # Authentication (JWT)
     jwt_secret_key: str = "change-me-in-production"

@@ -9,32 +9,32 @@
 ## PART 1: TESTING (T-01 → T-13)
 
 ### T-01: Test Infrastructure Setup
-- [ ] **ANALYZE** — Read conftest, models, database.py, requirements-dev
-  - [ ] Understood existing fixtures and backward compatibility needs
-  - [ ] Listed all models that need factories
-- [ ] **EXECUTE** — Create infrastructure
-  - [ ] Created `requirements-test.txt` with all new dependencies
-  - [ ] Installed test dependencies successfully
-  - [ ] Created directory structure (12 directories with `__init__.py`)
-  - [ ] Created `factories/base.py` (AsyncSQLAlchemyFactory)
-  - [ ] Created `factories/iam.py` (User, Membership, Session, InvitationCode, ParentChildLink)
-  - [ ] Created `factories/school.py` (School)
-  - [ ] Created `factories/lms.py` (Course, Assignment, Submission, Grade, Quiz)
-  - [ ] Created `factories/erp.py` (AcademicYear, Class, Enrollment, Attendance)
-  - [ ] Created `factories/billing.py` (Invoice, Payment, FeeStructure, Plan)
-  - [ ] Created `factories/com.py` (Notification, Conversation, Message)
-  - [ ] Created `factories/documents.py` (Document, Resource)
-  - [ ] Created `factories/calendar.py` (Event, RSVP)
-  - [ ] Updated `conftest.py` (testcontainer, engine, db_session, auth fixtures)
-  - [ ] Updated `pyproject.toml` (pytest markers, coverage config, fail_under=90)
-  - [ ] Added Makefile targets (test-unit, test-integration, test-security, test-full, test-perf)
-- [ ] **VERIFY** — All checks pass
-  - [ ] All factories importable
-  - [ ] Directory structure complete
-  - [ ] Existing tests still pass
-  - [ ] pyproject.toml has fail_under=90
-  - [ ] Makefile has all 5 targets
-- [ ] **GIT** — Committed (Codex only)
+- [x] **ANALYZE** — Read conftest, models, database.py, requirements-dev
+  - [x] Understood existing fixtures and backward compatibility needs
+  - [x] Listed all models that need factories
+- [x] **EXECUTE** — Create infrastructure
+  - [x] Created `requirements-test.txt` with all new dependencies
+  - [x] Installed test dependencies successfully
+  - [x] Created directory structure (12 directories with `__init__.py`)
+  - [x] Created `factories/base.py` (AsyncSQLAlchemyFactory)
+  - [x] Created `factories/iam.py` (User, Membership, Session, InvitationCode, ParentChildLink)
+  - [x] Created `factories/school.py` (School)
+  - [x] Created `factories/lms.py` (Course, Assignment, Submission, Grade, Quiz)
+  - [x] Created `factories/erp.py` (AcademicYear, Class, Enrollment, Attendance)
+  - [x] Created `factories/billing.py` (Invoice, Payment, FeeStructure, Plan)
+  - [x] Created `factories/com.py` (Notification, Conversation, Message)
+  - [x] Created `factories/documents.py` (Document, Resource)
+  - [x] Created `factories/calendar.py` (Event, RSVP)
+  - [x] Updated `conftest.py` (testcontainer, engine, db_session, auth fixtures)
+  - [x] Updated `pyproject.toml` (pytest markers, coverage config, fail_under=90)
+  - [x] Added Makefile targets (test-unit, test-integration, test-security, test-full, test-perf)
+- [x] **VERIFY** — All checks pass
+  - [x] All factories importable
+  - [x] Directory structure complete
+  - [x] Existing tests still pass
+  - [x] pyproject.toml has fail_under=90
+  - [x] Makefile has all 5 targets
+- [x] **GIT** — Committed (Codex only)
 
 ---
 

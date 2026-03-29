@@ -49,6 +49,10 @@ def _utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _api_url(path: str) -> str:
+    return f"{settings.api_base_url.rstrip('/')}/{path.lstrip('/')}"
+
+
 DEFAULT_REQUIREMENTS: tuple[tuple[str, bool, str], ...] = (
     ("certificate", True, "Birth or enrollment certificate"),
     ("identity", True, "Student identity document"),
@@ -630,7 +634,7 @@ class StudentDocumentsService:
         return {
             "document_count": len(scoped_documents),
             "filename": archive_name,
-            "download_url": f"/api/v1/documents/bulk-download?token={token}",
+            "download_url": _api_url(f"documents/bulk-download?token={token}"),
         }
 
     def build_access_token(
@@ -909,7 +913,9 @@ class StudentDocumentsService:
         can_delete = can_hard_delete or document.uploader_id == actor_id
         preview_url = None
         if document.thumbnail_path or document.mime_type.startswith("image/") or document.mime_type == "application/pdf":
-            preview_url = f"/api/v1/documents/{document.id}/preview?token={preview_token}"
+            preview_url = _api_url(
+                f"documents/{document.id}/preview?token={preview_token}"
+            )
         return {
             "id": str(document.id),
             "filename": document.filename,
@@ -931,7 +937,9 @@ class StudentDocumentsService:
             "download_count": document.download_count,
             "thumbnail_url": preview_url if document.thumbnail_path else None,
             "preview_url": preview_url,
-            "download_url": f"/api/v1/documents/{document.id}/download?token={download_token}",
+            "download_url": _api_url(
+                f"documents/{document.id}/download?token={download_token}"
+            ),
             "created_at": document.created_at.isoformat(),
             "deleted_at": document.deleted_at.isoformat() if document.deleted_at else None,
             "deduplicated": deduplicated,
@@ -1124,18 +1132,12 @@ class StudentDocumentsService:
             )
 
         category = category or DocumentCategory.OTHER.value
-        existing_document: Document | None = None
         if linked_student_id is not None:
             await self._verify_student_access_for_link(
                 school_id=school_id,
                 actor_id=user_id,
                 actor_role=role,
                 student_id=linked_student_id,
-            )
-            existing_document = await repo.find_document_for_student_category(
-                school_id=school_id,
-                linked_student_id=linked_student_id,
-                category=category,
             )
 
         content = file.read()
@@ -1160,40 +1162,21 @@ class StudentDocumentsService:
                 sha256=sha256,
             )
             thumbnail_path = thumbnail_path or None
-        if existing_document is not None:
-            await self._capture_document_version(
-                repo=repo,
-                document=existing_document,
-                change_note="Superseded by a newer upload",
-            )
-            existing_document.uploader_id = user_id
-            existing_document.filename = os.path.basename(storage_path)
-            existing_document.original_filename = original_filename
-            existing_document.mime_type = mime_type
-            existing_document.size_bytes = len(content)
-            existing_document.sha256 = sha256
-            existing_document.storage_path = storage_path
-            existing_document.thumbnail_path = thumbnail_path
-            existing_document.category = category
-            existing_document.linked_student_id = linked_student_id
-            existing_document.expires_at = expires_at
-            document = await repo.save_document(existing_document)
-        else:
-            document = Document(
-                school_id=school_id,
-                uploader_id=user_id,
-                filename=os.path.basename(storage_path),
-                original_filename=original_filename,
-                mime_type=mime_type,
-                size_bytes=len(content),
-                sha256=sha256,
-                storage_path=storage_path,
-                thumbnail_path=thumbnail_path,
-                category=category,
-                linked_student_id=linked_student_id,
-                expires_at=expires_at,
-            )
-            await repo.create_document(document)
+        document = Document(
+            school_id=school_id,
+            uploader_id=user_id,
+            filename=os.path.basename(storage_path),
+            original_filename=original_filename,
+            mime_type=mime_type,
+            size_bytes=len(content),
+            sha256=sha256,
+            storage_path=storage_path,
+            thumbnail_path=thumbnail_path,
+            category=category,
+            linked_student_id=linked_student_id,
+            expires_at=expires_at,
+        )
+        await repo.create_document(document)
         DOCUMENT_UPLOAD_COUNT.labels(
             env=settings.app_env,
             mime_type=mime_type,

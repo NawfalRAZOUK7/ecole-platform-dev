@@ -8,8 +8,14 @@ from __future__ import annotations
 
 import hashlib
 import io
+import uuid
 
 import pytest
+import pytest_asyncio
+from sqlalchemy import delete, select
+
+from app.core.database import async_session
+from app.models.lms import Submission, SubmissionFile
 
 
 # Fixed seed IDs (must match test_phase3.py / seed data)
@@ -26,6 +32,38 @@ def make_pdf_bytes(content: bytes = b"fake-pdf-content") -> tuple[bytes, str]:
     """Create a fake PDF file and return (bytes, sha256)."""
     sha256 = hashlib.sha256(content).hexdigest()
     return content, sha256
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def reset_submission_upload_state():
+    """Keep submission file tests deterministic across repeated suite reruns."""
+    assignment_id = uuid.UUID(ASSIGNMENT_ID)
+    student_id = uuid.UUID(STUDENT_ID)
+    async with async_session() as session:
+        submission_ids = list(
+            (
+                await session.execute(
+                    select(Submission.id).where(
+                        Submission.assignment_id == assignment_id,
+                        Submission.student_id == student_id,
+                        Submission.status.in_(["draft", "submitted"]),
+                    )
+                )
+            )
+            .scalars()
+            .all()
+        )
+        if submission_ids:
+            await session.execute(
+                delete(SubmissionFile).where(
+                    SubmissionFile.submission_id.in_(submission_ids)
+                )
+            )
+            await session.execute(
+                delete(Submission).where(Submission.id.in_(submission_ids))
+            )
+            await session.commit()
+    yield
 
 
 # ======================================================================

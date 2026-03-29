@@ -71,6 +71,7 @@ from app.models.lms import (
     QuizQuestion,
     Submission,
 )
+from app.models.school import School
 
 # ── Fixed UUIDs for deterministic seeding ──────────────────────────────────
 
@@ -158,6 +159,7 @@ async def clear_all(session: AsyncSession) -> None:
     existing_tables = await conn.run_sync(_get_table_names)
     tables_in_order = [
         "feature_toggles",
+        "schools",
         "audit_logs",
         "provider_webhook_events",
         "payment_proofs",
@@ -215,6 +217,65 @@ async def clear_all(session: AsyncSession) -> None:
 
     await session.execute(text(f"TRUNCATE TABLE {', '.join(present_tables)} CASCADE"))
     await session.commit()
+
+
+async def seed_schools(session: AsyncSession) -> None:
+    """Seed tenant schools before any school-scoped rows."""
+    schools = [
+        School(
+            id=SCHOOL_ID,
+            name="Ecole Benani",
+            name_ar="مدرسة بناني",
+            code="ECOLE-BENANI",
+            massar_code="MASSAR-BENANI",
+            status="active",
+            address="12 Rue des Orangers, Casablanca",
+            city="Casablanca",
+            region="Casablanca-Settat",
+            phone="+212522000001",
+            email="contact@ecole-benani.ma",
+            website="https://ecole-benani.ma",
+            max_students=1200,
+            max_teachers=120,
+            subscription_plan="premium",
+            timezone="Africa/Casablanca",
+            default_language="fr",
+            grading_scale="moroccan_20",
+            settings={
+                "timezone": "Africa/Casablanca",
+                "currency": "MAD",
+                "supported_languages": ["fr", "ar"],
+            },
+        ),
+        School(
+            id=SCHOOL_ID_2,
+            name="Ecole Atlas",
+            name_ar="مدرسة الأطلس",
+            code="ECOLE-ATLAS",
+            massar_code="MASSAR-ATLAS",
+            status="trial",
+            address="45 Avenue Mohammed V, Rabat",
+            city="Rabat",
+            region="Rabat-Sale-Kenitra",
+            phone="+212537000002",
+            email="contact@ecole-atlas.ma",
+            website="https://ecole-atlas.ma",
+            max_students=600,
+            max_teachers=60,
+            subscription_plan="trial",
+            timezone="Africa/Casablanca",
+            default_language="fr",
+            grading_scale="moroccan_20",
+            settings={
+                "timezone": "Africa/Casablanca",
+                "currency": "MAD",
+                "supported_languages": ["fr", "ar"],
+            },
+        ),
+    ]
+    session.add_all(schools)
+    await session.flush()
+    print("  [School]    2 schools")
 
 
 async def seed_iam(session: AsyncSession) -> None:
@@ -1596,6 +1657,7 @@ async def main() -> None:
         await clear_all(session)
 
         print("\nSeeding domains:")
+        await seed_schools(session)
         await seed_iam(session)
         await seed_profiles(session)
         await seed_parent_child_links(session)

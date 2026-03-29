@@ -26,6 +26,11 @@ def _utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _normalize_dispatch_timestamp(value: datetime) -> datetime:
+    """Collapse microsecond noise so reminder channels for the same offset coalesce."""
+    return value.astimezone(timezone.utc).replace(microsecond=0)
+
+
 def _default_offsets() -> list[int]:
     offsets: list[int] = []
     for raw in settings.calendar_reminder_default_offsets.split(","):
@@ -106,17 +111,24 @@ class ReminderService:
 
         grouped: dict[tuple[uuid.UUID, str, str], dict[str, object]] = {}
         for reminder, event in due_rows:
-            occurrence_key = (
+            normalized_occurrence_start_at = _normalize_dispatch_timestamp(
                 reminder.occurrence_start_at or event.start_at
-            ).astimezone(timezone.utc).isoformat()
-            group_key = (event.id, reminder.remind_at.astimezone(timezone.utc).isoformat(), occurrence_key)
+            )
+            normalized_remind_at = _normalize_dispatch_timestamp(reminder.remind_at)
+            occurrence_key = normalized_occurrence_start_at.isoformat()
+            group_key = (
+                event.id,
+                normalized_remind_at.isoformat(),
+                occurrence_key,
+            )
             grouped.setdefault(
                 group_key,
                 {
                     "event": event,
                     "channels": set(),
                     "reminder_ids": [],
-                    "occurrence_start_at": reminder.occurrence_start_at or event.start_at,
+                    "occurrence_start_at": normalized_occurrence_start_at,
+                    "remind_at": normalized_remind_at,
                 },
             )
             grouped[group_key]["channels"].add(reminder.channel)
@@ -130,6 +142,7 @@ class ReminderService:
                 channels = sorted(payload["channels"])
                 reminder_ids = payload["reminder_ids"]
                 occurrence_start_at = payload["occurrence_start_at"]
+                remind_at = payload["remind_at"]
 
                 recipient_ids = await self._resolve_recipient_ids(event)
                 if not recipient_ids:
@@ -162,7 +175,7 @@ class ReminderService:
                         event_ref=f"calendar.reminder:{event.id}",
                         preferred_channels=self._preferred_delivery_channels(channels),
                         idempotency_key=(
-                            f"calendar-reminder:{event.id}:{occurrence_start_at.isoformat()}:{recipient_id}"
+                            f"calendar-reminder:{event.id}:{remind_at.isoformat()}:{recipient_id}"
                         ),
                         silent_push=False,
                     )
