@@ -17,7 +17,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.dialects.postgresql import ARRAY, ENUM as PgEnum
 from sqlalchemy.orm import Mapped, mapped_column, validates
 
 from app.core.database import Base, SchoolScopedMixin, SoftDeleteMixin, TimestampMixin
@@ -25,6 +25,10 @@ from app.core.database import Base, SchoolScopedMixin, SoftDeleteMixin, Timestam
 
 def _short_id(value: object | None) -> str:
     return str(value)[:8] if value is not None else "None"
+
+
+def _enum_values(enum_cls: type[enum.Enum]) -> list[str]:
+    return [item.value for item in enum_cls]
 
 
 class DocumentCategory(str, enum.Enum):
@@ -66,7 +70,12 @@ class Document(TimestampMixin, SchoolScopedMixin, SoftDeleteMixin, Base):
     storage_path: Mapped[str] = mapped_column(String(500), nullable=False)
     thumbnail_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
     category: Mapped[str] = mapped_column(
-        String(40),
+        PgEnum(
+            DocumentCategory,
+            name="document_category_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
         nullable=False,
         default=DocumentCategory.OTHER.value,
     )
@@ -151,7 +160,15 @@ class Resource(TimestampMixin, SchoolScopedMixin, SoftDeleteMixin, Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     subject: Mapped[str | None] = mapped_column(String(120), nullable=True)
     level: Mapped[str | None] = mapped_column(String(120), nullable=True)
-    type: Mapped[str] = mapped_column(String(40), nullable=False)
+    type: Mapped[str] = mapped_column(
+        PgEnum(
+            ResourceType,
+            name="resource_type_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+    )
     tags: Mapped[list[str]] = mapped_column(
         ARRAY(String(80)),
         nullable=False,
@@ -162,7 +179,12 @@ class Resource(TimestampMixin, SchoolScopedMixin, SoftDeleteMixin, Base):
         nullable=False,
     )
     visibility: Mapped[str] = mapped_column(
-        String(20),
+        PgEnum(
+            ResourceVisibility,
+            name="resource_visibility_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
         nullable=False,
         default=ResourceVisibility.SCHOOL.value,
     )

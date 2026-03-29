@@ -487,12 +487,12 @@
 ### Phase MR-C: Enum Columns
 
 #### MR-C1: PG Enum Types + Column Conversions
-- [ ] Defined all missing Python enums (AssignmentType, SubmissionStatus, QuizAttemptStatus, TimetableJobStatus, EnrollmentStatus, AttendanceStatus, InvoiceStatus, PaymentStatus, PaymentMethod)
-- [ ] Created migration G31b: creates ~30 PostgreSQL ENUM types
-- [ ] Migration alters ~30 String columns to PgEnum columns
-- [ ] Migration is reversible (downgrade converts back to VARCHAR)
-- [ ] All model columns updated to use PgEnum(..., create_type=False)
-- [ ] Verified: all existing data values are valid enum members
+- [x] Defined all missing Python enums (AssignmentType alias, SubmissionStatus, QuizAttemptStatus, TimetableJobStatus, EnrollmentStatus, AttendanceStatus, InvoiceStatus, PaymentStatus alias, PaymentMethod)
+- [x] Created migration G31b: creates ~30 PostgreSQL ENUM types
+- [x] Migration alters ~30 String columns to PgEnum columns
+- [x] Migration is reversible (downgrade converts back to VARCHAR)
+- [x] All model columns updated to use PgEnum(..., create_type=False)
+- [x] Verified: all existing data values are valid enum members
 - [ ] **Review & commit myself**
 
 ---
@@ -558,7 +558,7 @@
 - [ ] Helper properties: all specified properties exist and are pure
 - [ ] __repr__: every model has one, no sensitive data exposed
 - [ ] Validators: all specified validators exist and raise ValueError
-- [ ] Enum columns: G31b migration exists, ~30 columns use PgEnum
+- [x] Enum columns: G31b migration exists, ~30 columns use PgEnum
 - [ ] School model: exists with all fields, CRUD stack complete, endpoints registered
 - [ ] Permissions: DIR/SUP/CONTENT_MGR expanded correctly
 - [ ] Role hierarchy: ROLE_HIERARCHY + get_effective_permissions() work correctly
@@ -586,7 +586,7 @@
 | ENH | E — Validation | ENH-E1 | Complete |
 | MR | A — School + Mixins | MR-A1 | Not started |
 | MR | B — Props/Repr/Valid | MR-B1, B2, B3 | Not started |
-| MR | C — Enum Columns | MR-C1 | Not started |
+| MR | C — Enum Columns | MR-C1 | Complete |
 | MR | D — Permissions | MR-D1 | Not started |
 | MR | E — ABAC + Roles | MR-E1, E2 | Not started |
 | MR | F — MR Validation | MR-F1 | Not started |

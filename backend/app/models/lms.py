@@ -23,7 +23,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import ENUM as PgEnum, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.core.database import (
@@ -36,6 +36,10 @@ from app.core.database import (
 
 def _short_id(value: object | None) -> str:
     return str(value)[:8] if value is not None else "None"
+
+
+def _enum_values(enum_cls: type[enum.Enum]) -> list[str]:
+    return [item.value for item in enum_cls]
 
 
 # ---------------------------------------------------------------------------
@@ -90,6 +94,9 @@ class ExerciseType(str, enum.Enum):
     STANDARD = "STANDARD"
     PRINTABLE_PDF = "PRINTABLE_PDF"
     QUIZ = "QUIZ"
+
+
+AssignmentType = ExerciseType
 
 
 # ---------------------------------------------------------------------------
@@ -286,7 +293,14 @@ class Assignment(TimestampMixin, Base):
     allow_late: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     # Phase 9B — exercise type + quiz link
     exercise_type: Mapped[str] = mapped_column(
-        String(20), nullable=False, default=ExerciseType.STANDARD.value
+        PgEnum(
+            ExerciseType,
+            name="assignment_type_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+        default=ExerciseType.STANDARD.value,
     )
     rubric_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("rubrics.id", ondelete="SET NULL"),
@@ -370,7 +384,14 @@ class Submission(TimestampMixin, Base):
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default=SubmissionStatus.DRAFT.value
+        PgEnum(
+            SubmissionStatus,
+            name="submission_status_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+        default=SubmissionStatus.DRAFT.value,
     )
     submitted_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
@@ -1049,7 +1070,14 @@ class QuizAttempt(TimestampMixin, Base):
     score: Mapped[float | None] = mapped_column(Numeric(8, 2), nullable=True)
     max_score: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default=QuizAttemptStatus.STARTED.value
+        PgEnum(
+            QuizAttemptStatus,
+            name="quiz_attempt_status_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+        default=QuizAttemptStatus.STARTED.value,
     )
 
     # Relationships

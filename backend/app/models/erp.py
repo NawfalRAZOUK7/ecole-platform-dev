@@ -23,7 +23,7 @@ from sqlalchemy import (
     Time,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import ENUM as PgEnum, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.core.database import Base, SchoolScopedMixin, TimestampMixin
@@ -31,6 +31,10 @@ from app.core.database import Base, SchoolScopedMixin, TimestampMixin
 
 def _short_id(value: object | None) -> str:
     return str(value)[:8] if value is not None else "None"
+
+
+def _enum_values(enum_cls: type[enum.Enum]) -> list[str]:
+    return [item.value for item in enum_cls]
 
 
 # ---------------------------------------------------------------------------
@@ -68,6 +72,14 @@ class ExceptionType(str, enum.Enum):
     CANCELED = "CANCELED"
     SUBSTITUTED = "SUBSTITUTED"
     ROOM_CHANGED = "ROOM_CHANGED"
+
+
+class TimetableJobStatus(str, enum.Enum):
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    APPLIED = "applied"
 
 
 # ---------------------------------------------------------------------------
@@ -186,7 +198,14 @@ class Enrollment(TimestampMixin, SchoolScopedMixin, Base):
         ForeignKey("periods.id", ondelete="CASCADE"), nullable=False
     )
     status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default=EnrollmentStatus.ACTIVE.value
+        PgEnum(
+            EnrollmentStatus,
+            name="enrollment_status_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+        default=EnrollmentStatus.ACTIVE.value,
     )
 
     # Relationships
@@ -309,7 +328,15 @@ class AttendanceRecord(TimestampMixin, SchoolScopedMixin, Base):
     student_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    status: Mapped[str] = mapped_column(String(20), nullable=False)
+    status: Mapped[str] = mapped_column(
+        PgEnum(
+            AttendanceStatus,
+            name="attendance_status_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+    )
     absence_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationships
@@ -508,7 +535,16 @@ class TimetableGenerationJob(TimestampMixin, SchoolScopedMixin, Base):
         ForeignKey("academic_years.id", ondelete="CASCADE"),
         nullable=False,
     )
-    status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending")
+    status: Mapped[str] = mapped_column(
+        PgEnum(
+            TimetableJobStatus,
+            name="timetable_job_status_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+        default=TimetableJobStatus.PENDING.value,
+    )
     constraints_snapshot: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     result_payload: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     result_slot_count: Mapped[int | None] = mapped_column(Integer, nullable=True)

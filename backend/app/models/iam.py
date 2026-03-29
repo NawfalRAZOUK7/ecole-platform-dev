@@ -21,6 +21,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
+from sqlalchemy.dialects.postgresql import ENUM as PgEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.core.database import Base, SchoolScopedMixin, TimestampMixin
@@ -28,6 +29,10 @@ from app.core.database import Base, SchoolScopedMixin, TimestampMixin
 
 def _short_id(value: object | None) -> str:
     return str(value)[:8] if value is not None else "None"
+
+
+def _enum_values(enum_cls: type[enum.Enum]) -> list[str]:
+    return [item.value for item in enum_cls]
 
 
 # ---------------------------------------------------------------------------
@@ -99,7 +104,14 @@ class User(TimestampMixin, SchoolScopedMixin, Base):
     full_name: Mapped[str] = mapped_column(String(200), nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default=UserStatus.ACTIVE.value
+        PgEnum(
+            UserStatus,
+            name="user_status_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+        default=UserStatus.ACTIVE.value,
     )
     # Phase 2B — TOTP two-factor authentication
     totp_secret: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -178,9 +190,24 @@ class Membership(TimestampMixin, SchoolScopedMixin, Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    role_code: Mapped[str] = mapped_column(String(20), nullable=False)
+    role_code: Mapped[str] = mapped_column(
+        PgEnum(
+            RoleCode,
+            name="role_code_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+    )
     status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default=MembershipStatus.ACTIVE.value
+        PgEnum(
+            MembershipStatus,
+            name="membership_status_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+        default=MembershipStatus.ACTIVE.value,
     )
 
     # Relationships
@@ -388,7 +415,14 @@ class AccountRecoveryRequest(TimestampMixin, SchoolScopedMixin, Base):
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default=RecoveryStatus.PENDING.value
+        PgEnum(
+            RecoveryStatus,
+            name="recovery_status_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+        default=RecoveryStatus.PENDING.value,
     )
     attempts: Mapped[int] = mapped_column(nullable=False, default=0)
     lock_until: Mapped[datetime | None] = mapped_column(

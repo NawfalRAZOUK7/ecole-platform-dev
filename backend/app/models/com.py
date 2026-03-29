@@ -19,7 +19,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import ENUM as PgEnum, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base, SchoolScopedMixin, SoftDeleteMixin, TimestampMixin
@@ -27,6 +27,10 @@ from app.core.database import Base, SchoolScopedMixin, SoftDeleteMixin, Timestam
 
 def _short_id(value: object | None) -> str:
     return str(value)[:8] if value is not None else "None"
+
+
+def _enum_values(enum_cls: type[enum.Enum]) -> list[str]:
+    return [item.value for item in enum_cls]
 
 
 # ---------------------------------------------------------------------------
@@ -129,11 +133,26 @@ class ConsentPreference(TimestampMixin, SchoolScopedMixin, Base):
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     topic: Mapped[str] = mapped_column(String(100), nullable=False)
-    channel: Mapped[str] = mapped_column(String(20), nullable=False)
+    channel: Mapped[str] = mapped_column(
+        PgEnum(
+            DeliveryChannel,
+            name="delivery_channel_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+    )
     scope_type: Mapped[str] = mapped_column(String(20), nullable=False)
     scope_ref_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True)
     status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default=ConsentStatus.OPTED_IN.value
+        PgEnum(
+            ConsentStatus,
+            name="consent_status_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+        default=ConsentStatus.OPTED_IN.value,
     )
 
     __table_args__ = (
@@ -172,12 +191,22 @@ class Notification(TimestampMixin, SchoolScopedMixin, SoftDeleteMixin, Base):
         String(255), nullable=False, unique=True
     )
     category: Mapped[str] = mapped_column(
-        String(30),
+        PgEnum(
+            NotificationCategory,
+            name="notification_category_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
         nullable=False,
         default=NotificationCategory.SYSTEM.value,
     )
     priority: Mapped[str] = mapped_column(
-        String(20),
+        PgEnum(
+            NotificationPriority,
+            name="notification_priority_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
         nullable=False,
         default=NotificationPriority.NORMAL.value,
     )
@@ -269,7 +298,15 @@ class DeviceToken(TimestampMixin, SchoolScopedMixin, Base):
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     token: Mapped[str] = mapped_column(String(4096), nullable=False, unique=True)
-    platform: Mapped[str] = mapped_column(String(20), nullable=False)
+    platform: Mapped[str] = mapped_column(
+        PgEnum(
+            DevicePlatform,
+            name="device_platform_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+    )
     device_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
     last_active_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -296,9 +333,24 @@ class NotificationDelivery(TimestampMixin, SchoolScopedMixin, Base):
     notification_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("notifications.id", ondelete="CASCADE"), nullable=False
     )
-    channel: Mapped[str] = mapped_column(String(20), nullable=False)
+    channel: Mapped[str] = mapped_column(
+        PgEnum(
+            DeliveryChannel,
+            name="delivery_channel_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+    )
     status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default=DeliveryStatus.QUEUED.value
+        PgEnum(
+            DeliveryStatus,
+            name="delivery_status_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+        default=DeliveryStatus.QUEUED.value,
     )
     delivered_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
@@ -390,7 +442,14 @@ class Conversation(TimestampMixin, SchoolScopedMixin, Base):
     __tablename__ = "conversations"
 
     type: Mapped[str] = mapped_column(
-        String(20), nullable=False, default=ConversationType.DIRECT.value
+        PgEnum(
+            ConversationType,
+            name="conversation_type_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+        default=ConversationType.DIRECT.value,
     )
     created_by: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
@@ -433,7 +492,14 @@ class ConversationParticipant(TimestampMixin, Base):
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     role_in_conversation: Mapped[str] = mapped_column(
-        String(20), nullable=False, default=ParticipantRole.PARTICIPANT.value
+        PgEnum(
+            ParticipantRole,
+            name="participant_role_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+        default=ParticipantRole.PARTICIPANT.value,
     )
     joined_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     muted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
@@ -555,7 +621,14 @@ class Announcement(TimestampMixin, SchoolScopedMixin, Base):
         DateTime(timezone=True), nullable=True
     )
     status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default=AnnouncementStatus.DRAFT.value
+        PgEnum(
+            AnnouncementStatus,
+            name="announcement_status_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+        default=AnnouncementStatus.DRAFT.value,
     )
 
     __table_args__ = (

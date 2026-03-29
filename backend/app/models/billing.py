@@ -22,6 +22,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
+from sqlalchemy.dialects.postgresql import ENUM as PgEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.core.database import Base, SchoolScopedMixin, TimestampMixin
@@ -29,6 +30,10 @@ from app.core.database import Base, SchoolScopedMixin, TimestampMixin
 
 def _short_id(value: object | None) -> str:
     return str(value)[:8] if value is not None else "None"
+
+
+def _enum_values(enum_cls: type[enum.Enum]) -> list[str]:
+    return [item.value for item in enum_cls]
 
 
 ALLOWED_CURRENCIES = {"MAD", "EUR", "USD"}
@@ -52,6 +57,16 @@ class PaymentAttemptStatus(str, enum.Enum):
     PAID = "paid"
     FAILED = "failed"
     CANCELED = "canceled"
+
+
+PaymentStatus = PaymentAttemptStatus
+
+
+class PaymentMethod(str, enum.Enum):
+    CASH = "cash"
+    BANK_TRANSFER = "bank_transfer"
+    CARD = "card"
+    CHECK = "check"
 
 
 class WebhookEventStatus(str, enum.Enum):
@@ -101,7 +116,14 @@ class Invoice(TimestampMixin, SchoolScopedMixin, Base):
         ForeignKey("periods.id", ondelete="SET NULL"), nullable=True
     )
     status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default=InvoiceStatus.PENDING.value
+        PgEnum(
+            InvoiceStatus,
+            name="invoice_status_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+        default=InvoiceStatus.PENDING.value,
     )
     total_amount: Mapped[float] = mapped_column(
         Numeric(12, 2), nullable=False, default=0
@@ -225,7 +247,14 @@ class PaymentAttempt(TimestampMixin, SchoolScopedMixin, Base):
         String(255), nullable=False, unique=True
     )
     status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default=PaymentAttemptStatus.PENDING.value
+        PgEnum(
+            PaymentAttemptStatus,
+            name="payment_status_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+        default=PaymentAttemptStatus.PENDING.value,
     )
     finalized_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True

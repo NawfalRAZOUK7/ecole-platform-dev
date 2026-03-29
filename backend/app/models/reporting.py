@@ -10,7 +10,7 @@ import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text
-from sqlalchemy.dialects.postgresql import ARRAY, JSONB
+from sqlalchemy.dialects.postgresql import ARRAY, ENUM as PgEnum, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, validates
 
 from app.core.database import Base, SchoolScopedMixin, TimestampMixin
@@ -18,6 +18,10 @@ from app.core.database import Base, SchoolScopedMixin, TimestampMixin
 
 def _short_id(value: object | None) -> str:
     return str(value)[:8] if value is not None else "None"
+
+
+def _enum_values(enum_cls: type[enum.Enum]) -> list[str]:
+    return [item.value for item in enum_cls]
 
 
 class ReportType(str, enum.Enum):
@@ -49,7 +53,15 @@ class ReportSchedule(TimestampMixin, SchoolScopedMixin, Base):
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
     )
-    report_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    report_type: Mapped[str] = mapped_column(
+        PgEnum(
+            ReportType,
+            name="report_type_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+    )
     frequency: Mapped[str] = mapped_column(String(20), nullable=False)
     parameters: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     recipient_roles: Mapped[list[str]] = mapped_column(
@@ -88,11 +100,24 @@ class ReportJob(TimestampMixin, SchoolScopedMixin, Base):
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
     )
-    type: Mapped[str] = mapped_column(String(50), nullable=False)
+    type: Mapped[str] = mapped_column(
+        PgEnum(
+            ReportType,
+            name="report_type_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+    )
     parameters: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     parameters_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     status: Mapped[str] = mapped_column(
-        String(20),
+        PgEnum(
+            ReportJobStatus,
+            name="report_job_status_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
         nullable=False,
         default=ReportJobStatus.PENDING.value,
     )
@@ -148,7 +173,15 @@ class DataExport(TimestampMixin, SchoolScopedMixin, Base):
     )
     entity: Mapped[str] = mapped_column(String(50), nullable=False)
     filters: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
-    format: Mapped[str] = mapped_column(String(10), nullable=False)
+    format: Mapped[str] = mapped_column(
+        PgEnum(
+            DataExportFormat,
+            name="data_export_format_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+    )
     row_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     __table_args__ = (
