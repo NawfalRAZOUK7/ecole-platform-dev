@@ -404,27 +404,27 @@
 ### Phase MR-A: School Model + Model Mixins
 
 #### MR-A1: School Model + SchoolScopedMixin + SoftDeleteMixin
-- [ ] Created backend/app/models/school.py with School model
-- [ ] School has: name, name_ar, code, massar_code, status, address, city, region, phone, email, website, logo_path
-- [ ] School has: max_students, max_teachers, subscription_plan, subscription_expires_at
-- [ ] School has: timezone (Africa/Casablanca), default_language (fr), grading_scale (moroccan_20), settings (JSONB)
-- [ ] SchoolStatus enum defined (active, suspended, trial)
-- [ ] School has is_active, is_subscription_valid properties
-- [ ] School has __repr__ and email validator
-- [ ] Added SchoolScopedMixin to backend/app/core/database.py (school_id FK → schools.id)
-- [ ] Added SoftDeleteMixin to backend/app/core/database.py (deleted_at, is_deleted, soft_delete, restore)
-- [ ] Replaced school_id in ~40 models with SchoolScopedMixin inheritance
-- [ ] Replaced deleted_at in Document, Resource, Event, Notification with SoftDeleteMixin inheritance
-- [ ] Updated models/__init__.py with School, SchoolStatus exports
-- [ ] Created migration G31a: schools table + FK constraints + data population
-- [ ] Created repositories/school.py (CRUD)
-- [ ] Created services/school.py (SchoolService with UoW)
-- [ ] Created schemas/school.py (request/response)
-- [ ] Created api/v1/schools.py (POST, GET, PATCH, DELETE endpoints)
-- [ ] Added PERM_ADM_SCHOOL_MANAGE, PERM_ADM_SCHOOL_READ to permissions.py
-- [ ] Assigned permissions: SUP (manage+read), ADM/DIR (read)
-- [ ] Registered /schools endpoints in router.py
-- [ ] All composite indexes still reference school_id correctly
+- [x] Created backend/app/models/school.py with School model
+- [x] School has: name, name_ar, code, massar_code, status, address, city, region, phone, email, website, logo_path
+- [x] School has: max_students, max_teachers, subscription_plan, subscription_expires_at
+- [x] School has: timezone (Africa/Casablanca), default_language (fr), grading_scale (moroccan_20), settings (JSONB)
+- [x] SchoolStatus enum defined (active, suspended, trial)
+- [x] School has is_active, is_subscription_valid properties
+- [x] School has __repr__ and email validator
+- [x] Added SchoolScopedMixin to backend/app/core/database.py (school_id FK → schools.id)
+- [x] Added SoftDeleteMixin to backend/app/core/database.py (deleted_at, is_deleted, soft_delete, restore)
+- [x] Replaced school_id in ~40 models with SchoolScopedMixin inheritance
+- [x] Replaced deleted_at in Document, Resource, Event, Notification with SoftDeleteMixin inheritance
+- [x] Updated models/__init__.py with School, SchoolStatus exports
+- [x] Created migration G31a: schools table + FK constraints + data population
+- [x] Created repositories/school.py (CRUD)
+- [x] Created services/school.py (SchoolService with UoW)
+- [x] Created schemas/school.py (request/response)
+- [x] Created api/v1/schools.py (POST, GET, PATCH, DELETE endpoints)
+- [x] Added PERM_ADM_SCHOOL_MANAGE, PERM_ADM_SCHOOL_READ to permissions.py
+- [x] Assigned permissions: SUP (manage+read), ADM (manage+read for PATCH), DIR (read)
+- [x] Registered /schools endpoints in router.py
+- [x] All composite indexes still reference school_id correctly
 - [ ] **Review & commit myself**
 
 ---

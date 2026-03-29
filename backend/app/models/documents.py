@@ -20,7 +20,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.database import Base, TimestampMixin
+from app.core.database import Base, SchoolScopedMixin, SoftDeleteMixin, TimestampMixin
 
 
 class DocumentCategory(str, enum.Enum):
@@ -45,12 +45,11 @@ class ResourceVisibility(str, enum.Enum):
     CLASS = "class"
 
 
-class Document(TimestampMixin, Base):
+class Document(TimestampMixin, SchoolScopedMixin, SoftDeleteMixin, Base):
     """Uploaded binary asset stored in local or S3-backed storage."""
 
     __tablename__ = "documents"
 
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     uploader_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
@@ -76,11 +75,6 @@ class Document(TimestampMixin, Base):
         nullable=True,
     )
     download_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    deleted_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True),
-        nullable=True,
-    )
-
     __table_args__ = (
         Index("idx_documents_school_created", "school_id", "created_at"),
         Index("idx_documents_school_category", "school_id", "category"),
@@ -124,12 +118,11 @@ class DocumentVersion(TimestampMixin, Base):
     )
 
 
-class Resource(TimestampMixin, Base):
+class Resource(TimestampMixin, SchoolScopedMixin, SoftDeleteMixin, Base):
     """Teacher/admin shared resource that points to a document asset."""
 
     __tablename__ = "resources"
 
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     uploader_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
@@ -160,11 +153,6 @@ class Resource(TimestampMixin, Base):
     download_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     avg_rating: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     rating_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    deleted_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True),
-        nullable=True,
-    )
-
     __table_args__ = (
         Index("idx_resources_school_created", "school_id", "created_at"),
         Index("idx_resources_school_type", "school_id", "type"),
@@ -197,12 +185,11 @@ class ResourceRating(TimestampMixin, Base):
     )
 
 
-class StudentDocumentRequirement(TimestampMixin, Base):
+class StudentDocumentRequirement(TimestampMixin, SchoolScopedMixin, Base):
     """School-scoped required document categories for student onboarding/compliance."""
 
     __tablename__ = "student_document_requirements"
 
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     category: Mapped[str] = mapped_column(String(40), nullable=False)
     required: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)

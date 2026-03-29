@@ -21,7 +21,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.database import Base, TimestampMixin
+from app.core.database import Base, SchoolScopedMixin, SoftDeleteMixin, TimestampMixin
 
 
 class EventType(str, enum.Enum):
@@ -50,12 +50,11 @@ class EventReminderChannel(str, enum.Enum):
     PUSH = "push"
 
 
-class Event(TimestampMixin, Base):
+class Event(TimestampMixin, SchoolScopedMixin, SoftDeleteMixin, Base):
     """Calendar event created by a user within a school."""
 
     __tablename__ = "events"
 
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     title_fr: Mapped[str] = mapped_column(String(255), nullable=False)
     title_ar: Mapped[str | None] = mapped_column(String(255), nullable=True)
     title_en: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -83,11 +82,6 @@ class Event(TimestampMixin, Base):
     )
     role_codes: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     is_all_day: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    deleted_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True),
-        nullable=True,
-    )
-
     __table_args__ = (
         CheckConstraint("end_at >= start_at", name="ck_events_end_after_start"),
         CheckConstraint("capacity IS NULL OR capacity > 0", name="ck_events_capacity_positive"),
@@ -153,12 +147,11 @@ class EventReminder(TimestampMixin, Base):
     )
 
 
-class EventReminderPreference(TimestampMixin, Base):
+class EventReminderPreference(TimestampMixin, SchoolScopedMixin, Base):
     """Per-user event reminder preference by event type."""
 
     __tablename__ = "event_reminder_preferences"
 
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,

@@ -10,10 +10,10 @@ from sqlalchemy import ForeignKey, Index, String
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.database import Base, TimestampMixin
+from app.core.database import Base, SchoolScopedMixin, TimestampMixin
 
 
-class AuditLog(TimestampMixin, Base):
+class AuditLog(TimestampMixin, SchoolScopedMixin, Base):
     """Append-only audit log for security-relevant events.
 
     INV-AUDIT-ACTOR: actor_id is null only for SYS-originated events (enforced in app layer).
@@ -23,7 +23,6 @@ class AuditLog(TimestampMixin, Base):
 
     __tablename__ = "audit_logs"
 
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     actor_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )

@@ -26,7 +26,12 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.database import Base, TimestampMixin
+from app.core.database import (
+    Base,
+    NullableSchoolScopedMixin,
+    SchoolScopedMixin,
+    TimestampMixin,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -88,12 +93,11 @@ class ExerciseType(str, enum.Enum):
 # ---------------------------------------------------------------------------
 
 
-class Course(TimestampMixin, Base):
+class Course(TimestampMixin, SchoolScopedMixin, Base):
     """Course — teacher-created course within a class."""
 
     __tablename__ = "courses"
 
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     class_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("classes.id", ondelete="CASCADE"), nullable=False
     )
@@ -114,12 +118,11 @@ class Course(TimestampMixin, Base):
     __table_args__ = (Index("idx_courses_school_class", "school_id", "class_id"),)
 
 
-class GradeCategory(TimestampMixin, Base):
+class GradeCategory(TimestampMixin, SchoolScopedMixin, Base):
     """Weighted grade category for a class and period."""
 
     __tablename__ = "grade_categories"
 
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     class_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("classes.id", ondelete="CASCADE"),
         nullable=False,
@@ -145,12 +148,11 @@ class GradeCategory(TimestampMixin, Base):
     )
 
 
-class Rubric(TimestampMixin, Base):
+class Rubric(TimestampMixin, SchoolScopedMixin, Base):
     """Structured grading rubric owned by a teacher or reused as a template."""
 
     __tablename__ = "rubrics"
 
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     teacher_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
@@ -422,7 +424,7 @@ class Grade(TimestampMixin, Base):
     )
 
 
-class StudentPeriodAverage(TimestampMixin, Base):
+class StudentPeriodAverage(TimestampMixin, SchoolScopedMixin, Base):
     """Cached weighted average per student, class, and period."""
 
     __tablename__ = "student_period_averages"
@@ -439,7 +441,6 @@ class StudentPeriodAverage(TimestampMixin, Base):
         ForeignKey("periods.id", ondelete="CASCADE"),
         nullable=False,
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     weighted_average: Mapped[float] = mapped_column(Float, nullable=False)
     mention: Mapped[str] = mapped_column(String(30), nullable=False)
     class_rank: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -554,7 +555,7 @@ class ContentSubmissionStatus(str, enum.Enum):
     REJECTED = "REJECTED"
 
 
-class ContentItem(TimestampMixin, Base):
+class ContentItem(TimestampMixin, NullableSchoolScopedMixin, Base):
     """Educational content item (video, document, interactive).
 
     school_id nullable for shared/platform-wide content.
@@ -563,7 +564,6 @@ class ContentItem(TimestampMixin, Base):
 
     __tablename__ = "content_items"
 
-    school_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True)
     title: Mapped[str] = mapped_column(String(300), nullable=False)
     content_type: Mapped[str] = mapped_column(String(50), nullable=False)
     level_band: Mapped[str | None] = mapped_column(String(50), nullable=True)
@@ -644,7 +644,7 @@ class ContentProgress(TimestampMixin, Base):
     )
 
 
-class Activity(TimestampMixin, Base):
+class Activity(TimestampMixin, NullableSchoolScopedMixin, Base):
     """Pedagogical activity (quiz, exercise, game).
 
     school_id nullable for shared/platform-wide activities.
@@ -652,7 +652,6 @@ class Activity(TimestampMixin, Base):
 
     __tablename__ = "activities"
 
-    school_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True)
     type: Mapped[str] = mapped_column(String(50), nullable=False)
     difficulty: Mapped[str | None] = mapped_column(String(20), nullable=True)
     title: Mapped[str] = mapped_column(String(300), nullable=False)
@@ -696,7 +695,7 @@ class ActivitySession(TimestampMixin, Base):
 # ---------------------------------------------------------------------------
 
 
-class ClassContentAssignment(TimestampMixin, Base):
+class ClassContentAssignment(TimestampMixin, SchoolScopedMixin, Base):
     """Teacher assigns platform/school content to a class.
 
     Unique per (class_id, content_item_id) — no duplicate assignments.
@@ -713,7 +712,6 @@ class ClassContentAssignment(TimestampMixin, Base):
     content_item_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("content_items.id", ondelete="CASCADE"), nullable=False
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     assigned_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=datetime.utcnow
     )
@@ -731,7 +729,7 @@ class ClassContentAssignment(TimestampMixin, Base):
     )
 
 
-class ContentSubmission(TimestampMixin, Base):
+class ContentSubmission(TimestampMixin, SchoolScopedMixin, Base):
     """Teacher submits school-scoped content for platform promotion review.
 
     Workflow: PENDING → UNDER_REVIEW → APPROVED/REJECTED
@@ -746,7 +744,6 @@ class ContentSubmission(TimestampMixin, Base):
     submitted_by: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default=ContentSubmissionStatus.PENDING.value
     )
@@ -776,7 +773,7 @@ class ContentSubmission(TimestampMixin, Base):
 # ---------------------------------------------------------------------------
 
 
-class Quiz(TimestampMixin, Base):
+class Quiz(TimestampMixin, NullableSchoolScopedMixin, Base):
     """Quiz — created by CONTENT_MGR (platform-wide) or TCH (school-scoped).
 
     school_id=NULL means platform-wide (visible to all schools).
@@ -784,7 +781,6 @@ class Quiz(TimestampMixin, Base):
 
     __tablename__ = "quizzes"
 
-    school_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True)
     created_by: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
@@ -922,12 +918,11 @@ class QuizResponse(TimestampMixin, Base):
     )
 
 
-class QuestionBankItem(TimestampMixin, Base):
+class QuestionBankItem(TimestampMixin, SchoolScopedMixin, Base):
     """Reusable school question bank item for quiz generation."""
 
     __tablename__ = "question_bank_items"
 
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     teacher_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )

@@ -24,7 +24,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.database import Base, TimestampMixin
+from app.core.database import Base, SchoolScopedMixin, TimestampMixin
 
 
 # ---------------------------------------------------------------------------
@@ -82,12 +82,11 @@ class FeeAssignmentStatus(str, enum.Enum):
 # ---------------------------------------------------------------------------
 
 
-class Invoice(TimestampMixin, Base):
+class Invoice(TimestampMixin, SchoolScopedMixin, Base):
     """Invoice issued to a parent for a period."""
 
     __tablename__ = "invoices"
 
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     parent_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
@@ -161,7 +160,7 @@ class InvoiceItem(TimestampMixin, Base):
     )
 
 
-class PaymentAttempt(TimestampMixin, Base):
+class PaymentAttempt(TimestampMixin, SchoolScopedMixin, Base):
     """Payment attempt for an invoice.
 
     INV-BIL-FINALIZATION: finalized_at NOT NULL when status IN (paid, failed, canceled).
@@ -175,7 +174,6 @@ class PaymentAttempt(TimestampMixin, Base):
     parent_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     idempotency_key: Mapped[str] = mapped_column(
         String(255), nullable=False, unique=True
     )
@@ -236,7 +234,7 @@ class PaymentProof(TimestampMixin, Base):
     payment_attempt: Mapped["PaymentAttempt"] = relationship(back_populates="proof")
 
 
-class ProviderWebhookEvent(TimestampMixin, Base):
+class ProviderWebhookEvent(TimestampMixin, SchoolScopedMixin, Base):
     """Webhook event received from a payment provider.
 
     INV-BIL-WEBHOOK: duplicate provider_event_id = no-op.
@@ -247,7 +245,6 @@ class ProviderWebhookEvent(TimestampMixin, Base):
     payment_attempt_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("payment_attempts.id", ondelete="SET NULL"), nullable=True
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     provider_event_id: Mapped[str] = mapped_column(
         String(255), nullable=False, unique=True
     )
@@ -278,7 +275,7 @@ class ProviderWebhookEvent(TimestampMixin, Base):
 # ---------------------------------------------------------------------------
 
 
-class FeeStructure(TimestampMixin, Base):
+class FeeStructure(TimestampMixin, SchoolScopedMixin, Base):
     """Fee structure — defines a recurring or one-time fee for a school.
 
     Examples: "Frais de scolarité 1ère année" (ANNUAL, 15000 MAD),
@@ -287,7 +284,6 @@ class FeeStructure(TimestampMixin, Base):
 
     __tablename__ = "fee_structures"
 
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     academic_year_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("academic_years.id", ondelete="CASCADE"), nullable=False
     )
@@ -327,7 +323,7 @@ class FeeStructure(TimestampMixin, Base):
     )
 
 
-class FeeAssignment(TimestampMixin, Base):
+class FeeAssignment(TimestampMixin, SchoolScopedMixin, Base):
     """Assignment of a fee structure to a specific student.
 
     Supports optional discount (percent-based with reason).
@@ -342,7 +338,6 @@ class FeeAssignment(TimestampMixin, Base):
     student_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     discount_percent: Mapped[float | None] = mapped_column(Numeric(5, 2), nullable=True)
     discount_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(
@@ -371,12 +366,11 @@ class FeeAssignment(TimestampMixin, Base):
     )
 
 
-class SiblingDiscountPolicy(TimestampMixin, Base):
+class SiblingDiscountPolicy(TimestampMixin, SchoolScopedMixin, Base):
     """School-level sibling discount tiers for invoice generation."""
 
     __tablename__ = "sibling_discount_policies"
 
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False, unique=True)
     enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     second_child_percent: Mapped[float] = mapped_column(
         Numeric(5, 2), nullable=False, default=10.0
@@ -392,6 +386,7 @@ class SiblingDiscountPolicy(TimestampMixin, Base):
     )
 
     __table_args__ = (
+        UniqueConstraint("school_id"),
         CheckConstraint(
             "second_child_percent >= 0 AND second_child_percent <= 100",
             name="ck_sibling_discount_second_percent",
@@ -408,12 +403,11 @@ class SiblingDiscountPolicy(TimestampMixin, Base):
     )
 
 
-class LateFeePolicy(TimestampMixin, Base):
+class LateFeePolicy(TimestampMixin, SchoolScopedMixin, Base):
     """School-level late-fee policy applied to overdue invoices."""
 
     __tablename__ = "late_fee_policies"
 
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False, unique=True)
     enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     fee_type: Mapped[str] = mapped_column(String(20), nullable=False, default="fixed")
     amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False, default=0.0)
@@ -422,6 +416,7 @@ class LateFeePolicy(TimestampMixin, Base):
     max_fee: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True)
 
     __table_args__ = (
+        UniqueConstraint("school_id"),
         CheckConstraint(
             "fee_type IN ('fixed', 'percent')",
             name="ck_late_fee_policies_type",
@@ -443,7 +438,7 @@ class LateFeePolicy(TimestampMixin, Base):
     )
 
 
-class PaymentPlan(TimestampMixin, Base):
+class PaymentPlan(TimestampMixin, SchoolScopedMixin, Base):
     """Installment plan for an invoice."""
 
     __tablename__ = "payment_plans"
@@ -451,7 +446,6 @@ class PaymentPlan(TimestampMixin, Base):
     invoice_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("invoices.id", ondelete="CASCADE"), nullable=False
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     total_installments: Mapped[int] = mapped_column(Integer, nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="active")
 

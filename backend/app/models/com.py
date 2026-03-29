@@ -22,7 +22,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.database import Base, TimestampMixin
+from app.core.database import Base, SchoolScopedMixin, SoftDeleteMixin, TimestampMixin
 
 
 # ---------------------------------------------------------------------------
@@ -113,7 +113,7 @@ class AnnouncementStatus(str, enum.Enum):
 # ---------------------------------------------------------------------------
 
 
-class ConsentPreference(TimestampMixin, Base):
+class ConsentPreference(TimestampMixin, SchoolScopedMixin, Base):
     """Parent consent preference for a notification topic/channel.
 
     INV-COM-CONSENT: unique on full scope tuple (user, topic, channel, scope_type, scope_ref_id).
@@ -124,7 +124,6 @@ class ConsentPreference(TimestampMixin, Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     topic: Mapped[str] = mapped_column(String(100), nullable=False)
     channel: Mapped[str] = mapped_column(String(20), nullable=False)
     scope_type: Mapped[str] = mapped_column(String(20), nullable=False)
@@ -147,7 +146,7 @@ class ConsentPreference(TimestampMixin, Base):
     )
 
 
-class Notification(TimestampMixin, Base):
+class Notification(TimestampMixin, SchoolScopedMixin, SoftDeleteMixin, Base):
     """Notification generated from a platform event.
 
     idempotency_key ensures no duplicate notifications for the same event.
@@ -155,7 +154,6 @@ class Notification(TimestampMixin, Base):
 
     __tablename__ = "notifications"
 
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     parent_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
@@ -181,11 +179,6 @@ class Notification(TimestampMixin, Base):
         DateTime(timezone=True),
         nullable=True,
     )
-    deleted_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True),
-        nullable=True,
-    )
-
     # Relationships
     deliveries: Mapped[list["NotificationDelivery"]] = relationship(
         back_populates="notification", cascade="all, delete-orphan"
@@ -217,7 +210,7 @@ class Notification(TimestampMixin, Base):
         return self.read_at is not None
 
 
-class NotificationPreference(TimestampMixin, Base):
+class NotificationPreference(TimestampMixin, SchoolScopedMixin, Base):
     """Per-user notification preference by channel and category."""
 
     __tablename__ = "notification_preferences"
@@ -225,7 +218,6 @@ class NotificationPreference(TimestampMixin, Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     channel: Mapped[str] = mapped_column(String(20), nullable=False)
     category: Mapped[str] = mapped_column(String(30), nullable=False)
     enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
@@ -246,7 +238,7 @@ class NotificationPreference(TimestampMixin, Base):
     )
 
 
-class DeviceToken(TimestampMixin, Base):
+class DeviceToken(TimestampMixin, SchoolScopedMixin, Base):
     """Registered mobile/web push token for a user."""
 
     __tablename__ = "device_tokens"
@@ -254,7 +246,6 @@ class DeviceToken(TimestampMixin, Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     token: Mapped[str] = mapped_column(String(4096), nullable=False, unique=True)
     platform: Mapped[str] = mapped_column(String(20), nullable=False)
     device_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
@@ -269,7 +260,7 @@ class DeviceToken(TimestampMixin, Base):
     )
 
 
-class NotificationDelivery(TimestampMixin, Base):
+class NotificationDelivery(TimestampMixin, SchoolScopedMixin, Base):
     """Delivery attempt for a notification via a specific channel."""
 
     __tablename__ = "notification_deliveries"
@@ -277,7 +268,6 @@ class NotificationDelivery(TimestampMixin, Base):
     notification_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("notifications.id", ondelete="CASCADE"), nullable=False
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     channel: Mapped[str] = mapped_column(String(20), nullable=False)
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default=DeliveryStatus.QUEUED.value
@@ -315,7 +305,7 @@ class NotificationDelivery(TimestampMixin, Base):
         return self.status
 
 
-class ParentFeedItem(TimestampMixin, Base):
+class ParentFeedItem(TimestampMixin, SchoolScopedMixin, Base):
     """Parent feed item — aggregated view for parents.
 
     Derived from verified metier events; idempotent creation.
@@ -323,7 +313,6 @@ class ParentFeedItem(TimestampMixin, Base):
 
     __tablename__ = "parent_feed_items"
 
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     parent_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
@@ -351,7 +340,7 @@ class ParentFeedItem(TimestampMixin, Base):
 # ---------------------------------------------------------------------------
 
 
-class Conversation(TimestampMixin, Base):
+class Conversation(TimestampMixin, SchoolScopedMixin, Base):
     """Parent-teacher conversation (direct or group).
 
     ABAC enforced at API level: parents can only message teachers
@@ -360,7 +349,6 @@ class Conversation(TimestampMixin, Base):
 
     __tablename__ = "conversations"
 
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     type: Mapped[str] = mapped_column(
         String(20), nullable=False, default=ConversationType.DIRECT.value
     )
@@ -478,7 +466,7 @@ class MessageReadReceipt(TimestampMixin, Base):
 # ---------------------------------------------------------------------------
 
 
-class Announcement(TimestampMixin, Base):
+class Announcement(TimestampMixin, SchoolScopedMixin, Base):
     """School-wide or targeted announcement from admin/director.
 
     target_roles: JSONB array of role codes — e.g. ["PAR", "STD"]
@@ -487,7 +475,6 @@ class Announcement(TimestampMixin, Base):
 
     __tablename__ = "announcements"
 
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     author_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )

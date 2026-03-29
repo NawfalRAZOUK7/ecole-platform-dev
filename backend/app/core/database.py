@@ -7,7 +7,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import AsyncGenerator
 
-from sqlalchemy import DateTime
+from sqlalchemy import DateTime, ForeignKey
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -60,6 +60,46 @@ class TimestampMixin:
         onupdate=_utc_now,
         nullable=True,
     )
+
+
+class SchoolScopedMixin:
+    """Mixin providing a required school_id FK for school-scoped models."""
+
+    school_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("schools.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+
+class NullableSchoolScopedMixin:
+    """Nullable school_id variant for platform-wide content entities."""
+
+    school_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("schools.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
+
+
+class SoftDeleteMixin:
+    """Mixin for soft-deletable models."""
+
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        default=None,
+    )
+
+    @property
+    def is_deleted(self) -> bool:
+        return self.deleted_at is not None
+
+    def soft_delete(self) -> None:
+        self.deleted_at = _utc_now()
+
+    def restore(self) -> None:
+        self.deleted_at = None
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:

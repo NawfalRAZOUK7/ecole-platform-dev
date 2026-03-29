@@ -18,10 +18,10 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.database import Base, TimestampMixin
+from app.core.database import Base, SchoolScopedMixin, TimestampMixin
 
 
-class WritingAttempt(TimestampMixin, Base):
+class WritingAttempt(TimestampMixin, SchoolScopedMixin, Base):
     """Student writing assistance attempt — stores request + AI response.
 
     Reference: S-143, PROMPT-G3-002
@@ -32,7 +32,6 @@ class WritingAttempt(TimestampMixin, Base):
     student_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     subject: Mapped[str | None] = mapped_column(String(200), nullable=True)
     input_text: Mapped[str] = mapped_column(Text, nullable=False)
     input_word_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
@@ -49,7 +48,7 @@ class WritingAttempt(TimestampMixin, Base):
     )
 
 
-class AIPreference(TimestampMixin, Base):
+class AIPreference(TimestampMixin, SchoolScopedMixin, Base):
     """AI personalization opt-out preference.
 
     Reference: S-144, DEC-009, G3.3 — Consent & Opt-out Contract
@@ -66,7 +65,6 @@ class AIPreference(TimestampMixin, Base):
     target_user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     opt_out: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     __table_args__ = (

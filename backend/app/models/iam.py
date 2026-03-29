@@ -23,7 +23,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.database import Base, TimestampMixin
+from app.core.database import Base, SchoolScopedMixin, TimestampMixin
 
 
 # ---------------------------------------------------------------------------
@@ -82,10 +82,9 @@ class RelationshipType(str, enum.Enum):
 # ---------------------------------------------------------------------------
 
 
-class User(TimestampMixin, Base):
+class User(TimestampMixin, SchoolScopedMixin, Base):
     """Platform user — one row per person across schools.
 
-    school_id is NOT a FK (schools managed externally per DEC-001).
     email uniqueness is scoped per school via partial unique index.
     """
 
@@ -98,8 +97,6 @@ class User(TimestampMixin, Base):
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default=UserStatus.ACTIVE.value
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False, index=True)
-
     # Phase 2B — TOTP two-factor authentication
     totp_secret: Mapped[str | None] = mapped_column(String(255), nullable=True)
     totp_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
@@ -135,7 +132,7 @@ class User(TimestampMixin, Base):
     )
 
 
-class Membership(TimestampMixin, Base):
+class Membership(TimestampMixin, SchoolScopedMixin, Base):
     """Role assignment — links a user to a school with a specific role.
 
     Partial unique index ensures only one active membership per (user, school, role).
@@ -146,7 +143,6 @@ class Membership(TimestampMixin, Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     role_code: Mapped[str] = mapped_column(String(20), nullable=False)
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default=MembershipStatus.ACTIVE.value
@@ -168,7 +164,7 @@ class Membership(TimestampMixin, Base):
     )
 
 
-class Session(TimestampMixin, Base):
+class Session(TimestampMixin, SchoolScopedMixin, Base):
     """Auth session — tracks JWT refresh sessions with revocation.
 
     revoke_at IS NULL means the session is still active.
@@ -180,7 +176,6 @@ class Session(TimestampMixin, Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     revoke_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
@@ -216,7 +211,7 @@ class Session(TimestampMixin, Base):
     )
 
 
-class LoginHistory(TimestampMixin, Base):
+class LoginHistory(TimestampMixin, SchoolScopedMixin, Base):
     """Historical record of login attempts and successful device usage."""
 
     __tablename__ = "login_history"
@@ -225,7 +220,6 @@ class LoginHistory(TimestampMixin, Base):
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
     user_agent: Mapped[str | None] = mapped_column(String(500), nullable=True)
     device_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
@@ -251,7 +245,7 @@ class LoginHistory(TimestampMixin, Base):
     )
 
 
-class InvitationCode(TimestampMixin, Base):
+class InvitationCode(TimestampMixin, SchoolScopedMixin, Base):
     """Invitation code — one-time codes for user onboarding.
 
     code_hash is a bcrypt or SHA-256 hash of the actual code sent to the user.
@@ -259,7 +253,6 @@ class InvitationCode(TimestampMixin, Base):
 
     __tablename__ = "invitation_codes"
 
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     issuer_user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
@@ -293,7 +286,7 @@ class InvitationCode(TimestampMixin, Base):
     )
 
 
-class AccountRecoveryRequest(TimestampMixin, Base):
+class AccountRecoveryRequest(TimestampMixin, SchoolScopedMixin, Base):
     """Account recovery — password reset flow with OTP and attempt tracking."""
 
     __tablename__ = "account_recovery_requests"
@@ -301,7 +294,6 @@ class AccountRecoveryRequest(TimestampMixin, Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default=RecoveryStatus.PENDING.value
     )
@@ -319,7 +311,7 @@ class AccountRecoveryRequest(TimestampMixin, Base):
     __table_args__ = (Index("idx_recovery_user_status", "user_id", "status"),)
 
 
-class ParentChildLink(TimestampMixin, Base):
+class ParentChildLink(TimestampMixin, SchoolScopedMixin, Base):
     """Explicit parent-child relationship for ABAC ownership guard.
 
     Phase 1A: replaces the enrollment-based derivation in get_parent_child_ids().
@@ -335,7 +327,6 @@ class ParentChildLink(TimestampMixin, Base):
     child_user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default=LinkStatus.ACTIVE.value
     )
@@ -366,7 +357,7 @@ class ParentChildLink(TimestampMixin, Base):
 # ---------------------------------------------------------------------------
 
 
-class StudentProfile(TimestampMixin, Base):
+class StudentProfile(TimestampMixin, SchoolScopedMixin, Base):
     """Extended profile for students (STD role).
 
     One-to-one with User. student_number is unique per school.
@@ -377,7 +368,6 @@ class StudentProfile(TimestampMixin, Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     student_number: Mapped[str | None] = mapped_column(String(50), nullable=True)
     date_of_birth: Mapped[datetime | None] = mapped_column(Date, nullable=True)
     gender: Mapped[str | None] = mapped_column(String(10), nullable=True)
@@ -399,7 +389,7 @@ class StudentProfile(TimestampMixin, Base):
     )
 
 
-class ParentProfile(TimestampMixin, Base):
+class ParentProfile(TimestampMixin, SchoolScopedMixin, Base):
     """Extended profile for parents (PAR role).
 
     One-to-one with User. Stores Moroccan-specific fields (CIN).
@@ -410,7 +400,6 @@ class ParentProfile(TimestampMixin, Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     relationship_type: Mapped[str | None] = mapped_column(String(20), nullable=True)
     cin_number: Mapped[str | None] = mapped_column(String(30), nullable=True)
     address: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -426,7 +415,7 @@ class ParentProfile(TimestampMixin, Base):
     )
 
 
-class TeacherProfile(TimestampMixin, Base):
+class TeacherProfile(TimestampMixin, SchoolScopedMixin, Base):
     """Extended profile for teachers (TCH role).
 
     One-to-one with User. Stores employment and qualification info.
@@ -437,7 +426,6 @@ class TeacherProfile(TimestampMixin, Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     employee_id: Mapped[str | None] = mapped_column(String(50), nullable=True)
     subject_specialty: Mapped[str | None] = mapped_column(String(200), nullable=True)
     qualification: Mapped[str | None] = mapped_column(String(200), nullable=True)
@@ -453,7 +441,7 @@ class TeacherProfile(TimestampMixin, Base):
     )
 
 
-class AdminProfile(TimestampMixin, Base):
+class AdminProfile(TimestampMixin, SchoolScopedMixin, Base):
     """Extended profile for ADM/DIR roles."""
 
     __tablename__ = "admin_profiles"
@@ -461,7 +449,6 @@ class AdminProfile(TimestampMixin, Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     department: Mapped[str | None] = mapped_column(String(100), nullable=True)
     management_level: Mapped[str | None] = mapped_column(String(50), nullable=True)
     can_approve_budgets: Mapped[bool] = mapped_column(
@@ -476,7 +463,7 @@ class AdminProfile(TimestampMixin, Base):
     )
 
 
-class ContentManagerProfile(TimestampMixin, Base):
+class ContentManagerProfile(TimestampMixin, SchoolScopedMixin, Base):
     """Extended profile for CONTENT_MGR role."""
 
     __tablename__ = "content_manager_profiles"
@@ -484,7 +471,6 @@ class ContentManagerProfile(TimestampMixin, Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     specialization: Mapped[str | None] = mapped_column(String(200), nullable=True)
     languages_managed: Mapped[str | None] = mapped_column(Text, nullable=True)
     approved_subjects: Mapped[str | None] = mapped_column(Text, nullable=True)

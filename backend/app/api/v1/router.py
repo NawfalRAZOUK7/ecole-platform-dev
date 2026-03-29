@@ -4,6 +4,7 @@ Reference: Pack D5 — API Implementation Plan
 Routes:
   /health                       — Health check (public)
   /auth/*                       — Authentication (login, refresh, logout, me)
+  /schools/*                    — School management
   /invites/*                    — Invitation code management
   /recovery/*                   — Account recovery flow
   /classes/*                    — Class endpoints (ERP)
@@ -47,6 +48,7 @@ from app.api.v1.classes import router as classes_router
 from app.api.v1.enrollments import router as enrollments_router
 from app.api.v1.invitations import router as invitations_router
 from app.api.v1.recovery import router as recovery_router
+from app.api.v1.schools import router as schools_router
 
 # Phase 3 — ERP routers
 from app.api.v1.class_assignments import router as class_assignments_router
@@ -155,6 +157,7 @@ async def health_check():
 
 # Mount sub-routers — Phase 2
 router.include_router(auth_router)
+router.include_router(schools_router)
 router.include_router(invitations_router)
 router.include_router(recovery_router)
 router.include_router(classes_router)

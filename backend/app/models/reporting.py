@@ -13,7 +13,7 @@ from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Te
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.database import Base, TimestampMixin
+from app.core.database import Base, SchoolScopedMixin, TimestampMixin
 
 
 class ReportType(str, enum.Enum):
@@ -36,12 +36,11 @@ class DataExportFormat(str, enum.Enum):
     XLSX = "xlsx"
 
 
-class ReportSchedule(TimestampMixin, Base):
+class ReportSchedule(TimestampMixin, SchoolScopedMixin, Base):
     """Scheduled report generation with role-targeted email delivery."""
 
     __tablename__ = "report_schedules"
 
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     created_by: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
@@ -70,12 +69,11 @@ class ReportSchedule(TimestampMixin, Base):
     )
 
 
-class ReportJob(TimestampMixin, Base):
+class ReportJob(TimestampMixin, SchoolScopedMixin, Base):
     """Asynchronous PDF report generation job."""
 
     __tablename__ = "report_jobs"
 
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     requester_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
@@ -109,12 +107,11 @@ class ReportJob(TimestampMixin, Base):
     )
 
 
-class DataExport(TimestampMixin, Base):
+class DataExport(TimestampMixin, SchoolScopedMixin, Base):
     """Audit log for CSV/XLSX exports."""
 
     __tablename__ = "data_exports"
 
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     requester_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,

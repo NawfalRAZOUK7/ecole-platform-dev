@@ -52,6 +52,8 @@ PERM_ADM_USER_MANAGE = "PERM-ADM:user:manage"
 PERM_ADM_INVITATION_READ = "PERM-ADM:invitation:read"
 PERM_ADM_AUDIT_READ = "PERM-ADM:audit:read"
 PERM_ADM_IMPERSONATE = "PERM-ADM:impersonation:create"
+PERM_ADM_SCHOOL_MANAGE = "PERM-ADM:school:manage"
+PERM_ADM_SCHOOL_READ = "PERM-ADM:school:read"
 
 # Profiles / GDPR
 PERM_PROF_ADMIN_READ = "PERM-PROF:profile-admin:read"
@@ -231,6 +233,8 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_ADM_INVITATION_READ,
         PERM_ADM_AUDIT_READ,
         PERM_ADM_IMPERSONATE,
+        PERM_ADM_SCHOOL_MANAGE,
+        PERM_ADM_SCHOOL_READ,
         PERM_PROF_ADMIN_READ,
         PERM_GDPR_DATA_DELETE,
         PERM_GDPR_CONSENT_MANAGE,
@@ -340,6 +344,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_ADM_INVITATION_READ,
         PERM_ADM_AUDIT_READ,
         PERM_ADM_IMPERSONATE,
+        PERM_ADM_SCHOOL_READ,
         PERM_GDPR_DATA_DELETE,
         # IAM — read/validate
         PERM_IAM_SESSION_CREATE,
@@ -595,6 +600,8 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IAM_RECOVERY_RESET,
         PERM_IAM_LOGIN_HISTORY_READ,
         PERM_ADM_IMPERSONATE,
+        PERM_ADM_SCHOOL_MANAGE,
+        PERM_ADM_SCHOOL_READ,
         # Support — grant lifecycle
         PERM_SUP_GRANT_REQUEST,
         PERM_SUP_GRANT_REVOKE,

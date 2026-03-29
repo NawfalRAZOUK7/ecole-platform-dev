@@ -26,7 +26,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.database import Base, TimestampMixin
+from app.core.database import Base, SchoolScopedMixin, TimestampMixin
 
 
 # ---------------------------------------------------------------------------
@@ -71,7 +71,7 @@ class ExceptionType(str, enum.Enum):
 # ---------------------------------------------------------------------------
 
 
-class AcademicYear(TimestampMixin, Base):
+class AcademicYear(TimestampMixin, SchoolScopedMixin, Base):
     """Academic year — school calendar boundaries.
 
     INV-ERP-DATE: periods must be contained within the academic year dates.
@@ -80,7 +80,6 @@ class AcademicYear(TimestampMixin, Base):
 
     __tablename__ = "academic_years"
 
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     label: Mapped[str | None] = mapped_column(String(100), nullable=True)
     date_start: Mapped[date] = mapped_column(Date, nullable=False)
     date_end: Mapped[date] = mapped_column(Date, nullable=False)
@@ -99,7 +98,7 @@ class AcademicYear(TimestampMixin, Base):
     )
 
 
-class Period(TimestampMixin, Base):
+class Period(TimestampMixin, SchoolScopedMixin, Base):
     """Period (semester/trimester) within an academic year.
 
     INV-ERP-DATE: period dates must be contained within academic year dates.
@@ -110,7 +109,6 @@ class Period(TimestampMixin, Base):
     academic_year_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("academic_years.id", ondelete="CASCADE"), nullable=False
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     label: Mapped[str | None] = mapped_column(String(100), nullable=True)
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default=PeriodStatus.ACTIVE.value
@@ -127,7 +125,7 @@ class Period(TimestampMixin, Base):
     )
 
 
-class Class(TimestampMixin, Base):
+class Class(TimestampMixin, SchoolScopedMixin, Base):
     """School class (e.g., 3eme A, 6eme B).
 
     Unique per (code, school, academic year).
@@ -135,7 +133,6 @@ class Class(TimestampMixin, Base):
 
     __tablename__ = "classes"
 
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     code: Mapped[str] = mapped_column(String(50), nullable=False)
     academic_year_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("academic_years.id", ondelete="CASCADE"), nullable=False
@@ -158,7 +155,7 @@ class Class(TimestampMixin, Base):
     )
 
 
-class Enrollment(TimestampMixin, Base):
+class Enrollment(TimestampMixin, SchoolScopedMixin, Base):
     """Student enrollment in a class for a period.
 
     INV-ERP-CLASS-ACTIVE: only one active enrollment per student per period.
@@ -175,7 +172,6 @@ class Enrollment(TimestampMixin, Base):
     period_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("periods.id", ondelete="CASCADE"), nullable=False
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default=EnrollmentStatus.ACTIVE.value
     )
@@ -196,7 +192,7 @@ class Enrollment(TimestampMixin, Base):
     )
 
 
-class TeacherAssignment(TimestampMixin, Base):
+class TeacherAssignment(TimestampMixin, SchoolScopedMixin, Base):
     """Teacher assignment to a class for a period."""
 
     __tablename__ = "teacher_assignments"
@@ -210,8 +206,6 @@ class TeacherAssignment(TimestampMixin, Base):
     period_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("periods.id", ondelete="CASCADE"), nullable=False
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
-
     __table_args__ = (
         # idx_teacher_school_class_period
         Index(
@@ -224,7 +218,7 @@ class TeacherAssignment(TimestampMixin, Base):
     )
 
 
-class AttendanceSession(TimestampMixin, Base):
+class AttendanceSession(TimestampMixin, SchoolScopedMixin, Base):
     """Attendance session — one per class/date/slot.
 
     Created by the teacher when taking attendance.
@@ -241,7 +235,6 @@ class AttendanceSession(TimestampMixin, Base):
     teacher_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     session_date: Mapped[date] = mapped_column(Date, nullable=False)
     slot: Mapped[str] = mapped_column(String(20), nullable=False)
 
@@ -261,7 +254,7 @@ class AttendanceSession(TimestampMixin, Base):
     )
 
 
-class AttendanceRecord(TimestampMixin, Base):
+class AttendanceRecord(TimestampMixin, SchoolScopedMixin, Base):
     """Individual student attendance record within a session."""
 
     __tablename__ = "attendance_records"
@@ -272,7 +265,6 @@ class AttendanceRecord(TimestampMixin, Base):
     student_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False)
     absence_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
 
@@ -300,7 +292,7 @@ class AttendanceRecord(TimestampMixin, Base):
     )
 
 
-class AbsenceJustification(TimestampMixin, Base):
+class AbsenceJustification(TimestampMixin, SchoolScopedMixin, Base):
     """Parent-submitted justification for a student absence."""
 
     __tablename__ = "absence_justifications"
@@ -313,7 +305,6 @@ class AbsenceJustification(TimestampMixin, Base):
     parent_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default=JustificationStatus.PENDING.value
     )
@@ -329,7 +320,7 @@ class AbsenceJustification(TimestampMixin, Base):
     )
 
 
-class JustificationReview(TimestampMixin, Base):
+class JustificationReview(TimestampMixin, SchoolScopedMixin, Base):
     """Teacher/admin review decision on a justification."""
 
     __tablename__ = "justification_reviews"
@@ -340,7 +331,6 @@ class JustificationReview(TimestampMixin, Base):
     reviewer_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     decision: Mapped[str] = mapped_column(String(20), nullable=False)
 
     # Relationships
@@ -349,7 +339,7 @@ class JustificationReview(TimestampMixin, Base):
     )
 
 
-class AttendanceAlert(TimestampMixin, Base):
+class AttendanceAlert(TimestampMixin, SchoolScopedMixin, Base):
     """Threshold-based attendance alert for a student within a period."""
 
     __tablename__ = "attendance_alerts"
@@ -358,7 +348,6 @@ class AttendanceAlert(TimestampMixin, Base):
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     period_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("periods.id", ondelete="CASCADE"),
         nullable=False,
@@ -404,12 +393,11 @@ class AttendanceAlert(TimestampMixin, Base):
 # ---------------------------------------------------------------------------
 
 
-class TimetableConstraint(TimestampMixin, Base):
+class TimetableConstraint(TimestampMixin, SchoolScopedMixin, Base):
     """School timetable generation constraint."""
 
     __tablename__ = "timetable_constraints"
 
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     academic_year_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("academic_years.id", ondelete="CASCADE"),
         nullable=False,
@@ -433,12 +421,11 @@ class TimetableConstraint(TimestampMixin, Base):
     )
 
 
-class TimetableGenerationJob(TimestampMixin, Base):
+class TimetableGenerationJob(TimestampMixin, SchoolScopedMixin, Base):
     """Stored result of a timetable generation run."""
 
     __tablename__ = "timetable_generation_jobs"
 
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     academic_year_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("academic_years.id", ondelete="CASCADE"),
         nullable=False,
@@ -472,7 +459,7 @@ class TimetableGenerationJob(TimestampMixin, Base):
 # ---------------------------------------------------------------------------
 
 
-class TimetableSlot(TimestampMixin, Base):
+class TimetableSlot(TimestampMixin, SchoolScopedMixin, Base):
     """Recurring timetable slot — one class period per week.
 
     INV-ERP-TIMETABLE-TIME: end_time > start_time
@@ -483,7 +470,6 @@ class TimetableSlot(TimestampMixin, Base):
 
     __tablename__ = "timetable_slots"
 
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     class_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("classes.id", ondelete="CASCADE"), nullable=False
     )
@@ -526,7 +512,7 @@ class TimetableSlot(TimestampMixin, Base):
     )
 
 
-class TimetableException(TimestampMixin, Base):
+class TimetableException(TimestampMixin, SchoolScopedMixin, Base):
     """Exception to a recurring timetable slot (cancel, substitute, room change).
 
     One exception per slot per date.
@@ -537,7 +523,6 @@ class TimetableException(TimestampMixin, Base):
     timetable_slot_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("timetable_slots.id", ondelete="CASCADE"), nullable=False
     )
-    school_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
     exception_date: Mapped[date] = mapped_column(Date, nullable=False)
     exception_type: Mapped[str] = mapped_column(String(20), nullable=False)
     substitute_teacher_id: Mapped[uuid.UUID | None] = mapped_column(

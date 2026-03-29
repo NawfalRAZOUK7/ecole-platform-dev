@@ -3,6 +3,9 @@
 Migration group order: G1-IAM -> G2-ERP -> G3-LMS -> G4-COM -> G5-Billing -> G6-Audit
 """
 
+# G0 — Schools
+from app.models.school import School, SchoolStatus
+
 # G1 — IAM
 from app.models.iam import (
     AccountRecoveryRequest,
@@ -53,13 +56,19 @@ from app.models.lms import (
     Assessment,
     AssessmentResult,
     Assignment,
+    ClassContentAssignment,
     ContentItem,
     ContentItemAsset,
     ContentProgress,
+    ContentSubmission,
     Course,
     GradeCategory,
     Grade,
     QuestionBankItem,
+    Quiz,
+    QuizAttempt,
+    QuizQuestion,
+    QuizResponse,
     Rubric,
     RubricCriterion,
     RubricLevel,
@@ -128,6 +137,9 @@ from app.models.documents import (
 )
 
 __all__ = [
+    # Schools
+    "School",
+    "SchoolStatus",
     # IAM
     "User",
     "Membership",
@@ -175,6 +187,12 @@ __all__ = [
     "ContentItem",
     "ContentItemAsset",
     "ContentProgress",
+    "ClassContentAssignment",
+    "ContentSubmission",
+    "Quiz",
+    "QuizQuestion",
+    "QuizAttempt",
+    "QuizResponse",
     "Rubric",
     "RubricCriterion",
     "RubricLevel",
