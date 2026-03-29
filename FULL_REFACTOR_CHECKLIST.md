@@ -553,18 +553,18 @@
 ### Phase MR-F: Model & Role Validation
 
 #### MR-F1: Full Model & Role Validation
-- [ ] SchoolScopedMixin: exists in database.py, ~40 models use it, no duplicate school_id
-- [ ] SoftDeleteMixin: exists, 4 models use it, no duplicate deleted_at
-- [ ] Helper properties: all specified properties exist and are pure
-- [ ] __repr__: every model has one, no sensitive data exposed
-- [ ] Validators: all specified validators exist and raise ValueError
+- [x] SchoolScopedMixin: exists in database.py, 60 models use it (+ 3 nullable-scoped models), no duplicate school_id
+- [x] SoftDeleteMixin: exists, 5 models use it, no duplicate deleted_at
+- [x] Helper properties: all specified properties exist and are pure
+- [x] __repr__: every mapped model has one, no sensitive data exposed
+- [x] Validators: all specified validators exist and raise ValueError
 - [x] Enum columns: G31b migration exists, ~30 columns use PgEnum
-- [ ] School model: exists with all fields, CRUD stack complete, endpoints registered
-- [ ] Permissions: DIR/SUP/CONTENT_MGR expanded correctly
-- [ ] Role hierarchy: ROLE_HIERARCHY + get_effective_permissions() work correctly
-- [ ] ABAC: abac.py exists, PAR validates links, STD validates class membership
-- [ ] Hardcoded roles: zero remaining in services
-- [ ] Import health: all model/core/permission imports succeed
+- [x] School model: exists with all fields, CRUD stack complete, endpoints registered
+- [x] Permissions: DIR/SUP/CONTENT_MGR expanded correctly
+- [x] Role hierarchy: ROLE_HIERARCHY + get_effective_permissions() work correctly
+- [x] ABAC: abac.py exists, PAR validates links, STD validates class membership
+- [x] Hardcoded roles: zero remaining in services
+- [x] Import health: all model/core/permission imports succeed
 - [ ] **Review & commit myself**
 
 ---
@@ -584,11 +584,11 @@
 | ENH | C — Billing/ERP | ENH-C1, C2, C3 | Complete |
 | ENH | D — Comms/Docs | ENH-D1, D2 | Complete |
 | ENH | E — Validation | ENH-E1 | Complete |
-| MR | A — School + Mixins | MR-A1 | Not started |
-| MR | B — Props/Repr/Valid | MR-B1, B2, B3 | Not started |
+| MR | A — School + Mixins | MR-A1 | Complete |
+| MR | B — Props/Repr/Valid | MR-B1, B2, B3 | Complete |
 | MR | C — Enum Columns | MR-C1 | Complete |
 | MR | D — Permissions | MR-D1 | Complete |
 | MR | E — ABAC + Roles | MR-E1, E2 | Complete |
-| MR | F — MR Validation | MR-F1 | Not started |
+| MR | F — MR Validation | MR-F1 | Complete |
 
-**Total: 30 prompts (23 complete + 7 new), ~160+ files to create/modify, 10 migrations (G26-G31b)**
+**Total: 30 prompts (30 complete), ~160+ files to create/modify, 10 migrations (G26-G31b)**

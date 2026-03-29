@@ -42,3 +42,9 @@ class FeatureToggle(TimestampMixin, Base):
     enabled_role_codes: Mapped[list | None] = mapped_column(
         JSONB, nullable=True, server_default="[]"
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<FeatureToggle id={str(self.id)[:8]} "
+            f"feature_key={self.feature_key} enabled_globally={self.enabled_globally}>"
+        )

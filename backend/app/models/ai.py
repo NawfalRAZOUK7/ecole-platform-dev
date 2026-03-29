@@ -21,6 +21,10 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.core.database import Base, SchoolScopedMixin, TimestampMixin
 
 
+def _short_id(value: uuid.UUID | None) -> str:
+    return str(value)[:8] if value is not None else "None"
+
+
 class WritingAttempt(TimestampMixin, SchoolScopedMixin, Base):
     """Student writing assistance attempt — stores request + AI response.
 
@@ -46,6 +50,12 @@ class WritingAttempt(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_writing_attempts_student", "student_id"),
         Index("idx_writing_attempts_school", "school_id"),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<WritingAttempt id={_short_id(self.id)} "
+            f"student_id={_short_id(self.student_id)} status={self.status}>"
+        )
 
 
 class AIPreference(TimestampMixin, SchoolScopedMixin, Base):
@@ -77,3 +87,9 @@ class AIPreference(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_ai_preferences_target", "target_user_id"),
         Index("idx_ai_preferences_school", "school_id"),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<AIPreference id={_short_id(self.id)} "
+            f"user_id={_short_id(self.user_id)} opt_out={self.opt_out}>"
+        )
