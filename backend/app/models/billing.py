@@ -22,13 +22,16 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.core.database import Base, SchoolScopedMixin, TimestampMixin
 
 
 def _short_id(value: object | None) -> str:
     return str(value)[:8] if value is not None else "None"
+
+
+ALLOWED_CURRENCIES = {"MAD", "EUR", "USD"}
 
 
 # ---------------------------------------------------------------------------
@@ -149,6 +152,20 @@ class Invoice(TimestampMixin, SchoolScopedMixin, Base):
     def is_paid(self) -> bool:
         return self.status == InvoiceStatus.PAID.value
 
+    @validates("total_amount")
+    def validate_total_amount(self, key: str, value: float) -> float:
+        if value < 0:
+            raise ValueError("Invoice total_amount must be non-negative")
+        return value
+
+    @validates("currency")
+    def validate_currency(self, key: str, value: str) -> str:
+        cleaned = value.strip().upper()
+        if cleaned not in ALLOWED_CURRENCIES:
+            allowed = ", ".join(sorted(ALLOWED_CURRENCIES))
+            raise ValueError(f"Invoice currency must be one of: {allowed}")
+        return cleaned
+
     def __repr__(self) -> str:
         return (
             f"<Invoice id={_short_id(self.id)} status={self.status} "
@@ -176,6 +193,12 @@ class InvoiceItem(TimestampMixin, Base):
         CheckConstraint("amount >= 0", name="ck_invoice_items_amount"),
         CheckConstraint("quantity > 0", name="ck_invoice_items_quantity"),
     )
+
+    @validates("amount")
+    def validate_amount(self, key: str, value: float) -> float:
+        if value < 0:
+            raise ValueError("InvoiceItem amount must be non-negative")
+        return value
 
     def __repr__(self) -> str:
         return (
@@ -456,6 +479,16 @@ class SiblingDiscountPolicy(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_sdp_school", "school_id"),
     )
 
+    @validates(
+        "second_child_percent",
+        "third_child_percent",
+        "fourth_plus_percent",
+    )
+    def validate_discount_percent(self, key: str, value: float) -> float:
+        if value < 0 or value > 100:
+            raise ValueError(f"{key} must be between 0 and 100")
+        return value
+
     def __repr__(self) -> str:
         return (
             f"<SiblingDiscountPolicy id={_short_id(self.id)} enabled={self.enabled} "
@@ -585,6 +618,12 @@ class Installment(TimestampMixin, Base):
     @property
     def is_overdue(self) -> bool:
         return self.paid_at is None and self.due_date.date() < date.today()
+
+    @validates("amount")
+    def validate_amount(self, key: str, value: float) -> float:
+        if value <= 0:
+            raise ValueError("Installment amount must be greater than 0")
+        return value
 
     def __repr__(self) -> str:
         return (

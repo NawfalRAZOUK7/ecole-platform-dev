@@ -18,7 +18,7 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import ARRAY
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, validates
 
 from app.core.database import Base, SchoolScopedMixin, SoftDeleteMixin, TimestampMixin
 
@@ -206,6 +206,12 @@ class ResourceRating(TimestampMixin, Base):
         Index("idx_resource_ratings_resource", "resource_id"),
         Index("idx_resource_ratings_user", "user_id"),
     )
+
+    @validates("rating")
+    def validate_rating(self, key: str, value: int) -> int:
+        if value < 1 or value > 5:
+            raise ValueError("ResourceRating rating must be between 1 and 5")
+        return value
 
     def __repr__(self) -> str:
         return (

@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, validates
 
 from app.core.database import Base, SchoolScopedMixin, TimestampMixin
 
@@ -123,6 +123,15 @@ class ReportJob(TimestampMixin, SchoolScopedMixin, Base):
     @property
     def is_expired(self) -> bool:
         return self.expires_at is not None and self.expires_at < datetime.now(timezone.utc)
+
+    @validates("status")
+    def validate_status(self, key: str, value: str) -> str:
+        allowed = {status.value for status in ReportJobStatus}
+        if value not in allowed:
+            raise ValueError(
+                f"ReportJob status must be one of: {', '.join(sorted(allowed))}"
+            )
+        return value
 
     def __repr__(self) -> str:
         return f"<ReportJob id={_short_id(self.id)} type={self.type} status={self.status}>"

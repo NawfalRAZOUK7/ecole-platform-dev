@@ -24,7 +24,7 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.core.database import Base, SchoolScopedMixin, TimestampMixin
 
@@ -207,6 +207,15 @@ class Enrollment(TimestampMixin, SchoolScopedMixin, Base):
     @property
     def is_active(self) -> bool:
         return self.status == EnrollmentStatus.ACTIVE.value
+
+    @validates("status")
+    def validate_status(self, key: str, value: str) -> str:
+        allowed = {status.value for status in EnrollmentStatus}
+        if value not in allowed:
+            raise ValueError(
+                f"Enrollment status must be one of: {', '.join(sorted(allowed))}"
+            )
+        return value
 
     def __repr__(self) -> str:
         return (

@@ -466,20 +466,20 @@
 - [ ] **Review & commit myself**
 
 #### MR-B3: SQLAlchemy Validators
-- [ ] User: email validator (contains @, lowercase, strip)
-- [ ] User: phone validator (starts with +, strip)
-- [ ] Invoice: total validator (>= 0)
-- [ ] Invoice: currency validator (must be MAD/EUR/USD)
-- [ ] InvoiceItem: amount validator (>= 0)
-- [ ] Installment: amount validator (> 0)
-- [ ] SiblingDiscountPolicy: discount_percent validator (0-100)
-- [ ] Grade: score validator (0-20 Moroccan scale)
-- [ ] Grade: late_penalty validator (>= 0)
-- [ ] Assignment: max_score validator (> 0)
-- [ ] Assignment: late_penalty_per_day validator (0-100)
-- [ ] GradeCategory: weight validator (0-1)
-- [ ] ResourceRating: rating validator (1-5)
-- [ ] All validators raise ValueError with descriptive messages
+- [x] User: email validator (contains @, lowercase, strip)
+- [x] User: phone validator (starts with +, strip)
+- [x] Invoice: total validator (>= 0)
+- [x] Invoice: currency validator (must be MAD/EUR/USD)
+- [x] InvoiceItem: amount validator (>= 0)
+- [x] Installment: amount validator (> 0)
+- [x] SiblingDiscountPolicy: discount_percent validator (0-100)
+- [x] Grade: score validator (0-20 Moroccan scale)
+- [x] Grade: late_penalty validator (>= 0)
+- [x] Assignment: max_score validator (> 0)
+- [x] Assignment: late_penalty_per_day validator (0-100)
+- [x] GradeCategory: weight validator (0-1)
+- [x] ResourceRating: rating validator (1-5)
+- [x] All validators raise ValueError with descriptive messages
 - [ ] **Review & commit myself**
 
 ---

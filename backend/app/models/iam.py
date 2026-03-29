@@ -21,7 +21,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.core.database import Base, SchoolScopedMixin, TimestampMixin
 
@@ -146,6 +146,22 @@ class User(TimestampMixin, SchoolScopedMixin, Base):
     @property
     def is_email_verified(self) -> bool:
         return self.email_verified_at is not None
+
+    @validates("email")
+    def validate_email(self, key: str, value: str) -> str:
+        cleaned = value.strip().lower()
+        if "@" not in cleaned:
+            raise ValueError(f"Invalid email format: {value}")
+        return cleaned
+
+    @validates("phone")
+    def validate_phone(self, key: str, value: str | None) -> str | None:
+        if value is None:
+            return value
+        cleaned = value.strip().replace(" ", "").replace("-", "")
+        if not cleaned.startswith("+"):
+            raise ValueError("Phone must start with country code (+)")
+        return cleaned
 
     def __repr__(self) -> str:
         return f"<User id={_short_id(self.id)} email={self.email} status={self.status}>"

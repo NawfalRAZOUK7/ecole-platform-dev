@@ -24,7 +24,7 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.core.database import (
     Base,
@@ -153,6 +153,12 @@ class GradeCategory(TimestampMixin, SchoolScopedMixin, Base):
             name="ck_grade_categories_weight",
         ),
     )
+
+    @validates("weight")
+    def validate_weight(self, key: str, value: float) -> float:
+        if value <= 0 or value > 1:
+            raise ValueError("GradeCategory weight must be between 0 and 1")
+        return value
 
     def __repr__(self) -> str:
         return (
@@ -330,6 +336,18 @@ class Assignment(TimestampMixin, Base):
             return True
         return now <= grace_deadline + timedelta(days=self.max_late_days)
 
+    @validates("total_points")
+    def validate_total_points(self, key: str, value: int) -> int:
+        if value <= 0:
+            raise ValueError("Assignment total_points must be greater than 0")
+        return value
+
+    @validates("late_penalty_per_day")
+    def validate_late_penalty_per_day(self, key: str, value: float) -> float:
+        if value < 0 or value > 100:
+            raise ValueError("Assignment late_penalty_per_day must be between 0 and 100")
+        return value
+
     def __repr__(self) -> str:
         return (
             f"<Assignment id={_short_id(self.id)} title={self.title} "
@@ -489,6 +507,18 @@ class Grade(TimestampMixin, Base):
     __table_args__ = (
         Index("idx_grades_submission_published", "submission_id", "published_at"),
     )
+
+    @validates("score")
+    def validate_score(self, key: str, value: float) -> float:
+        if value < 0 or value > 20:
+            raise ValueError("Grade score must be between 0 and 20")
+        return value
+
+    @validates("late_penalty")
+    def validate_late_penalty(self, key: str, value: float) -> float:
+        if value < 0:
+            raise ValueError("Grade late_penalty must be non-negative")
+        return value
 
     def __repr__(self) -> str:
         return (
