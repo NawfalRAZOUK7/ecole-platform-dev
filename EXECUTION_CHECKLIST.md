@@ -55,17 +55,17 @@
 ---
 
 ### T-03: Model Validator + Property Tests (~60 tests)
-- [ ] **ANALYZE** — Read all model files for @validates and @property
-  - [ ] Complete list of validators and properties per model
-- [ ] **EXECUTE** — Create tests
-  - [ ] Created `test_validators.py` (~30 tests: email, phone, score, total, currency)
-  - [ ] Created `test_helper_properties.py` (~25 tests: is_active, is_expired, is_overdue, etc.)
-  - [ ] Created `test_repr.py` (~10 tests: no sensitive data leaks)
-- [ ] **VERIFY** — ~60 tests pass
-  - [ ] All model tests pass
-  - [ ] No test isolation issues
-  - [ ] Existing tests unaffected
-- [ ] **GIT** — Committed (Codex only)
+- [x] **ANALYZE** — Read all model files for @validates and @property
+  - [x] Complete list of validators and properties per model
+- [x] **EXECUTE** — Create tests
+  - [x] Created `test_validators.py` (~30 tests: email, phone, score, total, currency)
+  - [x] Created `test_helper_properties.py` (~25 tests: is_active, is_expired, is_overdue, etc.)
+  - [x] Created `test_repr.py` (~10 tests: no sensitive data leaks)
+- [x] **VERIFY** — ~60 tests pass
+  - [x] All model tests pass
+  - [x] No test isolation issues
+  - [x] Existing tests unaffected
+- [x] **GIT** — Committed (Codex only)
 
 ---
 
