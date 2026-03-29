@@ -83,14 +83,14 @@
 ---
 
 ### T-05: LMS Service Unit Tests (~65 tests)
-- [ ] **ANALYZE** — Read grading_service, assignment_service, quiz_service, _helpers
-  - [ ] Listed every method with happy/error paths
-- [ ] **EXECUTE** — Create tests
-  - [ ] Created `test_grading_service.py` (~25 tests)
-  - [ ] Created `test_assignment_service.py` (~20 tests)
-  - [ ] Created `test_quiz_service.py` (~20 tests)
-- [ ] **VERIFY** — ~65 tests pass, no real DB calls
-- [ ] **GIT** — Committed (Codex only)
+- [x] **ANALYZE** — Read grading_service, assignment_service, quiz_service, _helpers
+  - [x] Listed every method with happy/error paths
+- [x] **EXECUTE** — Create tests
+  - [x] Created `test_grading_service.py` (~25 tests)
+  - [x] Created `test_assignment_service.py` (~20 tests)
+  - [x] Created `test_quiz_service.py` (~20 tests)
+- [x] **VERIFY** — ~65 tests pass, no real DB calls
+- [x] **GIT** — Committed (Codex only)
 
 ---
 
