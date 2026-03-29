@@ -16,6 +16,7 @@ from app.core.dependencies import (
     verify_teacher_assignment,
 )
 from app.core.exceptions import NotFoundError, ValidationError
+from app.core.permissions import ADM, DIR, PAR, STD, TCH
 from app.core.redis import redis_client
 from app.repositories.progress import ProgressRepository
 
@@ -58,19 +59,19 @@ class ProgressService:
         student_id: uuid.UUID,
         auth: AuthContext,
     ) -> None:
-        if auth.role in ("ADM", "DIR"):
+        if auth.role in (ADM, DIR):
             student_school_id = await self.repo.get_student_school_id(student_id)
             if student_school_id is None:
                 raise NotFoundError("Student not found", error_code="ERR-PROGRESS-404")
             verify_school_boundary(student_school_id, auth)
             return
 
-        if auth.role == "STD":
+        if auth.role == STD:
             if student_id != auth.user_id:
                 raise NotFoundError("Student not found", error_code="ERR-PROGRESS-404")
             return
 
-        if auth.role == "PAR":
+        if auth.role == PAR:
             child_ids = await self.repo.list_parent_child_ids(
                 parent_id=auth.user_id,
                 school_id=auth.school_id,
@@ -78,7 +79,7 @@ class ProgressService:
             verify_parent_child_ownership(student_id, child_ids)
             return
 
-        if auth.role == "TCH":
+        if auth.role == TCH:
             teacher_class_ids = await self.repo.list_teacher_class_ids(
                 teacher_id=auth.user_id,
                 school_id=auth.school_id,
@@ -105,7 +106,7 @@ class ProgressService:
             raise NotFoundError("Class not found", error_code="ERR-PROGRESS-404")
         verify_school_boundary(class_school_id, auth)
 
-        if auth.role == "TCH":
+        if auth.role == TCH:
             teacher_class_ids = await self.repo.list_teacher_class_ids(
                 teacher_id=auth.user_id,
                 school_id=auth.school_id,
@@ -537,7 +538,7 @@ class ProgressService:
         *,
         auth: AuthContext,
     ) -> dict[str, Any]:
-        if auth.role != "STD":
+        if auth.role != STD:
             raise ValidationError(
                 "This endpoint is for students only. Use /progress/student/{id} instead.",
                 error_code="ERR-PROGRESS-422",
@@ -549,7 +550,7 @@ class ProgressService:
         *,
         auth: AuthContext,
     ) -> dict[str, Any]:
-        if auth.role != "PAR":
+        if auth.role != PAR:
             raise ValidationError(
                 "This endpoint is for parents only. Use /progress/student/{id} instead.",
                 error_code="ERR-PROGRESS-422",

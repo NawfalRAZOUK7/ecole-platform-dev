@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import AuthContext
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
+from app.core.permissions import ADM, DIR, PAR, STD, TCH
 from app.core.security import hash_password
 from app.core.unit_of_work import UnitOfWork
 from app.models.iam import InvitationCode, Membership, ParentChildLink, User
@@ -168,7 +169,7 @@ class AdminService:
         auth: AuthContext,
         client_ip: str,
     ) -> dict:
-        valid_targets = {"TCH", "PAR", "STD", "DIR"}
+        valid_targets = {TCH, PAR, STD, DIR}
         if role not in valid_targets:
             raise ValidationError(
                 f"Invalid role. Must be one of: {', '.join(sorted(valid_targets))}",
@@ -345,7 +346,7 @@ class AdminService:
         school_id = auth.school_id
         results: list[dict] = []
         errors: list[dict] = []
-        valid_roles = {"STD", "PAR", "TCH", "ADM", "DIR"}
+        valid_roles = {STD, PAR, TCH, ADM, DIR}
         now = datetime.now(timezone.utc)
 
         async with UnitOfWork(self.db) as uow:
@@ -407,16 +408,16 @@ class AdminService:
                         consumed_at=now,
                         expires_at=now,
                         target_student_id=item.target_student_id
-                        if item.role == "PAR"
+                        if item.role == PAR
                         else None,
                     )
                 )
 
-                if item.role == "PAR" and item.target_student_id:
+                if item.role == PAR and item.target_student_id:
                     student = await repo.get_user_with_role(
                         user_id=item.target_student_id,
                         school_id=school_id,
-                        role_code="STD",
+                        role_code=STD,
                     )
                     if student is not None:
                         await repo.create_parent_child_link(
@@ -470,7 +471,7 @@ class AdminService:
         parent = await self.repo.get_user_with_role(
             user_id=parent_user_id,
             school_id=school_id,
-            role_code="PAR",
+            role_code=PAR,
         )
         if parent is None:
             raise NotFoundError(
@@ -481,7 +482,7 @@ class AdminService:
         student = await self.repo.get_user_with_role(
             user_id=child_user_id,
             school_id=school_id,
-            role_code="STD",
+            role_code=STD,
         )
         if student is None:
             raise NotFoundError(

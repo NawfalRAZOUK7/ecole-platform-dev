@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.dependencies import AuthContext, verify_school_boundary
 from app.core.exceptions import AuthorizationError, ConflictError, NotFoundError
 from app.core.permissions import (
+    PAR,
     PERM_BIL_PAYMENT_PLAN_CREATE,
     PERM_BIL_PAYMENT_PLAN_READ,
     role_has_permission,
@@ -147,7 +148,7 @@ class PaymentPlanService:
             raise NotFoundError("Invoice not found", error_code="ERR-BIL-404")
         verify_school_boundary(invoice.school_id, auth)
 
-        if auth.role == "PAR" and invoice.parent_id != auth.user_id:
+        if auth.role == PAR and invoice.parent_id != auth.user_id:
             raise NotFoundError("Invoice not found", error_code="ERR-BIL-404")
         if invoice.status == "paid":
             raise ConflictError(
@@ -218,7 +219,7 @@ class PaymentPlanService:
         self._ensure_can_read(auth)
 
         scoped_parent_id = parent_id
-        if auth.role == "PAR":
+        if auth.role == PAR:
             scoped_parent_id = auth.user_id
 
         plans = await self.repo.list_payment_plans(
@@ -240,7 +241,7 @@ class PaymentPlanService:
             raise NotFoundError("Payment plan not found", error_code="ERR-BIL-404")
 
         verify_school_boundary(plan.school_id, auth)
-        if auth.role == "PAR" and plan.invoice.parent_id != auth.user_id:
+        if auth.role == PAR and plan.invoice.parent_id != auth.user_id:
             raise NotFoundError("Payment plan not found", error_code="ERR-BIL-404")
 
         return self._plan_to_detail(plan)

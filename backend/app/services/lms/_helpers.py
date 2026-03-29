@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import AuthContext, verify_school_boundary
 from app.core.exceptions import NotFoundError, ValidationError
+from app.core.permissions import STD, TCH
 from app.core.storage import storage
 from app.domain.events.lms import (
     AssignmentCreated,
@@ -274,9 +275,9 @@ class LMSServiceBase:
             raise NotFoundError("No exercise PDF attached", error_code="ERR-LMS-404")
         verify_school_boundary(course.school_id, auth)
 
-        if auth.role == "TCH" and course.teacher_id != auth.user_id:
+        if auth.role == TCH and course.teacher_id != auth.user_id:
             raise NotFoundError("Assignment not found", error_code="ERR-LMS-404")
-        if auth.role == "STD":
+        if auth.role == STD:
             enrolled = await self.repo.student_is_enrolled_in_class(
                 student_id=auth.user_id,
                 class_id=course.class_id,
@@ -307,9 +308,9 @@ class LMSServiceBase:
         submission, _assignment, course = bundle
         verify_school_boundary(course.school_id, auth)
 
-        if auth.role == "STD" and submission.student_id != auth.user_id:
+        if auth.role == STD and submission.student_id != auth.user_id:
             raise NotFoundError("File not found", error_code="ERR-UPLOAD-404")
-        if auth.role == "TCH" and course.teacher_id != auth.user_id:
+        if auth.role == TCH and course.teacher_id != auth.user_id:
             raise NotFoundError("File not found", error_code="ERR-UPLOAD-404")
 
         abs_path = await storage.read(submission_file.file_path)
@@ -331,7 +332,7 @@ class LMSServiceBase:
         submission, assignment, course = bundle
         verify_school_boundary(course.school_id, auth)
 
-        if auth.role == "TCH" and course.teacher_id != auth.user_id:
+        if auth.role == TCH and course.teacher_id != auth.user_id:
             raise NotFoundError("Submission not found", error_code="ERR-LMS-404")
 
         files = await self.repo.list_submission_files(submission_id)
@@ -406,7 +407,7 @@ class LMSServiceBase:
         attempt = await self.quiz_repo.get_quiz_attempt(attempt_id)
         if attempt is None:
             raise NotFoundError("Attempt not found", error_code="ERR-QUIZ-404")
-        if auth.role == "STD" and attempt.student_id != auth.user_id:
+        if auth.role == STD and attempt.student_id != auth.user_id:
             raise NotFoundError("Attempt not found", error_code="ERR-QUIZ-404")
         if attempt.status == "STARTED":
             raise ValidationError("Attempt not yet submitted", error_code="ERR-QUIZ-400")

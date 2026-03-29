@@ -9,6 +9,7 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import AuthorizationError, ConflictError
+from app.core.permissions import ADM, DIR
 from app.core.unit_of_work import UnitOfWork
 from app.models.calendar import EventRsvpStatus, EventRSVP
 from app.repositories.calendar import CalendarRepository
@@ -133,7 +134,7 @@ class RSVPService:
             user_id=user_id,
             role=role,
         )
-        if role not in {"ADM", "DIR"} and event.created_by != user_id:
+        if role not in {ADM, DIR} and event.created_by != user_id:
             raise AuthorizationError(
                 "Only administrators, directors, or the event creator can view RSVPs",
                 error_code="ERR-CAL-403",

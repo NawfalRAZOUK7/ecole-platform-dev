@@ -9,6 +9,7 @@ from typing import Iterable
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import AuthorizationError, NotFoundError
+from app.core.permissions import ADM, DIR
 from app.core.redis import redis_client
 from app.core.unit_of_work import UnitOfWork
 from app.models.com import (
@@ -253,7 +254,7 @@ class NotificationHubService:
                 role=role,
             )
             if hard_delete:
-                if role != "ADM":
+                if role != ADM:
                     raise AuthorizationError(
                         "Only administrators can hard delete notifications",
                         error_code="ERR-COM-403",
@@ -425,11 +426,11 @@ class NotificationHubService:
                 student_ids=list(students),
             )
 
-            if not role_codes or "STD" in role_codes:
+            if not role_codes or STD in role_codes:
                 recipient_ids.update(students)
-            if not role_codes or "TCH" in role_codes:
+            if not role_codes or TCH in role_codes:
                 recipient_ids.update(teachers)
-            if not role_codes or "PAR" in role_codes:
+            if not role_codes or PAR in role_codes:
                 recipient_ids.update(parents)
 
         return recipient_ids
@@ -647,7 +648,7 @@ class NotificationHubService:
         notification = await repo.get_notification(notification_id)
         if notification is None or notification.school_id != school_id:
             raise NotFoundError("Notification not found", error_code="ERR-COM-404")
-        if role not in {"ADM", "DIR"} and notification.parent_id != user_id:
+        if role not in {ADM, DIR} and notification.parent_id != user_id:
             raise NotFoundError("Notification not found", error_code="ERR-COM-404")
         return notification
 

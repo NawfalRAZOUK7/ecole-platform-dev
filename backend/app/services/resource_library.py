@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.exceptions import AuthorizationError, NotFoundError, ValidationError
+from app.core.permissions import ADM, DIR, PAR, STD, TCH
 from app.core.unit_of_work import UnitOfWork
 from app.domain.events.documents import ResourceShared
 from app.models.documents import DocumentCategory, Resource, ResourceRating
@@ -46,7 +47,7 @@ class ResourceLibraryService:
         mime_type: str,
         payload: ResourceCreateRequest,
     ) -> dict:
-        if actor_role not in {"TCH", "ADM", "DIR"}:
+        if actor_role not in {TCH, ADM, DIR}:
             raise AuthorizationError(
                 "Only teachers and administrators can upload resources",
                 error_code="ERR-DOC-403",
@@ -229,7 +230,7 @@ class ResourceLibraryService:
             actor_id=actor_id,
             actor_role=actor_role,
         )
-        if actor_role not in {"ADM", "DIR"} and resource.uploader_id != actor_id:
+        if actor_role not in {ADM, DIR} and resource.uploader_id != actor_id:
             raise NotFoundError("Resource not found", error_code="ERR-DOC-404")
         updates = payload.model_dump(exclude_unset=True)
         for field, value in updates.items():
@@ -263,7 +264,7 @@ class ResourceLibraryService:
             actor_id=actor_id,
             actor_role=actor_role,
         )
-        if actor_role not in {"ADM", "DIR"} and resource.uploader_id != actor_id:
+        if actor_role not in {ADM, DIR} and resource.uploader_id != actor_id:
             raise NotFoundError("Resource not found", error_code="ERR-DOC-404")
         resource.deleted_at = _utc_now()
         document.deleted_at = _utc_now()
@@ -283,7 +284,7 @@ class ResourceLibraryService:
         actor_role: str,
         rating_value: int,
     ) -> dict:
-        if actor_role != "TCH":
+        if actor_role != TCH:
             raise AuthorizationError(
                 "Only teachers can rate resources",
                 error_code="ERR-DOC-403",
@@ -419,7 +420,7 @@ class ResourceLibraryService:
             actor_id=actor_id,
         )
         download_token = self.build_download_token(resource_id=resource.id)
-        can_manage = actor_role in {"ADM", "DIR"} or resource.uploader_id == actor_id
+        can_manage = actor_role in {ADM, DIR} or resource.uploader_id == actor_id
         return {
             "id": str(resource.id),
             "title": resource.title,
@@ -444,7 +445,7 @@ class ResourceLibraryService:
             "updated_at": resource.updated_at.isoformat() if resource.updated_at else None,
             "can_edit": can_manage,
             "can_delete": can_manage,
-            "can_rate": actor_role == "TCH",
+            "can_rate": actor_role == TCH,
         }
 
     async def _verify_class_access(
@@ -455,7 +456,7 @@ class ResourceLibraryService:
         actor_role: str,
         class_id: uuid.UUID,
     ) -> None:
-        if actor_role in {"ADM", "DIR"}:
+        if actor_role in {ADM, DIR}:
             return
         class_ids = await self.repo.list_teacher_class_ids(
             teacher_id=actor_id,
@@ -471,12 +472,12 @@ class ResourceLibraryService:
         actor_id: uuid.UUID,
         actor_role: str,
     ) -> set[uuid.UUID]:
-        if actor_role == "TCH":
+        if actor_role == TCH:
             return await self.repo.list_teacher_class_ids(
                 teacher_id=actor_id,
                 school_id=school_id,
             )
-        if actor_role == "PAR":
+        if actor_role == PAR:
             child_ids = await self.repo.list_parent_child_ids(
                 parent_id=actor_id,
                 school_id=school_id,
@@ -490,7 +491,7 @@ class ResourceLibraryService:
                     )
                 )
             return class_ids
-        if actor_role == "STD":
+        if actor_role == STD:
             return await self.repo.list_student_class_ids(
                 student_id=actor_id,
                 school_id=school_id,
@@ -507,7 +508,7 @@ class ResourceLibraryService:
     ) -> None:
         if resource.school_id != school_id:
             raise NotFoundError("Resource not found", error_code="ERR-DOC-404")
-        if actor_role in {"ADM", "DIR"}:
+        if actor_role in {ADM, DIR}:
             return
         if resource.uploader_id == actor_id:
             return

@@ -14,6 +14,7 @@ from app.core.dependencies import (
 )
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.core.filtering import FilterSpec, SortSpec
+from app.core.permissions import PAR, STD, TCH
 from app.core.response import encode_cursor
 from app.core.unit_of_work import UnitOfWork
 from app.repositories.lms import LMSRepository
@@ -42,7 +43,7 @@ class ProgressService(LMSServiceBase):
             raise NotFoundError("Class not found", error_code="ERR-LMS-404")
         verify_school_boundary(class_room.school_id, auth)
 
-        if auth.role == "TCH":
+        if auth.role == TCH:
             teacher_classes = await self.repo.list_teacher_class_ids(
                 teacher_id=auth.user_id,
                 school_id=auth.school_id,
@@ -92,7 +93,7 @@ class ProgressService(LMSServiceBase):
         auth: AuthContext,
     ) -> tuple[list[dict], str | None, bool]:
         teacher_class_ids: set[uuid.UUID] | None = None
-        if auth.role == "TCH":
+        if auth.role == TCH:
             teacher_class_ids = await self.repo.list_teacher_class_ids(
                 teacher_id=auth.user_id,
                 school_id=auth.school_id,
@@ -225,9 +226,9 @@ class ProgressService(LMSServiceBase):
         limit: int,
         auth: AuthContext,
     ) -> tuple[list[dict], str | None, bool]:
-        if auth.role == "STD":
+        if auth.role == STD:
             student_ids: set[uuid.UUID] | None = {auth.user_id}
-        elif auth.role == "PAR":
+        elif auth.role == PAR:
             child_ids = await self.repo.list_parent_child_ids(
                 parent_id=auth.user_id,
                 school_id=auth.school_id,

@@ -7,6 +7,7 @@ import uuid
 from app.core.dependencies import AuthContext, verify_school_boundary, verify_teacher_assignment
 from app.core.exceptions import ConflictError, NotFoundError
 from app.core.filtering import FilterSpec, SortSpec
+from app.core.permissions import TCH
 from app.core.response import encode_cursor
 from app.core.unit_of_work import UnitOfWork
 from app.repositories.lms import LMSRepository
@@ -81,7 +82,7 @@ class CourseService(LMSServiceBase):
         auth: AuthContext,
     ) -> tuple[list[dict], str | None, bool]:
         teacher_class_ids: set[uuid.UUID] | None = None
-        if auth.role == "TCH":
+        if auth.role == TCH:
             teacher_class_ids = await self.repo.list_teacher_class_ids(
                 teacher_id=auth.user_id,
                 school_id=auth.school_id,

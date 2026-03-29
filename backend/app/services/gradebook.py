@@ -14,8 +14,11 @@ from app.core.dependencies import (
 )
 from app.core.exceptions import AuthorizationError, NotFoundError, ValidationError
 from app.core.permissions import (
+    PAR,
     PERM_LMS_GRADEBOOK_MANAGE,
     PERM_LMS_GRADEBOOK_READ,
+    STD,
+    TCH,
     role_has_permission,
 )
 from app.core.unit_of_work import UnitOfWork
@@ -128,7 +131,7 @@ class GradebookService(LMSServiceBase):
         verify_school_boundary(class_room.school_id, auth)
         verify_school_boundary(period.school_id, auth)
 
-        if auth.role == "TCH":
+        if auth.role == TCH:
             teacher_assignment = await self.erp_repo.get_teacher_assignment(
                 teacher_id=auth.user_id,
                 class_id=class_id,
@@ -147,7 +150,7 @@ class GradebookService(LMSServiceBase):
         period_id: uuid.UUID,
         auth: AuthContext,
     ) -> set[uuid.UUID] | None:
-        if auth.role == "STD":
+        if auth.role == STD:
             enrollment = await self.erp_repo.get_active_enrollment(
                 student_id=auth.user_id,
                 class_id=class_id,
@@ -157,7 +160,7 @@ class GradebookService(LMSServiceBase):
                 raise NotFoundError("Gradebook not found", error_code="ERR-LMS-404")
             return {auth.user_id}
 
-        if auth.role == "PAR":
+        if auth.role == PAR:
             child_ids = await self.repo.list_parent_child_ids(
                 parent_id=auth.user_id,
                 school_id=auth.school_id,
@@ -371,7 +374,7 @@ class GradebookService(LMSServiceBase):
             auth=auth,
             manage=False,
         )
-        if auth.role in {"PAR", "STD"}:
+        if auth.role in {PAR, STD}:
             await self._resolve_visible_student_ids(
                 class_id=class_id,
                 period_id=period_id,
@@ -586,16 +589,16 @@ class GradebookService(LMSServiceBase):
         verify_school_boundary(student.school_id, auth)
 
         teacher_class_ids: set[uuid.UUID] | None = None
-        if auth.role == "STD":
+        if auth.role == STD:
             if student_id != auth.user_id:
                 raise NotFoundError("Transcript not found", error_code="ERR-LMS-404")
-        elif auth.role == "PAR":
+        elif auth.role == PAR:
             child_ids = await self.repo.list_parent_child_ids(
                 parent_id=auth.user_id,
                 school_id=auth.school_id,
             )
             verify_parent_child_ownership(student_id, child_ids)
-        elif auth.role == "TCH":
+        elif auth.role == TCH:
             teacher_class_ids = await self.repo.list_teacher_class_ids(
                 teacher_id=auth.user_id,
                 school_id=auth.school_id,

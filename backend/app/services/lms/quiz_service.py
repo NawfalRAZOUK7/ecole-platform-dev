@@ -6,6 +6,7 @@ import uuid
 
 from app.core.dependencies import AuthContext
 from app.core.exceptions import NotFoundError, ValidationError
+from app.core.permissions import ADM, CONTENT_MGR, STD, TCH
 from app.core.response import encode_cursor
 from app.core.unit_of_work import UnitOfWork
 from app.repositories.quiz import QuizRepository
@@ -25,7 +26,7 @@ class QuizService(LMSServiceBase):
         auth: AuthContext,
         ip_address: str | None,
     ) -> dict:
-        school_id = None if auth.role == "CONTENT_MGR" else auth.school_id
+        school_id = None if auth.role == CONTENT_MGR else auth.school_id
         async with UnitOfWork(self.db) as uow:
             quiz_repo = QuizRepository(uow.session)
             audit = AuditService(uow.session)
@@ -135,11 +136,11 @@ class QuizService(LMSServiceBase):
             raise NotFoundError("Quiz not found", error_code="ERR-QUIZ-404")
         if quiz.school_id is not None and quiz.school_id != auth.school_id:
             raise NotFoundError("Quiz not found", error_code="ERR-QUIZ-404")
-        if auth.role == "STD" and quiz.status != "published":
+        if auth.role == STD and quiz.status != "published":
             raise NotFoundError("Quiz not found", error_code="ERR-QUIZ-404")
 
         questions = await self.quiz_repo.list_quiz_questions(quiz_id)
-        include_answer = auth.role in ("CONTENT_MGR", "TCH", "ADM")
+        include_answer = auth.role in (CONTENT_MGR, TCH, ADM)
         payload = self._quiz_to_dict(quiz, questions)
         payload["questions"] = [
             self._quiz_question_to_dict(question, include_answer=include_answer)
@@ -160,7 +161,7 @@ class QuizService(LMSServiceBase):
             raise NotFoundError("Quiz not found", error_code="ERR-QUIZ-404")
         if quiz.status != "draft":
             raise ValidationError("Can only edit draft quizzes", error_code="ERR-QUIZ-400")
-        if auth.role == "TCH" and quiz.created_by != auth.user_id:
+        if auth.role == TCH and quiz.created_by != auth.user_id:
             raise NotFoundError("Quiz not found", error_code="ERR-QUIZ-404")
 
         update_data = body.model_dump(exclude_unset=True, exclude={"questions"})
@@ -220,7 +221,7 @@ class QuizService(LMSServiceBase):
         quiz = await self.quiz_repo.get_quiz(quiz_id)
         if quiz is None:
             raise NotFoundError("Quiz not found", error_code="ERR-QUIZ-404")
-        if auth.role == "TCH" and quiz.created_by != auth.user_id:
+        if auth.role == TCH and quiz.created_by != auth.user_id:
             raise NotFoundError("Quiz not found", error_code="ERR-QUIZ-404")
         if quiz.status != "draft":
             raise ValidationError("Quiz is not in draft status", error_code="ERR-QUIZ-400")
@@ -429,7 +430,7 @@ class QuizService(LMSServiceBase):
         if quiz is None:
             raise NotFoundError("Quiz not found", error_code="ERR-QUIZ-404")
 
-        if auth.role == "TCH" and quiz.created_by != auth.user_id:
+        if auth.role == TCH and quiz.created_by != auth.user_id:
             if quiz.school_id is not None and quiz.school_id != auth.school_id:
                 raise NotFoundError("Quiz not found", error_code="ERR-QUIZ-404")
 

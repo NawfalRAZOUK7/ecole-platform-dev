@@ -29,7 +29,7 @@ from app.core.exceptions import (
     ValidationError,
 )
 from app.core.middleware import get_correlation_id
-from app.core.permissions import ADM, DIR, SUP, SYS, get_permissions_for_role
+from app.core.permissions import ADM, DIR, PAR, STD, SUP, SYS, TCH, get_permissions_for_role
 from app.core.unit_of_work import UnitOfWork
 from app.core.security import (
     create_access_token,
@@ -74,11 +74,11 @@ IMPERSONATION_ROLES = {ADM, DIR, SUP}
 
 def _normalize_profile_data(role: str, profile_data: dict[str, Any]) -> dict[str, Any]:
     """Coerce role-specific registration payloads through the profile schemas."""
-    if role == "STD":
+    if role == STD:
         return StudentProfileUpdate(**profile_data).model_dump(exclude_unset=True)
-    if role == "PAR":
+    if role == PAR:
         return ParentProfileUpdate(**profile_data).model_dump(exclude_unset=True)
-    if role == "TCH":
+    if role == TCH:
         return TeacherProfileUpdate(**profile_data).model_dump(exclude_unset=True)
     return {}
 
@@ -541,7 +541,7 @@ class AuthService:
                     setattr(profile, field, value)
 
             # 7. Auto-create parent_child_link if code has target_student_id
-            if role == "PAR" and invite.target_student_id:
+            if role == PAR and invite.target_student_id:
                 await repo.create_parent_child_link(
                     parent_user_id=user.id,
                     child_user_id=invite.target_student_id,
@@ -1073,7 +1073,7 @@ class AuthService:
             raise NotFoundError("Session not found", error_code="ERR-IAM-404")
 
         # Authorization: owner or ADM
-        if session.user_id != actor_user_id and actor_role != "ADM":
+        if session.user_id != actor_user_id and actor_role != ADM:
             raise AuthorizationError(
                 "Cannot revoke another user's session",
                 error_code="ERR-AUTHZ-001",
@@ -1190,7 +1190,7 @@ class InvitationService:
         """
         # Validate target_student_id if provided
         if target_student_id is not None:
-            if role_target != "PAR":
+            if role_target != PAR:
                 from app.core.exceptions import ValidationError
 
                 raise ValidationError(

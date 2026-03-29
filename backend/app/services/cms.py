@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import AuthContext, verify_school_boundary
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
+from app.core.permissions import ADM, DIR, PAR, STD, TCH
 from app.core.response import encode_cursor
 from app.core.unit_of_work import UnitOfWork
 from app.models.com import Announcement
@@ -364,7 +365,7 @@ class CMSService:
         auth: AuthContext,
         ip_address: str | None,
     ) -> dict:
-        valid_roles = {"ADM", "DIR", "TCH", "PAR", "STD"}
+        valid_roles = {ADM, DIR, TCH, PAR, STD}
         for role in body.target_roles:
             if role not in valid_roles:
                 raise ValidationError(
@@ -443,7 +444,7 @@ class CMSService:
         if body.body is not None:
             announcement.body = body.body
         if body.target_roles is not None:
-            valid_roles = {"ADM", "DIR", "TCH", "PAR", "STD"}
+            valid_roles = {ADM, DIR, TCH, PAR, STD}
             for role in body.target_roles:
                 if role not in valid_roles:
                     raise ValidationError(
@@ -501,13 +502,13 @@ class CMSService:
                 roles=announcement.target_roles or [],
             )
         )
-        if announcement.target_class_ids and "STD" in (announcement.target_roles or []):
+        if announcement.target_class_ids and STD in (announcement.target_roles or []):
             class_ids = [uuid.UUID(class_id) for class_id in announcement.target_class_ids]
             class_student_ids = await self.repo.list_student_ids_in_classes(
                 class_ids=class_ids,
                 school_id=auth.school_id,
             )
-            non_student_roles = [role for role in announcement.target_roles if role != "STD"]
+            non_student_roles = [role for role in announcement.target_roles if role != STD]
             non_student_ids = set(
                 await self.repo.list_membership_user_ids_by_roles(
                     school_id=auth.school_id,

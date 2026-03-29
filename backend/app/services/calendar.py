@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.exceptions import AuthorizationError, NotFoundError, ValidationError
+from app.core.permissions import ADM, DIR, PAR, STD, TCH
 from app.core.unit_of_work import UnitOfWork
 from app.domain.events.calendar import EventCreated, EventUpdated
 from app.models.calendar import (
@@ -100,7 +101,7 @@ class CalendarService:
     ) -> list[dict[str, Any]]:
         actor = CalendarActor(user_id=user_id, role=role, school_id=school_id)
         class_scope = await self._get_class_scope(actor)
-        if class_id and role in {"STD", "PAR"} and class_id not in class_scope:
+        if class_id and role in {STD, PAR} and class_id not in class_scope:
             raise NotFoundError("Class not found", error_code="ERR-CAL-404")
 
         from_dt, to_dt = _day_window(from_date, to_date)
@@ -188,7 +189,7 @@ class CalendarService:
                 counts=counts,
                 my_rsvp=my_rsvp,
             )
-            if role in {"ADM", "DIR"} or accessible.created_by == user_id:
+            if role in {ADM, DIR} or accessible.created_by == user_id:
                 item["rsvps"] = await self._serialize_rsvps(
                     event_id=accessible.id,
                     school_id=school_id,
@@ -398,7 +399,7 @@ class CalendarService:
                 raise ValidationError("end_at must be after start_at", error_code="ERR-CAL-422")
             if event.rsvp_deadline and event.rsvp_deadline > event.start_at:
                 raise ValidationError("rsvp_deadline must be before start_at", error_code="ERR-CAL-422")
-            if role == "TCH" and event.visibility != EventVisibility.CLASS.value:
+            if role == TCH and event.visibility != EventVisibility.CLASS.value:
                 raise AuthorizationError(
                     "Teachers can only create class events",
                     error_code="ERR-CAL-403",
@@ -407,7 +408,7 @@ class CalendarService:
                 class_obj = await repo.get_class(event.class_id)
                 if class_obj is None or class_obj.school_id != school_id:
                     raise NotFoundError("Class not found", error_code="ERR-CAL-404")
-                if role == "TCH":
+                if role == TCH:
                     teacher_classes = await repo.list_teacher_class_ids(
                         teacher_id=user_id,
                         school_id=school_id,
@@ -474,9 +475,9 @@ class CalendarService:
         role: str,
     ) -> list[dict[str, str]]:
         actor = CalendarActor(user_id=user_id, role=role, school_id=school_id)
-        if role in {"ADM", "DIR"}:
+        if role in {ADM, DIR}:
             classes = await self.repo.list_school_classes(school_id)
-        elif role == "TCH":
+        elif role == TCH:
             classes = await self.repo.list_teacher_classes(
                 teacher_id=user_id,
                 school_id=school_id,
@@ -691,7 +692,7 @@ class CalendarService:
         actor: CalendarActor,
         body: EventCreateRequest,
     ) -> None:
-        if actor.role == "TCH" and body.visibility != EventVisibility.CLASS.value:
+        if actor.role == TCH and body.visibility != EventVisibility.CLASS.value:
             raise AuthorizationError(
                 "Teachers can only create class events",
                 error_code="ERR-CAL-403",
@@ -700,7 +701,7 @@ class CalendarService:
             class_obj = await self.repo.get_class(body.class_id)
             if class_obj is None or class_obj.school_id != actor.school_id:
                 raise NotFoundError("Class not found", error_code="ERR-CAL-404")
-            if actor.role == "TCH":
+            if actor.role == TCH:
                 teacher_classes = await self.repo.list_teacher_class_ids(
                     teacher_id=actor.user_id,
                     school_id=actor.school_id,
@@ -709,7 +710,7 @@ class CalendarService:
                     raise NotFoundError("Class not found", error_code="ERR-CAL-404")
 
     def _verify_edit_permission(self, event: Event, actor: CalendarActor) -> None:
-        if actor.role in {"ADM", "DIR"}:
+        if actor.role in {ADM, DIR}:
             return
         if event.created_by != actor.user_id:
             raise AuthorizationError(
@@ -718,17 +719,17 @@ class CalendarService:
             )
 
     async def _get_class_scope(self, actor: CalendarActor) -> set[uuid.UUID]:
-        if actor.role == "STD":
+        if actor.role == STD:
             return await self.repo.list_student_class_ids(
                 student_id=actor.user_id,
                 school_id=actor.school_id,
             )
-        if actor.role == "PAR":
+        if actor.role == PAR:
             return await self.repo.list_parent_class_ids(
                 parent_id=actor.user_id,
                 school_id=actor.school_id,
             )
-        if actor.role == "TCH":
+        if actor.role == TCH:
             return await self.repo.list_teacher_class_ids(
                 teacher_id=actor.user_id,
                 school_id=actor.school_id,
@@ -773,7 +774,7 @@ class CalendarService:
         actor: CalendarActor,
         class_scope: set[uuid.UUID],
     ) -> bool:
-        if actor.role in {"ADM", "DIR", "TCH"}:
+        if actor.role in {ADM, DIR, TCH}:
             return True
         if event.visibility == EventVisibility.SCHOOL.value:
             return True
@@ -853,9 +854,9 @@ class CalendarService:
         counts: dict[str, int],
         my_rsvp: str | None,
     ) -> dict[str, Any]:
-        can_edit = actor.role in {"ADM", "DIR"} or event.created_by == actor.user_id
-        can_delete = actor.role in {"ADM", "DIR"}
-        can_rsvp = actor.role in {"PAR", "STD", "TCH"} and event.type != EventType.HOLIDAY.value
+        can_edit = actor.role in {ADM, DIR} or event.created_by == actor.user_id
+        can_delete = actor.role in {ADM, DIR}
+        can_rsvp = actor.role in {PAR, STD, TCH} and event.type != EventType.HOLIDAY.value
 
         return EventListItem(
             id=str(event.id),
@@ -898,7 +899,7 @@ class CalendarService:
     ) -> dict[str, Any]:
         start_dt = datetime.combine(holiday.holiday_date, time.min, tzinfo=timezone.utc)
         end_dt = start_dt + timedelta(days=1)
-        can_manage = actor.role in {"ADM", "DIR"}
+        can_manage = actor.role in {ADM, DIR}
         return EventListItem(
             id=str(holiday.id),
             instance_id=str(holiday.id),

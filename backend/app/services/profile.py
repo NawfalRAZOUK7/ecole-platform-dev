@@ -15,6 +15,7 @@ from app.core.dependencies import (
     verify_teacher_assignment,
 )
 from app.core.exceptions import NotFoundError, ValidationError
+from app.core.permissions import PAR, STD, TCH
 from app.core.unit_of_work import UnitOfWork
 from app.repositories.profile import ProfileRepository
 from app.schemas.profile import (
@@ -29,9 +30,9 @@ from app.services.audit import AuditService
 from app.services.profile_loader import ProfileLoader
 
 _ROLE_PROFILE_MAP = {
-    "STD": "student",
-    "PAR": "parent",
-    "TCH": "teacher",
+    STD: "student",
+    PAR: "parent",
+    TCH: "teacher",
 }
 
 
@@ -116,9 +117,9 @@ class ProfileService:
                 error_code="ERR-PROF-001",
             )
 
-        if role == "STD":
+        if role == STD:
             update_data = StudentProfileUpdate(**body).model_dump(exclude_unset=True)
-        elif role == "PAR":
+        elif role == PAR:
             update_data = ParentProfileUpdate(**body).model_dump(exclude_unset=True)
         else:
             update_data = TeacherProfileUpdate(**body).model_dump(exclude_unset=True)

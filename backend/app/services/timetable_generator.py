@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import AuthContext, verify_school_boundary
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
+from app.core.permissions import ADM
 from app.core.unit_of_work import UnitOfWork
 from app.models.erp import TimetableConstraint, TimetableGenerationJob
 from app.repositories.timetable_generation import TimetableGenerationRepository
@@ -75,7 +76,7 @@ class TimetableGeneratorService:
         self.audit = AuditService(db)
 
     def _ensure_admin(self, auth: AuthContext) -> None:
-        if auth.role != "ADM":
+        if auth.role != ADM:
             raise NotFoundError("Timetable generation not found", error_code="ERR-ERP-404")
 
     def _constraint_to_response(self, constraint: TimetableConstraint) -> dict:

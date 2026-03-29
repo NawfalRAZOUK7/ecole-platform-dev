@@ -13,6 +13,7 @@ from app.core.abac import validate_parent_child_access
 from app.core.dependencies import AuthContext, verify_school_boundary
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.core.filtering import FilterSpec, SortSpec
+from app.core.permissions import PAR
 from app.core.response import clamp_page_size
 from app.core.unit_of_work import UnitOfWork
 from app.domain.events.billing import InvoiceGenerated, PaymentFailed, PaymentReceived
@@ -558,7 +559,7 @@ class BillingService:
         status: str | None = None,
     ) -> list[dict]:
         student_ids: set[uuid.UUID] | None = None
-        if auth.role == "PAR":
+        if auth.role == PAR:
             student_ids = await self.repo.list_parent_child_ids(
                 parent_id=auth.user_id,
                 school_id=auth.school_id,
@@ -1063,7 +1064,7 @@ class BillingService:
             raise NotFoundError("Payment attempt not found", error_code="ERR-BIL-404")
 
         verify_school_boundary(payment.school_id, auth)
-        if auth.role == "PAR" and payment.parent_id != auth.user_id:
+        if auth.role == PAR and payment.parent_id != auth.user_id:
             raise NotFoundError("Payment attempt not found", error_code="ERR-BIL-404")
 
         return self._payment_to_response(payment)
@@ -1221,7 +1222,7 @@ class BillingService:
             raise NotFoundError("Invoice not found", error_code="ERR-BIL-404")
 
         verify_school_boundary(invoice.school_id, auth)
-        if auth.role == "PAR" and invoice.parent_id != auth.user_id:
+        if auth.role == PAR and invoice.parent_id != auth.user_id:
             raise NotFoundError("Invoice not found", error_code="ERR-BIL-404")
 
         return self._invoice_to_response(invoice)

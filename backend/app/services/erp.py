@@ -14,6 +14,7 @@ from app.core.dependencies import (
     verify_teacher_assignment,
 )
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
+from app.core.permissions import PAR, STD, TCH
 from app.core.unit_of_work import UnitOfWork
 from app.models.erp import (
     AbsenceJustification,
@@ -255,7 +256,7 @@ class ERPService:
             raise NotFoundError("Class not found", error_code="ERR-ERP-404")
         verify_school_boundary(class_room.school_id, auth)
 
-        if auth.role == "TCH":
+        if auth.role == TCH:
             teacher_classes = await self.repo.list_teacher_class_ids(
                 teacher_id=auth.user_id,
                 school_id=auth.school_id,
@@ -833,14 +834,14 @@ class ERPService:
     ) -> dict:
         target = target_date or date.today()
 
-        if auth.role == "TCH":
+        if auth.role == TCH:
             return await self._build_weekly_timetable(
                 school_id=auth.school_id,
                 target_date=target,
                 teacher_id=auth.user_id,
             )
 
-        if auth.role == "STD":
+        if auth.role == STD:
             class_id = await self.repo.get_active_student_class_id(
                 student_id=auth.user_id,
                 school_id=auth.school_id,
@@ -853,7 +854,7 @@ class ERPService:
                 class_id=class_id,
             )
 
-        if auth.role == "PAR":
+        if auth.role == PAR:
             child_ids = await self.repo.list_parent_child_ids(
                 parent_id=auth.user_id,
                 school_id=auth.school_id,
@@ -889,7 +890,7 @@ class ERPService:
             raise NotFoundError("Timetable slot not found", error_code="ERR-ERP-404")
         verify_school_boundary(slot.school_id, auth)
 
-        if auth.role == "TCH" and slot.teacher_id != auth.user_id:
+        if auth.role == TCH and slot.teacher_id != auth.user_id:
             raise NotFoundError("Timetable slot not found", error_code="ERR-ERP-404")
 
         if body.exception_type == "SUBSTITUTED" and body.substitute_teacher_id is None:

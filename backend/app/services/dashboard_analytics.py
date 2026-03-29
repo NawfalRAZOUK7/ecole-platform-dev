@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.dependencies import AuthContext, verify_teacher_assignment
+from app.core.permissions import TCH
 from app.core.redis import redis_client
 from app.repositories.analytics import AnalyticsRepository
 
@@ -79,7 +80,7 @@ class DashboardAnalyticsService:
         auth: AuthContext,
         class_id: uuid.UUID | None,
     ) -> None:
-        if auth.role != "TCH" or class_id is None:
+        if auth.role != TCH or class_id is None:
             return
         teacher_classes = await self.repo.list_teacher_class_ids(
             teacher_id=auth.user_id,

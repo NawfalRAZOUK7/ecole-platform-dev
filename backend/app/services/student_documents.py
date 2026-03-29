@@ -21,6 +21,7 @@ from app.core.metrics import (
     DOCUMENT_UPLOAD_COUNT,
     DOCUMENT_UPLOAD_SIZE_BYTES,
 )
+from app.core.permissions import ADM, DIR, PAR, STD, TCH
 from app.core.unit_of_work import UnitOfWork
 from app.domain.events.documents import DocumentExpiring, DocumentUploaded
 from app.models.com import NotificationCategory
@@ -149,7 +150,7 @@ class StudentDocumentsService:
             if owner == "me":
                 owner_id = user_id
             else:
-                if role not in {"ADM", "DIR"}:
+                if role not in {ADM, DIR}:
                     raise AuthorizationError(
                         "Only administrators can filter by another owner",
                         error_code="ERR-DOC-403",
@@ -191,7 +192,7 @@ class StudentDocumentsService:
         actor_id: uuid.UUID,
         actor_role: str,
     ) -> dict:
-        if actor_role in {"ADM", "DIR"}:
+        if actor_role in {ADM, DIR}:
             students = await self.repo.list_students_in_school(school_id=school_id)
         else:
             student_ids = await self._allowed_student_ids(
@@ -290,7 +291,7 @@ class StudentDocumentsService:
             actor_id=actor_id,
             actor_role=actor_role,
         )
-        if actor_role not in {"ADM", "DIR"} and document.uploader_id != actor_id:
+        if actor_role not in {ADM, DIR} and document.uploader_id != actor_id:
             raise AuthorizationError(
                 "Only the uploader or an administrator can restore document versions",
                 error_code="ERR-DOC-403",
@@ -360,7 +361,7 @@ class StudentDocumentsService:
         category: str,
         expires_at: datetime | None,
     ) -> dict:
-        if actor_role not in {"PAR", "ADM", "DIR"}:
+        if actor_role not in {PAR, ADM, DIR}:
             raise AuthorizationError(
                 "Only parents and administrators can link student documents",
                 error_code="ERR-DOC-403",
@@ -486,12 +487,12 @@ class StudentDocumentsService:
             actor_role=actor_role,
         )
         if hard_delete:
-            if actor_role not in {"ADM", "DIR"}:
+            if actor_role not in {ADM, DIR}:
                 raise AuthorizationError(
                     "Only administrators can hard delete documents",
                     error_code="ERR-DOC-403",
                 )
-        elif actor_role not in {"ADM", "DIR"} and document.uploader_id != actor_id:
+        elif actor_role not in {ADM, DIR} and document.uploader_id != actor_id:
             raise NotFoundError("Document not found", error_code="ERR-DOC-404")
 
         version_assets = []
@@ -540,7 +541,7 @@ class StudentDocumentsService:
         actor_id: uuid.UUID,
         actor_role: str,
     ) -> dict:
-        if actor_role != "ADM":
+        if actor_role != ADM:
             raise AuthorizationError(
                 "Only administrators can bulk delete documents",
                 error_code="ERR-DOC-403",
@@ -904,7 +905,7 @@ class StudentDocumentsService:
             document_id=document.id,
             action=DOCUMENT_PREVIEW_ACTION,
         )
-        can_hard_delete = role in {"ADM", "DIR"}
+        can_hard_delete = role in {ADM, DIR}
         can_delete = can_hard_delete or document.uploader_id == actor_id
         preview_url = None
         if document.thumbnail_path or document.mime_type.startswith("image/") or document.mime_type == "application/pdf":
@@ -964,9 +965,9 @@ class StudentDocumentsService:
         actor_role: str,
         student_id: uuid.UUID,
     ) -> None:
-        if actor_role in {"ADM", "DIR"}:
+        if actor_role in {ADM, DIR}:
             return
-        if actor_role == "STD":
+        if actor_role == STD:
             if student_id != actor_id:
                 raise NotFoundError("Student not found", error_code="ERR-DOC-404")
             return
@@ -985,12 +986,12 @@ class StudentDocumentsService:
         actor_id: uuid.UUID,
         actor_role: str,
     ) -> set[uuid.UUID]:
-        if actor_role == "PAR":
+        if actor_role == PAR:
             return await self.repo.list_parent_child_ids(
                 parent_id=actor_id,
                 school_id=school_id,
             )
-        if actor_role == "TCH":
+        if actor_role == TCH:
             class_ids = await self.repo.list_teacher_class_ids(
                 teacher_id=actor_id,
                 school_id=school_id,
@@ -999,7 +1000,7 @@ class StudentDocumentsService:
                 school_id=school_id,
                 class_ids=class_ids,
             )
-        if actor_role == "STD":
+        if actor_role == STD:
             return {actor_id}
         return set()
 
@@ -1013,7 +1014,7 @@ class StudentDocumentsService:
     ) -> None:
         if document.school_id != school_id:
             raise NotFoundError("Document not found", error_code="ERR-DOC-404")
-        if actor_role in {"ADM", "DIR"}:
+        if actor_role in {ADM, DIR}:
             return
         if document.uploader_id == actor_id:
             return
@@ -1111,12 +1112,12 @@ class StudentDocumentsService:
         linked_student_id: uuid.UUID | None,
         expires_at: datetime | None,
     ) -> dict:
-        if role == "STD":
+        if role == STD:
             raise AuthorizationError(
                 "Students cannot upload documents",
                 error_code="ERR-DOC-403",
             )
-        if linked_student_id is not None and role not in {"PAR", "ADM", "DIR"}:
+        if linked_student_id is not None and role not in {PAR, ADM, DIR}:
             raise AuthorizationError(
                 "Only parents and administrators can link uploads to students",
                 error_code="ERR-DOC-403",

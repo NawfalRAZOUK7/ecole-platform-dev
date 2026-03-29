@@ -9,6 +9,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.permissions import ADM, DIR
 from app.domain.events import (
     AssignmentCreated,
     AttendanceThresholdExceeded,
@@ -288,7 +289,7 @@ class EventDispatcher:
                 recipients.update(
                     await self._notification_repo.list_members_by_roles(
                         school_id=school_id,
-                        role_codes=["ADM", "DIR"],
+                        role_codes=[ADM, DIR],
                     )
                 )
         elif isinstance(event, ResourceShared):

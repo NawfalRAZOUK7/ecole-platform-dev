@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.exceptions import AuthorizationError, NotFoundError, ValidationError
+from app.core.permissions import ADM, DIR, PAR, STD, TCH
 from app.core.storage import storage
 from app.core.unit_of_work import UnitOfWork
 from app.models.erp import Class
@@ -221,7 +222,7 @@ class ReportsService:
         students: list[User] = []
         parents: list[User] = []
 
-        if requester_role == "TCH":
+        if requester_role == TCH:
             classes = await self.repo.list_classes_for_teacher(
                 teacher_id=requester_id,
                 school_id=school_id,
@@ -234,29 +235,29 @@ class ReportsService:
                     class_id=class_id,
                     school_id=school_id,
                 )
-        elif requester_role in {"ADM", "DIR"}:
+        elif requester_role in {ADM, DIR}:
             classes = await self.repo.list_classes(school_id=school_id)
             if report_type == ReportType.BILLING_STATEMENT.value:
                 parents = await self.repo.list_users_by_role(
                     school_id=school_id,
-                    role_code="PAR",
+                    role_code=PAR,
                 )
             elif report_type == ReportType.STUDENT_REPORT_CARD.value:
                 students = await self.repo.list_users_by_role(
                     school_id=school_id,
-                    role_code="STD",
+                    role_code=STD,
                 )
             elif class_id:
                 students = await self.repo.list_students_for_class(
                     class_id=class_id,
                     school_id=school_id,
                 )
-        elif requester_role == "PAR":
+        elif requester_role == PAR:
             students = await self.repo.list_children(
                 parent_id=requester_id,
                 school_id=school_id,
             )
-        elif requester_role == "STD":
+        elif requester_role == STD:
             student = await self.repo.get_user_in_school(
                 user_id=requester_id,
                 school_id=school_id,
@@ -306,7 +307,7 @@ class ReportsService:
         job = await self.repo.get_report_job(job_id)
         if job is None or job.school_id != school_id:
             raise NotFoundError("Report job not found", error_code="ERR-REPORT-404")
-        if requester_role not in {"ADM", "DIR"} and job.requester_id != requester_id:
+        if requester_role not in {ADM, DIR} and job.requester_id != requester_id:
             raise NotFoundError("Report job not found", error_code="ERR-REPORT-404")
         return job
 
@@ -457,7 +458,7 @@ class ReportsService:
         }
 
         if request.type == ReportType.STUDENT_REPORT_CARD.value:
-            if requester_role not in {"STD", "PAR", "ADM", "DIR"}:
+            if requester_role not in {STD, PAR, ADM, DIR}:
                 raise AuthorizationError(
                     "This role cannot generate report cards",
                     error_code="ERR-REPORT-403",
@@ -474,7 +475,7 @@ class ReportsService:
             ReportType.CLASS_SUMMARY.value,
             ReportType.ATTENDANCE_REPORT.value,
         }:
-            if requester_role not in {"TCH", "ADM", "DIR"}:
+            if requester_role not in {TCH, ADM, DIR}:
                 raise AuthorizationError(
                     "This role cannot generate class reports",
                     error_code="ERR-REPORT-403",
@@ -490,7 +491,7 @@ class ReportsService:
             )
             if class_obj is None:
                 raise NotFoundError("Class not found", error_code="ERR-REPORT-404")
-            if requester_role == "TCH":
+            if requester_role == TCH:
                 teacher_classes = await self.repo.list_teacher_class_ids(
                     teacher_id=requester_id,
                     school_id=school_id,
@@ -500,12 +501,12 @@ class ReportsService:
             parameters["class_id"] = str(request.class_id)
 
         elif request.type == ReportType.BILLING_STATEMENT.value:
-            if requester_role not in {"PAR", "ADM", "DIR"}:
+            if requester_role not in {PAR, ADM, DIR}:
                 raise AuthorizationError(
                     "This role cannot generate billing statements",
                     error_code="ERR-REPORT-403",
                 )
-            if requester_role == "PAR":
+            if requester_role == PAR:
                 if request.parent_id and request.parent_id != requester_id:
                     raise NotFoundError("Parent not found", error_code="ERR-REPORT-404")
                 target_parent_id = requester_id
@@ -525,7 +526,7 @@ class ReportsService:
             parameters["parent_id"] = str(target_parent_id)
 
         elif request.type == ReportType.SCHOOL_ANALYTICS.value:
-            if requester_role not in {"ADM", "DIR"}:
+            if requester_role not in {ADM, DIR}:
                 raise AuthorizationError(
                     "This role cannot generate school analytics reports",
                     error_code="ERR-REPORT-403",
@@ -552,12 +553,12 @@ class ReportsService:
         requester_role: str,
         requested_student_id: uuid.UUID | None,
     ) -> uuid.UUID:
-        if requester_role == "STD":
+        if requester_role == STD:
             if requested_student_id and requested_student_id != requester_id:
                 raise NotFoundError("Student not found", error_code="ERR-REPORT-404")
             return requester_id
 
-        if requester_role == "PAR":
+        if requester_role == PAR:
             child_ids = await self.repo.list_parent_child_ids(
                 parent_id=requester_id,
                 school_id=school_id,

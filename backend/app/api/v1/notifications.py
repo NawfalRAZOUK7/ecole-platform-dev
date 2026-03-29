@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, get_current_user, requires_permission
 from app.core.exceptions import AuthorizationError
+from app.core.permissions import ADM, PAR, TCH
 from app.core.response import clamp_page_size, list_response, success_response
 from app.core.request_utils import get_client_ip
 from app.schemas.notifications import (
@@ -199,7 +200,7 @@ async def update_digest_preferences(
     auth: AuthContext = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    if auth.role not in {"PAR", "TCH", "ADM"}:
+    if auth.role not in {PAR, TCH, ADM}:
         raise AuthorizationError(
             "Digest preferences are not available for this role",
             error_code="ERR-COM-403",

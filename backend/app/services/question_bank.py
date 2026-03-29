@@ -8,6 +8,7 @@ from typing import Any
 
 from app.core.dependencies import AuthContext, verify_school_boundary
 from app.core.exceptions import NotFoundError, ValidationError
+from app.core.permissions import TCH
 from app.core.response import encode_cursor
 from app.core.unit_of_work import UnitOfWork
 from app.repositories.question_bank import QuestionBankRepository
@@ -167,7 +168,7 @@ class QuestionBankService(LMSServiceBase):
         elif quiz.status != "published" and quiz.created_by != auth.user_id:
             raise NotFoundError("Quiz not found", error_code="ERR-QUIZ-404")
 
-        if auth.role == "TCH" and quiz.created_by != auth.user_id and quiz.status != "published":
+        if auth.role == TCH and quiz.created_by != auth.user_id and quiz.status != "published":
             raise NotFoundError("Quiz not found", error_code="ERR-QUIZ-404")
 
         questions = await self.quiz_repo.list_quiz_questions(quiz_id)

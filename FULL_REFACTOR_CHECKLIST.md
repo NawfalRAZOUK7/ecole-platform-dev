@@ -536,16 +536,16 @@
 - [ ] **Review & commit myself**
 
 #### MR-E2: Replace Hardcoded Role Strings
-- [ ] Searched all services for auth.role == / != patterns
-- [ ] Category A (authorization) replaced with require_permission()
-- [ ] Category B (data scoping) replaced with apply_owner_scope() or validators
-- [ ] Processed: lms/ sub-services (5 files)
-- [ ] Processed: erp, billing, communication, notification_hub
-- [ ] Processed: calendar, reports, student_documents, resource_library
-- [ ] Processed: admin, timetable_generator, data_export, profile, attendance_analytics
-- [ ] Checked router files in api/v1/ for hardcoded role checks
-- [ ] Zero hardcoded role string comparisons remaining in services
-- [ ] All replacements are semantically equivalent (no functionality broken)
+- [x] Searched all services for auth.role == / != patterns
+- [x] Category A (authorization) replaced with require_permission() or existing permission helpers where applicable
+- [x] Category B (data scoping) replaced with apply_owner_scope() or validators
+- [x] Processed: lms/ sub-services (5 files)
+- [x] Processed: erp, billing, communication, notification_hub
+- [x] Processed: calendar, reports, student_documents, resource_library
+- [x] Processed: admin, timetable_generator, data_export, profile, attendance_analytics
+- [x] Checked router files in api/v1/ for hardcoded role checks
+- [x] Zero hardcoded role string comparisons remaining in services
+- [x] All replacements are semantically equivalent (no functionality broken)
 - [ ] **Review & commit myself**
 
 ---
@@ -588,7 +588,7 @@
 | MR | B — Props/Repr/Valid | MR-B1, B2, B3 | Not started |
 | MR | C — Enum Columns | MR-C1 | Complete |
 | MR | D — Permissions | MR-D1 | Complete |
-| MR | E — ABAC + Roles | MR-E1, E2 | In progress |
+| MR | E — ABAC + Roles | MR-E1, E2 | Complete |
 | MR | F — MR Validation | MR-F1 | Not started |
 
 **Total: 30 prompts (23 complete + 7 new), ~160+ files to create/modify, 10 migrations (G26-G31b)**

@@ -10,6 +10,7 @@ from app.core.dependencies import (
     verify_school_boundary,
 )
 from app.core.exceptions import NotFoundError, ValidationError
+from app.core.permissions import ADM, PAR, STD, TCH
 from app.core.unit_of_work import UnitOfWork
 from app.domain.value_objects.grade import MoroccanGrade
 from app.models.lms import Rubric
@@ -80,12 +81,12 @@ class RubricService(LMSServiceBase):
 
     def _ensure_can_view_rubric(self, rubric: Rubric, auth: AuthContext) -> None:
         verify_school_boundary(rubric.school_id, auth)
-        if auth.role == "TCH" and rubric.teacher_id != auth.user_id and not rubric.is_template:
+        if auth.role == TCH and rubric.teacher_id != auth.user_id and not rubric.is_template:
             raise NotFoundError("Rubric not found", error_code="ERR-LMS-404")
 
     def _ensure_can_duplicate_rubric(self, rubric: Rubric, auth: AuthContext) -> None:
         verify_school_boundary(rubric.school_id, auth)
-        if auth.role == "TCH" and rubric.teacher_id != auth.user_id and not rubric.is_template:
+        if auth.role == TCH and rubric.teacher_id != auth.user_id and not rubric.is_template:
             raise NotFoundError("Rubric not found", error_code="ERR-LMS-404")
 
     def _rubric_feedback_summary(self, grade: MoroccanGrade) -> str:
@@ -253,7 +254,7 @@ class RubricService(LMSServiceBase):
         *,
         auth: AuthContext,
     ) -> list[dict]:
-        teacher_id = None if auth.role == "ADM" else auth.user_id
+        teacher_id = None if auth.role == ADM else auth.user_id
         rubrics = await self.rubric_repo.list_rubrics(
             school_id=auth.school_id,
             teacher_id=teacher_id,
@@ -332,7 +333,7 @@ class RubricService(LMSServiceBase):
         submission, assignment, course, rubric = bundle
         verify_school_boundary(course.school_id, auth)
 
-        if auth.role == "TCH" and course.teacher_id != auth.user_id:
+        if auth.role == TCH and course.teacher_id != auth.user_id:
             raise NotFoundError("Submission not found", error_code="ERR-LMS-404")
         if submission.status not in ("submitted", "graded"):
             raise ValidationError(
@@ -440,22 +441,22 @@ class RubricService(LMSServiceBase):
             raise NotFoundError("Rubric results not found", error_code="ERR-LMS-404")
         verify_school_boundary(course.school_id, auth)
 
-        if auth.role == "STD":
+        if auth.role == STD:
             if submission.student_id != auth.user_id:
                 raise NotFoundError("Rubric results not found", error_code="ERR-LMS-404")
-        elif auth.role == "PAR":
+        elif auth.role == PAR:
             child_ids = await self.repo.list_parent_child_ids(
                 parent_id=auth.user_id,
                 school_id=auth.school_id,
             )
             verify_parent_child_ownership(submission.student_id, child_ids)
-        elif auth.role == "TCH" and course.teacher_id != auth.user_id:
+        elif auth.role == TCH and course.teacher_id != auth.user_id:
             raise NotFoundError("Rubric results not found", error_code="ERR-LMS-404")
 
         grade = await self.repo.get_grade_for_submission(submission_id)
         if grade is None:
             raise NotFoundError("Rubric results not found", error_code="ERR-LMS-404")
-        if grade.published_at is None and auth.role in {"STD", "PAR"}:
+        if grade.published_at is None and auth.role in {STD, PAR}:
             raise NotFoundError("Rubric results not found", error_code="ERR-LMS-404")
 
         rubric_scores = await self.rubric_repo.list_rubric_scores(submission_id)

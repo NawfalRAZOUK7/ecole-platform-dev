@@ -31,6 +31,7 @@ from pydantic import BaseModel, Field
 
 from app.core.config import settings
 from app.core.middleware import get_correlation_id
+from app.core.permissions import ADM, DIR, PAR, STD, SUP, SYS, TCH
 
 logger = logging.getLogger("analytics")
 
@@ -63,13 +64,13 @@ class ClientPlatform(str, Enum):
 
 # Role → ActorType mapping
 _ROLE_TO_ACTOR: dict[str, ActorType] = {
-    "STD": ActorType.STUDENT,
-    "PAR": ActorType.PARENT,
-    "TCH": ActorType.TEACHER,
-    "ADM": ActorType.ADMIN,
-    "DIR": ActorType.ADMIN,
-    "SUP": ActorType.SUPPORT,
-    "SYS": ActorType.SYSTEM,
+    STD: ActorType.STUDENT,
+    PAR: ActorType.PARENT,
+    TCH: ActorType.TEACHER,
+    ADM: ActorType.ADMIN,
+    DIR: ActorType.ADMIN,
+    SUP: ActorType.SUPPORT,
+    SYS: ActorType.SYSTEM,
 }
 
 
@@ -227,7 +228,7 @@ def emit_event(
     event_name: str,
     *,
     actor_id: uuid.UUID | None = None,
-    actor_role: str = "SYS",
+    actor_role: str = SYS,
     session_id: uuid.UUID | None = None,
     client_platform: str = "server",
     client_version: str = "0.1.0",

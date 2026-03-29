@@ -11,6 +11,7 @@ from app.core.abac import validate_parent_child_access, validate_student_teacher
 from app.core.dependencies import AuthContext, verify_school_boundary
 from app.core.exceptions import NotFoundError, ValidationError
 from app.core.filtering import FilterSpec, SortSpec
+from app.core.permissions import ADM, DIR, PAR, STD, TCH
 from app.core.response import decode_cursor, encode_cursor
 from app.core.unit_of_work import UnitOfWork
 from app.models.com import Conversation, Message
@@ -98,10 +99,10 @@ class CommunicationService:
         auth: AuthContext,
         participant_ids: list[uuid.UUID],
     ) -> None:
-        if auth.role in ("ADM", "DIR"):
+        if auth.role in (ADM, DIR):
             return
 
-        if auth.role == "PAR":
+        if auth.role == PAR:
             child_ids = await self.repo.list_parent_child_ids(
                 parent_id=auth.user_id,
                 school_id=auth.school_id,
@@ -126,19 +127,19 @@ class CommunicationService:
                     user_id=participant_id,
                     school_id=auth.school_id,
                 )
-                if role == "TCH" and participant_id not in allowed_teacher_ids:
+                if role == TCH and participant_id not in allowed_teacher_ids:
                     raise ValidationError(
                         "Cannot message a teacher not assigned to your children's classes",
                         error_code="ERR-COM-403",
                     )
-                if role not in ("TCH", "ADM", "DIR"):
+                if role not in (TCH, ADM, DIR):
                     raise ValidationError(
                         "Parents can only message teachers, admins, or directors",
                         error_code="ERR-COM-403",
                     )
             return
 
-        if auth.role == "TCH":
+        if auth.role == TCH:
             teacher_class_ids = await self.repo.list_teacher_class_ids(
                 teacher_id=auth.user_id,
                 school_id=auth.school_id,
@@ -163,19 +164,19 @@ class CommunicationService:
                     user_id=participant_id,
                     school_id=auth.school_id,
                 )
-                if role == "PAR" and participant_id not in allowed_parent_ids:
+                if role == PAR and participant_id not in allowed_parent_ids:
                     raise ValidationError(
                         "Cannot message a parent whose children are not in your classes",
                         error_code="ERR-COM-403",
                     )
-                if role not in ("PAR", "ADM", "DIR", "TCH"):
+                if role not in (PAR, ADM, DIR, TCH):
                     raise ValidationError(
                         "Teachers can only message parents, admins, directors, or other teachers",
                         error_code="ERR-COM-403",
                     )
             return
 
-        if auth.role == "STD":
+        if auth.role == STD:
             for participant_id in participant_ids:
                 user = await self.repo.get_user(participant_id)
                 if user is None:
@@ -184,7 +185,7 @@ class CommunicationService:
                     user_id=participant_id,
                     school_id=auth.school_id,
                 )
-                if role != "TCH":
+                if role != TCH:
                     raise ValidationError(
                         "Students can only message teachers",
                         error_code="ERR-COM-403",
@@ -229,7 +230,7 @@ class CommunicationService:
         ip_address: str | None,
     ) -> dict:
         now = datetime.now(timezone.utc)
-        if auth.role == "STD" and body.type != "DIRECT":
+        if auth.role == STD and body.type != "DIRECT":
             raise ValidationError(
                 "Students can only create direct conversations",
                 error_code="ERR-COM-422",
@@ -529,7 +530,7 @@ class CommunicationService:
         limit: int,
         auth: AuthContext,
     ) -> tuple[list[dict], str | None, bool]:
-        if auth.role == "PAR" and student_id is not None:
+        if auth.role == PAR and student_id is not None:
             has_access = await validate_parent_child_access(
                 self.db,
                 parent_id=auth.user_id,

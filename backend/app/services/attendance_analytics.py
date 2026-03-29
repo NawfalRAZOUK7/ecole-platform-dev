@@ -15,6 +15,7 @@ from app.core.dependencies import (
     verify_teacher_assignment,
 )
 from app.core.exceptions import NotFoundError
+from app.core.permissions import ADM, PAR, STD, SYS, TCH
 from app.core.unit_of_work import UnitOfWork
 from app.domain.events.erp import AttendanceThresholdExceeded
 from app.repositories.attendance_analytics import AttendanceAnalyticsRepository
@@ -124,15 +125,15 @@ class AttendanceAnalyticsService:
         period = await self._load_period(period_id)
         verify_school_boundary(period.school_id, auth)
 
-        if auth.role == "STD" and student_id != auth.user_id:
+        if auth.role == STD and student_id != auth.user_id:
             raise NotFoundError("Attendance analytics not found", error_code="ERR-ERP-404")
-        if auth.role == "PAR":
+        if auth.role == PAR:
             child_ids = await self.erp_repo.list_parent_child_ids(
                 parent_id=auth.user_id,
                 school_id=auth.school_id,
             )
             verify_parent_child_ownership(student_id, child_ids)
-        if auth.role == "TCH":
+        if auth.role == TCH:
             enrollment = await self.erp_repo.get_active_enrollment_for_student_period(
                 student_id=student_id,
                 period_id=period_id,
@@ -160,9 +161,9 @@ class AttendanceAnalyticsService:
         verify_school_boundary(class_room.school_id, auth)
         verify_school_boundary(period.school_id, auth)
 
-        if auth.role in {"PAR", "STD"}:
+        if auth.role in {PAR, STD}:
             raise NotFoundError("Attendance analytics not found", error_code="ERR-ERP-404")
-        if auth.role == "TCH":
+        if auth.role == TCH:
             teacher_class_ids = await self.erp_repo.list_teacher_class_ids(
                 teacher_id=auth.user_id,
                 school_id=auth.school_id,
@@ -271,7 +272,7 @@ class AttendanceAnalyticsService:
         period_id: uuid.UUID | None = None,
         threshold_exceeded: str | None = None,
     ) -> list[dict]:
-        if auth.role != "ADM":
+        if auth.role != ADM:
             raise NotFoundError("Attendance alerts not found", error_code="ERR-ERP-404")
         if period_id is not None:
             period = await self._load_period(period_id)
@@ -300,7 +301,7 @@ class AttendanceAnalyticsService:
         auth: AuthContext,
         ip_address: str | None,
     ) -> dict:
-        if auth.role not in {"ADM", "SYS"}:
+        if auth.role not in {ADM, SYS}:
             raise NotFoundError(
                 "Attendance threshold check not found",
                 error_code="ERR-ERP-404",

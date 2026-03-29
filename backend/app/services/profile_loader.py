@@ -7,17 +7,18 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.permissions import ADM, CONTENT_MGR, DIR, PAR, STD, TCH
 from app.core.unit_of_work import UnitOfWork
 from app.repositories.profile_loader import ProfileLoaderRepository
 
 
 ROLE_PROFILE_MAP: dict[str, str] = {
-    "STD": "student",
-    "PAR": "parent",
-    "TCH": "teacher",
-    "ADM": "admin",
-    "DIR": "admin",
-    "CONTENT_MGR": "content_manager",
+    STD: "student",
+    PAR: "parent",
+    TCH: "teacher",
+    ADM: "admin",
+    DIR: "admin",
+    CONTENT_MGR: "content_manager",
 }
 
 
