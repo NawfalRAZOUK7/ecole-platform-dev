@@ -999,12 +999,18 @@ class Quiz(TimestampMixin, NullableSchoolScopedMixin, Base):
     def is_active(self) -> bool:
         if self.status != QuizStatus.PUBLISHED.value:
             return False
+
+        # The current quiz schema has no native scheduling window.
+        # If older or future code attaches scheduling attributes dynamically,
+        # honor them without making them part of the current persisted schema.
         now = datetime.now(timezone.utc)
-        start_at = getattr(self, "start_at", None) or getattr(self, "starts_at", None)
-        end_at = getattr(self, "end_at", None) or getattr(self, "ends_at", None)
-        if start_at is not None and now < start_at:
+        legacy_start_at = getattr(self, "start_at", None) or getattr(
+            self, "starts_at", None
+        )
+        legacy_end_at = getattr(self, "end_at", None) or getattr(self, "ends_at", None)
+        if legacy_start_at is not None and now < legacy_start_at:
             return False
-        if end_at is not None and now > end_at:
+        if legacy_end_at is not None and now > legacy_end_at:
             return False
         return True
 

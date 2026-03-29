@@ -284,8 +284,13 @@ class Session(TimestampMixin, SchoolScopedMixin, Base):
 
     @property
     def is_expired(self) -> bool:
-        expires_at = getattr(self, "expires_at", None)
-        return expires_at is not None and expires_at < datetime.now(timezone.utc)
+        # Sessions are expired by JWT/Redis TTL in the current schema.
+        # Keep a compatibility hook for any legacy code that still attaches
+        # an expires_at attribute without making it a required model field.
+        legacy_expires_at = getattr(self, "expires_at", None)
+        return legacy_expires_at is not None and legacy_expires_at < datetime.now(
+            timezone.utc
+        )
 
     @property
     def is_impersonated(self) -> bool:
@@ -393,10 +398,13 @@ class InvitationCode(TimestampMixin, SchoolScopedMixin, Base):
 
     @property
     def is_fully_used(self) -> bool:
-        current_uses = getattr(self, "current_uses", None)
-        max_uses = getattr(self, "max_uses", None)
-        if current_uses is not None and max_uses is not None:
-            return current_uses >= max_uses
+        # The current schema is single-use.
+        # Keep the multi-use branch only as a compatibility fallback if older
+        # code attaches current_uses/max_uses dynamically.
+        legacy_current_uses = getattr(self, "current_uses", None)
+        legacy_max_uses = getattr(self, "max_uses", None)
+        if legacy_current_uses is not None and legacy_max_uses is not None:
+            return legacy_current_uses >= legacy_max_uses
         return self.consumed_at is not None or self.consumed_by is not None
 
     def __repr__(self) -> str:

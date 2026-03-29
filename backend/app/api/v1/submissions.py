@@ -19,7 +19,7 @@ from app.core.permissions import (
 from app.core.request_utils import get_client_ip
 from app.core.response import success_response
 from app.schemas.lms import GradeRequest, SubmissionCreateRequest
-from app.services.lms import AssignmentService
+from app.services.lms import AssignmentService, GradingService
 
 router = APIRouter(prefix="/submissions", tags=["lms-submissions"])
 
@@ -59,7 +59,7 @@ async def grade_submission(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_SUBMISSION_GRADE)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = AssignmentService(db)
+    service = GradingService(db)
     return success_response(
         await service.grade_submission(
             submission_id=submission_id,
@@ -81,7 +81,7 @@ async def override_late_penalty(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_SUBMISSION_GRADE)),
     db: AsyncSession = Depends(get_db),
 ):
-    service = AssignmentService(db)
+    service = GradingService(db)
     return success_response(
         await service.override_late_penalty(
             submission_id=submission_id,
