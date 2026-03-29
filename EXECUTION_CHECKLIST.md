@@ -39,18 +39,18 @@
 ---
 
 ### T-02: Domain Value Object Unit Tests (~45 tests)
-- [ ] **ANALYZE** — Read grade.py, money.py, typed_id.py, role_set.py
-  - [ ] Listed all public methods/properties per value object
-- [ ] **EXECUTE** — Create tests
-  - [ ] Created `test_grade.py` (~15 tests: boundaries, mentions, parametrized)
-  - [ ] Created `test_money.py` (~12 tests: MAD/EUR/USD, negative, decimal)
-  - [ ] Created `test_typed_id.py` (~8 tests: UUID creation, validation, equality)
-  - [ ] Created `test_role_set.py` (~10 tests: membership, iteration, invalid codes)
-- [ ] **VERIFY** — ~45 tests pass
-  - [ ] All domain tests pass
-  - [ ] No import errors
-  - [ ] Existing tests unaffected
-- [ ] **GIT** — Committed (Codex only)
+- [x] **ANALYZE** — Read grade.py, money.py, typed_id.py, role_set.py
+  - [x] Listed all public methods/properties per value object
+- [x] **EXECUTE** — Create tests
+  - [x] Created `test_grade.py` (~15 tests: boundaries, mentions, parametrized)
+  - [x] Created `test_money.py` (~12 tests: MAD/EUR/USD, negative, decimal)
+  - [x] Created `test_typed_id.py` (~8 tests: UUID creation, validation, equality)
+  - [x] Created `test_role_set.py` (~10 tests: membership, iteration, invalid codes)
+- [x] **VERIFY** — ~45 tests pass
+  - [x] All domain tests pass
+  - [x] No import errors
+  - [x] Existing tests unaffected
+- [x] **GIT** — Committed (Codex only)
 
 ---
 
