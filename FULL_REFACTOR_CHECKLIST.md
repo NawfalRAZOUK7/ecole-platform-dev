@@ -453,16 +453,16 @@
 - [ ] **Review & commit myself**
 
 #### MR-B2: __repr__ Methods on All Models
-- [ ] All IAM models (12 models) have __repr__
-- [ ] All LMS models (25+ models) have __repr__
-- [ ] All ERP models (14 models) have __repr__
-- [ ] All Billing models have __repr__
-- [ ] All COM models have __repr__
-- [ ] All Documents models have __repr__
-- [ ] All Calendar models have __repr__
-- [ ] All Reporting models have __repr__
-- [ ] AuditLog has __repr__
-- [ ] No sensitive data in any __repr__ (no password_hash, tokens, secrets)
+- [x] All IAM models (12 models) have __repr__
+- [x] All LMS models (25+ models) have __repr__
+- [x] All ERP models (14 models) have __repr__
+- [x] All Billing models have __repr__
+- [x] All COM models have __repr__
+- [x] All Documents models have __repr__
+- [x] All Calendar models have __repr__
+- [x] All Reporting models have __repr__
+- [x] AuditLog has __repr__
+- [x] No sensitive data in any __repr__ (no password_hash, tokens, secrets)
 - [ ] **Review & commit myself**
 
 #### MR-B3: SQLAlchemy Validators

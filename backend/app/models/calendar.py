@@ -24,6 +24,10 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.core.database import Base, SchoolScopedMixin, SoftDeleteMixin, TimestampMixin
 
 
+def _short_id(value: object | None) -> str:
+    return str(value)[:8] if value is not None else "None"
+
+
 class EventType(str, enum.Enum):
     HOLIDAY = "holiday"
     EXAM = "exam"
@@ -95,6 +99,12 @@ class Event(TimestampMixin, SchoolScopedMixin, SoftDeleteMixin, Base):
     def is_past(self) -> bool:
         return self.end_at < datetime.now(timezone.utc)
 
+    def __repr__(self) -> str:
+        return (
+            f"<Event id={_short_id(self.id)} title={self.title_fr} "
+            f"start={self.start_at}>"
+        )
+
 
 class EventRSVP(TimestampMixin, Base):
     """Per-user RSVP state for an event."""
@@ -117,6 +127,12 @@ class EventRSVP(TimestampMixin, Base):
         Index("idx_event_rsvps_event_status", "event_id", "status"),
         Index("idx_event_rsvps_user_responded", "user_id", "responded_at"),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<EventRSVP id={_short_id(self.id)} event_id={_short_id(self.event_id)} "
+            f"status={self.status}>"
+        )
 
 
 class EventReminder(TimestampMixin, Base):
@@ -150,6 +166,12 @@ class EventReminder(TimestampMixin, Base):
         Index("idx_event_reminders_due_sent", "sent", "remind_at"),
     )
 
+    def __repr__(self) -> str:
+        return (
+            f"<EventReminder id={_short_id(self.id)} event_id={_short_id(self.event_id)} "
+            f"channel={self.channel}>"
+        )
+
 
 class EventReminderPreference(TimestampMixin, SchoolScopedMixin, Base):
     """Per-user event reminder preference by event type."""
@@ -172,6 +194,12 @@ class EventReminderPreference(TimestampMixin, SchoolScopedMixin, Base):
         ),
     )
 
+    def __repr__(self) -> str:
+        return (
+            f"<EventReminderPreference id={_short_id(self.id)} "
+            f"user_id={_short_id(self.user_id)} event_type={self.event_type}>"
+        )
+
 
 class MoroccanHoliday(TimestampMixin, Base):
     """Global holiday seed rows used to auto-populate school calendars."""
@@ -190,3 +218,9 @@ class MoroccanHoliday(TimestampMixin, Base):
         UniqueConstraint("code", "holiday_date", name="uq_moroccan_holidays_code_date"),
         Index("idx_moroccan_holidays_date", "holiday_date"),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<MoroccanHoliday id={_short_id(self.id)} code={self.code} "
+            f"holiday_date={self.holiday_date}>"
+        )

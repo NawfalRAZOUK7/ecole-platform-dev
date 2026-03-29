@@ -27,6 +27,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base, SchoolScopedMixin, TimestampMixin
 
 
+def _short_id(value: object | None) -> str:
+    return str(value)[:8] if value is not None else "None"
+
+
 # ---------------------------------------------------------------------------
 # Enums
 # ---------------------------------------------------------------------------
@@ -145,6 +149,12 @@ class Invoice(TimestampMixin, SchoolScopedMixin, Base):
     def is_paid(self) -> bool:
         return self.status == InvoiceStatus.PAID.value
 
+    def __repr__(self) -> str:
+        return (
+            f"<Invoice id={_short_id(self.id)} status={self.status} "
+            f"total={self.total_amount}>"
+        )
+
 
 class InvoiceItem(TimestampMixin, Base):
     """Line item on an invoice."""
@@ -166,6 +176,12 @@ class InvoiceItem(TimestampMixin, Base):
         CheckConstraint("amount >= 0", name="ck_invoice_items_amount"),
         CheckConstraint("quantity > 0", name="ck_invoice_items_quantity"),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<InvoiceItem id={_short_id(self.id)} "
+            f"invoice_id={_short_id(self.invoice_id)} amount={self.amount}>"
+        )
 
 
 class PaymentAttempt(TimestampMixin, SchoolScopedMixin, Base):
@@ -220,6 +236,12 @@ class PaymentAttempt(TimestampMixin, SchoolScopedMixin, Base):
         ),
     )
 
+    def __repr__(self) -> str:
+        return (
+            f"<PaymentAttempt id={_short_id(self.id)} status={self.status} "
+            f"invoice_id={_short_id(self.invoice_id)}>"
+        )
+
 
 class PaymentProof(TimestampMixin, Base):
     """Proof of payment (receipt, confirmation from provider)."""
@@ -240,6 +262,12 @@ class PaymentProof(TimestampMixin, Base):
 
     # Relationships
     payment_attempt: Mapped["PaymentAttempt"] = relationship(back_populates="proof")
+
+    def __repr__(self) -> str:
+        return (
+            f"<PaymentProof id={_short_id(self.id)} "
+            f"payment_attempt_id={_short_id(self.payment_attempt_id)} source={self.source}>"
+        )
 
 
 class ProviderWebhookEvent(TimestampMixin, SchoolScopedMixin, Base):
@@ -276,6 +304,12 @@ class ProviderWebhookEvent(TimestampMixin, SchoolScopedMixin, Base):
             "provider_event_received_at",
         ),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<ProviderWebhookEvent id={_short_id(self.id)} status={self.status} "
+            f"provider_event_id={self.provider_event_id}>"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -330,6 +364,12 @@ class FeeStructure(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_fee_structures_school_year", "school_id", "academic_year_id"),
     )
 
+    def __repr__(self) -> str:
+        return (
+            f"<FeeStructure id={_short_id(self.id)} name={self.name} "
+            f"amount={self.amount}>"
+        )
+
 
 class FeeAssignment(TimestampMixin, SchoolScopedMixin, Base):
     """Assignment of a fee structure to a specific student.
@@ -373,6 +413,12 @@ class FeeAssignment(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_fee_assignments_student", "student_id"),
     )
 
+    def __repr__(self) -> str:
+        return (
+            f"<FeeAssignment id={_short_id(self.id)} "
+            f"student_id={_short_id(self.student_id)} status={self.status}>"
+        )
+
 
 class SiblingDiscountPolicy(TimestampMixin, SchoolScopedMixin, Base):
     """School-level sibling discount tiers for invoice generation."""
@@ -410,6 +456,12 @@ class SiblingDiscountPolicy(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_sdp_school", "school_id"),
     )
 
+    def __repr__(self) -> str:
+        return (
+            f"<SiblingDiscountPolicy id={_short_id(self.id)} enabled={self.enabled} "
+            f"second_child_percent={self.second_child_percent}>"
+        )
+
 
 class LateFeePolicy(TimestampMixin, SchoolScopedMixin, Base):
     """School-level late-fee policy applied to overdue invoices."""
@@ -445,6 +497,12 @@ class LateFeePolicy(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_late_fee_policies_school", "school_id"),
     )
 
+    def __repr__(self) -> str:
+        return (
+            f"<LateFeePolicy id={_short_id(self.id)} fee_type={self.fee_type} "
+            f"amount={self.amount}>"
+        )
+
 
 class PaymentPlan(TimestampMixin, SchoolScopedMixin, Base):
     """Installment plan for an invoice."""
@@ -479,6 +537,12 @@ class PaymentPlan(TimestampMixin, SchoolScopedMixin, Base):
     @property
     def is_completed(self) -> bool:
         return self.status == "completed"
+
+    def __repr__(self) -> str:
+        return (
+            f"<PaymentPlan id={_short_id(self.id)} "
+            f"invoice_id={_short_id(self.invoice_id)} status={self.status}>"
+        )
 
 
 class Installment(TimestampMixin, Base):
@@ -521,3 +585,9 @@ class Installment(TimestampMixin, Base):
     @property
     def is_overdue(self) -> bool:
         return self.paid_at is None and self.due_date.date() < date.today()
+
+    def __repr__(self) -> str:
+        return (
+            f"<Installment id={_short_id(self.id)} plan_id={_short_id(self.plan_id)} "
+            f"status={self.status}>"
+        )

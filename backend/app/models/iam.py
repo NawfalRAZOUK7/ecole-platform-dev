@@ -26,6 +26,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base, SchoolScopedMixin, TimestampMixin
 
 
+def _short_id(value: object | None) -> str:
+    return str(value)[:8] if value is not None else "None"
+
+
 # ---------------------------------------------------------------------------
 # Enums
 # ---------------------------------------------------------------------------
@@ -143,6 +147,9 @@ class User(TimestampMixin, SchoolScopedMixin, Base):
     def is_email_verified(self) -> bool:
         return self.email_verified_at is not None
 
+    def __repr__(self) -> str:
+        return f"<User id={_short_id(self.id)} email={self.email} status={self.status}>"
+
 
 class Membership(TimestampMixin, SchoolScopedMixin, Base):
     """Role assignment — links a user to a school with a specific role.
@@ -178,6 +185,12 @@ class Membership(TimestampMixin, SchoolScopedMixin, Base):
     @property
     def is_active(self) -> bool:
         return self.status == MembershipStatus.ACTIVE.value
+
+    def __repr__(self) -> str:
+        return (
+            f"<Membership id={_short_id(self.id)} user_id={_short_id(self.user_id)} "
+            f"role_code={self.role_code}>"
+        )
 
 
 class Session(TimestampMixin, SchoolScopedMixin, Base):
@@ -244,6 +257,12 @@ class Session(TimestampMixin, SchoolScopedMixin, Base):
         )
         return revoked_at is not None
 
+    def __repr__(self) -> str:
+        return (
+            f"<Session id={_short_id(self.id)} user_id={_short_id(self.user_id)} "
+            f"impersonated={self.impersonator_id is not None}>"
+        )
+
 
 class LoginHistory(TimestampMixin, SchoolScopedMixin, Base):
     """Historical record of login attempts and successful device usage."""
@@ -277,6 +296,12 @@ class LoginHistory(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_login_history_user_created", "user_id", "created_at"),
         Index("idx_login_history_school", "school_id"),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<LoginHistory id={_short_id(self.id)} user_id={_short_id(self.user_id)} "
+            f"success={self.success}>"
+        )
 
 
 class InvitationCode(TimestampMixin, SchoolScopedMixin, Base):
@@ -331,6 +356,12 @@ class InvitationCode(TimestampMixin, SchoolScopedMixin, Base):
             return current_uses >= max_uses
         return self.consumed_at is not None or self.consumed_by is not None
 
+    def __repr__(self) -> str:
+        return (
+            f"<InvitationCode id={_short_id(self.id)} role_target={self.role_target} "
+            f"consumed={self.consumed_at is not None}>"
+        )
+
 
 class AccountRecoveryRequest(TimestampMixin, SchoolScopedMixin, Base):
     """Account recovery — password reset flow with OTP and attempt tracking."""
@@ -359,6 +390,12 @@ class AccountRecoveryRequest(TimestampMixin, SchoolScopedMixin, Base):
     @property
     def is_expired(self) -> bool:
         return self.expires_at < datetime.now(timezone.utc)
+
+    def __repr__(self) -> str:
+        return (
+            f"<AccountRecoveryRequest id={_short_id(self.id)} "
+            f"user_id={_short_id(self.user_id)} status={self.status}>"
+        )
 
 
 class ParentChildLink(TimestampMixin, SchoolScopedMixin, Base):
@@ -401,6 +438,13 @@ class ParentChildLink(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_parent_child_links_child", "child_user_id"),
     )
 
+    def __repr__(self) -> str:
+        return (
+            f"<ParentChildLink id={_short_id(self.id)} "
+            f"parent_id={_short_id(self.parent_user_id)} "
+            f"child_id={_short_id(self.child_user_id)}>"
+        )
+
 
 # ---------------------------------------------------------------------------
 # Phase 1B — Role-Specific Profile Tables
@@ -438,6 +482,12 @@ class StudentProfile(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_student_profiles_school", "school_id"),
     )
 
+    def __repr__(self) -> str:
+        return (
+            f"<StudentProfile id={_short_id(self.id)} "
+            f"student_number={self.student_number}>"
+        )
+
 
 class ParentProfile(TimestampMixin, SchoolScopedMixin, Base):
     """Extended profile for parents (PAR role).
@@ -463,6 +513,12 @@ class ParentProfile(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_parent_profiles_user", "user_id"),
         Index("idx_parent_profiles_school", "school_id"),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<ParentProfile id={_short_id(self.id)} "
+            f"user_id={_short_id(self.user_id)}>"
+        )
 
 
 class TeacherProfile(TimestampMixin, SchoolScopedMixin, Base):
@@ -490,6 +546,12 @@ class TeacherProfile(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_teacher_profiles_school", "school_id"),
     )
 
+    def __repr__(self) -> str:
+        return (
+            f"<TeacherProfile id={_short_id(self.id)} "
+            f"employee_id={self.employee_id}>"
+        )
+
 
 class AdminProfile(TimestampMixin, SchoolScopedMixin, Base):
     """Extended profile for ADM/DIR roles."""
@@ -512,6 +574,9 @@ class AdminProfile(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_admin_profiles_school", "school_id"),
     )
 
+    def __repr__(self) -> str:
+        return f"<AdminProfile id={_short_id(self.id)} department={self.department}>"
+
 
 class ContentManagerProfile(TimestampMixin, SchoolScopedMixin, Base):
     """Extended profile for CONTENT_MGR role."""
@@ -531,3 +596,9 @@ class ContentManagerProfile(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_content_manager_profiles_user", "user_id"),
         Index("idx_content_manager_profiles_school", "school_id"),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<ContentManagerProfile id={_short_id(self.id)} "
+            f"specialization={self.specialization}>"
+        )

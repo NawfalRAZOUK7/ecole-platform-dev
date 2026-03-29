@@ -16,6 +16,10 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.core.database import Base, SchoolScopedMixin, TimestampMixin
 
 
+def _short_id(value: object | None) -> str:
+    return str(value)[:8] if value is not None else "None"
+
+
 class ReportType(str, enum.Enum):
     STUDENT_REPORT_CARD = "student_report_card"
     CLASS_SUMMARY = "class_summary"
@@ -68,6 +72,12 @@ class ReportSchedule(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_report_schedules_next_run", "next_run_at"),
     )
 
+    def __repr__(self) -> str:
+        return (
+            f"<ReportSchedule id={_short_id(self.id)} report_type={self.report_type} "
+            f"frequency={self.frequency}>"
+        )
+
 
 class ReportJob(TimestampMixin, SchoolScopedMixin, Base):
     """Asynchronous PDF report generation job."""
@@ -114,6 +124,9 @@ class ReportJob(TimestampMixin, SchoolScopedMixin, Base):
     def is_expired(self) -> bool:
         return self.expires_at is not None and self.expires_at < datetime.now(timezone.utc)
 
+    def __repr__(self) -> str:
+        return f"<ReportJob id={_short_id(self.id)} type={self.type} status={self.status}>"
+
 
 class DataExport(TimestampMixin, SchoolScopedMixin, Base):
     """Audit log for CSV/XLSX exports."""
@@ -134,3 +147,6 @@ class DataExport(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_data_exports_requester_created", "requester_id", "created_at"),
         Index("idx_data_exports_entity_format", "entity", "format"),
     )
+
+    def __repr__(self) -> str:
+        return f"<DataExport id={_short_id(self.id)} entity={self.entity} format={self.format}>"

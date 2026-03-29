@@ -29,6 +29,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base, SchoolScopedMixin, TimestampMixin
 
 
+def _short_id(value: object | None) -> str:
+    return str(value)[:8] if value is not None else "None"
+
+
 # ---------------------------------------------------------------------------
 # Enums
 # ---------------------------------------------------------------------------
@@ -97,6 +101,9 @@ class AcademicYear(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_academic_years_school", "school_id"),
     )
 
+    def __repr__(self) -> str:
+        return f"<AcademicYear id={_short_id(self.id)} label={self.label}>"
+
 
 class Period(TimestampMixin, SchoolScopedMixin, Base):
     """Period (semester/trimester) within an academic year.
@@ -123,6 +130,9 @@ class Period(TimestampMixin, SchoolScopedMixin, Base):
         CheckConstraint("date_end > date_start", name="ck_periods_dates"),
         Index("idx_periods_school_year", "school_id", "academic_year_id"),
     )
+
+    def __repr__(self) -> str:
+        return f"<Period id={_short_id(self.id)} label={self.label} status={self.status}>"
 
 
 class Class(TimestampMixin, SchoolScopedMixin, Base):
@@ -153,6 +163,9 @@ class Class(TimestampMixin, SchoolScopedMixin, Base):
             name="uq_classes_code_school_year",
         ),
     )
+
+    def __repr__(self) -> str:
+        return f"<Class id={_short_id(self.id)} name={self.name} code={self.code}>"
 
 
 class Enrollment(TimestampMixin, SchoolScopedMixin, Base):
@@ -195,6 +208,12 @@ class Enrollment(TimestampMixin, SchoolScopedMixin, Base):
     def is_active(self) -> bool:
         return self.status == EnrollmentStatus.ACTIVE.value
 
+    def __repr__(self) -> str:
+        return (
+            f"<Enrollment id={_short_id(self.id)} student_id={_short_id(self.student_id)} "
+            f"status={self.status}>"
+        )
+
 
 class TeacherAssignment(TimestampMixin, SchoolScopedMixin, Base):
     """Teacher assignment to a class for a period."""
@@ -220,6 +239,12 @@ class TeacherAssignment(TimestampMixin, SchoolScopedMixin, Base):
             "period_id",
         ),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<TeacherAssignment id={_short_id(self.id)} "
+            f"teacher_id={_short_id(self.teacher_id)} class_id={_short_id(self.class_id)}>"
+        )
 
 
 class AttendanceSession(TimestampMixin, SchoolScopedMixin, Base):
@@ -256,6 +281,12 @@ class AttendanceSession(TimestampMixin, SchoolScopedMixin, Base):
             name="uq_attendance_sessions_class_date_slot",
         ),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<AttendanceSession id={_short_id(self.id)} "
+            f"class_id={_short_id(self.class_id)} date={self.session_date}>"
+        )
 
 
 class AttendanceRecord(TimestampMixin, SchoolScopedMixin, Base):
@@ -295,6 +326,12 @@ class AttendanceRecord(TimestampMixin, SchoolScopedMixin, Base):
         ),
     )
 
+    def __repr__(self) -> str:
+        return (
+            f"<AttendanceRecord id={_short_id(self.id)} "
+            f"student_id={_short_id(self.student_id)} status={self.status}>"
+        )
+
 
 class AbsenceJustification(TimestampMixin, SchoolScopedMixin, Base):
     """Parent-submitted justification for a student absence."""
@@ -323,6 +360,12 @@ class AbsenceJustification(TimestampMixin, SchoolScopedMixin, Base):
         back_populates="justification", cascade="all, delete-orphan"
     )
 
+    def __repr__(self) -> str:
+        return (
+            f"<AbsenceJustification id={_short_id(self.id)} "
+            f"record_id={_short_id(self.attendance_record_id)} status={self.status}>"
+        )
+
 
 class JustificationReview(TimestampMixin, SchoolScopedMixin, Base):
     """Teacher/admin review decision on a justification."""
@@ -341,6 +384,12 @@ class JustificationReview(TimestampMixin, SchoolScopedMixin, Base):
     justification: Mapped["AbsenceJustification"] = relationship(
         back_populates="reviews"
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<JustificationReview id={_short_id(self.id)} "
+            f"justification_id={_short_id(self.justification_id)}>"
+        )
 
 
 class AttendanceAlert(TimestampMixin, SchoolScopedMixin, Base):
@@ -395,6 +444,12 @@ class AttendanceAlert(TimestampMixin, SchoolScopedMixin, Base):
     def is_resolved(self) -> bool:
         return getattr(self, "resolved_at", None) is not None
 
+    def __repr__(self) -> str:
+        return (
+            f"<AttendanceAlert id={_short_id(self.id)} "
+            f"student_id={_short_id(self.student_id)} type={self.threshold_exceeded}>"
+        )
+
 
 # ---------------------------------------------------------------------------
 # Timetable (Phase 11A / ENH-C3)
@@ -428,6 +483,12 @@ class TimetableConstraint(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_tc_school_year", "school_id", "academic_year_id"),
     )
 
+    def __repr__(self) -> str:
+        return (
+            f"<TimetableConstraint id={_short_id(self.id)} "
+            f"type={self.constraint_type}>"
+        )
+
 
 class TimetableGenerationJob(TimestampMixin, SchoolScopedMixin, Base):
     """Stored result of a timetable generation run."""
@@ -460,6 +521,9 @@ class TimetableGenerationJob(TimestampMixin, SchoolScopedMixin, Base):
         ),
         Index("idx_tgj_school_year", "school_id", "academic_year_id"),
     )
+
+    def __repr__(self) -> str:
+        return f"<TimetableGenerationJob id={_short_id(self.id)} status={self.status}>"
 
 
 # ---------------------------------------------------------------------------
@@ -519,6 +583,12 @@ class TimetableSlot(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_timetable_slots_teacher", "teacher_id"),
     )
 
+    def __repr__(self) -> str:
+        return (
+            f"<TimetableSlot id={_short_id(self.id)} day={self.day_of_week} "
+            f"start_time={self.start_time}>"
+        )
+
 
 class TimetableException(TimestampMixin, SchoolScopedMixin, Base):
     """Exception to a recurring timetable slot (cancel, substitute, room change).
@@ -555,3 +625,9 @@ class TimetableException(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_timetable_exceptions_school", "school_id"),
         Index("idx_timetable_exceptions_date", "exception_date"),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<TimetableException id={_short_id(self.id)} "
+            f"date={self.exception_date}>"
+        )

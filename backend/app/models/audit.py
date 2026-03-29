@@ -13,6 +13,10 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.core.database import Base, SchoolScopedMixin, TimestampMixin
 
 
+def _short_id(value: object | None) -> str:
+    return str(value)[:8] if value is not None else "None"
+
+
 class AuditLog(TimestampMixin, SchoolScopedMixin, Base):
     """Append-only audit log for security-relevant events.
 
@@ -41,3 +45,9 @@ class AuditLog(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_audit_logs_school_created", "school_id", "created_at"),
         Index("idx_audit_logs_actor_action", "actor_id", "action_type"),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<AuditLog id={_short_id(self.id)} action_type={self.action_type} "
+            f"target_type={self.target_type}>"
+        )

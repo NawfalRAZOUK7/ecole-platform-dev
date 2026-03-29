@@ -34,6 +34,10 @@ from app.core.database import (
 )
 
 
+def _short_id(value: object | None) -> str:
+    return str(value)[:8] if value is not None else "None"
+
+
 # ---------------------------------------------------------------------------
 # Enums
 # ---------------------------------------------------------------------------
@@ -117,6 +121,9 @@ class Course(TimestampMixin, SchoolScopedMixin, Base):
 
     __table_args__ = (Index("idx_courses_school_class", "school_id", "class_id"),)
 
+    def __repr__(self) -> str:
+        return f"<Course id={_short_id(self.id)} title={self.title} status={self.status}>"
+
 
 class GradeCategory(TimestampMixin, SchoolScopedMixin, Base):
     """Weighted grade category for a class and period."""
@@ -146,6 +153,12 @@ class GradeCategory(TimestampMixin, SchoolScopedMixin, Base):
             name="ck_grade_categories_weight",
         ),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<GradeCategory id={_short_id(self.id)} name={self.name} "
+            f"weight={self.weight}>"
+        )
 
 
 class Rubric(TimestampMixin, SchoolScopedMixin, Base):
@@ -178,6 +191,9 @@ class Rubric(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_rubrics_school_teacher", "school_id", "teacher_id"),
     )
 
+    def __repr__(self) -> str:
+        return f"<Rubric id={_short_id(self.id)} title={self.title}>"
+
 
 class RubricCriterion(TimestampMixin, Base):
     """Weighted criterion within a rubric."""
@@ -209,6 +225,9 @@ class RubricCriterion(TimestampMixin, Base):
         Index("idx_rubric_criteria_rubric", "rubric_id"),
     )
 
+    def __repr__(self) -> str:
+        return f"<RubricCriterion id={_short_id(self.id)} title={self.title}>"
+
 
 class RubricLevel(TimestampMixin, Base):
     """Level option for a rubric criterion."""
@@ -231,6 +250,9 @@ class RubricLevel(TimestampMixin, Base):
         CheckConstraint("points >= 0", name="ck_rubric_levels_points"),
         Index("idx_rubric_levels_criterion", "criterion_id"),
     )
+
+    def __repr__(self) -> str:
+        return f"<RubricLevel id={_short_id(self.id)} label={self.label}>"
 
 
 class Assignment(TimestampMixin, Base):
@@ -308,6 +330,12 @@ class Assignment(TimestampMixin, Base):
             return True
         return now <= grace_deadline + timedelta(days=self.max_late_days)
 
+    def __repr__(self) -> str:
+        return (
+            f"<Assignment id={_short_id(self.id)} title={self.title} "
+            f"exercise_type={self.exercise_type}>"
+        )
+
 
 class Submission(TimestampMixin, Base):
     """Student submission for an assignment.
@@ -361,6 +389,12 @@ class Submission(TimestampMixin, Base):
             SubmissionStatus.RETURNED.value,
         }
 
+    def __repr__(self) -> str:
+        return (
+            f"<Submission id={_short_id(self.id)} student_id={_short_id(self.student_id)} "
+            f"status={self.status}>"
+        )
+
 
 class SubmissionFile(TimestampMixin, Base):
     """File attached to a submission."""
@@ -379,6 +413,10 @@ class SubmissionFile(TimestampMixin, Base):
 
     # Relationships
     submission: Mapped["Submission"] = relationship(back_populates="files")
+
+    def __repr__(self) -> str:
+        filename = self.file_path.rsplit("/", 1)[-1]
+        return f"<SubmissionFile id={_short_id(self.id)} filename={filename}>"
 
 
 class RubricScore(TimestampMixin, Base):
@@ -415,6 +453,12 @@ class RubricScore(TimestampMixin, Base):
         Index("idx_rubric_scores_submission", "submission_id"),
     )
 
+    def __repr__(self) -> str:
+        return (
+            f"<RubricScore id={_short_id(self.id)} "
+            f"submission_id={_short_id(self.submission_id)}>"
+        )
+
 
 class Grade(TimestampMixin, Base):
     """Grade given by a teacher for a submission."""
@@ -445,6 +489,12 @@ class Grade(TimestampMixin, Base):
     __table_args__ = (
         Index("idx_grades_submission_published", "submission_id", "published_at"),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<Grade id={_short_id(self.id)} submission_id={_short_id(self.submission_id)} "
+            f"score={self.score}>"
+        )
 
 
 class StudentPeriodAverage(TimestampMixin, SchoolScopedMixin, Base):
@@ -483,6 +533,12 @@ class StudentPeriodAverage(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_spa_class_period", "class_id", "period_id"),
     )
 
+    def __repr__(self) -> str:
+        return (
+            f"<StudentPeriodAverage id={_short_id(self.id)} "
+            f"student_id={_short_id(self.student_id)} average={self.weighted_average}>"
+        )
+
 
 class Assessment(TimestampMixin, Base):
     """Formal assessment (exam, quiz) for a class."""
@@ -517,6 +573,12 @@ class Assessment(TimestampMixin, Base):
         Index("idx_assessments_class_status", "class_id", "status"),
     )
 
+    def __repr__(self) -> str:
+        return (
+            f"<Assessment id={_short_id(self.id)} title={self.title} "
+            f"status={self.status}>"
+        )
+
 
 class AssessmentResult(TimestampMixin, Base):
     """Student result for an assessment. Unique per (assessment, student)."""
@@ -544,6 +606,12 @@ class AssessmentResult(TimestampMixin, Base):
             name="uq_assessment_results_assessment_student",
         ),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<AssessmentResult id={_short_id(self.id)} "
+            f"student_id={_short_id(self.student_id)} score={self.score}>"
+        )
 
 
 class QuizStatus(str, enum.Enum):
@@ -625,6 +693,12 @@ class ContentItem(TimestampMixin, NullableSchoolScopedMixin, Base):
         Index("idx_content_items_created_by", "created_by"),
     )
 
+    def __repr__(self) -> str:
+        return (
+            f"<ContentItem id={_short_id(self.id)} title={self.title} "
+            f"content_type={self.content_type}>"
+        )
+
 
 class ContentItemAsset(TimestampMixin, Base):
     """File/media asset attached to a content item."""
@@ -641,6 +715,12 @@ class ContentItemAsset(TimestampMixin, Base):
 
     # Relationships
     content_item: Mapped["ContentItem"] = relationship(back_populates="assets")
+
+    def __repr__(self) -> str:
+        return (
+            f"<ContentItemAsset id={_short_id(self.id)} "
+            f"content_item_id={_short_id(self.content_item_id)}>"
+        )
 
 
 class ContentProgress(TimestampMixin, Base):
@@ -666,6 +746,12 @@ class ContentProgress(TimestampMixin, Base):
         ),
     )
 
+    def __repr__(self) -> str:
+        return (
+            f"<ContentProgress id={_short_id(self.id)} "
+            f"student_id={_short_id(self.student_id)} status={self.status}>"
+        )
+
 
 class Activity(TimestampMixin, NullableSchoolScopedMixin, Base):
     """Pedagogical activity (quiz, exercise, game).
@@ -686,6 +772,9 @@ class Activity(TimestampMixin, NullableSchoolScopedMixin, Base):
     )
 
     __table_args__ = (Index("idx_activities_school_type", "school_id", "type"),)
+
+    def __repr__(self) -> str:
+        return f"<Activity id={_short_id(self.id)} title={self.title} type={self.type}>"
 
 
 class ActivitySession(TimestampMixin, Base):
@@ -711,6 +800,12 @@ class ActivitySession(TimestampMixin, Base):
     __table_args__ = (
         Index("idx_activity_sessions_student_activity", "student_id", "activity_id"),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<ActivitySession id={_short_id(self.id)} "
+            f"activity_id={_short_id(self.activity_id)} status={self.status}>"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -751,6 +846,12 @@ class ClassContentAssignment(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_class_content_assignments_school", "school_id"),
     )
 
+    def __repr__(self) -> str:
+        return (
+            f"<ClassContentAssignment id={_short_id(self.id)} "
+            f"class_id={_short_id(self.class_id)}>"
+        )
+
 
 class ContentSubmission(TimestampMixin, SchoolScopedMixin, Base):
     """Teacher submits school-scoped content for platform promotion review.
@@ -789,6 +890,12 @@ class ContentSubmission(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_content_submissions_submitted_by", "submitted_by"),
         Index("idx_content_submissions_school", "school_id"),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<ContentSubmission id={_short_id(self.id)} "
+            f"submitted_by={_short_id(self.submitted_by)} status={self.status}>"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -850,6 +957,12 @@ class Quiz(TimestampMixin, NullableSchoolScopedMixin, Base):
             return False
         return True
 
+    def __repr__(self) -> str:
+        return (
+            f"<Quiz id={_short_id(self.id)} title={self.title} "
+            f"published={self.status == QuizStatus.PUBLISHED.value}>"
+        )
+
 
 class QuizQuestion(TimestampMixin, Base):
     """Question within a quiz. Supports 5 types with JSONB options/answers."""
@@ -878,6 +991,11 @@ class QuizQuestion(TimestampMixin, Base):
         CheckConstraint("points >= 0", name="ck_quiz_questions_points"),
         Index("idx_quiz_questions_quiz_order", "quiz_id", "order"),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<QuizQuestion id={_short_id(self.id)} quiz_id={_short_id(self.quiz_id)}>"
+        )
 
 
 class QuizAttempt(TimestampMixin, Base):
@@ -921,6 +1039,12 @@ class QuizAttempt(TimestampMixin, Base):
         Index("idx_quiz_attempts_quiz_status", "quiz_id", "status"),
     )
 
+    def __repr__(self) -> str:
+        return (
+            f"<QuizAttempt id={_short_id(self.id)} student_id={_short_id(self.student_id)} "
+            f"status={self.status}>"
+        )
+
 
 class QuizResponse(TimestampMixin, Base):
     """Student response to a single quiz question within an attempt."""
@@ -953,6 +1077,11 @@ class QuizResponse(TimestampMixin, Base):
         Index("idx_quiz_responses_attempt", "attempt_id"),
     )
 
+    def __repr__(self) -> str:
+        return (
+            f"<QuizResponse id={_short_id(self.id)} attempt_id={_short_id(self.attempt_id)}>"
+        )
+
 
 class QuestionBankItem(TimestampMixin, SchoolScopedMixin, Base):
     """Reusable school question bank item for quiz generation."""
@@ -980,3 +1109,9 @@ class QuestionBankItem(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_qb_school_difficulty", "school_id", "difficulty"),
         Index("idx_qb_teacher", "teacher_id"),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<QuestionBankItem id={_short_id(self.id)} subject={self.subject} "
+            f"difficulty={self.difficulty}>"
+        )

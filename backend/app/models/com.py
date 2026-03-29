@@ -25,6 +25,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base, SchoolScopedMixin, SoftDeleteMixin, TimestampMixin
 
 
+def _short_id(value: object | None) -> str:
+    return str(value)[:8] if value is not None else "None"
+
+
 # ---------------------------------------------------------------------------
 # Enums
 # ---------------------------------------------------------------------------
@@ -145,6 +149,12 @@ class ConsentPreference(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_consent_school_user", "school_id", "user_id"),
     )
 
+    def __repr__(self) -> str:
+        return (
+            f"<ConsentPreference id={_short_id(self.id)} "
+            f"user_id={_short_id(self.user_id)} topic={self.topic}>"
+        )
+
 
 class Notification(TimestampMixin, SchoolScopedMixin, SoftDeleteMixin, Base):
     """Notification generated from a platform event.
@@ -209,6 +219,12 @@ class Notification(TimestampMixin, SchoolScopedMixin, SoftDeleteMixin, Base):
     def is_read(self) -> bool:
         return self.read_at is not None
 
+    def __repr__(self) -> str:
+        return (
+            f"<Notification id={_short_id(self.id)} category={self.category} "
+            f"is_read={self.is_read}>"
+        )
+
 
 class NotificationPreference(TimestampMixin, SchoolScopedMixin, Base):
     """Per-user notification preference by channel and category."""
@@ -237,6 +253,12 @@ class NotificationPreference(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_notification_preferences_school_user", "school_id", "user_id"),
     )
 
+    def __repr__(self) -> str:
+        return (
+            f"<NotificationPreference id={_short_id(self.id)} "
+            f"user_id={_short_id(self.user_id)} channel={self.channel}>"
+        )
+
 
 class DeviceToken(TimestampMixin, SchoolScopedMixin, Base):
     """Registered mobile/web push token for a user."""
@@ -258,6 +280,12 @@ class DeviceToken(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_device_tokens_school_user", "school_id", "user_id"),
         Index("idx_device_tokens_last_active", "last_active_at"),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<DeviceToken id={_short_id(self.id)} user_id={_short_id(self.user_id)} "
+            f"platform={self.platform}>"
+        )
 
 
 class NotificationDelivery(TimestampMixin, SchoolScopedMixin, Base):
@@ -304,6 +332,12 @@ class NotificationDelivery(TimestampMixin, SchoolScopedMixin, Base):
     def delivery_status(self) -> str:
         return self.status
 
+    def __repr__(self) -> str:
+        return (
+            f"<NotificationDelivery id={_short_id(self.id)} "
+            f"notification_id={_short_id(self.notification_id)} status={self.status}>"
+        )
+
 
 class ParentFeedItem(TimestampMixin, SchoolScopedMixin, Base):
     """Parent feed item — aggregated view for parents.
@@ -333,6 +367,12 @@ class ParentFeedItem(TimestampMixin, SchoolScopedMixin, Base):
             "created_at",
         ),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<ParentFeedItem id={_short_id(self.id)} "
+            f"parent_id={_short_id(self.parent_id)} source_type={self.source_type}>"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -374,6 +414,12 @@ class Conversation(TimestampMixin, SchoolScopedMixin, Base):
     def is_group(self) -> bool:
         return self.type == ConversationType.GROUP.value
 
+    def __repr__(self) -> str:
+        return (
+            f"<Conversation id={_short_id(self.id)} type={self.type} "
+            f"subject={self.subject}>"
+        )
+
 
 class ConversationParticipant(TimestampMixin, Base):
     """Participant in a conversation."""
@@ -403,6 +449,13 @@ class ConversationParticipant(TimestampMixin, Base):
         ),
         Index("idx_conv_participants_user", "user_id"),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<ConversationParticipant id={_short_id(self.id)} "
+            f"conversation_id={_short_id(self.conversation_id)} "
+            f"user_id={_short_id(self.user_id)}>"
+        )
 
 
 class Message(TimestampMixin, Base):
@@ -438,6 +491,12 @@ class Message(TimestampMixin, Base):
         Index("idx_messages_attachment_id", "attachment_id"),
     )
 
+    def __repr__(self) -> str:
+        return (
+            f"<Message id={_short_id(self.id)} "
+            f"conversation_id={_short_id(self.conversation_id)}>"
+        )
+
 
 class MessageReadReceipt(TimestampMixin, Base):
     """Read receipt for a message — tracks who read when."""
@@ -463,6 +522,12 @@ class MessageReadReceipt(TimestampMixin, Base):
         ),
         Index("idx_read_receipts_user", "user_id"),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<MessageReadReceipt id={_short_id(self.id)} "
+            f"message_id={_short_id(self.message_id)} user_id={_short_id(self.user_id)}>"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -497,3 +562,9 @@ class Announcement(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_announcements_school_status", "school_id", "status"),
         Index("idx_announcements_author", "author_id"),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<Announcement id={_short_id(self.id)} title={self.title} "
+            f"status={self.status}>"
+        )

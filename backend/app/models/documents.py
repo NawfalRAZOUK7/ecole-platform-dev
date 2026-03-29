@@ -23,6 +23,10 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.core.database import Base, SchoolScopedMixin, SoftDeleteMixin, TimestampMixin
 
 
+def _short_id(value: object | None) -> str:
+    return str(value)[:8] if value is not None else "None"
+
+
 class DocumentCategory(str, enum.Enum):
     CERTIFICATE = "certificate"
     REPORT_CARD = "report_card"
@@ -88,6 +92,12 @@ class Document(TimestampMixin, SchoolScopedMixin, SoftDeleteMixin, Base):
     def is_expired(self) -> bool:
         return self.expires_at is not None and self.expires_at < datetime.now(timezone.utc)
 
+    def __repr__(self) -> str:
+        return (
+            f"<Document id={_short_id(self.id)} filename={self.filename} "
+            f"category={self.category}>"
+        )
+
 
 class DocumentVersion(TimestampMixin, Base):
     """Historical version snapshot for a document."""
@@ -120,6 +130,12 @@ class DocumentVersion(TimestampMixin, Base):
         ),
         Index("idx_doc_versions_document", "document_id"),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<DocumentVersion id={_short_id(self.id)} "
+            f"document_id={_short_id(self.document_id)} version={self.version_number}>"
+        )
 
 
 class Resource(TimestampMixin, SchoolScopedMixin, SoftDeleteMixin, Base):
@@ -166,6 +182,9 @@ class Resource(TimestampMixin, SchoolScopedMixin, SoftDeleteMixin, Base):
         Index("idx_resources_deleted_at", "deleted_at"),
     )
 
+    def __repr__(self) -> str:
+        return f"<Resource id={_short_id(self.id)} title={self.title} type={self.type}>"
+
 
 class ResourceRating(TimestampMixin, Base):
     """Per-teacher rating for a resource."""
@@ -188,6 +207,12 @@ class ResourceRating(TimestampMixin, Base):
         Index("idx_resource_ratings_user", "user_id"),
     )
 
+    def __repr__(self) -> str:
+        return (
+            f"<ResourceRating id={_short_id(self.id)} "
+            f"resource_id={_short_id(self.resource_id)} rating={self.rating}>"
+        )
+
 
 class StudentDocumentRequirement(TimestampMixin, SchoolScopedMixin, Base):
     """School-scoped required document categories for student onboarding/compliance."""
@@ -206,3 +231,9 @@ class StudentDocumentRequirement(TimestampMixin, SchoolScopedMixin, Base):
         ),
         Index("idx_student_document_requirements_school", "school_id"),
     )
+
+    def __repr__(self) -> str:
+        return (
+            f"<StudentDocumentRequirement id={_short_id(self.id)} "
+            f"category={self.category} required={self.required}>"
+        )
