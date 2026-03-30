@@ -195,19 +195,19 @@
   - [x] Branch coverage ≥ 85%
   - [x] Total tests: ~1,200+
   - [x] All tests pass
-- [ ] **GIT** — Committed (Codex only)
+- [x] **GIT** — Committed (Codex only)
 
 ---
 
 ## PART 2: CI/CD & INFRASTRUCTURE (CI-01 → CI-12)
 
 ### CI-01: Pre-commit Hooks
-- [ ] **ANALYZE** — Read Makefile, ruff config, existing hooks
-- [ ] **EXECUTE**
-  - [ ] Created `.pre-commit-config.yaml` (ruff, detect-secrets, conventional commits, alembic heads, pre-commit-hooks)
-  - [ ] Generated `.secrets.baseline`
-  - [ ] Added `hooks-install` Makefile target
-- [ ] **VERIFY** — YAML valid, baseline valid, target exists
+- [x] **ANALYZE** — Read Makefile, ruff config, existing hooks
+- [x] **EXECUTE**
+  - [x] Created `.pre-commit-config.yaml` (ruff, detect-secrets, conventional commits, alembic heads, pre-commit-hooks)
+  - [x] Generated `.secrets.baseline`
+  - [x] Added `hooks-install` Makefile target
+- [x] **VERIFY** — YAML valid, baseline valid, target exists
 - [ ] **GIT** — Committed (Codex only)
 
 ---

@@ -120,6 +120,12 @@ openapi:
 openapi-check:
 	$(DC) exec backend python scripts/export_openapi.py --check
 
+hooks-install: ## Install pre-commit hooks
+	python3 -m pip install pre-commit
+	pre-commit install
+	pre-commit install --hook-type commit-msg
+	@echo "Pre-commit hooks installed"
+
 shell:
 	$(DC) exec backend bash
 
