@@ -148,14 +148,14 @@
 ---
 
 ### T-10: RBAC + ABAC Security Matrix (~120 tests)
-- [ ] **ANALYZE** — Map full endpoint × role matrix
-- [ ] **EXECUTE** — Create tests
-  - [ ] Created `test_rbac_matrix.py` (~80 tests: 7 groups × 8 roles)
-  - [ ] Created `test_abac_parent_child.py` (~15 tests)
-  - [ ] Created `test_abac_student_teacher.py` (~15 tests)
-  - [ ] Created `test_abac_teacher_class.py` (~10 tests)
-  - [ ] Created `test_permission_escalation.py` (~10 tests)
-- [ ] **VERIFY** — ~120 tests pass, no 500s
+- [x] **ANALYZE** — Map full endpoint × role matrix
+- [x] **EXECUTE** — Create tests
+  - [x] Created `test_rbac_matrix.py` (~80 tests: 7 groups × 8 roles)
+  - [x] Created `test_abac_parent_child.py` (~15 tests)
+  - [x] Created `test_abac_student_teacher.py` (~15 tests)
+  - [x] Created `test_abac_teacher_class.py` (~10 tests)
+  - [x] Created `test_permission_escalation.py` (~10 tests)
+- [x] **VERIFY** — ~120 tests pass, no 500s
 - [ ] **GIT** — Committed (Codex only)
 
 ---
