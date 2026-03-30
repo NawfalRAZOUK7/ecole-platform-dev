@@ -172,14 +172,14 @@
 ---
 
 ### T-12: Performance + Contract Tests (~50 tests)
-- [ ] **ANALYZE** — Understand benchmark targets and contract schemas
-- [ ] **EXECUTE** — Create tests
-  - [ ] Created `test_benchmarks.py` (~20 tests: permission <1ms, grade <0.1ms)
-  - [ ] Created `test_load_patterns.py` (~10 tests: concurrent ops, batch)
-  - [ ] Created `test_api_contracts.py` (~15 tests: response schemas)
-  - [ ] Created `test_migration_contracts.py` (~5 tests: upgrade/downgrade)
-- [ ] **VERIFY** — ~50 tests pass
-- [ ] **GIT** — Committed (Codex only)
+- [x] **ANALYZE** — Understand benchmark targets and contract schemas
+- [x] **EXECUTE** — Create tests
+  - [x] Created `test_benchmarks.py` (~20 tests: permission <1ms, grade <0.1ms)
+  - [x] Created `test_load_patterns.py` (~10 tests: concurrent ops, batch)
+  - [x] Created `test_api_contracts.py` (~15 tests: response schemas)
+  - [x] Created `test_migration_contracts.py` (~5 tests: upgrade/downgrade)
+- [x] **VERIFY** — ~50 tests pass
+- [x] **GIT** — Committed (Codex only)
 
 ---
 
