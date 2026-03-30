@@ -108,16 +108,16 @@
 ---
 
 ### T-07: Communication + School + Other Service Tests (~50 tests)
-- [ ] **ANALYZE** — Read communication, school, timetable, gradebook, reports services
-- [ ] **EXECUTE** — Create tests
-  - [ ] Created `test_communication_service.py` (~15 tests)
-  - [ ] Created `test_school_service.py` (~10 tests)
-  - [ ] Created `test_timetable_service.py` (~15 tests)
-  - [ ] Created `test_gradebook_service.py` (~15 tests)
-  - [ ] Created `test_report_service.py` (~10 tests)
-- [ ] **VERIFY** — ~50 tests pass
-  - [ ] Total unit tests: ~210+
-- [ ] **GIT** — Committed (Codex only)
+- [x] **ANALYZE** — Read communication, school, timetable, gradebook, reports services
+- [x] **EXECUTE** — Create tests
+  - [x] Created `test_communication_service.py` (~15 tests)
+  - [x] Created `test_school_service.py` (~10 tests)
+  - [x] Created `test_timetable_service.py` (~15 tests)
+  - [x] Created `test_gradebook_service.py` (~15 tests)
+  - [x] Created `test_report_service.py` (~10 tests)
+- [x] **VERIFY** — ~50 tests pass
+  - [x] Total unit tests: ~210+
+- [x] **GIT** — Committed (Codex only)
 
 ---
 
