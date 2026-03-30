@@ -14,6 +14,7 @@ import httpx
 import pytest
 import pytest_asyncio
 import redis.asyncio as redis
+from sqlalchemy.dialects.postgresql import ENUM as PgEnum
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from testcontainers.postgres import PostgresContainer
 
@@ -127,24 +128,27 @@ async def parent_token(client: httpx.AsyncClient) -> str:
 def postgres_url() -> str:
     """Disposable PostgreSQL URL for integration-style tests."""
     with PostgresContainer("postgres:16-alpine") as pg:
-        yield pg.get_connection_url().replace("postgresql://", "postgresql+asyncpg://", 1)
+        yield pg.get_connection_url().replace(
+            "postgresql+psycopg2://",
+            "postgresql+asyncpg://",
+            1,
+        ).replace("postgresql://", "postgresql+asyncpg://", 1)
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture(loop_scope="function")
 async def engine(postgres_url: str):
     """Async SQLAlchemy engine bound to the disposable PostgreSQL instance."""
     eng = create_async_engine(postgres_url, echo=False)
     async with eng.begin() as conn:
+        await conn.run_sync(_create_postgres_enum_types)
         await conn.run_sync(Base.metadata.create_all)
     try:
         yield eng
     finally:
-        async with eng.begin() as conn:
-            await conn.run_sync(Base.metadata.drop_all)
         await eng.dispose()
 
 
-@pytest_asyncio.fixture
+@pytest_asyncio.fixture(loop_scope="function")
 async def db_session(engine) -> AsyncSession:
     """Per-test SQLAlchemy session wrapped in a rollback-only outer transaction."""
     async with engine.connect() as conn:
@@ -219,6 +223,21 @@ def _build_auth_context(role: str) -> AuthContext:
         session_id=uuid.uuid4(),
         permissions=get_permissions_for_role(role),
     )
+
+
+def _create_postgres_enum_types(sync_conn) -> None:
+    """Create native PostgreSQL enum types required by models with create_type=False."""
+    created_names: set[str] = set()
+    for table in Base.metadata.sorted_tables:
+        for column in table.columns:
+            column_type = column.type
+            if not isinstance(column_type, PgEnum) or column_type.name in created_names:
+                continue
+            PgEnum(
+                *column_type.enums,
+                name=column_type.name,
+            ).create(sync_conn, checkfirst=True)
+            created_names.add(column_type.name)
 
 
 @pytest.fixture

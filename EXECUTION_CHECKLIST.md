@@ -137,13 +137,13 @@
 ---
 
 ### T-09: Database Repository Integration Tests (~40 tests)
-- [ ] **ANALYZE** — Read school, LMS, billing repositories
-- [ ] **EXECUTE** — Create tests
-  - [ ] Created `test_school_repo.py` (~15 tests)
-  - [ ] Created `test_lms_repo.py` (~15 tests)
-  - [ ] Created `test_billing_repo.py` (~10 tests)
-- [ ] **VERIFY** — ~40 tests pass, real SQL executed
-- [ ] **GIT** — Committed (Codex only)
+- [x] **ANALYZE** — Read school, LMS, billing repositories
+- [x] **EXECUTE** — Create tests
+  - [x] Created `test_school_repo.py` (~15 tests)
+  - [x] Created `test_lms_repo.py` (~15 tests)
+  - [x] Created `test_billing_repo.py` (~10 tests)
+- [x] **VERIFY** — ~40 tests pass, real SQL executed
+- [x] **GIT** — Committed (Codex only)
 
 ---
 
