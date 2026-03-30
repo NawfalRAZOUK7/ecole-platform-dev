@@ -4,7 +4,8 @@
        migrate-new migrate-down migrate-status test-cov lint-fix format web-install web-lint \
        openapi openapi-check worker worker-logs test-unit test-integration test-security \
        test-full test-perf rotate-jwt rotate-db rotate-redis rotate-all \
-       deploy-blue-green deploy-rollback deploy-status
+       deploy-blue-green deploy-rollback deploy-status dev-init dev-reset seed-demo \
+       docs docs-schema
 
 # ==================== Compose Files ====================
 COMPOSE_FILE = infra/docker-compose.dev.yml
@@ -100,6 +101,9 @@ migrate-validate:
 seed:
 	$(DC) exec backend python -m app.seed
 
+seed-demo:
+	$(DC) run --rm backend python -m app.scripts.seed_demo
+
 test:
 	$(DC) exec backend pytest -v --tb=short
 
@@ -126,6 +130,12 @@ hooks-install: ## Install pre-commit hooks
 	pre-commit install
 	pre-commit install --hook-type commit-msg
 	@echo "Pre-commit hooks installed"
+
+docs:
+	cd backend && .venv/bin/python scripts/export_openapi.py --redoc
+
+docs-schema:
+	cd backend && .venv/bin/pip install eralchemy2 && .venv/bin/python -c "from eralchemy2 import render_er; from app.core.database import Base; import app.models.audit, app.models.billing, app.models.calendar, app.models.com, app.models.documents, app.models.erp, app.models.iam, app.models.lms, app.models.reporting, app.models.school; render_er(Base.metadata, 'docs/schema.png')"
 
 shell:
 	$(DC) exec backend bash
@@ -214,6 +224,30 @@ deploy-status:
 	@echo "---"
 	@echo "Current upstream:"
 	@cat infra/nginx/upstream.conf
+
+# ==================== Developer Onboarding ====================
+
+dev-init:
+	@echo "=== Ecole Platform — Dev Setup ==="
+	@test -f .env || (cp .env.example .env && echo "  .env created")
+	@docker compose -f infra/docker-compose.dev.yml build
+	@docker compose -f infra/docker-compose.dev.yml up -d postgres redis
+	@echo "  Waiting for PostgreSQL..."
+	@sleep 5
+	@docker compose -f infra/docker-compose.dev.yml run --rm backend alembic upgrade head
+	@docker compose -f infra/docker-compose.dev.yml run --rm backend python -m app.scripts.seed_demo
+	@docker compose -f infra/docker-compose.dev.yml up -d
+	@echo ""
+	@echo "  API:  http://localhost:8000/docs"
+	@echo "  Web:  http://localhost:5173"
+	@echo "  Demo school: Lycée Mohammed V (code: LMV-001)"
+	@echo "  Admin login: admin@ecole-demo.ma / Demo1234!"
+	@echo "=== Setup complete ==="
+
+dev-reset:
+	@docker compose -f infra/docker-compose.dev.yml down -v --remove-orphans
+	@rm -f .env
+	@echo "Environment cleared. Run 'make dev-init' to start fresh."
 
 # ==================== Web Frontend ====================
 

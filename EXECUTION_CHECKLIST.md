@@ -336,18 +336,18 @@
   - [x] Updated nginx-prod.conf include
   - [x] Added Makefile deploy targets
 - [x] **VERIFY** — Both compose files validate, script passes shellcheck
-- [ ] **GIT** — Committed (Codex only)
+- [x] **GIT** — Committed (Codex only)
 
 ---
 
 ### CI-12: Developer Onboarding + Documentation
-- [ ] **ANALYZE** — Read Makefile, .env.example, main.py
-- [ ] **EXECUTE**
-  - [ ] Created seed_demo.py (Lycée Mohammed V, users, courses, billing)
-  - [ ] Added Makefile targets: dev-init, dev-reset, seed-demo
-  - [ ] Created docs.yml (Redoc → GitHub Pages)
-  - [ ] Added Makefile targets: docs, docs-schema
-- [ ] **VERIFY** — seed_demo importable, targets exist, YAML valid
+- [x] **ANALYZE** — Read Makefile, .env.example, main.py
+- [x] **EXECUTE**
+  - [x] Created seed_demo.py (Lycée Mohammed V, users, courses, billing)
+  - [x] Added Makefile targets: dev-init, dev-reset, seed-demo
+  - [x] Created docs.yml (Redoc → GitHub Pages)
+  - [x] Added Makefile targets: docs, docs-schema
+- [x] **VERIFY** — seed_demo importable, targets exist, YAML valid
 - [ ] **GIT** — Committed (Codex only)
 
 ---
