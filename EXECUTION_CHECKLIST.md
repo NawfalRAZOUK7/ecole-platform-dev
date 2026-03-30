@@ -258,18 +258,18 @@
   - [x] Updated DATABASE_URL to pgbouncer:6432
   - [x] Added statement_cache_size=0 to connect_args
 - [x] **VERIFY** — Compose validates, cache setting present
-- [ ] **GIT** — Committed (Codex only)
+- [x] **GIT** — Committed (Codex only)
 
 ---
 
 ### CI-06: Read Replica + DB Routing
-- [ ] **ANALYZE** — Read postgres config, init.sql, database.py, config.py
-- [ ] **EXECUTE**
-  - [ ] Added replicator role to init.sql
-  - [ ] Added postgres-replica service
-  - [ ] Created db_routing.py (get_read_db, get_write_db)
-  - [ ] Added DATABASE_REPLICA_URL to config + .env.example
-- [ ] **VERIFY** — Compose validates, routing importable, env documented
+- [x] **ANALYZE** — Read postgres config, init.sql, database.py, config.py
+- [x] **EXECUTE**
+  - [x] Added replicator role to init.sql
+  - [x] Added postgres-replica service
+  - [x] Created db_routing.py (get_read_db, get_write_db)
+  - [x] Added DATABASE_REPLICA_URL to config + .env.example
+- [x] **VERIFY** — Compose validates, routing importable, env documented
 - [ ] **GIT** — Committed (Codex only)
 
 ---

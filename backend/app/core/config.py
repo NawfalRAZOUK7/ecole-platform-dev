@@ -33,6 +33,7 @@ class Settings(BaseSettings):
 
     # Database (PostgreSQL)
     database_url: str = "postgresql+asyncpg://ecole:change-me@localhost:5432/ecole_platform"
+    database_replica_url: str | None = None
 
     # Cache (Redis)
     redis_url: str = "redis://:change-me-dev-redis@localhost:6379/0"
@@ -139,6 +140,7 @@ class Settings(BaseSettings):
     def model_post_init(self, __context: object) -> None:
         secret_overrides = {
             "database_url": _read_secret_file("DATABASE_URL"),
+            "database_replica_url": _read_secret_file("DATABASE_REPLICA_URL"),
             "redis_url": _read_secret_file("REDIS_URL"),
             "jwt_secret_key": _read_secret_file("JWT_SECRET_KEY"),
             "smtp_password": _read_secret_file("SMTP_PASSWORD"),

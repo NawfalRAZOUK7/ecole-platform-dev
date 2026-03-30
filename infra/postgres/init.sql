@@ -7,6 +7,7 @@
 
 \set app_user_password `sh -c 'if [ -n "${APP_DB_PASSWORD_FILE:-}" ] && [ -f "${APP_DB_PASSWORD_FILE}" ]; then cat "${APP_DB_PASSWORD_FILE}"; else printf "%s" "${APP_DB_PASSWORD:-change-me-app-user}"; fi'`
 \set app_readonly_password `sh -c 'if [ -n "${APP_READONLY_PASSWORD_FILE:-}" ] && [ -f "${APP_READONLY_PASSWORD_FILE}" ]; then cat "${APP_READONLY_PASSWORD_FILE}"; else printf "%s" "${APP_READONLY_PASSWORD:-change-me-readonly}"; fi'`
+\set replicator_password `sh -c 'printf "%s" "${REPLICATOR_PASSWORD:-change-me-replicator}"'`
 
 -- Create application roles with environment-specific passwords
 DO $$
@@ -16,6 +17,9 @@ BEGIN
     END IF;
     IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'app_readonly') THEN
         EXECUTE format('CREATE ROLE app_readonly WITH LOGIN PASSWORD %L', :'app_readonly_password');
+    END IF;
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'replicator') THEN
+        EXECUTE format('CREATE ROLE replicator WITH REPLICATION LOGIN PASSWORD %L', :'replicator_password');
     END IF;
 END
 $$;

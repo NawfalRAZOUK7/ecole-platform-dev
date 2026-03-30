@@ -40,6 +40,7 @@ services:
     environment:
       # Database — secret content should point at PgBouncer on pgbouncer:6432
       DATABASE_URL_FILE: /run/secrets/database_url
+      DATABASE_REPLICA_URL: ${DATABASE_REPLICA_URL:-}
       # Cache — use Docker secret or managed Redis URL secret in production
       REDIS_URL_FILE: /run/secrets/redis_url
       # Auth
@@ -132,6 +133,8 @@ services:
       - "-c"
       - "max_wal_senders=5"
       - "-c"
+      - "hot_standby=on"
+      - "-c"
       - "max_connections=200"
       - "-c"
       - "shared_buffers=256MB"
@@ -214,6 +217,50 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+  # ==================== PostgreSQL Read Replica (Production) ====================
+  postgres-replica:
+    image: postgres:16-alpine
+    container_name: ecole-prod-postgres-replica
+    environment:
+      PGUSER: replicator
+      PGPASSWORD: ${REPLICATOR_PASSWORD:-change-me-replicator}
+    volumes:
+      - prod_postgres_replica_data:/var/lib/postgresql/data
+    command:
+      - /bin/sh
+      - -c
+      - |
+          if [ ! -s /var/lib/postgresql/data/PG_VERSION ]; then
+            until pg_basebackup -h postgres -U replicator -D /var/lib/postgresql/data -Fp -Xs -R; do
+              echo "Waiting for primary..."
+              sleep 5
+            done
+          fi
+          exec postgres -c hot_standby=on
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -U replicator"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecole-prod-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "1.5"
+        reservations:
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
 
   # ==================== Redis 7 (Production) ====================
   # NOTE: In production, prefer managed Redis (AWS ElastiCache,
@@ -414,6 +461,7 @@ secrets:
 # ==================== Volumes ====================
 volumes:
   prod_postgres_data:
+  prod_postgres_replica_data:
   prod_redis_data:
   prod_wal_archive:
   backend_uploads:
