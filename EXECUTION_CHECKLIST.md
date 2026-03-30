@@ -224,18 +224,18 @@
   - [x] Added migration head conflict check
   - [x] Added [tool.bandit] to pyproject.toml
 - [x] **VERIFY** — YAML valid, correct job dependencies, TOML valid
-- [ ] **GIT** — Committed (Codex only)
+- [x] **GIT** — Committed (Codex only)
 
 ---
 
 ### CI-03: Docker Build Optimization
-- [ ] **ANALYZE** — Read backend/Dockerfile
-- [ ] **EXECUTE**
-  - [ ] Rewrote Dockerfile with BuildKit syntax
-  - [ ] Added cache mounts for pip
-  - [ ] Added test stage (ruff lint+format check)
-  - [ ] Production: non-root user, 4 workers, healthcheck
-- [ ] **VERIFY** — All stages defined, syntax valid
+- [x] **ANALYZE** — Read backend/Dockerfile
+- [x] **EXECUTE**
+  - [x] Rewrote Dockerfile with BuildKit syntax
+  - [x] Added cache mounts for pip
+  - [x] Added test stage (ruff lint+format check)
+  - [x] Production: non-root user, 4 workers, healthcheck
+- [x] **VERIFY** — All stages defined, syntax valid
 - [ ] **GIT** — Committed (Codex only)
 
 ---
