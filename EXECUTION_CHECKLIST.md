@@ -270,18 +270,18 @@
   - [x] Created db_routing.py (get_read_db, get_write_db)
   - [x] Added DATABASE_REPLICA_URL to config + .env.example
 - [x] **VERIFY** — Compose validates, routing importable, env documented
-- [ ] **GIT** — Committed (Codex only)
+- [x] **GIT** — Committed (Codex only)
 
 ---
 
 ### CI-07: Automated Backups + S3
-- [ ] **ANALYZE** — Read existing backup scripts
-- [ ] **EXECUTE**
-  - [ ] Created backup-s3.sh (pg_dump + gzip + S3 upload)
-  - [ ] Created restore-drill.sh (download + restore + validate)
-  - [ ] Made scripts executable
-  - [ ] Added Makefile targets + .env.example + DEPLOYMENT.md cron docs
-- [ ] **VERIFY** — shellcheck passes, scripts executable, S3_BUCKET documented
+- [x] **ANALYZE** — Read existing backup scripts
+- [x] **EXECUTE**
+  - [x] Created backup-s3.sh (pg_dump + gzip + S3 upload)
+  - [x] Created restore-drill.sh (download + restore + validate)
+  - [x] Made scripts executable
+  - [x] Added Makefile targets + .env.example + DEPLOYMENT.md cron docs
+- [x] **VERIFY** — shellcheck passes, scripts executable, S3_BUCKET documented
 - [ ] **GIT** — Committed (Codex only)
 
 ---

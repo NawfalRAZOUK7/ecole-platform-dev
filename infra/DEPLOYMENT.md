@@ -287,14 +287,27 @@ Current production limits (adjustable in `docker-compose.prod.yml`):
 
 ### Database backup
 
-Daily backups run automatically via `infra/backup/pg_backup.sh`. See the backup scripts documentation for details.
+Daily backups run automatically via `infra/scripts/backup-s3.sh`, with weekly restore validation via `infra/scripts/restore-drill.sh`. The legacy local scripts in `infra/backup/` remain available for manual recovery workflows.
 
 ```bash
-# Manual backup
-./infra/backup/pg_backup.sh
+# Manual S3 backup
+S3_BUCKET=your-ops-bucket ./infra/scripts/backup-s3.sh
 
-# Restore drill (monthly validation)
-./infra/backup/restore_drill.sh
+# Weekly restore drill validation
+S3_BUCKET=your-ops-bucket ./infra/scripts/restore-drill.sh
+
+# Backup inventory
+S3_BUCKET=your-ops-bucket make backup-status
+```
+
+Production cron schedule (server timezone should be `Africa/Casablanca`):
+
+```cron
+# Daily backup at 02:00
+0 2 * * * /opt/ecole/infra/scripts/backup-s3.sh >> /var/log/ecole-backup.log 2>&1
+
+# Weekly restore drill on Sunday at 04:00
+0 4 * * 0 /opt/ecole/infra/scripts/restore-drill.sh >> /var/log/ecole-restore-drill.log 2>&1
 ```
 
 ### Log access
@@ -453,7 +466,7 @@ Internet
 - [ ] CORS_ORIGINS set to actual domain
 - [ ] SMTP configured for email delivery
 - [ ] Firewall allows only ports 80, 443, 22
-- [ ] Backups configured (`pg_backup.sh` in cron)
+- [ ] Backups configured (`backup-s3.sh` + `restore-drill.sh` in cron)
 - [ ] Health monitoring configured (`healthcheck.sh` in cron)
 - [ ] SSL auto-renewal configured (`ssl-renew.sh` in cron)
 - [ ] Log rotation configured (Docker JSON driver, max 10MB × 5 files)

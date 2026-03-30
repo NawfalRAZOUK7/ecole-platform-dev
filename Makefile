@@ -1,6 +1,6 @@
 .PHONY: up down restart logs migrate seed test lint shell build clean status health \
        staging-up staging-down prod-up prod-down monitoring-up monitoring-down \
-       shell-db redis-cli backup restore docker-prune version \
+       shell-db redis-cli backup restore backup-status docker-prune version \
        migrate-new migrate-down migrate-status test-cov lint-fix format web-install web-lint \
        openapi openapi-check worker worker-logs test-unit test-integration test-security \
        test-full test-perf
@@ -156,8 +156,8 @@ redis-cli-staging:
 # ==================== Backup & Restore ====================
 
 backup:
-	@echo "Running PostgreSQL backup..."
-	bash infra/backup/pg_backup.sh
+	@echo "Running PostgreSQL backup to S3..."
+	bash infra/scripts/backup-s3.sh
 
 restore:
 	@echo "Running PostgreSQL restore..."
@@ -165,8 +165,15 @@ restore:
 	bash infra/backup/pg_restore.sh $${BACKUP_FILE}
 
 restore-drill:
-	@echo "Running restore drill..."
-	bash infra/backup/restore_drill.sh
+	@echo "Running S3 restore drill..."
+	bash infra/scripts/restore-drill.sh
+
+backup-status:
+	@echo "Latest local backups:"
+	@find $${BACKUP_DIR:-/var/backups/ecole/postgresql} -maxdepth 1 -name '*.sql.gz' -print 2>/dev/null | sort | tail -5 || true
+	@echo "---"
+	@echo "Latest S3 backups:"
+	@bash -lc 'aws s3 ls "s3://$${S3_BUCKET:?S3_BUCKET required}/$${S3_BACKUP_PREFIX:-backups}/" | tail -5'
 
 audit-export:
 	@echo "Running audit WORM export..."
