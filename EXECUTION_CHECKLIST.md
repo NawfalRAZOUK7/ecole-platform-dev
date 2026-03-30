@@ -247,17 +247,17 @@
   - [x] Added SBOM generation
   - [x] Created cleanup-images.yml (weekly)
 - [x] **VERIFY** — YAML valid, correct gating on main push
-- [ ] **GIT** — Committed (Codex only)
+- [x] **GIT** — Committed (Codex only)
 
 ---
 
 ### CI-05: PgBouncer Connection Pooling
-- [ ] **ANALYZE** — Read docker-compose.prod.yml, database.py
-- [ ] **EXECUTE**
-  - [ ] Added pgbouncer service to prod + staging compose
-  - [ ] Updated DATABASE_URL to pgbouncer:6432
-  - [ ] Added statement_cache_size=0 to connect_args
-- [ ] **VERIFY** — Compose validates, cache setting present
+- [x] **ANALYZE** — Read docker-compose.prod.yml, database.py
+- [x] **EXECUTE**
+  - [x] Added pgbouncer service to prod + staging compose
+  - [x] Updated DATABASE_URL to pgbouncer:6432
+  - [x] Added statement_cache_size=0 to connect_args
+- [x] **VERIFY** — Compose validates, cache setting present
 - [ ] **GIT** — Committed (Codex only)
 
 ---

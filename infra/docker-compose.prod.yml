@@ -11,7 +11,7 @@
 #        openssl rand -base64 24 > infra/secrets/db_password.txt
 #        openssl rand -base64 24 > infra/secrets/app_db_password.txt
 #        openssl rand -base64 24 > infra/secrets/app_readonly_password.txt
-#        printf '%s' 'postgresql+asyncpg://ecole:<db-password>@postgres:5432/ecole_platform' > infra/secrets/database_url.txt
+#        printf '%s' 'postgresql+asyncpg://ecole:<db-password>@pgbouncer:6432/ecole_platform' > infra/secrets/database_url.txt
 #        openssl rand -base64 24 > infra/secrets/redis_password.txt
 #        printf '%s' 'redis://:<redis-password>@redis:6379/0' > infra/secrets/redis_url.txt
 #        printf '%s' 'your-smtp-password' > infra/secrets/smtp_password.txt
@@ -38,7 +38,7 @@ services:
       target: production
     # Note: no container_name to allow scaling with --scale backend=N
     environment:
-      # Database — use Docker secret or managed PostgreSQL URL secret in production
+      # Database — secret content should point at PgBouncer on pgbouncer:6432
       DATABASE_URL_FILE: /run/secrets/database_url
       # Cache — use Docker secret or managed Redis URL secret in production
       REDIS_URL_FILE: /run/secrets/redis_url
@@ -78,7 +78,7 @@ services:
       - jwt_secret_key
       - smtp_password
     depends_on:
-      postgres:
+      pgbouncer:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -171,6 +171,49 @@ services:
       options:
         max-size: "10m"
         max-file: "5"
+
+  # ==================== PgBouncer (Production) ====================
+  pgbouncer:
+    image: edoburu/pgbouncer:1.22.0
+    container_name: ecole-prod-pgbouncer
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-ecole}:${PGBOUNCER_DB_PASSWORD:-ecole}@postgres:5432/${POSTGRES_DB:-ecole_platform}
+      POOL_MODE: transaction
+      DEFAULT_POOL_SIZE: 50
+      MAX_CLIENT_CONN: 200
+      MAX_DB_CONNECTIONS: 50
+      RESERVE_POOL_SIZE: 5
+      RESERVE_POOL_TIMEOUT: 3
+      SERVER_IDLE_TIMEOUT: 300
+      SERVER_LIFETIME: 3600
+      LOG_CONNECTIONS: 0
+      LOG_DISCONNECTIONS: 0
+      STATS_PERIOD: 60
+    ports:
+      - "6432:6432"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "localhost", "-p", "6432"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - ecole-prod-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.5"
+        reservations:
+          memory: 64M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # ==================== Redis 7 (Production) ====================
   # NOTE: In production, prefer managed Redis (AWS ElastiCache,

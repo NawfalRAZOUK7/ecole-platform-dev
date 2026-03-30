@@ -50,6 +50,37 @@ services:
       - ecole-staging-network
     restart: unless-stopped
 
+  # ==================== PgBouncer (Stage) ====================
+  pgbouncer:
+    image: edoburu/pgbouncer:1.22.0
+    container_name: ecole-staging-pgbouncer
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-ecole_platform_staging}
+      POOL_MODE: transaction
+      DEFAULT_POOL_SIZE: 50
+      MAX_CLIENT_CONN: 200
+      MAX_DB_CONNECTIONS: 50
+      RESERVE_POOL_SIZE: 5
+      RESERVE_POOL_TIMEOUT: 3
+      SERVER_IDLE_TIMEOUT: 300
+      SERVER_LIFETIME: 3600
+      LOG_CONNECTIONS: 0
+      LOG_DISCONNECTIONS: 0
+      STATS_PERIOD: 60
+    ports:
+      - "6432:6432"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "localhost", "-p", "6432"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - ecole-staging-network
+    restart: unless-stopped
+
   # ==================== Redis 7 (Stage) ====================
   redis:
     image: redis:7-alpine
@@ -77,7 +108,7 @@ services:
       target: production
     container_name: ecole-staging-backend
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-ecole_platform_staging}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB:-ecole_platform_staging}
       REDIS_URL: redis://redis:6379/0
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
@@ -91,7 +122,7 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      postgres:
+      pgbouncer:
         condition: service_healthy
       redis:
         condition: service_healthy
