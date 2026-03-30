@@ -322,20 +322,20 @@
   - [x] Created dependabot-automerge.yml
   - [x] Added Makefile rotate targets
 - [x] **VERIFY** — shellcheck OK, YAML valid, nginx rules present
-- [ ] **GIT** — Committed (Codex only)
+- [x] **GIT** — Committed (Codex only)
 
 ---
 
 ### CI-11: Blue-Green Deployment
-- [ ] **ANALYZE** — Read prod compose, nginx, deploy scripts
-- [ ] **EXECUTE**
-  - [ ] Created docker-compose.blue.yml
-  - [ ] Created docker-compose.green.yml
-  - [ ] Created blue-green-deploy.sh
-  - [ ] Created upstream.conf
-  - [ ] Updated nginx-prod.conf include
-  - [ ] Added Makefile deploy targets
-- [ ] **VERIFY** — Both compose files validate, script passes shellcheck
+- [x] **ANALYZE** — Read prod compose, nginx, deploy scripts
+- [x] **EXECUTE**
+  - [x] Created docker-compose.blue.yml
+  - [x] Created docker-compose.green.yml
+  - [x] Created blue-green-deploy.sh
+  - [x] Created upstream.conf
+  - [x] Updated nginx-prod.conf include
+  - [x] Added Makefile deploy targets
+- [x] **VERIFY** — Both compose files validate, script passes shellcheck
 - [ ] **GIT** — Committed (Codex only)
 
 ---

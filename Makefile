@@ -3,7 +3,8 @@
        shell-db redis-cli backup restore backup-status docker-prune version \
        migrate-new migrate-down migrate-status test-cov lint-fix format web-install web-lint \
        openapi openapi-check worker worker-logs test-unit test-integration test-security \
-       test-full test-perf rotate-jwt rotate-db rotate-redis rotate-all
+       test-full test-perf rotate-jwt rotate-db rotate-redis rotate-all \
+       deploy-blue-green deploy-rollback deploy-status
 
 # ==================== Compose Files ====================
 COMPOSE_FILE = infra/docker-compose.dev.yml
@@ -196,6 +197,23 @@ rotate-redis:
 rotate-all:
 	@echo "Rotating all application secrets..."
 	bash infra/scripts/rotate-secrets.sh all
+
+# ==================== Blue-Green Deployment ====================
+
+deploy-blue-green:
+	@test -n "$${IMAGE_TAG}" || (echo "Usage: make deploy-blue-green IMAGE_TAG=<sha-or-tag>" && exit 1)
+	bash infra/scripts/blue-green-deploy.sh "$${IMAGE_TAG}"
+
+deploy-rollback:
+	@echo "Rolling back via blue-green deploy using IMAGE_TAG=$${IMAGE_TAG:-previous}"
+	bash infra/scripts/blue-green-deploy.sh "$${IMAGE_TAG:-previous}"
+
+deploy-status:
+	@echo "Active environment:"
+	@cat infra/active-env 2>/dev/null || echo "blue"
+	@echo "---"
+	@echo "Current upstream:"
+	@cat infra/nginx/upstream.conf
 
 # ==================== Web Frontend ====================
 

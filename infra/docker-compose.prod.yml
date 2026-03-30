@@ -333,6 +333,7 @@ services:
     container_name: ecole-prod-nginx
     volumes:
       - ./nginx/nginx-prod.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/upstream.conf:/etc/nginx/conf.d/upstream.conf
       - ./certs:/etc/nginx/ssl:ro
       - certbot_webroot:/var/www/certbot:ro
     ports:

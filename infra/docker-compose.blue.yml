@@ -1,0 +1,84 @@
+services:
+  backend-blue:
+    image: ${BACKEND_IMAGE:-ghcr.io/ecole-platform/backend}:${IMAGE_TAG:-latest}
+    container_name: ecole-backend-blue
+    environment:
+      DATABASE_URL_FILE: /run/secrets/database_url
+      DATABASE_REPLICA_URL: ${DATABASE_REPLICA_URL:-}
+      REDIS_URL_FILE: /run/secrets/redis_url
+      JWT_SECRET_KEY_FILE: /run/secrets/jwt_secret_key
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-15}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
+      APP_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL:-WARNING}
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://ecole-platform.example}
+      ENABLE_TRACING: ${ENABLE_TRACING:-true}
+      ENABLE_STRICT_RATE_LIMIT: ${ENABLE_STRICT_RATE_LIMIT:-true}
+      SMTP_HOST: ${SMTP_HOST:-smtp.example.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-noreply@example.com}
+      SMTP_PASSWORD_FILE: /run/secrets/smtp_password
+      S3_ENDPOINT: ${S3_ENDPOINT:-https://storage.example.com}
+      S3_BUCKET: ${S3_BUCKET:-ecole-uploads}
+      S3_REGION: ${S3_REGION:-eu-west-1}
+      TZ: ${TZ:-Africa/Casablanca}
+    secrets:
+      - database_url
+      - redis_url
+      - jwt_secret_key
+      - smtp_password
+    ports:
+      - "8001:8000"
+    networks:
+      - ecole-prod-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; r = httpx.get('http://localhost:8000/api/v1/health'); r.raise_for_status()"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+
+  worker-blue:
+    image: ${WORKER_IMAGE:-ghcr.io/ecole-platform/backend}:${IMAGE_TAG:-latest}
+    container_name: ecole-worker-blue
+    command: ["python", "-m", "arq", "app.worker.WorkerSettings"]
+    environment:
+      DATABASE_URL_FILE: /run/secrets/database_url
+      REDIS_URL_FILE: /run/secrets/redis_url
+      JWT_SECRET_KEY_FILE: /run/secrets/jwt_secret_key
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      APP_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL:-WARNING}
+      SMTP_HOST: ${SMTP_HOST:-smtp.example.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-noreply@example.com}
+      SMTP_PASSWORD_FILE: /run/secrets/smtp_password
+      S3_ENDPOINT: ${S3_ENDPOINT:-https://storage.example.com}
+      S3_BUCKET: ${S3_BUCKET:-ecole-uploads}
+      S3_REGION: ${S3_REGION:-eu-west-1}
+      TZ: ${TZ:-Africa/Casablanca}
+    secrets:
+      - database_url
+      - redis_url
+      - jwt_secret_key
+      - smtp_password
+    networks:
+      - ecole-prod-network
+    restart: unless-stopped
+
+secrets:
+  jwt_secret_key:
+    file: ./secrets/jwt_secret_key.txt
+  database_url:
+    file: ./secrets/database_url.txt
+  redis_url:
+    file: ./secrets/redis_url.txt
+  smtp_password:
+    file: ./secrets/smtp_password.txt
+
+networks:
+  ecole-prod-network:
+    external: true
+    name: infra_ecole-prod-network
