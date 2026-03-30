@@ -282,20 +282,20 @@
   - [x] Made scripts executable
   - [x] Added Makefile targets + .env.example + DEPLOYMENT.md cron docs
 - [x] **VERIFY** — shellcheck passes, scripts executable, S3_BUCKET documented
-- [ ] **GIT** — Committed (Codex only)
+- [x] **GIT** — Committed (Codex only)
 
 ---
 
 ### CI-08: OpenTelemetry APM
-- [ ] **ANALYZE** — Read requirements, config, main.py, monitoring compose
-- [ ] **EXECUTE**
-  - [ ] Added OTel packages to requirements.txt
-  - [ ] Created telemetry.py (setup_telemetry)
-  - [ ] Added ENABLE_TRACING + OTEL_EXPORTER_ENDPOINT to config
-  - [ ] Integrated in main.py (guarded)
-  - [ ] Created tempo.yml + added Tempo service
-  - [ ] Added Tempo datasource to Grafana
-- [ ] **VERIFY** — pip install OK, telemetry importable, compose validates
+- [x] **ANALYZE** — Read requirements, config, main.py, monitoring compose
+- [x] **EXECUTE**
+  - [x] Added OTel packages to requirements.txt
+  - [x] Created telemetry.py (setup_telemetry)
+  - [x] Added ENABLE_TRACING + OTEL_EXPORTER_ENDPOINT to config
+  - [x] Integrated in main.py (guarded)
+  - [x] Created tempo.yml + added Tempo service
+  - [x] Added Tempo datasource to Grafana
+- [x] **VERIFY** — pip install OK, telemetry importable, compose validates
 - [ ] **GIT** — Committed (Codex only)
 
 ---

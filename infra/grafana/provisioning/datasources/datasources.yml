@@ -11,6 +11,7 @@ datasources:
     url: http://prometheus:9090
     isDefault: true
     editable: false
+    uid: prometheus
     jsonData:
       timeInterval: "15s"
       httpMethod: POST
@@ -20,8 +21,25 @@ datasources:
     access: proxy
     url: http://loki:3100
     editable: false
+    uid: loki
     jsonData:
       maxLines: 1000
+
+  - name: Tempo
+    type: tempo
+    access: proxy
+    url: http://tempo:3200
+    editable: false
+    uid: tempo
+    jsonData:
+      tracesToLogs:
+        datasourceUid: loki
+        tags:
+          - service.name
+      serviceMap:
+        datasourceUid: prometheus
+      nodeGraph:
+        enabled: true
 
   - name: Alertmanager
     type: alertmanager

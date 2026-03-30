@@ -129,6 +129,8 @@ class Settings(BaseSettings):
     calendar_ical_ttl_days: int = 30
     calendar_reminder_horizon_days: int = 90
     calendar_reminder_default_offsets: str = "1440,60"
+    enable_tracing: bool = False
+    otel_exporter_endpoint: str = "http://tempo:4317"
 
     # CORS
     cors_origins: str = "http://localhost:5173,http://localhost:3000"

@@ -22,8 +22,21 @@ services:
       - "--web.enable-admin-api"
     ports:
       - "9090:9090"
-    depends_on:
-      - backend
+    networks:
+      - ecole-network
+    restart: unless-stopped
+
+  # ==================== Tempo (Tracing) ====================
+  tempo:
+    image: grafana/tempo:2.4.0
+    container_name: ecole-tempo
+    command: ["-config.file=/etc/tempo/tempo.yml"]
+    volumes:
+      - ./tempo/tempo.yml:/etc/tempo/tempo.yml:ro
+      - tempo_data:/var/tempo
+    ports:
+      - "4317:4317"
+      - "3200:3200"
     networks:
       - ecole-network
     restart: unless-stopped
@@ -47,6 +60,7 @@ services:
     depends_on:
       - prometheus
       - loki
+      - tempo
     networks:
       - ecole-network
     restart: unless-stopped
@@ -98,6 +112,7 @@ volumes:
   prometheus_data:
   grafana_data:
   loki_data:
+  tempo_data:
 
 networks:
   ecole-network:

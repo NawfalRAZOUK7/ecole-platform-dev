@@ -14,11 +14,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.router import router as v1_router
 from app.core.config import settings
+from app.core.database import engine
 from app.core.idempotency import IdempotencyMiddleware
 from app.core.metrics import register_metrics
 from app.core.middleware import register_middleware
 from app.core.rate_limit import RateLimitMiddleware
 from app.core.tasks import close_arq_pool
+from app.core.telemetry import setup_telemetry
 from app.core.ws_manager import ws_manager
 
 # ---------------------------------------------------------------------------
@@ -156,6 +158,9 @@ app = FastAPI(
     redoc_url="/redoc",
     openapi_tags=OPENAPI_TAGS,
 )
+
+if settings.enable_tracing:
+    setup_telemetry(app, engine)
 
 # Register Prometheus metrics middleware and /metrics endpoint (S-128, F2)
 register_metrics(app)
