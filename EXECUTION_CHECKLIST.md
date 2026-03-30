@@ -95,15 +95,15 @@
 ---
 
 ### T-06: Billing + Auth + Attendance Service Tests (~60 tests)
-- [ ] **ANALYZE** — Read billing, payment_plan, attendance_analytics, auth services
-  - [ ] Listed methods and edge cases
-- [ ] **EXECUTE** — Create tests
-  - [ ] Created `test_billing_service.py` (~25 tests: invoices, sibling discounts, late fees)
-  - [ ] Created `test_auth_service.py` (~20 tests: login, impersonation, tokens)
-  - [ ] Created `test_attendance_service.py` (~15 tests: thresholds, rates, trends)
-- [ ] **VERIFY** — ~60 tests pass, no DB connections
-  - [ ] Total unit tests so far: ~165+
-- [ ] **GIT** — Committed (Codex only)
+- [x] **ANALYZE** — Read billing, payment_plan, attendance_analytics, auth services
+  - [x] Listed methods and edge cases
+- [x] **EXECUTE** — Create tests
+  - [x] Created `test_billing_service.py` (~25 tests: invoices, sibling discounts, late fees)
+  - [x] Created `test_auth_service.py` (~20 tests: login, impersonation, tokens)
+  - [x] Created `test_attendance_service.py` (~15 tests: thresholds, rates, trends)
+- [x] **VERIFY** — ~60 tests pass, no DB connections
+  - [x] Total unit tests so far: ~165+
+- [x] **GIT** — Committed (Codex only)
 
 ---
 
