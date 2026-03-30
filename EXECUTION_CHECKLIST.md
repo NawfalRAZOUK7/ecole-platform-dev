@@ -236,17 +236,17 @@
   - [x] Added test stage (ruff lint+format check)
   - [x] Production: non-root user, 4 workers, healthcheck
 - [x] **VERIFY** — All stages defined, syntax valid
-- [ ] **GIT** — Committed (Codex only)
+- [x] **GIT** — Committed (Codex only)
 
 ---
 
 ### CI-04: Container Registry + Versioned Tags
-- [ ] **ANALYZE** — Read ci.yml for publish placement
-- [ ] **EXECUTE**
-  - [ ] Added publish-images job (ghcr.io, SHA tags)
-  - [ ] Added SBOM generation
-  - [ ] Created cleanup-images.yml (weekly)
-- [ ] **VERIFY** — YAML valid, correct gating on main push
+- [x] **ANALYZE** — Read ci.yml for publish placement
+- [x] **EXECUTE**
+  - [x] Added publish-images job (ghcr.io, SHA tags)
+  - [x] Added SBOM generation
+  - [x] Created cleanup-images.yml (weekly)
+- [x] **VERIFY** — YAML valid, correct gating on main push
 - [ ] **GIT** — Committed (Codex only)
 
 ---
