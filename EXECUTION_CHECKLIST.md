@@ -156,17 +156,17 @@
   - [x] Created `test_abac_teacher_class.py` (~10 tests)
   - [x] Created `test_permission_escalation.py` (~10 tests)
 - [x] **VERIFY** — ~120 tests pass, no 500s
-- [ ] **GIT** — Committed (Codex only)
+- [x] **GIT** — Committed (Codex only)
 
 ---
 
 ### T-11: Edge Case + Boundary + Time Tests (~80 tests)
-- [ ] **ANALYZE** — Review all validators/services for untested edge cases
-- [ ] **EXECUTE** — Create tests
-  - [ ] Created `test_boundary_values.py` (~30 tests: numeric, string, Unicode, pagination)
-  - [ ] Created `test_time_dependent.py` (~25 tests: freezegun, timezone, DST)
-  - [ ] Created `test_error_paths.py` (~25 tests: not found, duplicates, state transitions)
-- [ ] **VERIFY** — ~80 tests pass
+- [x] **ANALYZE** — Review all validators/services for untested edge cases
+- [x] **EXECUTE** — Create tests
+  - [x] Created `test_boundary_values.py` (~30 tests: numeric, string, Unicode, pagination)
+  - [x] Created `test_time_dependent.py` (~25 tests: freezegun, timezone, DST)
+  - [x] Created `test_error_paths.py` (~25 tests: not found, duplicates, state transitions)
+- [x] **VERIFY** — ~80 tests pass
 - [ ] **GIT** — Committed (Codex only)
 
 ---
