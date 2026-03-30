@@ -3,7 +3,7 @@
        shell-db redis-cli backup restore backup-status docker-prune version \
        migrate-new migrate-down migrate-status test-cov lint-fix format web-install web-lint \
        openapi openapi-check worker worker-logs test-unit test-integration test-security \
-       test-full test-perf
+       test-full test-perf rotate-jwt rotate-db rotate-redis rotate-all
 
 # ==================== Compose Files ====================
 COMPOSE_FILE = infra/docker-compose.dev.yml
@@ -178,6 +178,24 @@ backup-status:
 audit-export:
 	@echo "Running audit WORM export..."
 	bash infra/backup/audit_worm_export.sh
+
+# ==================== Secret Rotation ====================
+
+rotate-jwt:
+	@echo "Rotating JWT secret..."
+	bash infra/scripts/rotate-secrets.sh jwt
+
+rotate-db:
+	@echo "Rotating database password..."
+	bash infra/scripts/rotate-secrets.sh db
+
+rotate-redis:
+	@echo "Rotating Redis password..."
+	bash infra/scripts/rotate-secrets.sh redis
+
+rotate-all:
+	@echo "Rotating all application secrets..."
+	bash infra/scripts/rotate-secrets.sh all
 
 # ==================== Web Frontend ====================
 

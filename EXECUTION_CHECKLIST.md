@@ -309,19 +309,19 @@
   - [x] Added Loki ruler config
   - [x] Created ecole-alerts.yml (5 alert rules)
 - [x] **VERIFY** — Metrics importable, JSON valid, YAML valid
-- [ ] **GIT** — Committed (Codex only)
+- [x] **GIT** — Committed (Codex only)
 
 ---
 
 ### CI-10: Security Hardening
-- [ ] **ANALYZE** — Read nginx-prod.conf, scripts, .github/
-- [ ] **EXECUTE**
-  - [ ] Created rotate-secrets.sh (jwt, db, redis, all)
-  - [ ] Updated nginx with WAF rules + per-user rate limiting
-  - [ ] Created dependabot.yml (4 ecosystems)
-  - [ ] Created dependabot-automerge.yml
-  - [ ] Added Makefile rotate targets
-- [ ] **VERIFY** — shellcheck OK, YAML valid, nginx rules present
+- [x] **ANALYZE** — Read nginx-prod.conf, scripts, .github/
+- [x] **EXECUTE**
+  - [x] Created rotate-secrets.sh (jwt, db, redis, all)
+  - [x] Updated nginx with WAF rules + per-user rate limiting
+  - [x] Created dependabot.yml (4 ecosystems)
+  - [x] Created dependabot-automerge.yml
+  - [x] Added Makefile rotate targets
+- [x] **VERIFY** — shellcheck OK, YAML valid, nginx rules present
 - [ ] **GIT** — Committed (Codex only)
 
 ---
