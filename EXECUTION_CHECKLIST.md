@@ -208,22 +208,22 @@
   - [x] Generated `.secrets.baseline`
   - [x] Added `hooks-install` Makefile target
 - [x] **VERIFY** — YAML valid, baseline valid, target exists
-- [ ] **GIT** — Committed (Codex only)
+- [x] **GIT** — Committed (Codex only)
 
 ---
 
 ### CI-02: CI Pipeline Hardening
-- [ ] **ANALYZE** — Read ci.yml, understand current 10-stage pipeline
-- [ ] **EXECUTE**
-  - [ ] Added matrix strategy (Python 3.12/3.13 × PostgreSQL 15/16/17)
-  - [ ] Added pip/npm dependency caching
-  - [ ] Added Trivy container scanning job
-  - [ ] Added pip-audit job
-  - [ ] Added Bandit static analysis job
-  - [ ] Added migration safety job (forward/downgrade/re-forward)
-  - [ ] Added migration head conflict check
-  - [ ] Added [tool.bandit] to pyproject.toml
-- [ ] **VERIFY** — YAML valid, correct job dependencies, TOML valid
+- [x] **ANALYZE** — Read ci.yml, understand current 10-stage pipeline
+- [x] **EXECUTE**
+  - [x] Added matrix strategy (Python 3.12/3.13 × PostgreSQL 15/16/17)
+  - [x] Added pip/npm dependency caching
+  - [x] Added Trivy container scanning job
+  - [x] Added pip-audit job
+  - [x] Added Bandit static analysis job
+  - [x] Added migration safety job (forward/downgrade/re-forward)
+  - [x] Added migration head conflict check
+  - [x] Added [tool.bandit] to pyproject.toml
+- [x] **VERIFY** — YAML valid, correct job dependencies, TOML valid
 - [ ] **GIT** — Committed (Codex only)
 
 ---

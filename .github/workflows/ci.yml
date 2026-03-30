@@ -1,10 +1,7 @@
 # CI Pipeline — École Platform
 #
 # Reference: S-125 — CI pipeline, EP-08 Testing & Quality
-# Stages: lint → unit → integration → contract → security
-# Coverage enforcement:
-# - Unit core utilities: ≥95%
-# - Aggregated backend coverage: reported after backend test jobs finish
+# Stages: lint → security → unit → integration → contract → security-runtime → coverage
 
 name: CI Pipeline
 
@@ -19,9 +16,6 @@ env:
   NODE_VERSION: "20"
 
 jobs:
-  # ──────────────────────────────────────────────────────────
-  # Stage 1: Lint
-  # ──────────────────────────────────────────────────────────
   lint:
     name: Lint
     runs-on: ubuntu-latest
@@ -33,10 +27,28 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('backend/requirements*.txt') }}
+          restore-keys: |
+            pip-${{ env.PYTHON_VERSION }}-
+
       - name: Install dependencies
         run: |
           cd backend
           pip install -r requirements-dev.txt
+
+      - name: Check migration branch conflicts
+        run: |
+          cd backend
+          heads=$(alembic heads | wc -l)
+          if [ "$heads" -gt 1 ]; then
+            echo "ERROR: Multiple migration heads detected — merge required"
+            alembic heads
+            exit 1
+          fi
 
       - name: Ruff check (lint)
         run: |
@@ -53,13 +65,175 @@ jobs:
           cd backend
           python scripts/export_openapi.py --check
 
-  # ──────────────────────────────────────────────────────────
-  # Stage 2: Unit Tests (no DB/Redis needed)
-  # ──────────────────────────────────────────────────────────
-  unit-tests:
-    name: Unit Tests
+  security-trivy:
+    name: Security - Trivy
     runs-on: ubuntu-latest
-    needs: lint
+    needs: [lint]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build backend image
+        run: docker build -t ecole-backend:ci ./backend
+
+      - name: Scan backend image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ecole-backend:ci
+          format: table
+          exit-code: "1"
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+
+  security-pip-audit:
+    name: Security - pip-audit
+    runs-on: ubuntu-latest
+    needs: [lint]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('backend/requirements*.txt') }}
+          restore-keys: |
+            pip-${{ env.PYTHON_VERSION }}-
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Audit backend dependencies
+        run: pip-audit -r backend/requirements.txt --strict
+
+  security-bandit:
+    name: Security - Bandit
+    runs-on: ubuntu-latest
+    needs: [lint]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('backend/requirements*.txt') }}
+          restore-keys: |
+            pip-${{ env.PYTHON_VERSION }}-
+
+      - name: Install Bandit
+        run: pip install "bandit[toml]"
+
+      - name: Run Bandit
+        run: bandit -r backend/app/ -c backend/pyproject.toml -f json -o bandit-report.json
+
+      - name: Upload Bandit report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bandit-report
+          path: bandit-report.json
+
+  migration-safety:
+    name: Migration Safety
+    runs-on: ubuntu-latest
+    needs: [lint]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: ecole_migration_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test -d ecole_migration_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/ecole_migration_test
+      REDIS_URL: redis://localhost:6379/0
+      JWT_SECRET_KEY: test-secret-key-ci-only
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+      REFRESH_TOKEN_EXPIRE_DAYS: "7"
+      APP_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect Alembic changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            alembic:
+              - 'backend/alembic/**'
+
+      - name: Skip when no Alembic files changed
+        if: steps.changes.outputs.alembic != 'true'
+        run: echo "No Alembic changes detected; skipping migration safety checks."
+
+      - name: Set up Python
+        if: steps.changes.outputs.alembic == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip
+        if: steps.changes.outputs.alembic == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('backend/requirements*.txt') }}
+          restore-keys: |
+            pip-${{ env.PYTHON_VERSION }}-
+
+      - name: Install dependencies
+        if: steps.changes.outputs.alembic == 'true'
+        run: |
+          cd backend
+          pip install -r requirements.txt
+
+      - name: Forward migration
+        if: steps.changes.outputs.alembic == 'true'
+        run: |
+          cd backend
+          alembic upgrade head
+
+      - name: Verify downgrade reversibility
+        if: steps.changes.outputs.alembic == 'true'
+        run: |
+          cd backend
+          alembic downgrade base
+
+      - name: Re-apply to confirm idempotency
+        if: steps.changes.outputs.alembic == 'true'
+        run: |
+          cd backend
+          alembic upgrade head
+
+  unit-tests:
+    name: Unit Tests (Py ${{ matrix.python-version }}, PG ${{ matrix.postgres-version }})
+    runs-on: ubuntu-latest
+    needs: [lint]
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+        postgres-version: ["15", "16", "17"]
     env:
       JWT_SECRET_KEY: test-secret-key-ci-only
       JWT_ALGORITHM: HS256
@@ -74,7 +248,15 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ matrix.python-version }}-${{ hashFiles('backend/requirements*.txt') }}
+          restore-keys: |
+            pip-${{ matrix.python-version }}-
 
       - name: Install dependencies
         run: |
@@ -95,28 +277,30 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: coverage-unit
+          name: coverage-unit-${{ matrix.python-version }}-pg${{ matrix.postgres-version }}
           path: backend/coverage-unit.xml
 
       - name: Upload unit coverage data
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: coverage-data-unit
+          name: coverage-data-unit-${{ matrix.python-version }}-pg${{ matrix.postgres-version }}
           path: backend/.coverage*
           include-hidden-files: true
           if-no-files-found: warn
 
-  # ──────────────────────────────────────────────────────────
-  # Stage 3: Integration Tests (needs DB + Redis)
-  # ──────────────────────────────────────────────────────────
   integration-tests:
-    name: Integration Tests
+    name: Integration Tests (Py ${{ matrix.python-version }}, PG ${{ matrix.postgres-version }})
     runs-on: ubuntu-latest
-    needs: unit-tests
+    needs: [unit-tests]
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+        postgres-version: ["15", "16", "17"]
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:${{ matrix.postgres-version }}-alpine
         env:
           POSTGRES_USER: ecole
           POSTGRES_PASSWORD: ecole
@@ -154,7 +338,15 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ matrix.python-version }}-${{ hashFiles('backend/requirements*.txt') }}
+          restore-keys: |
+            pip-${{ matrix.python-version }}-
 
       - name: Install dependencies
         run: |
@@ -195,18 +387,15 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: coverage-data-integration
+          name: coverage-data-integration-${{ matrix.python-version }}-pg${{ matrix.postgres-version }}
           path: backend/.coverage*
           include-hidden-files: true
           if-no-files-found: warn
 
-  # ──────────────────────────────────────────────────────────
-  # Stage 4: Contract Tests (needs running API)
-  # ──────────────────────────────────────────────────────────
   contract-tests:
     name: Contract Tests
     runs-on: ubuntu-latest
-    needs: integration-tests
+    needs: [integration-tests]
     services:
       postgres:
         image: postgres:16-alpine
@@ -248,6 +437,14 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('backend/requirements*.txt') }}
+          restore-keys: |
+            pip-${{ env.PYTHON_VERSION }}-
 
       - name: Install dependencies
         run: |
@@ -289,13 +486,10 @@ jobs:
           include-hidden-files: true
           if-no-files-found: warn
 
-  # ──────────────────────────────────────────────────────────
-  # Stage 5: RBAC Security Tests (needs running API)
-  # ──────────────────────────────────────────────────────────
   security-tests:
     name: RBAC Security Tests
     runs-on: ubuntu-latest
-    needs: integration-tests
+    needs: [integration-tests]
     services:
       postgres:
         image: postgres:16-alpine
@@ -338,6 +532,14 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('backend/requirements*.txt') }}
+          restore-keys: |
+            pip-${{ env.PYTHON_VERSION }}-
+
       - name: Install dependencies
         run: |
           cd backend
@@ -378,14 +580,19 @@ jobs:
           include-hidden-files: true
           if-no-files-found: warn
 
-  # ──────────────────────────────────────────────────────────
-  # Stage 6: Full Coverage Report
-  # ──────────────────────────────────────────────────────────
   coverage-report:
     name: Coverage Report
     runs-on: ubuntu-latest
-    needs: [unit-tests, integration-tests, contract-tests, security-tests, e2e-tests, security-audit, load-tests]
-
+    needs:
+      [
+        unit-tests,
+        integration-tests,
+        contract-tests,
+        security-tests,
+        e2e-tests,
+        security-audit,
+        load-tests,
+      ]
     steps:
       - uses: actions/checkout@v4
 
@@ -393,6 +600,14 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('backend/requirements*.txt') }}
+          restore-keys: |
+            pip-${{ env.PYTHON_VERSION }}-
 
       - name: Install dependencies
         run: |
@@ -423,9 +638,6 @@ jobs:
             backend/coverage.xml
             backend/htmlcov/
 
-  # ──────────────────────────────────────────────────────────
-  # Stage 7: Web Frontend Lint
-  # ──────────────────────────────────────────────────────────
   web-lint:
     name: Web Frontend Lint
     runs-on: ubuntu-latest
@@ -436,6 +648,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ hashFiles('web/package-lock.json') }}
+          restore-keys: |
+            npm-
 
       - name: Install dependencies
         run: |
@@ -452,9 +672,6 @@ jobs:
           cd web
           npm run build
 
-  # ──────────────────────────────────────────────────────────
-  # Stage 8: E2E Tests (Playwright — needs API + Web)
-  # ──────────────────────────────────────────────────────────
   e2e-tests:
     name: E2E Tests (Playwright)
     runs-on: ubuntu-latest
@@ -501,10 +718,26 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('backend/requirements*.txt') }}
+          restore-keys: |
+            pip-${{ env.PYTHON_VERSION }}-
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ hashFiles('web/package-lock.json') }}
+          restore-keys: |
+            npm-
 
       - name: Install backend dependencies
         run: |
@@ -561,13 +794,10 @@ jobs:
           name: playwright-report
           path: web/playwright-report/
 
-  # ──────────────────────────────────────────────────────────
-  # Stage 9: Security Audit Tests
-  # ──────────────────────────────────────────────────────────
   security-audit:
     name: Security Audit Tests
     runs-on: ubuntu-latest
-    needs: integration-tests
+    needs: [integration-tests]
     services:
       postgres:
         image: postgres:16-alpine
@@ -609,6 +839,14 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('backend/requirements*.txt') }}
+          restore-keys: |
+            pip-${{ env.PYTHON_VERSION }}-
 
       - name: Install dependencies
         run: |
@@ -650,13 +888,10 @@ jobs:
           include-hidden-files: true
           if-no-files-found: warn
 
-  # ──────────────────────────────────────────────────────────
-  # Stage 10: Load Tests (k6)
-  # ──────────────────────────────────────────────────────────
   load-tests:
     name: Load Tests (k6)
     runs-on: ubuntu-latest
-    needs: integration-tests
+    needs: [integration-tests]
     services:
       postgres:
         image: postgres:16-alpine
@@ -698,6 +933,14 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('backend/requirements*.txt') }}
+          restore-keys: |
+            pip-${{ env.PYTHON_VERSION }}-
 
       - name: Install backend dependencies
         run: |
