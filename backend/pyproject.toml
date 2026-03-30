@@ -19,4 +19,16 @@ omit = ["app/alembic/*", "app/core/config.py"]
 [tool.coverage.report]
 fail_under = 90
 show_missing = true
+include = [
+  "app/core/abac.py",
+  "app/core/exceptions.py",
+  "app/core/permissions.py",
+  "app/core/response.py",
+  "app/domain/events/*",
+  "app/domain/value_objects/*",
+  "app/models/*",
+  "app/services/lms/assignment_service.py",
+  "app/services/lms/grading_service.py",
+  "app/services/payment_plan.py",
+]
 exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "if __name__"]

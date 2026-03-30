@@ -8,7 +8,9 @@ from __future__ import annotations
 
 
 import os
+import subprocess
 import uuid
+from pathlib import Path
 
 import httpx
 import pytest
@@ -45,6 +47,8 @@ TEST_REDIS_URL = os.getenv(
     "TEST_REDIS_URL",
     f"redis://:{os.getenv('REDIS_PASSWORD', 'change-me-dev-redis')}@localhost:6379/0",
 )
+REPO_ROOT = Path(__file__).resolve().parents[2]
+_seed_attempted = False
 
 
 @pytest.fixture
@@ -64,64 +68,88 @@ async def client():
         yield c
 
 
+def _reseed_dev_database() -> None:
+    subprocess.run(
+        [
+            "docker",
+            "compose",
+            "-f",
+            "infra/docker-compose.dev.yml",
+            "exec",
+            "-T",
+            "backend",
+            "python",
+            "-m",
+            "app.seed",
+        ],
+        cwd=REPO_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+
+async def _login_with_seed_retry(
+    client: httpx.AsyncClient,
+    *,
+    email: str,
+    password: str,
+) -> str:
+    global _seed_attempted
+
+    payload = {
+        "email": email,
+        "password": password,
+        "school_id": SCHOOL_ID,
+    }
+    response = await client.post("/auth/login", json=payload)
+    if response.status_code == 401 and not _seed_attempted:
+        _seed_attempted = True
+        _reseed_dev_database()
+        response = await client.post("/auth/login", json=payload)
+
+    assert response.status_code == 200
+    return response.json()["data"]["access_token"]
+
+
 @pytest_asyncio.fixture(loop_scope="function")
 async def admin_token(client: httpx.AsyncClient) -> str:
     """Get an admin access token."""
-    response = await client.post(
-        "/auth/login",
-        json={
-            "email": ADMIN_EMAIL,
-            "password": ADMIN_PASSWORD,
-            "school_id": SCHOOL_ID,
-        },
+    return await _login_with_seed_retry(
+        client,
+        email=ADMIN_EMAIL,
+        password=ADMIN_PASSWORD,
     )
-    assert response.status_code == 200
-    return response.json()["data"]["access_token"]
 
 
 @pytest_asyncio.fixture(loop_scope="function")
 async def teacher_token(client: httpx.AsyncClient) -> str:
     """Get a teacher access token."""
-    response = await client.post(
-        "/auth/login",
-        json={
-            "email": TEACHER_EMAIL,
-            "password": TEACHER_PASSWORD,
-            "school_id": SCHOOL_ID,
-        },
+    return await _login_with_seed_retry(
+        client,
+        email=TEACHER_EMAIL,
+        password=TEACHER_PASSWORD,
     )
-    assert response.status_code == 200
-    return response.json()["data"]["access_token"]
 
 
 @pytest_asyncio.fixture(loop_scope="function")
 async def student_token(client: httpx.AsyncClient) -> str:
     """Get a student access token."""
-    response = await client.post(
-        "/auth/login",
-        json={
-            "email": STUDENT_EMAIL,
-            "password": STUDENT_PASSWORD,
-            "school_id": SCHOOL_ID,
-        },
+    return await _login_with_seed_retry(
+        client,
+        email=STUDENT_EMAIL,
+        password=STUDENT_PASSWORD,
     )
-    assert response.status_code == 200
-    return response.json()["data"]["access_token"]
 
 
 @pytest_asyncio.fixture(loop_scope="function")
 async def parent_token(client: httpx.AsyncClient) -> str:
     """Get a parent access token."""
-    response = await client.post(
-        "/auth/login",
-        json={
-            "email": PARENT_EMAIL,
-            "password": PARENT_PASSWORD,
-            "school_id": SCHOOL_ID,
-        },
+    return await _login_with_seed_retry(
+        client,
+        email=PARENT_EMAIL,
+        password=PARENT_PASSWORD,
     )
-    assert response.status_code == 200
-    return response.json()["data"]["access_token"]
 
 
 @pytest.fixture(scope="session")

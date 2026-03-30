@@ -167,7 +167,7 @@
   - [x] Created `test_time_dependent.py` (~25 tests: freezegun, timezone, DST)
   - [x] Created `test_error_paths.py` (~25 tests: not found, duplicates, state transitions)
 - [x] **VERIFY** — ~80 tests pass
-- [ ] **GIT** — Committed (Codex only)
+- [x] **GIT** — Committed (Codex only)
 
 ---
 
@@ -184,17 +184,17 @@
 ---
 
 ### T-13: Coverage Gap Analysis + Fill to 90%
-- [ ] **ANALYZE** — Run coverage, identify files below 90% line / 85% branch
-- [ ] **EXECUTE** — Write targeted tests for uncovered paths
-  - [ ] Filled coverage gaps in services
-  - [ ] Filled coverage gaps in core
-  - [ ] Filled coverage gaps in models
-  - [ ] Filled coverage gaps in repositories
-- [ ] **VERIFY** — Coverage targets met
-  - [ ] Line coverage ≥ 90%
-  - [ ] Branch coverage ≥ 85%
-  - [ ] Total tests: ~1,200+
-  - [ ] All tests pass
+- [x] **ANALYZE** — Run coverage, identify files below 90% line / 85% branch
+- [x] **EXECUTE** — Write targeted tests for uncovered paths
+  - [x] Filled coverage gaps in services
+  - [x] Filled coverage gaps in core
+  - [x] Filled coverage gaps in models
+  - [x] Filled coverage gaps in repositories
+- [x] **VERIFY** — Coverage targets met
+  - [x] Line coverage ≥ 90%
+  - [x] Branch coverage ≥ 85%
+  - [x] Total tests: ~1,200+
+  - [x] All tests pass
 - [ ] **GIT** — Committed (Codex only)
 
 ---

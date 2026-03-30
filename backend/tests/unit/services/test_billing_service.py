@@ -11,7 +11,12 @@ from unittest.mock import AsyncMock
 import pytest
 
 from app.core.dependencies import AuthContext
-from app.core.exceptions import ConflictError, NotFoundError, ValidationError
+from app.core.exceptions import (
+    AuthorizationError,
+    ConflictError,
+    NotFoundError,
+    ValidationError,
+)
 from app.schemas.billing import InvoiceGenerateRequest
 from app.schemas.billing_enhancements import PaymentPlanCreateRequest
 from app.services import billing as billing_module
@@ -551,19 +556,125 @@ class TestApplyLateFees:
 
 
 class TestPaymentPlanService:
-    def test_split_amounts_preserves_total_and_currency(self):
+    @pytest.mark.parametrize(
+        ("total", "count", "expected"),
+        [
+            (500.0, 3, [166.67, 166.67, 166.66]),
+            (100.0, 4, [25.0, 25.0, 25.0, 25.0]),
+            (20.0, 1, [20.0]),
+        ],
+    )
+    def test_split_amounts_preserves_total_and_currency(
+        self,
+        total: float,
+        count: int,
+        expected: list[float],
+    ):
         service = PaymentPlanService(AsyncMock())
         amounts = service._split_amounts(
-            total=payment_plan_module.Money.from_float(500.0, "MAD"),
-            count=3,
+            total=payment_plan_module.Money.from_float(total, "MAD"),
+            count=count,
         )
 
-        assert [float(item.amount) for item in amounts] == [166.67, 166.67, 166.66]
+        assert [float(item.amount) for item in amounts] == expected
         assert all(item.currency == "MAD" for item in amounts)
 
-    def test_add_months_clamps_end_of_month(self):
+    @pytest.mark.parametrize(
+        ("source", "months", "expected"),
+        [
+            (date(2026, 1, 31), 1, date(2026, 2, 28)),
+            (date(2026, 10, 31), 4, date(2027, 2, 28)),
+            (date(2024, 2, 29), 12, date(2025, 2, 28)),
+            (date(2026, 3, 15), 6, date(2026, 9, 15)),
+        ],
+    )
+    def test_add_months_clamps_end_of_month(self, source: date, months: int, expected: date):
         service = PaymentPlanService(AsyncMock())
-        assert service._add_months(date(2026, 1, 31), 1) == date(2026, 2, 28)
+        assert service._add_months(source, months) == expected
+
+    def test_to_due_datetime_normalizes_to_utc_midnight(self):
+        service = PaymentPlanService(AsyncMock())
+
+        due_at = service._to_due_datetime(date(2026, 9, 1))
+
+        assert due_at == datetime(2026, 9, 1, tzinfo=timezone.utc)
+
+    @pytest.mark.parametrize("paid_at", [None, datetime(2026, 4, 2, tzinfo=timezone.utc)])
+    def test_installment_to_response_serializes_paid_and_unpaid(
+        self,
+        paid_at: datetime | None,
+    ):
+        service = PaymentPlanService(AsyncMock())
+        plan = make_plan(make_invoice(uuid.uuid4(), uuid.uuid4()))
+        installment = make_installment(plan, installment_number=2, paid_at=paid_at)
+
+        result = service._installment_to_response(installment)
+
+        assert result["installment_number"] == 2
+        assert result["amount"] == 100.0
+        assert result["paid_at"] == (paid_at.isoformat() if paid_at else None)
+
+    def test_plan_to_summary_counts_paid_and_pending_installments(self):
+        service = PaymentPlanService(AsyncMock())
+        invoice = make_invoice(uuid.uuid4(), uuid.uuid4(), total_amount=900.0)
+        plan = make_plan(
+            invoice,
+            installments=[
+                SimpleNamespace(status="paid"),
+                SimpleNamespace(status="pending"),
+                SimpleNamespace(status="paid"),
+            ],
+        )
+        plan.total_installments = 3
+
+        result = service._plan_to_summary(plan)
+
+        assert result["currency"] == "MAD"
+        assert result["installments_paid"] == 2
+        assert result["installments_pending"] == 1
+
+    def test_plan_to_detail_sorts_installments_by_number(self):
+        service = PaymentPlanService(AsyncMock())
+        invoice = make_invoice(uuid.uuid4(), uuid.uuid4())
+        plan = make_plan(
+            invoice,
+            installments=[
+                make_installment(
+                    SimpleNamespace(id=uuid.uuid4()),
+                    installment_number=3,
+                    amount=120.0,
+                ),
+                make_installment(
+                    SimpleNamespace(id=uuid.uuid4()),
+                    installment_number=1,
+                    amount=80.0,
+                ),
+            ],
+        )
+        plan.installments[0].plan_id = plan.id
+        plan.installments[1].plan_id = plan.id
+
+        result = service._plan_to_detail(plan)
+
+        assert [item["installment_number"] for item in result["installments"]] == [1, 3]
+
+    @pytest.mark.parametrize("role", ["STD", "PAR"])
+    def test_ensure_can_create_raises_for_missing_permission(self, monkeypatch: pytest.MonkeyPatch, role: str):
+        auth = make_auth(role)
+        service = PaymentPlanService(AsyncMock())
+        monkeypatch.setattr(payment_plan_module, "role_has_permission", lambda *_args: False)
+
+        with pytest.raises(AuthorizationError, match="Insufficient permissions"):
+            service._ensure_can_create(auth)
+
+    @pytest.mark.parametrize("role", ["STD", "TCH"])
+    def test_ensure_can_read_raises_for_missing_permission(self, monkeypatch: pytest.MonkeyPatch, role: str):
+        auth = make_auth(role)
+        service = PaymentPlanService(AsyncMock())
+        monkeypatch.setattr(payment_plan_module, "role_has_permission", lambda *_args: False)
+
+        with pytest.raises(AuthorizationError, match="Insufficient permissions"):
+            service._ensure_can_read(auth)
 
     @pytest.mark.asyncio
     async def test_create_plan_hides_other_parent_invoice(self, monkeypatch: pytest.MonkeyPatch):
@@ -575,6 +686,52 @@ class TestPaymentPlanService:
         service.billing_repo.get_invoice_by_id.return_value = invoice
 
         with pytest.raises(NotFoundError, match="Invoice not found"):
+            await service.create_plan(
+                body=PaymentPlanCreateRequest(invoice_id=invoice.id, num_installments=3),
+                auth=auth,
+                ip_address=None,
+            )
+
+    @pytest.mark.asyncio
+    async def test_create_plan_rejects_without_permission(self, monkeypatch: pytest.MonkeyPatch):
+        auth = make_auth("STD")
+        service, _repo_in_uow, _billing_repo_in_uow, _audit, _uow = setup_payment_plan_service(
+            monkeypatch
+        )
+        monkeypatch.setattr(payment_plan_module, "role_has_permission", lambda *_args: False)
+
+        with pytest.raises(AuthorizationError, match="Insufficient permissions"):
+            await service.create_plan(
+                body=PaymentPlanCreateRequest(invoice_id=uuid.uuid4(), num_installments=3),
+                auth=auth,
+                ip_address=None,
+            )
+
+    @pytest.mark.asyncio
+    async def test_create_plan_raises_when_invoice_missing(self, monkeypatch: pytest.MonkeyPatch):
+        auth = make_auth("ADM")
+        service, _repo_in_uow, _billing_repo_in_uow, _audit, _uow = setup_payment_plan_service(
+            monkeypatch
+        )
+        service.billing_repo.get_invoice_by_id.return_value = None
+
+        with pytest.raises(NotFoundError, match="Invoice not found"):
+            await service.create_plan(
+                body=PaymentPlanCreateRequest(invoice_id=uuid.uuid4(), num_installments=3),
+                auth=auth,
+                ip_address=None,
+            )
+
+    @pytest.mark.asyncio
+    async def test_create_plan_masks_other_school_invoice(self, monkeypatch: pytest.MonkeyPatch):
+        auth = make_auth("ADM")
+        service, _repo_in_uow, _billing_repo_in_uow, _audit, _uow = setup_payment_plan_service(
+            monkeypatch
+        )
+        invoice = make_invoice(uuid.uuid4(), uuid.uuid4())
+        service.billing_repo.get_invoice_by_id.return_value = invoice
+
+        with pytest.raises(NotFoundError, match="Resource not found"):
             await service.create_plan(
                 body=PaymentPlanCreateRequest(invoice_id=invoice.id, num_installments=3),
                 auth=auth,
@@ -689,6 +846,32 @@ class TestPaymentPlanService:
         assert uow.committed is True
 
     @pytest.mark.asyncio
+    async def test_create_plan_raises_when_saved_plan_missing(self, monkeypatch: pytest.MonkeyPatch):
+        auth = make_auth("ADM")
+        service, repo_in_uow, _billing_repo_in_uow, audit, uow = setup_payment_plan_service(
+            monkeypatch
+        )
+        invoice = make_invoice(auth.school_id, uuid.uuid4(), total_amount=300.0)
+        service.billing_repo.get_invoice_by_id.return_value = invoice
+        service.repo.get_active_payment_plan_for_invoice.return_value = None
+        repo_in_uow.create_payment_plan.return_value = SimpleNamespace(
+            id=uuid.uuid4(),
+            invoice_id=invoice.id,
+            school_id=invoice.school_id,
+        )
+        repo_in_uow.get_payment_plan.return_value = None
+
+        with pytest.raises(NotFoundError, match="Payment plan not found"):
+            await service.create_plan(
+                body=PaymentPlanCreateRequest(invoice_id=invoice.id, num_installments=2),
+                auth=auth,
+                ip_address="127.0.0.1",
+            )
+
+        audit.log_event.assert_awaited_once()
+        assert uow.committed is True
+
+    @pytest.mark.asyncio
     async def test_list_plans_scopes_to_parent(self, monkeypatch: pytest.MonkeyPatch):
         auth = make_auth("PAR")
         service, _repo_in_uow, _billing_repo_in_uow, _audit, _uow = setup_payment_plan_service(
@@ -710,6 +893,34 @@ class TestPaymentPlanService:
         assert service.repo.list_payment_plans.await_args.kwargs["parent_id"] == auth.user_id
 
     @pytest.mark.asyncio
+    async def test_list_plans_rejects_without_permission(self, monkeypatch: pytest.MonkeyPatch):
+        auth = make_auth("STD")
+        service, _repo_in_uow, _billing_repo_in_uow, _audit, _uow = setup_payment_plan_service(
+            monkeypatch
+        )
+        monkeypatch.setattr(payment_plan_module, "role_has_permission", lambda *_args: False)
+
+        with pytest.raises(AuthorizationError, match="Insufficient permissions"):
+            await service.list_plans(auth=auth)
+
+    @pytest.mark.asyncio
+    async def test_list_plans_preserves_explicit_parent_filter_for_admin(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ):
+        auth = make_auth("ADM")
+        service, _repo_in_uow, _billing_repo_in_uow, _audit, _uow = setup_payment_plan_service(
+            monkeypatch
+        )
+        parent_id = uuid.uuid4()
+        service.repo.list_payment_plans.return_value = []
+
+        result = await service.list_plans(auth=auth, parent_id=parent_id)
+
+        assert result == []
+        assert service.repo.list_payment_plans.await_args.kwargs["parent_id"] == parent_id
+
+    @pytest.mark.asyncio
     async def test_get_plan_hides_other_parent(self, monkeypatch: pytest.MonkeyPatch):
         auth = make_auth("PAR")
         service, _repo_in_uow, _billing_repo_in_uow, _audit, _uow = setup_payment_plan_service(
@@ -721,6 +932,64 @@ class TestPaymentPlanService:
 
         with pytest.raises(NotFoundError, match="Payment plan not found"):
             await service.get_plan(plan_id=plan.id, auth=auth)
+
+    @pytest.mark.asyncio
+    async def test_get_plan_rejects_without_permission(self, monkeypatch: pytest.MonkeyPatch):
+        auth = make_auth("STD")
+        service, _repo_in_uow, _billing_repo_in_uow, _audit, _uow = setup_payment_plan_service(
+            monkeypatch
+        )
+        monkeypatch.setattr(payment_plan_module, "role_has_permission", lambda *_args: False)
+
+        with pytest.raises(AuthorizationError, match="Insufficient permissions"):
+            await service.get_plan(plan_id=uuid.uuid4(), auth=auth)
+
+    @pytest.mark.asyncio
+    async def test_get_plan_raises_when_missing(self, monkeypatch: pytest.MonkeyPatch):
+        auth = make_auth("ADM")
+        service, _repo_in_uow, _billing_repo_in_uow, _audit, _uow = setup_payment_plan_service(
+            monkeypatch
+        )
+        service.repo.get_payment_plan.return_value = None
+
+        with pytest.raises(NotFoundError, match="Payment plan not found"):
+            await service.get_plan(plan_id=uuid.uuid4(), auth=auth)
+
+    @pytest.mark.asyncio
+    async def test_get_plan_masks_other_school(self, monkeypatch: pytest.MonkeyPatch):
+        auth = make_auth("ADM")
+        service, _repo_in_uow, _billing_repo_in_uow, _audit, _uow = setup_payment_plan_service(
+            monkeypatch
+        )
+        invoice = make_invoice(uuid.uuid4(), uuid.uuid4())
+        plan = make_plan(invoice)
+        service.repo.get_payment_plan.return_value = plan
+
+        with pytest.raises(NotFoundError, match="Resource not found"):
+            await service.get_plan(plan_id=plan.id, auth=auth)
+
+    @pytest.mark.asyncio
+    async def test_get_plan_returns_detail_for_admin(self, monkeypatch: pytest.MonkeyPatch):
+        auth = make_auth("ADM")
+        service, _repo_in_uow, _billing_repo_in_uow, _audit, _uow = setup_payment_plan_service(
+            monkeypatch
+        )
+        invoice = make_invoice(auth.school_id, uuid.uuid4())
+        plan = make_plan(
+            invoice,
+            installments=[
+                make_installment(SimpleNamespace(id=uuid.uuid4()), installment_number=2),
+                make_installment(SimpleNamespace(id=uuid.uuid4()), installment_number=1),
+            ],
+        )
+        for installment in plan.installments:
+            installment.plan_id = plan.id
+        service.repo.get_payment_plan.return_value = plan
+
+        result = await service.get_plan(plan_id=plan.id, auth=auth)
+
+        assert result["id"] == str(plan.id)
+        assert [item["installment_number"] for item in result["installments"]] == [1, 2]
 
     @pytest.mark.asyncio
     async def test_mark_installment_paid_is_idempotent_for_paid_installment(
@@ -745,6 +1014,36 @@ class TestPaymentPlanService:
 
         assert result["status"] == "paid"
         assert result["paid_at"] == paid_at.isoformat()
+
+    @pytest.mark.asyncio
+    async def test_mark_installment_paid_raises_when_missing_before_uow(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ):
+        service, _repo_in_uow, _billing_repo_in_uow, _audit, _uow = setup_payment_plan_service(
+            monkeypatch
+        )
+        service.repo.get_installment.return_value = None
+
+        with pytest.raises(NotFoundError, match="Installment not found"):
+            await service.mark_installment_paid(installment_id=uuid.uuid4())
+
+    @pytest.mark.asyncio
+    async def test_mark_installment_paid_raises_when_missing_inside_uow(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ):
+        service, repo_in_uow, _billing_repo_in_uow, _audit, _uow = setup_payment_plan_service(
+            monkeypatch
+        )
+        invoice = make_invoice(uuid.uuid4(), uuid.uuid4())
+        plan = make_plan(invoice)
+        installment = make_installment(plan, installment_number=1, status="pending")
+        service.repo.get_installment.return_value = installment
+        repo_in_uow.get_installment.return_value = None
+
+        with pytest.raises(NotFoundError, match="Installment not found"):
+            await service.mark_installment_paid(installment_id=installment.id)
 
     @pytest.mark.asyncio
     async def test_mark_installment_paid_completes_plan_and_invoice(
@@ -779,5 +1078,37 @@ class TestPaymentPlanService:
         assert invoice.status == "paid"
         repo_in_uow.save_payment_plan.assert_awaited_once_with(plan)
         billing_repo_in_uow.save_invoice.assert_awaited_once_with(invoice)
+        audit.log_event.assert_awaited_once()
+        assert uow.committed is True
+
+    @pytest.mark.asyncio
+    async def test_mark_installment_paid_leaves_plan_active_when_items_remain(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ):
+        service, repo_in_uow, billing_repo_in_uow, audit, uow = setup_payment_plan_service(
+            monkeypatch
+        )
+        invoice = make_invoice(uuid.uuid4(), uuid.uuid4(), status="pending")
+        plan = make_plan(invoice)
+        installment_one = make_installment(plan, installment_number=1, status="pending")
+        installment_two = make_installment(plan, installment_number=2, status="pending")
+        plan.installments = [installment_one, installment_two]
+        installment_one.plan = plan
+        installment_two.plan = plan
+        service.repo.get_installment.return_value = installment_one
+        repo_in_uow.get_installment.return_value = installment_one
+        paid_at = datetime(2026, 3, 12, tzinfo=timezone.utc)
+
+        result = await service.mark_installment_paid(
+            installment_id=installment_one.id,
+            paid_at=paid_at,
+        )
+
+        assert result["paid_at"] == paid_at.isoformat()
+        assert plan.status == "active"
+        assert invoice.status == "pending"
+        repo_in_uow.save_payment_plan.assert_not_awaited()
+        billing_repo_in_uow.save_invoice.assert_not_awaited()
         audit.log_event.assert_awaited_once()
         assert uow.committed is True
