@@ -122,17 +122,17 @@
 ---
 
 ### T-08: API Integration Tests (~80 tests)
-- [ ] **ANALYZE** — Read all API endpoint files, map routes × auth × status codes
-- [ ] **EXECUTE** — Create tests
-  - [ ] Created `test_schools_api.py` (~20 tests)
-  - [ ] Created `test_gradebook_api.py` (~15 tests)
-  - [ ] Created `test_rubrics_api.py` (~15 tests)
-  - [ ] Created `test_billing_api.py` (~15 tests)
-  - [ ] Created `test_attendance_analytics_api.py` (~10 tests)
-  - [ ] Created `test_timetable_api.py` (~10 tests)
-- [ ] **VERIFY** — ~80 tests pass against testcontainer DB
-  - [ ] No 500 status codes in happy paths
-- [ ] **GIT** — Committed (Codex only)
+- [x] **ANALYZE** — Read all API endpoint files, map routes × auth × status codes
+- [x] **EXECUTE** — Create tests
+  - [x] Created `test_schools_api.py` (~20 tests)
+  - [x] Created `test_gradebook_api.py` (~15 tests)
+  - [x] Created `test_rubrics_api.py` (~15 tests)
+  - [x] Created `test_billing_api.py` (~15 tests)
+  - [x] Created `test_attendance_analytics_api.py` (~10 tests)
+  - [x] Created `test_timetable_api.py` (~10 tests)
+- [x] **VERIFY** — ~80 tests pass against testcontainer DB
+  - [x] No 500 status codes in happy paths
+- [x] **GIT** — Committed (Codex only)
 
 ---
 
