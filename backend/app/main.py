@@ -20,7 +20,6 @@ from app.core.metrics import register_metrics
 from app.core.middleware import register_middleware
 from app.core.rate_limit import RateLimitMiddleware
 from app.core.tasks import close_arq_pool
-from app.core.telemetry import setup_telemetry
 from app.core.ws_manager import ws_manager
 
 # ---------------------------------------------------------------------------
@@ -160,6 +159,8 @@ app = FastAPI(
 )
 
 if settings.enable_tracing:
+    from app.core.telemetry import setup_telemetry
+
     setup_telemetry(app, engine)
 
 # Register Prometheus metrics middleware and /metrics endpoint (S-128, F2)

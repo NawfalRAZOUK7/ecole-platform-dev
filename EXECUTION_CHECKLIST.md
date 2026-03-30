@@ -348,17 +348,17 @@
   - [x] Created docs.yml (Redoc → GitHub Pages)
   - [x] Added Makefile targets: docs, docs-schema
 - [x] **VERIFY** — seed_demo importable, targets exist, YAML valid
-- [ ] **GIT** — Committed (Codex only)
+- [x] **GIT** — Committed (Codex only)
 
 ---
 
 ## Final Validation
 
-- [ ] All 25 prompts completed
-- [ ] All tests pass: `cd backend && pytest -x -q`
-- [ ] Coverage ≥ 90% line, ≥ 85% branch
-- [ ] CI pipeline YAML valid
-- [ ] All Docker Compose files validate
-- [ ] All shell scripts pass shellcheck/bash -n
-- [ ] No broken imports across the project
-- [ ] Total test count: ~1,200+
+- [x] All 25 prompts completed
+- [x] All tests pass: `cd backend && pytest -x -q`
+- [x] Coverage ≥ 90% line, ≥ 85% branch
+- [x] CI pipeline YAML valid
+- [x] All Docker Compose files validate
+- [x] All shell scripts pass shellcheck/bash -n
+- [x] No broken imports across the project
+- [x] Total test count: ~1,200+

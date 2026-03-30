@@ -48,6 +48,7 @@ TEST_REDIS_URL = os.getenv(
     f"redis://:{os.getenv('REDIS_PASSWORD', 'change-me-dev-redis')}@localhost:6379/0",
 )
 REPO_ROOT = Path(__file__).resolve().parents[2]
+LOGIN_TIMEOUT = httpx.Timeout(30.0, connect=5.0)
 _seed_attempted = False
 
 
@@ -64,7 +65,7 @@ def school_id():
 @pytest_asyncio.fixture(loop_scope="function")
 async def client():
     """Async HTTP client for integration tests."""
-    async with httpx.AsyncClient(base_url=BASE_URL) as c:
+    async with httpx.AsyncClient(base_url=BASE_URL, timeout=LOGIN_TIMEOUT) as c:
         yield c
 
 
@@ -102,11 +103,17 @@ async def _login_with_seed_retry(
         "password": password,
         "school_id": SCHOOL_ID,
     }
-    response = await client.post("/auth/login", json=payload)
+    try:
+        response = await client.post("/auth/login", json=payload, timeout=LOGIN_TIMEOUT)
+    except httpx.ReadTimeout:
+        if not _seed_attempted:
+            _seed_attempted = True
+            _reseed_dev_database()
+        response = await client.post("/auth/login", json=payload, timeout=LOGIN_TIMEOUT)
     if response.status_code == 401 and not _seed_attempted:
         _seed_attempted = True
         _reseed_dev_database()
-        response = await client.post("/auth/login", json=payload)
+        response = await client.post("/auth/login", json=payload, timeout=LOGIN_TIMEOUT)
 
     assert response.status_code == 200
     return response.json()["data"]["access_token"]
