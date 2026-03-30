@@ -6,8 +6,10 @@ Grading logic (grade_submission, override_late_penalty) lives in grading_service
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 from typing import BinaryIO
 
+from app.core.business_metrics import assignment_submissions
 from app.core.dependencies import AuthContext, verify_school_boundary
 from app.core.exceptions import AuthorizationError, NotFoundError, ValidationError
 from app.core.filtering import FilterSpec, SortSpec
@@ -29,6 +31,16 @@ from app.services.lms._helpers import (
 
 class AssignmentService(LMSServiceBase):
     """Handles assignments, submissions, grades, and submission files."""
+
+    @staticmethod
+    def _submission_metric_status(assignment, submitted_at: datetime | None) -> str:
+        if assignment.due_at is None or submitted_at is None:
+            return "on_time"
+        if submitted_at <= assignment.due_at:
+            return "on_time"
+        if not assignment.allow_late:
+            return "missed"
+        return "late"
 
     async def create_assignment(
         self,
@@ -239,6 +251,10 @@ class AssignmentService(LMSServiceBase):
             await uow.commit()
 
         if initial_status == "submitted":
+            assignment_submissions.labels(
+                school_id=str(auth.school_id),
+                status=self._submission_metric_status(assignment, submission.submitted_at),
+            ).inc()
             await self._dispatch_submission_received(
                 submission=submission,
                 assignment=assignment,
@@ -390,4 +406,8 @@ class AssignmentService(LMSServiceBase):
             course=course,
             actor_id=auth.user_id,
         )
+        assignment_submissions.labels(
+            school_id=str(auth.school_id),
+            status=self._submission_metric_status(assignment, submission.submitted_at),
+        ).inc()
         return self._submission_to_dict(submission)

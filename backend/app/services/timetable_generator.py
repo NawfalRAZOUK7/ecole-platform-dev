@@ -10,6 +10,7 @@ from datetime import datetime, time, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.business_metrics import timetable_generation
 from app.core.dependencies import AuthContext, verify_school_boundary
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.core.permissions import ADM
@@ -811,6 +812,7 @@ class TimetableGeneratorService:
             school_id=auth.school_id,
             academic_year_id=body.academic_year_id,
         )
+        duration_started_at = time_module.perf_counter()
         constraint_snapshot = {
             "constraints": [self._constraint_to_response(item) for item in constraints]
         }
@@ -907,6 +909,10 @@ class TimetableGeneratorService:
                 await repo.save_job(stored_job)
                 await uow.commit()
             raise
+        finally:
+            timetable_generation.labels(
+                school_id=str(auth.school_id),
+            ).observe(time_module.perf_counter() - duration_started_at)
 
     async def get_job_status(
         self,

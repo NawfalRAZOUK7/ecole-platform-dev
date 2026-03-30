@@ -1,0 +1,47 @@
+groups:
+  - name: ecole-log-alerts
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          sum(rate({service=~"ecole-.*"} |= "ERROR" [5m])) > 0.5
+        for: 2m
+        labels:
+          severity: SEV-2
+        annotations:
+          summary: "High error rate detected (>0.5 errors/sec for 2 minutes)"
+
+      - alert: AuthBruteForce
+        expr: |
+          sum by (ip) (rate({service="ecole-backend"} |= "login_failed" [1m])) > 5
+        for: 0s
+        labels:
+          severity: SEV-1
+        annotations:
+          summary: "Possible brute-force: more than 5 failed logins/min from one IP"
+
+      - alert: DatabasePoolExhaustion
+        expr: |
+          sum(rate({service="ecole-backend"} |= "QueuePool limit" |= "overflow" [5m])) > 0
+        for: 1m
+        labels:
+          severity: SEV-1
+        annotations:
+          summary: "SQLAlchemy connection pool exhaustion detected"
+
+      - alert: PaymentWebhookFailures
+        expr: |
+          sum(rate({service="ecole-backend"} |= "webhook" |= "failed" [10m])) > 0.1
+        for: 5m
+        labels:
+          severity: SEV-2
+        annotations:
+          summary: "Payment webhook failure rate is elevated"
+
+      - alert: MigrationErrors
+        expr: |
+          sum(rate({service="ecole-backend"} |= "alembic" |= "ERROR" [5m])) > 0
+        for: 0s
+        labels:
+          severity: SEV-1
+        annotations:
+          summary: "Migration error detected in backend logs"

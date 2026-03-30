@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 
+from app.core.business_metrics import grade_distribution
 from app.core.dependencies import AuthContext, verify_school_boundary
 from app.core.exceptions import AuthorizationError, NotFoundError, ValidationError
 from app.core.unit_of_work import UnitOfWork
@@ -19,6 +20,12 @@ from app.services.lms._helpers import (
 
 class GradingService(LMSServiceBase):
     """Handles grading submissions and late-penalty overrides."""
+
+    @staticmethod
+    def _score_on_moroccan_scale(score: float, total_points: float) -> float:
+        if total_points <= 0:
+            return max(0.0, min(20.0, score))
+        return max(0.0, min(20.0, (score / total_points) * 20.0))
 
     async def grade_submission(
         self,
@@ -120,6 +127,15 @@ class GradingService(LMSServiceBase):
                 score=float(penalty_data["adjusted_score"]),
                 feedback_text=body.feedback_text,
             )
+        grade_distribution.labels(
+            school_id=str(auth.school_id),
+            subject=getattr(course, "title", None) or "General",
+        ).observe(
+            self._score_on_moroccan_scale(
+                float(penalty_data["adjusted_score"]),
+                float(assignment.total_points),
+            )
+        )
         return self._grade_to_dict(grade)
 
     async def override_late_penalty(

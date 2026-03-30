@@ -10,6 +10,7 @@ from datetime import date, datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.abac import validate_parent_child_access
+from app.core.business_metrics import billing_collection, billing_revenue
 from app.core.dependencies import AuthContext, verify_school_boundary
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.core.filtering import FilterSpec, SortSpec
@@ -1051,6 +1052,10 @@ class BillingService:
                 ip_address=ip_address,
             )
             await uow.commit()
+        billing_collection.labels(
+            school_id=str(auth.school_id),
+            status="pending",
+        ).inc()
         return self._payment_to_response(payment)
 
     async def get_payment_status(
@@ -1078,6 +1083,9 @@ class BillingService:
     ) -> dict:
         now = datetime.now(timezone.utc)
         payment_event: PaymentReceived | PaymentFailed | None = None
+        revenue_amount = 0.0
+        revenue_plan = "invoice"
+        collection_status: str | None = None
 
         existing = await self.repo.get_webhook_event_by_provider_event_id(
             body.provider_event_id
@@ -1111,6 +1119,12 @@ class BillingService:
                     if invoice is not None:
                         invoice.status = "paid"
                         await repo.save_invoice(invoice)
+                        if invoice.currency == "MAD":
+                            revenue_amount = float(invoice.total_amount)
+                        if invoice.fee_structure_id is not None:
+                            fee_structure = await repo.get_fee_structure(invoice.fee_structure_id)
+                            if fee_structure is not None:
+                                revenue_plan = fee_structure.frequency.lower()
                         payment_event = PaymentReceived(
                             school_id=auth.school_id,
                             actor_id=auth.user_id,
@@ -1119,6 +1133,7 @@ class BillingService:
                             amount=float(invoice.total_amount),
                             method=body.event_type,
                         )
+                    collection_status = "success"
                 elif body.status == "failed":
                     payment_attempt.status = "failed"
                     payment_attempt.finalized_at = now
@@ -1140,10 +1155,12 @@ class BillingService:
                         )
                     except Exception:
                         pass
+                    collection_status = "failed"
                 elif body.status == "canceled":
                     payment_attempt.status = "canceled"
                     payment_attempt.finalized_at = now
                     await repo.save_payment(payment_attempt)
+                    collection_status = "failed"
 
             await audit.log_event(
                 school_id=auth.school_id,
@@ -1168,6 +1185,16 @@ class BillingService:
                 status=body.status,
                 invoice_id=payment_attempt.invoice_id,
             )
+        if collection_status is not None:
+            billing_collection.labels(
+                school_id=str(auth.school_id),
+                status=collection_status,
+            ).inc()
+        if revenue_amount > 0:
+            billing_revenue.labels(
+                school_id=str(auth.school_id),
+                plan=revenue_plan,
+            ).inc(revenue_amount)
         if payment_event is not None:
             try:
                 await self._dispatcher.dispatch(payment_event)

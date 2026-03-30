@@ -296,19 +296,19 @@
   - [x] Created tempo.yml + added Tempo service
   - [x] Added Tempo datasource to Grafana
 - [x] **VERIFY** — pip install OK, telemetry importable, compose validates
-- [ ] **GIT** — Committed (Codex only)
+- [x] **GIT** — Committed (Codex only)
 
 ---
 
 ### CI-09: Business Metrics + Log Alerting
-- [ ] **ANALYZE** — Read metrics.py, service files, loki config, dashboards
-- [ ] **EXECUTE**
-  - [ ] Created business_metrics.py (7 education metrics)
-  - [ ] Added metric calls to service methods
-  - [ ] Created business-education.json dashboard (7 panels)
-  - [ ] Added Loki ruler config
-  - [ ] Created ecole-alerts.yml (5 alert rules)
-- [ ] **VERIFY** — Metrics importable, JSON valid, YAML valid
+- [x] **ANALYZE** — Read metrics.py, service files, loki config, dashboards
+- [x] **EXECUTE**
+  - [x] Created business_metrics.py (7 education metrics)
+  - [x] Added metric calls to service methods
+  - [x] Created business-education.json dashboard (7 panels)
+  - [x] Added Loki ruler config
+  - [x] Created ecole-alerts.yml (5 alert rules)
+- [x] **VERIFY** — Metrics importable, JSON valid, YAML valid
 - [ ] **GIT** — Committed (Codex only)
 
 ---

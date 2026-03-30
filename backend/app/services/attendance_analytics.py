@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.business_metrics import active_students, attendance_rate
 from app.core.config import settings
 from app.core.dependencies import (
     AuthContext,
@@ -226,6 +227,13 @@ class AttendanceAnalyticsService:
             for student_id, student_name in students
         ]
         rows.sort(key=lambda item: (-item["absence_rate"], item["student_name"] or ""))
+        average_absence_rate = (
+            sum(row["absence_rate"] for row in rows) / len(rows) if rows else 0.0
+        )
+        active_students.labels(school_id=str(auth.school_id)).set(len(rows))
+        attendance_rate.labels(school_id=str(auth.school_id)).set(
+            max(0.0, min(1.0, 1.0 - average_absence_rate))
+        )
 
         return ClassAbsenceRateResponse(
             class_id=str(class_id),

@@ -1,0 +1,120 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "panels": [
+    {
+      "title": "Active Students Per School",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(ecole_active_students_total) by (school_id)",
+          "legendFormat": "{{ school_id }}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Submission Rate: On-Time vs Late vs Missed",
+      "type": "barchart",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(increase(ecole_assignment_submissions_total[24h])) by (status)",
+          "legendFormat": "{{ status }}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Grade Distribution (0-20)",
+      "type": "barchart",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum(increase(ecole_grade_value_bucket[24h])) by (le)",
+          "legendFormat": "{{ le }}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Attendance Rate Trend",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "avg(ecole_attendance_rate) by (school_id)",
+          "legendFormat": "{{ school_id }}",
+          "refId": "A"
+        },
+        {
+          "expr": "0.90",
+          "legendFormat": "Target",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        }
+      }
+    },
+    {
+      "title": "Billing Collection Rate",
+      "type": "piechart",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "expr": "sum(increase(ecole_billing_payments_total[24h])) by (status)",
+          "legendFormat": "{{ status }}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Revenue Per School Per Month (MAD)",
+      "type": "barchart",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "targets": [
+        {
+          "expr": "sum(increase(ecole_billing_revenue_mad[30d])) by (school_id)",
+          "legendFormat": "{{ school_id }}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Timetable Generation P95 Latency",
+      "type": "gauge",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 24 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(ecole_timetable_generation_seconds_bucket[5m])) by (le))",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 2 },
+              { "color": "red", "value": 5 }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["ecole", "business", "education", "kpi"],
+  "templating": { "list": [] },
+  "time": { "from": "now-30d", "to": "now" },
+  "title": "Education Business Metrics",
+  "uid": "ecole-business-education"
+}
