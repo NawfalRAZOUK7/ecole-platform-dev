@@ -1,0 +1,455 @@
+{
+  "info": {
+    "name": "Billing Cycle Scenario",
+    "description": "Complete billing workflow from fee creation through payment",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Login as Admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Admin login successful - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has access_token', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('access_token');",
+              "  pm.environment.set('access_token', jsonData.access_token);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\": \"admin@ecole.ma\", \"password\": \"AdminPass123!\"}"
+        },
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/auth/login",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "2. Create Fee Structure 15000 MAD",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Create fee structure - 201 Created', function() {",
+              "  pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test('Amount is exactly 15000 MAD', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData.amount).to.equal(15000);",
+              "  pm.expect(jsonData.currency).to.equal('MAD');",
+              "});",
+              "",
+              "pm.test('Save fee structure ID', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.environment.set('fee_structure_id', jsonData.id);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"school_id\": \"school1\", \"name\": \"Tuition Fee\", \"amount\": 15000, \"currency\": \"MAD\", \"academic_year\": \"2025-2026\", \"due_date\": \"2026-09-30\"}"
+        },
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/billing/fee-structures",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "billing", "fee-structures"]
+        }
+      }
+    },
+    {
+      "name": "3. Assign Fee to Student",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Assign fee - 201 Created', function() {",
+              "  pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test('Response has fee_assignment_id', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('id');",
+              "  pm.environment.set('fee_assignment_id', jsonData.id);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"student_id\": \"student1\", \"fee_structure_id\": \"{{fee_structure_id}}\"}"
+        },
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/billing/fee-assignments",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "billing", "fee-assignments"]
+        }
+      }
+    },
+    {
+      "name": "4. Generate Invoice",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Generate invoices - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has invoices array', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('invoices').that.is.an('array');",
+              "});",
+              "",
+              "pm.test('Save invoice ID', function() {",
+              "  var jsonData = pm.response.json();",
+              "  if (jsonData.invoices && jsonData.invoices.length > 0) {",
+              "    pm.environment.set('invoice_id', jsonData.invoices[0].id);",
+              "    pm.environment.set('invoice_amount', jsonData.invoices[0].total_amount);",
+              "  }",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/billing/generate-invoices",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "billing", "generate-invoices"]
+        }
+      }
+    },
+    {
+      "name": "5. List Invoices",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Get invoices - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has invoices array', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('data').that.is.an('array');",
+              "});",
+              "",
+              "pm.test('Extract invoice ID if not already set', function() {",
+              "  var jsonData = pm.response.json();",
+              "  if (!pm.environment.get('invoice_id') && jsonData.data && jsonData.data.length > 0) {",
+              "    pm.environment.set('invoice_id', jsonData.data[0].id);",
+              "    pm.environment.set('invoice_amount', jsonData.data[0].total_amount);",
+              "  }",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/invoices",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "invoices"]
+        }
+      }
+    },
+    {
+      "name": "6. Logout Admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Logout successful - 204 No Content', function() {",
+              "  pm.response.to.have.status(204);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/auth/logout",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "auth", "logout"]
+        }
+      }
+    },
+    {
+      "name": "7. Login as Parent",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Parent login successful - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has access_token', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('access_token');",
+              "  pm.environment.set('access_token', jsonData.access_token);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\": \"parent@ecole.ma\", \"password\": \"ParentPass123!\"}"
+        },
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/auth/login",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "8. View Invoice",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Get invoice - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Invoice has correct structure', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('id');",
+              "  pm.expect(jsonData).to.have.property('total_amount');",
+              "  pm.expect(jsonData).to.have.property('currency');",
+              "});",
+              "",
+              "pm.test('Invoice currency is MAD', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData.currency).to.equal('MAD');",
+              "});",
+              "",
+              "pm.test('Invoice amount is in correct format', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData.total_amount).to.be.a('number');",
+              "  pm.expect(jsonData.total_amount).to.be.greaterThan(0);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/invoices/{{invoice_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "invoices", "{{invoice_id}}"]
+        }
+      }
+    },
+    {
+      "name": "9. Initiate Payment",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Initiate payment - 200 OK or 201 Created', function() {",
+              "  pm.expect([200, 201]).to.include(pm.response.code);",
+              "});",
+              "",
+              "pm.test('Response has payment_id or transaction_id', function() {",
+              "  var jsonData = pm.response.json();",
+              "  var hasId = jsonData.hasOwnProperty('payment_id') || jsonData.hasOwnProperty('transaction_id') || jsonData.hasOwnProperty('id');",
+              "  pm.expect(hasId).to.be.true;",
+              "});",
+              "",
+              "pm.test('Save payment ID', function() {",
+              "  var jsonData = pm.response.json();",
+              "  if (jsonData.payment_id) {",
+              "    pm.environment.set('payment_id', jsonData.payment_id);",
+              "  } else if (jsonData.transaction_id) {",
+              "    pm.environment.set('payment_id', jsonData.transaction_id);",
+              "  } else if (jsonData.id) {",
+              "    pm.environment.set('payment_id', jsonData.id);",
+              "  }",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"invoice_id\": \"{{invoice_id}}\", \"amount\": {{invoice_amount}}, \"currency\": \"MAD\", \"payment_method\": \"card\"}"
+        },
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/payments/initiate",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "payments", "initiate"]
+        }
+      }
+    },
+    {
+      "name": "10. Logout Parent",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Logout successful - 204 No Content', function() {",
+              "  pm.response.to.have.status(204);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/auth/logout",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "auth", "logout"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "api_prefix",
+      "value": "/api/v1"
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "fee_structure_id",
+      "value": ""
+    },
+    {
+      "key": "fee_assignment_id",
+      "value": ""
+    },
+    {
+      "key": "invoice_id",
+      "value": ""
+    },
+    {
+      "key": "invoice_amount",
+      "value": ""
+    },
+    {
+      "key": "payment_id",
+      "value": ""
+    }
+  ]
+}

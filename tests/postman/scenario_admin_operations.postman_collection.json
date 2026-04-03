@@ -1,0 +1,623 @@
+{
+  "info": {
+    "name": "Admin Operations Scenario",
+    "description": "System admin workflow including school creation, user management, and feature toggles",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Login as System Admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Admin login successful - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has access_token', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('access_token');",
+              "  pm.environment.set('access_token', jsonData.access_token);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\": \"admin@ecole.ma\", \"password\": \"AdminPass123!\"}"
+        },
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/auth/login",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "2. Create School",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Create school - 201 Created', function() {",
+              "  pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test('Response has school_id', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('id');",
+              "  pm.expect(jsonData).to.have.property('name');",
+              "});",
+              "",
+              "pm.test('Save school ID', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.environment.set('school_id', jsonData.id);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\": \"Excellence School {{$timestamp}}\", \"code\": \"EXC{{$randomInt}}\", \"city\": \"Casablanca\", \"country\": \"Morocco\", \"founded_year\": 2010}"
+        },
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/schools",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "schools"]
+        }
+      }
+    },
+    {
+      "name": "3. Batch Register Users",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Batch register - 201 Created', function() {",
+              "  pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test('Response has created users', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('created_count');",
+              "  pm.expect(jsonData).to.have.property('users').that.is.an('array');",
+              "});",
+              "",
+              "pm.test('Save first user ID', function() {",
+              "  var jsonData = pm.response.json();",
+              "  if (jsonData.users && jsonData.users.length > 0) {",
+              "    pm.environment.set('user_id', jsonData.users[0].id);",
+              "  }",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"school_id\": \"{{school_id}}\", \"users\": [{\"email\": \"student1_{{$timestamp}}@ecole.ma\", \"first_name\": \"Mohamed\", \"last_name\": \"Ali\", \"role\": \"STUDENT\"}, {\"email\": \"teacher1_{{$timestamp}}@ecole.ma\", \"first_name\": \"Fatima\", \"last_name\": \"Hassan\", \"role\": \"TEACHER\"}]}"
+        },
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/admin/batch-register",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "admin", "batch-register"]
+        }
+      }
+    },
+    {
+      "name": "4. Enroll Students",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Enroll students - 201 Created', function() {",
+              "  pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test('Response has enrollment_id', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('id');",
+              "  pm.expect(jsonData).to.have.property('student_id');",
+              "});",
+              "",
+              "pm.test('Save enrollment ID', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.environment.set('enrollment_id', jsonData.id);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"student_id\": \"{{user_id}}\", \"class_id\": \"class1\", \"academic_year\": \"2025-2026\"}"
+        },
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/enrollments",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "enrollments"]
+        }
+      }
+    },
+    {
+      "name": "5. Assign Teachers to Classes",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Assign teacher - 201 Created', function() {",
+              "  pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test('Response has assignment_id', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('id');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"teacher_id\": \"{{user_id}}\", \"class_id\": \"class1\", \"subject\": \"Mathematics\"}"
+        },
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/class-assignments",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "class-assignments"]
+        }
+      }
+    },
+    {
+      "name": "6. Create Fee Structure in MAD",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Create fee structure - 201 Created', function() {",
+              "  pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test('Response has fee_structure_id', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('id');",
+              "  pm.expect(jsonData).to.have.property('amount');",
+              "});",
+              "",
+              "pm.test('Amount is in MAD currency', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('currency').that.equals('MAD');",
+              "  pm.expect(jsonData.amount).to.equal(15000);",
+              "});",
+              "",
+              "pm.test('Save fee structure ID', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.environment.set('fee_structure_id', jsonData.id);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"school_id\": \"{{school_id}}\", \"name\": \"Annual Fee\", \"amount\": 15000, \"currency\": \"MAD\", \"academic_year\": \"2025-2026\", \"due_date\": \"2026-09-30\"}"
+        },
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/billing/fee-structures",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "billing", "fee-structures"]
+        }
+      }
+    },
+    {
+      "name": "7. Assign Fees to Students",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Assign fee - 201 Created', function() {",
+              "  pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test('Response has fee_assignment_id', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('id');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"student_id\": \"{{user_id}}\", \"fee_structure_id\": \"{{fee_structure_id}}\"}"
+        },
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/billing/fee-assignments",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "billing", "fee-assignments"]
+        }
+      }
+    },
+    {
+      "name": "8. Generate Invoices",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Generate invoices - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has generated_count', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('generated_count');",
+              "  pm.expect(jsonData).to.have.property('invoices').that.is.an('array');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/billing/generate-invoices",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "billing", "generate-invoices"]
+        }
+      }
+    },
+    {
+      "name": "9. Check Admin Dashboard",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Get dashboard - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Dashboard has stats', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('total_schools');",
+              "  pm.expect(jsonData).to.have.property('total_users');",
+              "  pm.expect(jsonData).to.have.property('total_students');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/admin/dashboard",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "admin", "dashboard"]
+        }
+      }
+    },
+    {
+      "name": "10. Review Analytics",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Get analytics - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Analytics has overview data', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('enrollment_trends');",
+              "  pm.expect(jsonData).to.have.property('performance_metrics');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/analytics/overview",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "analytics", "overview"]
+        }
+      }
+    },
+    {
+      "name": "11. Export Student Data CSV",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Export CSV - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response contains CSV data', function() {",
+              "  var responseText = pm.response.text();",
+              "  pm.expect(responseText).to.include(',');",
+              "  pm.expect(responseText.length).to.be.greaterThan(0);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/export/csv?entity=students",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "export", "csv"],
+          "query": [
+            {
+              "key": "entity",
+              "value": "students"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "12. Check Feature Flags",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Get feature flags - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response is array of features', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.be.an('array');",
+              "});",
+              "",
+              "pm.test('Each feature has key and enabled', function() {",
+              "  var jsonData = pm.response.json();",
+              "  jsonData.forEach(function(feature) {",
+              "    pm.expect(feature).to.have.property('key');",
+              "    pm.expect(feature).to.have.property('enabled');",
+              "  });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/features",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "features"]
+        }
+      }
+    },
+    {
+      "name": "13. Toggle Feature Flag",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Toggle feature - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has updated enabled status', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('enabled');",
+              "  pm.expect(jsonData.enabled).to.be.a('boolean');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"key\": \"new_grading_system\", \"enabled\": true}"
+        },
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/features",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "features"]
+        }
+      }
+    },
+    {
+      "name": "14. Logout Admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Logout successful - 204 No Content', function() {",
+              "  pm.response.to.have.status(204);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/auth/logout",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "auth", "logout"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "api_prefix",
+      "value": "/api/v1"
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "school_id",
+      "value": ""
+    },
+    {
+      "key": "user_id",
+      "value": ""
+    },
+    {
+      "key": "enrollment_id",
+      "value": ""
+    },
+    {
+      "key": "fee_structure_id",
+      "value": ""
+    }
+  ]
+}

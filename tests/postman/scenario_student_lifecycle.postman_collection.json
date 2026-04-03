@@ -1,0 +1,476 @@
+{
+  "info": {
+    "name": "Student Lifecycle Scenario",
+    "description": "Complete student journey from registration through logout",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Register New Student",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Registration successful - 201 Created', function() {",
+              "  pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test('Response has user object', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('user');",
+              "  pm.expect(jsonData.user).to.have.property('id');",
+              "});",
+              "",
+              "pm.test('Response has access token', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('access_token');",
+              "  pm.expect(jsonData.access_token).to.be.a('string');",
+              "  pm.environment.set('access_token', jsonData.access_token);",
+              "});",
+              "",
+              "pm.test('Student ID saved for later requests', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.environment.set('student_id', jsonData.user.id);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\": \"student_{{$timestamp}}@ecole.ma\", \"password\": \"SecurePass123!\", \"first_name\": \"Ahmed\", \"last_name\": \"Hassan\", \"role\": \"STUDENT\"}"
+        },
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/auth/register",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "auth", "register"]
+        }
+      }
+    },
+    {
+      "name": "2. Login as Student",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Login successful - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has access_token and refresh_token', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('access_token');",
+              "  pm.expect(jsonData).to.have.property('refresh_token');",
+              "});",
+              "",
+              "pm.test('Update access_token for authenticated requests', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.environment.set('access_token', jsonData.access_token);",
+              "  pm.environment.set('refresh_token', jsonData.refresh_token);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\": \"student_{{$timestamp}}@ecole.ma\", \"password\": \"SecurePass123!\"}"
+        },
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/auth/login",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "3. View Available Courses",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Get courses - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response is an array of courses', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.be.an('array');",
+              "});",
+              "",
+              "pm.test('Save first course ID if available', function() {",
+              "  var jsonData = pm.response.json();",
+              "  if (jsonData.length > 0) {",
+              "    pm.environment.set('course_id', jsonData[0].id);",
+              "  }",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/courses",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "courses"]
+        }
+      }
+    },
+    {
+      "name": "4. View Assignments",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Get assignments - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response structure is valid', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('data').that.is.an('array');",
+              "});",
+              "",
+              "pm.test('Save first assignment ID', function() {",
+              "  var jsonData = pm.response.json();",
+              "  if (jsonData.data && jsonData.data.length > 0) {",
+              "    pm.environment.set('assignment_id', jsonData.data[0].id);",
+              "  }",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/assignments",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "assignments"]
+        }
+      }
+    },
+    {
+      "name": "5. Submit Assignment Work",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Assignment submission - 201 Created', function() {",
+              "  pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test('Response has submission object with ID', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('id');",
+              "  pm.expect(jsonData).to.have.property('status');",
+              "});",
+              "",
+              "pm.test('Save submission ID for grading', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.environment.set('submission_id', jsonData.id);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"assignment_id\": \"{{assignment_id}}\", \"content\": \"This is my assignment submission\", \"file_url\": \"https://example.com/file.pdf\"}"
+        },
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/submissions",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "submissions"]
+        }
+      }
+    },
+    {
+      "name": "6. Start Quiz",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Quiz start - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has attempt_id and quiz_id', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('attempt_id');",
+              "  pm.expect(jsonData).to.have.property('quiz_id');",
+              "});",
+              "",
+              "pm.test('Save attempt ID for submission', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.environment.set('attempt_id', jsonData.attempt_id);",
+              "  pm.environment.set('quiz_id', jsonData.quiz_id);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/quizzes/{{quiz_id}}/start",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "quizzes", "{{quiz_id}}", "start"]
+        }
+      }
+    },
+    {
+      "name": "7. Submit Quiz Attempt",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Quiz submission - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has status and submitted_at', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('status').that.equals('submitted');",
+              "  pm.expect(jsonData).to.have.property('submitted_at');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"answers\": [{\"question_id\": \"q1\", \"answer\": \"A\"}, {\"question_id\": \"q2\", \"answer\": \"B\"}]}"
+        },
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/attempts/{{attempt_id}}/submit",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "attempts", "{{attempt_id}}", "submit"]
+        }
+      }
+    },
+    {
+      "name": "8. View Quiz Results",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Get quiz results - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has grade in 0-20 Moroccan scale', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('grade');",
+              "  pm.expect(jsonData.grade).to.be.a('number');",
+              "  pm.expect(jsonData.grade).to.be.at.least(0);",
+              "  pm.expect(jsonData.grade).to.be.at.most(20);",
+              "});",
+              "",
+              "pm.test('Response has correct_answers and total_questions', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('correct_answers');",
+              "  pm.expect(jsonData).to.have.property('total_questions');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/attempts/{{attempt_id}}/results",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "attempts", "{{attempt_id}}", "results"]
+        }
+      }
+    },
+    {
+      "name": "9. View Transcript",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Get transcript - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Transcript has grades array', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('grades').that.is.an('array');",
+              "});",
+              "",
+              "pm.test('All grades are in 0-20 scale', function() {",
+              "  var jsonData = pm.response.json();",
+              "  jsonData.grades.forEach(function(grade) {",
+              "    pm.expect(grade.score).to.be.at.least(0);",
+              "    pm.expect(grade.score).to.be.at.most(20);",
+              "  });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/gradebook/transcript/{{student_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "gradebook", "transcript", "{{student_id}}"]
+        }
+      }
+    },
+    {
+      "name": "10. Logout",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Logout successful - 204 No Content', function() {",
+              "  pm.response.to.have.status(204);",
+              "});",
+              "",
+              "pm.test('Token cleared from environment', function() {",
+              "  pm.environment.set('access_token', '');",
+              "  pm.expect(pm.environment.get('access_token')).to.equal('');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/auth/logout",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "auth", "logout"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "api_prefix",
+      "value": "/api/v1"
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "student_id",
+      "value": ""
+    },
+    {
+      "key": "course_id",
+      "value": ""
+    },
+    {
+      "key": "assignment_id",
+      "value": ""
+    },
+    {
+      "key": "submission_id",
+      "value": ""
+    },
+    {
+      "key": "quiz_id",
+      "value": ""
+    },
+    {
+      "key": "attempt_id",
+      "value": ""
+    }
+  ]
+}

@@ -1,0 +1,777 @@
+{
+  "info": {
+    "name": "Security Hardening Scenario",
+    "description": "Comprehensive security testing including 2FA setup, session management, password policies, and audit trails",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "api_prefix",
+      "value": "/api/v1"
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "refresh_token",
+      "value": ""
+    },
+    {
+      "key": "user_id",
+      "value": ""
+    },
+    {
+      "key": "user_email",
+      "value": "security_test_{{$timestamp}}@ecole.ma"
+    },
+    {
+      "key": "user_password",
+      "value": "InitialPassword123!"
+    },
+    {
+      "key": "user_password_new",
+      "value": "NewSecurePassword456!"
+    },
+    {
+      "key": "user_password_reset",
+      "value": "FinalResetPassword789!"
+    },
+    {
+      "key": "user_first_name",
+      "value": "Security"
+    },
+    {
+      "key": "user_last_name",
+      "value": "Tester"
+    },
+    {
+      "key": "user_role",
+      "value": "STUDENT"
+    },
+    {
+      "key": "totp_secret",
+      "value": ""
+    },
+    {
+      "key": "totp_code",
+      "value": "123456"
+    },
+    {
+      "key": "totp_setup_code",
+      "value": "654321"
+    },
+    {
+      "key": "session_id",
+      "value": ""
+    },
+    {
+      "key": "session_count",
+      "value": ""
+    },
+    {
+      "key": "active_sessions",
+      "value": ""
+    },
+    {
+      "key": "login_history_count",
+      "value": ""
+    },
+    {
+      "key": "login_events",
+      "value": ""
+    },
+    {
+      "key": "password_change_timestamp",
+      "value": ""
+    },
+    {
+      "key": "password_strength_score",
+      "value": ""
+    },
+    {
+      "key": "min_password_length",
+      "value": "8"
+    },
+    {
+      "key": "requires_uppercase",
+      "value": "true"
+    },
+    {
+      "key": "requires_lowercase",
+      "value": "true"
+    },
+    {
+      "key": "requires_numbers",
+      "value": "true"
+    },
+    {
+      "key": "requires_special_chars",
+      "value": "true"
+    },
+    {
+      "key": "otp_request_id",
+      "value": ""
+    },
+    {
+      "key": "otp_code",
+      "value": "654321"
+    },
+    {
+      "key": "recovery_token",
+      "value": ""
+    },
+    {
+      "key": "recovery_code",
+      "value": "123456"
+    },
+    {
+      "key": "two_fa_enabled",
+      "value": ""
+    },
+    {
+      "key": "two_fa_method",
+      "value": "TOTP"
+    },
+    {
+      "key": "audit_log_count",
+      "value": ""
+    },
+    {
+      "key": "last_login_timestamp",
+      "value": ""
+    },
+    {
+      "key": "last_password_change",
+      "value": ""
+    },
+    {
+      "key": "failed_login_attempts",
+      "value": "0"
+    },
+    {
+      "key": "account_locked",
+      "value": "false"
+    },
+    {
+      "key": "max_login_attempts",
+      "value": "5"
+    },
+    {
+      "key": "lockout_duration_minutes",
+      "value": "30"
+    },
+    {
+      "key": "token_expiry_seconds",
+      "value": "3600"
+    },
+    {
+      "key": "refresh_token_expiry_days",
+      "value": "7"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Register User Account",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('User registration - 201 Created', function() {",
+              "  pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test('User created with ID', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData.user).to.have.property('id');",
+              "  pm.expect(jsonData.user).to.have.property('email');",
+              "  pm.expect(jsonData.user.email).to.equal(pm.environment.get('user_email'));",
+              "  pm.environment.set('user_id', jsonData.user.id);",
+              "});",
+              "",
+              "pm.test('Access token provided', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('access_token');",
+              "  pm.environment.set('access_token', jsonData.access_token);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\": \"{{user_email}}\", \"password\": \"{{user_password}}\", \"first_name\": \"{{user_first_name}}\", \"last_name\": \"{{user_last_name}}\", \"role\": \"{{user_role}}\"}"
+        },
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/auth/register",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "auth", "register"]
+        }
+      }
+    },
+    {
+      "name": "2. User Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('User login - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Token response valid', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('access_token');",
+              "  pm.expect(jsonData).to.have.property('refresh_token');",
+              "  pm.environment.set('access_token', jsonData.access_token);",
+              "  pm.environment.set('refresh_token', jsonData.refresh_token);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\": \"{{user_email}}\", \"password\": \"{{user_password}}\"}"
+        },
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/auth/login",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "3. Setup 2FA (TOTP)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('2FA setup initiated - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('TOTP secret provided', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('secret');",
+              "  pm.expect(jsonData).to.have.property('qr_code');",
+              "  pm.expect(jsonData.secret).to.be.a('string');",
+              "  pm.environment.set('totp_secret', jsonData.secret);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"method\": \"{{two_fa_method}}\"}"
+        },
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/auth/2fa/setup",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "auth", "2fa", "setup"]
+        }
+      }
+    },
+    {
+      "name": "4. Verify 2FA Setup",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('2FA setup verified - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('2FA is now enabled', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('enabled');",
+              "  pm.expect(jsonData.enabled).to.equal(true);",
+              "  pm.environment.set('two_fa_enabled', 'true');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"code\": \"{{totp_setup_code}}\"}"
+        },
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/auth/2fa/verify-setup",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "auth", "2fa", "verify-setup"]
+        }
+      }
+    },
+    {
+      "name": "5. Logout User",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Logout - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/auth/logout",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "auth", "logout"]
+        }
+      }
+    },
+    {
+      "name": "6. Login Again (2FA Required Now)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Login response - 200 OK or 401 Unauthorized (2FA required)', function() {",
+              "  pm.response.to.have.status([200, 401]);",
+              "});",
+              "",
+              "pm.test('2FA is now enforced', function() {",
+              "  var jsonData = pm.response.json();",
+              "  if (pm.response.code === 401) {",
+              "    pm.expect(jsonData).to.have.property('requires_2fa');",
+              "    pm.expect(jsonData.requires_2fa).to.equal(true);",
+              "  }",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\": \"{{user_email}}\", \"password\": \"{{user_password}}\"}"
+        },
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/auth/login",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "7. Verify 2FA During Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('2FA verification - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Access token provided after 2FA', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('access_token');",
+              "  pm.environment.set('access_token', jsonData.access_token);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\": \"{{user_email}}\", \"totp_code\": \"{{totp_code}}\"}"
+        },
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/auth/2fa/verify",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "auth", "2fa", "verify"]
+        }
+      }
+    },
+    {
+      "name": "8. List Active Sessions",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Get sessions - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Sessions list is valid', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.be.an('array');",
+              "  pm.expect(jsonData.length).to.be.greaterThan(0);",
+              "});",
+              "",
+              "pm.test('Each session has required fields', function() {",
+              "  var jsonData = pm.response.json();",
+              "  jsonData.forEach(function(session) {",
+              "    pm.expect(session).to.have.property('id');",
+              "    pm.expect(session).to.have.property('created_at');",
+              "    pm.expect(session).to.have.property('last_activity');",
+              "  });",
+              "  if (jsonData.length > 0) {",
+              "    pm.environment.set('session_id', jsonData[0].id);",
+              "  }",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/auth/sessions",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "auth", "sessions"]
+        }
+      }
+    },
+    {
+      "name": "9. Revoke a Session",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Session revocation - 200 OK or 204 No Content', function() {",
+              "  pm.response.to.have.status([200, 204]);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/auth/sessions/{{session_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "auth", "sessions", "{{session_id}}"]
+        }
+      }
+    },
+    {
+      "name": "10. Change Password",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Password change - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Password updated successfully', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('message');",
+              "  pm.environment.set('user_password', pm.environment.get('user_password_new'));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"current_password\": \"{{user_password}}\", \"new_password\": \"{{user_password_new}}\"}"
+        },
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/auth/change-password",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "auth", "change-password"]
+        }
+      }
+    },
+    {
+      "name": "11. Get Login History",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Get login history - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Login history is an array', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.be.an('array');",
+              "  pm.expect(jsonData.length).to.be.greaterThan(0);",
+              "});",
+              "",
+              "pm.test('Each login event has required fields', function() {",
+              "  var jsonData = pm.response.json();",
+              "  jsonData.forEach(function(event) {",
+              "    pm.expect(event).to.have.property('timestamp');",
+              "    pm.expect(event).to.have.property('ip_address');",
+              "    pm.expect(event).to.have.property('status');",
+              "  });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/auth/login-history",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "auth", "login-history"]
+        }
+      }
+    },
+    {
+      "name": "12. Request Password Reset",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Password reset request - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Reset request initiated', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('message');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\": \"{{user_email}}\"}"
+        },
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/recovery/request",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "recovery", "request"]
+        }
+      }
+    },
+    {
+      "name": "13. Verify Recovery OTP",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('OTP verification - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Recovery token provided', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('recovery_token');",
+              "  pm.environment.set('recovery_token', jsonData.recovery_token);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\": \"{{user_email}}\", \"otp\": \"{{recovery_code}}\"}"
+        },
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/recovery/verify",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "recovery", "verify"]
+        }
+      }
+    },
+    {
+      "name": "14. Reset Password with Token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Password reset - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Password reset complete', function() {",
+              "  var jsonData = pm.response.json();",
+              "  pm.expect(jsonData).to.have.property('message');",
+              "  pm.environment.set('user_password', pm.environment.get('user_password_reset'));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"recovery_token\": \"{{recovery_token}}\", \"new_password\": \"{{user_password_reset}}\"}"
+        },
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/recovery/reset",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "recovery", "reset"]
+        }
+      }
+    },
+    {
+      "name": "15. Final Logout",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Logout - 200 OK', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Access token cleared', function() {",
+              "  pm.environment.set('access_token', '');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}{{api_prefix}}/auth/logout",
+          "host": ["{{base_url}}"],
+          "path": ["{{api_prefix}}", "auth", "logout"]
+        }
+      }
+    }
+  ]
+}

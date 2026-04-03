@@ -1,0 +1,437 @@
+{
+  "info": {
+    "name": "ABAC Policies Scenario",
+    "description": "Attribute-based access control boundary testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Parent Access Boundaries",
+      "item": [
+        {
+          "name": "1. Login as Parent A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Parent A login - 200 OK', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Save token', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.environment.set('parent_a_token', jsonData.access_token);",
+                  "  pm.environment.set('current_token', jsonData.access_token);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"parent_a@ecole.ma\", \"password\": \"ParentPass123!\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["{{api_prefix}}", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "2. GET OWN child transcript (Expected: 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Access own child transcript - 200 OK', function() {",
+                  "  pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has transcript data', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData).to.have.property('student_id');",
+                  "  pm.expect(jsonData).to.have.property('grades');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{parent_a_token}}"}
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/gradebook/transcript/child_a_id",
+              "host": ["{{base_url}}"],
+              "path": ["{{api_prefix}}", "gradebook", "transcript", "child_a_id"]
+            }
+          }
+        },
+        {
+          "name": "3. GET OTHER parent's child transcript (Expected: 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Access other parent child transcript - 403 Forbidden', function() {",
+                  "  pm.expect(pm.response.code).to.equal(403);",
+                  "});",
+                  "",
+                  "pm.test('Response has error message', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData).to.have.property('error');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{parent_a_token}}"}
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/gradebook/transcript/child_b_id",
+              "host": ["{{base_url}}"],
+              "path": ["{{api_prefix}}", "gradebook", "transcript", "child_b_id"]
+            }
+          }
+        },
+        {
+          "name": "4. Logout Parent A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Logout - 204 No Content', function() {",
+                  "  pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{parent_a_token}}"}
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["{{api_prefix}}", "auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Teacher Access Boundaries",
+      "item": [
+        {
+          "name": "5. Login as Teacher A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Teacher A login - 200 OK', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Save token', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.environment.set('teacher_a_token', jsonData.access_token);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"teacher_a@ecole.ma\", \"password\": \"TeacherPass123!\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["{{api_prefix}}", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "6. Grade submission in OWN class (Expected: 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Grade own class submission - 200 OK', function() {",
+                  "  pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "pm.test('Response has grade confirmation', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData).to.have.property('grade');",
+                  "  pm.expect(jsonData.grade).to.equal(18);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{teacher_a_token}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"grade\": 18, \"feedback\": \"Excellent submission\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/submissions/submission_in_own_class/grade",
+              "host": ["{{base_url}}"],
+              "path": ["{{api_prefix}}", "submissions", "submission_in_own_class", "grade"]
+            }
+          }
+        },
+        {
+          "name": "7. Grade submission in OTHER class (Expected: 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Grade other class submission - 403 Forbidden', function() {",
+                  "  pm.expect(pm.response.code).to.equal(403);",
+                  "});",
+                  "",
+                  "pm.test('Response has error', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData).to.have.property('error');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{teacher_a_token}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"grade\": 15, \"feedback\": \"Not your class\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/submissions/submission_in_other_class/grade",
+              "host": ["{{base_url}}"],
+              "path": ["{{api_prefix}}", "submissions", "submission_in_other_class", "grade"]
+            }
+          }
+        },
+        {
+          "name": "8. Logout Teacher A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Logout - 204 No Content', function() {",
+                  "  pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{teacher_a_token}}"}
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["{{api_prefix}}", "auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Student Access Boundaries",
+      "item": [
+        {
+          "name": "9. Login as Student A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Student A login - 200 OK', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Save token', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.environment.set('student_a_token', jsonData.access_token);",
+                  "  pm.environment.set('student_a_id', jsonData.user.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"student_a@ecole.ma\", \"password\": \"StudentPass123!\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["{{api_prefix}}", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "10. GET OWN results (Expected: 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Get own results - 200 OK', function() {",
+                  "  pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has results array', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData).to.have.property('results').that.is.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{student_a_token}}"}
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/results",
+              "host": ["{{base_url}}"],
+              "path": ["{{api_prefix}}", "results"]
+            }
+          }
+        },
+        {
+          "name": "11. GET OTHER student transcript (Expected: 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Get other student transcript - 403 Forbidden', function() {",
+                  "  pm.expect(pm.response.code).to.equal(403);",
+                  "});",
+                  "",
+                  "pm.test('Response has error', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData).to.have.property('error');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{student_a_token}}"}
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/gradebook/transcript/other_student_id",
+              "host": ["{{base_url}}"],
+              "path": ["{{api_prefix}}", "gradebook", "transcript", "other_student_id"]
+            }
+          }
+        },
+        {
+          "name": "12. Logout Student A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Logout - 204 No Content', function() {",
+                  "  pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{student_a_token}}"}
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["{{api_prefix}}", "auth", "logout"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "api_prefix",
+      "value": "/api/v1"
+    },
+    {
+      "key": "parent_a_token",
+      "value": ""
+    },
+    {
+      "key": "teacher_a_token",
+      "value": ""
+    },
+    {
+      "key": "student_a_token",
+      "value": ""
+    },
+    {
+      "key": "student_a_id",
+      "value": ""
+    },
+    {
+      "key": "current_token",
+      "value": ""
+    }
+  ]
+}

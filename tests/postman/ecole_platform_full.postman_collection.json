@@ -1,0 +1,5123 @@
+{
+  "info": {
+    "_postman_id": "ecole-platform-api-collection",
+    "name": "Ecole Platform - Full API",
+    "description": "K-12 EdTech SaaS API for Moroccan schools - Complete test collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global pre-request: set base URL and ensure variables are initialized",
+          "if (!pm.environment.get('base_url')) {",
+          "  pm.environment.set('base_url', 'http://localhost:8000');",
+          "}",
+          "if (!pm.environment.get('api_prefix')) {",
+          "  pm.environment.set('api_prefix', '/api/v1');",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "api_prefix",
+      "value": "/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "admin_email",
+      "value": "admin@ecole.ma",
+      "type": "string"
+    },
+    {
+      "key": "admin_password",
+      "value": "AdminPassword123!",
+      "type": "string"
+    },
+    {
+      "key": "school_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "class_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "student_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "teacher_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "course_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "assignment_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "submission_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "quiz_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "academic_year_id",
+      "value": "2025-2026",
+      "type": "string"
+    },
+    {
+      "key": "enrollment_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "content_item_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "attempt_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "fee_structure_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "invoice_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "payment_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "conversation_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "notification_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "report_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "timetable_slot_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "question_bank_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "rubric_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "event_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01-Auth",
+      "item": [
+        {
+          "name": "POST /auth/login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has correct structure\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json).to.have.property('data');",
+                  "  pm.expect(json.data).to.have.property('access_token');",
+                  "  pm.expect(json.data).to.have.property('refresh_token');",
+                  "});",
+                  "",
+                  "pm.test(\"Save tokens to environment\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.environment.set('access_token', json.data.access_token);",
+                  "  pm.environment.set('refresh_token', json.data.refresh_token);",
+                  "  pm.expect(pm.environment.get('access_token')).to.be.truthy();",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"{{admin_email}}\", \"password\": \"{{admin_password}}\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/auth/login",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /auth/register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function() {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has correct structure\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.have.property('user_id');",
+                  "  pm.expect(json.data.email).to.equal('newuser@test.ma');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"newuser@test.ma\", \"password\": \"TestPassword123!\", \"first_name\": \"Test\", \"last_name\": \"User\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/auth/register",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /auth/refresh",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has new access token\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.have.property('access_token');",
+                  "  pm.environment.set('access_token', json.data.access_token);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/auth/refresh",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /auth/logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Logout successful\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/auth/logout",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /auth/me",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has correct structure\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.have.property('email');",
+                  "  pm.expect(json.data).to.have.property('roles');",
+                  "  pm.expect(json.data).to.have.property('permissions');",
+                  "  pm.expect(json.data.roles).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/auth/me",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /auth/sessions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has sessions array\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/auth/sessions",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "auth",
+                "sessions"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /auth/login-history",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has login history\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/auth/login-history",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "auth",
+                "login-history"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /auth/change-password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Password changed successfully\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"current_password\": \"{{admin_password}}\", \"new_password\": \"NewPassword123!\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/auth/change-password",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "auth",
+                "change-password"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /auth/2fa/setup",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"2FA setup initiated\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.have.property('secret');",
+                  "  pm.expect(json.data).to.have.property('qr_code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/auth/2fa/setup",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "auth",
+                "2fa",
+                "setup"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /auth/2fa/verify-setup",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"2FA verified successfully\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"code\": \"123456\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/auth/2fa/verify-setup",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "auth",
+                "2fa",
+                "verify-setup"
+              ]
+            }
+          }
+        },
+        {
+          "name": "NEGATIVE: POST /auth/login wrong password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 401\", function() {",
+                  "  pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message present\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', false);",
+                  "  pm.expect(json).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"{{admin_email}}\", \"password\": \"WrongPassword123!\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/auth/login",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "NEGATIVE: GET /auth/me without token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 401\", function() {",
+                  "  pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Unauthorized error\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', false);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/auth/me",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            }
+          }
+        },
+        {
+          "name": "NEGATIVE: GET /admin/users as student",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function() {",
+                  "  pm.response.to.have.status(403);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Forbidden error\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', false);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/admin/users",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "admin",
+                "users"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02-Schools",
+      "item": [
+        {
+          "name": "POST /schools",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function() {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has correct structure\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "  pm.expect(json.data.name).to.equal('Lycée Ibn Khaldoun');",
+                  "});",
+                  "",
+                  "pm.test(\"Save school_id\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.environment.set('school_id', json.data.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Lycée Ibn Khaldoun\", \"city\": \"Casablanca\", \"address\": \"123 Rue Mohammed V\", \"phone\": \"+212522123456\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/schools",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "schools"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /schools",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has pagination\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json).to.have.property('data');",
+                  "  pm.expect(json).to.have.property('pagination');",
+                  "  pm.expect(json.pagination).to.have.property('total');",
+                  "  pm.expect(json.pagination).to.have.property('page');",
+                  "  pm.expect(json.pagination).to.have.property('limit');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/schools?page=1&limit=10",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "schools"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /schools/{{school_id}}",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has correct structure\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "  pm.expect(json.data).to.have.property('name');",
+                  "  pm.expect(json.data).to.have.property('city');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/schools/{{school_id}}",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "schools",
+                "{{school_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "PATCH /schools/{{school_id}}",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"School updated successfully\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data.name).to.equal('Lycée Ibn Khaldoun - Updated');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Lycée Ibn Khaldoun - Updated\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/schools/{{school_id}}",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "schools",
+                "{{school_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "DELETE /schools/{{school_id}}",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 204 or 200\", function() {",
+                  "  pm.expect([200, 204]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/schools/{{school_id}}",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "schools",
+                "{{school_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "NEGATIVE: POST /schools as teacher",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 403\", function() {",
+                  "  pm.response.to.have.status(403);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Forbidden error\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', false);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Lycée Test\", \"city\": \"Rabat\", \"address\": \"456 Rue Principale\", \"phone\": \"+212661234567\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/schools",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "schools"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03-Classes & Enrollments",
+      "item": [
+        {
+          "name": "POST /classes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function() {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has correct structure\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "});",
+                  "",
+                  "pm.test(\"Save class_id\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.environment.set('class_id', json.data.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"school_id\": \"{{school_id}}\", \"name\": \"3ème A\", \"level\": \"9\", \"capacity\": 35}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/classes",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "classes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /classes/{{class_id}}",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has correct structure\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "  pm.expect(json.data).to.have.property('name');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/classes/{{class_id}}",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "classes",
+                "{{class_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /enrollments",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function() {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has correct structure\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "});",
+                  "",
+                  "pm.test(\"Save enrollment_id\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.environment.set('enrollment_id', json.data.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"student_id\": \"{{student_id}}\", \"class_id\": \"{{class_id}}\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/enrollments",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "enrollments"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /class-assignments",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function() {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has correct structure\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"teacher_id\": \"{{teacher_id}}\", \"class_id\": \"{{class_id}}\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/class-assignments",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "class-assignments"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /teacher/classes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has classes array\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/teacher/classes",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "teacher",
+                "classes"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04-Courses & Content",
+      "item": [
+        {
+          "name": "POST /courses",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function() {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has correct structure\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "});",
+                  "",
+                  "pm.test(\"Save course_id\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.environment.set('course_id', json.data.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Mathématiques 3ème\", \"description\": \"Cours de maths pour la 3ème année\", \"class_id\": \"{{class_id}}\", \"subject\": \"mathematics\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/courses",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "courses"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /courses",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has courses array\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/courses",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "courses"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /content-items",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has content items\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.be.an('array');",
+                  "  if (json.data.length > 0) {",
+                  "    pm.environment.set('content_item_id', json.data[0].id);",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/content-items",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "content-items"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /content-items/{{content_item_id}}",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200 or 404\", function() {",
+                  "  pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/content-items/{{content_item_id}}",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "content-items",
+                "{{content_item_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /content/library",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has library content\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/content/library",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "content",
+                "library"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /student-work",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has student work\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/student-work",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "student-work"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05-Assignments & Submissions",
+      "item": [
+        {
+          "name": "POST /assignments",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function() {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has correct structure\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "});",
+                  "",
+                  "pm.test(\"Save assignment_id\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.environment.set('assignment_id', json.data.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\": \"Devoir de Maths\", \"course_id\": \"{{course_id}}\", \"due_date\": \"2026-04-15T23:59:00+01:00\", \"max_grade\": 20}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/assignments",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "assignments"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /assignments",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has assignments array\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/assignments",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "assignments"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /submissions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function() {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has correct structure\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "});",
+                  "",
+                  "pm.test(\"Save submission_id\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.environment.set('submission_id', json.data.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"assignment_id\": \"{{assignment_id}}\", \"content\": \"Ma réponse\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/submissions",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "submissions"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /submissions/{{submission_id}}/submit",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Submission submitted\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/submissions/{{submission_id}}/submit",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "submissions",
+                "{{submission_id}}",
+                "submit"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /submissions/{{submission_id}}/grade",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Graded successfully\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.have.property('grade', 16);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"grade\": 16, \"feedback\": \"Très bien\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/submissions/{{submission_id}}/grade",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "submissions",
+                "{{submission_id}}",
+                "grade"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /results",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has results\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/results",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "results"
+              ]
+            }
+          }
+        },
+        {
+          "name": "NEGATIVE: POST /submissions/{{submission_id}}/grade with grade=25",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 422\", function() {",
+                  "  pm.response.to.have.status(422);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Validation error\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', false);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"grade\": 25, \"feedback\": \"Invalid grade\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/submissions/{{submission_id}}/grade",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "submissions",
+                "{{submission_id}}",
+                "grade"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06-Quizzes",
+      "item": [
+        {
+          "name": "POST /quizzes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function() {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has correct structure\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "});",
+                  "",
+                  "pm.test(\"Save quiz_id\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.environment.set('quiz_id', json.data.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\": \"Quiz Algèbre\", \"subject\": \"mathematics\", \"difficulty\": \"medium\", \"questions\": [{\"question\": \"Calculer 2+3\", \"answer\": \"5\", \"type\": \"multiple_choice\", \"options\": [\"3\", \"4\", \"5\", \"6\"]}]}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/quizzes",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "quizzes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /quizzes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has quizzes array\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/quizzes",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "quizzes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /quizzes/{{quiz_id}}",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has correct structure\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "  pm.expect(json.data).to.have.property('title');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/quizzes/{{quiz_id}}",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "quizzes",
+                "{{quiz_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "PUT /quizzes/{{quiz_id}}",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Quiz updated\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\": \"Quiz Algèbre - Updated\", \"difficulty\": \"hard\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/quizzes/{{quiz_id}}",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "quizzes",
+                "{{quiz_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /quizzes/{{quiz_id}}/publish",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Quiz published\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data.status).to.equal('published');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/quizzes/{{quiz_id}}/publish",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "quizzes",
+                "{{quiz_id}}",
+                "publish"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /quizzes/{{quiz_id}}/start",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function() {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has attempt_id\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "});",
+                  "",
+                  "pm.test(\"Save attempt_id\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.environment.set('attempt_id', json.data.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/quizzes/{{quiz_id}}/start",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "quizzes",
+                "{{quiz_id}}",
+                "start"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /attempts/{{attempt_id}}/submit",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Attempt submitted\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.have.property('score');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"answers\": [{\"question_id\": \"1\", \"answer\": \"5\"}]}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/attempts/{{attempt_id}}/submit",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "attempts",
+                "{{attempt_id}}",
+                "submit"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /attempts/{{attempt_id}}/results",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has results\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.have.property('score');",
+                  "  pm.expect(json.data).to.have.property('answers');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/attempts/{{attempt_id}}/results",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "attempts",
+                "{{attempt_id}}",
+                "results"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "07-Gradebook",
+      "item": [
+        {
+          "name": "POST /gradebook/categories",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function() {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has correct structure\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"class_id\": \"{{class_id}}\", \"period_id\": \"{{academic_year_id}}\", \"categories\": [{\"name\": \"Contrôle\", \"weight\": 0.4}, {\"name\": \"Devoir\", \"weight\": 0.3}, {\"name\": \"Participation\", \"weight\": 0.3}]}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/gradebook/categories",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "gradebook",
+                "categories"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /gradebook/categories/{{class_id}}/{{academic_year_id}}",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has categories\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/gradebook/categories/{{class_id}}/{{academic_year_id}}",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "gradebook",
+                "categories",
+                "{{class_id}}",
+                "{{academic_year_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /gradebook/compute/{{class_id}}/{{academic_year_id}}",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200 or 202\", function() {",
+                  "  pm.expect([200, 202]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 1000ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(1000);",
+                  "});",
+                  "",
+                  "pm.test(\"Compute initiated\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/gradebook/compute/{{class_id}}/{{academic_year_id}}",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "gradebook",
+                "compute",
+                "{{class_id}}",
+                "{{academic_year_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /gradebook/{{class_id}}/{{academic_year_id}}",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has gradebook data\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/gradebook/{{class_id}}/{{academic_year_id}}",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "gradebook",
+                "{{class_id}}",
+                "{{academic_year_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /gradebook/transcript/{{student_id}}",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has transcript\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.be.an('object');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/gradebook/transcript/{{student_id}}",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "gradebook",
+                "transcript",
+                "{{student_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "08-Attendance",
+      "item": [
+        {
+          "name": "POST /attendance/sessions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function() {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has correct structure\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"class_id\": \"{{class_id}}\", \"date\": \"2026-03-30\", \"records\": [{\"student_id\": \"{{student_id}}\", \"status\": \"present\"}]}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/attendance/sessions",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "attendance",
+                "sessions"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /analytics/attendance/student/{{student_id}}",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has attendance data\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.be.an('object');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/analytics/attendance/student/{{student_id}}",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "analytics",
+                "attendance",
+                "student",
+                "{{student_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /analytics/attendance/class/{{class_id}}",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has class attendance\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/analytics/attendance/class/{{class_id}}",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "analytics",
+                "attendance",
+                "class",
+                "{{class_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /analytics/attendance/trends/{{class_id}}",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has trends\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/analytics/attendance/trends/{{class_id}}",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "analytics",
+                "attendance",
+                "trends",
+                "{{class_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /analytics/attendance/alerts",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has alerts\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/analytics/attendance/alerts",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "analytics",
+                "attendance",
+                "alerts"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "09-Billing & Payments",
+      "item": [
+        {
+          "name": "POST /billing/fee-structures",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function() {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has correct structure\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "});",
+                  "",
+                  "pm.test(\"Save fee_structure_id\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.environment.set('fee_structure_id', json.data.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Frais scolaires 2026\", \"amount\": 15000, \"currency\": \"MAD\", \"academic_year_id\": \"{{academic_year_id}}\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/billing/fee-structures",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "billing",
+                "fee-structures"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /billing/fee-structures",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has fee structures\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/billing/fee-structures",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "billing",
+                "fee-structures"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /billing/fee-assignments",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function() {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Fee assignment created\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"fee_structure_id\": \"{{fee_structure_id}}\", \"student_id\": \"{{student_id}}\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/billing/fee-assignments",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "billing",
+                "fee-assignments"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /billing/generate-invoices",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200 or 202\", function() {",
+                  "  pm.expect([200, 202]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 1000ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(1000);",
+                  "});",
+                  "",
+                  "pm.test(\"Invoice generation initiated\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"academic_year_id\": \"{{academic_year_id}}\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/billing/generate-invoices",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "billing",
+                "generate-invoices"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /invoices",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has invoices\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.be.an('array');",
+                  "  if (json.data.length > 0) {",
+                  "    pm.environment.set('invoice_id', json.data[0].id);",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/invoices",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "invoices"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /invoices/{{invoice_id}}",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200 or 404\", function() {",
+                  "  pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/invoices/{{invoice_id}}",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "invoices",
+                "{{invoice_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /payments/initiate",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 201\", function() {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has payment_id\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('success', true);",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "});",
+                  "",
+                  "pm.test(\"Save payment_id\", function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.environment.set('payment_id', json.data.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"invoice_id\": \"{{invoice_id}}\", \"amount\": 15000, \"currency\": \"MAD\", \"method\": \"bank_transfer\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/payments/initiate",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "payments",
+                "initiate"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /payments/{{payment_id}}",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200 or 404\", function() {",
+                  "  pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time < 500ms\", function() {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/payments/{{payment_id}}",
+              "host": [
+                "{{base_url}}{{api_prefix}}"
+              ],
+              "path": [
+                "payments",
+                "{{payment_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "10-Calendar & Events",
+      "item": [
+        {
+          "name": "List events",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/events",
+              "host": [
+                "{{base_url}}{{api_prefix}}/events"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List holidays",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/calendar/holidays",
+              "host": [
+                "{{base_url}}{{api_prefix}}/calendar/holidays"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create holiday",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/calendar/holidays",
+              "host": [
+                "{{base_url}}{{api_prefix}}/calendar/holidays"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Aïd Al Fitr\",\n  \"start_date\": \"2026-03-20\",\n  \"end_date\": \"2026-03-22\",\n  \"academic_year_id\": \"{{academic_year_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function() { pm.response.to.have.status(201); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });",
+                  "var json = pm.response.json(); if (json.data) { pm.environment.set(\"event_id\", json.data.id); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update holiday",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/calendar/holidays/{{event_id}}",
+              "host": [
+                "{{base_url}}{{api_prefix}}/calendar/holidays/{{event_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Aïd Al Fitr - Updated\",\n  \"start_date\": \"2026-03-20\",\n  \"end_date\": \"2026-03-23\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "11-Messaging & Notifications",
+      "item": [
+        {
+          "name": "Create conversation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/messages/conversations",
+              "host": [
+                "{{base_url}}{{api_prefix}}/messages/conversations"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"participant_ids\": [\n    \"{{teacher_id}}\"\n  ],\n  \"subject\": \"Question sur le devoir\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function() { pm.response.to.have.status(201); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });",
+                  "var json = pm.response.json(); if (json.data) { pm.environment.set(\"conversation_id\", json.data.id); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List conversations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/messages/conversations",
+              "host": [
+                "{{base_url}}{{api_prefix}}/messages/conversations"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get conversation messages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/messages/conversations/{{conversation_id}}/messages",
+              "host": [
+                "{{base_url}}{{api_prefix}}/messages/conversations/{{conversation_id}}/messages"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Send message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/messages/conversations/{{conversation_id}}/messages",
+              "host": [
+                "{{base_url}}{{api_prefix}}/messages/conversations/{{conversation_id}}/messages"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Bonjour, j'ai une question sur le devoir de mathématiques.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function() { pm.response.to.have.status(201); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Search messages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/messages/search?q=devoir",
+              "host": [
+                "{{base_url}}{{api_prefix}}/messages/search?q=devoir"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/notifications",
+              "host": [
+                "{{base_url}}{{api_prefix}}/notifications"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });",
+                  "var json = pm.response.json(); if (json.data) { pm.environment.set(\"notification_id\", json.data && json.data[0] ? json.data[0].id : ''); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get unread count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/notifications/unread-count",
+              "host": [
+                "{{base_url}}{{api_prefix}}/notifications/unread-count"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });",
+                  "pm.test(\"Has count field\", function() { pm.expect(pm.response.json().data).to.have.property(\"count\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get notification preferences",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/notifications/preferences",
+              "host": [
+                "{{base_url}}{{api_prefix}}/notifications/preferences"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update notification preferences",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/notifications/preferences",
+              "host": [
+                "{{base_url}}{{api_prefix}}/notifications/preferences"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email_enabled\": true,\n  \"push_enabled\": true,\n  \"sms_enabled\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get digest preferences",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/notifications/digest/preferences",
+              "host": [
+                "{{base_url}}{{api_prefix}}/notifications/digest/preferences"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "12-Reports & Analytics",
+      "item": [
+        {
+          "name": "Generate report",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/reports/generate",
+              "host": [
+                "{{base_url}}{{api_prefix}}/reports/generate"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"student_report_card\",\n  \"student_id\": \"{{student_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });",
+                  "var json = pm.response.json(); if (json.data) { pm.environment.set(\"report_id\", json.data.id); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List reports",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/reports",
+              "host": [
+                "{{base_url}}{{api_prefix}}/reports"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get report options",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/reports/options?type=student_report_card",
+              "host": [
+                "{{base_url}}{{api_prefix}}/reports/options?type=student_report_card"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Analytics overview",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/analytics/overview",
+              "host": [
+                "{{base_url}}{{api_prefix}}/analytics/overview"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });",
+                  "pm.test(\"Has analytics data\", function() { pm.expect(pm.response.json()).to.have.property(\"data\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Attendance analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/analytics/attendance",
+              "host": [
+                "{{base_url}}{{api_prefix}}/analytics/attendance"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Grade analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/analytics/grades",
+              "host": [
+                "{{base_url}}{{api_prefix}}/analytics/grades"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });",
+                  "pm.test(\"Grades in valid range\", function() { var data = pm.response.json().data; if (data && data.average) { pm.expect(data.average).to.be.at.most(20); pm.expect(data.average).to.be.at.least(0); } });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Billing analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/analytics/billing",
+              "host": [
+                "{{base_url}}{{api_prefix}}/analytics/billing"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Engagement analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/analytics/engagement",
+              "host": [
+                "{{base_url}}{{api_prefix}}/analytics/engagement"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "13-Timetable",
+      "item": [
+        {
+          "name": "Create timetable slot",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/timetable/slots",
+              "host": [
+                "{{base_url}}{{api_prefix}}/timetable/slots"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"class_id\": \"{{class_id}}\",\n  \"teacher_id\": \"{{teacher_id}}\",\n  \"subject\": \"mathematics\",\n  \"day_of_week\": 1,\n  \"start_time\": \"08:00\",\n  \"end_time\": \"09:00\",\n  \"academic_year_id\": \"{{academic_year_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function() { pm.response.to.have.status(201); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });",
+                  "var json = pm.response.json(); if (json.data) { pm.environment.set(\"timetable_slot_id\", json.data.id); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List timetable slots",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/timetable/slots?class_id={{class_id}}",
+              "host": [
+                "{{base_url}}{{api_prefix}}/timetable/slots?class_id={{class_id}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get class weekly timetable",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/timetable/class/{{class_id}}/weekly",
+              "host": [
+                "{{base_url}}{{api_prefix}}/timetable/class/{{class_id}}/weekly"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get my weekly timetable",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/timetable/me/weekly",
+              "host": [
+                "{{base_url}}{{api_prefix}}/timetable/me/weekly"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update timetable slot",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/timetable/slots/{{timetable_slot_id}}",
+              "host": [
+                "{{base_url}}{{api_prefix}}/timetable/slots/{{timetable_slot_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_time\": \"09:00\",\n  \"end_time\": \"10:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete timetable slot",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/timetable/slots/{{timetable_slot_id}}",
+              "host": [
+                "{{base_url}}{{api_prefix}}/timetable/slots/{{timetable_slot_id}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Set constraints",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/timetable/constraints",
+              "host": [
+                "{{base_url}}{{api_prefix}}/timetable/constraints"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"academic_year_id\": \"{{academic_year_id}}\",\n  \"max_hours_per_day\": 8,\n  \"min_break_minutes\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get constraints",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/timetable/constraints?academic_year_id={{academic_year_id}}",
+              "host": [
+                "{{base_url}}{{api_prefix}}/timetable/constraints?academic_year_id={{academic_year_id}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "14-Profiles & Documents",
+      "item": [
+        {
+          "name": "Get my profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/me/profile",
+              "host": [
+                "{{base_url}}{{api_prefix}}/me/profile"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });",
+                  "pm.test(\"Profile has required fields\", function() { var data = pm.response.json().data; pm.expect(data).to.have.property(\"email\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update my profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/me/profile",
+              "host": [
+                "{{base_url}}{{api_prefix}}/me/profile"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+212661234567\",\n  \"preferred_language\": \"fr\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get my children (parent)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/me/children",
+              "host": [
+                "{{base_url}}{{api_prefix}}/me/children"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin get user profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/admin/users/{{user_id}}/profile",
+              "host": [
+                "{{base_url}}{{api_prefix}}/admin/users/{{user_id}}/profile"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List documents",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/documents",
+              "host": [
+                "{{base_url}}{{api_prefix}}/documents"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get document options",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/documents/options",
+              "host": [
+                "{{base_url}}{{api_prefix}}/documents/options"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "15-Admin & System",
+      "item": [
+        {
+          "name": "Admin dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/admin/dashboard",
+              "host": [
+                "{{base_url}}{{api_prefix}}/admin/dashboard"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });",
+                  "pm.test(\"Dashboard has stats\", function() { pm.expect(pm.response.json()).to.have.property(\"data\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/admin/users",
+              "host": [
+                "{{base_url}}{{api_prefix}}/admin/users"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "User login history",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/admin/users/{{user_id}}/login-history",
+              "host": [
+                "{{base_url}}{{api_prefix}}/admin/users/{{user_id}}/login-history"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Suspend user",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/admin/users/{{user_id}}/suspend",
+              "host": [
+                "{{base_url}}{{api_prefix}}/admin/users/{{user_id}}/suspend"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unsuspend user",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/admin/users/{{user_id}}/unsuspend",
+              "host": [
+                "{{base_url}}{{api_prefix}}/admin/users/{{user_id}}/unsuspend"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List invitations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/admin/invitations",
+              "host": [
+                "{{base_url}}{{api_prefix}}/admin/invitations"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Batch register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/admin/batch-register",
+              "host": [
+                "{{base_url}}{{api_prefix}}/admin/batch-register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"users\": [\n    {\n      \"email\": \"batch1@ecole-test.ma\",\n      \"first_name\": \"Batch\",\n      \"last_name\": \"User1\",\n      \"role\": \"STUDENT\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function() { pm.response.to.have.status(201); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Impersonate user",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/admin/impersonate/{{user_id}}",
+              "host": [
+                "{{base_url}}{{api_prefix}}/admin/impersonate/{{user_id}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Stop impersonation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/admin/stop-impersonation",
+              "host": [
+                "{{base_url}}{{api_prefix}}/admin/stop-impersonation"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "16-AI & CMS",
+      "item": [
+        {
+          "name": "Create writing attempt",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/writing-attempts",
+              "host": [
+                "{{base_url}}{{api_prefix}}/writing-attempts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prompt\": \"Écris un paragraphe sur l'histoire du Maroc\",\n  \"student_text\": \"Le Maroc est un pays riche en histoire...\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function() { pm.response.to.have.status(201); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get recommendations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/recommendations",
+              "host": [
+                "{{base_url}}{{api_prefix}}/recommendations"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get KPIs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/kpis?period=30",
+              "host": [
+                "{{base_url}}{{api_prefix}}/kpis?period=30"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get event schema",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/events/schema",
+              "host": [
+                "{{base_url}}{{api_prefix}}/events/schema"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create CMS content",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/cms/content",
+              "host": [
+                "{{base_url}}{{api_prefix}}/cms/content"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Leçon: Les fractions\",\n  \"content_type\": \"lesson\",\n  \"subject\": \"mathematics\",\n  \"level_band\": \"college\",\n  \"body\": \"Les fractions sont...\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function() { pm.response.to.have.status(201); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List CMS content",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/cms/content",
+              "host": [
+                "{{base_url}}{{api_prefix}}/cms/content"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List CMS submissions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/cms/submissions",
+              "host": [
+                "{{base_url}}{{api_prefix}}/cms/submissions"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "AI opt-out",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/ai/preferences/opt-out",
+              "host": [
+                "{{base_url}}{{api_prefix}}/ai/preferences/opt-out"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"opted_out\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "17-GDPR",
+      "item": [
+        {
+          "name": "Export user data",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/users/{{user_id}}/data-export",
+              "host": [
+                "{{base_url}}{{api_prefix}}/users/{{user_id}}/data-export"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });",
+                  "pm.test(\"Export contains user data\", function() { pm.expect(pm.response.json()).to.have.property(\"data\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get consent log",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/users/{{user_id}}/consent-log",
+              "host": [
+                "{{base_url}}{{api_prefix}}/users/{{user_id}}/consent-log"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Request data deletion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/users/{{user_id}}/data-deletion",
+              "host": [
+                "{{base_url}}{{api_prefix}}/users/{{user_id}}/data-deletion"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"User request\",\n  \"confirm\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "18-Question Bank & Rubrics",
+      "item": [
+        {
+          "name": "Create question",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/question-bank",
+              "host": [
+                "{{base_url}}{{api_prefix}}/question-bank"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"Calculer: 2/3 + 1/4\",\n  \"answer\": \"11/12\",\n  \"subject\": \"mathematics\",\n  \"difficulty\": \"medium\",\n  \"level_band\": \"college\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function() { pm.response.to.have.status(201); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });",
+                  "var json = pm.response.json(); if (json.data) { pm.environment.set(\"question_bank_id\", json.data.id); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List questions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/question-bank",
+              "host": [
+                "{{base_url}}{{api_prefix}}/question-bank"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Question bank stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/question-bank/stats",
+              "host": [
+                "{{base_url}}{{api_prefix}}/question-bank/stats"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Generate quiz from bank",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/question-bank/generate-quiz",
+              "host": [
+                "{{base_url}}{{api_prefix}}/question-bank/generate-quiz"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"mathematics\",\n  \"difficulty\": \"medium\",\n  \"count\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function() { pm.response.to.have.status(201); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create rubric",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/rubrics",
+              "host": [
+                "{{base_url}}{{api_prefix}}/rubrics"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Grille d'évaluation - Rédaction\",\n  \"criteria\": [\n    {\n      \"name\": \"Compréhension\",\n      \"max_score\": 5\n    },\n    {\n      \"name\": \"Rédaction\",\n      \"max_score\": 5\n    },\n    {\n      \"name\": \"Présentation\",\n      \"max_score\": 5\n    },\n    {\n      \"name\": \"Argumentation\",\n      \"max_score\": 5\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function() { pm.response.to.have.status(201); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });",
+                  "var json = pm.response.json(); if (json.data) { pm.environment.set(\"rubric_id\", json.data.id); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List rubrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/rubrics",
+              "host": [
+                "{{base_url}}{{api_prefix}}/rubrics"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get rubric detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/rubrics/{{rubric_id}}",
+              "host": [
+                "{{base_url}}{{api_prefix}}/rubrics/{{rubric_id}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function() { pm.response.to.have.status(200); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Duplicate rubric",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/rubrics/{{rubric_id}}/duplicate",
+              "host": [
+                "{{base_url}}{{api_prefix}}/rubrics/{{rubric_id}}/duplicate"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function() { pm.response.to.have.status(201); });",
+                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });",
+                  "pm.test(\"Response structure valid\", function() { var json = pm.response.json(); pm.expect(json).to.have.property(\"success\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

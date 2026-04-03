@@ -1,0 +1,277 @@
+{
+  "id": "9f0a1b2c-4d5e-4f6a-9b0c-2d3e4f5a6b7c",
+  "name": "Ecole Platform - Staging",
+  "values": [
+    {
+      "key": "base_url",
+      "value": "https://staging.ecole-platform.ma",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "api_prefix",
+      "value": "/api/v1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "sys_admin_email",
+      "value": "sysadmin@staging.ecole-platform.ma",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "sys_admin_password",
+      "value": "TestPassword123!",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "admin_email",
+      "value": "admin@staging.ecole-platform.ma",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "admin_password",
+      "value": "TestPassword123!",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "director_email",
+      "value": "director@staging.ecole-platform.ma",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "director_password",
+      "value": "TestPassword123!",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "teacher_email",
+      "value": "teacher@staging.ecole-platform.ma",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "teacher_password",
+      "value": "TestPassword123!",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "parent_email",
+      "value": "parent@staging.ecole-platform.ma",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "parent_password",
+      "value": "TestPassword123!",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "student_email",
+      "value": "student@staging.ecole-platform.ma",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "student_password",
+      "value": "TestPassword123!",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "school_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "class_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "course_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "academic_year_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "student_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "teacher_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "parent_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "assignment_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "submission_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "quiz_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "attempt_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "invoice_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "payment_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "fee_structure_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "event_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "conversation_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "message_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "notification_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "document_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "report_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "rubric_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "question_bank_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "content_item_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "timetable_slot_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "enrollment_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "announcement_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "feature_toggle_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "assessment_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}
