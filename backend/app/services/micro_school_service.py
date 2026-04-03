@@ -101,11 +101,13 @@ class _MicroServiceBase:
         self,
         micro_school_id: uuid.UUID,
         *,
+        school_id: uuid.UUID | None = None,
         include_groups: bool = False,
         include_payments: bool = False,
     ) -> MicroSchool:
         school = await self.repo.get_micro_school(
             micro_school_id,
+            school_id=school_id,
             include_groups=include_groups,
             include_payments=include_payments,
         )
@@ -123,6 +125,7 @@ class _MicroServiceBase:
         if auth.role == PAR and await self.repo.parent_has_school_access(
             parent_id=auth.user_id,
             micro_school_id=school.id,
+            school_id=auth.school_id,
         ):
             return
         raise AuthorizationError(
@@ -293,6 +296,7 @@ class MicroSchoolService(_MicroServiceBase):
         if self._is_educator_actor(auth):
             target_educator = auth.user_id
         schools = await self.repo.list_micro_schools(
+            school_id=auth.school_id,
             educator_id=target_educator,
             city=city,
             status=status,
@@ -303,6 +307,7 @@ class MicroSchoolService(_MicroServiceBase):
                 if await self.repo.parent_has_school_access(
                     parent_id=auth.user_id,
                     micro_school_id=school.id,
+                    school_id=auth.school_id,
                 ):
                     visible.append(school)
             schools = visible
@@ -316,6 +321,7 @@ class MicroSchoolService(_MicroServiceBase):
     ) -> dict[str, Any]:
         school = await self._get_school_or_404(
             micro_school_id,
+            school_id=auth.school_id,
             include_groups=True,
             include_payments=True,
         )
@@ -330,13 +336,16 @@ class MicroSchoolService(_MicroServiceBase):
         auth: AuthContext,
         ip_address: str | None = None,
     ) -> dict[str, Any]:
-        school = await self._get_school_or_404(micro_school_id)
+        school = await self._get_school_or_404(micro_school_id, school_id=auth.school_id)
         await self._ensure_school_manage_access(school, auth)
 
         async with UnitOfWork(self.db) as uow:
             repo = MicroSchoolRepository(uow.session)
             audit = AuditService(uow.session)
-            school = await repo.get_micro_school(micro_school_id)
+            school = await repo.get_micro_school(
+                micro_school_id,
+                school_id=auth.school_id,
+            )
             if school is None:
                 raise NotFoundError("Micro-school not found", error_code="ERR-MICRO-404")
             before = self._school_to_response(school)
@@ -365,13 +374,16 @@ class MicroSchoolService(_MicroServiceBase):
         auth: AuthContext,
         ip_address: str | None = None,
     ) -> dict[str, Any]:
-        school = await self._get_school_or_404(micro_school_id)
+        school = await self._get_school_or_404(micro_school_id, school_id=auth.school_id)
         await self._ensure_school_manage_access(school, auth)
 
         async with UnitOfWork(self.db) as uow:
             repo = MicroSchoolRepository(uow.session)
             audit = AuditService(uow.session)
-            school = await repo.get_micro_school(micro_school_id)
+            school = await repo.get_micro_school(
+                micro_school_id,
+                school_id=auth.school_id,
+            )
             if school is None:
                 raise NotFoundError("Micro-school not found", error_code="ERR-MICRO-404")
             before = self._school_to_response(school)
@@ -519,7 +531,10 @@ class MicroGroupService(_MicroServiceBase):
         auth: AuthContext,
         ip_address: str | None = None,
     ) -> dict[str, Any]:
-        school = await self._get_school_or_404(body.micro_school_id)
+        school = await self._get_school_or_404(
+            body.micro_school_id,
+            school_id=auth.school_id,
+        )
         await self._ensure_school_manage_access(school, auth)
 
         async with UnitOfWork(self.db) as uow:
@@ -556,9 +571,15 @@ class MicroGroupService(_MicroServiceBase):
         micro_school_id: uuid.UUID,
         auth: AuthContext,
     ) -> list[dict[str, Any]]:
-        school = await self._get_school_or_404(micro_school_id)
+        school = await self._get_school_or_404(
+            micro_school_id,
+            school_id=auth.school_id,
+        )
         await self._ensure_school_view_access(school, auth)
-        groups = await self.repo.list_micro_groups(micro_school_id=micro_school_id)
+        groups = await self.repo.list_micro_groups(
+            school_id=auth.school_id,
+            micro_school_id=micro_school_id,
+        )
         return [self._group_to_response(item) for item in groups]
 
     async def update_group(
@@ -569,7 +590,11 @@ class MicroGroupService(_MicroServiceBase):
         auth: AuthContext,
         ip_address: str | None = None,
     ) -> dict[str, Any]:
-        group = await self.repo.get_micro_group(micro_group_id, include_school=True)
+        group = await self.repo.get_micro_group(
+            micro_group_id,
+            school_id=auth.school_id,
+            include_school=True,
+        )
         if group is None or group.micro_school is None:
             raise NotFoundError("Micro group not found", error_code="ERR-MICRO-404")
         await self._ensure_school_manage_access(group.micro_school, auth)
@@ -616,7 +641,11 @@ class MicroGroupService(_MicroServiceBase):
         auth: AuthContext,
         ip_address: str | None = None,
     ) -> dict[str, Any]:
-        group = await self.repo.get_micro_group(micro_group_id, include_school=True)
+        group = await self.repo.get_micro_group(
+            micro_group_id,
+            school_id=auth.school_id,
+            include_school=True,
+        )
         if group is None or group.micro_school is None:
             raise NotFoundError("Micro group not found", error_code="ERR-MICRO-404")
         await self._ensure_school_manage_access(group.micro_school, auth)
@@ -649,7 +678,11 @@ class MicroGroupService(_MicroServiceBase):
         auth: AuthContext,
         ip_address: str | None = None,
     ) -> dict[str, Any]:
-        group = await self.repo.get_micro_group(body.micro_group_id, include_school=True)
+        group = await self.repo.get_micro_group(
+            body.micro_group_id,
+            school_id=auth.school_id,
+            include_school=True,
+        )
         if group is None or group.micro_school is None:
             raise NotFoundError("Micro group not found", error_code="ERR-MICRO-404")
         if auth.role == PAR:
@@ -711,11 +744,16 @@ class MicroGroupService(_MicroServiceBase):
         if auth.role == PAR:
             target_parent = auth.user_id
         if micro_group_id is not None:
-            group = await self.repo.get_micro_group(micro_group_id, include_school=True)
+            group = await self.repo.get_micro_group(
+                micro_group_id,
+                school_id=auth.school_id,
+                include_school=True,
+            )
             if group is None or group.micro_school is None:
                 raise NotFoundError("Micro group not found", error_code="ERR-MICRO-404")
             await self._ensure_school_view_access(group.micro_school, auth)
         enrollments = await self.repo.list_micro_enrollments(
+            school_id=auth.school_id,
             micro_group_id=micro_group_id,
             parent_id=target_parent,
             status=status,
@@ -734,6 +772,7 @@ class MicroGroupService(_MicroServiceBase):
     ) -> dict[str, Any]:
         enrollment = await self.repo.get_micro_enrollment(
             micro_enrollment_id,
+            school_id=auth.school_id,
             include_group=True,
         )
         if (
@@ -795,6 +834,7 @@ class MicroGroupService(_MicroServiceBase):
     ) -> dict[str, Any]:
         enrollment = await self.repo.get_micro_enrollment(
             micro_enrollment_id,
+            school_id=auth.school_id,
             include_group=True,
         )
         if (
@@ -837,8 +877,14 @@ class MicroPaymentService(_MicroServiceBase):
         auth: AuthContext,
         ip_address: str | None = None,
     ) -> dict[str, Any]:
-        school = await self._get_school_or_404(body.micro_school_id)
-        enrollment = await self.repo.get_micro_enrollment(body.child_enrollment_id)
+        school = await self._get_school_or_404(
+            body.micro_school_id,
+            school_id=auth.school_id,
+        )
+        enrollment = await self.repo.get_micro_enrollment(
+            body.child_enrollment_id,
+            school_id=auth.school_id,
+        )
         if enrollment is None:
             raise NotFoundError("Micro enrollment not found", error_code="ERR-MICRO-404")
         if auth.role == PAR:
@@ -909,9 +955,13 @@ class MicroPaymentService(_MicroServiceBase):
         if auth.role == PAR:
             target_parent = auth.user_id
         if micro_school_id is not None:
-            school = await self._get_school_or_404(micro_school_id)
+            school = await self._get_school_or_404(
+                micro_school_id,
+                school_id=auth.school_id,
+            )
             await self._ensure_school_view_access(school, auth)
         payments = await self.repo.list_micro_payments(
+            school_id=auth.school_id,
             micro_school_id=micro_school_id,
             parent_id=target_parent,
             child_enrollment_id=child_enrollment_id,
@@ -929,7 +979,11 @@ class MicroPaymentService(_MicroServiceBase):
         auth: AuthContext,
         ip_address: str | None = None,
     ) -> dict[str, Any]:
-        payment = await self.repo.get_micro_payment(micro_payment_id, include_school=True)
+        payment = await self.repo.get_micro_payment(
+            micro_payment_id,
+            school_id=auth.school_id,
+            include_school=True,
+        )
         if payment is None or payment.micro_school is None:
             raise NotFoundError("Micro payment not found", error_code="ERR-MICRO-404")
         if auth.role == PAR:
@@ -976,7 +1030,11 @@ class MicroPaymentService(_MicroServiceBase):
         auth: AuthContext,
         ip_address: str | None = None,
     ) -> dict[str, Any]:
-        payment = await self.repo.get_micro_payment(micro_payment_id, include_school=True)
+        payment = await self.repo.get_micro_payment(
+            micro_payment_id,
+            school_id=auth.school_id,
+            include_school=True,
+        )
         if payment is None or payment.micro_school is None:
             raise NotFoundError("Micro payment not found", error_code="ERR-MICRO-404")
         await self._ensure_school_manage_access(payment.micro_school, auth)
@@ -1010,9 +1068,13 @@ class MicroPaymentService(_MicroServiceBase):
     ) -> dict[str, Any]:
         target_parent = auth.user_id if auth.role == PAR else None
         if micro_school_id is not None:
-            school = await self._get_school_or_404(micro_school_id)
+            school = await self._get_school_or_404(
+                micro_school_id,
+                school_id=auth.school_id,
+            )
             await self._ensure_school_view_access(school, auth)
         payments = await self.repo.list_micro_payments(
+            school_id=auth.school_id,
             micro_school_id=micro_school_id,
             parent_id=target_parent,
         )
@@ -1056,6 +1118,7 @@ class MicroProgressService(_MicroServiceBase):
     ) -> dict[str, Any]:
         enrollment = await self.repo.get_micro_enrollment(
             body.micro_enrollment_id,
+            school_id=auth.school_id,
             include_group=True,
         )
         if (
@@ -1121,6 +1184,7 @@ class MicroProgressService(_MicroServiceBase):
         if micro_enrollment_id is not None:
             enrollment = await self.repo.get_micro_enrollment(
                 micro_enrollment_id,
+                school_id=auth.school_id,
                 include_group=True,
             )
             if (
@@ -1142,6 +1206,7 @@ class MicroProgressService(_MicroServiceBase):
             else:
                 await self._ensure_school_view_access(school, auth)
         logs = await self.repo.list_micro_progress_logs(
+            school_id=auth.school_id,
             micro_enrollment_id=micro_enrollment_id,
             educator_id=target_educator,
             date_from=date_from,
@@ -1150,7 +1215,10 @@ class MicroProgressService(_MicroServiceBase):
         if auth.role == PAR:
             allowed_enrollment_ids: set[uuid.UUID] = set()
             for log in logs:
-                enrollment = await self.repo.get_micro_enrollment(log.micro_enrollment_id)
+                enrollment = await self.repo.get_micro_enrollment(
+                    log.micro_enrollment_id,
+                    school_id=auth.school_id,
+                )
                 if enrollment is not None and enrollment.parent_id == auth.user_id:
                     allowed_enrollment_ids.add(enrollment.id)
             logs = [
@@ -1168,6 +1236,7 @@ class MicroProgressService(_MicroServiceBase):
     ) -> dict[str, Any]:
         progress = await self.repo.get_micro_progress_log(
             micro_progress_log_id,
+            school_id=auth.school_id,
             include_enrollment=True,
         )
         if (
@@ -1215,6 +1284,7 @@ class MicroProgressService(_MicroServiceBase):
     ) -> dict[str, Any]:
         progress = await self.repo.get_micro_progress_log(
             micro_progress_log_id,
+            school_id=auth.school_id,
             include_enrollment=True,
         )
         if (
@@ -1257,6 +1327,7 @@ class MicroProgressService(_MicroServiceBase):
     ) -> dict[str, Any]:
         enrollment = await self.repo.get_micro_enrollment(
             micro_enrollment_id,
+            school_id=auth.school_id,
             include_group=True,
             include_progress_logs=True,
         )

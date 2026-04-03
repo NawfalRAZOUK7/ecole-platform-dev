@@ -151,7 +151,13 @@ class Settings(BaseSettings):
             if value:
                 object.__setattr__(self, field_name, value)
 
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+    model_config = {
+        "env_file": ".env",
+        "env_file_encoding": "utf-8",
+        # Local dev/test .env files include compatibility keys that this
+        # settings model does not currently expose.
+        "extra": "ignore",
+    }
 
 
 settings = Settings()

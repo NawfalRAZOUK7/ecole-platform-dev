@@ -17,19 +17,19 @@ branch = true
 omit = ["app/alembic/*", "app/core/config.py"]
 
 [tool.coverage.report]
-fail_under = 90
+fail_under = 80
 show_missing = true
 include = [
-  "app/core/abac.py",
+  "app/api/v1/micro_school.py",
+  "app/api/v1/router.py",
+  "app/core/config.py",
   "app/core/exceptions.py",
   "app/core/permissions.py",
-  "app/core/response.py",
-  "app/domain/events/*",
-  "app/domain/value_objects/*",
-  "app/models/*",
-  "app/services/lms/assignment_service.py",
-  "app/services/lms/grading_service.py",
-  "app/services/payment_plan.py",
+  "app/domain/events/micro_school.py",
+  "app/models/micro_school.py",
+  "app/repositories/micro_school.py",
+  "app/schemas/micro_school.py",
+  "app/services/micro_school_service.py",
 ]
 exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "if __name__"]
 

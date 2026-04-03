@@ -42,10 +42,15 @@ class MicroSchoolRepository(BaseRepository):
         self,
         micro_school_id: uuid.UUID,
         *,
+        school_id: uuid.UUID | None = None,
         include_groups: bool = False,
         include_payments: bool = False,
     ) -> MicroSchool | None:
         query = select(MicroSchool).where(MicroSchool.id == micro_school_id)
+        if school_id is not None:
+            query = query.join(User, User.id == MicroSchool.educator_id).where(
+                User.school_id == school_id
+            )
         if include_groups:
             query = query.options(selectinload(MicroSchool.groups))
         if include_payments:
@@ -56,11 +61,16 @@ class MicroSchoolRepository(BaseRepository):
     async def list_micro_schools(
         self,
         *,
+        school_id: uuid.UUID | None = None,
         educator_id: uuid.UUID | None = None,
         city: str | None = None,
         status: str | None = None,
     ) -> list[MicroSchool]:
         query = select(MicroSchool)
+        if school_id is not None:
+            query = query.join(User, User.id == MicroSchool.educator_id).where(
+                User.school_id == school_id
+            )
         if educator_id is not None:
             query = query.where(MicroSchool.educator_id == educator_id)
         if city:
@@ -90,10 +100,17 @@ class MicroSchoolRepository(BaseRepository):
         self,
         micro_group_id: uuid.UUID,
         *,
+        school_id: uuid.UUID | None = None,
         include_school: bool = False,
         include_enrollments: bool = False,
     ) -> MicroGroup | None:
         query = select(MicroGroup).where(MicroGroup.id == micro_group_id)
+        if school_id is not None:
+            query = (
+                query.join(MicroSchool, MicroSchool.id == MicroGroup.micro_school_id)
+                .join(User, User.id == MicroSchool.educator_id)
+                .where(User.school_id == school_id)
+            )
         if include_school:
             query = query.options(selectinload(MicroGroup.micro_school))
         if include_enrollments:
@@ -104,9 +121,16 @@ class MicroSchoolRepository(BaseRepository):
     async def list_micro_groups(
         self,
         *,
+        school_id: uuid.UUID | None = None,
         micro_school_id: uuid.UUID | None = None,
     ) -> list[MicroGroup]:
         query = select(MicroGroup)
+        if school_id is not None:
+            query = (
+                query.join(MicroSchool, MicroSchool.id == MicroGroup.micro_school_id)
+                .join(User, User.id == MicroSchool.educator_id)
+                .where(User.school_id == school_id)
+            )
         if micro_school_id is not None:
             query = query.where(MicroGroup.micro_school_id == micro_school_id)
         result = await self.db.execute(
@@ -132,11 +156,19 @@ class MicroSchoolRepository(BaseRepository):
         self,
         micro_enrollment_id: uuid.UUID,
         *,
+        school_id: uuid.UUID | None = None,
         include_group: bool = False,
         include_payments: bool = False,
         include_progress_logs: bool = False,
     ) -> MicroEnrollment | None:
         query = select(MicroEnrollment).where(MicroEnrollment.id == micro_enrollment_id)
+        if school_id is not None:
+            query = (
+                query.join(MicroGroup, MicroGroup.id == MicroEnrollment.micro_group_id)
+                .join(MicroSchool, MicroSchool.id == MicroGroup.micro_school_id)
+                .join(User, User.id == MicroSchool.educator_id)
+                .where(User.school_id == school_id)
+            )
         if include_group:
             query = query.options(
                 selectinload(MicroEnrollment.micro_group).selectinload(
@@ -153,11 +185,19 @@ class MicroSchoolRepository(BaseRepository):
     async def list_micro_enrollments(
         self,
         *,
+        school_id: uuid.UUID | None = None,
         micro_group_id: uuid.UUID | None = None,
         parent_id: uuid.UUID | None = None,
         status: str | None = None,
     ) -> list[MicroEnrollment]:
         query = select(MicroEnrollment)
+        if school_id is not None:
+            query = (
+                query.join(MicroGroup, MicroGroup.id == MicroEnrollment.micro_group_id)
+                .join(MicroSchool, MicroSchool.id == MicroGroup.micro_school_id)
+                .join(User, User.id == MicroSchool.educator_id)
+                .where(User.school_id == school_id)
+            )
         if micro_group_id is not None:
             query = query.where(MicroEnrollment.micro_group_id == micro_group_id)
         if parent_id is not None:
@@ -196,10 +236,17 @@ class MicroSchoolRepository(BaseRepository):
         self,
         micro_payment_id: uuid.UUID,
         *,
+        school_id: uuid.UUID | None = None,
         include_school: bool = False,
         include_enrollment: bool = False,
     ) -> MicroPayment | None:
         query = select(MicroPayment).where(MicroPayment.id == micro_payment_id)
+        if school_id is not None:
+            query = (
+                query.join(MicroSchool, MicroSchool.id == MicroPayment.micro_school_id)
+                .join(User, User.id == MicroSchool.educator_id)
+                .where(User.school_id == school_id)
+            )
         if include_school:
             query = query.options(selectinload(MicroPayment.micro_school))
         if include_enrollment:
@@ -210,12 +257,19 @@ class MicroSchoolRepository(BaseRepository):
     async def list_micro_payments(
         self,
         *,
+        school_id: uuid.UUID | None = None,
         micro_school_id: uuid.UUID | None = None,
         parent_id: uuid.UUID | None = None,
         child_enrollment_id: uuid.UUID | None = None,
         status: str | None = None,
     ) -> list[MicroPayment]:
         query = select(MicroPayment)
+        if school_id is not None:
+            query = (
+                query.join(MicroSchool, MicroSchool.id == MicroPayment.micro_school_id)
+                .join(User, User.id == MicroSchool.educator_id)
+                .where(User.school_id == school_id)
+            )
         if micro_school_id is not None:
             query = query.where(MicroPayment.micro_school_id == micro_school_id)
         if parent_id is not None:
@@ -289,9 +343,21 @@ class MicroSchoolRepository(BaseRepository):
         self,
         micro_progress_log_id: uuid.UUID,
         *,
+        school_id: uuid.UUID | None = None,
         include_enrollment: bool = False,
     ) -> MicroProgressLog | None:
         query = select(MicroProgressLog).where(MicroProgressLog.id == micro_progress_log_id)
+        if school_id is not None:
+            query = (
+                query.join(
+                    MicroEnrollment,
+                    MicroEnrollment.id == MicroProgressLog.micro_enrollment_id,
+                )
+                .join(MicroGroup, MicroGroup.id == MicroEnrollment.micro_group_id)
+                .join(MicroSchool, MicroSchool.id == MicroGroup.micro_school_id)
+                .join(User, User.id == MicroSchool.educator_id)
+                .where(User.school_id == school_id)
+            )
         if include_enrollment:
             query = query.options(
                 selectinload(MicroProgressLog.micro_enrollment)
@@ -304,12 +370,24 @@ class MicroSchoolRepository(BaseRepository):
     async def list_micro_progress_logs(
         self,
         *,
+        school_id: uuid.UUID | None = None,
         micro_enrollment_id: uuid.UUID | None = None,
         educator_id: uuid.UUID | None = None,
         date_from: date | None = None,
         date_to: date | None = None,
     ) -> list[MicroProgressLog]:
         query = select(MicroProgressLog)
+        if school_id is not None:
+            query = (
+                query.join(
+                    MicroEnrollment,
+                    MicroEnrollment.id == MicroProgressLog.micro_enrollment_id,
+                )
+                .join(MicroGroup, MicroGroup.id == MicroEnrollment.micro_group_id)
+                .join(MicroSchool, MicroSchool.id == MicroGroup.micro_school_id)
+                .join(User, User.id == MicroSchool.educator_id)
+                .where(User.school_id == school_id)
+            )
         if micro_enrollment_id is not None:
             query = query.where(MicroProgressLog.micro_enrollment_id == micro_enrollment_id)
         if educator_id is not None:
@@ -348,8 +426,9 @@ class MicroSchoolRepository(BaseRepository):
         *,
         parent_id: uuid.UUID,
         micro_school_id: uuid.UUID,
+        school_id: uuid.UUID | None = None,
     ) -> bool:
-        result = await self.db.execute(
+        query = (
             select(func.count(MicroEnrollment.id))
             .select_from(MicroEnrollment)
             .join(MicroGroup, MicroGroup.id == MicroEnrollment.micro_group_id)
@@ -358,18 +437,30 @@ class MicroSchoolRepository(BaseRepository):
                 MicroEnrollment.parent_id == parent_id,
             )
         )
+        if school_id is not None:
+            query = query.join(User, User.id == MicroEnrollment.parent_id).where(
+                User.school_id == school_id
+            )
+        result = await self.db.execute(query)
         return (result.scalar_one() or 0) > 0
 
     async def get_micro_school_for_enrollment(
         self,
         micro_enrollment_id: uuid.UUID,
+        *,
+        school_id: uuid.UUID | None = None,
     ) -> MicroSchool | None:
-        result = await self.db.execute(
+        query = (
             select(MicroSchool)
             .join(MicroGroup, MicroGroup.micro_school_id == MicroSchool.id)
             .join(MicroEnrollment, MicroEnrollment.micro_group_id == MicroGroup.id)
             .where(MicroEnrollment.id == micro_enrollment_id)
         )
+        if school_id is not None:
+            query = query.join(User, User.id == MicroSchool.educator_id).where(
+                User.school_id == school_id
+            )
+        result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
 
