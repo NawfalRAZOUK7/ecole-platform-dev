@@ -19,6 +19,7 @@ from app.repositories.gradebook import GradebookRepository
 from app.repositories.lms import AssessmentRepository, AssignmentRepository, LMSRepository
 from app.repositories.login_history import LoginHistoryRepository
 from app.repositories.messaging import MessagingRepository
+from app.repositories.micro_school import MicroSchoolRepository
 from app.repositories.notifications import NotificationRepository
 from app.repositories.profile import ProfileRepository
 from app.repositories.profile_loader import ProfileLoaderRepository
@@ -52,6 +53,7 @@ __all__ = [
     "AssessmentRepository",
     "LoginHistoryRepository",
     "MessagingRepository",
+    "MicroSchoolRepository",
     "NotificationRepository",
     "ProfileRepository",
     "ProfileLoaderRepository",
