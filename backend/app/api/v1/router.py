@@ -36,6 +36,7 @@ Routes:
   /features/*                   — Feature toggles management (Phase 11E)
   /events/*                     — Calendar events, RSVP, reminders (Phase 15)
   /calendar/*                   — Calendar feeds and options (Phase 15)
+  /micro/*                      — Micro-school management, enrollments, payments, resources, progress
 """
 
 from datetime import datetime, timezone
@@ -110,6 +111,7 @@ from app.api.v1.timetable_generation import router as timetable_generation_route
 
 # Phase 11B — Billing Enhancements
 from app.api.v1.billing import router as billing_router
+from app.api.v1.micro_school import router as micro_school_router
 
 # Phase 11C — Messaging & Announcements
 from app.api.v1.messaging import router as messaging_router
@@ -223,6 +225,7 @@ router.include_router(timetable_generation_router)
 
 # Mount sub-routers — Phase 11B Billing Enhancements
 router.include_router(billing_router)
+router.include_router(micro_school_router)
 
 # Mount sub-routers — Phase 11C Messaging & Announcements
 router.include_router(messaging_router)
