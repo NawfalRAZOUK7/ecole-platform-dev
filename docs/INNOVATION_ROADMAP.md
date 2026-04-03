@@ -1,9 +1,31 @@
 # Ecole Platform Innovation Roadmap
 
-**Status:** Blueprint for Autonomous Development
+**Status:** Blueprint for Autonomous Development — Decisions Finalized
 **Created:** April 2026
 **Target Environment:** Python 3.11+, FastAPI, SQLAlchemy 2.0, Alembic, PostgreSQL
 **Execution Model:** Sequential Prompt Chain (ANALYZE → EXECUTE → VERIFY → GIT)
+
+---
+
+## Finalized Decisions
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| **Implementation Order** | Impact-first | Micro-École → Budget → Skills → Compliance → Sync → Financial Health |
+| **Local-First Sync depth** | Full backend infrastructure | Complete sync queue, conflict resolution, device management APIs — ready for Flutter/React offline layer |
+| **MEN seed data** | Sample: Math + Arabic for Collège 3ème | ~50 objectives, enough for convincing demo. Schools add more via API |
+| **File format** | Single roadmap file | INNOVATION_ROADMAP.md as master document |
+
+### Recommended Execution Order (Impact-First)
+
+```
+Priority 1 ★★★  MICRO-01→04   Micro-École         Strongest differentiator, "Blue Ocean" market
+Priority 2 ★★★  BUDGET-01→04  Class Micro-Budget   Quick win, clean approval workflow
+Priority 3 ★★☆  SKILL-01→04   Life Skills Passport High parent appeal, rule-based engine
+Priority 4 ★★☆  COMPLY-01→04  MEN Compliance       Practical for inspections, seed Math+Arabic
+Priority 5 ★☆☆  SYNC-01→04    Local-First Sync     Complex but foundational for offline
+Priority 6 ★☆☆  HEALTH-01→04  Financial Health     Leverages existing billing data, do last
+```
 
 ---
 
@@ -1664,24 +1686,45 @@ class FinancialHealthService:
 
 ## Dependency Order & Mega-Prompts
 
-### Execution Order
+### Execution Order (Impact-First)
+
+Each feature is implemented fully (01→04) before moving to the next.
+Within each feature, prompts must run sequentially: Models → Repo/Service → Endpoints → Tests.
 
 ```
-Phase 1: Models & Migrations (all X-01 prompts in parallel or sequential)
-  MICRO-01 → SYNC-01 → SKILL-01 → COMPLY-01 → BUDGET-01 → HEALTH-01
-
-Phase 2: Repositories & Services (all X-02 prompts, depends on Phase 1)
-  MICRO-02 → SYNC-02 → SKILL-02 → COMPLY-02 → BUDGET-02 → HEALTH-02
-
-Phase 3: API Endpoints (all X-03 prompts, depends on Phase 2)
-  MICRO-03 → SYNC-03 → SKILL-03 → COMPLY-03 → BUDGET-03 → HEALTH-03
-
-Phase 4: Tests & Factories (all X-04 prompts, depends on Phase 3)
-  MICRO-04 → SYNC-04 → SKILL-04 → COMPLY-04 → BUDGET-04 → HEALTH-04
-
-Phase 5: Verification & Documentation
-  Run GLOBAL-VERIFY (check all 26 models, 74 endpoints, 350+ tests)
+┌──────────────────────────────────────────────────────────────────┐
+│ PRIORITY 1 ★★★  Micro-École (strongest differentiator)          │
+│   MICRO-01 → MICRO-02 → MICRO-03 → MICRO-04                    │
+│   Commit after each prompt (if Codex)                            │
+├──────────────────────────────────────────────────────────────────┤
+│ PRIORITY 2 ★★★  Class Micro-Budget (quick win, clean workflow)  │
+│   BUDGET-01 → BUDGET-02 → BUDGET-03 → BUDGET-04                │
+├──────────────────────────────────────────────────────────────────┤
+│ PRIORITY 3 ★★☆  Life Skills Passport (high parent appeal)      │
+│   SKILL-01 → SKILL-02 → SKILL-03 → SKILL-04                    │
+├──────────────────────────────────────────────────────────────────┤
+│ PRIORITY 4 ★★☆  MEN Compliance (practical for inspections)     │
+│   COMPLY-01 → COMPLY-02 → COMPLY-03 → COMPLY-04                │
+│   Seed: Math + Arabic for Collège 3ème (~50 objectives)         │
+├──────────────────────────────────────────────────────────────────┤
+│ PRIORITY 5 ★☆☆  Local-First Sync (complex, foundational)       │
+│   SYNC-01 → SYNC-02 → SYNC-03 → SYNC-04                        │
+│   Full backend infrastructure (queue, conflicts, checkpoints)    │
+├──────────────────────────────────────────────────────────────────┤
+│ PRIORITY 6 ★☆☆  Financial Health (leverages billing data)       │
+│   HEALTH-01 → HEALTH-02 → HEALTH-03 → HEALTH-04                │
+├──────────────────────────────────────────────────────────────────┤
+│ FINAL: Run GLOBAL-VERIFY                                         │
+│   Check all 26 models, 74 endpoints, 350+ tests                 │
+└──────────────────────────────────────────────────────────────────┘
 ```
+
+### Dependencies Between Features
+
+- Features are independent — no cross-feature dependencies
+- Within each feature: X-01 → X-02 → X-03 → X-04 (strict order)
+- HEALTH-01→04 benefits from existing billing data but does not require other innovation features
+- COMPLY-01 includes a seed script; run it after migration to populate MEN reference data
 
 ### Three Mega-Prompts
 
@@ -1724,42 +1767,208 @@ Output: Checklist of 20+ verification items, all passing before proceeding
 
 #### GLOBAL-EXECUTE: Run All 24 Prompts
 
+**Behavior:** Execute each prompt as a standalone unit — ANALYZE → EXECUTE → VERIFY → GIT COMMIT.
+After each prompt completes and commits, move to the next. This is identical to copy-pasting each prompt one by one. Do NOT skip the git step between prompts.
+
 ```markdown
 ## GLOBAL-EXECUTE: Sequential Feature Implementation
 
-Run all 24 feature prompts in order:
+You are executing 24 prompts in strict order. For EACH prompt:
+1. Run its ANALYZE phase (read files listed in the checklist)
+2. Run its EXECUTE phase (create/modify files)
+3. Run its VERIFY phase (run checks, fix any errors)
+4. Run GIT: git add -A && git commit -m "<COMMIT_MSG>"
+5. Print "✓ PROMPT {ID} COMPLETE" before moving to the next
 
-1. MICRO-01: Models & Migrations ✓
-2. MICRO-02: Repository & Service ✓
-3. MICRO-03: API Endpoints ✓
-4. MICRO-04: Tests & Factories ✓
-5. SYNC-01: Models & Migrations ✓
-6. SYNC-02: Repository & Service ✓
-7. SYNC-03: API Endpoints ✓
-8. SYNC-04: Tests & Factories ✓
-9. SKILL-01: Models & Migrations ✓
-10. SKILL-02: Repository & Service ✓
-11. SKILL-03: API Endpoints ✓
-12. SKILL-04: Tests & Factories ✓
-13. COMPLY-01: Models & Migrations ✓
-14. COMPLY-02: Repository & Service ✓
-15. COMPLY-03: API Endpoints ✓
-16. COMPLY-04: Tests & Factories ✓
-17. BUDGET-01: Models & Migrations ✓
-18. BUDGET-02: Repository & Service ✓
-19. BUDGET-03: API Endpoints ✓
-20. BUDGET-04: Tests & Factories ✓
-21. HEALTH-01: Models & Migrations ✓
-22. HEALTH-02: Repository & Service ✓
-23. HEALTH-03: API Endpoints ✓
-24. HEALTH-04: Tests & Factories ✓
+IMPORTANT RULES:
+- EVERY prompt gets its own separate git commit
+- If a VERIFY step fails, fix the issue BEFORE committing
+- Do NOT batch multiple prompts into one commit
+- Do NOT skip any prompt
+- If you run out of context or time, print "PAUSED AT: {PROMPT_ID}" so I can say "continue"
+- The git behavior is: ALWAYS commit (whether Codex or Claude Code), because this mega-prompt is meant to be autonomous
 
-After each prompt, verify:
-- No errors
-- All VERIFY phase checks pass
-- Git commit (if CODEX_ENV=true)
+### EXECUTION SEQUENCE (Impact-First Order):
 
-Output: Git log showing 24 commits, one per prompt
+═══════════════════════════════════════════════════════
+FEATURE 1: MICRO-ÉCOLE (Priority ★★★)
+═══════════════════════════════════════════════════════
+
+PROMPT 1/24 — MICRO-01: Models & Migrations
+  → Read: models/billing.py, models/lms.py, core/permissions.py, models/__init__.py
+  → Create: models/micro_school.py (6 models: MicroSchool, MicroGroup, MicroEnrollment, MicroPayment, MicroResource, MicroProgressLog)
+  → Create: alembic migration for 6 tables
+  → Modify: core/permissions.py (add 13 PERM_MICRO_* constants + EDUCATOR role mapping)
+  → Create: domain/events/micro_school.py
+  → Modify: models/__init__.py (add imports)
+  → Verify: alembic upgrade head, downgrade -1, upgrade head
+  → Verify: python -c "from app.models.micro_school import *"
+  → GIT: git add -A && git commit -m "feat(micro-ecole): add 6 models, migration, and 13 permissions for micro-school module"
+
+PROMPT 2/24 — MICRO-02: Repository & Service
+  → Read: repositories/base.py, repositories/billing.py, services/billing.py
+  → Create: schemas/micro_school.py (14 schemas: create/update/response for each entity)
+  → Create: repositories/micro_school.py (MicroSchoolRepository with CRUD for all 6 entities)
+  → Create: services/micro_school_service.py (MicroSchoolService, MicroGroupService, MicroPaymentService, MicroProgressService)
+  → Verify: python -c "from app.services.micro_school_service import *"
+  → Verify: python -c "from app.schemas.micro_school import *"
+  → GIT: git add -A && git commit -m "feat(micro-ecole): add repository, service, and schemas for micro-school module"
+
+PROMPT 3/24 — MICRO-03: API Endpoints
+  → Read: api/v1/billing.py, api/v1/router.py
+  → Create: api/v1/micro_school.py (14 endpoints)
+  → Modify: api/v1/router.py (register micro_school_router)
+  → Verify: python -c "from app.api.v1.micro_school import router"
+  → GIT: git add -A && git commit -m "feat(micro-ecole): add 14 API endpoints for micro-school module"
+
+PROMPT 4/24 — MICRO-04: Tests & Factories
+  → Read: tests/factories/billing.py, tests/unit/services/test_billing_service.py, tests/security/test_rbac_matrix.py
+  → Create: tests/factories/micro_school.py (6 factories)
+  → Create: tests/unit/services/test_micro_school_service.py (~25 tests)
+  → Create: tests/integration/api/test_micro_school_api.py (~15 tests)
+  → Create: tests/security/test_micro_school_rbac.py (~12 tests)
+  → Create: tests/edge/test_micro_school_edge.py (~8 tests)
+  → Verify: pytest backend/tests/ -k "micro" --tb=short (all pass)
+  → Verify: pytest backend/tests/ -k "micro" --cov=app --cov-report=term (coverage ≥ 80%)
+  → GIT: git add -A && git commit -m "test(micro-ecole): add 60 tests and factories for micro-school module"
+
+═══════════════════════════════════════════════════════
+FEATURE 2: CLASS MICRO-BUDGET (Priority ★★★)
+═══════════════════════════════════════════════════════
+
+PROMPT 5/24 — BUDGET-01: Models & Migrations
+  → Create: models/budget.py (4 models: MicroBudget, BudgetAllocation, BudgetRequest, BudgetTransaction)
+  → Create: alembic migration for 4 tables
+  → Modify: core/permissions.py (add 10 PERM_BUDGET_* constants)
+  → Create: domain/events/budget.py
+  → Verify: alembic upgrade/downgrade round-trip
+  → GIT: git add -A && git commit -m "feat(budget): add 4 models, migration, and 10 permissions for class micro-budget"
+
+PROMPT 6/24 — BUDGET-02: Repository & Service
+  → Create: schemas/budget.py, repositories/budget.py, services/budget_service.py
+  → Implement: allocation flow, request→approve→deduct workflow, budget analytics
+  → Verify: import checks
+  → GIT: git add -A && git commit -m "feat(budget): add repository, service, and schemas for class micro-budget"
+
+PROMPT 7/24 — BUDGET-03: API Endpoints
+  → Create: api/v1/budgets.py (14 endpoints)
+  → Modify: api/v1/router.py
+  → Verify: endpoint registration
+  → GIT: git add -A && git commit -m "feat(budget): add 14 API endpoints for class micro-budget"
+
+PROMPT 8/24 — BUDGET-04: Tests & Factories
+  → Create: factories, unit tests, integration tests, security tests, edge tests (~60 total)
+  → Verify: pytest -k "budget" all pass, coverage ≥ 80%
+  → GIT: git add -A && git commit -m "test(budget): add 60 tests and factories for class micro-budget"
+
+═══════════════════════════════════════════════════════
+FEATURE 3: LIFE SKILLS PASSPORT (Priority ★★☆)
+═══════════════════════════════════════════════════════
+
+PROMPT 9/24 — SKILL-01: Models & Migrations
+  → Create: models/skill_passport.py (4 models: SkillDimension, SkillMilestone, SkillProgress, SkillPassport)
+  → Create: alembic migration, permissions (8 PERM_SKILL_*), domain events
+  → Verify: migration round-trip
+  → GIT: git add -A && git commit -m "feat(skills): add 4 models, migration, and 8 permissions for life skills passport"
+
+PROMPT 10/24 — SKILL-02: Repository & Service
+  → Create: schemas, repository, service (including milestone evaluation engine + PDF generation)
+  → Verify: import checks
+  → GIT: git add -A && git commit -m "feat(skills): add repository, service, and schemas for life skills passport"
+
+PROMPT 11/24 — SKILL-03: API Endpoints
+  → Create: api/v1/skills.py (12 endpoints)
+  → Modify: router.py
+  → GIT: git add -A && git commit -m "feat(skills): add 12 API endpoints for life skills passport"
+
+PROMPT 12/24 — SKILL-04: Tests & Factories
+  → Create: tests (~65 total)
+  → Verify: all pass
+  → GIT: git add -A && git commit -m "test(skills): add 65 tests and factories for life skills passport"
+
+═══════════════════════════════════════════════════════
+FEATURE 4: MEN COMPLIANCE CHECKER (Priority ★★☆)
+═══════════════════════════════════════════════════════
+
+PROMPT 13/24 — COMPLY-01: Models & Migrations
+  → Create: models/men_compliance.py (4 models: MenCurriculum, MenObjective, CurriculumMapping, ComplianceReport)
+  → Create: alembic migration, permissions (8 PERM_COMPLY_*), domain events
+  → Create: scripts/seed_men_curriculum.py (seed Math + Arabic for Collège 3ème, ~50 objectives)
+  → Verify: migration round-trip, run seed script
+  → GIT: git add -A && git commit -m "feat(compliance): add 4 models, migration, 8 permissions, and MEN seed data"
+
+PROMPT 14/24 — COMPLY-02: Repository & Service
+  → Create: schemas, repository, service (compliance % calculator, PDF report generation)
+  → Verify: import checks
+  → GIT: git add -A && git commit -m "feat(compliance): add repository, service, and schemas for MEN compliance"
+
+PROMPT 15/24 — COMPLY-03: API Endpoints
+  → Create: api/v1/compliance.py (12 endpoints)
+  → Modify: router.py
+  → GIT: git add -A && git commit -m "feat(compliance): add 12 API endpoints for MEN compliance checker"
+
+PROMPT 16/24 — COMPLY-04: Tests & Factories
+  → Create: tests (~55 total)
+  → Verify: all pass
+  → GIT: git add -A && git commit -m "test(compliance): add 55 tests and factories for MEN compliance checker"
+
+═══════════════════════════════════════════════════════
+FEATURE 5: LOCAL-FIRST SYNC (Priority ★☆☆)
+═══════════════════════════════════════════════════════
+
+PROMPT 17/24 — SYNC-01: Models & Migrations
+  → Create: models/sync_queue.py (4 models: SyncDevice, SyncQueue, SyncConflict, SyncCheckpoint)
+  → Create: alembic migration, permissions (8 PERM_SYNC_*), domain events
+  → Verify: migration round-trip
+  → GIT: git add -A && git commit -m "feat(sync): add 4 models, migration, and 8 permissions for local-first sync"
+
+PROMPT 18/24 — SYNC-02: Repository & Service
+  → Create: schemas, repository, service (push/pull logic, conflict resolution engine, checkpoint management)
+  → Verify: import checks
+  → GIT: git add -A && git commit -m "feat(sync): add repository, service, and schemas for local-first sync"
+
+PROMPT 19/24 — SYNC-03: API Endpoints
+  → Create: api/v1/sync.py (10 endpoints)
+  → Modify: router.py
+  → GIT: git add -A && git commit -m "feat(sync): add 10 API endpoints for local-first sync"
+
+PROMPT 20/24 — SYNC-04: Tests & Factories
+  → Create: tests (~55 total)
+  → Verify: all pass
+  → GIT: git add -A && git commit -m "test(sync): add 55 tests and factories for local-first sync"
+
+═══════════════════════════════════════════════════════
+FEATURE 6: FINANCIAL HEALTH DASHBOARD (Priority ★☆☆)
+═══════════════════════════════════════════════════════
+
+PROMPT 21/24 — HEALTH-01: Models & Migrations
+  → Create: models/financial_health.py (4 models: RetentionMetric, CashflowForecast, CostPerStudent, FinancialSnapshot)
+  → Create: alembic migration, permissions (6 PERM_FINHEALTH_*), domain events
+  → Verify: migration round-trip
+  → GIT: git add -A && git commit -m "feat(finhealth): add 4 models, migration, and 6 permissions for financial health dashboard"
+
+PROMPT 22/24 — HEALTH-02: Repository & Service
+  → Create: schemas, repository, service (retention calculator, cashflow forecast, cost-per-student, financial snapshot)
+  → Verify: import checks
+  → GIT: git add -A && git commit -m "feat(finhealth): add repository, service, and schemas for financial health dashboard"
+
+PROMPT 23/24 — HEALTH-03: API Endpoints
+  → Create: api/v1/financial_health.py (12 endpoints)
+  → Modify: router.py
+  → GIT: git add -A && git commit -m "feat(finhealth): add 12 API endpoints for financial health dashboard"
+
+PROMPT 24/24 — HEALTH-04: Tests & Factories
+  → Create: tests (~55 total)
+  → Verify: all pass
+  → GIT: git add -A && git commit -m "test(finhealth): add 55 tests and factories for financial health dashboard"
+
+═══════════════════════════════════════════════════════
+DONE: Print final summary
+═══════════════════════════════════════════════════════
+
+After all 24 prompts complete:
+  git log --oneline -24  (show all 24 commits)
+  echo "✓ ALL 24 PROMPTS COMPLETE — Ready for GLOBAL-VERIFY"
 ```
 
 #### GLOBAL-VERIFY: Final Integration Check
