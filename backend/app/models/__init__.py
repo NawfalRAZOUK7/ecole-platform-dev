@@ -108,6 +108,21 @@ from app.models.billing import (
     SiblingDiscountPolicy,
 )
 
+# G5B — Micro-school
+from app.models.micro_school import (
+    MicroEnrollment,
+    MicroEnrollmentStatus,
+    MicroGroup,
+    MicroPayment,
+    MicroPaymentPeriodType,
+    MicroPaymentStatus,
+    MicroProgressLog,
+    MicroResource,
+    MicroResourceType,
+    MicroSchool,
+    MicroSchoolStatus,
+)
+
 # G6 — Audit
 from app.models.audit import AuditLog
 
@@ -223,6 +238,18 @@ __all__ = [
     "PaymentAttempt",
     "PaymentProof",
     "ProviderWebhookEvent",
+    # Micro-school
+    "MicroSchool",
+    "MicroSchoolStatus",
+    "MicroGroup",
+    "MicroEnrollment",
+    "MicroEnrollmentStatus",
+    "MicroPayment",
+    "MicroPaymentPeriodType",
+    "MicroPaymentStatus",
+    "MicroResource",
+    "MicroResourceType",
+    "MicroProgressLog",
     # Audit
     "AuditLog",
     # AI

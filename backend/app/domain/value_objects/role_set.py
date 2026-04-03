@@ -4,11 +4,22 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-VALID_ROLES = {"STD", "PAR", "TCH", "ADM", "DIR", "SYS", "CONTENT_MGR", "SUP"}
+VALID_ROLES = {
+    "STD",
+    "PAR",
+    "TCH",
+    "EDUCATOR",
+    "ADM",
+    "DIR",
+    "SYS",
+    "CONTENT_MGR",
+    "SUP",
+}
 
 ROLE_COMPATIBILITY = {
     # Roles that can coexist on the same user
     "TCH": {"PAR", "CONTENT_MGR"},
+    "EDUCATOR": {"PAR"},
     "ADM": {"DIR"},
     "DIR": {"ADM"},
     "PAR": {"TCH"},
@@ -39,12 +50,22 @@ class RoleSet:
 
     @property
     def is_educator(self) -> bool:
-        return self.has_any("TCH", "CONTENT_MGR")
+        return self.has_any("TCH", "EDUCATOR", "CONTENT_MGR")
 
     @property
     def primary_role(self) -> str:
         """Highest-priority role for display purposes."""
-        priority = ["SUP", "SYS", "DIR", "ADM", "CONTENT_MGR", "TCH", "PAR", "STD"]
+        priority = [
+            "SUP",
+            "SYS",
+            "DIR",
+            "ADM",
+            "CONTENT_MGR",
+            "EDUCATOR",
+            "TCH",
+            "PAR",
+            "STD",
+        ]
         for role in priority:
             if role in self.roles:
                 return role

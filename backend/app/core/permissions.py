@@ -2,7 +2,7 @@
 
 Reference: S-034 — RBAC permission middleware, Pack C6 — complete permission catalog.
 Format: PERM-{DOMAIN}:{resource}:{action}
-Roles: ADM, DIR, TCH, PAR, STD, SUP, SYS, PUBLIC
+Roles: ADM, DIR, TCH, EDUCATOR, PAR, STD, SUP, SYS, CONTENT_MGR, PUBLIC
 
 This module is the single source of truth for which roles hold which permissions.
 Permissions can be updated without code deployment by modifying the ROLE_PERMISSIONS dict.
@@ -16,6 +16,7 @@ from __future__ import annotations
 ADM = "ADM"
 DIR = "DIR"
 TCH = "TCH"
+EDUCATOR = "EDUCATOR"
 PAR = "PAR"
 STD = "STD"
 SUP = "SUP"
@@ -228,6 +229,21 @@ PERM_DOC_REQUIREMENT_MANAGE = "PERM-DOC:requirement:manage"
 PERM_DOC_BULK_DOWNLOAD = "PERM-DOC:document-bulk:download"
 PERM_DOC_BULK_DELETE = "PERM-DOC:document-bulk:delete"
 
+# Micro-school
+PERM_MICRO_SCHOOL_CREATE = "PERM-MICRO:school:create"
+PERM_MICRO_SCHOOL_READ = "PERM-MICRO:school:read"
+PERM_MICRO_SCHOOL_MANAGE = "PERM-MICRO:school:manage"
+PERM_MICRO_GROUP_CREATE = "PERM-MICRO:group:create"
+PERM_MICRO_GROUP_READ = "PERM-MICRO:group:read"
+PERM_MICRO_ENROLLMENT_CREATE = "PERM-MICRO:enrollment:create"
+PERM_MICRO_ENROLLMENT_READ = "PERM-MICRO:enrollment:read"
+PERM_MICRO_PAYMENT_CREATE = "PERM-MICRO:payment:create"
+PERM_MICRO_PAYMENT_READ = "PERM-MICRO:payment:read"
+PERM_MICRO_RESOURCE_READ = "PERM-MICRO:resource:read"
+PERM_MICRO_RESOURCE_MANAGE = "PERM-MICRO:resource:manage"
+PERM_MICRO_PROGRESS_CREATE = "PERM-MICRO:progress:create"
+PERM_MICRO_PROGRESS_READ = "PERM-MICRO:progress:read"
+
 # Support
 PERM_SUP_GRANT_REQUEST = "PERM-SUP:grant:request"
 PERM_SUP_GRANT_APPROVE = "PERM-SUP:grant:approve"
@@ -265,6 +281,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_ERP_TIMETABLE_CREATE,
         PERM_ERP_TIMETABLE_UPDATE,
         PERM_ERP_TIMETABLE_DELETE,
+        # Micro-school administration
+        PERM_MICRO_SCHOOL_READ,
+        PERM_MICRO_SCHOOL_MANAGE,
         # Document management (Phase 16) — destructive bulk action stays ADM-only
         PERM_DOC_BULK_DELETE,
         # COM — config/broadcast operations
@@ -406,6 +425,32 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IA_REQUEST_READ,
         PERM_IA_REQUEST_OVERRIDE,
     },
+    EDUCATOR: {
+        # IAM — login/recovery
+        PERM_IAM_SESSION_CREATE,
+        PERM_IAM_SESSION_REFRESH,
+        PERM_IAM_SESSION_REVOKE,
+        PERM_IAM_SESSION_LIST,
+        PERM_IAM_PASSWORD_CHANGE,
+        PERM_IAM_INVITE_CONSUME,
+        PERM_IAM_RECOVERY_REQUEST,
+        PERM_IAM_RECOVERY_VERIFY,
+        PERM_IAM_RECOVERY_RESET,
+        # Micro-school operations
+        PERM_MICRO_SCHOOL_CREATE,
+        PERM_MICRO_SCHOOL_READ,
+        PERM_MICRO_SCHOOL_MANAGE,
+        PERM_MICRO_GROUP_CREATE,
+        PERM_MICRO_GROUP_READ,
+        PERM_MICRO_ENROLLMENT_CREATE,
+        PERM_MICRO_ENROLLMENT_READ,
+        PERM_MICRO_PAYMENT_CREATE,
+        PERM_MICRO_PAYMENT_READ,
+        PERM_MICRO_RESOURCE_READ,
+        PERM_MICRO_RESOURCE_MANAGE,
+        PERM_MICRO_PROGRESS_CREATE,
+        PERM_MICRO_PROGRESS_READ,
+    },
     PAR: {
         # Profiles
         PERM_PROF_CHILD_READ,
@@ -436,6 +481,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_BIL_PROOF_READ,
         PERM_BIL_FEE_READ,
         PERM_BIL_PAYMENT_PLAN_READ,
+        # Micro-school parent access
+        PERM_MICRO_PAYMENT_READ,
+        PERM_MICRO_PROGRESS_READ,
         # Progress (Phase 11D)
         PERM_PROGRESS_READ,
         # Reporting (Phase 14)

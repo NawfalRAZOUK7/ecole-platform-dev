@@ -27,6 +27,13 @@ from app.domain.events.lms import (
     QuizCompleted,
     SubmissionReceived,
 )
+from app.domain.events.micro_school import (
+    MicroEnrollmentCreated,
+    MicroGroupCreated,
+    MicroPaymentRecorded,
+    MicroProgressLogged,
+    MicroSchoolCreated,
+)
 
 __all__ = [
     "DomainEvent",
@@ -42,6 +49,11 @@ __all__ = [
     "InvoiceGenerated",
     "PaymentReceived",
     "PaymentFailed",
+    "MicroSchoolCreated",
+    "MicroGroupCreated",
+    "MicroEnrollmentCreated",
+    "MicroPaymentRecorded",
+    "MicroProgressLogged",
     "DocumentUploaded",
     "DocumentExpiring",
     "ResourceShared",

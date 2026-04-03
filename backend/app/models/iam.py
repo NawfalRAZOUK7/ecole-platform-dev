@@ -50,6 +50,7 @@ class RoleCode(str, enum.Enum):
     ADM = "ADM"  # School administrator
     DIR = "DIR"  # Director / principal
     TCH = "TCH"  # Teacher
+    EDUCATOR = "EDUCATOR"  # Informal education / micro-school educator
     PAR = "PAR"  # Parent
     STD = "STD"  # Student
     SUP = "SUP"  # Super-admin (platform ops)
