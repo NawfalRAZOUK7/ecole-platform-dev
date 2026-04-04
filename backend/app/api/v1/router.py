@@ -30,6 +30,7 @@ Routes:
   /feed/*                       — Parent feed (COM)
   /timetable/*                  — Timetable slots, exceptions, constraints, generation (ERP)
   /billing/*                    — Fee structures, assignments, invoice generation, policies, payment plans
+  /budgets/*                    — Class micro-budget envelopes, allocations, requests, transactions, analytics
   /messages/*                   — Conversations + messaging (Phase 11C)
   /announcements/*              — Announcements CRUD + publish (Phase 11C)
   /progress/*                   — Student progress visualization (Phase 11D)
@@ -111,6 +112,7 @@ from app.api.v1.timetable_generation import router as timetable_generation_route
 
 # Phase 11B — Billing Enhancements
 from app.api.v1.billing import router as billing_router
+from app.api.v1.budgets import router as budgets_router
 from app.api.v1.micro_school import router as micro_school_router
 
 # Phase 11C — Messaging & Announcements
@@ -225,6 +227,7 @@ router.include_router(timetable_generation_router)
 
 # Mount sub-routers — Phase 11B Billing Enhancements
 router.include_router(billing_router)
+router.include_router(budgets_router)
 router.include_router(micro_school_router)
 
 # Mount sub-routers — Phase 11C Messaging & Announcements
