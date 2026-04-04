@@ -1,6 +1,7 @@
 """Service layer package exports."""
 
 from app.services.budget_service import BudgetService
+from app.services.compliance_service import ComplianceService
 from app.services.micro_school_service import (
     MicroGroupService,
     MicroPaymentService,
@@ -17,6 +18,7 @@ from app.services.skill_passport_service import (
 
 __all__ = [
     "BudgetService",
+    "ComplianceService",
     "MicroSchoolService",
     "MicroGroupService",
     "MicroPaymentService",
