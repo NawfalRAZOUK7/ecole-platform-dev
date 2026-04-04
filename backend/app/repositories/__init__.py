@@ -33,6 +33,7 @@ from app.repositories.report_schedule import ReportScheduleRepository
 from app.repositories.rubric import RubricRepository
 from app.repositories.school import SchoolRepository
 from app.repositories.skill_passport import SkillPassportRepository
+from app.repositories.sync_queue import SyncQueueRepository
 from app.repositories.timetable_generation import TimetableGenerationRepository
 
 __all__ = [
@@ -68,6 +69,7 @@ __all__ = [
     "RubricRepository",
     "SchoolRepository",
     "SkillPassportRepository",
+    "SyncQueueRepository",
     "TimetableGenerationRepository",
     "AnalyticsRepository",
     "ReportsRepository",

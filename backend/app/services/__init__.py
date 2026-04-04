@@ -15,6 +15,7 @@ from app.services.skill_passport_service import (
     SkillPassportService,
     SkillProgressService,
 )
+from app.services.sync_queue_service import SyncService
 
 __all__ = [
     "BudgetService",
@@ -28,4 +29,5 @@ __all__ = [
     "SkillMilestoneService",
     "SkillProgressService",
     "SkillAnalyticsService",
+    "SyncService",
 ]
