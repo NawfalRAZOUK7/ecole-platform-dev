@@ -135,6 +135,15 @@ from app.models.budget import (
     MicroBudgetStatus,
 )
 
+# G5D — Skills
+from app.models.skill_passport import (
+    SkillDimension,
+    SkillMilestone,
+    SkillPassport,
+    SkillProgress,
+    SkillProgressStatus,
+)
+
 # G6 — Audit
 from app.models.audit import AuditLog
 
@@ -271,6 +280,12 @@ __all__ = [
     "BudgetRequestStatus",
     "BudgetTransaction",
     "BudgetTransactionType",
+    # Skills
+    "SkillDimension",
+    "SkillMilestone",
+    "SkillProgress",
+    "SkillProgressStatus",
+    "SkillPassport",
     # Audit
     "AuditLog",
     # AI

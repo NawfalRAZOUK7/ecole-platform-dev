@@ -256,6 +256,16 @@ PERM_BUDGET_TRANSACTION_CREATE = "PERM-BUDGET:transaction:create"
 PERM_BUDGET_TRANSACTION_READ = "PERM-BUDGET:transaction:read"
 PERM_BUDGET_ANALYTICS_READ = "PERM-BUDGET:analytics:read"
 
+# Life-skills passport
+PERM_SKILL_DIMENSION_READ = "PERM-SKILL:dimension:read"
+PERM_SKILL_DIMENSION_MANAGE = "PERM-SKILL:dimension:manage"
+PERM_SKILL_MILESTONE_READ = "PERM-SKILL:milestone:read"
+PERM_SKILL_MILESTONE_MANAGE = "PERM-SKILL:milestone:manage"
+PERM_SKILL_PROGRESS_READ = "PERM-SKILL:progress:read"
+PERM_SKILL_PROGRESS_EVALUATE = "PERM-SKILL:progress:evaluate"
+PERM_SKILL_PASSPORT_READ = "PERM-SKILL:passport:read"
+PERM_SKILL_PASSPORT_GENERATE = "PERM-SKILL:passport:generate"
+
 # Support
 PERM_SUP_GRANT_REQUEST = "PERM-SUP:grant:request"
 PERM_SUP_GRANT_APPROVE = "PERM-SUP:grant:approve"
@@ -296,6 +306,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # Micro-school administration
         PERM_MICRO_SCHOOL_READ,
         PERM_MICRO_SCHOOL_MANAGE,
+        # Skill framework administration
+        PERM_SKILL_DIMENSION_MANAGE,
+        PERM_SKILL_MILESTONE_MANAGE,
         # Document management (Phase 16) — destructive bulk action stays ADM-only
         PERM_DOC_BULK_DELETE,
         # COM — config/broadcast operations
@@ -423,6 +436,13 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_BUDGET_REQUEST_CREATE,
         PERM_BUDGET_REQUEST_READ,
         PERM_BUDGET_TRANSACTION_READ,
+        # Life-skills passport
+        PERM_SKILL_DIMENSION_READ,
+        PERM_SKILL_MILESTONE_READ,
+        PERM_SKILL_PROGRESS_READ,
+        PERM_SKILL_PROGRESS_EVALUATE,
+        PERM_SKILL_PASSPORT_READ,
+        PERM_SKILL_PASSPORT_GENERATE,
         # Reporting (Phase 14)
         PERM_REP_REPORT_GENERATE,
         PERM_REP_REPORT_READ,
@@ -511,6 +531,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # Micro-school parent access
         PERM_MICRO_PAYMENT_READ,
         PERM_MICRO_PROGRESS_READ,
+        # Life-skills passport
+        PERM_SKILL_PROGRESS_READ,
+        PERM_SKILL_PASSPORT_READ,
         # Progress (Phase 11D)
         PERM_PROGRESS_READ,
         # Reporting (Phase 14)
@@ -569,6 +592,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # Quiz — attempt + read
         PERM_QUIZ_ATTEMPT,
         PERM_QUIZ_READ,
+        # Life-skills passport
+        PERM_SKILL_PROGRESS_READ,
+        PERM_SKILL_PASSPORT_READ,
         # Progress (Phase 11D)
         PERM_PROGRESS_READ,
         # Reporting (Phase 14)
