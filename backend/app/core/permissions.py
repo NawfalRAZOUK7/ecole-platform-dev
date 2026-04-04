@@ -266,6 +266,16 @@ PERM_SKILL_PROGRESS_EVALUATE = "PERM-SKILL:progress:evaluate"
 PERM_SKILL_PASSPORT_READ = "PERM-SKILL:passport:read"
 PERM_SKILL_PASSPORT_GENERATE = "PERM-SKILL:passport:generate"
 
+# MEN compliance
+PERM_COMPLY_CURRICULUM_READ = "PERM-COMPLY:curriculum:read"
+PERM_COMPLY_CURRICULUM_MANAGE = "PERM-COMPLY:curriculum:manage"
+PERM_COMPLY_OBJECTIVE_READ = "PERM-COMPLY:objective:read"
+PERM_COMPLY_MAPPING_CREATE = "PERM-COMPLY:mapping:create"
+PERM_COMPLY_MAPPING_READ = "PERM-COMPLY:mapping:read"
+PERM_COMPLY_REPORT_READ = "PERM-COMPLY:report:read"
+PERM_COMPLY_REPORT_GENERATE = "PERM-COMPLY:report:generate"
+PERM_COMPLY_SEED = "PERM-COMPLY:data:seed"
+
 # Support
 PERM_SUP_GRANT_REQUEST = "PERM-SUP:grant:request"
 PERM_SUP_GRANT_APPROVE = "PERM-SUP:grant:approve"
@@ -309,6 +319,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # Skill framework administration
         PERM_SKILL_DIMENSION_MANAGE,
         PERM_SKILL_MILESTONE_MANAGE,
+        # MEN compliance oversight
+        PERM_COMPLY_REPORT_READ,
+        PERM_COMPLY_REPORT_GENERATE,
         # Document management (Phase 16) — destructive bulk action stays ADM-only
         PERM_DOC_BULK_DELETE,
         # COM — config/broadcast operations
@@ -371,6 +384,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_BUDGET_TRANSACTION_CREATE,
         PERM_BUDGET_TRANSACTION_READ,
         PERM_BUDGET_ANALYTICS_READ,
+        # MEN compliance reporting
+        PERM_COMPLY_REPORT_READ,
+        PERM_COMPLY_REPORT_GENERATE,
         # Calendar & Events (Phase 15)
         PERM_CAL_EVENT_DELETE,
         PERM_CAL_HOLIDAY_MANAGE,
@@ -443,6 +459,11 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_SKILL_PROGRESS_EVALUATE,
         PERM_SKILL_PASSPORT_READ,
         PERM_SKILL_PASSPORT_GENERATE,
+        # MEN compliance
+        PERM_COMPLY_CURRICULUM_READ,
+        PERM_COMPLY_OBJECTIVE_READ,
+        PERM_COMPLY_MAPPING_CREATE,
+        PERM_COMPLY_MAPPING_READ,
         # Reporting (Phase 14)
         PERM_REP_REPORT_GENERATE,
         PERM_REP_REPORT_READ,
@@ -624,6 +645,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_ERP_ATTENDANCE_READ,
         PERM_ADM_PLATFORM_STATS,
         PERM_SYS_AUDIT_LOG_READ,
+        # MEN compliance reference management
+        PERM_COMPLY_CURRICULUM_MANAGE,
+        PERM_COMPLY_SEED,
         # Support — grant lifecycle
         PERM_SUP_GRANT_REQUEST,
         PERM_SUP_AUDIT_READ,
@@ -633,6 +657,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_BIL_PAYMENT_RECONCILE,
         PERM_COM_NOTIFICATION_BATCH_CREATE,
         PERM_IA_WRITING_ATTEMPT_REVIEW,
+        # MEN compliance reference management
+        PERM_COMPLY_CURRICULUM_MANAGE,
+        PERM_COMPLY_SEED,
         # Feature toggles (Phase 11E)
         PERM_SYS_FEATURE_MANAGE,
     },

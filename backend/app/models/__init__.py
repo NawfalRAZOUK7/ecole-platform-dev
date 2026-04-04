@@ -144,6 +144,14 @@ from app.models.skill_passport import (
     SkillProgressStatus,
 )
 
+# G5E — MEN compliance
+from app.models.men_compliance import (
+    ComplianceReport,
+    CurriculumMapping,
+    MenCurriculum,
+    MenObjective,
+)
+
 # G6 — Audit
 from app.models.audit import AuditLog
 
@@ -286,6 +294,11 @@ __all__ = [
     "SkillProgress",
     "SkillProgressStatus",
     "SkillPassport",
+    # MEN compliance
+    "MenCurriculum",
+    "MenObjective",
+    "CurriculumMapping",
+    "ComplianceReport",
     # Audit
     "AuditLog",
     # AI
