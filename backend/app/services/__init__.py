@@ -7,6 +7,13 @@ from app.services.micro_school_service import (
     MicroProgressService,
     MicroSchoolService,
 )
+from app.services.skill_passport_service import (
+    SkillAnalyticsService,
+    SkillDimensionService,
+    SkillMilestoneService,
+    SkillPassportService,
+    SkillProgressService,
+)
 
 __all__ = [
     "BudgetService",
@@ -14,4 +21,9 @@ __all__ = [
     "MicroGroupService",
     "MicroPaymentService",
     "MicroProgressService",
+    "SkillPassportService",
+    "SkillDimensionService",
+    "SkillMilestoneService",
+    "SkillProgressService",
+    "SkillAnalyticsService",
 ]
