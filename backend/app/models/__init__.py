@@ -123,6 +123,18 @@ from app.models.micro_school import (
     MicroSchoolStatus,
 )
 
+# G5C — Budget
+from app.models.budget import (
+    BudgetAllocation,
+    BudgetAllocationStatus,
+    BudgetRequest,
+    BudgetRequestStatus,
+    BudgetTransaction,
+    BudgetTransactionType,
+    MicroBudget,
+    MicroBudgetStatus,
+)
+
 # G6 — Audit
 from app.models.audit import AuditLog
 
@@ -250,6 +262,15 @@ __all__ = [
     "MicroResource",
     "MicroResourceType",
     "MicroProgressLog",
+    # Budget
+    "MicroBudget",
+    "MicroBudgetStatus",
+    "BudgetAllocation",
+    "BudgetAllocationStatus",
+    "BudgetRequest",
+    "BudgetRequestStatus",
+    "BudgetTransaction",
+    "BudgetTransactionType",
     # Audit
     "AuditLog",
     # AI

@@ -244,6 +244,18 @@ PERM_MICRO_RESOURCE_MANAGE = "PERM-MICRO:resource:manage"
 PERM_MICRO_PROGRESS_CREATE = "PERM-MICRO:progress:create"
 PERM_MICRO_PROGRESS_READ = "PERM-MICRO:progress:read"
 
+# Class micro-budget
+PERM_BUDGET_CREATE = "PERM-BUDGET:budget:create"
+PERM_BUDGET_READ = "PERM-BUDGET:budget:read"
+PERM_BUDGET_MANAGE = "PERM-BUDGET:budget:manage"
+PERM_BUDGET_ALLOCATE = "PERM-BUDGET:allocation:allocate"
+PERM_BUDGET_REQUEST_CREATE = "PERM-BUDGET:request:create"
+PERM_BUDGET_REQUEST_READ = "PERM-BUDGET:request:read"
+PERM_BUDGET_APPROVE = "PERM-BUDGET:request:approve"
+PERM_BUDGET_TRANSACTION_CREATE = "PERM-BUDGET:transaction:create"
+PERM_BUDGET_TRANSACTION_READ = "PERM-BUDGET:transaction:read"
+PERM_BUDGET_ANALYTICS_READ = "PERM-BUDGET:analytics:read"
+
 # Support
 PERM_SUP_GRANT_REQUEST = "PERM-SUP:grant:request"
 PERM_SUP_GRANT_APPROVE = "PERM-SUP:grant:approve"
@@ -336,6 +348,16 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_BIL_PAYMENT_PLAN_CREATE,
         PERM_BIL_PAYMENT_PLAN_READ,
         PERM_BIL_PAYMENT_PLAN_MANAGE,
+        # Budget — class micro-budget approvals and oversight
+        PERM_BUDGET_CREATE,
+        PERM_BUDGET_READ,
+        PERM_BUDGET_MANAGE,
+        PERM_BUDGET_ALLOCATE,
+        PERM_BUDGET_REQUEST_READ,
+        PERM_BUDGET_APPROVE,
+        PERM_BUDGET_TRANSACTION_CREATE,
+        PERM_BUDGET_TRANSACTION_READ,
+        PERM_BUDGET_ANALYTICS_READ,
         # Calendar & Events (Phase 15)
         PERM_CAL_EVENT_DELETE,
         PERM_CAL_HOLIDAY_MANAGE,
@@ -396,6 +418,11 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # Progress (Phase 11D)
         PERM_PROGRESS_READ,
         PERM_PROGRESS_CLASS_READ,
+        # Budget — teachers can inspect scoped allocations and submit requests
+        PERM_BUDGET_READ,
+        PERM_BUDGET_REQUEST_CREATE,
+        PERM_BUDGET_REQUEST_READ,
+        PERM_BUDGET_TRANSACTION_READ,
         # Reporting (Phase 14)
         PERM_REP_REPORT_GENERATE,
         PERM_REP_REPORT_READ,
