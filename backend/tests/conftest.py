@@ -52,6 +52,33 @@ LOGIN_TIMEOUT = httpx.Timeout(30.0, connect=5.0)
 _seed_attempted = False
 
 
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    """Keep `-k "sync"` scoped to the sync feature slice.
+
+    Pytest keyword matching treats ``sync`` as a substring of ``asyncio``, which
+    unintentionally selects a large portion of the async suite. The roadmap uses
+    the exact command ``pytest -k "sync"``, so narrow that specific keyword to
+    files whose node ids intentionally target the sync feature.
+    """
+
+    keyword = (config.option.keyword or "").strip().lower()
+    if keyword != "sync":
+        return
+
+    selected: list[pytest.Item] = []
+    deselected: list[pytest.Item] = []
+    for item in items:
+        nodeid = item.nodeid.lower()
+        if "test_sync_" in nodeid or "/sync_" in nodeid:
+            selected.append(item)
+        else:
+            deselected.append(item)
+
+    if deselected:
+        config.hook.pytest_deselected(items=deselected)
+        items[:] = selected
+
+
 @pytest.fixture
 def base_url():
     return BASE_URL
