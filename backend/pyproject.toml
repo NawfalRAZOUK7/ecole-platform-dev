@@ -20,16 +20,14 @@ omit = ["app/alembic/*", "app/core/config.py"]
 fail_under = 80
 show_missing = true
 include = [
-  "app/api/v1/micro_school.py",
+  "app/api/v1/budgets.py",
   "app/api/v1/router.py",
-  "app/core/config.py",
-  "app/core/exceptions.py",
   "app/core/permissions.py",
-  "app/domain/events/micro_school.py",
-  "app/models/micro_school.py",
-  "app/repositories/micro_school.py",
-  "app/schemas/micro_school.py",
-  "app/services/micro_school_service.py",
+  "app/domain/events/budget.py",
+  "app/models/budget.py",
+  "app/repositories/budget.py",
+  "app/schemas/budget.py",
+  "app/services/budget_service.py",
 ]
 exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "if __name__"]
 
