@@ -32,6 +32,7 @@ Routes:
   /billing/*                    — Fee structures, assignments, invoice generation, policies, payment plans
   /budgets/*                    — Class micro-budget envelopes, allocations, requests, transactions, analytics
   /skills/*                     — Life-skills dimensions, milestones, evaluation, passports, analytics
+  /compliance/*                 — MEN curriculum mapping, dashboards, and compliance reports
   /messages/*                   — Conversations + messaging (Phase 11C)
   /announcements/*              — Announcements CRUD + publish (Phase 11C)
   /progress/*                   — Student progress visualization (Phase 11D)
@@ -114,6 +115,7 @@ from app.api.v1.timetable_generation import router as timetable_generation_route
 # Phase 11B — Billing Enhancements
 from app.api.v1.billing import router as billing_router
 from app.api.v1.budgets import router as budgets_router
+from app.api.v1.compliance import router as compliance_router
 from app.api.v1.micro_school import router as micro_school_router
 from app.api.v1.skills import router as skills_router
 
@@ -232,6 +234,7 @@ router.include_router(billing_router)
 router.include_router(budgets_router)
 router.include_router(micro_school_router)
 router.include_router(skills_router)
+router.include_router(compliance_router)
 
 # Mount sub-routers — Phase 11C Messaging & Announcements
 router.include_router(messaging_router)
