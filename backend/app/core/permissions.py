@@ -276,6 +276,16 @@ PERM_COMPLY_REPORT_READ = "PERM-COMPLY:report:read"
 PERM_COMPLY_REPORT_GENERATE = "PERM-COMPLY:report:generate"
 PERM_COMPLY_SEED = "PERM-COMPLY:data:seed"
 
+# Local-first sync
+PERM_SYNC_DEVICE_REGISTER = "PERM-SYNC:device:register"
+PERM_SYNC_DEVICE_READ = "PERM-SYNC:device:read"
+PERM_SYNC_DEVICE_MANAGE = "PERM-SYNC:device:manage"
+PERM_SYNC_PUSH = "PERM-SYNC:data:push"
+PERM_SYNC_PULL = "PERM-SYNC:data:pull"
+PERM_SYNC_CONFLICT_READ = "PERM-SYNC:conflict:read"
+PERM_SYNC_CONFLICT_RESOLVE = "PERM-SYNC:conflict:resolve"
+PERM_SYNC_STATUS_READ = "PERM-SYNC:status:read"
+
 # Support
 PERM_SUP_GRANT_REQUEST = "PERM-SUP:grant:request"
 PERM_SUP_GRANT_APPROVE = "PERM-SUP:grant:approve"
@@ -387,6 +397,15 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # MEN compliance reporting
         PERM_COMPLY_REPORT_READ,
         PERM_COMPLY_REPORT_GENERATE,
+        # Local-first sync administration
+        PERM_SYNC_DEVICE_REGISTER,
+        PERM_SYNC_DEVICE_READ,
+        PERM_SYNC_DEVICE_MANAGE,
+        PERM_SYNC_PUSH,
+        PERM_SYNC_PULL,
+        PERM_SYNC_CONFLICT_READ,
+        PERM_SYNC_CONFLICT_RESOLVE,
+        PERM_SYNC_STATUS_READ,
         # Calendar & Events (Phase 15)
         PERM_CAL_EVENT_DELETE,
         PERM_CAL_HOLIDAY_MANAGE,
@@ -464,6 +483,10 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_COMPLY_OBJECTIVE_READ,
         PERM_COMPLY_MAPPING_CREATE,
         PERM_COMPLY_MAPPING_READ,
+        # Local-first sync
+        PERM_SYNC_PUSH,
+        PERM_SYNC_PULL,
+        PERM_SYNC_STATUS_READ,
         # Reporting (Phase 14)
         PERM_REP_REPORT_GENERATE,
         PERM_REP_REPORT_READ,
@@ -555,6 +578,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # Life-skills passport
         PERM_SKILL_PROGRESS_READ,
         PERM_SKILL_PASSPORT_READ,
+        # Local-first sync
+        PERM_SYNC_PULL,
+        PERM_SYNC_STATUS_READ,
         # Progress (Phase 11D)
         PERM_PROGRESS_READ,
         # Reporting (Phase 14)

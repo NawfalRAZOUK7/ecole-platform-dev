@@ -152,6 +152,18 @@ from app.models.men_compliance import (
     MenObjective,
 )
 
+# G5F — Local-first sync
+from app.models.sync_queue import (
+    SyncCheckpoint,
+    SyncConflict,
+    SyncConflictResolution,
+    SyncDevice,
+    SyncDeviceType,
+    SyncQueue,
+    SyncQueueOperation,
+    SyncQueueStatus,
+)
+
 # G6 — Audit
 from app.models.audit import AuditLog
 
@@ -299,6 +311,15 @@ __all__ = [
     "MenObjective",
     "CurriculumMapping",
     "ComplianceReport",
+    # Local-first sync
+    "SyncDevice",
+    "SyncDeviceType",
+    "SyncQueue",
+    "SyncQueueOperation",
+    "SyncQueueStatus",
+    "SyncConflict",
+    "SyncConflictResolution",
+    "SyncCheckpoint",
     # Audit
     "AuditLog",
     # AI
