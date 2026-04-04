@@ -254,13 +254,15 @@ class _SkillServiceBase:
                 f"Unsupported skill metric: {raw_metric}",
                 error_code="ERR-SKILL-422",
             )
-        threshold = float(rule_config.get("threshold", 1) or 1)
+        threshold_raw = rule_config.get("threshold", 1)
+        threshold = float(1 if threshold_raw is None else threshold_raw)
         if threshold <= 0:
             raise ValidationError(
                 "Skill milestone threshold must be greater than zero",
                 error_code="ERR-SKILL-422",
             )
-        period_days = int(rule_config.get("period_days", 30) or 30)
+        period_days_raw = rule_config.get("period_days", 30)
+        period_days = int(30 if period_days_raw is None else period_days_raw)
         if period_days <= 0:
             raise ValidationError(
                 "Skill milestone period_days must be greater than zero",

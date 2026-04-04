@@ -433,6 +433,7 @@ class SkillPassportRepository(BaseRepository):
     ) -> int:
         result = await self.db.execute(
             select(func.count(func.distinct(Activity.type)))
+            .select_from(ActivitySession)
             .join(Activity, Activity.id == ActivitySession.activity_id)
             .where(
                 ActivitySession.student_id == student_id,
