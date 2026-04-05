@@ -164,6 +164,7 @@ class SyncQueue(TimestampMixin, SchoolScopedMixin, Base):
             "retry_count >= 0 AND retry_count <= 5",
             name="ck_sync_queue_retry_count",
         ),
+        Index("idx_sync_queue_device_id", "device_id"),
         Index("idx_sync_queue_device_status", "device_id", "status"),
         Index("idx_sync_queue_school_entity", "school_id", "entity_type", "entity_id"),
         Index("idx_sync_queue_pending_created_at", "status", "created_at"),
@@ -216,6 +217,8 @@ class SyncConflict(TimestampMixin, SchoolScopedMixin, Base):
     resolver = relationship("User", foreign_keys=[resolved_by])
 
     __table_args__ = (
+        Index("idx_sync_conflicts_queue_item_id", "queue_item_id"),
+        Index("idx_sync_conflicts_resolved_by", "resolved_by"),
         Index("idx_sync_conflicts_school_resolution", "school_id", "resolution"),
         Index("idx_sync_conflicts_entity", "entity_type", "entity_id"),
     )
@@ -259,6 +262,7 @@ class SyncCheckpoint(TimestampMixin, SchoolScopedMixin, Base):
             "records_synced >= 0",
             name="ck_sync_checkpoints_records_synced",
         ),
+        Index("idx_sync_checkpoints_device_id", "device_id"),
         Index("idx_sync_checkpoints_device_last_sync", "device_id", "last_sync_at"),
         Index("idx_sync_checkpoints_school_entity", "school_id", "last_entity_type"),
     )

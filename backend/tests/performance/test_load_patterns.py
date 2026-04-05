@@ -13,7 +13,6 @@ from app.core.permissions import (
     DIR,
     PAR,
     PERM_ADM_USER_READ,
-    PERM_BIL_PAYMENT_PLAN_READ,
     PERM_LMS_SUBMISSION_GRADE,
     PERM_PROF_CHILD_READ,
     TCH,

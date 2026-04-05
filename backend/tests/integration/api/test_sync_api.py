@@ -18,7 +18,6 @@ from tests.factories.iam import MembershipFactory, SessionFactory, UserFactory
 from tests.factories.school import SchoolFactory
 from tests.factories.sync_queue import (
     SyncCheckpointFactory,
-    SyncConflictFactory,
     SyncDeviceFactory,
     SyncQueueFactory,
 )

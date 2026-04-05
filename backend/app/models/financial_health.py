@@ -221,6 +221,7 @@ class CostPerStudent(TimestampMixin, SchoolScopedMixin, Base):
             "school_id",
             "computed_at",
         ),
+        Index("idx_cost_per_student_academic_year_id", "academic_year_id"),
     )
 
     @validates("currency")

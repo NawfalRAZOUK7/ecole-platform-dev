@@ -17,7 +17,7 @@ import pytest
 import pytest_asyncio
 import redis.asyncio as redis
 from sqlalchemy.dialects.postgresql import ENUM as PgEnum
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from testcontainers.postgres import PostgresContainer
 
 import app.core.feature_flags as feature_flags_module
@@ -97,24 +97,39 @@ async def client():
 
 
 def _reseed_dev_database() -> None:
-    subprocess.run(
-        [
-            "docker",
-            "compose",
-            "-f",
-            "infra/docker-compose.dev.yml",
-            "exec",
-            "-T",
-            "backend",
-            "python",
-            "-m",
-            "app.seed",
-        ],
-        cwd=REPO_ROOT,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
+    try:
+        subprocess.run(
+            [
+                "docker",
+                "compose",
+                "-f",
+                "infra/docker-compose.dev.yml",
+                "exec",
+                "-T",
+                "backend",
+                "python",
+                "-m",
+                "app.seed",
+            ],
+            cwd=REPO_ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError):
+        # Docker may not be available; fall back to direct seed if possible.
+        try:
+            subprocess.run(
+                ["python", "-m", "app.seed"],
+                cwd=REPO_ROOT,
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+        except Exception:
+            pass  # Seed data should already be loaded; tests will fail clearly if not.
 
 
 async def _login_with_seed_retry(

@@ -9,7 +9,7 @@ from typing import Iterable
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import AuthorizationError, NotFoundError
-from app.core.permissions import ADM, DIR
+from app.core.permissions import ADM, DIR, PAR, STD, TCH
 from app.core.redis import redis_client
 from app.core.unit_of_work import UnitOfWork
 from app.models.com import (

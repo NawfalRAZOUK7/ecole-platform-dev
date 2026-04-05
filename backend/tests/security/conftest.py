@@ -14,7 +14,7 @@ from app.core.database import async_session
 from app.core.security import create_access_token, hash_password
 from app.models.erp import AttendanceRecord, AttendanceSession
 from app.models.iam import Membership, ParentChildLink, Session, User
-from app.models.lms import Assignment, Course, Submission
+from app.models.lms import Assignment, Course, GradeCategory, Submission
 
 SCHOOL_ID = "00000000-0000-4000-8000-000000000001"
 YEAR_ID = "20000000-0000-4000-8000-000000000001"
@@ -191,6 +191,27 @@ async def create_absence_record() -> uuid.UUID:
         )
         await db.commit()
     return attendance_record_id
+
+
+async def ensure_grade_category() -> uuid.UUID:
+    """Create a grade category for the security test class/period if missing."""
+    category_id = uuid.uuid5(uuid.NAMESPACE_URL, "security-grade-category")
+    async with async_session() as db:
+        existing = await db.get(GradeCategory, category_id)
+        if existing is None:
+            db.add(
+                GradeCategory(
+                    id=category_id,
+                    school_id=SCHOOL_UUID,
+                    class_id=CLASS_UUID,
+                    period_id=PERIOD_UUID,
+                    name="Contrôle continu",
+                    weight=1.0,
+                    position=0,
+                )
+            )
+            await db.commit()
+    return category_id
 
 
 async def create_grading_scope_submission(*, teacher_id: uuid.UUID) -> dict[str, uuid.UUID]:
@@ -375,3 +396,9 @@ async def other_teacher_owned_submission(
     other_teacher_actor: SecurityActor,
 ) -> dict[str, uuid.UUID]:
     return await create_grading_scope_submission(teacher_id=other_teacher_actor.user_id)
+
+
+@pytest_asyncio.fixture(autouse=True, loop_scope="function")
+async def _grade_category_for_abac() -> uuid.UUID:
+    """Ensure a grade category exists so transcript endpoints don't 422."""
+    return await ensure_grade_category()

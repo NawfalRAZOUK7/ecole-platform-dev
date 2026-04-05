@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import Date, and_, case, cast, distinct, func, select
+from sqlalchemy import Date, case, cast, distinct, func, select
 
 from app.models.billing import Invoice, InvoiceStatus, PaymentAttempt, PaymentAttemptStatus
 from app.models.budget import BudgetAllocation, BudgetTransaction, BudgetTransactionType, MicroBudget

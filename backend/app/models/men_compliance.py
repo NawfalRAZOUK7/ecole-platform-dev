@@ -127,6 +127,7 @@ class MenObjective(TimestampMixin, Base):
             "trimester",
         ),
         Index("idx_men_objectives_curriculum_order", "curriculum_id", "display_order"),
+        Index("idx_men_objectives_curriculum_id", "curriculum_id"),
     )
 
     @validates("code")
@@ -207,6 +208,10 @@ class CurriculumMapping(TimestampMixin, SchoolScopedMixin, Base):
         ),
         Index("idx_curriculum_mappings_course", "course_id"),
         Index("idx_curriculum_mappings_content_item", "content_item_id"),
+        Index("idx_curriculum_mappings_objective_id", "objective_id"),
+        Index("idx_curriculum_mappings_course_id", "course_id"),
+        Index("idx_curriculum_mappings_content_item_id", "content_item_id"),
+        Index("idx_curriculum_mappings_mapped_by", "mapped_by"),
     )
 
     def __repr__(self) -> str:
@@ -284,6 +289,9 @@ class ComplianceReport(TimestampMixin, SchoolScopedMixin, Base):
             "curriculum_id",
         ),
         Index("idx_compliance_reports_generated_by", "generated_by"),
+        Index("idx_compliance_reports_curriculum_id", "curriculum_id"),
+        Index("idx_compliance_reports_generated_by_fk", "generated_by"),
+        Index("idx_compliance_reports_academic_year_id", "academic_year_id"),
     )
 
     def __repr__(self) -> str:

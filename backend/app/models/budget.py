@@ -122,6 +122,8 @@ class MicroBudget(TimestampMixin, SchoolScopedMixin, Base):
             "status",
         ),
         Index("idx_micro_budgets_creator", "created_by"),
+        Index("idx_micro_budgets_academic_year_id", "academic_year_id"),
+        Index("idx_micro_budgets_created_by", "created_by"),
     )
 
     @validates("currency")
@@ -214,6 +216,10 @@ class BudgetAllocation(TimestampMixin, Base):
         Index("idx_budget_allocations_budget_status", "budget_id", "status"),
         Index("idx_budget_allocations_class", "class_id"),
         Index("idx_budget_allocations_teacher", "teacher_id"),
+        Index("idx_budget_allocations_budget_id", "budget_id"),
+        Index("idx_budget_allocations_class_id", "class_id"),
+        Index("idx_budget_allocations_teacher_id", "teacher_id"),
+        Index("idx_budget_allocations_allocated_by", "allocated_by"),
     )
 
     @validates("currency")
@@ -283,6 +289,7 @@ class BudgetRequest(TimestampMixin, Base):
         CheckConstraint("amount > 0", name="ck_budget_requests_amount"),
         Index("idx_budget_requests_allocation_status", "allocation_id", "status"),
         Index("idx_budget_requests_requester_status", "requester_id", "status"),
+        Index("idx_budget_requests_reviewed_by", "reviewed_by"),
     )
 
     @validates("currency")
@@ -353,6 +360,9 @@ class BudgetTransaction(TimestampMixin, Base):
             "recorded_at",
         ),
         Index("idx_budget_transactions_request", "request_id"),
+        Index("idx_budget_transactions_allocation_id", "allocation_id"),
+        Index("idx_budget_transactions_request_id", "request_id"),
+        Index("idx_budget_transactions_recorded_by", "recorded_by"),
     )
 
     @validates("description")

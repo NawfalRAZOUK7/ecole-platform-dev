@@ -20,16 +20,10 @@ from app.domain.events.lms import (
     SubmissionReceived,
 )
 from app.models.lms import (
-    Activity,
-    ActivitySession,
-    Assessment,
     Assignment,
-    ContentItem,
     Course,
     Grade,
-    Quiz,
     QuizAttempt,
-    QuizQuestion,
     Submission,
 )
 from app.repositories.lms import LMSRepository

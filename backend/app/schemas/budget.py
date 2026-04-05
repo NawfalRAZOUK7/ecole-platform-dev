@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime as datetime_type
 
 from pydantic import BaseModel, Field
 

@@ -18,7 +18,6 @@ from app.models.billing import (
     InvoiceStatus,
     PaymentAttempt,
     PaymentAttemptStatus,
-    PaymentMethod,
     PaymentPlan,
 )
 from tests.factories.base import AsyncSQLAlchemyFactory

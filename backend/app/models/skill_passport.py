@@ -112,6 +112,7 @@ class SkillMilestone(TimestampMixin, Base):
         CheckConstraint("level <= 5", name="ck_skill_milestones_level_max"),
         Index("idx_skill_milestones_dimension_level", "dimension_id", "level"),
         Index("idx_skill_milestones_active", "is_active"),
+        Index("idx_skill_milestones_dimension_id", "dimension_id"),
     )
 
     @validates("code")
@@ -193,6 +194,9 @@ class SkillProgress(TimestampMixin, SchoolScopedMixin, Base):
             "academic_year_id",
             "milestone_id",
         ),
+        Index("idx_skill_progress_student_id", "student_id"),
+        Index("idx_skill_progress_milestone_id", "milestone_id"),
+        Index("idx_skill_progress_academic_year_id", "academic_year_id"),
     )
 
     def __repr__(self) -> str:
@@ -264,6 +268,8 @@ class SkillPassport(TimestampMixin, SchoolScopedMixin, Base):
             "student_id",
             "academic_year_id",
         ),
+        Index("idx_skill_passports_student_id", "student_id"),
+        Index("idx_skill_passports_academic_year_id", "academic_year_id"),
     )
 
     @validates("pdf_url")

@@ -152,6 +152,7 @@ class MicroGroup(TimestampMixin, Base):
             name="ck_micro_groups_age_range_order",
         ),
         Index("idx_micro_groups_school", "micro_school_id"),
+        Index("idx_micro_groups_micro_school_id", "micro_school_id"),
     )
 
     def __repr__(self) -> str:
@@ -276,6 +277,9 @@ class MicroPayment(TimestampMixin, Base):
         ),
         Index("idx_micro_payments_school_status", "micro_school_id", "status"),
         Index("idx_micro_payments_parent_period", "parent_id", "period_start"),
+        Index("idx_micro_payments_micro_school_id", "micro_school_id"),
+        Index("idx_micro_payments_parent_id", "parent_id"),
+        Index("idx_micro_payments_child_enrollment_id", "child_enrollment_id"),
     )
 
     @validates("currency")
@@ -363,6 +367,8 @@ class MicroProgressLog(TimestampMixin, Base):
             "date",
         ),
         Index("idx_micro_progress_logs_educator_date", "educator_id", "date"),
+        Index("idx_micro_progress_logs_micro_enrollment_id", "micro_enrollment_id"),
+        Index("idx_micro_progress_logs_educator_id", "educator_id"),
     )
 
     @validates("note")
