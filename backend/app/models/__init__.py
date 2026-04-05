@@ -164,6 +164,14 @@ from app.models.sync_queue import (
     SyncQueueStatus,
 )
 
+# G5G — Financial health
+from app.models.financial_health import (
+    CashflowForecast,
+    CostPerStudent,
+    FinancialSnapshot,
+    RetentionMetric,
+)
+
 # G6 — Audit
 from app.models.audit import AuditLog
 
@@ -320,6 +328,11 @@ __all__ = [
     "SyncConflict",
     "SyncConflictResolution",
     "SyncCheckpoint",
+    # Financial health
+    "RetentionMetric",
+    "CashflowForecast",
+    "CostPerStudent",
+    "FinancialSnapshot",
     # Audit
     "AuditLog",
     # AI
