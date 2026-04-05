@@ -34,6 +34,7 @@ Routes:
   /skills/*                     — Life-skills dimensions, milestones, evaluation, passports, analytics
   /compliance/*                 — MEN curriculum mapping, dashboards, and compliance reports
   /sync/*                       — Local-first device registration, queue push/pull, conflicts, checkpoints
+  /financial-health/*           — Retention, cashflow, cost-per-student, snapshots, exports
   /messages/*                   — Conversations + messaging (Phase 11C)
   /announcements/*              — Announcements CRUD + publish (Phase 11C)
   /progress/*                   — Student progress visualization (Phase 11D)
@@ -117,6 +118,7 @@ from app.api.v1.timetable_generation import router as timetable_generation_route
 from app.api.v1.billing import router as billing_router
 from app.api.v1.budgets import router as budgets_router
 from app.api.v1.compliance import router as compliance_router
+from app.api.v1.financial_health import router as financial_health_router
 from app.api.v1.micro_school import router as micro_school_router
 from app.api.v1.skills import router as skills_router
 from app.api.v1.sync import router as sync_router
@@ -238,6 +240,7 @@ router.include_router(micro_school_router)
 router.include_router(skills_router)
 router.include_router(compliance_router)
 router.include_router(sync_router)
+router.include_router(financial_health_router)
 
 # Mount sub-routers — Phase 11C Messaging & Announcements
 router.include_router(messaging_router)
