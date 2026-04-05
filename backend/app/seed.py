@@ -71,7 +71,9 @@ from app.models.lms import (
     QuizQuestion,
     Submission,
 )
+from app.models.men_compliance import MenCurriculum, MenObjective
 from app.models.school import School
+from app.services.compliance_service import seed_men_reference_data
 
 # ── Fixed UUIDs for deterministic seeding ──────────────────────────────────
 
@@ -159,6 +161,10 @@ async def clear_all(session: AsyncSession) -> None:
     existing_tables = await conn.run_sync(_get_table_names)
     tables_in_order = [
         "feature_toggles",
+        "compliance_reports",
+        "curriculum_mappings",
+        "men_objectives",
+        "men_curricula",
         "schools",
         "audit_logs",
         "provider_webhook_events",
@@ -182,7 +188,13 @@ async def clear_all(session: AsyncSession) -> None:
         "content_progress",
         "content_item_assets",
         "content_items",
+        "student_period_averages",
         "grades",
+        "grade_categories",
+        "rubric_scores",
+        "rubric_levels",
+        "rubric_criteria",
+        "rubrics",
         "submission_files",
         "submissions",
         "assessment_results",
@@ -637,7 +649,7 @@ async def seed_lms(session: AsyncSession) -> None:
     result = AssessmentResult(
         assessment_id=ASSESS_1_ID,
         student_id=STUDENT_1_ID,
-        score=35.0,
+        score=17.5,
         status="published",
     )
     session.add(result)
@@ -1647,6 +1659,113 @@ async def seed_feature_toggles(session: AsyncSession) -> None:
     print("  [Features] 6 feature toggles (messaging + announcements globally enabled)")
 
 
+async def seed_men_compliance(session: AsyncSession) -> None:
+    """Seed MEN curriculum reference data and objectives."""
+    result = await seed_men_reference_data(session)
+
+    extra_curricula = [
+        {
+            "curriculum_id": uuid.uuid5(
+                uuid.NAMESPACE_URL,
+                "men-primaire-3-francais-2025-2026",
+            ),
+            "level": "Primaire",
+            "grade": "3eme annee",
+            "subject": "Francais",
+            "academic_year": "2025-2026",
+            "version": "1.0",
+            "objectives": [
+                ("FRA-P3-01", "Lire un court recit", "قراءة قصة قصيرة"),
+                ("FRA-P3-02", "Identifier le verbe", "تحديد الفعل"),
+                ("FRA-P3-03", "Rediger une phrase simple", "كتابة جملة بسيطة"),
+            ],
+        },
+        {
+            "curriculum_id": uuid.uuid5(
+                uuid.NAMESPACE_URL,
+                "men-college-1-svt-2025-2026",
+            ),
+            "level": "College",
+            "grade": "1ere annee",
+            "subject": "Sciences de la vie et de la terre",
+            "academic_year": "2025-2026",
+            "version": "1.0",
+            "objectives": [
+                ("SVT-C1-01", "Observer la cellule", "ملاحظة الخلية"),
+                ("SVT-C1-02", "Distinguer les ecosystemes", "تمييز الأنظمة البيئية"),
+                ("SVT-C1-03", "Expliquer une chaine alimentaire", "شرح سلسلة غذائية"),
+            ],
+        },
+        {
+            "curriculum_id": uuid.uuid5(
+                uuid.NAMESPACE_URL,
+                "men-lycee-tc-physique-2025-2026",
+            ),
+            "level": "Lycee",
+            "grade": "Tronc commun",
+            "subject": "Physique-Chimie",
+            "academic_year": "2025-2026",
+            "version": "1.0",
+            "objectives": [
+                ("PHY-L1-01", "Mesurer une vitesse", "قياس السرعة"),
+                ("PHY-L1-02", "Identifier un melange", "تحديد خليط"),
+                ("PHY-L1-03", "Interpreter un circuit simple", "تفسير دارة بسيطة"),
+            ],
+        },
+    ]
+
+    curricula = [
+        MenCurriculum(
+            id=payload["curriculum_id"],
+            level=payload["level"],
+            grade=payload["grade"],
+            subject=payload["subject"],
+            academic_year=payload["academic_year"],
+            version=payload["version"],
+            is_active=True,
+        )
+        for payload in extra_curricula
+    ]
+    session.add_all(curricula)
+    await session.flush()
+
+    objectives: list[MenObjective] = []
+    for payload, curriculum in zip(extra_curricula, curricula, strict=True):
+        for display_order, (code, title_fr, title_ar) in enumerate(
+            payload["objectives"],
+            start=1,
+        ):
+            objectives.append(
+                MenObjective(
+                    id=uuid.uuid5(
+                        uuid.NAMESPACE_URL,
+                        f"{payload['subject']}-{code}-{display_order}",
+                    ),
+                    curriculum_id=curriculum.id,
+                    code=code,
+                    title_fr=title_fr,
+                    title_ar=title_ar,
+                    description_fr=(
+                        f"Objectif MEN de demonstration pour {payload['subject']}"
+                    ),
+                    trimester=min(display_order, 3),
+                    unit_number=display_order,
+                    is_mandatory=True,
+                    hours_recommended=2.0,
+                    display_order=display_order,
+                )
+            )
+
+    session.add_all(objectives)
+    await session.flush()
+
+    print(
+        "  [MEN] "
+        f"{result['curricula_created'] + len(curricula)} curricula, "
+        f"{result['objectives_created'] + len(objectives)} objectives"
+    )
+
+
 async def main() -> None:
     print("=" * 60)
     print("Ecole Platform — Seeding development database")
@@ -1672,6 +1791,7 @@ async def main() -> None:
         await seed_timetable(session)
         await seed_fees(session)
         await seed_feature_toggles(session)
+        await seed_men_compliance(session)
 
         await session.commit()
 

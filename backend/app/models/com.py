@@ -242,6 +242,7 @@ class Notification(TimestampMixin, SchoolScopedMixin, SoftDeleteMixin, Base):
             "category",
             "created_at",
         ),
+        Index("idx_notifications_parent_id", "parent_id"),
     )
 
     @property
@@ -315,6 +316,7 @@ class DeviceToken(TimestampMixin, SchoolScopedMixin, Base):
 
     __table_args__ = (
         Index("idx_device_tokens_school_user", "school_id", "user_id"),
+        Index("idx_device_tokens_user_id", "user_id"),
         Index("idx_device_tokens_last_active", "last_active_at"),
     )
 
@@ -377,6 +379,7 @@ class NotificationDelivery(TimestampMixin, SchoolScopedMixin, Base):
             "notification_id",
             "status",
         ),
+        Index("idx_notification_deliveries_notification_id", "notification_id"),
         Index("idx_deliveries_school_channel_status", "school_id", "channel", "status"),
     )
 
@@ -418,6 +421,7 @@ class ParentFeedItem(TimestampMixin, SchoolScopedMixin, Base):
             "parent_id",
             "created_at",
         ),
+        Index("idx_parent_feed_items_parent_id", "parent_id"),
         Index("idx_feed_student_id", "student_id"),
     )
 

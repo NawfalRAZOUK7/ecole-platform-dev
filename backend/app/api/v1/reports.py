@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, requires_permission
 from app.core.exceptions import AuthenticationError, ValidationError
@@ -63,7 +64,12 @@ async def generate_report(
     )
     await db.commit()
     if not cache_hit:
-        await enqueue_task("task_generate_report", job_id=payload["id"])
+        if settings.app_env == "production":
+            await enqueue_task("task_generate_report", job_id=payload["id"])
+        else:
+            job = await service.generate_report_job(uuid.UUID(payload["id"]))
+            if job is not None:
+                payload = service.serialize_job(job)
     return success_response(payload)
 
 

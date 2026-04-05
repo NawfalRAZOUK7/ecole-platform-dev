@@ -41,6 +41,7 @@ async def test_create_and_get_school(db_session):
 @pytest.mark.asyncio
 async def test_list_schools_applies_filters_and_cursor_pagination(db_session):
     repo = SchoolRepository(db_session)
+    repo_city = "RepoVille Pagination"
 
     oldest = await repo.create_school(
         {
@@ -57,7 +58,7 @@ async def test_list_schools_applies_filters_and_cursor_pagination(db_session):
             "id": _uuid(12),
             "name": "Ecole Middle",
             "code": "repo-school-12",
-            "city": "Casablanca",
+            "city": repo_city,
             "status": SchoolStatus.ACTIVE.value,
             "settings": {"timezone": "Africa/Casablanca"},
         }
@@ -67,7 +68,7 @@ async def test_list_schools_applies_filters_and_cursor_pagination(db_session):
             "id": _uuid(13),
             "name": "Ecole Newest",
             "code": "repo-school-13",
-            "city": "Casablanca",
+            "city": repo_city,
             "status": SchoolStatus.ACTIVE.value,
             "settings": {"timezone": "Africa/Casablanca"},
         }
@@ -81,7 +82,7 @@ async def test_list_schools_applies_filters_and_cursor_pagination(db_session):
     first_page, cursor, has_more = await repo.list_schools(
         cursor=None,
         limit=1,
-        filters={"status": SchoolStatus.ACTIVE.value, "city": "Casablanca"},
+        filters={"status": SchoolStatus.ACTIVE.value, "city": repo_city},
     )
 
     assert [school.id for school in first_page] == [newest.id]
@@ -91,7 +92,7 @@ async def test_list_schools_applies_filters_and_cursor_pagination(db_session):
     second_page, next_cursor, second_has_more = await repo.list_schools(
         cursor=cursor,
         limit=1,
-        filters={"status": SchoolStatus.ACTIVE.value, "city": "Casablanca"},
+        filters={"status": SchoolStatus.ACTIVE.value, "city": repo_city},
     )
 
     assert [school.id for school in second_page] == [middle.id]

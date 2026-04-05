@@ -79,6 +79,11 @@ class TestGradebookHelpers:
         with pytest.raises(ValidationError, match="At least one grade category"):
             service._validate_category_weights([])
 
+    def test_validate_category_weights_allows_empty_list_for_read_views(self):
+        service = GradebookService(AsyncMock())
+
+        service._validate_category_weights([], allow_empty=True)
+
     def test_compute_weighted_average_returns_moroccan_grade(self):
         service = GradebookService(AsyncMock())
         categories = [

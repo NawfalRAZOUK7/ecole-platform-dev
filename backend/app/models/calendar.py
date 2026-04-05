@@ -93,6 +93,7 @@ class Event(TimestampMixin, SchoolScopedMixin, SoftDeleteMixin, Base):
         Index("idx_events_school_type_start", "school_id", "type", "start_at"),
         Index("idx_events_school_class_start", "school_id", "class_id", "start_at"),
         Index("idx_events_school_visibility_start", "school_id", "visibility", "start_at"),
+        Index("idx_events_class_id", "class_id"),
         Index("idx_events_created_by", "created_by"),
     )
 
@@ -193,6 +194,7 @@ class EventReminderPreference(TimestampMixin, SchoolScopedMixin, Base):
             "event_type",
             name="uq_event_reminder_prefs_school_user_type",
         ),
+        Index("idx_event_reminder_preferences_user_id", "user_id"),
     )
 
     def __repr__(self) -> str:

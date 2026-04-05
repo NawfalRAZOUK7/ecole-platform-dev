@@ -137,6 +137,7 @@ class ReportJob(TimestampMixin, SchoolScopedMixin, Base):
 
     __table_args__ = (
         Index("idx_report_jobs_school_requester_created", "school_id", "requester_id", "created_at"),
+        Index("idx_report_jobs_requester_id", "requester_id"),
         Index("idx_report_jobs_school_type_status", "school_id", "type", "status"),
         Index("idx_report_jobs_school_params_hash_created", "school_id", "parameters_hash", "created_at"),
         Index("idx_report_jobs_expires_at", "expires_at"),

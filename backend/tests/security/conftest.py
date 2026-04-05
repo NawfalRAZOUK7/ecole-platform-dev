@@ -197,6 +197,18 @@ async def ensure_grade_category() -> uuid.UUID:
     """Create a grade category for the security test class/period if missing."""
     category_id = uuid.uuid5(uuid.NAMESPACE_URL, "security-grade-category")
     async with async_session() as db:
+        existing_for_scope = (
+            await db.execute(
+                select(GradeCategory).where(
+                    GradeCategory.school_id == SCHOOL_UUID,
+                    GradeCategory.class_id == CLASS_UUID,
+                    GradeCategory.period_id == PERIOD_UUID,
+                )
+            )
+        ).scalars().all()
+        if existing_for_scope:
+            return existing_for_scope[0].id
+
         existing = await db.get(GradeCategory, category_id)
         if existing is None:
             db.add(

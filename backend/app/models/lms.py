@@ -128,6 +128,7 @@ class Course(TimestampMixin, SchoolScopedMixin, Base):
 
     __table_args__ = (
         Index("idx_courses_school_class", "school_id", "class_id"),
+        Index("idx_courses_class_id", "class_id"),
         Index("idx_courses_teacher", "teacher_id"),
     )
 
@@ -158,6 +159,7 @@ class GradeCategory(TimestampMixin, SchoolScopedMixin, Base):
 
     __table_args__ = (
         Index("idx_grade_categories_class_period", "class_id", "period_id"),
+        Index("idx_grade_categories_period_id", "period_id"),
         Index("idx_grade_categories_school", "school_id"),
         CheckConstraint(
             "weight > 0 AND weight <= 1",
@@ -206,6 +208,7 @@ class Rubric(TimestampMixin, SchoolScopedMixin, Base):
     __table_args__ = (
         CheckConstraint("total_points >= 0", name="ck_rubrics_total_points"),
         Index("idx_rubrics_school_teacher", "school_id", "teacher_id"),
+        Index("idx_rubrics_teacher_id", "teacher_id"),
     )
 
     def __repr__(self) -> str:
@@ -424,6 +427,8 @@ class Submission(TimestampMixin, Base):
             unique=True,
             postgresql_where="status IN ('draft', 'submitted')",
         ),
+        Index("idx_submissions_assignment_id", "assignment_id"),
+        Index("idx_submissions_student_id", "student_id"),
     )
 
     @property
@@ -535,6 +540,10 @@ class Grade(TimestampMixin, Base):
     submission: Mapped["Submission"] = relationship(back_populates="grade")
 
     __table_args__ = (
+        CheckConstraint(
+            "score >= 0 AND score <= 20",
+            name="ck_grades_score_range",
+        ),
         Index("idx_grades_submission_published", "submission_id", "published_at"),
         Index("idx_grades_teacher", "teacher_id"),
     )
@@ -592,6 +601,7 @@ class StudentPeriodAverage(TimestampMixin, SchoolScopedMixin, Base):
             name="uq_spa_student_class_period",
         ),
         Index("idx_spa_class_period", "class_id", "period_id"),
+        Index("idx_student_period_averages_period_id", "period_id"),
         Index("idx_spa_student", "student_id"),
         Index("idx_spa_school", "school_id"),
     )
@@ -669,8 +679,18 @@ class AssessmentResult(TimestampMixin, Base):
             "student_id",
             name="uq_assessment_results_assessment_student",
         ),
+        CheckConstraint(
+            "score IS NULL OR (score >= 0 AND score <= 20)",
+            name="ck_assessment_results_score_range",
+        ),
         Index("idx_assessment_results_student", "student_id"),
     )
+
+    @validates("score")
+    def validate_score(self, key: str, value: float | None) -> float | None:
+        if value is not None and (value < 0 or value > 20):
+            raise ValueError("Assessment result score must be between 0 and 20")
+        return value
 
     def __repr__(self) -> str:
         return (
@@ -813,6 +833,7 @@ class ContentProgress(TimestampMixin, Base):
             "content_item_id",
             name="uq_content_progress_student_item",
         ),
+        Index("idx_content_progress_content_item_id", "content_item_id"),
     )
 
     def __repr__(self) -> str:
@@ -868,6 +889,7 @@ class ActivitySession(TimestampMixin, Base):
 
     __table_args__ = (
         Index("idx_activity_sessions_student_activity", "student_id", "activity_id"),
+        Index("idx_activity_sessions_activity_id", "activity_id"),
     )
 
     def __repr__(self) -> str:

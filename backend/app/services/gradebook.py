@@ -74,8 +74,15 @@ class GradebookService(LMSServiceBase):
             "position": category.position,
         }
 
-    def _validate_category_weights(self, categories: list[Any]) -> None:
+    def _validate_category_weights(
+        self,
+        categories: list[Any],
+        *,
+        allow_empty: bool = False,
+    ) -> None:
         if not categories:
+            if allow_empty:
+                return
             raise ValidationError(
                 "At least one grade category is required",
                 error_code="ERR-LMS-422",
@@ -208,12 +215,16 @@ class GradebookService(LMSServiceBase):
         *,
         class_id: uuid.UUID,
         period_id: uuid.UUID,
+        allow_empty_categories: bool = False,
     ) -> dict[str, Any]:
         categories = await self.gradebook_repo.list_grade_categories(
             class_id=class_id,
             period_id=period_id,
         )
-        self._validate_category_weights(categories)
+        self._validate_category_weights(
+            categories,
+            allow_empty=allow_empty_categories,
+        )
 
         students = await self.gradebook_repo.list_class_period_students(
             class_id=class_id,
@@ -425,7 +436,10 @@ class GradebookService(LMSServiceBase):
             auth=auth,
             manage=True,
         )
-        metrics = await self._build_live_metrics(class_id=class_id, period_id=period_id)
+        metrics = await self._build_live_metrics(
+            class_id=class_id,
+            period_id=period_id,
+        )
         computed_at = _utc_now()
 
         async with UnitOfWork(self.db) as uow:
@@ -496,7 +510,11 @@ class GradebookService(LMSServiceBase):
             period_id=period_id,
             auth=auth,
         )
-        metrics = await self._build_live_metrics(class_id=class_id, period_id=period_id)
+        metrics = await self._build_live_metrics(
+            class_id=class_id,
+            period_id=period_id,
+            allow_empty_categories=True,
+        )
 
         rows = []
         for record in metrics["ordered_records"]:
@@ -646,6 +664,7 @@ class GradebookService(LMSServiceBase):
             metrics = await self._build_live_metrics(
                 class_id=class_room.id,
                 period_id=period.id,
+                allow_empty_categories=True,
             )
             record = metrics["ranked_by_student"].get(student_id)
             if record is None:

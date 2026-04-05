@@ -141,6 +141,7 @@ class Period(TimestampMixin, SchoolScopedMixin, Base):
     __table_args__ = (
         CheckConstraint("date_end > date_start", name="ck_periods_dates"),
         Index("idx_periods_school_year", "school_id", "academic_year_id"),
+        Index("idx_periods_academic_year_id", "academic_year_id"),
     )
 
     def __repr__(self) -> str:
@@ -222,7 +223,10 @@ class Enrollment(TimestampMixin, SchoolScopedMixin, Base):
             unique=True,
             postgresql_where="status = 'active'",
         ),
+        Index("idx_enrollments_school_id", "school_id"),
         Index("idx_enrollments_class", "class_id"),
+        Index("idx_enrollments_student_id", "student_id"),
+        Index("idx_enrollments_period_id", "period_id"),
     )
 
     @property
@@ -268,6 +272,9 @@ class TeacherAssignment(TimestampMixin, SchoolScopedMixin, Base):
             "class_id",
             "period_id",
         ),
+        Index("idx_teacher_assignments_teacher_id", "teacher_id"),
+        Index("idx_teacher_assignments_class_id", "class_id"),
+        Index("idx_teacher_assignments_period_id", "period_id"),
     )
 
     def __repr__(self) -> str:
@@ -359,6 +366,7 @@ class AttendanceRecord(TimestampMixin, SchoolScopedMixin, Base):
             "school_id",
             "student_id",
         ),
+        Index("idx_attendance_records_student_id", "student_id"),
         # One record per student per session
         UniqueConstraint(
             "attendance_session_id",
@@ -532,6 +540,7 @@ class TimetableConstraint(TimestampMixin, SchoolScopedMixin, Base):
             name="ck_timetable_constraints_type",
         ),
         Index("idx_tc_school_year", "school_id", "academic_year_id"),
+        Index("idx_timetable_constraints_academic_year_id", "academic_year_id"),
     )
 
     def __repr__(self) -> str:
@@ -580,6 +589,7 @@ class TimetableGenerationJob(TimestampMixin, SchoolScopedMixin, Base):
             name="ck_timetable_generation_jobs_status",
         ),
         Index("idx_tgj_school_year", "school_id", "academic_year_id"),
+        Index("idx_timetable_generation_jobs_academic_year_id", "academic_year_id"),
     )
 
     def __repr__(self) -> str:
@@ -640,6 +650,7 @@ class TimetableSlot(TimestampMixin, SchoolScopedMixin, Base):
         ),
         Index("idx_timetable_slots_school", "school_id"),
         Index("idx_timetable_slots_class_year", "class_id", "academic_year_id"),
+        Index("idx_timetable_slots_academic_year_id", "academic_year_id"),
         Index("idx_timetable_slots_teacher", "teacher_id"),
     )
 

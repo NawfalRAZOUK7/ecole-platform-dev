@@ -224,6 +224,7 @@ class Membership(TimestampMixin, SchoolScopedMixin, Base):
             unique=True,
             postgresql_where="status = 'active'",
         ),
+        Index("idx_memberships_user_id", "user_id"),
     )
 
     @property
@@ -279,6 +280,7 @@ class Session(TimestampMixin, SchoolScopedMixin, Base):
             "user_id",
             postgresql_where="revoke_at IS NULL",
         ),
+        Index("idx_sessions_school_id", "school_id"),
         Index("idx_sessions_user_id", "user_id"),
         Index("idx_sessions_correlation_id", "correlation_id"),
         Index("idx_sessions_impersonator_id", "impersonator_id"),

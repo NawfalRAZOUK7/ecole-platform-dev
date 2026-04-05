@@ -162,6 +162,7 @@ class Invoice(TimestampMixin, SchoolScopedMixin, Base):
             "status",
             "period_id",
         ),
+        Index("idx_invoices_period_id", "period_id"),
         Index("idx_invoices_school_status", "school_id", "status"),
         Index("idx_invoices_due_date_status", "due_date", "status"),
         Index("idx_invoices_fee_structure", "fee_structure_id"),
@@ -423,6 +424,7 @@ class FeeStructure(TimestampMixin, SchoolScopedMixin, Base):
         ),
         Index("idx_fee_structures_school", "school_id"),
         Index("idx_fee_structures_school_year", "school_id", "academic_year_id"),
+        Index("idx_fee_structures_academic_year_id", "academic_year_id"),
     )
 
     def __repr__(self) -> str:
