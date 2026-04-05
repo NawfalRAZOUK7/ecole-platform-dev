@@ -16,6 +16,7 @@ from app.repositories.men_compliance import ComplianceRepository
 from app.repositories.documents import DocumentsRepository
 from app.repositories.erp import ERPRepository
 from app.repositories.feature import FeatureRepository
+from app.repositories.financial_health import FinancialHealthRepository
 from app.repositories.gdpr import GDPRRepository
 from app.repositories.gradebook import GradebookRepository
 from app.repositories.lms import AssessmentRepository, AssignmentRepository, LMSRepository
@@ -52,6 +53,7 @@ __all__ = [
     "DocumentsRepository",
     "ERPRepository",
     "FeatureRepository",
+    "FinancialHealthRepository",
     "GDPRRepository",
     "GradebookRepository",
     "LMSRepository",

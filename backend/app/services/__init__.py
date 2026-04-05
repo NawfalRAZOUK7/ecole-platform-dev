@@ -2,6 +2,7 @@
 
 from app.services.budget_service import BudgetService
 from app.services.compliance_service import ComplianceService
+from app.services.financial_health_service import FinancialHealthService
 from app.services.micro_school_service import (
     MicroGroupService,
     MicroPaymentService,
@@ -20,6 +21,7 @@ from app.services.sync_queue_service import SyncService
 __all__ = [
     "BudgetService",
     "ComplianceService",
+    "FinancialHealthService",
     "MicroSchoolService",
     "MicroGroupService",
     "MicroPaymentService",
