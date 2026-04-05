@@ -92,7 +92,7 @@ class FinancialHealthService:
             computed_at=_iso(metric.computed_at) or "",
             created_at=_iso(metric.created_at) or "",
             updated_at=_iso(metric.updated_at),
-        ).model_dump()
+        ).model_dump(mode="json")
 
     def _cashflow_to_response(self, forecast: CashflowForecast) -> dict[str, Any]:
         return CashflowForecastResponse(
@@ -112,7 +112,7 @@ class FinancialHealthService:
             computed_at=_iso(forecast.computed_at) or "",
             created_at=_iso(forecast.created_at) or "",
             updated_at=_iso(forecast.updated_at),
-        ).model_dump()
+        ).model_dump(mode="json")
 
     def _cost_to_response(self, analysis: CostPerStudent) -> dict[str, Any]:
         return CostPerStudentResponse(
@@ -128,7 +128,7 @@ class FinancialHealthService:
             computed_at=_iso(analysis.computed_at) or "",
             created_at=_iso(analysis.created_at) or "",
             updated_at=_iso(analysis.updated_at),
-        ).model_dump()
+        ).model_dump(mode="json")
 
     def _snapshot_to_response(self, snapshot: FinancialSnapshot) -> dict[str, Any]:
         return FinancialSnapshotResponse(
@@ -147,7 +147,7 @@ class FinancialHealthService:
             computed_at=_iso(snapshot.computed_at) or "",
             created_at=_iso(snapshot.created_at) or "",
             updated_at=_iso(snapshot.updated_at),
-        ).model_dump()
+        ).model_dump(mode="json")
 
     async def _get_academic_year_by_label_or_404(
         self,
