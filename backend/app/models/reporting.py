@@ -82,6 +82,7 @@ class ReportSchedule(TimestampMixin, SchoolScopedMixin, Base):
     __table_args__ = (
         Index("idx_report_schedules_school", "school_id"),
         Index("idx_report_schedules_next_run", "next_run_at"),
+        Index("idx_report_schedules_created_by", "created_by"),
     )
 
     def __repr__(self) -> str:

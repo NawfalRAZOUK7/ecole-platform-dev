@@ -93,6 +93,7 @@ class Event(TimestampMixin, SchoolScopedMixin, SoftDeleteMixin, Base):
         Index("idx_events_school_type_start", "school_id", "type", "start_at"),
         Index("idx_events_school_class_start", "school_id", "class_id", "start_at"),
         Index("idx_events_school_visibility_start", "school_id", "visibility", "start_at"),
+        Index("idx_events_created_by", "created_by"),
     )
 
     @property

@@ -33,6 +33,7 @@ async def parent_tokens(
 async def test_parent_transcript_access(
     client,
     parent_tokens,
+    grade_category_id,
     token_key: str,
     expected_status: int,
 ):

@@ -418,6 +418,7 @@ class ParentFeedItem(TimestampMixin, SchoolScopedMixin, Base):
             "parent_id",
             "created_at",
         ),
+        Index("idx_feed_student_id", "student_id"),
     )
 
     def __repr__(self) -> str:

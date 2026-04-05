@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import AuthContext, get_current_user
+from app.core.dependencies import AuthContext, requires_permission
 from app.core.request_utils import get_client_ip
 from app.core.response import list_response, success_response
 from app.schemas.gradebook import GradeCategorySetRequest
@@ -21,7 +21,7 @@ router = APIRouter(prefix="/gradebook", tags=["gradebook"])
 async def set_grade_categories(
     body: GradeCategorySetRequest,
     request: Request,
-    auth: AuthContext = Depends(get_current_user),
+    auth: AuthContext = Depends(requires_permission("PERM-LMS:gradebook:manage")),
     db: AsyncSession = Depends(get_db),
 ):
     service = GradebookService(db)
@@ -40,7 +40,7 @@ async def set_grade_categories(
 async def list_grade_categories(
     class_id: uuid.UUID,
     period_id: uuid.UUID,
-    auth: AuthContext = Depends(get_current_user),
+    auth: AuthContext = Depends(requires_permission("PERM-LMS:gradebook:read")),
     db: AsyncSession = Depends(get_db),
 ):
     service = GradebookService(db)
@@ -60,7 +60,7 @@ async def compute_class_averages(
     class_id: uuid.UUID,
     period_id: uuid.UUID,
     request: Request,
-    auth: AuthContext = Depends(get_current_user),
+    auth: AuthContext = Depends(requires_permission("PERM-LMS:gradebook:manage")),
     db: AsyncSession = Depends(get_db),
 ):
     service = GradebookService(db)
@@ -80,7 +80,7 @@ async def compute_class_averages(
 async def get_student_transcript(
     student_id: uuid.UUID,
     academic_year_id: uuid.UUID = Query(...),
-    auth: AuthContext = Depends(get_current_user),
+    auth: AuthContext = Depends(requires_permission("PERM-LMS:gradebook:read")),
     db: AsyncSession = Depends(get_db),
 ):
     service = GradebookService(db)
@@ -100,7 +100,7 @@ async def get_student_transcript(
 async def get_gradebook(
     class_id: uuid.UUID,
     period_id: uuid.UUID,
-    auth: AuthContext = Depends(get_current_user),
+    auth: AuthContext = Depends(requires_permission("PERM-LMS:gradebook:read")),
     db: AsyncSession = Depends(get_db),
 ):
     service = GradebookService(db)

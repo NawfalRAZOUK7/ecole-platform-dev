@@ -45,7 +45,7 @@ class FakeUnitOfWork:
 
 
 def make_report_job(*, status: str = "ready", expires_in_hours: int = 24):
-    now = datetime(2026, 3, 30, tzinfo=timezone.utc)
+    now = datetime.now(timezone.utc)
     return SimpleNamespace(
         id=uuid.uuid4(),
         type="student_report_card",

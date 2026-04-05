@@ -279,6 +279,7 @@ class Session(TimestampMixin, SchoolScopedMixin, Base):
             "user_id",
             postgresql_where="revoke_at IS NULL",
         ),
+        Index("idx_sessions_user_id", "user_id"),
         Index("idx_sessions_correlation_id", "correlation_id"),
         Index("idx_sessions_impersonator_id", "impersonator_id"),
     )
@@ -391,6 +392,9 @@ class InvitationCode(TimestampMixin, SchoolScopedMixin, Base):
     __table_args__ = (
         Index("idx_invitation_codes_hash", "code_hash", unique=True),
         Index("idx_invitation_codes_school_expires", "school_id", "expires_at"),
+        Index("idx_invitation_codes_issuer_user_id", "issuer_user_id"),
+        Index("idx_invitation_codes_consumed_by", "consumed_by"),
+        Index("idx_invitation_codes_target_student_id", "target_student_id"),
     )
 
     @property
@@ -444,7 +448,10 @@ class AccountRecoveryRequest(TimestampMixin, SchoolScopedMixin, Base):
     # Relationships
     user: Mapped["User"] = relationship()
 
-    __table_args__ = (Index("idx_recovery_user_status", "user_id", "status"),)
+    __table_args__ = (
+        Index("idx_recovery_user_status", "user_id", "status"),
+        Index("idx_recovery_school_id", "school_id"),
+    )
 
     @property
     def is_expired(self) -> bool:
@@ -495,6 +502,7 @@ class ParentChildLink(TimestampMixin, SchoolScopedMixin, Base):
         ),
         Index("idx_parent_child_links_parent", "parent_user_id", "school_id"),
         Index("idx_parent_child_links_child", "child_user_id"),
+        Index("idx_parent_child_links_linked_by", "linked_by"),
     )
 
     def __repr__(self) -> str:

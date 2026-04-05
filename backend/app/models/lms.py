@@ -126,7 +126,10 @@ class Course(TimestampMixin, SchoolScopedMixin, Base):
         back_populates="course", cascade="all, delete-orphan"
     )
 
-    __table_args__ = (Index("idx_courses_school_class", "school_id", "class_id"),)
+    __table_args__ = (
+        Index("idx_courses_school_class", "school_id", "class_id"),
+        Index("idx_courses_teacher", "teacher_id"),
+    )
 
     def __repr__(self) -> str:
         return f"<Course id={_short_id(self.id)} title={self.title} status={self.status}>"
@@ -155,6 +158,7 @@ class GradeCategory(TimestampMixin, SchoolScopedMixin, Base):
 
     __table_args__ = (
         Index("idx_grade_categories_class_period", "class_id", "period_id"),
+        Index("idx_grade_categories_school", "school_id"),
         CheckConstraint(
             "weight > 0 AND weight <= 1",
             name="ck_grade_categories_weight",
@@ -329,6 +333,7 @@ class Assignment(TimestampMixin, Base):
     __table_args__ = (
         CheckConstraint("total_points >= 0", name="ck_assignments_total_points"),
         Index("idx_assignments_course_due", "course_id", "due_at"),
+        Index("idx_assignments_teacher", "teacher_id"),
         Index("idx_assignments_rubric", "rubric_id"),
         Index("idx_assignments_grade_category", "grade_category_id"),
         Index("idx_assignments_quiz", "quiz_id"),
@@ -453,6 +458,8 @@ class SubmissionFile(TimestampMixin, Base):
     # Relationships
     submission: Mapped["Submission"] = relationship(back_populates="files")
 
+    __table_args__ = (Index("idx_submission_files_submission", "submission_id"),)
+
     def __repr__(self) -> str:
         filename = self.file_path.rsplit("/", 1)[-1]
         return f"<SubmissionFile id={_short_id(self.id)} filename={filename}>"
@@ -490,6 +497,8 @@ class RubricScore(TimestampMixin, Base):
             name="uq_rubric_scores_sub_criterion",
         ),
         Index("idx_rubric_scores_submission", "submission_id"),
+        Index("idx_rubric_scores_criterion", "criterion_id"),
+        Index("idx_rubric_scores_level", "level_id"),
     )
 
     def __repr__(self) -> str:
@@ -527,6 +536,7 @@ class Grade(TimestampMixin, Base):
 
     __table_args__ = (
         Index("idx_grades_submission_published", "submission_id", "published_at"),
+        Index("idx_grades_teacher", "teacher_id"),
     )
 
     @validates("score")
@@ -582,6 +592,8 @@ class StudentPeriodAverage(TimestampMixin, SchoolScopedMixin, Base):
             name="uq_spa_student_class_period",
         ),
         Index("idx_spa_class_period", "class_id", "period_id"),
+        Index("idx_spa_student", "student_id"),
+        Index("idx_spa_school", "school_id"),
     )
 
     def __repr__(self) -> str:
@@ -622,6 +634,7 @@ class Assessment(TimestampMixin, Base):
     __table_args__ = (
         CheckConstraint("total_points >= 0", name="ck_assessments_total_points"),
         Index("idx_assessments_class_status", "class_id", "status"),
+        Index("idx_assessments_teacher", "teacher_id"),
     )
 
     def __repr__(self) -> str:
@@ -656,6 +669,7 @@ class AssessmentResult(TimestampMixin, Base):
             "student_id",
             name="uq_assessment_results_assessment_student",
         ),
+        Index("idx_assessment_results_student", "student_id"),
     )
 
     def __repr__(self) -> str:
@@ -742,6 +756,8 @@ class ContentItem(TimestampMixin, NullableSchoolScopedMixin, Base):
         Index("idx_content_items_subject", "subject"),
         Index("idx_content_items_origin", "origin"),
         Index("idx_content_items_created_by", "created_by"),
+        Index("idx_content_items_original", "original_content_id"),
+        Index("idx_content_items_school", "school_id"),
     )
 
     def __repr__(self) -> str:
@@ -766,6 +782,8 @@ class ContentItemAsset(TimestampMixin, Base):
 
     # Relationships
     content_item: Mapped["ContentItem"] = relationship(back_populates="assets")
+
+    __table_args__ = (Index("idx_content_item_assets_content_item", "content_item_id"),)
 
     def __repr__(self) -> str:
         return (
@@ -894,6 +912,7 @@ class ClassContentAssignment(TimestampMixin, SchoolScopedMixin, Base):
         ),
         Index("idx_class_content_assignments_teacher", "teacher_id"),
         Index("idx_class_content_assignments_class", "class_id"),
+        Index("idx_class_content_assignments_content_item", "content_item_id"),
         Index("idx_class_content_assignments_school", "school_id"),
     )
 
@@ -937,8 +956,11 @@ class ContentSubmission(TimestampMixin, SchoolScopedMixin, Base):
     )
 
     __table_args__ = (
+        Index("idx_content_submissions_content_item", "content_item_id"),
         Index("idx_content_submissions_status", "status"),
         Index("idx_content_submissions_submitted_by", "submitted_by"),
+        Index("idx_content_submissions_reviewed_by", "reviewed_by"),
+        Index("idx_content_submissions_promoted_content", "promoted_content_id"),
         Index("idx_content_submissions_school", "school_id"),
     )
 
@@ -1139,6 +1161,7 @@ class QuizResponse(TimestampMixin, Base):
             name="uq_quiz_responses_attempt_question",
         ),
         Index("idx_quiz_responses_attempt", "attempt_id"),
+        Index("idx_quiz_responses_question", "question_id"),
     )
 
     def __repr__(self) -> str:

@@ -125,13 +125,6 @@ class TestSyncServiceEdges:
             await service.get_sync_status(device_id=uuid.uuid4(), auth=auth)
 
     def test_is_conflicting_ignores_synced_existing_item(self) -> None:
-        auth = AuthContext(
-            user_id=uuid.uuid4(),
-            role="ADM",
-            school_id=uuid.uuid4(),
-            session_id=uuid.uuid4(),
-            permissions=set(),
-        )
         service = SyncService(AsyncMock())
         existing_item = type(
             "QueueStub",

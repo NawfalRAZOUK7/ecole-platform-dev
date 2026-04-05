@@ -546,7 +546,7 @@ class ComplianceService:
         auth: AuthContext,
         ip_address: str | None = None,
     ) -> dict[str, Any]:
-        objective = await self._get_objective_or_404(
+        await self._get_objective_or_404(
             body.objective_id,
             include_curriculum=True,
         )

@@ -95,6 +95,7 @@ class Document(TimestampMixin, SchoolScopedMixin, SoftDeleteMixin, Base):
         Index("idx_documents_linked_student", "linked_student_id"),
         Index("idx_documents_deleted_at", "deleted_at"),
         Index("idx_documents_expires_at", "expires_at"),
+        Index("idx_documents_uploader_id", "uploader_id"),
     )
 
     @property
@@ -138,6 +139,7 @@ class DocumentVersion(TimestampMixin, Base):
             name="uq_doc_versions_doc_version",
         ),
         Index("idx_doc_versions_document", "document_id"),
+        Index("idx_doc_versions_uploader_id", "uploader_id"),
     )
 
     def __repr__(self) -> str:
@@ -202,6 +204,8 @@ class Resource(TimestampMixin, SchoolScopedMixin, SoftDeleteMixin, Base):
         Index("idx_resources_school_visibility", "school_id", "visibility"),
         Index("idx_resources_class_id", "class_id"),
         Index("idx_resources_deleted_at", "deleted_at"),
+        Index("idx_resources_uploader_id", "uploader_id"),
+        Index("idx_resources_file_id", "file_id"),
     )
 
     def __repr__(self) -> str:

@@ -174,6 +174,7 @@ class Class(TimestampMixin, SchoolScopedMixin, Base):
             "academic_year_id",
             name="uq_classes_code_school_year",
         ),
+        Index("idx_classes_academic_year", "academic_year_id"),
     )
 
     def __repr__(self) -> str:
@@ -221,6 +222,7 @@ class Enrollment(TimestampMixin, SchoolScopedMixin, Base):
             unique=True,
             postgresql_where="status = 'active'",
         ),
+        Index("idx_enrollments_class", "class_id"),
     )
 
     @property
@@ -308,6 +310,9 @@ class AttendanceSession(TimestampMixin, SchoolScopedMixin, Base):
             "slot",
             name="uq_attendance_sessions_class_date_slot",
         ),
+        Index("idx_attendance_sessions_class", "class_id"),
+        Index("idx_attendance_sessions_period", "period_id"),
+        Index("idx_attendance_sessions_teacher", "teacher_id"),
     )
 
     def __repr__(self) -> str:
@@ -396,6 +401,11 @@ class AbsenceJustification(TimestampMixin, SchoolScopedMixin, Base):
         back_populates="justification", cascade="all, delete-orphan"
     )
 
+    __table_args__ = (
+        Index("idx_absence_justifications_attendance_record", "attendance_record_id"),
+        Index("idx_absence_justifications_parent", "parent_id"),
+    )
+
     def __repr__(self) -> str:
         return (
             f"<AbsenceJustification id={_short_id(self.id)} "
@@ -419,6 +429,11 @@ class JustificationReview(TimestampMixin, SchoolScopedMixin, Base):
     # Relationships
     justification: Mapped["AbsenceJustification"] = relationship(
         back_populates="reviews"
+    )
+
+    __table_args__ = (
+        Index("idx_justification_reviews_justification", "justification_id"),
+        Index("idx_justification_reviews_reviewer", "reviewer_id"),
     )
 
     def __repr__(self) -> str:
@@ -669,6 +684,8 @@ class TimetableException(TimestampMixin, SchoolScopedMixin, Base):
         ),
         Index("idx_timetable_exceptions_school", "school_id"),
         Index("idx_timetable_exceptions_date", "exception_date"),
+        Index("idx_timetable_exceptions_timetable_slot", "timetable_slot_id"),
+        Index("idx_timetable_exceptions_substitute_teacher", "substitute_teacher_id"),
     )
 
     def __repr__(self) -> str:

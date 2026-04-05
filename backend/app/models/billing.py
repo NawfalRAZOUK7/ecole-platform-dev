@@ -164,6 +164,7 @@ class Invoice(TimestampMixin, SchoolScopedMixin, Base):
         ),
         Index("idx_invoices_school_status", "school_id", "status"),
         Index("idx_invoices_due_date_status", "due_date", "status"),
+        Index("idx_invoices_fee_structure", "fee_structure_id"),
     )
 
     @property
@@ -214,6 +215,7 @@ class InvoiceItem(TimestampMixin, Base):
     __table_args__ = (
         CheckConstraint("amount >= 0", name="ck_invoice_items_amount"),
         CheckConstraint("quantity > 0", name="ck_invoice_items_quantity"),
+        Index("idx_invoice_items_invoice", "invoice_id"),
     )
 
     @validates("amount")
@@ -286,6 +288,8 @@ class PaymentAttempt(TimestampMixin, SchoolScopedMixin, Base):
             "invoice_id",
             "created_at",
         ),
+        Index("idx_payment_attempts_parent", "parent_id"),
+        Index("idx_payment_attempts_school", "school_id"),
     )
 
     def __repr__(self) -> str:
@@ -314,6 +318,10 @@ class PaymentProof(TimestampMixin, Base):
 
     # Relationships
     payment_attempt: Mapped["PaymentAttempt"] = relationship(back_populates="proof")
+
+    __table_args__ = (
+        Index("idx_payment_proofs_payment_attempt", "payment_attempt_id"),
+    )
 
     def __repr__(self) -> str:
         return (
@@ -355,6 +363,7 @@ class ProviderWebhookEvent(TimestampMixin, SchoolScopedMixin, Base):
             "school_id",
             "provider_event_received_at",
         ),
+        Index("idx_provider_webhook_events_payment_attempt", "payment_attempt_id"),
     )
 
     def __repr__(self) -> str:
@@ -463,6 +472,7 @@ class FeeAssignment(TimestampMixin, SchoolScopedMixin, Base):
         ),
         Index("idx_fee_assignments_school", "school_id"),
         Index("idx_fee_assignments_student", "student_id"),
+        Index("idx_fee_assignments_fee_structure", "fee_structure_id"),
     )
 
     def __repr__(self) -> str:

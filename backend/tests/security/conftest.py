@@ -398,7 +398,7 @@ async def other_teacher_owned_submission(
     return await create_grading_scope_submission(teacher_id=other_teacher_actor.user_id)
 
 
-@pytest_asyncio.fixture(autouse=True, loop_scope="function")
-async def _grade_category_for_abac() -> uuid.UUID:
+@pytest_asyncio.fixture(loop_scope="function")
+async def grade_category_id() -> uuid.UUID:
     """Ensure a grade category exists so transcript endpoints don't 422."""
     return await ensure_grade_category()

@@ -206,7 +206,7 @@ class AnalyticsRepository(BaseRepository):
             .where(
                 Course.school_id == school_id,
                 Grade.created_at >= from_dt,
-                Grade.created_at < to_dt,
+                Grade.created_at <= to_dt,
             )
         )
         if subject:

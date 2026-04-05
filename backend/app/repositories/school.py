@@ -52,9 +52,7 @@ class SchoolRepository(BaseRepository):
         if city := filters.get("city"):
             query = query.where(School.city == city)
 
-        query = query.order_by(School.created_at.desc(), School.id.desc()).limit(
-            page_size + 1
-        )
+        query = query.order_by(School.created_at.desc(), School.id.desc())
 
         if cursor:
             last_id, last_created_at = decode_cursor(cursor)
@@ -70,7 +68,7 @@ class SchoolRepository(BaseRepository):
                     )
                 )
 
-        result = await self.db.execute(query)
+        result = await self.db.execute(query.limit(page_size + 1))
         items = list(result.scalars().all())
         has_more = len(items) > page_size
         if has_more:
