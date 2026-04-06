@@ -4,9 +4,68 @@
 
 import { test, expect } from '@playwright/test';
 import { login } from './helpers';
+import { apiListResponse, apiResponse, installMockSession } from './mockApi';
 
 test.describe('J4 — Admin invitation journey', () => {
   test('login → invitations → create → verify → revoke', async ({ page }) => {
+    let invitations = [
+      {
+        id: 'invite-seed',
+        role_target: 'STD',
+        consumed_at: null,
+        consumed_by: null,
+        expires_at: '2026-04-10T00:00:00.000Z',
+        created_at: '2026-04-05T09:00:00.000Z',
+        issuer_user_id: 'admin-1',
+        status: 'active',
+      },
+    ];
+
+    await installMockSession(page, 'admin');
+
+    await page.route(/\/api\/v1\/admin\/invitations(?:\?.*)?$/, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(apiListResponse(invitations)),
+      });
+    });
+
+    await page.route(/\/api\/v1\/invites\/create$/, async (route) => {
+      const invitation = {
+        id: `invite-${invitations.length + 1}`,
+        role_target: 'PAR',
+        consumed_at: null,
+        consumed_by: null,
+        expires_at: '2026-04-12T00:00:00.000Z',
+        created_at: '2026-04-06T12:00:00.000Z',
+        issuer_user_id: 'admin-1',
+        status: 'active',
+      };
+      invitations = [invitation, ...invitations];
+
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(apiResponse({ code: 'INVITE-2026' })),
+      });
+    });
+
+    await page.route(/\/api\/v1\/invites\/revoke$/, async (route) => {
+      const payload = route.request().postDataJSON() as { invite_id: string };
+      invitations = invitations.map((invitation) =>
+        invitation.id === payload.invite_id
+          ? { ...invitation, status: 'expired' }
+          : invitation
+      );
+
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(apiResponse(null)),
+      });
+    });
+
     // 1. Login as admin
     await login(page, 'admin');
 
@@ -54,11 +113,11 @@ test.describe('J4 — Admin invitation journey', () => {
         await revokeBtn.click();
 
         // Confirm revocation if dialog appears
-        const confirmBtn = page.locator('button', {
+        const dialogConfirmBtn = page.locator('.confirm-dialog button', {
           hasText: /confirmer|oui|ok/i,
         });
-        if (await confirmBtn.isVisible({ timeout: 2_000 }).catch(() => false)) {
-          await confirmBtn.click();
+        if (await dialogConfirmBtn.isVisible({ timeout: 2_000 }).catch(() => false)) {
+          await dialogConfirmBtn.click();
         }
         await page.waitForLoadState('networkidle');
       }
