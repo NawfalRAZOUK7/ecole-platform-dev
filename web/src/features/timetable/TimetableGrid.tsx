@@ -94,13 +94,13 @@ function TimetableSlotCard({
       )}
       {isAdmin && (
         <div className="timetable-slot-actions">
-          <button className="btn btn-sm btn-secondary" onClick={() => onEdit(slot)}>
+          <button className="btn btn-sm btn-secondary" onClick={() => onEdit(slot)} aria-label={t('timetable.editSlot')}>
             ✏️
           </button>
-          <button className="btn btn-sm btn-secondary" onClick={() => onException(slot)}>
+          <button className="btn btn-sm btn-secondary" onClick={() => onException(slot)} aria-label={t('timetable.createException')}>
             ⚠️
           </button>
-          <button className="btn btn-sm btn-danger" onClick={() => onDelete(slot.id)}>
+          <button className="btn btn-sm btn-danger" onClick={() => onDelete(slot.id)} aria-label={t('timetable.deleteSlot', { defaultValue: 'Delete slot' })}>
             🗑️
           </button>
         </div>

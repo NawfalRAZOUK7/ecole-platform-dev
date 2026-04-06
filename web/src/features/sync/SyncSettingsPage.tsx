@@ -138,8 +138,8 @@ export function SyncSettingsPage() {
         <div className="card">
           <h2>{t('sync.configuration')}</h2>
           <div className="filters-bar">
-            <input className="filter-input" type="number" min="1" value={intervalMinutes} onChange={(event) => setIntervalMinutes(event.target.value)} placeholder={t('sync.intervalMinutes')} />
-            <input className="filter-input" value={scope} onChange={(event) => setScope(event.target.value)} placeholder={t('sync.dataScope')} />
+            <input className="filter-input" aria-label={t('sync.intervalMinutes')} type="number" min="1" value={intervalMinutes} onChange={(event) => setIntervalMinutes(event.target.value)} placeholder={t('sync.intervalMinutes')} />
+            <input className="filter-input" aria-label={t('sync.dataScope')} value={scope} onChange={(event) => setScope(event.target.value)} placeholder={t('sync.dataScope')} />
             <button type="button" className="btn btn-primary" onClick={() => void handleSaveSettings()}>
               {t('app.save')}
             </button>
@@ -148,13 +148,13 @@ export function SyncSettingsPage() {
         <div className="card">
           <h2>{t('sync.registerDevice')}</h2>
           <div className="filters-bar">
-            <input className="filter-input" value={deviceName} onChange={(event) => setDeviceName(event.target.value)} placeholder={t('sync.deviceName')} />
-            <select className="filter-select" value={deviceType} onChange={(event) => setDeviceType(event.target.value as 'browser' | 'mobile' | 'local_server')}>
+            <input className="filter-input" aria-label={t('sync.deviceName')} value={deviceName} onChange={(event) => setDeviceName(event.target.value)} placeholder={t('sync.deviceName')} />
+            <select className="filter-select" aria-label={t('sync.deviceType')} value={deviceType} onChange={(event) => setDeviceType(event.target.value as 'browser' | 'mobile' | 'local_server')}>
               <option value="browser">{t('sync.browser')}</option>
               <option value="mobile">{t('sync.mobile')}</option>
               <option value="local_server">{t('sync.localServer')}</option>
             </select>
-            <input className="filter-input" value={firmwareVersion} onChange={(event) => setFirmwareVersion(event.target.value)} placeholder={t('sync.firmwareVersion')} />
+            <input className="filter-input" aria-label={t('sync.firmwareVersion')} value={firmwareVersion} onChange={(event) => setFirmwareVersion(event.target.value)} placeholder={t('sync.firmwareVersion')} />
             <button type="button" className="btn btn-primary" onClick={() => void handleRegisterDevice()}>
               {t('sync.registerDevice')}
             </button>
@@ -163,7 +163,7 @@ export function SyncSettingsPage() {
         <div className="card">
           <h2>{t('sync.manualSync')}</h2>
           <div className="filters-bar">
-            <select className="filter-select" value={selectedDeviceId} onChange={(event) => setSelectedDeviceId(event.target.value)}>
+            <select className="filter-select" aria-label={t('sync.devices')} value={selectedDeviceId} onChange={(event) => setSelectedDeviceId(event.target.value)}>
               {(devicesQuery.data ?? []).map((device) => (
                 <option key={device.id} value={device.id}>
                   {device.device_name}

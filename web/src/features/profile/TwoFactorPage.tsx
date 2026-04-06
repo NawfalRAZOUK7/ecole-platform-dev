@@ -111,7 +111,7 @@ export function TwoFactorPage() {
           <div style={{ textAlign: 'center', marginBottom: 16 }}>
             <img
               src={`https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl=${encodeURIComponent(provisioningUri)}`}
-              alt="QR Code"
+              alt={t('twoFactor.qrAlt', { defaultValue: 'QR code for two-factor setup' })}
               style={{ border: '1px solid var(--color-border)', borderRadius: 8, padding: 8 }}
               width={200}
               height={200}

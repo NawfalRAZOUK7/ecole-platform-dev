@@ -43,6 +43,7 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   const { t } = useTranslation();
   const dialogRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
   const labels = useMemo(() => ({
     title: t(title),
     message: t(message),
@@ -52,9 +53,11 @@ export function ConfirmDialog({
 
   useEffect(() => {
     if (!open) {
+      previousFocusRef.current?.focus();
       return undefined;
     }
 
+    previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const focusable = getFocusableElements(dialogRef.current);
     focusable[0]?.focus();
 

@@ -154,7 +154,7 @@ export function BatchRegisterPage() {
       {batchRegisterMutation.isPending && <LoadingState />}
 
       {result && (
-        <div className="card">
+        <div className="card" role="status" aria-live="polite">
           <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>
             {t('register.batchResults')}
           </h3>

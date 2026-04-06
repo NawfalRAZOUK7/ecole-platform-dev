@@ -73,30 +73,30 @@ export function DocumentUpload({
     <div className="documents-upload-dropzone" onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); onDropFile(event.dataTransfer.files?.[0] || null); }}>
       <strong>{t('documents.uploadTitle')}</strong>
       <p>{t('documents.uploadSubtitle')}</p>
-      <input type="file" onChange={(event) => onDropFile(event.target.files?.[0] || null)} />
+      <input type="file" aria-label={t('documents.uploadTitle')} onChange={(event) => onDropFile(event.target.files?.[0] || null)} />
 
       {activeTab !== 'resources' ? (
         <div className="documents-upload-fields">
-          <select value={uploadCategory} onChange={(event) => onChangeUploadCategory(event.target.value)}>
+          <select aria-label={t('documents.categoriesLabel', { defaultValue: 'Document category' })} value={uploadCategory} onChange={(event) => onChangeUploadCategory(event.target.value)}>
             {options.categories.map((category) => <option key={category} value={category}>{t(`documents.categories.${category}`)}</option>)}
           </select>
-          <input type="date" value={uploadExpiry} onChange={(event) => onChangeUploadExpiry(event.target.value)} />
+          <input type="date" aria-label={t('documents.expiryDate', { defaultValue: 'Expiry date' })} value={uploadExpiry} onChange={(event) => onChangeUploadExpiry(event.target.value)} />
         </div>
       ) : (
         <div className="documents-upload-fields documents-upload-fields--resource">
-          <input value={resourceTitle} onChange={(event) => onChangeResourceTitle(event.target.value)} placeholder={t('documents.resources.title')} />
-          <input value={resourceSubject} onChange={(event) => onChangeResourceSubject(event.target.value)} placeholder={t('documents.resources.subject')} />
-          <input value={resourceLevel} onChange={(event) => onChangeResourceLevel(event.target.value)} placeholder={t('documents.resources.level')} />
-          <select value={resourceType} onChange={(event) => onChangeResourceType(event.target.value as (typeof RESOURCE_TYPES)[number])}>
+          <input aria-label={t('documents.resources.title')} value={resourceTitle} onChange={(event) => onChangeResourceTitle(event.target.value)} placeholder={t('documents.resources.title')} />
+          <input aria-label={t('documents.resources.subject')} value={resourceSubject} onChange={(event) => onChangeResourceSubject(event.target.value)} placeholder={t('documents.resources.subject')} />
+          <input aria-label={t('documents.resources.level')} value={resourceLevel} onChange={(event) => onChangeResourceLevel(event.target.value)} placeholder={t('documents.resources.level')} />
+          <select aria-label={t('documents.resources.type', { defaultValue: 'Resource type' })} value={resourceType} onChange={(event) => onChangeResourceType(event.target.value as (typeof RESOURCE_TYPES)[number])}>
             {RESOURCE_TYPES.map((item) => <option key={item} value={item}>{t(`documents.resourceTypes.${item}`)}</option>)}
           </select>
-          <input value={resourceTags} onChange={(event) => onChangeResourceTags(event.target.value)} placeholder={t('documents.resources.tags')} />
-          <textarea value={resourceDescription} onChange={(event) => onChangeResourceDescription(event.target.value)} placeholder={t('documents.resources.description')} />
+          <input aria-label={t('documents.resources.tags')} value={resourceTags} onChange={(event) => onChangeResourceTags(event.target.value)} placeholder={t('documents.resources.tags')} />
+          <textarea aria-label={t('documents.resources.description')} value={resourceDescription} onChange={(event) => onChangeResourceDescription(event.target.value)} placeholder={t('documents.resources.description')} />
         </div>
       )}
 
       {uploadFile && <div className="documents-upload-summary"><span>{uploadFile.name}</span><span>{humanSize(uploadFile.size)}</span></div>}
-      {isPending && <div className="documents-upload-progress"><div style={{ width: `${uploadProgress}%` }} /></div>}
+      {isPending && <div className="documents-upload-progress" role="status" aria-live="polite"><div style={{ width: `${uploadProgress}%` }} /></div>}
       <div className="documents-upload-actions">
         <button type="button" className="btn btn-primary" onClick={onSubmit} disabled={!uploadFile || isPending}>{isPending ? t('documents.uploading') : t('documents.uploadAction')}</button>
         {isPending && <button type="button" className="btn btn-secondary" onClick={onAbort}>{t('documents.cancelUpload')}</button>}

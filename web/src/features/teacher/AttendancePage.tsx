@@ -119,28 +119,28 @@ export function AttendancePage() {
       />
 
       {success && (
-        <div className="card" style={{ background: 'var(--color-surface-success)', borderColor: 'var(--color-success)', marginBottom: 16, padding: 12, fontSize: 14 }}>
+        <div className="card" role="status" aria-live="polite" style={{ background: 'var(--color-surface-success)', borderColor: 'var(--color-success)', marginBottom: 16, padding: 12, fontSize: 14 }}>
           {success}
         </div>
       )}
 
       <form onSubmit={handleSubmit}>
         <div className="filters-bar">
-          <select className="filter-select" value={selectedClassId} onChange={(e) => setSelectedClassId(e.target.value)} required>
+          <select className="filter-select" aria-label={t('teacher.attendance.selectClass')} value={selectedClassId} onChange={(e) => setSelectedClassId(e.target.value)} required>
             <option value="">{t('teacher.attendance.selectClass')}</option>
             {classes.map((item) => (
               <option key={item.id} value={item.id}>{item.code} — {item.name}</option>
             ))}
           </select>
-          <select className="filter-select" value={selectedPeriodId} onChange={(e) => setSelectedPeriodId(e.target.value)} required>
+          <select className="filter-select" aria-label={t('teacher.attendance.selectPeriod', { defaultValue: 'Select period' })} value={selectedPeriodId} onChange={(e) => setSelectedPeriodId(e.target.value)} required>
             {periods.map((item) => (
               <option key={item.id} value={item.id}>
                 {item.label || `${item.date_start} → ${item.date_end}`}
               </option>
             ))}
           </select>
-          <input type="date" className="filter-input" value={sessionDate} onChange={(e) => setSessionDate(e.target.value)} required />
-          <select className="filter-select" value={slot} onChange={(e) => setSlot(e.target.value)}>
+          <input type="date" className="filter-input" aria-label={t('teacher.attendance.date', { defaultValue: 'Session date' })} value={sessionDate} onChange={(e) => setSessionDate(e.target.value)} required />
+          <select className="filter-select" aria-label={t('teacher.attendance.slot', { defaultValue: 'Attendance slot' })} value={slot} onChange={(e) => setSlot(e.target.value)}>
             {SLOTS.map((item) => (
               <option key={item} value={item}>{t(`teacher.attendance.${item}`)}</option>
             ))}
@@ -167,6 +167,7 @@ export function AttendancePage() {
                       <td>
                         <select
                           className="filter-select"
+                          aria-label={t('teacher.attendance.status')}
                           value={records[index]?.status || 'present'}
                           onChange={(e) => updateRecord(index, 'status', e.target.value)}
                           style={{ minWidth: 120 }}
@@ -182,6 +183,7 @@ export function AttendancePage() {
                         {records[index]?.status === 'absent' && (
                           <input
                             className="filter-input"
+                            aria-label={t('teacher.attendance.reason')}
                             value={records[index]?.absence_reason || ''}
                             onChange={(e) => updateRecord(index, 'absence_reason', e.target.value)}
                             placeholder={t('teacher.attendance.reasonPlaceholder')}

@@ -172,7 +172,7 @@ export function ReportsPage() {
       <ErrorBanner error={dismissibleError.error} onDismiss={dismissibleError.dismiss} onRetry={() => void historyQuery.refetch()} />
 
       {pendingJobs.length > 0 && (
-        <div className="card report-highlight">
+        <div className="card report-highlight" role="status" aria-live="polite">
           <strong>{t('reports.progressTitle')}</strong>
           <p>{t('reports.progressMessage', { count: pendingJobs.length })}</p>
         </div>
@@ -188,7 +188,7 @@ export function ReportsPage() {
           <div className="report-form">
             <label className="form-field">
               <span>{t('reports.fields.type')}</span>
-              <select value={selectedType} onChange={(event) => setSelectedType(event.target.value as ReportType)}>
+              <select aria-label={t('reports.fields.type')} value={selectedType} onChange={(event) => setSelectedType(event.target.value as ReportType)}>
                 {availableTypes.map((item) => (
                   <option key={item} value={item}>
                     {t(`reports.types.${item}`)}
@@ -199,7 +199,7 @@ export function ReportsPage() {
 
             <label className="form-field">
               <span>{t('reports.fields.language')}</span>
-              <select value={locale} onChange={(event) => setLocale(event.target.value as 'fr' | 'ar' | 'en')}>
+              <select aria-label={t('reports.fields.language')} value={locale} onChange={(event) => setLocale(event.target.value as 'fr' | 'ar' | 'en')}>
                 <option value="fr">Français</option>
                 <option value="ar">العربية</option>
                 <option value="en">English</option>
@@ -209,7 +209,7 @@ export function ReportsPage() {
             {options.periods.length > 0 && (
               <label className="form-field">
                 <span>{t('reports.fields.period')}</span>
-                <select value={periodId} onChange={(event) => setPeriodId(event.target.value)}>
+                <select aria-label={t('reports.fields.period')} value={periodId} onChange={(event) => setPeriodId(event.target.value)}>
                   <option value="">{t('reports.anyPeriod')}</option>
                   {options.periods.map((item) => (
                     <option key={item.id} value={item.id}>
@@ -223,7 +223,7 @@ export function ReportsPage() {
             {needsClass && (
               <label className="form-field">
                 <span>{t('reports.fields.class')}</span>
-                <select value={classId} onChange={(event) => setClassId(event.target.value)}>
+                <select aria-label={t('reports.fields.class')} value={classId} onChange={(event) => setClassId(event.target.value)}>
                   <option value="">{t('reports.selectClass')}</option>
                   {options.classes.map((item) => (
                     <option key={item.id} value={item.id}>
@@ -237,7 +237,7 @@ export function ReportsPage() {
             {needsStudent && options.students.length > 0 && (
               <label className="form-field">
                 <span>{t('reports.fields.student')}</span>
-                <select value={studentId} onChange={(event) => setStudentId(event.target.value)}>
+                <select aria-label={t('reports.fields.student')} value={studentId} onChange={(event) => setStudentId(event.target.value)}>
                   <option value="">{t('reports.selectStudent')}</option>
                   {options.students.map((item) => (
                     <option key={item.id} value={item.id}>
@@ -251,7 +251,7 @@ export function ReportsPage() {
             {needsParent && options.parents.length > 0 && (
               <label className="form-field">
                 <span>{t('reports.fields.parent')}</span>
-                <select value={parentId} onChange={(event) => setParentId(event.target.value)}>
+                <select aria-label={t('reports.fields.parent')} value={parentId} onChange={(event) => setParentId(event.target.value)}>
                   <option value="">{t('reports.selectParent')}</option>
                   {options.parents.map((item) => (
                     <option key={item.id} value={item.id}>
@@ -264,17 +264,17 @@ export function ReportsPage() {
 
             <label className="form-field">
               <span>{t('reports.fields.from')}</span>
-              <input type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} disabled={Boolean(periodId)} />
+              <input aria-label={t('reports.fields.from')} type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} disabled={Boolean(periodId)} />
             </label>
 
             <label className="form-field">
               <span>{t('reports.fields.to')}</span>
-              <input type="date" value={toDate} onChange={(event) => setToDate(event.target.value)} disabled={Boolean(periodId)} />
+              <input aria-label={t('reports.fields.to')} type="date" value={toDate} onChange={(event) => setToDate(event.target.value)} disabled={Boolean(periodId)} />
             </label>
 
             {selectedType === 'school_analytics' && (
               <label className="form-checkbox">
-                <input type="checkbox" checked={compare} onChange={(event) => setCompare(event.target.checked)} />
+                <input aria-label={t('reports.comparePrevious')} type="checkbox" checked={compare} onChange={(event) => setCompare(event.target.checked)} />
                 <span>{t('reports.comparePrevious')}</span>
               </label>
             )}
@@ -294,7 +294,7 @@ export function ReportsPage() {
               <p>{t('reports.historySubtitle')}</p>
             </div>
             <div className="page-actions">
-              <select className="filter-select" value={historyTypeFilter} onChange={(event) => setHistoryTypeFilter(event.target.value as ReportType | '')}>
+              <select className="filter-select" aria-label={t('reports.allTypes')} value={historyTypeFilter} onChange={(event) => setHistoryTypeFilter(event.target.value as ReportType | '')}>
                 <option value="">{t('reports.allTypes')}</option>
                 {availableTypes.map((item) => (
                   <option key={item} value={item}>
@@ -302,7 +302,7 @@ export function ReportsPage() {
                   </option>
                 ))}
               </select>
-              <select className="filter-select" value={historyStatusFilter} onChange={(event) => setHistoryStatusFilter(event.target.value as ReportStatus | '')}>
+              <select className="filter-select" aria-label={t('reports.allStatuses')} value={historyStatusFilter} onChange={(event) => setHistoryStatusFilter(event.target.value as ReportStatus | '')}>
                 {STATUS_FILTERS.map((item) => (
                   <option key={item || 'all'} value={item}>
                     {item ? t(`reports.status.${item}`) : t('reports.allStatuses')}

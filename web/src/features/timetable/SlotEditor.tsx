@@ -30,6 +30,7 @@ export function SlotEditor({
               <label>{t('timetable.day')}</label>
               <select
                 className="filter-select"
+                aria-label={t('timetable.day')}
                 value={slotForm.day_of_week}
                 onChange={(event) => onChangeSlotForm({ ...slotForm, day_of_week: Number(event.target.value) })}
               >
@@ -43,24 +44,24 @@ export function SlotEditor({
             <div style={{ display: 'flex', gap: 12 }}>
               <label className="form-field" style={{ flex: 1 }}>
                 <span>{t('timetable.startTime')}</span>
-                <input type="time" value={slotForm.start_time} onChange={(event) => onChangeSlotForm({ ...slotForm, start_time: event.target.value })} />
+                <input aria-label={t('timetable.startTime')} type="time" value={slotForm.start_time} onChange={(event) => onChangeSlotForm({ ...slotForm, start_time: event.target.value })} />
               </label>
               <label className="form-field" style={{ flex: 1 }}>
                 <span>{t('timetable.endTime')}</span>
-                <input type="time" value={slotForm.end_time} onChange={(event) => onChangeSlotForm({ ...slotForm, end_time: event.target.value })} />
+                <input aria-label={t('timetable.endTime')} type="time" value={slotForm.end_time} onChange={(event) => onChangeSlotForm({ ...slotForm, end_time: event.target.value })} />
               </label>
             </div>
             <label className="form-field">
               <span>{t('timetable.subject')}</span>
-              <input type="text" value={slotForm.subject} onChange={(event) => onChangeSlotForm({ ...slotForm, subject: event.target.value })} placeholder={t('timetable.subjectPlaceholder')} />
+              <input aria-label={t('timetable.subject')} type="text" value={slotForm.subject} onChange={(event) => onChangeSlotForm({ ...slotForm, subject: event.target.value })} placeholder={t('timetable.subjectPlaceholder')} />
             </label>
             <label className="form-field">
               <span>{t('timetable.room')}</span>
-              <input type="text" value={slotForm.room} onChange={(event) => onChangeSlotForm({ ...slotForm, room: event.target.value })} placeholder={t('timetable.roomPlaceholder')} />
+              <input aria-label={t('timetable.room')} type="text" value={slotForm.room} onChange={(event) => onChangeSlotForm({ ...slotForm, room: event.target.value })} placeholder={t('timetable.roomPlaceholder')} />
             </label>
             <label className="form-field">
               <span>{t('timetable.teacherId')}</span>
-              <input type="text" value={slotForm.teacher_id} onChange={(event) => onChangeSlotForm({ ...slotForm, teacher_id: event.target.value })} placeholder="UUID" />
+              <input aria-label={t('timetable.teacherId')} type="text" value={slotForm.teacher_id} onChange={(event) => onChangeSlotForm({ ...slotForm, teacher_id: event.target.value })} placeholder="UUID" />
             </label>
             <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
               <button className="btn btn-primary" onClick={onSaveSlot} disabled={isSaving || !slotForm.subject}>
@@ -80,12 +81,13 @@ export function SlotEditor({
             <h2 style={{ marginBottom: 16 }}>{t('timetable.createException')}</h2>
             <label className="form-field">
               <span>{t('timetable.exceptionDate')}</span>
-              <input type="date" value={exceptionForm.exception_date} onChange={(event) => onChangeExceptionForm({ ...exceptionForm, exception_date: event.target.value })} />
+              <input aria-label={t('timetable.exceptionDate')} type="date" value={exceptionForm.exception_date} onChange={(event) => onChangeExceptionForm({ ...exceptionForm, exception_date: event.target.value })} />
             </label>
             <label className="form-field">
               <span>{t('timetable.exceptionType')}</span>
               <select
                 className="filter-select"
+                aria-label={t('timetable.exceptionType')}
                 value={exceptionForm.exception_type}
                 onChange={(event) => onChangeExceptionForm({ ...exceptionForm, exception_type: event.target.value })}
               >
@@ -97,18 +99,18 @@ export function SlotEditor({
             {exceptionForm.exception_type === 'SUBSTITUTED' && (
               <label className="form-field">
                 <span>{t('timetable.substituteTeacher')}</span>
-                <input type="text" value={exceptionForm.substitute_teacher_id} onChange={(event) => onChangeExceptionForm({ ...exceptionForm, substitute_teacher_id: event.target.value })} placeholder="UUID" />
+                <input aria-label={t('timetable.substituteTeacher')} type="text" value={exceptionForm.substitute_teacher_id} onChange={(event) => onChangeExceptionForm({ ...exceptionForm, substitute_teacher_id: event.target.value })} placeholder="UUID" />
               </label>
             )}
             {exceptionForm.exception_type === 'ROOM_CHANGED' && (
               <label className="form-field">
                 <span>{t('timetable.newRoom')}</span>
-                <input type="text" value={exceptionForm.new_room} onChange={(event) => onChangeExceptionForm({ ...exceptionForm, new_room: event.target.value })} />
+                <input aria-label={t('timetable.newRoom')} type="text" value={exceptionForm.new_room} onChange={(event) => onChangeExceptionForm({ ...exceptionForm, new_room: event.target.value })} />
               </label>
             )}
             <label className="form-field">
               <span>{t('timetable.reason')}</span>
-              <input type="text" value={exceptionForm.reason} onChange={(event) => onChangeExceptionForm({ ...exceptionForm, reason: event.target.value })} placeholder={t('timetable.reasonPlaceholder')} />
+              <input aria-label={t('timetable.reason')} type="text" value={exceptionForm.reason} onChange={(event) => onChangeExceptionForm({ ...exceptionForm, reason: event.target.value })} placeholder={t('timetable.reasonPlaceholder')} />
             </label>
             <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
               <button className="btn btn-primary" onClick={onSaveException} disabled={isSaving}>

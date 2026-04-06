@@ -160,24 +160,24 @@ export function CurriculumMappingPage() {
                 <div className="card">
                   <h2>{t('compliance.selectionUi')}</h2>
                   <div className="filters-bar">
-                    <select className="filter-select" value={selectedCurriculumId} onChange={(event) => setSelectedCurriculumId(event.target.value)}>
+                    <select className="filter-select" aria-label={t('compliance.curriculumTab')} value={selectedCurriculumId} onChange={(event) => setSelectedCurriculumId(event.target.value)}>
                       {(curriculaQuery.data ?? []).map((curriculum) => (
                         <option key={curriculum.id} value={curriculum.id}>
                           {curriculum.subject} · {curriculum.grade}
                         </option>
                       ))}
                     </select>
-                    <select className="filter-select" value={selectedObjectiveId} onChange={(event) => setSelectedObjectiveId(event.target.value)}>
+                    <select className="filter-select" aria-label={t('compliance.objectiveTab')} value={selectedObjectiveId} onChange={(event) => setSelectedObjectiveId(event.target.value)}>
                       {(objectivesQuery.data ?? []).map((objective) => (
                         <option key={objective.id} value={objective.id}>
                           {objective.code} · {objective.title_fr}
                         </option>
                       ))}
                     </select>
-                    <input className="filter-input" value={courseId} onChange={(event) => setCourseId(event.target.value)} placeholder={t('compliance.courseId')} />
-                    <input className="filter-input" value={contentItemId} onChange={(event) => setContentItemId(event.target.value)} placeholder={t('compliance.contentItemId')} />
-                    <input className="filter-input" type="number" min="0" max="100" value={coveragePercent} onChange={(event) => setCoveragePercent(event.target.value)} placeholder={t('compliance.coveragePercent')} />
-                    <input className="filter-input" value={notes} onChange={(event) => setNotes(event.target.value)} placeholder={t('compliance.notes')} />
+                    <input className="filter-input" aria-label={t('compliance.courseId')} value={courseId} onChange={(event) => setCourseId(event.target.value)} placeholder={t('compliance.courseId')} />
+                    <input className="filter-input" aria-label={t('compliance.contentItemId')} value={contentItemId} onChange={(event) => setContentItemId(event.target.value)} placeholder={t('compliance.contentItemId')} />
+                    <input className="filter-input" aria-label={t('compliance.coveragePercent')} type="number" min="0" max="100" value={coveragePercent} onChange={(event) => setCoveragePercent(event.target.value)} placeholder={t('compliance.coveragePercent')} />
+                    <input className="filter-input" aria-label={t('compliance.notes')} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder={t('compliance.notes')} />
                     <button type="button" className="btn btn-primary" onClick={() => void handleCreateMapping()}>
                       {t('compliance.createMapping')}
                     </button>
@@ -201,11 +201,11 @@ export function CurriculumMappingPage() {
             content: (
               <div className="card">
                 <div className="filters-bar">
-                  <input className="filter-input" value={curriculumForm.level} onChange={(event) => setCurriculumForm({ ...curriculumForm, level: event.target.value })} placeholder={t('compliance.level')} />
-                  <input className="filter-input" value={curriculumForm.grade} onChange={(event) => setCurriculumForm({ ...curriculumForm, grade: event.target.value })} placeholder={t('compliance.grade')} />
-                  <input className="filter-input" value={curriculumForm.subject} onChange={(event) => setCurriculumForm({ ...curriculumForm, subject: event.target.value })} placeholder={t('compliance.subject')} />
-                  <input className="filter-input" value={curriculumForm.academic_year} onChange={(event) => setCurriculumForm({ ...curriculumForm, academic_year: event.target.value })} placeholder={t('compliance.academicYear')} />
-                  <input className="filter-input" value={curriculumForm.version} onChange={(event) => setCurriculumForm({ ...curriculumForm, version: event.target.value })} placeholder={t('compliance.version')} />
+                  <input className="filter-input" aria-label={t('compliance.level')} value={curriculumForm.level} onChange={(event) => setCurriculumForm({ ...curriculumForm, level: event.target.value })} placeholder={t('compliance.level')} />
+                  <input className="filter-input" aria-label={t('compliance.grade')} value={curriculumForm.grade} onChange={(event) => setCurriculumForm({ ...curriculumForm, grade: event.target.value })} placeholder={t('compliance.grade')} />
+                  <input className="filter-input" aria-label={t('compliance.subject')} value={curriculumForm.subject} onChange={(event) => setCurriculumForm({ ...curriculumForm, subject: event.target.value })} placeholder={t('compliance.subject')} />
+                  <input className="filter-input" aria-label={t('compliance.academicYear')} value={curriculumForm.academic_year} onChange={(event) => setCurriculumForm({ ...curriculumForm, academic_year: event.target.value })} placeholder={t('compliance.academicYear')} />
+                  <input className="filter-input" aria-label={t('compliance.version')} value={curriculumForm.version} onChange={(event) => setCurriculumForm({ ...curriculumForm, version: event.target.value })} placeholder={t('compliance.version')} />
                   <button type="button" className="btn btn-primary" onClick={() => void handleCreateCurriculum()}>
                     {t('compliance.createCurriculum')}
                   </button>
@@ -219,11 +219,11 @@ export function CurriculumMappingPage() {
             content: (
               <div className="card">
                 <div className="filters-bar">
-                  <input className="filter-input" value={objectiveForm.code} onChange={(event) => setObjectiveForm({ ...objectiveForm, code: event.target.value })} placeholder={t('compliance.objectiveCode')} />
-                  <input className="filter-input" value={objectiveForm.title_fr} onChange={(event) => setObjectiveForm({ ...objectiveForm, title_fr: event.target.value })} placeholder={t('compliance.titleFr')} />
-                  <input className="filter-input" value={objectiveForm.title_ar} onChange={(event) => setObjectiveForm({ ...objectiveForm, title_ar: event.target.value })} placeholder={t('compliance.titleAr')} />
-                  <input className="filter-input" type="number" min="1" max="3" value={objectiveForm.trimester} onChange={(event) => setObjectiveForm({ ...objectiveForm, trimester: Number(event.target.value) })} placeholder={t('compliance.trimester')} />
-                  <input className="filter-input" type="number" min="1" value={objectiveForm.unit_number} onChange={(event) => setObjectiveForm({ ...objectiveForm, unit_number: Number(event.target.value) })} placeholder={t('compliance.unitNumber')} />
+                  <input className="filter-input" aria-label={t('compliance.objectiveCode')} value={objectiveForm.code} onChange={(event) => setObjectiveForm({ ...objectiveForm, code: event.target.value })} placeholder={t('compliance.objectiveCode')} />
+                  <input className="filter-input" aria-label={t('compliance.titleFr')} value={objectiveForm.title_fr} onChange={(event) => setObjectiveForm({ ...objectiveForm, title_fr: event.target.value })} placeholder={t('compliance.titleFr')} />
+                  <input className="filter-input" aria-label={t('compliance.titleAr')} value={objectiveForm.title_ar} onChange={(event) => setObjectiveForm({ ...objectiveForm, title_ar: event.target.value })} placeholder={t('compliance.titleAr')} />
+                  <input className="filter-input" aria-label={t('compliance.trimester')} type="number" min="1" max="3" value={objectiveForm.trimester} onChange={(event) => setObjectiveForm({ ...objectiveForm, trimester: Number(event.target.value) })} placeholder={t('compliance.trimester')} />
+                  <input className="filter-input" aria-label={t('compliance.unitNumber')} type="number" min="1" value={objectiveForm.unit_number} onChange={(event) => setObjectiveForm({ ...objectiveForm, unit_number: Number(event.target.value) })} placeholder={t('compliance.unitNumber')} />
                   <button type="button" className="btn btn-primary" onClick={() => void handleCreateObjective()}>
                     {t('compliance.createObjective')}
                   </button>

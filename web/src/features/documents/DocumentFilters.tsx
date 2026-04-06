@@ -98,28 +98,28 @@ export function DocumentFilters({
         <div className="documents-toolbar__filters">
           {activeTab !== 'resources' ? (
             <>
-              <input value={documentSearch} onChange={(event) => onChangeDocumentSearch(event.target.value)} placeholder={t('documents.filters.search')} />
-              <select value={documentCategoryFilter} onChange={(event) => onChangeDocumentCategoryFilter(event.target.value)}>
+              <input aria-label={t('documents.filters.search')} value={documentSearch} onChange={(event) => onChangeDocumentSearch(event.target.value)} placeholder={t('documents.filters.search')} />
+              <select aria-label={t('documents.filters.allCategories')} value={documentCategoryFilter} onChange={(event) => onChangeDocumentCategoryFilter(event.target.value)}>
                 <option value="">{t('documents.filters.allCategories')}</option>
                 {optionsCategories.map((category) => <option key={category} value={category}>{t(`documents.categories.${category}`)}</option>)}
               </select>
-              <select value={documentTypeFilter} onChange={(event) => onChangeDocumentTypeFilter(event.target.value)}>
+              <select aria-label={t('documents.filters.allTypes')} value={documentTypeFilter} onChange={(event) => onChangeDocumentTypeFilter(event.target.value)}>
                 <option value="">{t('documents.filters.allTypes')}</option>
                 {documentMimeOptions.map((mime) => <option key={mime} value={mime}>{mime}</option>)}
               </select>
-              <input type="date" value={documentFromDate} onChange={(event) => onChangeDocumentFromDate(event.target.value)} />
-              <input type="date" value={documentToDate} onChange={(event) => onChangeDocumentToDate(event.target.value)} />
+              <input aria-label={t('documents.filters.fromDate', { defaultValue: 'From date' })} type="date" value={documentFromDate} onChange={(event) => onChangeDocumentFromDate(event.target.value)} />
+              <input aria-label={t('documents.filters.toDate', { defaultValue: 'To date' })} type="date" value={documentToDate} onChange={(event) => onChangeDocumentToDate(event.target.value)} />
             </>
           ) : (
             <>
-              <input value={resourceSearch} onChange={(event) => onChangeResourceSearch(event.target.value)} placeholder={t('documents.resources.searchPlaceholder')} />
-              <input value={resourceFilterSubject} onChange={(event) => onChangeResourceFilterSubject(event.target.value)} placeholder={t('documents.resources.subject')} />
-              <input value={resourceFilterLevel} onChange={(event) => onChangeResourceFilterLevel(event.target.value)} placeholder={t('documents.resources.level')} />
-              <select value={resourceFilterType} onChange={(event) => onChangeResourceFilterType(event.target.value)}>
+              <input aria-label={t('documents.resources.searchPlaceholder')} value={resourceSearch} onChange={(event) => onChangeResourceSearch(event.target.value)} placeholder={t('documents.resources.searchPlaceholder')} />
+              <input aria-label={t('documents.resources.subject')} value={resourceFilterSubject} onChange={(event) => onChangeResourceFilterSubject(event.target.value)} placeholder={t('documents.resources.subject')} />
+              <input aria-label={t('documents.resources.level')} value={resourceFilterLevel} onChange={(event) => onChangeResourceFilterLevel(event.target.value)} placeholder={t('documents.resources.level')} />
+              <select aria-label={t('documents.resources.allTypes')} value={resourceFilterType} onChange={(event) => onChangeResourceFilterType(event.target.value)}>
                 <option value="">{t('documents.resources.allTypes')}</option>
                 {RESOURCE_TYPES.map((item) => <option key={item} value={item}>{t(`documents.resourceTypes.${item}`)}</option>)}
               </select>
-              <select value={resourceFilterRating} onChange={(event) => onChangeResourceFilterRating(event.target.value)}>
+              <select aria-label={t('documents.resources.allRatings')} value={resourceFilterRating} onChange={(event) => onChangeResourceFilterRating(event.target.value)}>
                 <option value="">{t('documents.resources.allRatings')}</option>
                 {[5, 4, 3].map((rating) => <option key={rating} value={rating}>{t('documents.resources.ratingAtLeast', { rating })}</option>)}
               </select>
