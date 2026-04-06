@@ -6,9 +6,12 @@
  * Role-based redirect on root /.
  */
 
+import { Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/services/auth/AuthContext';
+import { ErrorBoundary } from '@/shared/ui/ErrorBoundary';
 import { Layout } from '@/shared/ui/Layout';
+import { OfflineIndicator } from '@/shared/ui/OfflineIndicator';
 import { LoginPage, ROLE_REDIRECT } from '@/features/auth/LoginPage';
 import { ProtectedRoute } from '@/features/auth/ProtectedRoute';
 import { FeedPage } from '@/features/feed/FeedPage';
@@ -81,10 +84,14 @@ function RoleRedirect() {
 
 function App() {
   return (
-    <Routes>
-      {/* Public routes */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+    <div className="app-root">
+      <OfflineIndicator />
+      <ErrorBoundary onError={(error) => console.error(error)}>
+        <Suspense fallback={<LoadingState />}>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
 
       {/* Protected routes with layout */}
       <Route
@@ -486,9 +493,12 @@ function App() {
       {/* Root redirect */}
       <Route path="/" element={<RoleRedirect />} />
 
-      {/* Catch-all → redirect to root */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+            {/* Catch-all → redirect to root */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </ErrorBoundary>
+    </div>
   );
 }
 

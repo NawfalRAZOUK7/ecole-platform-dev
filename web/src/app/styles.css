@@ -747,6 +747,46 @@ button {
   }
 }
 
+.offline-indicator {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  padding-block: 0.8rem;
+  padding-inline: 1rem;
+  background: color-mix(in srgb, var(--color-warning) 22%, var(--color-surface));
+  color: var(--color-text);
+  text-align: center;
+  z-index: 9999;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.error-boundary {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.error-boundary__card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: min(100%, 34rem);
+  padding: 2rem;
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+  text-align: center;
+}
+
+.error-boundary__actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
 .logout-btn {
   width: 100%;
   padding: 8px;

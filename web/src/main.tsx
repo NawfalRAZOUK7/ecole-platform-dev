@@ -7,7 +7,12 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+  MutationCache,
+  QueryCache,
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '@/services/auth/AuthContext';
 import App from '@/app/App';
@@ -19,11 +24,24 @@ import '@/shared/i18n';
 import '@/app/styles.css';
 
 const queryClient = new QueryClient({
+  queryCache: new QueryCache({
+    onError: (error) => {
+      console.error(error);
+    },
+  }),
+  mutationCache: new MutationCache({
+    onError: (error) => {
+      console.error(error);
+    },
+  }),
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000,
       retry: 2,
       refetchOnWindowFocus: true,
+    },
+    mutations: {
+      retry: 0,
     },
   },
 });
