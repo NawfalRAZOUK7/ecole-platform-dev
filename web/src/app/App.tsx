@@ -35,6 +35,10 @@ import { AttendancePage as AttendanceModulePage } from '@/features/attendance/At
 import { ParentJustificationPage } from '@/features/attendance/ParentJustificationPage';
 import { GradeDetailPage } from '@/features/gradebook/GradeDetailPage';
 import { GradebookPage } from '@/features/gradebook/GradebookPage';
+import { BudgetAnalyticsPage } from '@/features/budgets/BudgetAnalyticsPage';
+import { BudgetDetailPage } from '@/features/budgets/BudgetDetailPage';
+import { BudgetListPage } from '@/features/budgets/BudgetListPage';
+import { BudgetRequestPage } from '@/features/budgets/BudgetRequestPage';
 import { DashboardPage } from '@/features/admin/DashboardPage';
 import { UsersPage } from '@/features/admin/UsersPage';
 import { InvitationsPage } from '@/features/admin/InvitationsPage';
@@ -343,6 +347,38 @@ function App() {
           element={
             <ProtectedRoute roles={['STD', 'PAR', 'TCH', 'DIR']}>
               <GradeDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/budgets"
+          element={
+            <ProtectedRoute roles={['ADM', 'DIR']}>
+              <BudgetListPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/budgets/requests"
+          element={
+            <ProtectedRoute roles={['ADM', 'DIR']}>
+              <BudgetRequestPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/budgets/analytics"
+          element={
+            <ProtectedRoute roles={['ADM', 'DIR']}>
+              <BudgetAnalyticsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/budgets/:id"
+          element={
+            <ProtectedRoute roles={['ADM', 'DIR']}>
+              <BudgetDetailPage />
             </ProtectedRoute>
           }
         />

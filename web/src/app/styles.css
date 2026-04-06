@@ -3377,3 +3377,10 @@ textarea.filter-input {
   display: grid;
   gap: 12px;
 }
+
+.budgets-page__form,
+.budgets-page__chart,
+.budgets-analytics-page__charts {
+  display: grid;
+  gap: 16px;
+}
