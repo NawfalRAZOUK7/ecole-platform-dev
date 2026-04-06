@@ -85,6 +85,10 @@ import { ClassProgressPage } from '@/features/teacher/ClassProgressPage';
 import { AnalyticsDashboardPage } from '@/features/analytics/AnalyticsDashboardPage';
 import { DocumentsPage } from '@/features/documents/DocumentsPage';
 import { ResourcesPage } from '@/features/documents/ResourcesPage';
+import { SkillAnalyticsPage } from '@/features/skills/SkillAnalyticsPage';
+import { SkillEvaluationPage } from '@/features/skills/SkillEvaluationPage';
+import { SkillPassportPage } from '@/features/skills/SkillPassportPage';
+import { SkillsOverviewPage } from '@/features/skills/SkillsOverviewPage';
 
 /** Redirect based on user role */
 function RoleRedirect() {
@@ -601,6 +605,38 @@ function App() {
           element={
             <ProtectedRoute roles={['STD', 'TCH', 'ADM']}>
               <ActivityDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/skills"
+          element={
+            <ProtectedRoute roles={['TCH', 'DIR', 'PAR', 'STD']}>
+              <SkillsOverviewPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/skills/passport/:studentId"
+          element={
+            <ProtectedRoute roles={['TCH', 'DIR', 'PAR', 'STD']}>
+              <SkillPassportPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/skills/evaluate"
+          element={
+            <ProtectedRoute roles={['TCH', 'DIR']}>
+              <SkillEvaluationPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/skills/analytics"
+          element={
+            <ProtectedRoute roles={['TCH', 'DIR']}>
+              <SkillAnalyticsPage />
             </ProtectedRoute>
           }
         />
