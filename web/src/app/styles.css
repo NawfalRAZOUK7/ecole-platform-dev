@@ -3384,3 +3384,47 @@ textarea.filter-input {
   display: grid;
   gap: 16px;
 }
+
+.micro-schools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.micro-school-card {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  text-align: start;
+  cursor: pointer;
+}
+
+.micro-school-card__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+}
+
+.micro-school-card__capacity {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--color-border);
+  overflow: hidden;
+}
+
+.micro-school-card__capacity-bar {
+  height: 100%;
+  background: var(--color-primary);
+}
+
+.micro-schools-page__form,
+.micro-school-detail-page__hero,
+.micro-school-detail-page__resources,
+.micro-school-detail-page__progress {
+  display: grid;
+  gap: 16px;
+}

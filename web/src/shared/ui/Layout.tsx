@@ -44,6 +44,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/admin/fee-assignments', labelKey: 'nav.adminFeeAssignments', icon: '📋', roles: ['ADM'] },
   { to: '/admin/generate-invoices', labelKey: 'nav.adminGenerateInvoices', icon: '🧾', roles: ['ADM'] },
   { to: '/budgets', labelKey: 'nav.budgets', icon: '💼', roles: ['ADM', 'DIR'] },
+  { to: '/micro-schools', labelKey: 'nav.microSchools', icon: '🏠', roles: ['ADM', 'DIR', 'PAR'] },
   { to: '/teacher', labelKey: 'nav.teacherClasses', icon: '🏫', roles: ['TCH'] },
   { to: '/teacher/courses', labelKey: 'nav.teacherCourses', icon: '📖', roles: ['TCH'] },
   { to: '/teacher/assignments', labelKey: 'nav.teacherAssignments', icon: '📝', roles: ['TCH'] },

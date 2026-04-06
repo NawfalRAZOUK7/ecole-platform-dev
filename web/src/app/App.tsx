@@ -39,6 +39,9 @@ import { BudgetAnalyticsPage } from '@/features/budgets/BudgetAnalyticsPage';
 import { BudgetDetailPage } from '@/features/budgets/BudgetDetailPage';
 import { BudgetListPage } from '@/features/budgets/BudgetListPage';
 import { BudgetRequestPage } from '@/features/budgets/BudgetRequestPage';
+import { MicroSchoolDetailPage } from '@/features/micro-schools/MicroSchoolDetailPage';
+import { MicroSchoolEnrollPage } from '@/features/micro-schools/MicroSchoolEnrollPage';
+import { MicroSchoolListPage } from '@/features/micro-schools/MicroSchoolListPage';
 import { DashboardPage } from '@/features/admin/DashboardPage';
 import { UsersPage } from '@/features/admin/UsersPage';
 import { InvitationsPage } from '@/features/admin/InvitationsPage';
@@ -379,6 +382,30 @@ function App() {
           element={
             <ProtectedRoute roles={['ADM', 'DIR']}>
               <BudgetDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/micro-schools"
+          element={
+            <ProtectedRoute roles={['ADM', 'DIR', 'PAR']}>
+              <MicroSchoolListPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/micro-schools/:id"
+          element={
+            <ProtectedRoute roles={['ADM', 'DIR', 'PAR']}>
+              <MicroSchoolDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/micro-schools/:id/enroll"
+          element={
+            <ProtectedRoute roles={['ADM', 'DIR', 'PAR']}>
+              <MicroSchoolEnrollPage />
             </ProtectedRoute>
           }
         />
