@@ -12,92 +12,96 @@ import { useAuth } from '@/services/auth/AuthContext';
 import { ErrorBoundary } from '@/shared/ui/ErrorBoundary';
 import { Layout } from '@/shared/ui/Layout';
 import { OfflineIndicator } from '@/shared/ui/OfflineIndicator';
-import { LoginPage, ROLE_REDIRECT } from '@/features/auth/LoginPage';
+import { ROLE_REDIRECT } from '@/features/auth/LoginPage';
 import { ProtectedRoute } from '@/features/auth/ProtectedRoute';
-import { FeedPage } from '@/features/feed/FeedPage';
-import { NotificationsPage } from '@/features/notifications/NotificationsPage';
-import { NotificationSettingsPage } from '@/features/notifications/NotificationSettingsPage';
-import { ReportsPage } from '@/features/reports/ReportsPage';
-import { CalendarPage } from '@/features/calendar/CalendarPage';
-import { EventDetailPage } from '@/features/calendar/EventDetailPage';
-import { ContentDetailPage } from '@/features/content/ContentDetailPage';
-import { ContentPlayerPage } from '@/features/content/ContentPlayerPage';
-import { ContentPage } from '@/features/content/ContentPage';
-import { ResultsPage } from '@/features/results/ResultsPage';
-import { InvoiceDetailPage } from '@/features/invoices/InvoiceDetailPage';
-import { InvoicesPage } from '@/features/invoices/InvoicesPage';
-import { ActivityDetailPage } from '@/features/activities/ActivityDetailPage';
-import { ActivitiesPage } from '@/features/activities/ActivitiesPage';
-import { ProfilePage } from '@/features/profile/ProfilePage';
-import { SessionsPage } from '@/features/profile/SessionsPage';
-import { TwoFactorPage } from '@/features/profile/TwoFactorPage';
-import { StudentSubmissionPage } from '@/features/submissions/StudentSubmissionPage';
-import { AttendanceAnalyticsPage } from '@/features/attendance/AttendanceAnalyticsPage';
-import { AttendanceHistoryPage } from '@/features/attendance/AttendanceHistoryPage';
-import { AttendancePage as AttendanceModulePage } from '@/features/attendance/AttendancePage';
-import { ParentJustificationPage } from '@/features/attendance/ParentJustificationPage';
-import { GradeDetailPage } from '@/features/gradebook/GradeDetailPage';
-import { GradebookPage } from '@/features/gradebook/GradebookPage';
-import { BudgetAnalyticsPage } from '@/features/budgets/BudgetAnalyticsPage';
-import { BudgetDetailPage } from '@/features/budgets/BudgetDetailPage';
-import { BudgetListPage } from '@/features/budgets/BudgetListPage';
-import { BudgetRequestPage } from '@/features/budgets/BudgetRequestPage';
-import { MicroSchoolDetailPage } from '@/features/micro-schools/MicroSchoolDetailPage';
-import { MicroSchoolEnrollPage } from '@/features/micro-schools/MicroSchoolEnrollPage';
-import { MicroSchoolListPage } from '@/features/micro-schools/MicroSchoolListPage';
-import { DashboardPage } from '@/features/admin/DashboardPage';
-import { UsersPage } from '@/features/admin/UsersPage';
-import { InvitationsPage } from '@/features/admin/InvitationsPage';
-import { AuditLogPage } from '@/features/admin/AuditLogPage';
-import { SchoolSettingsPage } from '@/features/admin/SchoolSettingsPage';
-import { JustificationReviewPage } from '@/features/admin/JustificationReviewPage';
-import { BatchRegisterPage } from '@/features/admin/BatchRegisterPage';
-import { ParentChildLinksPage } from '@/features/admin/ParentChildLinksPage';
-import { RegisterPage } from '@/features/auth/RegisterPage';
-import { ClassesPage as TeacherClassesPage } from '@/features/teacher/ClassesPage';
-import { CoursesPage as TeacherCoursesPage } from '@/features/teacher/CoursesPage';
-import { AssignmentFormPage } from '@/features/teacher/AssignmentFormPage';
-import { SubmissionsPage as TeacherSubmissionsPage } from '@/features/teacher/SubmissionsPage';
-import { AttendancePage as TeacherAttendancePage } from '@/features/teacher/AttendancePage';
-import { AssessmentFormPage } from '@/features/teacher/AssessmentFormPage';
-import { ContentLibraryPage } from '@/features/teacher/ContentLibraryPage';
-import { QuizManagerPage } from '@/features/teacher/QuizManagerPage';
-import { ContentViewPage } from '@/features/student/ContentViewPage';
-import { QuizPlayerPage } from '@/features/student/QuizPlayerPage';
-import { LoadingState } from '@/shared/ui/LoadingState';
 import { CmsLayout } from '@/features/cms/CmsLayout';
-import { CmsContentListPage } from '@/features/cms/ContentListPage';
-import { CmsContentUploadPage } from '@/features/cms/ContentUploadPage';
-import { CmsContentEditPage } from '@/features/cms/ContentEditPage';
-import { CmsReviewQueuePage } from '@/features/cms/ReviewQueuePage';
-import { CmsQuizBuilderPage } from '@/features/cms/QuizBuilderPage';
-import { CmsAnalyticsPage } from '@/features/cms/AnalyticsPage';
-import { TimetablePage } from '@/features/timetable/TimetablePage';
-import { FeeStructuresPage } from '@/features/billing/FeeStructuresPage';
-import { FeeAssignmentsPage } from '@/features/billing/FeeAssignmentsPage';
-import { GenerateInvoicesPage } from '@/features/billing/GenerateInvoicesPage';
-import { ConversationsPage } from '@/features/messages/ConversationsPage';
-import { ChatPage } from '@/features/messages/ChatPage';
-import { AnnouncementsPage } from '@/features/announcements/AnnouncementsPage';
-import { ProgressDashboardPage } from '@/features/progress/ProgressDashboardPage';
-import { ParentProgressPage } from '@/features/progress/ParentProgressPage';
-import { ClassProgressPage } from '@/features/teacher/ClassProgressPage';
-import { AnalyticsDashboardPage } from '@/features/analytics/AnalyticsDashboardPage';
-import { DocumentsPage } from '@/features/documents/DocumentsPage';
-import { ResourcesPage } from '@/features/documents/ResourcesPage';
-import { SkillAnalyticsPage } from '@/features/skills/SkillAnalyticsPage';
-import { SkillEvaluationPage } from '@/features/skills/SkillEvaluationPage';
-import { SkillPassportPage } from '@/features/skills/SkillPassportPage';
-import { SkillsOverviewPage } from '@/features/skills/SkillsOverviewPage';
-import { ComplianceDashboardPage } from '@/features/compliance/ComplianceDashboardPage';
-import { ComplianceReportPage } from '@/features/compliance/ComplianceReportPage';
-import { CurriculumMappingPage } from '@/features/compliance/CurriculumMappingPage';
-import { FinancialDashboardPage } from '@/features/financial-health/FinancialDashboardPage';
-import { FinancialExportPage } from '@/features/financial-health/FinancialExportPage';
-import { FinancialSnapshotsPage } from '@/features/financial-health/FinancialSnapshotsPage';
-import { SyncConflictsPage } from '@/features/sync/SyncConflictsPage';
-import { SyncSettingsPage } from '@/features/sync/SyncSettingsPage';
-import { SyncStatusPage } from '@/features/sync/SyncStatusPage';
+import { LoadingState } from '@/shared/ui/LoadingState';
+
+import {
+  LoginPage,
+  RegisterPage,
+  DashboardPage,
+  UsersPage,
+  InvitationsPage,
+  AuditLogPage,
+  SchoolSettingsPage,
+  JustificationReviewPage,
+  BatchRegisterPage,
+  ParentChildLinksPage,
+  AnalyticsDashboardPage,
+  TeacherClassesPage,
+  TeacherCoursesPage,
+  AssignmentFormPage,
+  TeacherSubmissionsPage,
+  TeacherAttendancePage,
+  AssessmentFormPage,
+  ContentLibraryPage,
+  QuizManagerPage,
+  ClassProgressPage,
+  ContentViewPage,
+  QuizPlayerPage,
+  AttendanceModulePage,
+  AttendanceHistoryPage,
+  AttendanceAnalyticsPage,
+  ParentJustificationPage,
+  GradebookPage,
+  GradeDetailPage,
+  BudgetListPage,
+  BudgetRequestPage,
+  BudgetAnalyticsPage,
+  BudgetDetailPage,
+  MicroSchoolListPage,
+  MicroSchoolDetailPage,
+  MicroSchoolEnrollPage,
+  TimetablePage,
+  ConversationsPage,
+  ChatPage,
+  ProgressDashboardPage,
+  ParentProgressPage,
+  AnnouncementsPage,
+  FeedPage,
+  NotificationsPage,
+  NotificationSettingsPage,
+  CalendarPage,
+  EventDetailPage,
+  ReportsPage,
+  DocumentsPage,
+  ResourcesPage,
+  ContentPage,
+  ContentDetailPage,
+  ContentPlayerPage,
+  ResultsPage,
+  InvoicesPage,
+  InvoiceDetailPage,
+  ActivitiesPage,
+  ActivityDetailPage,
+  ProfilePage,
+  SessionsPage,
+  TwoFactorPage,
+  StudentSubmissionPage,
+  SkillsOverviewPage,
+  SkillPassportPage,
+  SkillEvaluationPage,
+  SkillAnalyticsPage,
+  ComplianceDashboardPage,
+  CurriculumMappingPage,
+  ComplianceReportPage,
+  SyncStatusPage,
+  SyncConflictsPage,
+  SyncSettingsPage,
+  FinancialDashboardPage,
+  FinancialSnapshotsPage,
+  FinancialExportPage,
+  FeeStructuresPage,
+  FeeAssignmentsPage,
+  GenerateInvoicesPage,
+  CmsContentListPage,
+  CmsContentUploadPage,
+  CmsContentEditPage,
+  CmsReviewQueuePage,
+  CmsQuizBuilderPage,
+  CmsAnalyticsPage,
+} from './LazyPages';
 
 /** Redirect based on user role */
 function RoleRedirect() {
@@ -320,7 +324,7 @@ function App() {
           }
         />
 
-        {/* Timetable (all roles) */}
+        {/* Attendance */}
         <Route
           path="/attendance"
           element={
