@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { api } from '@/services/api/client';
 import { useAuth } from '@/services/auth/AuthContext';
 import { useFocusManagement } from '@/shared/hooks/useFocusManagement';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { LanguageSwitcher } from '@/shared/ui/LanguageSwitcher';
 import { formatDate } from '@/shared/i18n';
 import { wsClient, type WsEvent } from '@/services/ws/WebSocketClient';
@@ -98,6 +99,7 @@ export function Layout() {
   const [dropdownLoading, setDropdownLoading] = useState(false);
   const [recentNotifications, setRecentNotifications] = useState<NotificationPreview[]>([]);
   const navRef = useRef<HTMLElement>(null);
+  const { theme, toggleTheme } = useTheme();
 
   useFocusManagement();
 
@@ -218,7 +220,25 @@ export function Layout() {
       <aside className="app-sidebar">
         <div className="sidebar-header">
           <h2 className="sidebar-title">{t('app.name')}</h2>
-          <LanguageSwitcher />
+          <div className="sidebar-header__controls">
+            <LanguageSwitcher />
+            <button
+              type="button"
+              className="theme-toggle"
+              onClick={toggleTheme}
+              aria-label={t('theme.toggle', { defaultValue: 'Toggle dark mode' })}
+            >
+              {theme === 'dark' ? (
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 4a1 1 0 0 1 1 1v1.2a1 1 0 0 1-2 0V5a1 1 0 0 1 1-1Zm0 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7-5a1 1 0 0 1 0 2h-1.2a1 1 0 0 1 0-2H19ZM7.2 12a1 1 0 0 1-1 1H5a1 1 0 1 1 0-2h1.2a1 1 0 0 1 1 1Zm8.94 5.54a1 1 0 0 1 1.41 0l.85.85a1 1 0 0 1-1.41 1.41l-.85-.85a1 1 0 0 1 0-1.41ZM6.46 7.86a1 1 0 0 1 1.41 0l.85.85a1 1 0 1 1-1.41 1.41l-.85-.85a1 1 0 0 1 0-1.41Zm10.68 0a1 1 0 0 1 0 1.41l-.85.85a1 1 0 0 1-1.41-1.41l.85-.85a1 1 0 0 1 1.41 0ZM7.87 16.13a1 1 0 0 1 0 1.41l-.85.85a1 1 0 0 1-1.41-1.41l.85-.85a1 1 0 0 1 1.41 0ZM12 17.8a1 1 0 0 1 1 1V20a1 1 0 0 1-2 0v-1.2a1 1 0 0 1 1-1Z" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M14.94 3.78a1 1 0 0 1 .65 1.57 8 8 0 1 0 3.06 11.4 1 1 0 0 1 1.77.92A10 10 0 1 1 14.3 3.9a1 1 0 0 1 .64-.12Z" />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
 
         <nav

@@ -22,21 +22,14 @@ export function LanguageSwitcher() {
   }
 
   return (
-    <div style={{ display: 'flex', gap: '4px' }}>
+    <div className="language-switcher">
       {SUPPORTED_LANGUAGES.map((lang) => (
         <button
           key={lang}
+          type="button"
           onClick={() => handleChange(lang)}
-          style={{
-            padding: '4px 10px',
-            borderRadius: '4px',
-            border: '1px solid #d1d5db',
-            background: i18n.language === lang ? '#2563eb' : 'transparent',
-            color: i18n.language === lang ? '#fff' : '#374151',
-            cursor: 'pointer',
-            fontSize: '13px',
-            fontWeight: i18n.language === lang ? 600 : 400,
-          }}
+          className={`language-switcher__button ${i18n.language === lang ? 'language-switcher__button--active' : ''}`}
+          aria-pressed={i18n.language === lang}
         >
           {LANGUAGE_LABELS[lang]}
         </button>
