@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { api } from '@/services/api/client';
 import { useAuth } from '@/services/auth/AuthContext';
 import { useFeedUnreadSummary } from '@/features/feed/useFeed';
+import { useSyncDevices, useSyncHealth, useSyncStatus } from '@/features/sync/useSync';
 import { useFocusManagement } from '@/shared/hooks/useFocusManagement';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { LanguageSwitcher } from '@/shared/ui/LanguageSwitcher';
@@ -108,6 +109,11 @@ export function Layout() {
   const userRole = user?.role || '';
   const feedUnreadSummary = useFeedUnreadSummary(userRole === 'PAR');
   const { unreadCount: feedUnreadCount, refetch: refetchFeedUnread } = feedUnreadSummary;
+  const syncEnabled = userRole === 'ADM' || userRole === 'DIR';
+  const syncDevicesQuery = useSyncDevices(syncEnabled);
+  const primarySyncDeviceId = syncDevicesQuery.data?.[0]?.id ?? '';
+  const syncStatusQuery = useSyncStatus(primarySyncDeviceId, syncEnabled);
+  const syncHealthQuery = useSyncHealth(primarySyncDeviceId, syncEnabled);
 
   useFocusManagement();
   const visibleItems = useMemo(
@@ -302,6 +308,28 @@ export function Layout() {
         <div className="app-topbar">
           <div />
           <div className="topbar-actions">
+            {syncEnabled && primarySyncDeviceId ? (
+              <button
+                type="button"
+                className="bell-button"
+                onClick={() => navigate('/sync')}
+                aria-label={t('sync.title')}
+              >
+                <span
+                  className="bell-button__icon"
+                  style={{
+                    color:
+                      (syncStatusQuery.data?.conflict_count ?? syncHealthQuery.data?.conflict_count ?? 0) > 0
+                        ? 'var(--color-error)'
+                        : (syncStatusQuery.data?.pending_count ?? 0) > 0
+                          ? 'var(--color-warning)'
+                          : 'var(--color-success)',
+                  }}
+                >
+                  ⟳
+                </span>
+              </button>
+            ) : null}
             <div className="notification-menu">
               <button
                 type="button"

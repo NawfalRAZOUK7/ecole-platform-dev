@@ -92,6 +92,9 @@ import { SkillsOverviewPage } from '@/features/skills/SkillsOverviewPage';
 import { ComplianceDashboardPage } from '@/features/compliance/ComplianceDashboardPage';
 import { ComplianceReportPage } from '@/features/compliance/ComplianceReportPage';
 import { CurriculumMappingPage } from '@/features/compliance/CurriculumMappingPage';
+import { SyncConflictsPage } from '@/features/sync/SyncConflictsPage';
+import { SyncSettingsPage } from '@/features/sync/SyncSettingsPage';
+import { SyncStatusPage } from '@/features/sync/SyncStatusPage';
 
 /** Redirect based on user role */
 function RoleRedirect() {
@@ -664,6 +667,30 @@ function App() {
           element={
             <ProtectedRoute roles={['ADM', 'DIR']}>
               <ComplianceReportPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/sync"
+          element={
+            <ProtectedRoute roles={['ADM', 'DIR']}>
+              <SyncStatusPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/sync/conflicts"
+          element={
+            <ProtectedRoute roles={['ADM', 'DIR']}>
+              <SyncConflictsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/sync/settings"
+          element={
+            <ProtectedRoute roles={['ADM', 'DIR']}>
+              <SyncSettingsPage />
             </ProtectedRoute>
           }
         />
