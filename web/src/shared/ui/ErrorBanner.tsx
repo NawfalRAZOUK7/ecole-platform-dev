@@ -41,6 +41,7 @@ export function ErrorBanner({ error, onDismiss, onRetry }: ErrorBannerProps) {
   return (
     <div
       role="alert"
+      aria-live="assertive"
       style={{
         padding: '12px 16px',
         marginBottom: '16px',

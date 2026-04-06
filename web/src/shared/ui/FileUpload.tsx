@@ -25,6 +25,7 @@ export function FileUpload({
 }: FileUploadProps) {
   const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
+  const instructionsId = 'file-upload-instructions';
   const [dragOver, setDragOver] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
@@ -95,10 +96,20 @@ export function FileUpload({
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => !disabled && inputRef.current?.click()}
+        onKeyDown={(event) => {
+          if (!disabled && (event.key === 'Enter' || event.key === ' ')) {
+            event.preventDefault();
+            inputRef.current?.click();
+          }
+        }}
+        role="button"
+        tabIndex={disabled ? -1 : 0}
+        aria-label={t('fileUpload.dragDrop')}
+        aria-describedby={instructionsId}
       >
         <span style={{ fontSize: 24 }}>📎</span>
         <span>{t('fileUpload.dragDrop')}</span>
-        <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+        <span id={instructionsId} style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
           {t('fileUpload.maxSize', { max: maxSizeMb })}
         </span>
         <input

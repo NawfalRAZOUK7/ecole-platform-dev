@@ -2,11 +2,12 @@
  * Main application layout — sidebar navigation + topbar bell/dropdown.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/services/api/client';
 import { useAuth } from '@/services/auth/AuthContext';
+import { useFocusManagement } from '@/shared/hooks/useFocusManagement';
 import { LanguageSwitcher } from '@/shared/ui/LanguageSwitcher';
 import { formatDate } from '@/shared/i18n';
 import { wsClient, type WsEvent } from '@/services/ws/WebSocketClient';
@@ -96,6 +97,9 @@ export function Layout() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [dropdownLoading, setDropdownLoading] = useState(false);
   const [recentNotifications, setRecentNotifications] = useState<NotificationPreview[]>([]);
+  const navRef = useRef<HTMLElement>(null);
+
+  useFocusManagement();
 
   const userRole = user?.role || '';
   const visibleItems = useMemo(
@@ -186,20 +190,50 @@ export function Layout() {
     navigate(notification.action_url || '/notifications');
   }
 
+  function handleSidebarKeyDown(event: React.KeyboardEvent<HTMLElement>) {
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') {
+      return;
+    }
+
+    const links = Array.from(navRef.current?.querySelectorAll<HTMLAnchorElement>('a.nav-link') ?? []);
+    if (links.length === 0) {
+      return;
+    }
+
+    const currentIndex = links.findIndex((link) => link === document.activeElement);
+    const fallbackIndex = currentIndex === -1 ? 0 : currentIndex;
+    const nextIndex = event.key === 'ArrowDown'
+      ? (fallbackIndex + 1) % links.length
+      : (fallbackIndex - 1 + links.length) % links.length;
+
+    event.preventDefault();
+    links[nextIndex]?.focus();
+  }
+
   return (
     <div className="app-layout">
+      <a href="#main-content" className="skip-link">
+        {t('a11y.skipToContent', { defaultValue: 'Skip to content' })}
+      </a>
       <aside className="app-sidebar">
         <div className="sidebar-header">
           <h2 className="sidebar-title">{t('app.name')}</h2>
           <LanguageSwitcher />
         </div>
 
-        <nav className="sidebar-nav">
+        <nav
+          ref={navRef}
+          className="sidebar-nav"
+          role="navigation"
+          aria-label={t('a11y.mainNavigation', { defaultValue: 'Main navigation' })}
+          onKeyDown={handleSidebarKeyDown}
+        >
           {visibleItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               className={({ isActive }) => `nav-link ${isActive ? 'nav-link--active' : ''}`}
+              aria-label={t(item.labelKey)}
               onClick={() => {
                 if (item.to === '/messages') setMsgCount(0);
               }}
@@ -227,7 +261,7 @@ export function Layout() {
         </div>
       </aside>
 
-      <main className="app-main">
+      <main id="main-content" className="app-main">
         <div className="app-topbar">
           <div />
           <div className="topbar-actions">

@@ -14,6 +14,7 @@ export function EmptyState({ message, icon = '📭' }: EmptyStateProps) {
 
   return (
     <div
+      role="status"
       style={{
         display: 'flex',
         flexDirection: 'column',

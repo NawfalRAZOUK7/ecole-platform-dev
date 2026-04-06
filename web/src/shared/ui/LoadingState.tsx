@@ -13,6 +13,9 @@ export function LoadingState({ message }: LoadingStateProps) {
 
   return (
     <div
+      role="status"
+      aria-live="polite"
+      aria-label={t('app.loading')}
       style={{
         display: 'flex',
         flexDirection: 'column',
