@@ -75,6 +75,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/invoices', labelKey: 'nav.invoices', icon: '💳', roles: ['PAR', 'ADM'] },
   { to: '/activities', labelKey: 'nav.activities', icon: '🎯', roles: ['STD', 'TCH', 'ADM'] },
   { to: '/skills', labelKey: 'nav.skills', icon: '🧠', roles: ['TCH', 'DIR', 'PAR', 'STD'] },
+  { to: '/compliance', labelKey: 'nav.compliance', icon: '📐', roles: ['ADM', 'DIR'] },
   { to: '/profile', labelKey: 'nav.profile', icon: '👤', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR', 'SUP'] },
   { to: '/profile/sessions', labelKey: 'nav.sessions', icon: '🔒', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR', 'SUP'] },
   { to: '/profile/2fa', labelKey: 'nav.twoFactor', icon: '🛡️', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR', 'SUP'] },

@@ -89,6 +89,9 @@ import { SkillAnalyticsPage } from '@/features/skills/SkillAnalyticsPage';
 import { SkillEvaluationPage } from '@/features/skills/SkillEvaluationPage';
 import { SkillPassportPage } from '@/features/skills/SkillPassportPage';
 import { SkillsOverviewPage } from '@/features/skills/SkillsOverviewPage';
+import { ComplianceDashboardPage } from '@/features/compliance/ComplianceDashboardPage';
+import { ComplianceReportPage } from '@/features/compliance/ComplianceReportPage';
+import { CurriculumMappingPage } from '@/features/compliance/CurriculumMappingPage';
 
 /** Redirect based on user role */
 function RoleRedirect() {
@@ -637,6 +640,30 @@ function App() {
           element={
             <ProtectedRoute roles={['TCH', 'DIR']}>
               <SkillAnalyticsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/compliance"
+          element={
+            <ProtectedRoute roles={['ADM', 'DIR']}>
+              <ComplianceDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/compliance/mapping"
+          element={
+            <ProtectedRoute roles={['ADM', 'DIR']}>
+              <CurriculumMappingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/compliance/reports"
+          element={
+            <ProtectedRoute roles={['ADM', 'DIR']}>
+              <ComplianceReportPage />
             </ProtectedRoute>
           }
         />
