@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from typing import Any
 
 from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -45,7 +46,8 @@ async def create_budget(
     request: Request,
     auth: AuthContext = Depends(requires_permission(PERM_BUDGET_CREATE)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Create a micro-budget for the authenticated school."""
     service = BudgetService(db)
     return success_response(
         await service.create_budget(
@@ -66,7 +68,8 @@ async def list_budgets(
     status: str | None = Query(None, pattern="^(active|frozen|closed)$"),
     auth: AuthContext = Depends(requires_permission(PERM_BUDGET_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """List budgets for the authenticated school."""
     service = BudgetService(db)
     return list_response(
         await service.list_budgets(
@@ -86,7 +89,8 @@ async def get_budget_analytics(
     academic_year_id: uuid.UUID | None = Query(None),
     auth: AuthContext = Depends(requires_permission(PERM_BUDGET_ANALYTICS_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Return budget analytics for the authenticated school."""
     service = BudgetService(db)
     return success_response(
         await service.get_budget_analytics(
@@ -105,7 +109,8 @@ async def get_budget(
     budget_id: uuid.UUID,
     auth: AuthContext = Depends(requires_permission(PERM_BUDGET_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Fetch one budget."""
     service = BudgetService(db)
     return success_response(await service.get_budget(budget_id=budget_id, auth=auth))
 
@@ -122,7 +127,8 @@ async def create_allocation(
     request: Request,
     auth: AuthContext = Depends(requires_permission(PERM_BUDGET_ALLOCATE)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Create an allocation inside a budget."""
     service = BudgetService(db)
     return success_response(
         await service.create_allocation(
@@ -146,7 +152,8 @@ async def list_budget_allocations(
     status: str | None = Query(None, pattern="^(active|exhausted|frozen)$"),
     auth: AuthContext = Depends(requires_permission(PERM_BUDGET_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """List allocations attached to a budget."""
     service = BudgetService(db)
     return list_response(
         await service.list_allocations(
@@ -168,7 +175,8 @@ async def get_allocation(
     allocation_id: uuid.UUID,
     auth: AuthContext = Depends(requires_permission(PERM_BUDGET_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Fetch one budget allocation."""
     service = BudgetService(db)
     return success_response(
         await service.get_allocation(
@@ -190,7 +198,8 @@ async def create_budget_request(
     request: Request,
     auth: AuthContext = Depends(requires_permission(PERM_BUDGET_REQUEST_CREATE)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Create a spending request for an allocation."""
     service = BudgetService(db)
     return success_response(
         await service.create_request(
@@ -213,7 +222,8 @@ async def list_budget_requests(
     status: str | None = Query(None, pattern="^(pending|approved|rejected|cancelled)$"),
     auth: AuthContext = Depends(requires_permission(PERM_BUDGET_REQUEST_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """List budget requests for an allocation."""
     service = BudgetService(db)
     return list_response(
         await service.list_requests(
@@ -236,7 +246,8 @@ async def approve_budget_request(
     request: Request,
     auth: AuthContext = Depends(requires_permission(PERM_BUDGET_APPROVE)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Approve a pending budget request."""
     service = BudgetService(db)
     return success_response(
         await service.approve_request(
@@ -259,7 +270,8 @@ async def reject_budget_request(
     request: Request,
     auth: AuthContext = Depends(requires_permission(PERM_BUDGET_APPROVE)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Reject a pending budget request."""
     service = BudgetService(db)
     return success_response(
         await service.reject_request(
@@ -280,7 +292,8 @@ async def get_budget_request(
     request_id: uuid.UUID,
     auth: AuthContext = Depends(requires_permission(PERM_BUDGET_REQUEST_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Fetch one budget request."""
     service = BudgetService(db)
     return success_response(await service.get_request(request_id=request_id, auth=auth))
 
@@ -297,7 +310,8 @@ async def create_budget_transaction(
     request: Request,
     auth: AuthContext = Depends(requires_permission(PERM_BUDGET_TRANSACTION_CREATE)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Record a budget transaction against an allocation."""
     service = BudgetService(db)
     return success_response(
         await service.record_transaction(
@@ -323,7 +337,8 @@ async def list_budget_transactions(
     ),
     auth: AuthContext = Depends(requires_permission(PERM_BUDGET_TRANSACTION_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """List transactions recorded for an allocation."""
     service = BudgetService(db)
     return list_response(
         await service.list_transactions(

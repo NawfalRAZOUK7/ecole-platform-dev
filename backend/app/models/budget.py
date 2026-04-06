@@ -32,18 +32,24 @@ def _enum_values(enum_cls: type[enum.Enum]) -> list[str]:
 
 
 class MicroBudgetStatus(str, enum.Enum):
+    """Lifecycle states for a micro-budget."""
+
     ACTIVE = "active"
     FROZEN = "frozen"
     CLOSED = "closed"
 
 
 class BudgetAllocationStatus(str, enum.Enum):
+    """Lifecycle states for a budget allocation."""
+
     ACTIVE = "active"
     EXHAUSTED = "exhausted"
     FROZEN = "frozen"
 
 
 class BudgetRequestStatus(str, enum.Enum):
+    """Review states for a budget request."""
+
     PENDING = "pending"
     APPROVED = "approved"
     REJECTED = "rejected"
@@ -51,6 +57,8 @@ class BudgetRequestStatus(str, enum.Enum):
 
 
 class BudgetTransactionType(str, enum.Enum):
+    """Transaction categories recorded against allocations."""
+
     ALLOCATION = "allocation"
     EXPENSE = "expense"
     REFUND = "refund"

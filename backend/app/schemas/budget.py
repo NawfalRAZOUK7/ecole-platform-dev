@@ -8,6 +8,8 @@ from pydantic import BaseModel, Field
 
 
 class MicroBudgetCreateRequest(BaseModel):
+    """Payload for creating a micro-budget."""
+
     academic_year_id: uuid.UUID
     total_amount: float = Field(..., ge=0)
     currency: str = Field("MAD", pattern="^MAD$")
@@ -15,12 +17,16 @@ class MicroBudgetCreateRequest(BaseModel):
 
 
 class MicroBudgetUpdateRequest(BaseModel):
+    """Payload for updating a micro-budget."""
+
     total_amount: float | None = Field(None, ge=0)
     currency: str | None = Field(None, pattern="^MAD$")
     status: str | None = Field(None, pattern="^(active|frozen|closed)$")
 
 
 class MicroBudgetResponse(BaseModel):
+    """Serialized micro-budget response."""
+
     id: str
     school_id: str
     academic_year_id: str
@@ -35,6 +41,8 @@ class MicroBudgetResponse(BaseModel):
 
 
 class BudgetAllocationCreateRequest(BaseModel):
+    """Payload for creating a budget allocation."""
+
     class_id: uuid.UUID | None = None
     teacher_id: uuid.UUID | None = None
     label: str = Field(..., min_length=1, max_length=200)
@@ -44,6 +52,8 @@ class BudgetAllocationCreateRequest(BaseModel):
 
 
 class BudgetAllocationUpdateRequest(BaseModel):
+    """Payload for updating a budget allocation."""
+
     class_id: uuid.UUID | None = None
     teacher_id: uuid.UUID | None = None
     label: str | None = Field(None, min_length=1, max_length=200)
@@ -53,6 +63,8 @@ class BudgetAllocationUpdateRequest(BaseModel):
 
 
 class BudgetAllocationResponse(BaseModel):
+    """Serialized budget allocation response."""
+
     id: str
     budget_id: str
     class_id: str | None = None
@@ -70,6 +82,8 @@ class BudgetAllocationResponse(BaseModel):
 
 
 class BudgetRequestCreateRequest(BaseModel):
+    """Payload for creating a budget request."""
+
     amount: float = Field(..., gt=0)
     currency: str = Field("MAD", pattern="^MAD$")
     description: str = Field(..., min_length=1, max_length=4000)
@@ -77,6 +91,8 @@ class BudgetRequestCreateRequest(BaseModel):
 
 
 class BudgetRequestUpdateRequest(BaseModel):
+    """Payload for updating a budget request."""
+
     amount: float | None = Field(None, gt=0)
     currency: str | None = Field(None, pattern="^MAD$")
     description: str | None = Field(None, min_length=1, max_length=4000)
@@ -85,10 +101,14 @@ class BudgetRequestUpdateRequest(BaseModel):
 
 
 class BudgetRequestReviewRequest(BaseModel):
+    """Payload for approving or rejecting a budget request."""
+
     review_comment: str | None = Field(None, max_length=4000)
 
 
 class BudgetRequestResponse(BaseModel):
+    """Serialized budget request response."""
+
     id: str
     allocation_id: str
     requester_id: str
@@ -105,6 +125,8 @@ class BudgetRequestResponse(BaseModel):
 
 
 class BudgetTransactionCreateRequest(BaseModel):
+    """Payload for recording a budget transaction."""
+
     request_id: uuid.UUID | None = None
     amount: float = Field(..., gt=0)
     transaction_type: str = Field(
@@ -116,11 +138,15 @@ class BudgetTransactionCreateRequest(BaseModel):
 
 
 class BudgetTransactionUpdateRequest(BaseModel):
+    """Payload for updating a budget transaction."""
+
     description: str | None = Field(None, min_length=1, max_length=300)
     receipt_url: str | None = Field(None, max_length=500)
 
 
 class BudgetTransactionResponse(BaseModel):
+    """Serialized budget transaction response."""
+
     id: str
     allocation_id: str
     request_id: str | None = None
@@ -135,6 +161,8 @@ class BudgetTransactionResponse(BaseModel):
 
 
 class BudgetAnalyticsResponse(BaseModel):
+    """Serialized budget analytics response."""
+
     school_id: str
     academic_year_id: str | None = None
     budget_count: int

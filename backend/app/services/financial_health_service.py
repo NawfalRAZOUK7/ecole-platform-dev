@@ -6,7 +6,7 @@ import csv
 import io
 import uuid
 from datetime import UTC, date, datetime, time
-from typing import Any
+from typing import Any, cast
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,6 +19,7 @@ from app.domain.events.financial_health import (
     FinancialSnapshotComputed,
     RetentionMetricComputed,
 )
+from app.models.erp import AcademicYear
 from app.models.financial_health import CashflowForecast, CostPerStudent, FinancialSnapshot, RetentionMetric
 from app.repositories.financial_health import FinancialHealthRepository
 from app.schemas.financial_health import (
@@ -40,7 +41,9 @@ def _iso(value: datetime | None) -> str | None:
 
 
 def _as_float(value: object | None) -> float:
-    return float(value or 0)
+    if value is None:
+        return 0.0
+    return float(cast(Any, value))
 
 
 def _percentage(numerator: float, denominator: float, *, empty: float = 0.0) -> float:
@@ -154,7 +157,7 @@ class FinancialHealthService:
         *,
         school_id: uuid.UUID,
         label: str,
-    ):
+    ) -> AcademicYear:
         academic_year = await self.repo.get_academic_year_by_label(
             school_id=school_id,
             label=label,
@@ -168,7 +171,7 @@ class FinancialHealthService:
         *,
         academic_year_id: uuid.UUID,
         auth: AuthContext,
-    ):
+    ) -> AcademicYear:
         academic_year = await self.repo.get_academic_year(
             academic_year_id,
             school_id=auth.school_id,

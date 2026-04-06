@@ -342,12 +342,13 @@ class MicroSchoolService(_MicroServiceBase):
         async with UnitOfWork(self.db) as uow:
             repo = MicroSchoolRepository(uow.session)
             audit = AuditService(uow.session)
-            school = await repo.get_micro_school(
+            current_school = await repo.get_micro_school(
                 micro_school_id,
                 school_id=auth.school_id,
             )
-            if school is None:
+            if current_school is None:
                 raise NotFoundError("Micro-school not found", error_code="ERR-MICRO-404")
+            school = current_school
             before = self._school_to_response(school)
             for field, value in body.model_dump(exclude_unset=True).items():
                 setattr(school, field, value)
@@ -380,12 +381,13 @@ class MicroSchoolService(_MicroServiceBase):
         async with UnitOfWork(self.db) as uow:
             repo = MicroSchoolRepository(uow.session)
             audit = AuditService(uow.session)
-            school = await repo.get_micro_school(
+            current_school = await repo.get_micro_school(
                 micro_school_id,
                 school_id=auth.school_id,
             )
-            if school is None:
+            if current_school is None:
                 raise NotFoundError("Micro-school not found", error_code="ERR-MICRO-404")
+            school = current_school
             before = self._school_to_response(school)
             await repo.delete_micro_school(school)
             await audit.log_event(

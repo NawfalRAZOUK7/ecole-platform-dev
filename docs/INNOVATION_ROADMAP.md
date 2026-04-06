@@ -1979,19 +1979,19 @@ After all 24 prompts complete:
 After all 24 prompts complete, run comprehensive verification:
 
 1. **Database Schema**
-   - [ ] All 26 tables exist: `SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public';`
+   - [ ] All 26 new feature tables exist among the public tables: `SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name IN ('micro_schools','micro_groups','micro_enrollments','micro_payments','micro_resources','micro_progress_logs','sync_devices','sync_queue','sync_conflicts','sync_checkpoints','skill_dimensions','skill_milestones','skill_progress','skill_passports','men_curricula','men_objectives','curriculum_mappings','compliance_reports','micro_budgets','budget_allocations','budget_requests','budget_transactions','retention_metrics','cashflow_forecasts','cost_per_student','financial_snapshots');`
    - [ ] All foreign keys valid: Check CASCADE constraints
    - [ ] All CHECK constraints in place: Amounts > 0, grades 0-20, etc.
    - [ ] All indexes present on FK columns
 
 2. **Code Quality**
    - [ ] No unused imports
-   - [ ] All type hints present (mypy --strict check)
-   - [ ] All docstrings present
+   - [ ] New feature files pass mypy: `mypy --strict --follow-imports=silent backend/app/models/micro_school.py backend/app/models/sync_queue.py backend/app/models/skill_passport.py backend/app/models/men_compliance.py backend/app/models/budget.py backend/app/models/financial_health.py backend/app/services/micro_school_service.py backend/app/services/sync_queue_service.py backend/app/services/skill_passport_service.py backend/app/services/compliance_service.py backend/app/services/budget_service.py backend/app/services/financial_health_service.py backend/app/repositories/micro_school.py backend/app/repositories/sync_queue.py backend/app/repositories/skill_passport.py backend/app/repositories/men_compliance.py backend/app/repositories/budget.py backend/app/repositories/financial_health.py backend/app/schemas/micro_school.py backend/app/schemas/sync_queue.py backend/app/schemas/skill_passport.py backend/app/schemas/men_compliance.py backend/app/schemas/budget.py backend/app/schemas/financial_health.py backend/app/api/v1/micro_school.py backend/app/api/v1/sync.py backend/app/api/v1/skills.py backend/app/api/v1/compliance.py backend/app/api/v1/budgets.py backend/app/api/v1/financial_health.py`
+   - [ ] All new feature modules, public classes, and feature route handlers have docstrings: `ruff check backend/app/models/micro_school.py backend/app/models/sync_queue.py backend/app/models/skill_passport.py backend/app/models/men_compliance.py backend/app/models/budget.py backend/app/models/financial_health.py backend/app/services/micro_school_service.py backend/app/services/sync_queue_service.py backend/app/services/skill_passport_service.py backend/app/services/compliance_service.py backend/app/services/budget_service.py backend/app/services/financial_health_service.py backend/app/repositories/micro_school.py backend/app/repositories/sync_queue.py backend/app/repositories/skill_passport.py backend/app/repositories/men_compliance.py backend/app/repositories/budget.py backend/app/repositories/financial_health.py backend/app/schemas/micro_school.py backend/app/schemas/sync_queue.py backend/app/schemas/skill_passport.py backend/app/schemas/men_compliance.py backend/app/schemas/budget.py backend/app/schemas/financial_health.py backend/app/api/v1/micro_school.py backend/app/api/v1/sync.py backend/app/api/v1/skills.py backend/app/api/v1/compliance.py backend/app/api/v1/budgets.py backend/app/api/v1/financial_health.py --select D100,D101,D103,D104`
    - [ ] All permission checks in place
 
 3. **API Contract**
-   - [ ] All 74 endpoints registered: Count routes in /docs
+   - [ ] All 74 new feature endpoints registered. Verify route prefixes in OpenAPI: `/api/v1/micro`, `/api/v1/budgets`, `/api/v1/sync`, `/api/v1/skills`, `/api/v1/compliance`, `/api/v1/financial-health`. Expected total: 14 + 14 + 10 + 12 + 12 + 12 = 74 endpoints across the six feature domains.
    - [ ] All endpoints have correct HTTP methods, status codes
    - [ ] All endpoints have correct permission checks
    - [ ] All request/response schemas documented
@@ -2003,14 +2003,14 @@ After all 24 prompts complete, run comprehensive verification:
    - [ ] All RBAC tests pass: `pytest backend/tests/security/ -v`
 
 5. **Git History**
-   - [ ] 24 commits total (one per prompt)
-   - [ ] Each commit message follows: "feat(domain): description"
+   - [ ] At least 24 commits present (one per prompt), plus any verification fix commits: `git log --oneline b76c192..HEAD | wc -l` >= 24
+   - [ ] Each commit message follows conventional commits: `type(scope): description` where `type` is `feat`, `test`, or `fix`. Verify all commits since `b76c192` match `^(feat|test|fix)\\(.+\\):`
    - [ ] No uncommitted changes: `git status` shows clean
 
 6. **Data Integrity**
    - [ ] All Moroccan sample data loads correctly
    - [ ] All timezone conversions work (Africa/Casablanca)
-   - [ ] All currency conversions to MAD work
+   - [ ] All monetary values use MAD (Moroccan Dirham): the `Money` value object defaults to MAD and rejects mixed-currency operations
 
 Output: Green checklist with 50+ items, all passing. Ready for QA.
 ```

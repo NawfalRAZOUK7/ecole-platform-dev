@@ -10370,6 +10370,7 @@
           "budget"
         ],
         "summary": "Create budget",
+        "description": "Create a micro-budget for the authenticated school.",
         "operationId": "create_budget_api_v1_budgets_post",
         "security": [
           {
@@ -10391,7 +10392,9 @@
             "description": "Created budget",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Create Budget Api V1 Budgets Post"
+                }
               }
             }
           },
@@ -10412,6 +10415,7 @@
           "budget"
         ],
         "summary": "List budgets",
+        "description": "List budgets for the authenticated school.",
         "operationId": "list_budgets_api_v1_budgets_get",
         "security": [
           {
@@ -10459,7 +10463,9 @@
             "description": "List of budgets",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response List Budgets Api V1 Budgets Get"
+                }
               }
             }
           },
@@ -10482,6 +10488,7 @@
           "budget"
         ],
         "summary": "Get budget analytics",
+        "description": "Return budget analytics for the authenticated school.",
         "operationId": "get_budget_analytics_api_v1_budgets_analytics_get",
         "security": [
           {
@@ -10512,7 +10519,9 @@
             "description": "Budget analytics summary",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Get Budget Analytics Api V1 Budgets Analytics Get"
+                }
               }
             }
           },
@@ -10535,6 +10544,7 @@
           "budget"
         ],
         "summary": "Get budget",
+        "description": "Fetch one budget.",
         "operationId": "get_budget_api_v1_budgets__budget_id__get",
         "security": [
           {
@@ -10558,7 +10568,9 @@
             "description": "Budget detail",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Get Budget Api V1 Budgets  Budget Id  Get"
+                }
               }
             }
           },
@@ -10581,6 +10593,7 @@
           "budget"
         ],
         "summary": "Create allocation",
+        "description": "Create an allocation inside a budget.",
         "operationId": "create_allocation_api_v1_budgets__budget_id__allocations_post",
         "security": [
           {
@@ -10614,7 +10627,9 @@
             "description": "Created allocation",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Create Allocation Api V1 Budgets  Budget Id  Allocations Post"
+                }
               }
             }
           },
@@ -10635,6 +10650,7 @@
           "budget"
         ],
         "summary": "List allocations for budget",
+        "description": "List allocations attached to a budget.",
         "operationId": "list_budget_allocations_api_v1_budgets__budget_id__allocations_get",
         "security": [
           {
@@ -10709,7 +10725,9 @@
             "description": "List of allocations",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response List Budget Allocations Api V1 Budgets  Budget Id  Allocations Get"
+                }
               }
             }
           },
@@ -10732,6 +10750,7 @@
           "budget"
         ],
         "summary": "Get allocation",
+        "description": "Fetch one budget allocation.",
         "operationId": "get_allocation_api_v1_budgets_allocations__allocation_id__get",
         "security": [
           {
@@ -10755,7 +10774,9 @@
             "description": "Allocation detail",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Get Allocation Api V1 Budgets Allocations  Allocation Id  Get"
+                }
               }
             }
           },
@@ -10778,6 +10799,7 @@
           "budget"
         ],
         "summary": "Create budget request",
+        "description": "Create a spending request for an allocation.",
         "operationId": "create_budget_request_api_v1_budgets_allocations__allocation_id__requests_post",
         "security": [
           {
@@ -10811,7 +10833,9 @@
             "description": "Created budget request",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Create Budget Request Api V1 Budgets Allocations  Allocation Id  Requests Post"
+                }
               }
             }
           },
@@ -10832,6 +10856,7 @@
           "budget"
         ],
         "summary": "List budget requests",
+        "description": "List budget requests for an allocation.",
         "operationId": "list_budget_requests_api_v1_budgets_allocations__allocation_id__requests_get",
         "security": [
           {
@@ -10889,7 +10914,9 @@
             "description": "List of budget requests",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response List Budget Requests Api V1 Budgets Allocations  Allocation Id  Requests Get"
+                }
               }
             }
           },
@@ -10912,6 +10939,7 @@
           "budget"
         ],
         "summary": "Approve budget request",
+        "description": "Approve a pending budget request.",
         "operationId": "approve_budget_request_api_v1_budgets_requests__request_id__approve_post",
         "security": [
           {
@@ -10945,7 +10973,9 @@
             "description": "Approved budget request",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Approve Budget Request Api V1 Budgets Requests  Request Id  Approve Post"
+                }
               }
             }
           },
@@ -10968,6 +10998,7 @@
           "budget"
         ],
         "summary": "Reject budget request",
+        "description": "Reject a pending budget request.",
         "operationId": "reject_budget_request_api_v1_budgets_requests__request_id__reject_post",
         "security": [
           {
@@ -11001,7 +11032,9 @@
             "description": "Rejected budget request",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Reject Budget Request Api V1 Budgets Requests  Request Id  Reject Post"
+                }
               }
             }
           },
@@ -11024,6 +11057,7 @@
           "budget"
         ],
         "summary": "Get budget request",
+        "description": "Fetch one budget request.",
         "operationId": "get_budget_request_api_v1_budgets_requests__request_id__get",
         "security": [
           {
@@ -11047,7 +11081,9 @@
             "description": "Budget request detail",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Get Budget Request Api V1 Budgets Requests  Request Id  Get"
+                }
               }
             }
           },
@@ -11070,6 +11106,7 @@
           "budget"
         ],
         "summary": "Record budget transaction",
+        "description": "Record a budget transaction against an allocation.",
         "operationId": "create_budget_transaction_api_v1_budgets_allocations__allocation_id__transactions_post",
         "security": [
           {
@@ -11103,7 +11140,9 @@
             "description": "Created budget transaction",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Create Budget Transaction Api V1 Budgets Allocations  Allocation Id  Transactions Post"
+                }
               }
             }
           },
@@ -11124,6 +11163,7 @@
           "budget"
         ],
         "summary": "List budget transactions",
+        "description": "List transactions recorded for an allocation.",
         "operationId": "list_budget_transactions_api_v1_budgets_allocations__allocation_id__transactions_get",
         "security": [
           {
@@ -11181,7 +11221,9 @@
             "description": "List of budget transactions",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response List Budget Transactions Api V1 Budgets Allocations  Allocation Id  Transactions Get"
+                }
               }
             }
           },
@@ -11204,6 +11246,7 @@
           "micro-school"
         ],
         "summary": "Create micro-school",
+        "description": "Create a micro-school managed by the authenticated school.",
         "operationId": "create_micro_school_api_v1_micro_schools_post",
         "security": [
           {
@@ -11225,7 +11268,9 @@
             "description": "Created micro-school",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Create Micro School Api V1 Micro Schools Post"
+                }
               }
             }
           },
@@ -11246,6 +11291,7 @@
           "micro-school"
         ],
         "summary": "List micro-schools",
+        "description": "List micro-schools visible within the authenticated school.",
         "operationId": "list_micro_schools_api_v1_micro_schools_get",
         "security": [
           {
@@ -11309,7 +11355,9 @@
             "description": "List of micro-schools",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response List Micro Schools Api V1 Micro Schools Get"
+                }
               }
             }
           },
@@ -11332,6 +11380,7 @@
           "micro-school"
         ],
         "summary": "Update micro-school",
+        "description": "Update a micro-school within the authenticated school.",
         "operationId": "update_micro_school_api_v1_micro_schools__micro_school_id__put",
         "security": [
           {
@@ -11365,7 +11414,9 @@
             "description": "Updated micro-school",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Update Micro School Api V1 Micro Schools  Micro School Id  Put"
+                }
               }
             }
           },
@@ -11388,6 +11439,7 @@
           "micro-school"
         ],
         "summary": "Create micro-group",
+        "description": "Create a micro-group inside a micro-school.",
         "operationId": "create_micro_group_api_v1_micro_groups_post",
         "requestBody": {
           "content": {
@@ -11404,7 +11456,9 @@
             "description": "Created micro-group",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Create Micro Group Api V1 Micro Groups Post"
+                }
               }
             }
           },
@@ -11432,6 +11486,7 @@
           "micro-school"
         ],
         "summary": "List micro-groups",
+        "description": "List micro-groups for a micro-school.",
         "operationId": "list_micro_groups_api_v1_micro_schools__micro_school_id__groups_get",
         "security": [
           {
@@ -11455,7 +11510,9 @@
             "description": "List of micro-groups",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response List Micro Groups Api V1 Micro Schools  Micro School Id  Groups Get"
+                }
               }
             }
           },
@@ -11478,6 +11535,7 @@
           "micro-school"
         ],
         "summary": "Create micro-enrollment",
+        "description": "Enroll a child into a micro-group.",
         "operationId": "create_micro_enrollment_api_v1_micro_enrollments_post",
         "security": [
           {
@@ -11499,7 +11557,9 @@
             "description": "Created micro-enrollment",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Create Micro Enrollment Api V1 Micro Enrollments Post"
+                }
               }
             }
           },
@@ -11520,6 +11580,7 @@
           "micro-school"
         ],
         "summary": "List micro-enrollments",
+        "description": "List micro-enrollments for the authenticated school.",
         "operationId": "list_micro_enrollments_api_v1_micro_enrollments_get",
         "security": [
           {
@@ -11584,7 +11645,9 @@
             "description": "List of micro-enrollments",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response List Micro Enrollments Api V1 Micro Enrollments Get"
+                }
               }
             }
           },
@@ -11607,6 +11670,7 @@
           "micro-school"
         ],
         "summary": "Create micro-payment",
+        "description": "Record a micro-school payment.",
         "operationId": "create_micro_payment_api_v1_micro_payments_post",
         "security": [
           {
@@ -11628,7 +11692,9 @@
             "description": "Created micro-payment",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Create Micro Payment Api V1 Micro Payments Post"
+                }
               }
             }
           },
@@ -11649,6 +11715,7 @@
           "micro-school"
         ],
         "summary": "List micro-payments",
+        "description": "List micro-school payments for the authenticated school.",
         "operationId": "list_micro_payments_api_v1_micro_payments_get",
         "security": [
           {
@@ -11730,7 +11797,9 @@
             "description": "List of micro-payments",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response List Micro Payments Api V1 Micro Payments Get"
+                }
               }
             }
           },
@@ -11753,6 +11822,7 @@
           "micro-school"
         ],
         "summary": "Get micro-payment analytics",
+        "description": "Return aggregate analytics for micro-school payments.",
         "operationId": "get_micro_payment_analytics_api_v1_micro_payments_analytics_get",
         "security": [
           {
@@ -11783,7 +11853,9 @@
             "description": "Micro-payment analytics",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Get Micro Payment Analytics Api V1 Micro Payments Analytics Get"
+                }
               }
             }
           },
@@ -11806,6 +11878,7 @@
           "micro-school"
         ],
         "summary": "Create micro-resource",
+        "description": "Create a micro-school learning resource.",
         "operationId": "create_micro_resource_api_v1_micro_resources_post",
         "security": [
           {
@@ -11827,7 +11900,9 @@
             "description": "Created micro-resource",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Create Micro Resource Api V1 Micro Resources Post"
+                }
               }
             }
           },
@@ -11848,6 +11923,7 @@
           "micro-school"
         ],
         "summary": "List micro-resources",
+        "description": "List micro-school resources with optional filters.",
         "operationId": "list_micro_resources_api_v1_micro_resources_get",
         "security": [
           {
@@ -11927,7 +12003,9 @@
             "description": "List of micro-resources",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response List Micro Resources Api V1 Micro Resources Get"
+                }
               }
             }
           },
@@ -11950,6 +12028,7 @@
           "micro-school"
         ],
         "summary": "Create micro progress log",
+        "description": "Create a progress log for a micro-enrollment.",
         "operationId": "create_micro_progress_log_api_v1_micro_progress_logs_post",
         "security": [
           {
@@ -11971,7 +12050,9 @@
             "description": "Created micro progress log",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Create Micro Progress Log Api V1 Micro Progress Logs Post"
+                }
               }
             }
           },
@@ -11992,6 +12073,7 @@
           "micro-school"
         ],
         "summary": "List micro progress logs",
+        "description": "List progress logs for micro-enrollments.",
         "operationId": "list_micro_progress_logs_api_v1_micro_progress_logs_get",
         "security": [
           {
@@ -12073,7 +12155,9 @@
             "description": "List of micro progress logs",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response List Micro Progress Logs Api V1 Micro Progress Logs Get"
+                }
               }
             }
           },
@@ -12096,6 +12180,7 @@
           "skills"
         ],
         "summary": "List skill dimensions",
+        "description": "List active and inactive life-skill dimensions.",
         "operationId": "list_skill_dimensions_api_v1_skills_dimensions_get",
         "security": [
           {
@@ -12125,7 +12210,9 @@
             "description": "List of skill dimensions",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response List Skill Dimensions Api V1 Skills Dimensions Get"
+                }
               }
             }
           },
@@ -12146,6 +12233,7 @@
           "skills"
         ],
         "summary": "Create skill dimension",
+        "description": "Create a life-skill dimension.",
         "operationId": "create_skill_dimension_api_v1_skills_dimensions_post",
         "security": [
           {
@@ -12167,7 +12255,9 @@
             "description": "Created skill dimension",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Create Skill Dimension Api V1 Skills Dimensions Post"
+                }
               }
             }
           },
@@ -12190,6 +12280,7 @@
           "skills"
         ],
         "summary": "List skill milestones",
+        "description": "List milestones defined for the skill framework.",
         "operationId": "list_skill_milestones_api_v1_skills_milestones_get",
         "security": [
           {
@@ -12236,7 +12327,9 @@
             "description": "List of skill milestones",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response List Skill Milestones Api V1 Skills Milestones Get"
+                }
               }
             }
           },
@@ -12257,6 +12350,7 @@
           "skills"
         ],
         "summary": "Create skill milestone",
+        "description": "Create a life-skill milestone.",
         "operationId": "create_skill_milestone_api_v1_skills_milestones_post",
         "security": [
           {
@@ -12278,7 +12372,9 @@
             "description": "Created skill milestone",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Create Skill Milestone Api V1 Skills Milestones Post"
+                }
               }
             }
           },
@@ -12301,6 +12397,7 @@
           "skills"
         ],
         "summary": "Get student skill progress",
+        "description": "Return skill progress records for one student.",
         "operationId": "get_student_skill_progress_api_v1_skills_progress_student__student_id__get",
         "security": [
           {
@@ -12334,7 +12431,9 @@
             "description": "Student skill progress detail",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Get Student Skill Progress Api V1 Skills Progress Student  Student Id  Get"
+                }
               }
             }
           },
@@ -12357,6 +12456,7 @@
           "skills"
         ],
         "summary": "Evaluate student life skills",
+        "description": "Evaluate a student's life-skill milestones.",
         "operationId": "evaluate_student_skills_api_v1_skills_evaluate__student_id__post",
         "security": [
           {
@@ -12390,7 +12490,9 @@
             "description": "Evaluation result",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Evaluate Student Skills Api V1 Skills Evaluate  Student Id  Post"
+                }
               }
             }
           },
@@ -12413,6 +12515,7 @@
           "skills"
         ],
         "summary": "Get student skill passport",
+        "description": "Fetch the generated skill passport for a student.",
         "operationId": "get_skill_passport_api_v1_skills_passport__student_id__get",
         "security": [
           {
@@ -12446,7 +12549,9 @@
             "description": "Skill passport detail",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Get Skill Passport Api V1 Skills Passport  Student Id  Get"
+                }
               }
             }
           },
@@ -12469,6 +12574,7 @@
           "skills"
         ],
         "summary": "Generate student skill passport",
+        "description": "Generate a skill passport for a student.",
         "operationId": "generate_skill_passport_api_v1_skills_passport__student_id__generate_post",
         "security": [
           {
@@ -12502,7 +12608,9 @@
             "description": "Generated skill passport",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Generate Skill Passport Api V1 Skills Passport  Student Id  Generate Post"
+                }
               }
             }
           },
@@ -12525,6 +12633,7 @@
           "skills"
         ],
         "summary": "Download student skill passport PDF",
+        "description": "Download the student's skill passport PDF.",
         "operationId": "download_skill_passport_api_v1_skills_passport__student_id__download_get",
         "security": [
           {
@@ -12558,7 +12667,9 @@
             "description": "PDF bytes",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Download Skill Passport Api V1 Skills Passport  Student Id  Download Get"
+                }
               }
             }
           },
@@ -12581,6 +12692,7 @@
           "skills"
         ],
         "summary": "Get class life-skills analytics",
+        "description": "Return class-level life-skill analytics.",
         "operationId": "get_skill_class_analytics_api_v1_skills_analytics_class__class_id__get",
         "security": [
           {
@@ -12614,7 +12726,9 @@
             "description": "Class analytics summary",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Get Skill Class Analytics Api V1 Skills Analytics Class  Class Id  Get"
+                }
               }
             }
           },
@@ -12637,6 +12751,7 @@
           "skills"
         ],
         "summary": "Get school life-skills analytics",
+        "description": "Return school-level life-skill analytics.",
         "operationId": "get_skill_school_analytics_api_v1_skills_analytics_school_get",
         "security": [
           {
@@ -12660,7 +12775,9 @@
             "description": "School analytics summary",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Get Skill School Analytics Api V1 Skills Analytics School Get"
+                }
               }
             }
           },
@@ -12683,6 +12800,7 @@
           "skills"
         ],
         "summary": "Get anonymized class skill leaderboard",
+        "description": "Return an anonymized skill leaderboard for a class.",
         "operationId": "get_skill_leaderboard_api_v1_skills_leaderboard__class_id__get",
         "security": [
           {
@@ -12728,7 +12846,9 @@
             "description": "Anonymized leaderboard",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Get Skill Leaderboard Api V1 Skills Leaderboard  Class Id  Get"
+                }
               }
             }
           },
@@ -12751,6 +12871,7 @@
           "compliance"
         ],
         "summary": "List MEN curricula",
+        "description": "List MEN curricula available to the school.",
         "operationId": "list_curricula_api_v1_compliance_curricula_get",
         "security": [
           {
@@ -12844,7 +12965,9 @@
             "description": "List of MEN curricula",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response List Curricula Api V1 Compliance Curricula Get"
+                }
               }
             }
           },
@@ -12865,6 +12988,7 @@
           "compliance"
         ],
         "summary": "Create MEN curriculum",
+        "description": "Create a MEN curriculum reference.",
         "operationId": "create_curriculum_api_v1_compliance_curricula_post",
         "security": [
           {
@@ -12886,7 +13010,9 @@
             "description": "Created MEN curriculum",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Create Curriculum Api V1 Compliance Curricula Post"
+                }
               }
             }
           },
@@ -12909,6 +13035,7 @@
           "compliance"
         ],
         "summary": "List MEN objectives for a curriculum",
+        "description": "List MEN objectives for a curriculum.",
         "operationId": "list_objectives_api_v1_compliance_curricula__curriculum_id__objectives_get",
         "security": [
           {
@@ -12950,7 +13077,9 @@
             "description": "List of MEN objectives",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response List Objectives Api V1 Compliance Curricula  Curriculum Id  Objectives Get"
+                }
               }
             }
           },
@@ -12971,6 +13100,7 @@
           "compliance"
         ],
         "summary": "Create MEN objective",
+        "description": "Create a MEN objective under a curriculum.",
         "operationId": "create_objective_api_v1_compliance_curricula__curriculum_id__objectives_post",
         "security": [
           {
@@ -13004,7 +13134,9 @@
             "description": "Created MEN objective",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Create Objective Api V1 Compliance Curricula  Curriculum Id  Objectives Post"
+                }
               }
             }
           },
@@ -13027,6 +13159,7 @@
           "compliance"
         ],
         "summary": "Create curriculum mapping",
+        "description": "Create a curriculum-to-course mapping.",
         "operationId": "create_mapping_api_v1_compliance_mappings_post",
         "security": [
           {
@@ -13048,7 +13181,9 @@
             "description": "Created mapping",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Create Mapping Api V1 Compliance Mappings Post"
+                }
               }
             }
           },
@@ -13069,6 +13204,7 @@
           "compliance"
         ],
         "summary": "List curriculum mappings",
+        "description": "List curriculum mappings for the school.",
         "operationId": "list_mappings_api_v1_compliance_mappings_get",
         "security": [
           {
@@ -13150,7 +13286,9 @@
             "description": "List of curriculum mappings",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response List Mappings Api V1 Compliance Mappings Get"
+                }
               }
             }
           },
@@ -13173,6 +13311,7 @@
           "compliance"
         ],
         "summary": "Delete curriculum mapping",
+        "description": "Delete a curriculum mapping.",
         "operationId": "delete_mapping_api_v1_compliance_mappings__mapping_id__delete",
         "security": [
           {
@@ -13214,6 +13353,7 @@
           "compliance"
         ],
         "summary": "Get MEN compliance dashboard",
+        "description": "Return the MEN compliance dashboard summary.",
         "operationId": "get_dashboard_api_v1_compliance_dashboard_get",
         "security": [
           {
@@ -13285,7 +13425,9 @@
             "description": "Compliance dashboard summary",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Get Dashboard Api V1 Compliance Dashboard Get"
+                }
               }
             }
           },
@@ -13308,6 +13450,7 @@
           "compliance"
         ],
         "summary": "Generate compliance report",
+        "description": "Generate a MEN compliance report.",
         "operationId": "generate_report_api_v1_compliance_reports_generate_post",
         "requestBody": {
           "content": {
@@ -13324,7 +13467,9 @@
             "description": "Generated compliance report",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Generate Report Api V1 Compliance Reports Generate Post"
+                }
               }
             }
           },
@@ -13352,6 +13497,7 @@
           "compliance"
         ],
         "summary": "List compliance reports",
+        "description": "List generated MEN compliance reports.",
         "operationId": "list_reports_api_v1_compliance_reports_get",
         "security": [
           {
@@ -13399,7 +13545,9 @@
             "description": "List of compliance reports",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response List Reports Api V1 Compliance Reports Get"
+                }
               }
             }
           },
@@ -13422,6 +13570,7 @@
           "compliance"
         ],
         "summary": "Get compliance report detail",
+        "description": "Fetch one MEN compliance report.",
         "operationId": "get_report_api_v1_compliance_reports__report_id__get",
         "security": [
           {
@@ -13445,7 +13594,9 @@
             "description": "Compliance report detail",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Get Report Api V1 Compliance Reports  Report Id  Get"
+                }
               }
             }
           },
@@ -13468,6 +13619,7 @@
           "compliance"
         ],
         "summary": "Download compliance report PDF",
+        "description": "Download a MEN compliance report PDF.",
         "operationId": "download_report_api_v1_compliance_reports__report_id__download_get",
         "security": [
           {
@@ -13491,7 +13643,9 @@
             "description": "PDF bytes",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Download Report Api V1 Compliance Reports  Report Id  Download Get"
+                }
               }
             }
           },
@@ -13514,6 +13668,7 @@
           "sync"
         ],
         "summary": "Register sync device",
+        "description": "Register a sync-capable device for the authenticated school.",
         "operationId": "register_device_api_v1_sync_devices_post",
         "security": [
           {
@@ -13535,7 +13690,9 @@
             "description": "Registered sync device",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Register Device Api V1 Sync Devices Post"
+                }
               }
             }
           },
@@ -13556,6 +13713,7 @@
           "sync"
         ],
         "summary": "List sync devices",
+        "description": "List registered sync devices for the authenticated school.",
         "operationId": "list_devices_api_v1_sync_devices_get",
         "security": [
           {
@@ -13602,7 +13760,9 @@
             "description": "List of sync devices",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response List Devices Api V1 Sync Devices Get"
+                }
               }
             }
           },
@@ -13625,6 +13785,7 @@
           "sync"
         ],
         "summary": "Push offline changes",
+        "description": "Accept queued offline changes from a device.",
         "operationId": "push_changes_api_v1_sync_push_post",
         "security": [
           {
@@ -13658,7 +13819,9 @@
             "description": "Accepted queue items for sync",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Push Changes Api V1 Sync Push Post"
+                }
               }
             }
           },
@@ -13681,6 +13844,7 @@
           "sync"
         ],
         "summary": "Pull synced changes",
+        "description": "Return synced server-side changes for a device.",
         "operationId": "pull_changes_api_v1_sync_pull_post",
         "security": [
           {
@@ -13732,7 +13896,9 @@
             "description": "Queued server changes since the checkpoint",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Pull Changes Api V1 Sync Pull Post"
+                }
               }
             }
           },
@@ -13755,6 +13921,7 @@
           "sync"
         ],
         "summary": "Get sync status",
+        "description": "Return queue status counts for a device.",
         "operationId": "get_sync_status_api_v1_sync_status_get",
         "security": [
           {
@@ -13778,7 +13945,9 @@
             "description": "Per-device queue status counts",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Get Sync Status Api V1 Sync Status Get"
+                }
               }
             }
           },
@@ -13801,6 +13970,7 @@
           "sync"
         ],
         "summary": "List sync conflicts",
+        "description": "List sync conflicts for the authenticated school.",
         "operationId": "list_conflicts_api_v1_sync_conflicts_get",
         "security": [
           {
@@ -13844,7 +14014,9 @@
             "description": "List of sync conflicts",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response List Conflicts Api V1 Sync Conflicts Get"
+                }
               }
             }
           },
@@ -13867,6 +14039,7 @@
           "sync"
         ],
         "summary": "Resolve sync conflict",
+        "description": "Resolve a queued sync conflict.",
         "operationId": "resolve_conflict_api_v1_sync_conflicts__conflict_id__resolve_post",
         "security": [
           {
@@ -13900,7 +14073,9 @@
             "description": "Resolved sync conflict",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Resolve Conflict Api V1 Sync Conflicts  Conflict Id  Resolve Post"
+                }
               }
             }
           },
@@ -13923,6 +14098,7 @@
           "sync"
         ],
         "summary": "List sync checkpoints",
+        "description": "List device sync checkpoints.",
         "operationId": "list_checkpoints_api_v1_sync_checkpoints_get",
         "security": [
           {
@@ -13965,7 +14141,9 @@
             "description": "List of sync checkpoints",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response List Checkpoints Api V1 Sync Checkpoints Get"
+                }
               }
             }
           },
@@ -13988,6 +14166,7 @@
           "sync"
         ],
         "summary": "Create sync checkpoint",
+        "description": "Create a checkpoint for incremental sync pulls.",
         "operationId": "create_checkpoint_api_v1_sync_checkpoint_post",
         "security": [
           {
@@ -14021,7 +14200,9 @@
             "description": "Created sync checkpoint",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Create Checkpoint Api V1 Sync Checkpoint Post"
+                }
               }
             }
           },
@@ -14044,6 +14225,7 @@
           "sync"
         ],
         "summary": "Get sync device health",
+        "description": "Return the current health summary for a sync device.",
         "operationId": "get_sync_health_api_v1_sync_health_get",
         "security": [
           {
@@ -14067,7 +14249,9 @@
             "description": "Current sync health for a device",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Get Sync Health Api V1 Sync Health Get"
+                }
               }
             }
           },
@@ -14090,6 +14274,7 @@
           "financial-health"
         ],
         "summary": "List retention metrics",
+        "description": "List stored retention metrics.",
         "operationId": "list_retention_metrics_api_v1_financial_health_retention_get",
         "security": [
           {
@@ -14126,7 +14311,9 @@
             "description": "List of retention metrics",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response List Retention Metrics Api V1 Financial Health Retention Get"
+                }
               }
             }
           },
@@ -14149,6 +14336,7 @@
           "financial-health"
         ],
         "summary": "Compute retention metric",
+        "description": "Compute a retention metric for two academic years.",
         "operationId": "compute_retention_api_v1_financial_health_retention_compute_post",
         "requestBody": {
           "content": {
@@ -14165,7 +14353,9 @@
             "description": "Computed retention metric",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Compute Retention Api V1 Financial Health Retention Compute Post"
+                }
               }
             }
           },
@@ -14193,6 +14383,7 @@
           "financial-health"
         ],
         "summary": "List cashflow forecasts",
+        "description": "List stored cashflow forecasts.",
         "operationId": "list_cashflow_forecasts_api_v1_financial_health_cashflow_get",
         "security": [
           {
@@ -14263,7 +14454,9 @@
             "description": "List of cashflow forecasts",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response List Cashflow Forecasts Api V1 Financial Health Cashflow Get"
+                }
               }
             }
           },
@@ -14286,6 +14479,7 @@
           "financial-health"
         ],
         "summary": "Compute cashflow forecast",
+        "description": "Compute forward-looking cashflow forecasts.",
         "operationId": "compute_cashflow_api_v1_financial_health_cashflow_compute_post",
         "requestBody": {
           "content": {
@@ -14302,7 +14496,9 @@
             "description": "Computed cashflow forecasts",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Compute Cashflow Api V1 Financial Health Cashflow Compute Post"
+                }
               }
             }
           },
@@ -14330,6 +14526,7 @@
           "financial-health"
         ],
         "summary": "Get cost-per-student analysis",
+        "description": "Fetch the stored cost-per-student analysis.",
         "operationId": "get_cost_per_student_api_v1_financial_health_cost_per_student_get",
         "security": [
           {
@@ -14353,7 +14550,9 @@
             "description": "Cost-per-student analysis",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Get Cost Per Student Api V1 Financial Health Cost Per Student Get"
+                }
               }
             }
           },
@@ -14376,6 +14575,7 @@
           "financial-health"
         ],
         "summary": "Compute cost-per-student analysis",
+        "description": "Compute cost-per-student analysis for an academic year.",
         "operationId": "compute_cost_per_student_api_v1_financial_health_cost_per_student_compute_post",
         "requestBody": {
           "content": {
@@ -14392,7 +14592,9 @@
             "description": "Computed cost-per-student analysis",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Compute Cost Per Student Api V1 Financial Health Cost Per Student Compute Post"
+                }
               }
             }
           },
@@ -14420,6 +14622,7 @@
           "financial-health"
         ],
         "summary": "Get financial snapshot",
+        "description": "Fetch a stored financial snapshot.",
         "operationId": "get_snapshot_api_v1_financial_health_snapshot_get",
         "security": [
           {
@@ -14450,7 +14653,9 @@
             "description": "Financial snapshot",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Get Snapshot Api V1 Financial Health Snapshot Get"
+                }
               }
             }
           },
@@ -14473,6 +14678,7 @@
           "financial-health"
         ],
         "summary": "Compute financial snapshot",
+        "description": "Compute a point-in-time financial snapshot.",
         "operationId": "compute_snapshot_api_v1_financial_health_snapshot_compute_post",
         "requestBody": {
           "content": {
@@ -14489,7 +14695,9 @@
             "description": "Computed financial snapshot",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Compute Snapshot Api V1 Financial Health Snapshot Compute Post"
+                }
               }
             }
           },
@@ -14517,13 +14725,16 @@
           "financial-health"
         ],
         "summary": "Get financial health dashboard",
+        "description": "Return the financial health dashboard summary.",
         "operationId": "get_dashboard_api_v1_financial_health_dashboard_get",
         "responses": {
           "200": {
             "description": "Financial dashboard summary",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Get Dashboard Api V1 Financial Health Dashboard Get"
+                }
               }
             }
           }
@@ -14541,6 +14752,7 @@
           "financial-health"
         ],
         "summary": "Get financial health trends",
+        "description": "Return financial health trend series.",
         "operationId": "get_trends_api_v1_financial_health_trends_get",
         "security": [
           {
@@ -14566,7 +14778,9 @@
             "description": "Financial trend series",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Get Trends Api V1 Financial Health Trends Get"
+                }
               }
             }
           },
@@ -14589,13 +14803,16 @@
           "financial-health"
         ],
         "summary": "Export financial health CSV",
+        "description": "Export the financial health dashboard as CSV.",
         "operationId": "export_financial_health_csv_api_v1_financial_health_export_csv_get",
         "responses": {
           "200": {
             "description": "CSV export",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Export Financial Health Csv Api V1 Financial Health Export Csv Get"
+                }
               }
             }
           }
@@ -14613,13 +14830,16 @@
           "financial-health"
         ],
         "summary": "Export financial health PDF",
+        "description": "Export the financial health dashboard as PDF.",
         "operationId": "export_financial_health_pdf_api_v1_financial_health_export_pdf_get",
         "responses": {
           "200": {
             "description": "PDF export",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "title": "Response Export Financial Health Pdf Api V1 Financial Health Export Pdf Get"
+                }
               }
             }
           }
@@ -19701,7 +19921,8 @@
           "label",
           "amount"
         ],
-        "title": "BudgetAllocationCreateRequest"
+        "title": "BudgetAllocationCreateRequest",
+        "description": "Payload for creating a budget allocation."
       },
       "BudgetRequestCreateRequest": {
         "properties": {
@@ -19740,7 +19961,8 @@
           "amount",
           "description"
         ],
-        "title": "BudgetRequestCreateRequest"
+        "title": "BudgetRequestCreateRequest",
+        "description": "Payload for creating a budget request."
       },
       "BudgetRequestReviewRequest": {
         "properties": {
@@ -19758,7 +19980,8 @@
           }
         },
         "type": "object",
-        "title": "BudgetRequestReviewRequest"
+        "title": "BudgetRequestReviewRequest",
+        "description": "Payload for approving or rejecting a budget request."
       },
       "BudgetTransactionCreateRequest": {
         "properties": {
@@ -19809,7 +20032,8 @@
           "transaction_type",
           "description"
         ],
-        "title": "BudgetTransactionCreateRequest"
+        "title": "BudgetTransactionCreateRequest",
+        "description": "Payload for recording a budget transaction."
       },
       "CashflowForecastComputeRequest": {
         "properties": {
@@ -19822,7 +20046,8 @@
           }
         },
         "type": "object",
-        "title": "CashflowForecastComputeRequest"
+        "title": "CashflowForecastComputeRequest",
+        "description": "Payload for computing cashflow forecasts."
       },
       "ChangePasswordRequest": {
         "properties": {
@@ -20028,7 +20253,8 @@
           "curriculum_id",
           "academic_year_id"
         ],
-        "title": "ComplianceReportGenerateRequest"
+        "title": "ComplianceReportGenerateRequest",
+        "description": "Payload for generating a compliance report."
       },
       "ConsentUpdateRequest": {
         "properties": {
@@ -20162,7 +20388,8 @@
         "required": [
           "academic_year_id"
         ],
-        "title": "CostPerStudentComputeRequest"
+        "title": "CostPerStudentComputeRequest",
+        "description": "Payload for computing cost-per-student analysis."
       },
       "CourseCreateRequest": {
         "properties": {
@@ -20302,7 +20529,8 @@
         "required": [
           "objective_id"
         ],
-        "title": "CurriculumMappingCreateRequest"
+        "title": "CurriculumMappingCreateRequest",
+        "description": "Payload for creating a curriculum mapping."
       },
       "DeviceRegistrationRequest": {
         "properties": {
@@ -21313,7 +21541,8 @@
           }
         },
         "type": "object",
-        "title": "FinancialSnapshotComputeRequest"
+        "title": "FinancialSnapshotComputeRequest",
+        "description": "Payload for computing a financial snapshot."
       },
       "GenerateQuizFromBankRequest": {
         "properties": {
@@ -21972,7 +22201,8 @@
           "subject",
           "academic_year"
         ],
-        "title": "MenCurriculumCreateRequest"
+        "title": "MenCurriculumCreateRequest",
+        "description": "Payload for creating a MEN curriculum."
       },
       "MenObjectiveCreateRequest": {
         "properties": {
@@ -22049,7 +22279,8 @@
           "unit_number",
           "display_order"
         ],
-        "title": "MenObjectiveCreateRequest"
+        "title": "MenObjectiveCreateRequest",
+        "description": "Payload for creating a MEN objective."
       },
       "MessageCreateRequest": {
         "properties": {
@@ -22109,7 +22340,8 @@
           "academic_year_id",
           "total_amount"
         ],
-        "title": "MicroBudgetCreateRequest"
+        "title": "MicroBudgetCreateRequest",
+        "description": "Payload for creating a micro-budget."
       },
       "MicroEnrollmentCreateRequest": {
         "properties": {
@@ -22160,7 +22392,8 @@
           "parent_id",
           "date_of_birth"
         ],
-        "title": "MicroEnrollmentCreateRequest"
+        "title": "MicroEnrollmentCreateRequest",
+        "description": "Payload for creating a micro-enrollment."
       },
       "MicroGroupCreateRequest": {
         "properties": {
@@ -22195,7 +22428,8 @@
           "age_range_min",
           "age_range_max"
         ],
-        "title": "MicroGroupCreateRequest"
+        "title": "MicroGroupCreateRequest",
+        "description": "Payload for creating a micro-group."
       },
       "MicroPaymentCreateRequest": {
         "properties": {
@@ -22270,7 +22504,8 @@
           "period_start",
           "period_end"
         ],
-        "title": "MicroPaymentCreateRequest"
+        "title": "MicroPaymentCreateRequest",
+        "description": "Payload for creating a micro-payment."
       },
       "MicroProgressLogCreateRequest": {
         "properties": {
@@ -22333,7 +22568,8 @@
           "date",
           "note"
         ],
-        "title": "MicroProgressLogCreateRequest"
+        "title": "MicroProgressLogCreateRequest",
+        "description": "Payload for creating a micro progress log."
       },
       "MicroResourceCreateRequest": {
         "properties": {
@@ -22396,7 +22632,8 @@
           "resource_type",
           "age_group"
         ],
-        "title": "MicroResourceCreateRequest"
+        "title": "MicroResourceCreateRequest",
+        "description": "Payload for creating a micro-resource."
       },
       "MicroSchoolCreateRequest": {
         "properties": {
@@ -22456,7 +22693,8 @@
           "city",
           "phone"
         ],
-        "title": "MicroSchoolCreateRequest"
+        "title": "MicroSchoolCreateRequest",
+        "description": "Payload for creating a micro-school."
       },
       "MicroSchoolUpdateRequest": {
         "properties": {
@@ -22538,7 +22776,8 @@
           }
         },
         "type": "object",
-        "title": "MicroSchoolUpdateRequest"
+        "title": "MicroSchoolUpdateRequest",
+        "description": "Payload for updating a micro-school."
       },
       "NotificationBatchRequest": {
         "properties": {
@@ -22784,7 +23023,8 @@
         "required": [
           "items"
         ],
-        "title": "PushPayload"
+        "title": "PushPayload",
+        "description": "Batch payload for pushed sync changes."
       },
       "QuestionBankCreateRequest": {
         "properties": {
@@ -22934,7 +23174,8 @@
           "entity_id",
           "operation"
         ],
-        "title": "QueueItemCreateRequest"
+        "title": "QueueItemCreateRequest",
+        "description": "Payload for enqueuing a sync item."
       },
       "QuizCreateRequest": {
         "properties": {
@@ -23322,7 +23563,8 @@
           "device_name",
           "device_type"
         ],
-        "title": "RegisterDeviceRequest"
+        "title": "RegisterDeviceRequest",
+        "description": "Payload for registering a sync device."
       },
       "RegisterRequest": {
         "properties": {
@@ -23651,7 +23893,8 @@
         "required": [
           "resolution"
         ],
-        "title": "ResolveConflictRequest"
+        "title": "ResolveConflictRequest",
+        "description": "Payload for resolving a sync conflict."
       },
       "ResourceRatingRequest": {
         "properties": {
@@ -23792,7 +24035,8 @@
           "academic_year_from",
           "academic_year_to"
         ],
-        "title": "RetentionComputeRequest"
+        "title": "RetentionComputeRequest",
+        "description": "Payload for computing a retention metric."
       },
       "ReviewDecisionRequest": {
         "properties": {
@@ -24472,7 +24716,8 @@
           "name_ar",
           "name_en"
         ],
-        "title": "SkillDimensionCreateRequest"
+        "title": "SkillDimensionCreateRequest",
+        "description": "Payload for creating a skill dimension."
       },
       "SkillMilestoneCreateRequest": {
         "properties": {
@@ -24536,7 +24781,8 @@
           "name_ar",
           "level"
         ],
-        "title": "SkillMilestoneCreateRequest"
+        "title": "SkillMilestoneCreateRequest",
+        "description": "Payload for creating a skill milestone."
       },
       "StudentWorkItem": {
         "properties": {
@@ -24665,7 +24911,8 @@
           "last_entity_type",
           "last_entity_id"
         ],
-        "title": "SyncCheckpointCreateRequest"
+        "title": "SyncCheckpointCreateRequest",
+        "description": "Payload for creating a sync checkpoint."
       },
       "TeacherAssignmentCreateRequest": {
         "properties": {

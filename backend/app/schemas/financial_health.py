@@ -9,11 +9,15 @@ from pydantic import BaseModel, Field
 
 
 class RetentionComputeRequest(BaseModel):
+    """Payload for computing a retention metric."""
+
     academic_year_from: str = Field(..., min_length=1, max_length=10)
     academic_year_to: str = Field(..., min_length=1, max_length=10)
 
 
 class RetentionMetricResponse(BaseModel):
+    """Serialized retention metric response."""
+
     id: str
     school_id: str
     academic_year_from: str
@@ -30,10 +34,14 @@ class RetentionMetricResponse(BaseModel):
 
 
 class CashflowForecastComputeRequest(BaseModel):
+    """Payload for computing cashflow forecasts."""
+
     months_ahead: int = Field(6, ge=1, le=24)
 
 
 class CashflowForecastResponse(BaseModel):
+    """Serialized cashflow forecast response."""
+
     id: str
     school_id: str
     forecast_month: date_type
@@ -49,10 +57,14 @@ class CashflowForecastResponse(BaseModel):
 
 
 class CostPerStudentComputeRequest(BaseModel):
+    """Payload for computing cost-per-student analysis."""
+
     academic_year_id: uuid.UUID
 
 
 class CostPerStudentResponse(BaseModel):
+    """Serialized cost-per-student response."""
+
     id: str
     school_id: str
     academic_year_id: str
@@ -68,10 +80,14 @@ class CostPerStudentResponse(BaseModel):
 
 
 class FinancialSnapshotComputeRequest(BaseModel):
+    """Payload for computing a financial snapshot."""
+
     snapshot_date: date_type | None = None
 
 
 class FinancialSnapshotResponse(BaseModel):
+    """Serialized financial snapshot response."""
+
     id: str
     school_id: str
     snapshot_date: date_type

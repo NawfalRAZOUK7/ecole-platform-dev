@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime
+from typing import Any, cast as type_cast
 
-from sqlalchemy import Date, case, cast, distinct, func, select
+from sqlalchemy import Date, case, cast as sa_cast, distinct, func, select
 
 from app.models.billing import Invoice, InvoiceStatus, PaymentAttempt, PaymentAttemptStatus
 from app.models.budget import BudgetAllocation, BudgetTransaction, BudgetTransactionType, MicroBudget
@@ -15,7 +16,9 @@ from app.repositories.base import BaseRepository
 
 
 def _as_float(value: object | None) -> float:
-    return float(value or 0)
+    if value is None:
+        return 0.0
+    return float(type_cast(Any, value))
 
 
 class FinancialHealthRepository(BaseRepository):
@@ -116,7 +119,7 @@ class FinancialHealthRepository(BaseRepository):
         )
         return list(result.scalars().all())
 
-    async def create_retention_metric(self, **kwargs) -> RetentionMetric:
+    async def create_retention_metric(self, **kwargs: Any) -> RetentionMetric:
         metric = RetentionMetric(**kwargs)
         self.db.add(metric)
         await self.db.flush()
@@ -160,7 +163,7 @@ class FinancialHealthRepository(BaseRepository):
         )
         return list(result.scalars().all())
 
-    async def create_cashflow_forecast(self, **kwargs) -> CashflowForecast:
+    async def create_cashflow_forecast(self, **kwargs: Any) -> CashflowForecast:
         forecast = CashflowForecast(**kwargs)
         self.db.add(forecast)
         await self.db.flush()
@@ -188,7 +191,7 @@ class FinancialHealthRepository(BaseRepository):
         )
         return result.scalar_one_or_none()
 
-    async def create_cost_per_student(self, **kwargs) -> CostPerStudent:
+    async def create_cost_per_student(self, **kwargs: Any) -> CostPerStudent:
         analysis = CostPerStudent(**kwargs)
         self.db.add(analysis)
         await self.db.flush()
@@ -229,7 +232,7 @@ class FinancialHealthRepository(BaseRepository):
         )
         return list(result.scalars().all())
 
-    async def create_financial_snapshot(self, **kwargs) -> FinancialSnapshot:
+    async def create_financial_snapshot(self, **kwargs: Any) -> FinancialSnapshot:
         snapshot = FinancialSnapshot(**kwargs)
         self.db.add(snapshot)
         await self.db.flush()
@@ -250,7 +253,7 @@ class FinancialHealthRepository(BaseRepository):
         start_date: date,
         end_date: date,
     ) -> dict[date, float]:
-        month_bucket = cast(func.date_trunc("month", Invoice.due_date), Date)
+        month_bucket = sa_cast(func.date_trunc("month", Invoice.due_date), Date)
         result = await self.db.execute(
             select(month_bucket, func.sum(Invoice.total_amount))
             .where(
@@ -271,7 +274,7 @@ class FinancialHealthRepository(BaseRepository):
         start_datetime: datetime,
         end_datetime: datetime,
     ) -> dict[date, float]:
-        month_bucket = cast(func.date_trunc("month", PaymentAttempt.finalized_at), Date)
+        month_bucket = sa_cast(func.date_trunc("month", PaymentAttempt.finalized_at), Date)
         result = await self.db.execute(
             select(month_bucket, func.sum(Invoice.total_amount))
             .join(Invoice, Invoice.id == PaymentAttempt.invoice_id)
@@ -294,7 +297,7 @@ class FinancialHealthRepository(BaseRepository):
         start_datetime: datetime,
         end_datetime: datetime,
     ) -> dict[date, float]:
-        month_bucket = cast(func.date_trunc("month", BudgetTransaction.recorded_at), Date)
+        month_bucket = sa_cast(func.date_trunc("month", BudgetTransaction.recorded_at), Date)
         signed_amount = case(
             (
                 BudgetTransaction.transaction_type == BudgetTransactionType.EXPENSE.value,
@@ -460,7 +463,7 @@ class FinancialHealthRepository(BaseRepository):
                 Invoice.school_id == school_id,
                 PaymentAttempt.status == PaymentAttemptStatus.PAID.value,
                 PaymentAttempt.finalized_at.is_not(None),
-                cast(PaymentAttempt.finalized_at, Date) <= snapshot_date,
+                sa_cast(PaymentAttempt.finalized_at, Date) <= snapshot_date,
             )
         )
         return _as_float(result.scalar())
@@ -490,7 +493,7 @@ class FinancialHealthRepository(BaseRepository):
         delay_days = (
             func.extract(
                 "epoch",
-                PaymentAttempt.finalized_at - cast(Invoice.due_date, Date),
+                PaymentAttempt.finalized_at - sa_cast(Invoice.due_date, Date),
             )
             / 86400.0
         )
@@ -501,7 +504,7 @@ class FinancialHealthRepository(BaseRepository):
                 PaymentAttempt.school_id == school_id,
                 PaymentAttempt.status == PaymentAttemptStatus.PAID.value,
                 PaymentAttempt.finalized_at.is_not(None),
-                cast(PaymentAttempt.finalized_at, Date) <= snapshot_date,
+                sa_cast(PaymentAttempt.finalized_at, Date) <= snapshot_date,
             )
         )
         value = result.scalar_one_or_none()

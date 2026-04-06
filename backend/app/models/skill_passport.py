@@ -5,6 +5,7 @@ from __future__ import annotations
 import enum
 import uuid
 from datetime import UTC, datetime
+from typing import Any
 
 from sqlalchemy import (
     Boolean,
@@ -33,6 +34,8 @@ def _enum_values(enum_cls: type[enum.Enum]) -> list[str]:
 
 
 class SkillProgressStatus(str, enum.Enum):
+    """Progress states for a skill milestone record."""
+
     LOCKED = "locked"
     IN_PROGRESS = "in_progress"
     UNLOCKED = "unlocked"
@@ -91,7 +94,7 @@ class SkillMilestone(TimestampMixin, Base):
     name_fr: Mapped[str] = mapped_column(String(200), nullable=False)
     name_ar: Mapped[str] = mapped_column(String(200), nullable=False)
     level: Mapped[int] = mapped_column(Integer, nullable=False)
-    rule_config: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    rule_config: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
     badge_icon: Mapped[str | None] = mapped_column(String(50), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
@@ -158,7 +161,7 @@ class SkillProgress(TimestampMixin, SchoolScopedMixin, Base):
         nullable=False,
         default=SkillProgressStatus.LOCKED.value,
     )
-    evidence: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    evidence: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     academic_year_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("academic_years.id", ondelete="CASCADE"),
         nullable=False,

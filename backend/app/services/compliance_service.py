@@ -515,15 +515,17 @@ class ComplianceService:
                 display_order=body.display_order,
             )
             created = await repo.create_objective(objective)
-            created = await repo.get_objective(created.id, include_curriculum=True)
-            response = self._objective_to_response(created)
+            hydrated_objective = await repo.get_objective(created.id, include_curriculum=True)
+            if hydrated_objective is None:
+                raise NotFoundError("MEN objective not found", error_code="ERR-COMPLY-404")
+            response = self._objective_to_response(hydrated_objective)
             await audit.log_event(
                 school_id=auth.school_id,
                 actor_id=auth.user_id,
                 action_type="compliance.objective.create",
                 outcome="success",
                 target_type="men_objective",
-                target_id=created.id,
+                target_id=hydrated_objective.id,
                 entity_after=response,
                 ip_address=ip_address,
             )
@@ -531,9 +533,9 @@ class ComplianceService:
                 MenObjectiveCreated(
                     school_id=auth.school_id,
                     actor_id=auth.user_id,
-                    objective_id=created.id,
-                    curriculum_id=created.curriculum_id,
-                    code=created.code,
+                    objective_id=hydrated_objective.id,
+                    curriculum_id=hydrated_objective.curriculum_id,
+                    code=hydrated_objective.code,
                 )
             )
             await uow.commit()
@@ -586,19 +588,21 @@ class ComplianceService:
                 notes=body.notes,
             )
             created = await repo.create_mapping(mapping)
-            created = await repo.get_mapping(
+            hydrated_mapping = await repo.get_mapping(
                 created.id,
                 school_id=auth.school_id,
                 include_objective=True,
             )
-            response = self._mapping_to_response(created)
+            if hydrated_mapping is None:
+                raise NotFoundError("Curriculum mapping not found", error_code="ERR-COMPLY-404")
+            response = self._mapping_to_response(hydrated_mapping)
             await audit.log_event(
                 school_id=auth.school_id,
                 actor_id=auth.user_id,
                 action_type="compliance.mapping.create",
                 outcome="success",
                 target_type="curriculum_mapping",
-                target_id=created.id,
+                target_id=hydrated_mapping.id,
                 entity_after=response,
                 ip_address=ip_address,
             )
@@ -606,10 +610,10 @@ class ComplianceService:
                 CurriculumMapped(
                     school_id=auth.school_id,
                     actor_id=auth.user_id,
-                    mapping_id=created.id,
-                    objective_id=created.objective_id,
-                    course_id=created.course_id,
-                    coverage_percent=created.coverage_percent,
+                    mapping_id=hydrated_mapping.id,
+                    objective_id=hydrated_mapping.objective_id,
+                    course_id=hydrated_mapping.course_id,
+                    coverage_percent=hydrated_mapping.coverage_percent,
                 )
             )
             await uow.commit()
@@ -766,19 +770,21 @@ class ComplianceService:
             created = await repo.create_report(report)
             created.pdf_url = self._report_url(created.id)
             created = await repo.save_report(created)
-            created = await repo.get_report(
+            hydrated_report = await repo.get_report(
                 created.id,
                 school_id=auth.school_id,
                 include_curriculum=True,
             )
-            response = self._report_to_response(created)
+            if hydrated_report is None:
+                raise NotFoundError("Compliance report not found", error_code="ERR-COMPLY-404")
+            response = self._report_to_response(hydrated_report)
             await audit.log_event(
                 school_id=auth.school_id,
                 actor_id=auth.user_id,
                 action_type="compliance.report.generate",
                 outcome="success",
                 target_type="compliance_report",
-                target_id=created.id,
+                target_id=hydrated_report.id,
                 entity_after=response,
                 ip_address=ip_address,
             )
@@ -786,9 +792,9 @@ class ComplianceService:
                 ComplianceReportGenerated(
                     school_id=auth.school_id,
                     actor_id=auth.user_id,
-                    report_id=created.id,
-                    curriculum_id=created.curriculum_id,
-                    compliance_percent=float(created.compliance_percent),
+                    report_id=hydrated_report.id,
+                    curriculum_id=hydrated_report.curriculum_id,
+                    compliance_percent=float(hydrated_report.compliance_percent),
                 )
             )
             await uow.commit()

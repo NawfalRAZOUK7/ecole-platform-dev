@@ -9,6 +9,8 @@ from pydantic import BaseModel, Field
 
 
 class SkillDimensionCreateRequest(BaseModel):
+    """Payload for creating a skill dimension."""
+
     code: str = Field(..., min_length=1, max_length=50)
     name_fr: str = Field(..., min_length=1, max_length=200)
     name_ar: str = Field(..., min_length=1, max_length=200)
@@ -20,6 +22,8 @@ class SkillDimensionCreateRequest(BaseModel):
 
 
 class SkillDimensionUpdateRequest(BaseModel):
+    """Payload for updating a skill dimension."""
+
     code: str | None = Field(None, min_length=1, max_length=50)
     name_fr: str | None = Field(None, min_length=1, max_length=200)
     name_ar: str | None = Field(None, min_length=1, max_length=200)
@@ -31,6 +35,8 @@ class SkillDimensionUpdateRequest(BaseModel):
 
 
 class SkillDimensionResponse(BaseModel):
+    """Serialized skill dimension response."""
+
     id: str
     code: str
     name_fr: str
@@ -45,6 +51,8 @@ class SkillDimensionResponse(BaseModel):
 
 
 class SkillMilestoneCreateRequest(BaseModel):
+    """Payload for creating a skill milestone."""
+
     dimension_id: uuid.UUID
     code: str = Field(..., min_length=1, max_length=100)
     name_fr: str = Field(..., min_length=1, max_length=200)
@@ -56,6 +64,8 @@ class SkillMilestoneCreateRequest(BaseModel):
 
 
 class SkillMilestoneUpdateRequest(BaseModel):
+    """Payload for updating a skill milestone."""
+
     code: str | None = Field(None, min_length=1, max_length=100)
     name_fr: str | None = Field(None, min_length=1, max_length=200)
     name_ar: str | None = Field(None, min_length=1, max_length=200)
@@ -66,6 +76,8 @@ class SkillMilestoneUpdateRequest(BaseModel):
 
 
 class SkillMilestoneResponse(BaseModel):
+    """Serialized skill milestone response."""
+
     id: str
     dimension_id: str
     dimension_code: str | None = None
@@ -81,6 +93,8 @@ class SkillMilestoneResponse(BaseModel):
 
 
 class SkillProgressResponse(BaseModel):
+    """Serialized skill progress response."""
+
     id: str
     student_id: str
     school_id: str
@@ -98,6 +112,8 @@ class SkillProgressResponse(BaseModel):
 
 
 class SkillPassportResponse(BaseModel):
+    """Serialized skill passport response."""
+
     id: str
     student_id: str
     school_id: str
@@ -113,6 +129,8 @@ class SkillPassportResponse(BaseModel):
 
 
 class SkillEvaluationResponse(BaseModel):
+    """Serialized student skill evaluation response."""
+
     student_id: str
     school_id: str
     academic_year_id: str
@@ -125,6 +143,8 @@ class SkillEvaluationResponse(BaseModel):
 
 
 class SkillDimensionAnalyticsResponse(BaseModel):
+    """Aggregated analytics for one skill dimension."""
+
     dimension_id: str
     code: str
     name_fr: str
@@ -134,6 +154,8 @@ class SkillDimensionAnalyticsResponse(BaseModel):
 
 
 class SkillClassAnalyticsResponse(BaseModel):
+    """Serialized class-level life-skills analytics."""
+
     class_id: str
     school_id: str
     academic_year_id: str
@@ -147,6 +169,8 @@ class SkillClassAnalyticsResponse(BaseModel):
 
 
 class SkillSchoolAnalyticsResponse(BaseModel):
+    """Serialized school-level life-skills analytics."""
+
     school_id: str
     academic_year_id: str
     student_count: int
@@ -159,6 +183,8 @@ class SkillSchoolAnalyticsResponse(BaseModel):
 
 
 class SkillLeaderboardEntryResponse(BaseModel):
+    """Serialized leaderboard entry for anonymized ranking."""
+
     rank: int
     student_id: str
     alias: str

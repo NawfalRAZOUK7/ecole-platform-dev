@@ -74,7 +74,7 @@ class SyncService:
             updated_at=_iso(device.updated_at),
         ).model_dump()
 
-    def _queue_item_to_response(self, queue_item: SyncQueue) -> dict[str, Any]:
+    def _queue_item_to_response(self, queue_item: SyncQueue) -> QueueItemResponse:
         return QueueItemResponse(
             id=str(queue_item.id),
             school_id=str(queue_item.school_id),
@@ -88,7 +88,7 @@ class SyncService:
             synced_at=_iso(queue_item.synced_at),
             created_at=_iso(queue_item.created_at) or "",
             updated_at=_iso(queue_item.updated_at),
-        ).model_dump()
+        )
 
     def _conflict_to_response(self, conflict: SyncConflict) -> dict[str, Any]:
         return SyncConflictResponse(
@@ -243,7 +243,7 @@ class SyncService:
             device.last_seen_at = now
             await repo.save_device(device)
 
-            queue_items: list[dict[str, Any]] = []
+            queue_items: list[QueueItemResponse] = []
             conflict_ids: list[str] = []
 
             for incoming in payload.items:
@@ -515,7 +515,7 @@ class SyncService:
             )
             queue_item.synced_at = now if not has_pending_conflict else None
             await repo.save_queue_item(queue_item)
-            response = self._queue_item_to_response(queue_item)
+            response = self._queue_item_to_response(queue_item).model_dump(mode="json")
 
             await audit.log_event(
                 school_id=auth.school_id,

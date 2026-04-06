@@ -5,6 +5,7 @@ from __future__ import annotations
 import enum
 import uuid
 from datetime import UTC, datetime
+from typing import Any
 
 from sqlalchemy import (
     Boolean,
@@ -31,18 +32,24 @@ def _enum_values(enum_cls: type[enum.Enum]) -> list[str]:
 
 
 class SyncDeviceType(str, enum.Enum):
+    """Device categories supported by the sync engine."""
+
     LOCAL_SERVER = "local_server"
     MOBILE = "mobile"
     BROWSER = "browser"
 
 
 class SyncQueueOperation(str, enum.Enum):
+    """CRUD operations represented in the sync queue."""
+
     CREATE = "create"
     UPDATE = "update"
     DELETE = "delete"
 
 
 class SyncQueueStatus(str, enum.Enum):
+    """Processing states for queued sync items."""
+
     PENDING = "pending"
     SYNCED = "synced"
     CONFLICT = "conflict"
@@ -50,6 +57,8 @@ class SyncQueueStatus(str, enum.Enum):
 
 
 class SyncConflictResolution(str, enum.Enum):
+    """Resolution outcomes available for sync conflicts."""
+
     PENDING = "pending"
     CLIENT_WINS = "client_wins"
     SERVER_WINS = "server_wins"
@@ -138,7 +147,7 @@ class SyncQueue(TimestampMixin, SchoolScopedMixin, Base):
         nullable=False,
         default=SyncQueueOperation.CREATE.value,
     )
-    payload: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
     synced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     status: Mapped[str] = mapped_column(
         PgEnum(
@@ -195,8 +204,8 @@ class SyncConflict(TimestampMixin, SchoolScopedMixin, Base):
     )
     entity_type: Mapped[str] = mapped_column(String(100), nullable=False)
     entity_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
-    client_payload: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
-    server_payload: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    client_payload: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
+    server_payload: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
     resolution: Mapped[str] = mapped_column(
         PgEnum(
             SyncConflictResolution,

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from typing import Any
 
 from fastapi import APIRouter, Depends, Query, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -44,7 +45,8 @@ async def list_curricula(
     is_active: bool | None = Query(None),
     auth: AuthContext = Depends(requires_permission(PERM_COMPLY_CURRICULUM_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """List MEN curricula available to the school."""
     service = ComplianceService(db)
     return list_response(
         await service.list_curricula(
@@ -68,7 +70,8 @@ async def create_curriculum(
     request: Request,
     auth: AuthContext = Depends(requires_permission(PERM_COMPLY_CURRICULUM_MANAGE)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Create a MEN curriculum reference."""
     service = ComplianceService(db)
     return success_response(
         await service.create_curriculum(
@@ -89,7 +92,8 @@ async def list_objectives(
     trimester: int | None = Query(None, ge=1, le=3),
     auth: AuthContext = Depends(requires_permission(PERM_COMPLY_OBJECTIVE_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """List MEN objectives for a curriculum."""
     service = ComplianceService(db)
     return list_response(
         await service.list_objectives(
@@ -111,7 +115,8 @@ async def create_objective(
     request: Request,
     auth: AuthContext = Depends(requires_permission(PERM_COMPLY_CURRICULUM_MANAGE)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Create a MEN objective under a curriculum."""
     service = ComplianceService(db)
     return success_response(
         await service.create_objective(
@@ -134,7 +139,8 @@ async def create_mapping(
     request: Request,
     auth: AuthContext = Depends(requires_permission(PERM_COMPLY_MAPPING_CREATE)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Create a curriculum-to-course mapping."""
     service = ComplianceService(db)
     return success_response(
         await service.create_mapping(
@@ -157,7 +163,8 @@ async def list_mappings(
     content_item_id: uuid.UUID | None = Query(None),
     auth: AuthContext = Depends(requires_permission(PERM_COMPLY_MAPPING_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """List curriculum mappings for the school."""
     service = ComplianceService(db)
     return list_response(
         await service.list_mappings(
@@ -173,6 +180,7 @@ async def list_mappings(
 @router.delete(
     "/mappings/{mapping_id}",
     status_code=204,
+    response_class=Response,
     summary="Delete curriculum mapping",
     response_description="Mapping deleted",
 )
@@ -181,7 +189,8 @@ async def delete_mapping(
     request: Request,
     auth: AuthContext = Depends(requires_permission(PERM_COMPLY_MAPPING_CREATE)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Response:
+    """Delete a curriculum mapping."""
     service = ComplianceService(db)
     await service.delete_mapping(
         mapping_id=mapping_id,
@@ -203,7 +212,8 @@ async def get_dashboard(
     subject: str | None = Query(None),
     auth: AuthContext = Depends(requires_permission(PERM_COMPLY_REPORT_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Return the MEN compliance dashboard summary."""
     service = ComplianceService(db)
     return success_response(
         await service.get_dashboard(
@@ -227,7 +237,8 @@ async def generate_report(
     request: Request,
     auth: AuthContext = Depends(requires_permission(PERM_COMPLY_REPORT_GENERATE)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Generate a MEN compliance report."""
     service = ComplianceService(db)
     return success_response(
         await service.generate_report(
@@ -248,7 +259,8 @@ async def list_reports(
     academic_year_id: uuid.UUID | None = Query(None),
     auth: AuthContext = Depends(requires_permission(PERM_COMPLY_REPORT_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """List generated MEN compliance reports."""
     service = ComplianceService(db)
     return list_response(
         await service.list_reports(
@@ -268,7 +280,8 @@ async def get_report(
     report_id: uuid.UUID,
     auth: AuthContext = Depends(requires_permission(PERM_COMPLY_REPORT_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Fetch one MEN compliance report."""
     service = ComplianceService(db)
     return success_response(await service.get_report(report_id=report_id, auth=auth))
 
@@ -282,7 +295,8 @@ async def download_report(
     report_id: uuid.UUID,
     auth: AuthContext = Depends(requires_permission(PERM_COMPLY_REPORT_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Download a MEN compliance report PDF."""
     service = ComplianceService(db)
     pdf_bytes = await service.download_pdf(report_id=report_id, auth=auth)
     return Response(

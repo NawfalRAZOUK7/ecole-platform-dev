@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import date
+from typing import Any
 
 from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -57,7 +58,8 @@ async def create_micro_school(
     request: Request,
     auth: AuthContext = Depends(requires_permission(PERM_MICRO_SCHOOL_CREATE)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Create a micro-school managed by the authenticated school."""
     service = MicroSchoolService(db)
     return success_response(
         await service.create_micro_school(
@@ -79,7 +81,8 @@ async def list_micro_schools(
     status: str | None = Query(None, pattern="^(active|suspended|closed)$"),
     auth: AuthContext = Depends(requires_permission(PERM_MICRO_SCHOOL_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """List micro-schools visible within the authenticated school."""
     service = MicroSchoolService(db)
     items = await service.list_micro_schools(
         auth=auth,
@@ -101,7 +104,8 @@ async def update_micro_school(
     request: Request,
     auth: AuthContext = Depends(requires_permission(PERM_MICRO_SCHOOL_MANAGE)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Update a micro-school within the authenticated school."""
     service = MicroSchoolService(db)
     return success_response(
         await service.update_micro_school(
@@ -124,7 +128,8 @@ async def create_micro_group(
     request: Request,
     auth: AuthContext = Depends(requires_permission(PERM_MICRO_GROUP_CREATE)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Create a micro-group inside a micro-school."""
     service = MicroGroupService(db)
     return success_response(
         await service.create_group(
@@ -144,7 +149,8 @@ async def list_micro_groups(
     micro_school_id: uuid.UUID,
     auth: AuthContext = Depends(requires_permission(PERM_MICRO_GROUP_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """List micro-groups for a micro-school."""
     service = MicroGroupService(db)
     return list_response(
         await service.list_groups(
@@ -165,7 +171,8 @@ async def create_micro_enrollment(
     request: Request,
     auth: AuthContext = Depends(requires_permission(PERM_MICRO_ENROLLMENT_CREATE)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Enroll a child into a micro-group."""
     service = MicroGroupService(db)
     return success_response(
         await service.create_enrollment(
@@ -187,7 +194,8 @@ async def list_micro_enrollments(
     status: str | None = Query(None, pattern="^(active|withdrawn)$"),
     auth: AuthContext = Depends(requires_permission(PERM_MICRO_ENROLLMENT_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """List micro-enrollments for the authenticated school."""
     service = MicroGroupService(db)
     return list_response(
         await service.list_enrollments(
@@ -210,7 +218,8 @@ async def create_micro_payment(
     request: Request,
     auth: AuthContext = Depends(requires_permission(PERM_MICRO_PAYMENT_CREATE)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Record a micro-school payment."""
     service = MicroPaymentService(db)
     return success_response(
         await service.create_payment(
@@ -233,7 +242,8 @@ async def list_micro_payments(
     status: str | None = Query(None, pattern="^(pending|paid|overdue)$"),
     auth: AuthContext = Depends(requires_permission(PERM_MICRO_PAYMENT_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """List micro-school payments for the authenticated school."""
     service = MicroPaymentService(db)
     return list_response(
         await service.list_payments(
@@ -255,7 +265,8 @@ async def get_micro_payment_analytics(
     micro_school_id: uuid.UUID | None = Query(None),
     auth: AuthContext = Depends(requires_permission(PERM_MICRO_PAYMENT_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Return aggregate analytics for micro-school payments."""
     service = MicroPaymentService(db)
     return success_response(
         await service.get_payment_analytics(
@@ -276,7 +287,8 @@ async def create_micro_resource(
     request: Request,
     auth: AuthContext = Depends(requires_permission(PERM_MICRO_RESOURCE_MANAGE)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Create a micro-school learning resource."""
     service = MicroSchoolService(db)
     return success_response(
         await service.create_resource(
@@ -302,7 +314,8 @@ async def list_micro_resources(
     is_premium: bool | None = Query(None),
     auth: AuthContext = Depends(requires_permission(PERM_MICRO_RESOURCE_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """List micro-school resources with optional filters."""
     service = MicroSchoolService(db)
     return list_response(
         await service.list_resources(
@@ -326,7 +339,8 @@ async def create_micro_progress_log(
     request: Request,
     auth: AuthContext = Depends(requires_permission(PERM_MICRO_PROGRESS_CREATE)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Create a progress log for a micro-enrollment."""
     service = MicroProgressService(db)
     return success_response(
         await service.create_progress_log(
@@ -349,7 +363,8 @@ async def list_micro_progress_logs(
     date_to: date | None = Query(None),
     auth: AuthContext = Depends(requires_permission(PERM_MICRO_PROGRESS_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """List progress logs for micro-enrollments."""
     service = MicroProgressService(db)
     return list_response(
         await service.list_progress_logs(

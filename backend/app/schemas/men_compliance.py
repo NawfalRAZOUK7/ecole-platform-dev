@@ -8,6 +8,8 @@ from pydantic import BaseModel, Field
 
 
 class MenCurriculumCreateRequest(BaseModel):
+    """Payload for creating a MEN curriculum."""
+
     level: str = Field(..., min_length=1, max_length=50)
     grade: str = Field(..., min_length=1, max_length=20)
     subject: str = Field(..., min_length=1, max_length=100)
@@ -17,6 +19,8 @@ class MenCurriculumCreateRequest(BaseModel):
 
 
 class MenCurriculumResponse(BaseModel):
+    """Serialized MEN curriculum response."""
+
     id: str
     level: str
     grade: str
@@ -29,6 +33,8 @@ class MenCurriculumResponse(BaseModel):
 
 
 class MenObjectiveCreateRequest(BaseModel):
+    """Payload for creating a MEN objective."""
+
     code: str = Field(..., min_length=1, max_length=50)
     title_fr: str = Field(..., min_length=1, max_length=500)
     title_ar: str = Field(..., min_length=1, max_length=500)
@@ -41,6 +47,8 @@ class MenObjectiveCreateRequest(BaseModel):
 
 
 class MenObjectiveResponse(BaseModel):
+    """Serialized MEN objective response."""
+
     id: str
     curriculum_id: str
     curriculum_subject: str | None = None
@@ -58,6 +66,8 @@ class MenObjectiveResponse(BaseModel):
 
 
 class CurriculumMappingCreateRequest(BaseModel):
+    """Payload for creating a curriculum mapping."""
+
     objective_id: uuid.UUID
     course_id: uuid.UUID | None = None
     content_item_id: uuid.UUID | None = None
@@ -66,6 +76,8 @@ class CurriculumMappingCreateRequest(BaseModel):
 
 
 class CurriculumMappingResponse(BaseModel):
+    """Serialized curriculum mapping response."""
+
     id: str
     school_id: str
     objective_id: str
@@ -82,6 +94,8 @@ class CurriculumMappingResponse(BaseModel):
 
 
 class ComplianceDashboardItemResponse(BaseModel):
+    """Serialized dashboard row for one curriculum."""
+
     curriculum_id: str
     level: str
     grade: str
@@ -94,6 +108,8 @@ class ComplianceDashboardItemResponse(BaseModel):
 
 
 class ComplianceDashboardResponse(BaseModel):
+    """Serialized MEN compliance dashboard response."""
+
     school_id: str
     academic_year_id: str | None = None
     curriculum_count: int
@@ -104,11 +120,15 @@ class ComplianceDashboardResponse(BaseModel):
 
 
 class ComplianceReportGenerateRequest(BaseModel):
+    """Payload for generating a compliance report."""
+
     curriculum_id: uuid.UUID
     academic_year_id: uuid.UUID
 
 
 class ComplianceReportResponse(BaseModel):
+    """Serialized compliance report response."""
+
     id: str
     school_id: str
     curriculum_id: str

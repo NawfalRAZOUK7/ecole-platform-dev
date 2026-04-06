@@ -10,12 +10,16 @@ from pydantic import BaseModel, Field
 
 
 class RegisterDeviceRequest(BaseModel):
+    """Payload for registering a sync device."""
+
     device_name: str = Field(..., min_length=1, max_length=200)
     device_type: str = Field(..., pattern="^(local_server|mobile|browser)$")
     firmware_version: str | None = Field(None, max_length=50)
 
 
 class SyncDeviceResponse(BaseModel):
+    """Serialized sync device response."""
+
     id: str
     school_id: str
     device_name: str
@@ -28,6 +32,8 @@ class SyncDeviceResponse(BaseModel):
 
 
 class QueueItemCreateRequest(BaseModel):
+    """Payload for enqueuing a sync item."""
+
     entity_type: str = Field(..., min_length=1, max_length=100)
     entity_id: uuid.UUID
     operation: str = Field(..., pattern="^(create|update|delete)$")
@@ -36,6 +42,8 @@ class QueueItemCreateRequest(BaseModel):
 
 
 class QueueItemResponse(BaseModel):
+    """Serialized sync queue item response."""
+
     id: str
     school_id: str
     device_id: str
@@ -51,10 +59,14 @@ class QueueItemResponse(BaseModel):
 
 
 class PushPayload(BaseModel):
+    """Batch payload for pushed sync changes."""
+
     items: list[QueueItemCreateRequest] = Field(..., min_length=1, max_length=500)
 
 
 class PushResponse(BaseModel):
+    """Summary response for a push operation."""
+
     device_id: str
     accepted_count: int
     conflict_count: int
@@ -63,6 +75,8 @@ class PushResponse(BaseModel):
 
 
 class PullResponse(BaseModel):
+    """Summary response for a pull operation."""
+
     device_id: str
     since_checkpoint: str | None = None
     changes: list[QueueItemResponse]
@@ -71,6 +85,8 @@ class PullResponse(BaseModel):
 
 
 class ResolveConflictRequest(BaseModel):
+    """Payload for resolving a sync conflict."""
+
     resolution: str = Field(
         ...,
         pattern="^(pending|client_wins|server_wins|manual)$",
@@ -78,6 +94,8 @@ class ResolveConflictRequest(BaseModel):
 
 
 class SyncConflictResponse(BaseModel):
+    """Serialized sync conflict response."""
+
     id: str
     school_id: str
     queue_item_id: str
@@ -93,12 +111,16 @@ class SyncConflictResponse(BaseModel):
 
 
 class SyncCheckpointCreateRequest(BaseModel):
+    """Payload for creating a sync checkpoint."""
+
     last_entity_type: str = Field(..., min_length=1, max_length=100)
     last_entity_id: uuid.UUID
     records_synced: int = Field(0, ge=0)
 
 
 class SyncCheckpointResponse(BaseModel):
+    """Serialized sync checkpoint response."""
+
     id: str
     school_id: str
     device_id: str
@@ -111,6 +133,8 @@ class SyncCheckpointResponse(BaseModel):
 
 
 class SyncStatusResponse(BaseModel):
+    """Serialized sync status response."""
+
     device_id: str
     pending_count: int
     synced_count: int
@@ -121,6 +145,8 @@ class SyncStatusResponse(BaseModel):
 
 
 class HealthResponse(BaseModel):
+    """Serialized sync health response."""
+
     device_id: str
     health: str
     is_active: bool

@@ -274,9 +274,10 @@ class BudgetService:
         async with UnitOfWork(self.db) as uow:
             repo = BudgetRepository(uow.session)
             audit = AuditService(uow.session)
-            budget = await repo.get_budget(budget_id, school_id=auth.school_id)
-            if budget is None:
+            current_budget = await repo.get_budget(budget_id, school_id=auth.school_id)
+            if current_budget is None:
                 raise NotFoundError("Budget not found", error_code="ERR-BUDGET-404")
+            budget = current_budget
             before = self._budget_to_response(budget)
             for field, value in payload.items():
                 setattr(budget, field, value)
@@ -331,9 +332,10 @@ class BudgetService:
             repo = BudgetRepository(uow.session)
             audit = AuditService(uow.session)
             dispatcher = EventDispatcher(uow.session)
-            budget = await repo.get_budget(budget_id, school_id=auth.school_id)
-            if budget is None:
+            current_budget = await repo.get_budget(budget_id, school_id=auth.school_id)
+            if current_budget is None:
                 raise NotFoundError("Budget not found", error_code="ERR-BUDGET-404")
+            budget = current_budget
             allocation = BudgetAllocation(
                 budget_id=budget.id,
                 class_id=body.class_id,
@@ -465,13 +467,14 @@ class BudgetService:
         async with UnitOfWork(self.db) as uow:
             repo = BudgetRepository(uow.session)
             audit = AuditService(uow.session)
-            allocation = await repo.get_allocation(
+            current_allocation = await repo.get_allocation(
                 allocation_id,
                 school_id=auth.school_id,
                 include_budget=True,
             )
-            if allocation is None or allocation.budget is None:
+            if current_allocation is None or current_allocation.budget is None:
                 raise NotFoundError("Budget allocation not found", error_code="ERR-BUDGET-404")
+            allocation = current_allocation
             before = self._allocation_to_response(allocation)
             for field, value in payload.items():
                 setattr(allocation, field, value)
@@ -612,13 +615,14 @@ class BudgetService:
         async with UnitOfWork(self.db) as uow:
             repo = BudgetRepository(uow.session)
             audit = AuditService(uow.session)
-            request = await repo.get_request(
+            current_request = await repo.get_request(
                 request_id,
                 school_id=auth.school_id,
                 include_allocation=True,
             )
-            if request is None:
+            if current_request is None:
                 raise NotFoundError("Budget request not found", error_code="ERR-BUDGET-404")
+            request = current_request
             before = self._request_to_response(request)
             for field, value in payload.items():
                 setattr(request, field, value)
@@ -669,17 +673,18 @@ class BudgetService:
             repo = BudgetRepository(uow.session)
             audit = AuditService(uow.session)
             dispatcher = EventDispatcher(uow.session)
-            request = await repo.get_request(
+            current_request = await repo.get_request(
                 request_id,
                 school_id=auth.school_id,
                 include_allocation=True,
             )
             if (
-                request is None
-                or request.allocation is None
-                or request.allocation.budget is None
+                current_request is None
+                or current_request.allocation is None
+                or current_request.allocation.budget is None
             ):
                 raise NotFoundError("Budget request not found", error_code="ERR-BUDGET-404")
+            request = current_request
             if request.status != "pending":
                 raise ConflictError(
                     "Budget request has already been reviewed",
@@ -767,9 +772,10 @@ class BudgetService:
             repo = BudgetRepository(uow.session)
             audit = AuditService(uow.session)
             dispatcher = EventDispatcher(uow.session)
-            request = await repo.get_request(request_id, school_id=auth.school_id)
-            if request is None:
+            current_request = await repo.get_request(request_id, school_id=auth.school_id)
+            if current_request is None:
                 raise NotFoundError("Budget request not found", error_code="ERR-BUDGET-404")
+            request = current_request
             if request.status != "pending":
                 raise ConflictError(
                     "Budget request has already been reviewed",
@@ -829,13 +835,14 @@ class BudgetService:
             repo = BudgetRepository(uow.session)
             audit = AuditService(uow.session)
             dispatcher = EventDispatcher(uow.session)
-            allocation = await repo.get_allocation(
+            current_allocation = await repo.get_allocation(
                 allocation_id,
                 school_id=auth.school_id,
                 include_budget=True,
             )
-            if allocation is None or allocation.budget is None:
+            if current_allocation is None or current_allocation.budget is None:
                 raise NotFoundError("Budget allocation not found", error_code="ERR-BUDGET-404")
+            allocation = current_allocation
             budget = allocation.budget
 
             if body.transaction_type == "expense":

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from typing import Any
 
 from fastapi import APIRouter, Depends, Query, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -39,7 +40,8 @@ async def list_skill_dimensions(
     is_active: bool | None = Query(None),
     auth: AuthContext = Depends(requires_permission(PERM_SKILL_DIMENSION_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """List active and inactive life-skill dimensions."""
     service = SkillPassportService(db)
     return list_response(await service.list_dimensions(is_active=is_active))
 
@@ -55,7 +57,8 @@ async def create_skill_dimension(
     request: Request,
     auth: AuthContext = Depends(requires_permission(PERM_SKILL_DIMENSION_MANAGE)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Create a life-skill dimension."""
     service = SkillPassportService(db)
     return success_response(
         await service.create_dimension(
@@ -76,7 +79,8 @@ async def list_skill_milestones(
     is_active: bool | None = Query(None),
     auth: AuthContext = Depends(requires_permission(PERM_SKILL_MILESTONE_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """List milestones defined for the skill framework."""
     service = SkillPassportService(db)
     return list_response(
         await service.list_milestones(
@@ -97,7 +101,8 @@ async def create_skill_milestone(
     request: Request,
     auth: AuthContext = Depends(requires_permission(PERM_SKILL_MILESTONE_MANAGE)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Create a life-skill milestone."""
     service = SkillPassportService(db)
     return success_response(
         await service.create_milestone(
@@ -118,7 +123,8 @@ async def get_student_skill_progress(
     academic_year_id: uuid.UUID = Query(...),
     auth: AuthContext = Depends(requires_permission(PERM_SKILL_PROGRESS_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Return skill progress records for one student."""
     service = SkillPassportService(db)
     return list_response(
         await service.get_student_progress(
@@ -140,7 +146,8 @@ async def evaluate_student_skills(
     academic_year_id: uuid.UUID = Query(...),
     auth: AuthContext = Depends(requires_permission(PERM_SKILL_PROGRESS_EVALUATE)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Evaluate a student's life-skill milestones."""
     service = SkillPassportService(db)
     return success_response(
         await service.evaluate_student(
@@ -162,7 +169,8 @@ async def get_skill_passport(
     academic_year_id: uuid.UUID = Query(...),
     auth: AuthContext = Depends(requires_permission(PERM_SKILL_PASSPORT_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Fetch the generated skill passport for a student."""
     service = SkillPassportService(db)
     return success_response(
         await service.get_passport(
@@ -184,7 +192,8 @@ async def generate_skill_passport(
     academic_year_id: uuid.UUID = Query(...),
     auth: AuthContext = Depends(requires_permission(PERM_SKILL_PASSPORT_GENERATE)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Generate a skill passport for a student."""
     service = SkillPassportService(db)
     return success_response(
         await service.generate_passport(
@@ -206,7 +215,8 @@ async def download_skill_passport(
     academic_year_id: uuid.UUID = Query(...),
     auth: AuthContext = Depends(requires_permission(PERM_SKILL_PASSPORT_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Download the student's skill passport PDF."""
     service = SkillPassportService(db)
     passport = await service.get_passport(
         student_id=student_id,
@@ -238,7 +248,8 @@ async def get_skill_class_analytics(
     academic_year_id: uuid.UUID = Query(...),
     auth: AuthContext = Depends(requires_permission(PERM_SKILL_PROGRESS_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Return class-level life-skill analytics."""
     service = SkillPassportService(db)
     return success_response(
         await service.class_analytics(
@@ -258,7 +269,8 @@ async def get_skill_school_analytics(
     academic_year_id: uuid.UUID = Query(...),
     auth: AuthContext = Depends(requires_permission(PERM_SKILL_PROGRESS_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Return school-level life-skill analytics."""
     service = SkillPassportService(db)
     return success_response(
         await service.school_analytics(
@@ -279,7 +291,8 @@ async def get_skill_leaderboard(
     limit: int = Query(10, ge=1, le=100),
     auth: AuthContext = Depends(requires_permission(PERM_SKILL_PROGRESS_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Return an anonymized skill leaderboard for a class."""
     service = SkillPassportService(db)
     return list_response(
         await service.leaderboard(

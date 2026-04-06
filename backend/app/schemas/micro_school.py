@@ -8,6 +8,8 @@ from pydantic import BaseModel, Field
 
 
 class MicroSchoolCreateRequest(BaseModel):
+    """Payload for creating a micro-school."""
+
     educator_id: uuid.UUID | None = None
     name: str = Field(..., min_length=1, max_length=200)
     neighborhood: str = Field(..., min_length=1, max_length=200)
@@ -18,6 +20,8 @@ class MicroSchoolCreateRequest(BaseModel):
 
 
 class MicroSchoolUpdateRequest(BaseModel):
+    """Payload for updating a micro-school."""
+
     name: str | None = Field(None, min_length=1, max_length=200)
     neighborhood: str | None = Field(None, min_length=1, max_length=200)
     city: str | None = Field(None, min_length=1, max_length=100)
@@ -27,6 +31,8 @@ class MicroSchoolUpdateRequest(BaseModel):
 
 
 class MicroSchoolResponse(BaseModel):
+    """Serialized micro-school response."""
+
     id: str
     educator_id: str
     name: str
@@ -40,6 +46,8 @@ class MicroSchoolResponse(BaseModel):
 
 
 class MicroGroupCreateRequest(BaseModel):
+    """Payload for creating a micro-group."""
+
     micro_school_id: uuid.UUID
     name: str = Field(..., min_length=1, max_length=100)
     age_range_min: int = Field(..., ge=2, le=6)
@@ -47,12 +55,16 @@ class MicroGroupCreateRequest(BaseModel):
 
 
 class MicroGroupUpdateRequest(BaseModel):
+    """Payload for updating a micro-group."""
+
     name: str | None = Field(None, min_length=1, max_length=100)
     age_range_min: int | None = Field(None, ge=2, le=6)
     age_range_max: int | None = Field(None, ge=2, le=6)
 
 
 class MicroGroupResponse(BaseModel):
+    """Serialized micro-group response."""
+
     id: str
     micro_school_id: str
     name: str
@@ -63,6 +75,8 @@ class MicroGroupResponse(BaseModel):
 
 
 class MicroEnrollmentCreateRequest(BaseModel):
+    """Payload for creating a micro-enrollment."""
+
     micro_group_id: uuid.UUID
     child_name: str = Field(..., min_length=1, max_length=200)
     parent_id: uuid.UUID
@@ -72,6 +86,8 @@ class MicroEnrollmentCreateRequest(BaseModel):
 
 
 class MicroEnrollmentUpdateRequest(BaseModel):
+    """Payload for updating a micro-enrollment."""
+
     child_name: str | None = Field(None, min_length=1, max_length=200)
     parent_id: uuid.UUID | None = None
     date_of_birth: date_type | None = None
@@ -80,6 +96,8 @@ class MicroEnrollmentUpdateRequest(BaseModel):
 
 
 class MicroEnrollmentResponse(BaseModel):
+    """Serialized micro-enrollment response."""
+
     id: str
     micro_group_id: str
     parent_id: str
@@ -92,6 +110,8 @@ class MicroEnrollmentResponse(BaseModel):
 
 
 class MicroPaymentCreateRequest(BaseModel):
+    """Payload for creating a micro-payment."""
+
     micro_school_id: uuid.UUID
     parent_id: uuid.UUID
     child_enrollment_id: uuid.UUID
@@ -105,6 +125,8 @@ class MicroPaymentCreateRequest(BaseModel):
 
 
 class MicroPaymentUpdateRequest(BaseModel):
+    """Payload for updating a micro-payment."""
+
     amount: float | None = Field(None, gt=0)
     currency: str | None = Field(None, min_length=3, max_length=3)
     period_type: str | None = Field(None, pattern="^(weekly|monthly)$")
@@ -115,6 +137,8 @@ class MicroPaymentUpdateRequest(BaseModel):
 
 
 class MicroPaymentResponse(BaseModel):
+    """Serialized micro-payment response."""
+
     id: str
     micro_school_id: str
     parent_id: str
@@ -131,6 +155,8 @@ class MicroPaymentResponse(BaseModel):
 
 
 class MicroResourceCreateRequest(BaseModel):
+    """Payload for creating a micro-resource."""
+
     title: str = Field(..., min_length=1, max_length=300)
     description: str | None = Field(None, max_length=4000)
     resource_type: str = Field(
@@ -144,6 +170,8 @@ class MicroResourceCreateRequest(BaseModel):
 
 
 class MicroResourceUpdateRequest(BaseModel):
+    """Payload for updating a micro-resource."""
+
     title: str | None = Field(None, min_length=1, max_length=300)
     description: str | None = Field(None, max_length=4000)
     resource_type: str | None = Field(
@@ -157,6 +185,8 @@ class MicroResourceUpdateRequest(BaseModel):
 
 
 class MicroResourceResponse(BaseModel):
+    """Serialized micro-resource response."""
+
     id: str
     title: str
     description: str | None = None
@@ -170,6 +200,8 @@ class MicroResourceResponse(BaseModel):
 
 
 class MicroProgressLogCreateRequest(BaseModel):
+    """Payload for creating a micro progress log."""
+
     micro_enrollment_id: uuid.UUID
     educator_id: uuid.UUID | None = None
     date: date_type
@@ -179,6 +211,8 @@ class MicroProgressLogCreateRequest(BaseModel):
 
 
 class MicroProgressLogUpdateRequest(BaseModel):
+    """Payload for updating a micro progress log."""
+
     date: date_type | None = None
     note: str | None = Field(None, min_length=1, max_length=4000)
     photo_url: str | None = Field(None, max_length=500)
@@ -186,6 +220,8 @@ class MicroProgressLogUpdateRequest(BaseModel):
 
 
 class MicroProgressLogResponse(BaseModel):
+    """Serialized micro progress log response."""
+
     id: str
     micro_enrollment_id: str
     educator_id: str

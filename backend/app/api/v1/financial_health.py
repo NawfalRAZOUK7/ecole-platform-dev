@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import date
+from typing import Any
 
 from fastapi import APIRouter, Depends, Query, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -41,7 +42,8 @@ async def list_retention_metrics(
     limit: int = Query(20, ge=1, le=100),
     auth: AuthContext = Depends(requires_permission(PERM_FINHEALTH_RETENTION_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """List stored retention metrics."""
     service = FinancialHealthService(db)
     return list_response(
         await service.list_retention_metrics(
@@ -63,7 +65,8 @@ async def compute_retention(
     request: Request,
     auth: AuthContext = Depends(requires_permission(PERM_FINHEALTH_COMPUTE)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Compute a retention metric for two academic years."""
     service = FinancialHealthService(db)
     return success_response(
         await service.compute_retention(
@@ -86,7 +89,8 @@ async def list_cashflow_forecasts(
     limit: int = Query(20, ge=1, le=100),
     auth: AuthContext = Depends(requires_permission(PERM_FINHEALTH_CASHFLOW_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """List stored cashflow forecasts."""
     service = FinancialHealthService(db)
     return list_response(
         await service.list_cashflow_forecasts(
@@ -110,7 +114,8 @@ async def compute_cashflow(
     request: Request,
     auth: AuthContext = Depends(requires_permission(PERM_FINHEALTH_COMPUTE)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Compute forward-looking cashflow forecasts."""
     service = FinancialHealthService(db)
     return success_response(
         await service.compute_cashflow(
@@ -130,7 +135,8 @@ async def get_cost_per_student(
     academic_year_id: uuid.UUID = Query(...),
     auth: AuthContext = Depends(requires_permission(PERM_FINHEALTH_COST_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Fetch the stored cost-per-student analysis."""
     service = FinancialHealthService(db)
     return success_response(
         await service.get_cost_analysis(
@@ -151,7 +157,8 @@ async def compute_cost_per_student(
     request: Request,
     auth: AuthContext = Depends(requires_permission(PERM_FINHEALTH_COMPUTE)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Compute cost-per-student analysis for an academic year."""
     service = FinancialHealthService(db)
     return success_response(
         await service.compute_cost(
@@ -171,7 +178,8 @@ async def get_snapshot(
     snapshot_date: date | None = Query(None),
     auth: AuthContext = Depends(requires_permission(PERM_FINHEALTH_SNAPSHOT_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Fetch a stored financial snapshot."""
     service = FinancialHealthService(db)
     return success_response(
         await service.get_snapshot(
@@ -192,7 +200,8 @@ async def compute_snapshot(
     request: Request,
     auth: AuthContext = Depends(requires_permission(PERM_FINHEALTH_COMPUTE)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Compute a point-in-time financial snapshot."""
     service = FinancialHealthService(db)
     return success_response(
         await service.compute_snapshot(
@@ -211,7 +220,8 @@ async def compute_snapshot(
 async def get_dashboard(
     auth: AuthContext = Depends(requires_permission(PERM_FINHEALTH_RETENTION_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Return the financial health dashboard summary."""
     service = FinancialHealthService(db)
     return success_response(await service.get_dashboard(auth=auth))
 
@@ -225,7 +235,8 @@ async def get_trends(
     months: int = Query(12, ge=1, le=24),
     auth: AuthContext = Depends(requires_permission(PERM_FINHEALTH_RETENTION_READ)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Return financial health trend series."""
     service = FinancialHealthService(db)
     return success_response(await service.get_trends(auth=auth, months=months))
 
@@ -238,7 +249,8 @@ async def get_trends(
 async def export_financial_health_csv(
     auth: AuthContext = Depends(requires_permission(PERM_FINHEALTH_EXPORT)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Export the financial health dashboard as CSV."""
     service = FinancialHealthService(db)
     csv_bytes = await service.export_csv(auth=auth)
     return Response(
@@ -256,7 +268,8 @@ async def export_financial_health_csv(
 async def export_financial_health_pdf(
     auth: AuthContext = Depends(requires_permission(PERM_FINHEALTH_EXPORT)),
     db: AsyncSession = Depends(get_db),
-):
+) -> Any:
+    """Export the financial health dashboard as PDF."""
     service = FinancialHealthService(db)
     pdf_bytes = await service.export_pdf(auth=auth)
     return Response(

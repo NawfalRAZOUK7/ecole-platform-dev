@@ -19,6 +19,8 @@ from app.domain.events.skill_passport import (
     SkillPassportGenerated,
     SkillProgressEvaluated,
 )
+from app.models.erp import AcademicYear, Class
+from app.models.iam import User
 from app.models.skill_passport import (
     SkillDimension,
     SkillMilestone,
@@ -95,7 +97,7 @@ class _SkillServiceBase:
         self,
         student_id: uuid.UUID,
         auth: AuthContext,
-    ):
+    ) -> User:
         student = await self.repo.get_user(student_id)
         if student is None:
             raise NotFoundError("Student not found", error_code="ERR-SKILL-404")
@@ -106,7 +108,7 @@ class _SkillServiceBase:
         self,
         student_id: uuid.UUID,
         auth: AuthContext,
-    ):
+    ) -> User:
         student = await self._get_student_or_404(student_id, auth)
         if auth.role in STAFF_ROLES:
             return student
@@ -127,7 +129,7 @@ class _SkillServiceBase:
         self,
         academic_year_id: uuid.UUID,
         auth: AuthContext,
-    ):
+    ) -> AcademicYear:
         academic_year = await self.repo.get_academic_year(academic_year_id)
         if academic_year is None:
             raise NotFoundError("Academic year not found", error_code="ERR-SKILL-404")
@@ -138,7 +140,7 @@ class _SkillServiceBase:
         self,
         class_id: uuid.UUID,
         auth: AuthContext,
-    ):
+    ) -> Class:
         school_class = await self.repo.get_class(class_id)
         if school_class is None:
             raise NotFoundError("Class not found", error_code="ERR-SKILL-404")
@@ -706,15 +708,17 @@ class SkillPassportService(_SkillServiceBase):
                 is_active=body.is_active,
             )
             created = await repo.create_milestone(milestone)
-            created = await repo.get_milestone(created.id, include_dimension=True)
-            response = self._milestone_to_response(created)
+            hydrated_milestone = await repo.get_milestone(created.id, include_dimension=True)
+            if hydrated_milestone is None:
+                raise NotFoundError("Skill milestone not found", error_code="ERR-SKILL-404")
+            response = self._milestone_to_response(hydrated_milestone)
             await audit.log_event(
                 school_id=auth.school_id,
                 actor_id=auth.user_id,
                 action_type="skill.milestone.create",
                 outcome="success",
                 target_type="skill_milestone",
-                target_id=created.id,
+                target_id=hydrated_milestone.id,
                 entity_after=response,
                 ip_address=ip_address,
             )
@@ -722,9 +726,9 @@ class SkillPassportService(_SkillServiceBase):
                 SkillMilestoneCreated(
                     school_id=auth.school_id,
                     actor_id=auth.user_id,
-                    skill_milestone_id=created.id,
-                    dimension_id=created.dimension_id,
-                    code=created.code,
+                    skill_milestone_id=hydrated_milestone.id,
+                    dimension_id=hydrated_milestone.dimension_id,
+                    code=hydrated_milestone.code,
                 )
             )
             await uow.commit()
@@ -767,15 +771,17 @@ class SkillPassportService(_SkillServiceBase):
             if body.rule_config is not None:
                 current.rule_config = dict(body.rule_config)
             saved = await repo.save_milestone(current)
-            saved = await repo.get_milestone(saved.id, include_dimension=True)
-            response = self._milestone_to_response(saved)
+            hydrated_milestone = await repo.get_milestone(saved.id, include_dimension=True)
+            if hydrated_milestone is None:
+                raise NotFoundError("Skill milestone not found", error_code="ERR-SKILL-404")
+            response = self._milestone_to_response(hydrated_milestone)
             await audit.log_event(
                 school_id=auth.school_id,
                 actor_id=auth.user_id,
                 action_type="skill.milestone.update",
                 outcome="success",
                 target_type="skill_milestone",
-                target_id=saved.id,
+                target_id=hydrated_milestone.id,
                 entity_before=before,
                 entity_after=response,
                 ip_address=ip_address,
@@ -995,7 +1001,7 @@ class SkillPassportService(_SkillServiceBase):
             current.pdf_url = self._passport_url(current.id)
             saved = await repo.save_passport(current)
             await uow.commit()
-        return saved.pdf_url
+        return saved.pdf_url or self._passport_url(saved.id)
 
     async def download_pdf(
         self,

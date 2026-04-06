@@ -36,28 +36,38 @@ def _enum_values(enum_cls: type[enum.Enum]) -> list[str]:
 
 
 class MicroSchoolStatus(str, enum.Enum):
+    """Lifecycle states for a micro-school."""
+
     ACTIVE = "active"
     SUSPENDED = "suspended"
     CLOSED = "closed"
 
 
 class MicroEnrollmentStatus(str, enum.Enum):
+    """Enrollment states for children in a micro-group."""
+
     ACTIVE = "active"
     WITHDRAWN = "withdrawn"
 
 
 class MicroPaymentPeriodType(str, enum.Enum):
+    """Supported billing cadences for micro-school payments."""
+
     WEEKLY = "weekly"
     MONTHLY = "monthly"
 
 
 class MicroPaymentStatus(str, enum.Enum):
+    """Collection states for micro-school payments."""
+
     PENDING = "pending"
     PAID = "paid"
     OVERDUE = "overdue"
 
 
 class MicroResourceType(str, enum.Enum):
+    """Allowed resource categories for micro-school content."""
+
     ACTIVITY_SHEET = "activity_sheet"
     SONG = "song"
     GAME = "game"
