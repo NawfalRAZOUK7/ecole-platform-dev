@@ -22,6 +22,7 @@ import { CalendarPage } from '@/features/calendar/CalendarPage';
 import { EventDetailPage } from '@/features/calendar/EventDetailPage';
 import { ContentPage } from '@/features/content/ContentPage';
 import { ResultsPage } from '@/features/results/ResultsPage';
+import { InvoiceDetailPage } from '@/features/invoices/InvoiceDetailPage';
 import { InvoicesPage } from '@/features/invoices/InvoicesPage';
 import { ActivitiesPage } from '@/features/activities/ActivitiesPage';
 import { ProfilePage } from '@/features/profile/ProfilePage';
@@ -494,6 +495,14 @@ function App() {
           element={
             <ProtectedRoute roles={['PAR', 'ADM']}>
               <InvoicesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/invoices/:id"
+          element={
+            <ProtectedRoute roles={['PAR', 'ADM', 'DIR']}>
+              <InvoiceDetailPage />
             </ProtectedRoute>
           }
         />

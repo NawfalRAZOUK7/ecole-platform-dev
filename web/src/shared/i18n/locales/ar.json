@@ -261,6 +261,7 @@
   },
   "invoices": {
     "title": "الفواتير",
+    "subtitle": "تتبع حالة الفواتير والمدفوعات وإثباتات الدفع بالدرهم المغربي.",
     "empty": "لا توجد فواتير",
     "amount": "المبلغ",
     "status": "الحالة",
@@ -268,17 +269,46 @@
     "dueDate": "تاريخ الاستحقاق",
     "pay": "دفع",
     "items": "التفاصيل",
+    "invoiceNumber": "رقم الفاتورة",
+    "student": "الطالب",
+    "searchPlaceholder": "ابحث باسم الطالب...",
+    "view": "عرض",
+    "detailTitle": "تفاصيل الفاتورة",
+    "lineItems": "بنود الفاتورة",
+    "description": "الوصف",
+    "quantity": "الكمية",
+    "unitPrice": "سعر الوحدة",
+    "total": "الإجمالي",
+    "balanceDue": "الرصيد المستحق",
+    "paymentHistory": "سجل المدفوعات",
+    "paymentDate": "تاريخ الدفع",
+    "method": "طريقة الدفع",
+    "createPayment": "إنشاء دفعة",
+    "paymentCreated": "تم إنشاء الدفعة",
+    "uploadProof": "رفع إثبات الدفع",
+    "proofUploaded": "تم رفع الإثبات",
+    "selectPayment": "اختر دفعة",
+    "noPayments": "لا توجد مدفوعات",
     "statusLabels": {
+      "draft": "مسودة",
+      "sent": "مرسلة",
       "pending": "قيد الانتظار",
       "paid": "مدفوعة",
       "failed": "فشلت",
-      "canceled": "ملغاة"
+      "canceled": "ملغاة",
+      "created": "تم الإنشاء"
+    },
+    "methods": {
+      "card": "بطاقة",
+      "bank_transfer": "تحويل بنكي",
+      "cash": "نقداً"
     },
     "overdue": "متأخرة",
     "overdueCount": "{{count}} فاتورة متأخرة",
     "allStatuses": "جميع الحالات",
     "retry": "إعادة محاولة الدفع",
-    "actions": "الإجراءات"
+    "actions": "الإجراءات",
+    "paymentProof": "إثبات الدفع"
   },
   "activities": {
     "title": "الأنشطة",

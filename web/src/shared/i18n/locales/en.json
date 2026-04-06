@@ -261,6 +261,7 @@
   },
   "invoices": {
     "title": "Invoices",
+    "subtitle": "Track invoice status, payments, and uploaded proofs in MAD.",
     "empty": "No invoices",
     "amount": "Amount",
     "status": "Status",
@@ -268,17 +269,46 @@
     "dueDate": "Due date",
     "pay": "Pay",
     "items": "Details",
+    "invoiceNumber": "Invoice #",
+    "student": "Student",
+    "searchPlaceholder": "Search by student name...",
+    "view": "View",
+    "detailTitle": "Invoice Detail",
+    "lineItems": "Line items",
+    "description": "Description",
+    "quantity": "Quantity",
+    "unitPrice": "Unit price",
+    "total": "Total",
+    "balanceDue": "Balance due",
+    "paymentHistory": "Payment history",
+    "paymentDate": "Payment date",
+    "method": "Method",
+    "createPayment": "Create payment",
+    "paymentCreated": "Payment created",
+    "uploadProof": "Upload proof",
+    "proofUploaded": "Proof uploaded",
+    "selectPayment": "Select payment",
+    "noPayments": "No payments yet",
     "statusLabels": {
+      "draft": "Draft",
+      "sent": "Sent",
       "pending": "Pending",
       "paid": "Paid",
       "failed": "Failed",
-      "canceled": "Canceled"
+      "canceled": "Canceled",
+      "created": "Created"
+    },
+    "methods": {
+      "card": "Card",
+      "bank_transfer": "Bank transfer",
+      "cash": "Cash"
     },
     "overdue": "Overdue",
     "overdueCount": "{{count}} overdue invoice(s)",
     "allStatuses": "All statuses",
     "retry": "Retry payment",
-    "actions": "Actions"
+    "actions": "Actions",
+    "paymentProof": "Payment proof"
   },
   "activities": {
     "title": "Activities",

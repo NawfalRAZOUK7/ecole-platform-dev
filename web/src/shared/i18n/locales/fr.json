@@ -261,6 +261,7 @@
   },
   "invoices": {
     "title": "Factures",
+    "subtitle": "Suivez les factures, les paiements et les justificatifs en MAD.",
     "empty": "Aucune facture",
     "amount": "Montant",
     "status": "Statut",
@@ -268,17 +269,46 @@
     "dueDate": "Date d'echeance",
     "pay": "Payer",
     "items": "Details",
+    "invoiceNumber": "Facture #",
+    "student": "Eleve",
+    "searchPlaceholder": "Rechercher par nom d'eleve...",
+    "view": "Voir",
+    "detailTitle": "Detail de facture",
+    "lineItems": "Lignes",
+    "description": "Description",
+    "quantity": "Quantite",
+    "unitPrice": "Prix unitaire",
+    "total": "Total",
+    "balanceDue": "Reste a payer",
+    "paymentHistory": "Historique des paiements",
+    "paymentDate": "Date de paiement",
+    "method": "Methode",
+    "createPayment": "Creer un paiement",
+    "paymentCreated": "Paiement cree",
+    "uploadProof": "Televerser un justificatif",
+    "proofUploaded": "Justificatif televerse",
+    "selectPayment": "Selectionner un paiement",
+    "noPayments": "Aucun paiement",
     "statusLabels": {
+      "draft": "Brouillon",
+      "sent": "Envoyee",
       "pending": "En attente",
       "paid": "Payee",
       "failed": "Echouee",
-      "canceled": "Annulee"
+      "canceled": "Annulee",
+      "created": "Cree"
+    },
+    "methods": {
+      "card": "Carte",
+      "bank_transfer": "Virement",
+      "cash": "Especes"
     },
     "overdue": "En retard",
     "overdueCount": "{{count}} facture(s) en retard",
     "allStatuses": "Tous les statuts",
     "retry": "Reessayer le paiement",
-    "actions": "Actions"
+    "actions": "Actions",
+    "paymentProof": "Justificatif de paiement"
   },
   "activities": {
     "title": "Activites",

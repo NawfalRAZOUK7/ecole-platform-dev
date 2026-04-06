@@ -1,177 +1,214 @@
-/**
- * Invoices page — invoice list with payment status, overdue indicators, retry.
- *
- * Reference: S-081 — Invoices page, Phase 12A — Extended with overdue + retry
- * Calls GET /invoices with cursor pagination. PAR and ADM roles.
- * Phase 12A: Overdue indicator (past due_date + pending), retry payment for failed.
- */
-
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '@/services/auth/AuthContext';
-import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
-import { EmptyState } from '@/shared/ui/EmptyState';
-import { ErrorBanner } from '@/shared/ui/ErrorBanner';
-import { LoadingState } from '@/shared/ui/LoadingState';
+import { useNavigate } from 'react-router-dom';
+import type { ColumnDef } from '@/shared/ui/DataTable';
+import { Badge, DataTable, ErrorBanner, LoadingState, Pagination, SearchInput } from '@/shared/ui';
+import { formatDate } from '@/shared/i18n';
 import { toBannerError } from '@/shared/ui/errorUtils';
-import { formatDate, formatCurrency } from '@/shared/i18n';
-import { useInitiateInvoicePayment, useInvoices } from './useInvoices';
-import type { Invoice } from './invoices.service';
+import { useInvoices } from './useInvoices';
+import type { InvoiceSummary } from './invoices.service';
 
-function isOverdue(invoice: Invoice): boolean {
-  return invoice.status === 'pending' && new Date(invoice.due_date) < new Date();
+type InvoiceTableRow = InvoiceSummary & Record<string, unknown>;
+
+const madFormatter = new Intl.NumberFormat('fr-MA', {
+  style: 'currency',
+  currency: 'MAD',
+});
+
+function getInvoiceAmount(invoice: InvoiceSummary) {
+  if (typeof invoice.total_amount === 'number') {
+    return invoice.total_amount;
+  }
+  if (typeof invoice.total_cents === 'number') {
+    return invoice.total_cents / 100;
+  }
+  return 0;
+}
+
+function resolveStatus(invoice: InvoiceSummary) {
+  if (invoice.status !== 'paid' && new Date(invoice.due_date) < new Date()) {
+    return 'overdue';
+  }
+  return invoice.status;
+}
+
+function getBadgeVariant(status: string) {
+  if (status === 'paid') return 'success';
+  if (status === 'sent') return 'info';
+  if (status === 'overdue' || status === 'failed') return 'error';
+  return 'neutral';
 }
 
 export function InvoicesPage() {
   const { t, i18n } = useTranslation();
-  const { user } = useAuth();
-  const isPar = user?.role === 'PAR';
-  const [retryingId, setRetryingId] = useState<string | null>(null);
+  const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState('');
+  const [search, setSearch] = useState('');
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   const invoicesQuery = useInvoices({
-    status: statusFilter && statusFilter !== 'overdue' ? statusFilter : undefined,
+    status: statusFilter || undefined,
   });
-  const initiatePaymentMutation = useInitiateInvoicePayment();
-  const items: Invoice[] = useMemo(
+
+  const items = useMemo(
     () => invoicesQuery.data?.pages.flatMap((page) => page.data) ?? [],
     [invoicesQuery.data]
   );
-  const overdueCount = items.filter(isOverdue).length;
-  const displayedItems = statusFilter === 'overdue' ? items.filter(isOverdue) : items;
-  const dismissibleError = useDismissibleError(
-    toBannerError(invoicesQuery.error ?? initiatePaymentMutation.error, t('app.error'))
+
+  const filteredItems = useMemo(() => {
+    return items.filter((invoice) => {
+      const normalizedStatus = resolveStatus(invoice);
+      const candidate = (invoice.student_name ?? invoice.student_id ?? '').toLowerCase();
+      const issuedDate = invoice.issued_date.slice(0, 10);
+      const withinFrom = !from || issuedDate >= from;
+      const withinTo = !to || issuedDate <= to;
+      const matchesSearch = !search || candidate.includes(search.toLowerCase());
+      const matchesStatus = !statusFilter || normalizedStatus === statusFilter;
+      return withinFrom && withinTo && matchesSearch && matchesStatus;
+    });
+  }, [from, items, search, statusFilter, to]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredItems.length / pageSize));
+  const pageItems = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredItems.slice(start, start + pageSize);
+  }, [currentPage, filteredItems, pageSize]);
+
+  const columns: ColumnDef<InvoiceTableRow>[] = useMemo(
+    () => [
+      {
+        key: 'id',
+        header: 'invoices.invoiceNumber',
+        render: (_value, row) => row.invoice_number ?? row.label ?? row.id.slice(0, 8),
+      },
+      {
+        key: 'student_name',
+        header: 'invoices.student',
+        render: (value, row) => String(value ?? row.student_id ?? '—'),
+      },
+      {
+        key: 'total_amount',
+        header: 'invoices.amount',
+        render: (_value, row) => madFormatter.format(getInvoiceAmount(row)),
+      },
+      {
+        key: 'status',
+        header: 'invoices.status',
+        render: (value, row) => {
+          const status = resolveStatus(row);
+          const labelKey =
+            status === 'overdue' ? 'invoices.overdue' : `invoices.statusLabels.${String(value)}`;
+          return <Badge variant={getBadgeVariant(status)}>{t(labelKey, { defaultValue: status })}</Badge>;
+        },
+      },
+      {
+        key: 'due_date',
+        header: 'invoices.dueDate',
+        render: (value) => formatDate(String(value), i18n.language),
+      },
+      {
+        key: 'id',
+        header: 'invoices.actions',
+        sortable: false,
+        render: (_value, row) => (
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={(event) => {
+              event.stopPropagation();
+              navigate(`/invoices/${row.id}`);
+            }}
+          >
+            {t('invoices.view')}
+          </button>
+        ),
+      },
+    ],
+    [i18n.language, navigate, t]
   );
-
-  async function handleRetryPayment(invoiceId: string) {
-    setRetryingId(invoiceId);
-    await initiatePaymentMutation.mutateAsync(invoiceId);
-    await invoicesQuery.refetch();
-    setRetryingId(null);
-  }
-
-  function getStatusColor(status: string, overdue?: boolean): string {
-    if (overdue) return '#ef4444';
-    switch (status) {
-      case 'paid':
-        return '#10b981';
-      case 'pending':
-        return '#f59e0b';
-      case 'failed':
-        return '#ef4444';
-      case 'canceled':
-        return '#6b7280';
-      default:
-        return '#6b7280';
-    }
-  }
 
   if (invoicesQuery.isLoading && !invoicesQuery.data) {
     return <LoadingState />;
   }
 
   return (
-    <div className="page">
-      <h1 className="page-title">{t('invoices.title')}</h1>
-
-      {overdueCount > 0 && (
-        <div className="invoice-overdue-banner">⚠️ {t('invoices.overdueCount', { count: overdueCount })}</div>
-      )}
-
-      <div className="filters-bar">
-        <div className="filter-pills">
-          {[
-            { value: '', label: t('invoices.allStatuses') },
-            { value: 'pending', label: t('invoices.statusLabels.pending') },
-            { value: 'paid', label: t('invoices.statusLabels.paid') },
-            { value: 'failed', label: t('invoices.statusLabels.failed') },
-          ].map((filter) => (
-            <button
-              key={filter.value}
-              className={`filter-pill ${statusFilter === filter.value ? 'filter-pill--active' : ''}`}
-              onClick={() => setStatusFilter(filter.value)}
-            >
-              {filter.label}
-            </button>
-          ))}
-          {overdueCount > 0 && (
-            <button
-              className={`filter-pill filter-pill--danger ${statusFilter === 'overdue' ? 'filter-pill--active' : ''}`}
-              onClick={() => setStatusFilter(statusFilter === 'overdue' ? '' : 'overdue')}
-            >
-              {t('invoices.overdue')} ({overdueCount})
-            </button>
-          )}
+    <div className="page invoices-page">
+      <div className="page-header page-header--split">
+        <div>
+          <h1 className="page-title">{t('invoices.title')}</h1>
+          <p className="page-subtitle">{t('invoices.subtitle')}</p>
         </div>
       </div>
 
-      <ErrorBanner
-        error={dismissibleError.error}
-        onDismiss={dismissibleError.dismiss}
-        onRetry={() => void invoicesQuery.refetch()}
+      <ErrorBanner error={toBannerError(invoicesQuery.error, t('app.error'))} />
+
+      <div className="filters-bar">
+        <SearchInput
+          value={search}
+          onChange={(value) => {
+            setSearch(value);
+            setCurrentPage(1);
+          }}
+          placeholder="invoices.searchPlaceholder"
+        />
+        <select
+          className="filter-select"
+          value={statusFilter}
+          onChange={(event) => {
+            setStatusFilter(event.target.value);
+            setCurrentPage(1);
+          }}
+        >
+          <option value="">{t('invoices.allStatuses')}</option>
+          <option value="draft">{t('invoices.statusLabels.draft')}</option>
+          <option value="sent">{t('invoices.statusLabels.sent')}</option>
+          <option value="paid">{t('invoices.statusLabels.paid')}</option>
+          <option value="overdue">{t('invoices.overdue')}</option>
+        </select>
+        <input
+          type="date"
+          className="filter-input"
+          value={from}
+          lang="fr-MA"
+          onChange={(event) => {
+            setFrom(event.target.value);
+            setCurrentPage(1);
+          }}
+        />
+        <input
+          type="date"
+          className="filter-input"
+          value={to}
+          lang="fr-MA"
+          onChange={(event) => {
+            setTo(event.target.value);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+
+      <DataTable
+        columns={columns}
+        data={pageItems as InvoiceTableRow[]}
+        loading={invoicesQuery.isLoading}
+        emptyMessage="invoices.empty"
+        ariaLabel={t('invoices.title')}
+        onRowClick={(row) => navigate(`/invoices/${row.id}`)}
       />
 
-      {displayedItems.length === 0 ? (
-        <EmptyState message={t('invoices.empty')} icon="💳" />
-      ) : (
-        <>
-          <div className="table-container">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>{t('invoices.items')}</th>
-                  <th>{t('invoices.amount')}</th>
-                  <th>{t('invoices.status')}</th>
-                  <th>{t('invoices.issuedDate')}</th>
-                  <th>{t('invoices.dueDate')}</th>
-                  {isPar && <th>{t('invoices.actions')}</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {displayedItems.map((invoice) => {
-                  const overdue = isOverdue(invoice);
-                  return (
-                    <tr key={invoice.id} className={overdue ? 'invoice-row--overdue' : ''}>
-                      <td>{invoice.label}</td>
-                      <td>{formatCurrency(invoice.total_cents / 100, invoice.currency)}</td>
-                      <td>
-                        <span className="status-badge" style={{ color: getStatusColor(invoice.status, overdue), borderColor: getStatusColor(invoice.status, overdue) }}>
-                          {overdue ? t('invoices.overdue') : t(`invoices.statusLabels.${invoice.status}`, invoice.status)}
-                        </span>
-                      </td>
-                      <td>{formatDate(invoice.issued_date, i18n.language)}</td>
-                      <td>
-                        {formatDate(invoice.due_date, i18n.language)}
-                        {overdue && <span style={{ color: 'var(--color-danger)', fontSize: 12, marginInlineStart: 4 }}>⚠️</span>}
-                      </td>
-                      {isPar && (
-                        <td>
-                          {(invoice.status === 'pending' || invoice.status === 'failed') && (
-                            <button
-                              className="btn btn-sm btn-primary"
-                              onClick={() => void handleRetryPayment(invoice.id)}
-                              disabled={retryingId === invoice.id}
-                            >
-                              {retryingId === invoice.id ? '...' : invoice.status === 'failed' ? t('invoices.retry') : t('invoices.pay')}
-                            </button>
-                          )}
-                        </td>
-                      )}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {invoicesQuery.hasNextPage && (
-            <div style={{ textAlign: 'center', marginTop: '16px' }}>
-              <button className="btn btn-secondary" onClick={() => void invoicesQuery.fetchNextPage()} disabled={invoicesQuery.isFetchingNextPage}>
-                {invoicesQuery.isFetchingNextPage ? t('app.loading') : t('feed.loadMore')}
-              </button>
-            </div>
-          )}
-        </>
-      )}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setCurrentPage(1);
+        }}
+      />
     </div>
   );
 }

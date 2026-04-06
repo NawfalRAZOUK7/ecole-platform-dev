@@ -3356,3 +3356,24 @@ textarea.filter-input {
     align-items: stretch;
   }
 }
+
+.invoice-detail-page__grid {
+  display: grid;
+  gap: 16px;
+}
+
+.invoice-detail-page__totals {
+  display: grid;
+  gap: 4px;
+  text-align: end;
+}
+
+.invoice-detail-page__totals strong {
+  font-size: 28px;
+}
+
+.invoice-detail-page__payment-form,
+.invoice-detail-page__proof {
+  display: grid;
+  gap: 12px;
+}
