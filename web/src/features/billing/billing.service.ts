@@ -70,6 +70,59 @@ export interface GenerateInvoicesResult {
   currency: string;
 }
 
+export interface SiblingPolicy {
+  id?: string;
+  discounts: Array<{ sibling_rank: number; discount_percent: number }>;
+  max_siblings_covered: number;
+}
+
+export interface SiblingPolicyInput {
+  discounts: Array<{ sibling_rank: number; discount_percent: number }>;
+  max_siblings_covered: number;
+}
+
+export interface LateFeePolicy {
+  id?: string;
+  grace_period_days: number;
+  fee_percent: number;
+  max_fee_cap: number;
+}
+
+export interface LateFeePolicyInput {
+  grace_period_days: number;
+  fee_percent: number;
+  max_fee_cap: number;
+}
+
+export interface PaymentPlanInstallment {
+  id: string;
+  plan_id: string;
+  due_date: string;
+  amount: number;
+  status: 'pending' | 'paid' | 'overdue';
+  paid_at?: string | null;
+}
+
+export interface PaymentPlan {
+  id: string;
+  student_id: string;
+  student_name?: string;
+  name: string;
+  total_amount: number;
+  start_date: string;
+  status: 'active' | 'completed' | 'cancelled';
+  installments: PaymentPlanInstallment[];
+  created_at: string;
+}
+
+export interface PaymentPlanInput {
+  student_id: string;
+  name: string;
+  total_amount: number;
+  start_date: string;
+  installments: Array<{ due_date: string; amount: number }>;
+}
+
 export const billingService = {
   listFeeStructures(params: Record<string, string | number | undefined> = {}) {
     return api.list<FeeStructure>('/billing/fee-structures', params);
@@ -97,5 +150,33 @@ export const billingService = {
 
   generateInvoices(payload: GenerateInvoicesInput) {
     return api.post<GenerateInvoicesResult>('/billing/generate-invoices', payload);
+  },
+
+  getSiblingPolicy() {
+    return api.get<SiblingPolicy>('/billing/sibling-policy');
+  },
+
+  updateSiblingPolicy(payload: SiblingPolicyInput) {
+    return api.put<SiblingPolicy>('/billing/sibling-policy', payload);
+  },
+
+  getLateFeePolicy() {
+    return api.get<LateFeePolicy>('/billing/late-fee-policy');
+  },
+
+  updateLateFeePolicy(payload: LateFeePolicyInput) {
+    return api.put<LateFeePolicy>('/billing/late-fee-policy', payload);
+  },
+
+  createPaymentPlan(payload: PaymentPlanInput) {
+    return api.post<PaymentPlan>('/billing/payment-plans', payload);
+  },
+
+  listPaymentPlans(params?: Record<string, string | number | undefined>) {
+    return api.list<PaymentPlan>('/billing/payment-plans', params);
+  },
+
+  getPaymentPlan(planId: string) {
+    return api.get<PaymentPlan>(`/billing/payment-plans/${planId}`);
   },
 };

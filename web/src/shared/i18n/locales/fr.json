@@ -56,6 +56,9 @@
     "adminFeeStructures": "Frais scolaires",
     "adminFeeAssignments": "Attribution des frais",
     "adminGenerateInvoices": "Generer des factures",
+    "billingSiblingPolicy": "Politique fratrie",
+    "billingLateFees": "Penalites de retard",
+    "billingPaymentPlans": "Plans de paiement",
     "budgets": "Budgets",
     "microSchools": "Micro-ecoles",
     "teacherClassProgress": "Progrès de la classe",
@@ -1770,6 +1773,53 @@
       "ACTIVE": "Actif",
       "ARCHIVED": "Archive",
       "EXEMPTED": "Exempte"
+    },
+    "siblingPolicy": {
+      "title": "Politique fratrie",
+      "description": "Definissez les remises accordees aux familles avec plusieurs enfants inscrits.",
+      "maxSiblings": "Nombre max de freres/soeurs couverts",
+      "siblingRank": "Enfant",
+      "discountPercent": "Remise (%)",
+      "siblingN": "{{n}}e enfant"
+    },
+    "lateFeePolicy": {
+      "title": "Politique de penalites de retard",
+      "description": "Configurez les penalites appliquees aux paiements en retard.",
+      "gracePeriodDays": "Delai de grace (jours)",
+      "feePercent": "Taux de penalite",
+      "maxFeeCap": "Plafond maximal",
+      "days": "jours"
+    },
+    "paymentPlans": {
+      "title": "Plans de paiement",
+      "create": "Nouveau plan",
+      "empty": "Aucun plan de paiement",
+      "notFound": "Plan introuvable",
+      "planName": "Nom du plan",
+      "student": "Eleve",
+      "studentId": "ID de l'eleve",
+      "totalAmount": "Montant total",
+      "installments": "Echeances",
+      "installmentsLabel": "Echeancier",
+      "addInstallment": "Ajouter une echeance",
+      "noInstallments": "Aucune echeance",
+      "startDate": "Date de debut",
+      "dueDate": "Date d'echeance",
+      "amount": "Montant",
+      "paidAt": "Date de paiement",
+      "progress": "Progression",
+      "createdAt": "Cree le",
+      "status": "Statut",
+      "statuses": {
+        "active": "Actif",
+        "completed": "Termine",
+        "cancelled": "Annule"
+      },
+      "installmentStatuses": {
+        "pending": "En attente",
+        "paid": "Paye",
+        "overdue": "En retard"
+      }
     }
   },
   "messages": {

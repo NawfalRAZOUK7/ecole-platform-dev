@@ -95,6 +95,10 @@ import {
   FeeStructuresPage,
   FeeAssignmentsPage,
   GenerateInvoicesPage,
+  SiblingPolicyPage,
+  LateFeePolicyPage,
+  PaymentPlansPage,
+  PaymentPlanDetailPage,
   CmsContentListPage,
   CmsContentUploadPage,
   CmsContentEditPage,
@@ -236,6 +240,38 @@ function App() {
           element={
             <ProtectedRoute roles={['ADM']}>
               <GenerateInvoicesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/billing/sibling-policy"
+          element={
+            <ProtectedRoute roles={['ADM']}>
+              <SiblingPolicyPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/billing/late-fees"
+          element={
+            <ProtectedRoute roles={['ADM']}>
+              <LateFeePolicyPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/billing/payment-plans/:planId"
+          element={
+            <ProtectedRoute roles={['ADM', 'DIR', 'PAR']}>
+              <PaymentPlanDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/billing/payment-plans"
+          element={
+            <ProtectedRoute roles={['ADM', 'DIR', 'PAR']}>
+              <PaymentPlansPage />
             </ProtectedRoute>
           }
         />
