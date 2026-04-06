@@ -3251,3 +3251,108 @@ textarea.filter-input {
     min-height: 72px;
   }
 }
+
+.gradebook-page__toolbar,
+.gradebook-page__actions,
+.gradebook-page__footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.gradebook-page__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.gradebook-page__loading {
+  display: grid;
+  gap: 12px;
+}
+
+.gradebook-page__form {
+  display: grid;
+  gap: 16px;
+}
+
+.gradebook-table-shell {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.gradebook-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.gradebook-table th,
+.gradebook-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--color-border);
+  text-align: start;
+  vertical-align: middle;
+}
+
+.gradebook-table th {
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.gradebook-table__header {
+  display: grid;
+  gap: 4px;
+}
+
+.gradebook-table__student {
+  min-width: 200px;
+}
+
+.gradebook-cell {
+  width: 88px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.gradebook-cell--pass {
+  border-color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 10%, var(--color-surface));
+}
+
+.gradebook-cell--fail {
+  border-color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 10%, var(--color-surface));
+}
+
+.gradebook-average {
+  font-weight: 700;
+}
+
+.gradebook-average--pass {
+  color: var(--color-success);
+}
+
+.gradebook-average--fail {
+  color: var(--color-error);
+}
+
+.grade-detail-page__chart {
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .gradebook-page__toolbar,
+  .gradebook-page__actions,
+  .gradebook-page__footer {
+    align-items: stretch;
+  }
+}

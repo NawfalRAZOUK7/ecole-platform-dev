@@ -32,6 +32,8 @@ import { AttendanceAnalyticsPage } from '@/features/attendance/AttendanceAnalyti
 import { AttendanceHistoryPage } from '@/features/attendance/AttendanceHistoryPage';
 import { AttendancePage as AttendanceModulePage } from '@/features/attendance/AttendancePage';
 import { ParentJustificationPage } from '@/features/attendance/ParentJustificationPage';
+import { GradeDetailPage } from '@/features/gradebook/GradeDetailPage';
+import { GradebookPage } from '@/features/gradebook/GradebookPage';
 import { DashboardPage } from '@/features/admin/DashboardPage';
 import { UsersPage } from '@/features/admin/UsersPage';
 import { InvitationsPage } from '@/features/admin/InvitationsPage';
@@ -324,6 +326,22 @@ function App() {
           element={
             <ProtectedRoute roles={['PAR']}>
               <ParentJustificationPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/gradebook"
+          element={
+            <ProtectedRoute roles={['TCH', 'DIR']}>
+              <GradebookPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/gradebook/student/:studentId"
+          element={
+            <ProtectedRoute roles={['STD', 'PAR', 'TCH', 'DIR']}>
+              <GradeDetailPage />
             </ProtectedRoute>
           }
         />
