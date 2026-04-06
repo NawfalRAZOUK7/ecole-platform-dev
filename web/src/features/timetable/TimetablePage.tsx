@@ -13,7 +13,6 @@ import { useAuth } from '@/services/auth/AuthContext';
 import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
-import { EmptyState } from '@/shared/ui/EmptyState';
 import { toBannerError } from '@/shared/ui/errorUtils';
 import {
   useCreateTimetableException,
@@ -24,45 +23,11 @@ import {
   useWeeklyTimetable,
 } from './useTimetable';
 import type { ClassOption, ExceptionForm, SlotForm, TimetableSlot } from './timetable.service';
-
-const DAYS = [1, 2, 3, 4, 5, 6]; // Mon-Sat
-const SUBJECT_COLORS: Record<string, string> = {
-  math: '#eff6ff',
-  french: '#fef3c7',
-  arabic: '#ecfdf5',
-  science: '#f0fdf4',
-  history: '#faf5ff',
-  geography: '#fff7ed',
-  english: '#fdf2f8',
-  islamic_studies: '#f0f9ff',
-  art: '#fefce8',
-  sport: '#f0fdfa',
-};
-
-function getSubjectColor(subject: string): string {
-  const key = subject.toLowerCase().replace(/\s+/g, '_');
-  return SUBJECT_COLORS[key] || '#f3f4f6';
-}
-
-const EMPTY_SLOT_FORM: SlotForm = {
-  class_id: '',
-  academic_year_id: '',
-  day_of_week: 1,
-  start_time: '08:00',
-  end_time: '09:00',
-  subject: '',
-  teacher_id: '',
-  room: '',
-};
-
-const EMPTY_EXCEPTION_FORM: ExceptionForm = {
-  timetable_slot_id: '',
-  exception_date: new Date().toISOString().slice(0, 10),
-  exception_type: 'CANCELED',
-  substitute_teacher_id: '',
-  new_room: '',
-  reason: '',
-};
+import { TimetableFilters } from './TimetableFilters';
+import { TimetableGrid } from './TimetableGrid';
+import { SlotEditor } from './SlotEditor';
+import { DAYS, EMPTY_EXCEPTION_FORM, EMPTY_SLOT_FORM } from './timetable.types';
+import { EmptyState } from '@/shared/ui/EmptyState';
 
 export function TimetablePage() {
   const { t } = useTranslation();
@@ -226,245 +191,46 @@ export function TimetablePage() {
         )}
       </div>
 
-      {weekStart && weekEnd && (
-        <p style={{ color: 'var(--color-text-secondary)', fontSize: 13, marginBottom: 16 }}>
-          {t('timetable.weekOf')} {weekStart} — {weekEnd}
-        </p>
-      )}
-
-      {isAdmin && classes.length > 0 && (
-        <div className="filters-bar">
-          <select
-            className="filter-select"
-            value={selectedClassId}
-            onChange={(e) => setSelectedClassId(e.target.value)}
-          >
-            {classes.map((c) => (
-              <option key={c.id} value={c.id}>{c.code} — {c.name}</option>
-            ))}
-          </select>
-        </div>
-      )}
+      <TimetableFilters
+        classes={classes}
+        isAdmin={isAdmin}
+        selectedClassId={selectedClassId}
+        weekStart={weekStart}
+        weekEnd={weekEnd}
+        onChangeClass={setSelectedClassId}
+      />
 
       <ErrorBanner error={dismissibleError.error} onDismiss={dismissibleError.dismiss} onRetry={() => void weeklyQuery.refetch()} />
 
       {slots.length === 0 ? (
         <EmptyState message={t('timetable.empty')} icon="📅" />
       ) : (
-        <div className="timetable-grid">
-          {DAYS.map((day) => {
-            const daySlots = slotsByDay.get(day) || [];
-            return (
-              <div key={day} className="timetable-day">
-                <div className="timetable-day-header">
-                  {t(`timetable.days.${day}`)}
-                </div>
-                <div className="timetable-day-slots">
-                  {daySlots.length === 0 ? (
-                    <div className="timetable-empty-day">—</div>
-                  ) : (
-                    daySlots.map((slot) => {
-                      const isCanceled = slot.exception?.exception_type === 'CANCELED';
-                      const isSubstituted = slot.exception?.exception_type === 'SUBSTITUTED';
-                      return (
-                        <div
-                          key={slot.id}
-                          className={`timetable-slot-card ${isCanceled ? 'timetable-slot--canceled' : ''}`}
-                          style={{ background: isCanceled ? '#fee2e2' : getSubjectColor(slot.subject) }}
-                        >
-                          <div className="timetable-slot-time">
-                            {slot.start_time.slice(0, 5)} – {slot.end_time.slice(0, 5)}
-                          </div>
-                          <div className="timetable-slot-subject">
-                            {t(`cms.subjects.${slot.subject.toLowerCase().replace(/\s+/g, '_')}`, slot.subject)}
-                          </div>
-                          {slot.room && (
-                            <div className="timetable-slot-room">🏫 {slot.room}</div>
-                          )}
-                          {slot.class_name && role === 'TCH' && (
-                            <div className="timetable-slot-class">{slot.class_name}</div>
-                          )}
-                          {isCanceled && (
-                            <span className="timetable-exception-badge timetable-exception--canceled">
-                              {t('timetable.canceled')}
-                            </span>
-                          )}
-                          {isSubstituted && (
-                            <span className="timetable-exception-badge timetable-exception--substituted">
-                              {t('timetable.substituted')}
-                            </span>
-                          )}
-                          {slot.exception?.exception_type === 'ROOM_CHANGED' && slot.exception.new_room && (
-                            <span className="timetable-exception-badge timetable-exception--room">
-                              → {slot.exception.new_room}
-                            </span>
-                          )}
-                          {isAdmin && (
-                            <div className="timetable-slot-actions">
-                              <button className="btn btn-sm btn-secondary" onClick={() => openEditSlot(slot)}>
-                                ✏️
-                              </button>
-                              <button className="btn btn-sm btn-secondary" onClick={() => openException(slot)}>
-                                ⚠️
-                              </button>
-                              <button className="btn btn-sm btn-danger" onClick={() => handleDeleteSlot(slot.id)}>
-                                🗑️
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <TimetableGrid
+          days={DAYS}
+          isAdmin={isAdmin}
+          role={role}
+          slotsByDay={slotsByDay}
+          onDelete={(slotId) => void handleDeleteSlot(slotId)}
+          onEdit={openEditSlot}
+          onException={openException}
+        />
       )}
 
-      {/* Slot Create/Edit Modal */}
-      {showSlotModal && (
-        <div className="modal-overlay" onClick={() => setShowSlotModal(false)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <h2 style={{ marginBottom: 16 }}>
-              {editingSlotId ? t('timetable.editSlot') : t('timetable.addSlot')}
-            </h2>
-            <div className="form-field">
-              <label>{t('timetable.day')}</label>
-              <select
-                className="filter-select"
-                value={slotForm.day_of_week}
-                onChange={(e) => setSlotForm({ ...slotForm, day_of_week: Number(e.target.value) })}
-              >
-                {DAYS.map((d) => (
-                  <option key={d} value={d}>{t(`timetable.days.${d}`)}</option>
-                ))}
-              </select>
-            </div>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <div className="form-field" style={{ flex: 1 }}>
-                <label>{t('timetable.startTime')}</label>
-                <input
-                  type="time"
-                  value={slotForm.start_time}
-                  onChange={(e) => setSlotForm({ ...slotForm, start_time: e.target.value })}
-                />
-              </div>
-              <div className="form-field" style={{ flex: 1 }}>
-                <label>{t('timetable.endTime')}</label>
-                <input
-                  type="time"
-                  value={slotForm.end_time}
-                  onChange={(e) => setSlotForm({ ...slotForm, end_time: e.target.value })}
-                />
-              </div>
-            </div>
-            <div className="form-field">
-              <label>{t('timetable.subject')}</label>
-              <input
-                type="text"
-                value={slotForm.subject}
-                onChange={(e) => setSlotForm({ ...slotForm, subject: e.target.value })}
-                placeholder={t('timetable.subjectPlaceholder')}
-              />
-            </div>
-            <div className="form-field">
-              <label>{t('timetable.room')}</label>
-              <input
-                type="text"
-                value={slotForm.room}
-                onChange={(e) => setSlotForm({ ...slotForm, room: e.target.value })}
-                placeholder={t('timetable.roomPlaceholder')}
-              />
-            </div>
-            <div className="form-field">
-              <label>{t('timetable.teacherId')}</label>
-              <input
-                type="text"
-                value={slotForm.teacher_id}
-                onChange={(e) => setSlotForm({ ...slotForm, teacher_id: e.target.value })}
-                placeholder="UUID"
-              />
-            </div>
-            <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
-              <button className="btn btn-primary" onClick={handleSaveSlot} disabled={saving || !slotForm.subject}>
-                {saving ? t('app.loading') : t('app.save')}
-              </button>
-              <button className="btn btn-secondary" onClick={() => setShowSlotModal(false)}>
-                {t('app.cancel')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Exception Modal */}
-      {showExceptionModal && (
-        <div className="modal-overlay" onClick={() => setShowExceptionModal(false)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <h2 style={{ marginBottom: 16 }}>{t('timetable.createException')}</h2>
-            <div className="form-field">
-              <label>{t('timetable.exceptionDate')}</label>
-              <input
-                type="date"
-                value={exceptionForm.exception_date}
-                onChange={(e) => setExceptionForm({ ...exceptionForm, exception_date: e.target.value })}
-              />
-            </div>
-            <div className="form-field">
-              <label>{t('timetable.exceptionType')}</label>
-              <select
-                className="filter-select"
-                value={exceptionForm.exception_type}
-                onChange={(e) => setExceptionForm({ ...exceptionForm, exception_type: e.target.value })}
-              >
-                <option value="CANCELED">{t('timetable.canceled')}</option>
-                <option value="SUBSTITUTED">{t('timetable.substituted')}</option>
-                <option value="ROOM_CHANGED">{t('timetable.roomChanged')}</option>
-              </select>
-            </div>
-            {exceptionForm.exception_type === 'SUBSTITUTED' && (
-              <div className="form-field">
-                <label>{t('timetable.substituteTeacher')}</label>
-                <input
-                  type="text"
-                  value={exceptionForm.substitute_teacher_id}
-                  onChange={(e) => setExceptionForm({ ...exceptionForm, substitute_teacher_id: e.target.value })}
-                  placeholder="UUID"
-                />
-              </div>
-            )}
-            {exceptionForm.exception_type === 'ROOM_CHANGED' && (
-              <div className="form-field">
-                <label>{t('timetable.newRoom')}</label>
-                <input
-                  type="text"
-                  value={exceptionForm.new_room}
-                  onChange={(e) => setExceptionForm({ ...exceptionForm, new_room: e.target.value })}
-                />
-              </div>
-            )}
-            <div className="form-field">
-              <label>{t('timetable.reason')}</label>
-              <input
-                type="text"
-                value={exceptionForm.reason}
-                onChange={(e) => setExceptionForm({ ...exceptionForm, reason: e.target.value })}
-                placeholder={t('timetable.reasonPlaceholder')}
-              />
-            </div>
-            <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
-              <button className="btn btn-primary" onClick={handleSaveException} disabled={saving}>
-                {saving ? t('app.loading') : t('app.save')}
-              </button>
-              <button className="btn btn-secondary" onClick={() => setShowExceptionModal(false)}>
-                {t('app.cancel')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <SlotEditor
+        days={DAYS}
+        exceptionForm={exceptionForm}
+        isExceptionOpen={showExceptionModal}
+        isSlotOpen={showSlotModal}
+        isSaving={saving}
+        editingSlotId={editingSlotId}
+        slotForm={slotForm}
+        onChangeExceptionForm={setExceptionForm}
+        onChangeSlotForm={setSlotForm}
+        onCloseException={() => setShowExceptionModal(false)}
+        onCloseSlot={() => setShowSlotModal(false)}
+        onSaveException={() => void handleSaveException()}
+        onSaveSlot={() => void handleSaveSlot()}
+      />
     </div>
   );
 }
