@@ -1,132 +1,115 @@
-import { useState, type FormEvent } from 'react';
+import { useMemo, useState } from 'react';
+import { FormProvider, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
-import { ErrorBanner } from '@/shared/ui/ErrorBanner';
+import { ErrorBanner, FileUpload, FormField, FormTextarea } from '@/shared/ui';
+import { toBannerError } from '@/shared/ui/errorUtils';
 import { useSubmitJustification } from './useAttendance';
+
+const justificationSchema = z.object({
+  attendanceRecordId: z.string().min(1, 'justification.attendanceRecordId'),
+  reason: z.string().min(3, 'justification.reason').max(2000, 'justification.reason'),
+});
+
+type JustificationFormValues = z.infer<typeof justificationSchema>;
 
 type Step = 'form' | 'done';
 
 export function ParentJustificationPage() {
   const { t } = useTranslation();
-  const submitJustificationMutation = useSubmitJustification();
   const [step, setStep] = useState<Step>('form');
-  const [error, setError] = useState<string | null>(null);
-  const [attendanceRecordId, setAttendanceRecordId] = useState('');
-  const [reason, setReason] = useState('');
+  const [attachment, setAttachment] = useState<File | undefined>(undefined);
+  const submitJustificationMutation = useSubmitJustification();
+  const methods = useForm<JustificationFormValues>({
+    resolver: zodResolver(justificationSchema),
+    defaultValues: {
+      attendanceRecordId: '',
+      reason: '',
+    },
+  });
 
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault();
-    if (!attendanceRecordId.trim() || !reason.trim()) {
-      return;
-    }
+  const bannerError = useMemo(
+    () => toBannerError(submitJustificationMutation.error, t('app.error')),
+    [submitJustificationMutation.error, t]
+  );
 
-    setError(null);
-
-    try {
-      await submitJustificationMutation.mutateAsync({
-        attendance_record_id: attendanceRecordId.trim(),
-        reason: reason.trim(),
-      });
-      setStep('done');
-    } catch (submissionError) {
-      setError(submissionError instanceof Error ? submissionError.message : t('app.error'));
-    }
+  async function handleSubmit(values: JustificationFormValues) {
+    await submitJustificationMutation.mutateAsync({
+      recordId: values.attendanceRecordId.trim(),
+      justification: values.reason.trim(),
+      file: attachment,
+    });
+    setStep('done');
   }
 
   function handleReset() {
-    setAttendanceRecordId('');
-    setReason('');
+    methods.reset();
+    setAttachment(undefined);
     setStep('form');
-    setError(null);
   }
 
   return (
-    <div className="page">
+    <div className="page attendance-justification-page">
       <h1 className="page-title">{t('justification.title')}</h1>
 
-      <ErrorBanner error={error} onDismiss={() => setError(null)} />
+      <ErrorBanner error={bannerError} />
 
       {step === 'done' ? (
-        <div className="card" style={{ maxWidth: 500 }}>
-          <h3
-            style={{
-              color: 'var(--color-success)',
-              marginBottom: 12,
-              fontSize: 16,
-              fontWeight: 600,
-            }}
-          >
-            {t('justification.success')}
-          </h3>
-          <p
-            style={{
-              fontSize: 14,
-              color: 'var(--color-text-secondary)',
-              marginBottom: 16,
-            }}
-          >
-            {t('justification.successMessage')}
-          </p>
-          <button className="btn btn-primary" onClick={handleReset}>
+        <div className="card attendance-banner attendance-banner--success">
+          <h2 className="attendance-page__section-title">{t('justification.success')}</h2>
+          <p className="attendance-page__summary">{t('justification.successMessage')}</p>
+          <button type="button" className="btn btn-primary" onClick={handleReset}>
             {t('justification.submitAnother')}
           </button>
         </div>
       ) : (
-        <form onSubmit={handleSubmit}>
-          <div className="card" style={{ maxWidth: 500 }}>
-            <p
-              style={{
-                fontSize: 13,
-                color: 'var(--color-text-secondary)',
-                marginBottom: 16,
-              }}
-            >
-              {t('justification.instructions')}
-            </p>
+        <FormProvider {...methods}>
+          <form onSubmit={methods.handleSubmit(handleSubmit)} className="attendance-justification-page__form">
+            <div className="card attendance-justification-page__card">
+              <p className="attendance-page__summary">{t('justification.instructions')}</p>
 
-            <div className="form-field" style={{ marginBottom: 16 }}>
-              <label>{t('justification.attendanceRecordId')}</label>
-              <input
-                className="filter-input"
-                value={attendanceRecordId}
-                onChange={(event) => setAttendanceRecordId(event.target.value)}
-                placeholder={t('justification.recordIdPlaceholder')}
-                required
+              <FormField<JustificationFormValues>
+                name="attendanceRecordId"
+                label="justification.attendanceRecordId"
+                placeholder="justification.recordIdPlaceholder"
                 disabled={submitJustificationMutation.isPending}
-                style={{ width: '100%' }}
               />
-            </div>
 
-            <div className="form-field" style={{ marginBottom: 16 }}>
-              <label>{t('justification.reason')}</label>
-              <textarea
-                className="filter-input"
-                value={reason}
-                onChange={(event) => setReason(event.target.value)}
-                placeholder={t('justification.reasonPlaceholder')}
-                required
-                disabled={submitJustificationMutation.isPending}
-                rows={4}
+              <FormTextarea<JustificationFormValues>
+                name="reason"
+                label="justification.reason"
+                placeholder="justification.reasonPlaceholder"
+                rows={5}
                 maxLength={2000}
-                style={{ width: '100%', resize: 'vertical' }}
+                disabled={submitJustificationMutation.isPending}
               />
-              <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
-                {reason.length}/2000
-              </span>
-            </div>
 
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={
-                submitJustificationMutation.isPending ||
-                !attendanceRecordId.trim() ||
-                !reason.trim()
-              }
-            >
-              {submitJustificationMutation.isPending ? t('app.loading') : t('justification.submit')}
-            </button>
-          </div>
-        </form>
+              <div className="attendance-justification-page__upload">
+                <span className="attendance-filter__label">{t('justification.attachFile')}</span>
+                <FileUpload
+                  maxFiles={1}
+                  maxSizeMb={5}
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  disabled={submitJustificationMutation.isPending}
+                  onFilesSelected={(files) => {
+                    setAttachment(files[0]);
+                  }}
+                />
+              </div>
+
+              <div className="attendance-page__actions">
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={submitJustificationMutation.isPending}
+                >
+                  {submitJustificationMutation.isPending ? t('app.loading') : t('justification.submit')}
+                </button>
+              </div>
+            </div>
+          </form>
+        </FormProvider>
       )}
     </div>
   );

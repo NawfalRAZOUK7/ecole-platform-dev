@@ -3046,3 +3046,208 @@ textarea.filter-input {
     grid-template-columns: 1fr;
   }
 }
+
+.attendance-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  margin-bottom: 20px;
+}
+
+.attendance-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 180px;
+}
+
+.attendance-filter__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.attendance-page__actions,
+.attendance-analytics-page__export,
+.attendance-page__footer,
+.attendance-heatmap__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.attendance-page__summary {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.attendance-page__section-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.attendance-banner {
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  margin-bottom: 16px;
+}
+
+.attendance-banner--success {
+  background: color-mix(in srgb, var(--color-success) 12%, var(--color-surface));
+  border-color: color-mix(in srgb, var(--color-success) 38%, var(--color-border));
+}
+
+.attendance-page__skeleton,
+.attendance-history__skeleton {
+  display: grid;
+  gap: 12px;
+}
+
+.attendance-page__note-input {
+  min-width: 160px;
+  width: 100%;
+}
+
+.attendance-status-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.attendance-status-pill {
+  padding: 6px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.attendance-status-pill--active.attendance-status-pill--present {
+  color: var(--color-success);
+  border-color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 10%, var(--color-surface));
+}
+
+.attendance-status-pill--active.attendance-status-pill--absent {
+  color: var(--color-error);
+  border-color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 10%, var(--color-surface));
+}
+
+.attendance-status-pill--active.attendance-status-pill--late {
+  color: var(--color-warning);
+  border-color: var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning) 10%, var(--color-surface));
+}
+
+.attendance-status-pill--active.attendance-status-pill--excused {
+  color: var(--color-text-secondary);
+  border-color: var(--color-text-secondary);
+  background: var(--color-bg);
+}
+
+.attendance-page__footer {
+  margin-top: 16px;
+}
+
+.attendance-history__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.attendance-history__card,
+.attendance-analytics-page__chart,
+.attendance-justification-page__card {
+  display: grid;
+  gap: 16px;
+}
+
+.attendance-history__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.attendance-heatmap {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.attendance-heatmap__cell {
+  min-height: 82px;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: var(--shadow-sm);
+}
+
+.attendance-heatmap__day {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.attendance-heatmap__label {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.attendance-heatmap__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.attendance-heatmap__legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+}
+
+.attendance-analytics-page__chart {
+  min-height: 340px;
+}
+
+.attendance-justification-page__form {
+  max-width: 560px;
+}
+
+.attendance-justification-page__upload {
+  display: grid;
+  gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .attendance-toolbar,
+  .attendance-page__actions,
+  .attendance-analytics-page__export {
+    align-items: stretch;
+  }
+
+  .attendance-filter {
+    min-width: 100%;
+  }
+
+  .attendance-heatmap {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .attendance-heatmap__cell {
+    min-height: 72px;
+  }
+}

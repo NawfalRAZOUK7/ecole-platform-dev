@@ -135,6 +135,7 @@ async function request<T>(
   options: RequestOptions = {}
 ): Promise<T> {
   const { method = 'GET', body, params, skipAuth = false, retries = 0 } = options;
+  const isFormData = body instanceof FormData;
 
   // Build URL with query params
   let url = `${API_BASE}${path}`;
@@ -162,7 +163,7 @@ async function request<T>(
     headers['Authorization'] = `Bearer ${accessToken}`;
   }
 
-  if (body !== undefined) {
+  if (body !== undefined && !isFormData) {
     headers['Content-Type'] = 'application/json';
   }
 
@@ -173,7 +174,7 @@ async function request<T>(
   };
 
   if (body !== undefined) {
-    fetchOpts.body = JSON.stringify(body);
+    fetchOpts.body = isFormData ? body : JSON.stringify(body);
   }
 
   const resp = await fetch(url, fetchOpts);

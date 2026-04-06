@@ -28,6 +28,9 @@ import { ProfilePage } from '@/features/profile/ProfilePage';
 import { SessionsPage } from '@/features/profile/SessionsPage';
 import { TwoFactorPage } from '@/features/profile/TwoFactorPage';
 import { StudentSubmissionPage } from '@/features/submissions/StudentSubmissionPage';
+import { AttendanceAnalyticsPage } from '@/features/attendance/AttendanceAnalyticsPage';
+import { AttendanceHistoryPage } from '@/features/attendance/AttendanceHistoryPage';
+import { AttendancePage as AttendanceModulePage } from '@/features/attendance/AttendancePage';
 import { ParentJustificationPage } from '@/features/attendance/ParentJustificationPage';
 import { DashboardPage } from '@/features/admin/DashboardPage';
 import { UsersPage } from '@/features/admin/UsersPage';
@@ -42,7 +45,7 @@ import { ClassesPage as TeacherClassesPage } from '@/features/teacher/ClassesPag
 import { CoursesPage as TeacherCoursesPage } from '@/features/teacher/CoursesPage';
 import { AssignmentFormPage } from '@/features/teacher/AssignmentFormPage';
 import { SubmissionsPage as TeacherSubmissionsPage } from '@/features/teacher/SubmissionsPage';
-import { AttendancePage } from '@/features/teacher/AttendancePage';
+import { AttendancePage as TeacherAttendancePage } from '@/features/teacher/AttendancePage';
 import { AssessmentFormPage } from '@/features/teacher/AssessmentFormPage';
 import { ContentLibraryPage } from '@/features/teacher/ContentLibraryPage';
 import { QuizManagerPage } from '@/features/teacher/QuizManagerPage';
@@ -244,7 +247,7 @@ function App() {
           path="/teacher/attendance"
           element={
             <ProtectedRoute roles={['TCH']}>
-              <AttendancePage />
+              <TeacherAttendancePage />
             </ProtectedRoute>
           }
         />
@@ -292,6 +295,38 @@ function App() {
         />
 
         {/* Timetable (all roles) */}
+        <Route
+          path="/attendance"
+          element={
+            <ProtectedRoute roles={['TCH', 'DIR', 'ADM']}>
+              <AttendanceModulePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/attendance/history"
+          element={
+            <ProtectedRoute roles={['STD', 'PAR']}>
+              <AttendanceHistoryPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/attendance/analytics"
+          element={
+            <ProtectedRoute roles={['DIR', 'ADM']}>
+              <AttendanceAnalyticsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/attendance/justify"
+          element={
+            <ProtectedRoute roles={['PAR']}>
+              <ParentJustificationPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/timetable"
           element={
