@@ -14,8 +14,8 @@ from app.core.permissions import (
     PERM_ADM_SCHOOL_READ,
     SUP,
 )
-from app.core.response import list_response, success_response
-from app.schemas.school import SchoolCreateRequest, SchoolUpdateRequest
+from app.core.response import ApiResponse, list_response, success_response
+from app.schemas.school import SchoolCreateRequest, SchoolResponse, SchoolUpdateRequest
 from app.services.school import SchoolService
 
 router = APIRouter(prefix="/schools", tags=["schools"])
@@ -60,6 +60,7 @@ async def list_schools(
 
 @router.get(
     "/{school_id}",
+    response_model=ApiResponse[SchoolResponse],
     summary="Get a school",
     response_description="School details",
 )

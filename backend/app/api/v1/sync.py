@@ -36,6 +36,7 @@ router = APIRouter(prefix="/sync", tags=["sync"])
     "/devices",
     status_code=201,
     summary="Register sync device",
+    description="Registers a device for offline synchronization and returns the stored device record used for future push and pull operations.",
     response_description="Registered sync device",
 )
 async def register_device(
@@ -58,6 +59,7 @@ async def register_device(
 @router.get(
     "/devices",
     summary="List sync devices",
+    description="Returns sync-capable devices for the authenticated school. Supports filtering by activation state and device type.",
     response_description="List of sync devices",
 )
 async def list_devices(
@@ -81,6 +83,7 @@ async def list_devices(
     "/push",
     status_code=202,
     summary="Push offline changes",
+    description="Accepts queued offline changes from a device, validates them within school scope, and returns the accepted sync queue items.",
     response_description="Accepted queue items for sync",
 )
 async def push_changes(
@@ -105,6 +108,7 @@ async def push_changes(
 @router.post(
     "/pull",
     summary="Pull synced changes",
+    description="Returns server-side changes available to a device after an optional checkpoint, with a configurable batch limit for incremental sync.",
     response_description="Queued server changes since the checkpoint",
 )
 async def pull_changes(
@@ -129,6 +133,7 @@ async def pull_changes(
 @router.get(
     "/status",
     summary="Get sync status",
+    description="Returns queue counters and current synchronization status for a specific device in the authenticated school.",
     response_description="Per-device queue status counts",
 )
 async def get_sync_status(
@@ -149,6 +154,7 @@ async def get_sync_status(
 @router.get(
     "/conflicts",
     summary="List sync conflicts",
+    description="Lists sync conflicts visible to the authenticated school. Supports filtering by resolution state and limiting the result set.",
     response_description="List of sync conflicts",
 )
 async def list_conflicts(
@@ -174,6 +180,7 @@ async def list_conflicts(
 @router.post(
     "/conflicts/{conflict_id}/resolve",
     summary="Resolve sync conflict",
+    description="Applies a resolution decision to a queued sync conflict and returns the updated conflict record for auditability.",
     response_description="Resolved sync conflict",
 )
 async def resolve_conflict(
@@ -198,6 +205,7 @@ async def resolve_conflict(
 @router.get(
     "/checkpoints",
     summary="List sync checkpoints",
+    description="Returns stored sync checkpoints for the authenticated school, optionally filtered to a specific device.",
     response_description="List of sync checkpoints",
 )
 async def list_checkpoints(
@@ -221,6 +229,7 @@ async def list_checkpoints(
     "/checkpoint",
     status_code=201,
     summary="Create sync checkpoint",
+    description="Creates a checkpoint for a device so future pull operations can request only changes after the recorded sync marker.",
     response_description="Created sync checkpoint",
 )
 async def create_checkpoint(
@@ -245,6 +254,7 @@ async def create_checkpoint(
 @router.get(
     "/health",
     summary="Get sync device health",
+    description="Returns the current sync health summary for a device, including queue backlogs and recent synchronization signals.",
     response_description="Current sync health for a device",
 )
 async def get_sync_health(

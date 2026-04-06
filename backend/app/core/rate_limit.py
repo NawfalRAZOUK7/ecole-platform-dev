@@ -47,8 +47,15 @@ RATE_LIMITS = {
     "read": (100, 60),  # 100 per minute
 }
 
-# Paths to skip rate limiting (health, metrics, docs)
-SKIP_PATHS = {"/metrics", "/docs", "/redoc", "/openapi.json", "/api/v1/health"}
+# Paths to skip rate limiting (health, readiness, metrics, docs)
+SKIP_PATHS = {
+    "/metrics",
+    "/docs",
+    "/redoc",
+    "/openapi.json",
+    "/api/v1/health",
+    "/api/v1/readiness",
+}
 
 
 def _classify_request(method: str, path: str) -> str:

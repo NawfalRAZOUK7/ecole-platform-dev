@@ -14,16 +14,19 @@ import uuid
 
 import redis.asyncio as aioredis
 from fastapi import APIRouter, Cookie, Depends, Header, Query, Request, Response
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, get_current_user
 from app.core.redis import get_redis
-from app.core.response import list_response, success_response
+from app.core.response import Meta, list_response, success_response
 from app.core.request_utils import get_client_ip, parse_device_name
 from app.schemas.auth import (
     ChangePasswordRequest,
     EmailVerifyRequest,
+    LoginData,
     LoginRequest,
     RegisterRequest,
     TwoFactorDisableRequest,
@@ -35,11 +38,47 @@ from app.services.auth import AuthService, EmailVerificationService, TwoFactorSe
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
+class LoginTwoFactorData(BaseModel):
+    requires_2fa: bool
+    temp_token: str
+    message: str
+
+
+class LoginResponseEnvelope(BaseModel):
+    data: LoginData | LoginTwoFactorData
+    meta: Meta
+
+
+def _set_auth_cookies(response: Response, result: dict) -> None:
+    max_age = int(
+        result.get("refresh_expires_in", settings.refresh_token_expire_days * 86400)
+    )
+    response.set_cookie(
+        key="refresh_token",
+        value=result["refresh_token"],
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        path="/api/v1/auth",
+        max_age=max_age,
+    )
+    response.set_cookie(
+        key="csrf_token",
+        value=result["csrf_token"],
+        httponly=False,
+        secure=True,
+        samesite="lax",
+        path="/api/v1/auth",
+        max_age=max_age,
+    )
+
+
 # ---------------------------------------------------------------------------
 # POST /auth/login (S-030) — Public
 # ---------------------------------------------------------------------------
 @router.post(
     "/login",
+    response_model=LoginResponseEnvelope,
     summary="Authenticate user",
     response_description="Access token or 2FA temp token",
 )
@@ -78,27 +117,7 @@ async def login(
             }
         )
 
-    # Set refresh token cookie (HttpOnly, Secure, SameSite=Lax)
-    response.set_cookie(
-        key="refresh_token",
-        value=result["refresh_token"],
-        httponly=True,
-        secure=True,
-        samesite="lax",
-        path="/api/v1/auth",
-        max_age=7 * 24 * 3600,  # 7 days
-    )
-
-    # Set CSRF cookie (NOT HttpOnly — client reads it for X-CSRF-Token header)
-    response.set_cookie(
-        key="csrf_token",
-        value=result["csrf_token"],
-        httponly=False,
-        secure=True,
-        samesite="lax",
-        path="/api/v1/auth",
-        max_age=7 * 24 * 3600,
-    )
+    _set_auth_cookies(response, result)
 
     return success_response(
         {
@@ -159,27 +178,7 @@ async def register(
 
     await db.commit()
 
-    # Set refresh token cookie (same pattern as login)
-    response.set_cookie(
-        key="refresh_token",
-        value=result["refresh_token"],
-        httponly=True,
-        secure=True,
-        samesite="lax",
-        path="/api/v1/auth",
-        max_age=7 * 24 * 3600,
-    )
-
-    # Set CSRF cookie
-    response.set_cookie(
-        key="csrf_token",
-        value=result["csrf_token"],
-        httponly=False,
-        secure=True,
-        samesite="lax",
-        path="/api/v1/auth",
-        max_age=7 * 24 * 3600,
-    )
+    _set_auth_cookies(response, result)
 
     return success_response(
         {
@@ -228,25 +227,7 @@ async def refresh(
         ip_address=get_client_ip(request),
     )
 
-    # Rotate cookies
-    response.set_cookie(
-        key="refresh_token",
-        value=result["refresh_token"],
-        httponly=True,
-        secure=True,
-        samesite="lax",
-        path="/api/v1/auth",
-        max_age=7 * 24 * 3600,
-    )
-    response.set_cookie(
-        key="csrf_token",
-        value=result["csrf_token"],
-        httponly=False,
-        secure=True,
-        samesite="lax",
-        path="/api/v1/auth",
-        max_age=7 * 24 * 3600,
-    )
+    _set_auth_cookies(response, result)
 
     return success_response(
         {
@@ -539,25 +520,7 @@ async def two_factor_verify_login(
         ip_address=get_client_ip(request),
     )
 
-    # Set cookies (same as normal login)
-    response.set_cookie(
-        key="refresh_token",
-        value=result["refresh_token"],
-        httponly=True,
-        secure=True,
-        samesite="lax",
-        path="/api/v1/auth",
-        max_age=7 * 24 * 3600,
-    )
-    response.set_cookie(
-        key="csrf_token",
-        value=result["csrf_token"],
-        httponly=False,
-        secure=True,
-        samesite="lax",
-        path="/api/v1/auth",
-        max_age=7 * 24 * 3600,
-    )
+    _set_auth_cookies(response, result)
 
     return success_response(
         {

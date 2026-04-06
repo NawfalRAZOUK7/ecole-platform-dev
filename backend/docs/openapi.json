@@ -19,7 +19,31 @@
             "description": "Service status, version, and timestamp",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/readiness": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Readiness probe",
+        "description": "Readiness probe for container orchestration.\n\nVerifies that both PostgreSQL and Redis are reachable.\nReturns 200 if all dependencies are healthy, 503 if any are down.\nUsed by Kubernetes readiness probes and load balancers.",
+        "operationId": "readiness_check_api_v1_readiness_get",
+        "responses": {
+          "200": {
+            "description": "Database and Redis connectivity status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessResponse"
+                }
               }
             }
           }
@@ -49,7 +73,9 @@
             "description": "Access token or 2FA temp token",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseEnvelope"
+                }
               }
             }
           },
@@ -749,7 +775,9 @@
             "description": "School details",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_SchoolResponse_"
+                }
               }
             }
           },
@@ -1149,7 +1177,9 @@
             "description": "Class with capacity, level, academic year",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_ClassResponse_"
+                }
               }
             }
           },
@@ -10370,7 +10400,7 @@
           "budget"
         ],
         "summary": "Create budget",
-        "description": "Create a micro-budget for the authenticated school.",
+        "description": "Creates a micro-budget for the authenticated school and returns the new budget envelope with its initial allocation totals.",
         "operationId": "create_budget_api_v1_budgets_post",
         "security": [
           {
@@ -10415,7 +10445,7 @@
           "budget"
         ],
         "summary": "List budgets",
-        "description": "List budgets for the authenticated school.",
+        "description": "Returns budgets within the authenticated school scope. Supports filtering by academic year and lifecycle status.",
         "operationId": "list_budgets_api_v1_budgets_get",
         "security": [
           {
@@ -10488,7 +10518,7 @@
           "budget"
         ],
         "summary": "Get budget analytics",
-        "description": "Return budget analytics for the authenticated school.",
+        "description": "Returns budget utilization analytics for the authenticated school, optionally scoped to a single academic year.",
         "operationId": "get_budget_analytics_api_v1_budgets_analytics_get",
         "security": [
           {
@@ -10544,7 +10574,7 @@
           "budget"
         ],
         "summary": "Get budget",
-        "description": "Fetch one budget.",
+        "description": "Fetches a single budget by ID and returns its current totals, status, and related academic-year context.",
         "operationId": "get_budget_api_v1_budgets__budget_id__get",
         "security": [
           {
@@ -10593,7 +10623,7 @@
           "budget"
         ],
         "summary": "Create allocation",
-        "description": "Create an allocation inside a budget.",
+        "description": "Creates a budget allocation within the selected budget and returns the stored allocation record for downstream request tracking.",
         "operationId": "create_allocation_api_v1_budgets__budget_id__allocations_post",
         "security": [
           {
@@ -10650,7 +10680,7 @@
           "budget"
         ],
         "summary": "List allocations for budget",
-        "description": "List allocations attached to a budget.",
+        "description": "Lists allocations attached to a budget. Supports filtering by class, teacher, and allocation status.",
         "operationId": "list_budget_allocations_api_v1_budgets__budget_id__allocations_get",
         "security": [
           {
@@ -10750,7 +10780,7 @@
           "budget"
         ],
         "summary": "Get allocation",
-        "description": "Fetch one budget allocation.",
+        "description": "Fetches a single allocation by ID and returns its current balances, ownership, and related budget metadata.",
         "operationId": "get_allocation_api_v1_budgets_allocations__allocation_id__get",
         "security": [
           {
@@ -10799,7 +10829,7 @@
           "budget"
         ],
         "summary": "Create budget request",
-        "description": "Create a spending request for an allocation.",
+        "description": "Creates a spending request for a specific allocation and returns the pending request for review workflows.",
         "operationId": "create_budget_request_api_v1_budgets_allocations__allocation_id__requests_post",
         "security": [
           {
@@ -10856,7 +10886,7 @@
           "budget"
         ],
         "summary": "List budget requests",
-        "description": "List budget requests for an allocation.",
+        "description": "Returns spending requests linked to an allocation, with optional filters for requester and approval status.",
         "operationId": "list_budget_requests_api_v1_budgets_allocations__allocation_id__requests_get",
         "security": [
           {
@@ -10939,7 +10969,7 @@
           "budget"
         ],
         "summary": "Approve budget request",
-        "description": "Approve a pending budget request.",
+        "description": "Approves a pending budget request and returns the updated request record with the applied approval decision.",
         "operationId": "approve_budget_request_api_v1_budgets_requests__request_id__approve_post",
         "security": [
           {
@@ -10998,7 +11028,7 @@
           "budget"
         ],
         "summary": "Reject budget request",
-        "description": "Reject a pending budget request.",
+        "description": "Rejects a pending budget request and returns the updated request record, including the reviewer decision details.",
         "operationId": "reject_budget_request_api_v1_budgets_requests__request_id__reject_post",
         "security": [
           {
@@ -11057,7 +11087,7 @@
           "budget"
         ],
         "summary": "Get budget request",
-        "description": "Fetch one budget request.",
+        "description": "Fetches a single budget request by ID and returns its request, approval, and allocation metadata.",
         "operationId": "get_budget_request_api_v1_budgets_requests__request_id__get",
         "security": [
           {
@@ -11106,7 +11136,7 @@
           "budget"
         ],
         "summary": "Record budget transaction",
-        "description": "Record a budget transaction against an allocation.",
+        "description": "Records a transaction against an allocation and returns the saved financial movement for audit and reconciliation flows.",
         "operationId": "create_budget_transaction_api_v1_budgets_allocations__allocation_id__transactions_post",
         "security": [
           {
@@ -11163,7 +11193,7 @@
           "budget"
         ],
         "summary": "List budget transactions",
-        "description": "List transactions recorded for an allocation.",
+        "description": "Lists transactions recorded for an allocation, with optional filters for source request and transaction type.",
         "operationId": "list_budget_transactions_api_v1_budgets_allocations__allocation_id__transactions_get",
         "security": [
           {
@@ -11246,7 +11276,7 @@
           "micro-school"
         ],
         "summary": "Create micro-school",
-        "description": "Create a micro-school managed by the authenticated school.",
+        "description": "Creates a micro-school under the authenticated school and returns the newly created record with its configured capacity and operating details.",
         "operationId": "create_micro_school_api_v1_micro_schools_post",
         "security": [
           {
@@ -11291,7 +11321,7 @@
           "micro-school"
         ],
         "summary": "List micro-schools",
-        "description": "List micro-schools visible within the authenticated school.",
+        "description": "Returns micro-schools visible to the authenticated school. Supports optional filtering by educator, city, and operating status.",
         "operationId": "list_micro_schools_api_v1_micro_schools_get",
         "security": [
           {
@@ -11380,7 +11410,7 @@
           "micro-school"
         ],
         "summary": "Update micro-school",
-        "description": "Update a micro-school within the authenticated school.",
+        "description": "Updates an existing micro-school within the caller's school scope and returns the latest persisted configuration.",
         "operationId": "update_micro_school_api_v1_micro_schools__micro_school_id__put",
         "security": [
           {
@@ -11439,7 +11469,7 @@
           "micro-school"
         ],
         "summary": "Create micro-group",
-        "description": "Create a micro-group inside a micro-school.",
+        "description": "Creates a micro-group within a micro-school and returns the saved group record for scheduling and enrollment workflows.",
         "operationId": "create_micro_group_api_v1_micro_groups_post",
         "requestBody": {
           "content": {
@@ -11486,7 +11516,7 @@
           "micro-school"
         ],
         "summary": "List micro-groups",
-        "description": "List micro-groups for a micro-school.",
+        "description": "Lists the micro-groups attached to a specific micro-school within the authenticated user's school boundary.",
         "operationId": "list_micro_groups_api_v1_micro_schools__micro_school_id__groups_get",
         "security": [
           {
@@ -11535,7 +11565,7 @@
           "micro-school"
         ],
         "summary": "Create micro-enrollment",
-        "description": "Enroll a child into a micro-group.",
+        "description": "Enrolls a child into a micro-group and returns the created enrollment record, including the current enrollment status.",
         "operationId": "create_micro_enrollment_api_v1_micro_enrollments_post",
         "security": [
           {
@@ -11580,7 +11610,7 @@
           "micro-school"
         ],
         "summary": "List micro-enrollments",
-        "description": "List micro-enrollments for the authenticated school.",
+        "description": "Returns micro-school enrollments for the authenticated school. Supports filtering by micro-group, parent, and enrollment status.",
         "operationId": "list_micro_enrollments_api_v1_micro_enrollments_get",
         "security": [
           {
@@ -11670,7 +11700,7 @@
           "micro-school"
         ],
         "summary": "Create micro-payment",
-        "description": "Record a micro-school payment.",
+        "description": "Records a micro-school payment for the authenticated school and returns the stored payment entry with its current status.",
         "operationId": "create_micro_payment_api_v1_micro_payments_post",
         "security": [
           {
@@ -11715,7 +11745,7 @@
           "micro-school"
         ],
         "summary": "List micro-payments",
-        "description": "List micro-school payments for the authenticated school.",
+        "description": "Lists micro-school payments within the authenticated school scope with optional filters for school, parent, enrollment, and payment state.",
         "operationId": "list_micro_payments_api_v1_micro_payments_get",
         "security": [
           {
@@ -11822,7 +11852,7 @@
           "micro-school"
         ],
         "summary": "Get micro-payment analytics",
-        "description": "Return aggregate analytics for micro-school payments.",
+        "description": "Returns aggregate micro-school payment analytics for the authenticated school, optionally scoped to a specific micro-school.",
         "operationId": "get_micro_payment_analytics_api_v1_micro_payments_analytics_get",
         "security": [
           {
@@ -11878,7 +11908,7 @@
           "micro-school"
         ],
         "summary": "Create micro-resource",
-        "description": "Create a micro-school learning resource.",
+        "description": "Creates a learning resource for the micro-school program and returns the saved resource metadata for catalog management.",
         "operationId": "create_micro_resource_api_v1_micro_resources_post",
         "security": [
           {
@@ -11923,7 +11953,7 @@
           "micro-school"
         ],
         "summary": "List micro-resources",
-        "description": "List micro-school resources with optional filters.",
+        "description": "Returns micro-school resources available to the authenticated school. Supports filtering by type, language, age group, and premium status.",
         "operationId": "list_micro_resources_api_v1_micro_resources_get",
         "security": [
           {
@@ -12028,7 +12058,7 @@
           "micro-school"
         ],
         "summary": "Create micro progress log",
-        "description": "Create a progress log for a micro-enrollment.",
+        "description": "Creates a progress log entry for a micro-enrollment and returns the recorded observation for follow-up and reporting.",
         "operationId": "create_micro_progress_log_api_v1_micro_progress_logs_post",
         "security": [
           {
@@ -12073,7 +12103,7 @@
           "micro-school"
         ],
         "summary": "List micro progress logs",
-        "description": "List progress logs for micro-enrollments.",
+        "description": "Lists progress logs for micro-enrollments visible to the authenticated school, with optional filters for enrollment, educator, and date range.",
         "operationId": "list_micro_progress_logs_api_v1_micro_progress_logs_get",
         "security": [
           {
@@ -12180,7 +12210,7 @@
           "skills"
         ],
         "summary": "List skill dimensions",
-        "description": "List active and inactive life-skill dimensions.",
+        "description": "Returns the life-skills dimensions configured for the school context. Supports filtering by active state.",
         "operationId": "list_skill_dimensions_api_v1_skills_dimensions_get",
         "security": [
           {
@@ -12233,7 +12263,7 @@
           "skills"
         ],
         "summary": "Create skill dimension",
-        "description": "Create a life-skill dimension.",
+        "description": "Creates a life-skills dimension and returns the saved framework record for milestone configuration.",
         "operationId": "create_skill_dimension_api_v1_skills_dimensions_post",
         "security": [
           {
@@ -12280,7 +12310,7 @@
           "skills"
         ],
         "summary": "List skill milestones",
-        "description": "List milestones defined for the skill framework.",
+        "description": "Lists milestones defined in the life-skills framework, with optional filters for dimension and active state.",
         "operationId": "list_skill_milestones_api_v1_skills_milestones_get",
         "security": [
           {
@@ -12350,7 +12380,7 @@
           "skills"
         ],
         "summary": "Create skill milestone",
-        "description": "Create a life-skill milestone.",
+        "description": "Creates a milestone under the life-skills framework and returns the new milestone definition.",
         "operationId": "create_skill_milestone_api_v1_skills_milestones_post",
         "security": [
           {
@@ -12397,7 +12427,7 @@
           "skills"
         ],
         "summary": "Get student skill progress",
-        "description": "Return skill progress records for one student.",
+        "description": "Returns the recorded life-skills progress for a student within the requested academic year as a list of progress entries.",
         "operationId": "get_student_skill_progress_api_v1_skills_progress_student__student_id__get",
         "security": [
           {
@@ -12456,7 +12486,7 @@
           "skills"
         ],
         "summary": "Evaluate student life skills",
-        "description": "Evaluate a student's life-skill milestones.",
+        "description": "Runs a life-skills evaluation for a student in the specified academic year and returns the resulting assessment payload.",
         "operationId": "evaluate_student_skills_api_v1_skills_evaluate__student_id__post",
         "security": [
           {
@@ -12515,7 +12545,7 @@
           "skills"
         ],
         "summary": "Get student skill passport",
-        "description": "Fetch the generated skill passport for a student.",
+        "description": "Fetches the generated life-skills passport for a student for the requested academic year.",
         "operationId": "get_skill_passport_api_v1_skills_passport__student_id__get",
         "security": [
           {
@@ -12574,7 +12604,7 @@
           "skills"
         ],
         "summary": "Generate student skill passport",
-        "description": "Generate a skill passport for a student.",
+        "description": "Generates or refreshes a student's life-skills passport for the requested academic year and returns the updated passport record.",
         "operationId": "generate_skill_passport_api_v1_skills_passport__student_id__generate_post",
         "security": [
           {
@@ -12633,7 +12663,7 @@
           "skills"
         ],
         "summary": "Download student skill passport PDF",
-        "description": "Download the student's skill passport PDF.",
+        "description": "Streams the generated skill passport as a PDF download for the requested student and academic year.",
         "operationId": "download_skill_passport_api_v1_skills_passport__student_id__download_get",
         "security": [
           {
@@ -12692,7 +12722,7 @@
           "skills"
         ],
         "summary": "Get class life-skills analytics",
-        "description": "Return class-level life-skill analytics.",
+        "description": "Returns class-level life-skills analytics for the requested academic year, including aggregated progress indicators.",
         "operationId": "get_skill_class_analytics_api_v1_skills_analytics_class__class_id__get",
         "security": [
           {
@@ -12751,7 +12781,7 @@
           "skills"
         ],
         "summary": "Get school life-skills analytics",
-        "description": "Return school-level life-skill analytics.",
+        "description": "Returns school-level life-skills analytics for the requested academic year across all students in scope.",
         "operationId": "get_skill_school_analytics_api_v1_skills_analytics_school_get",
         "security": [
           {
@@ -12800,7 +12830,7 @@
           "skills"
         ],
         "summary": "Get anonymized class skill leaderboard",
-        "description": "Return an anonymized skill leaderboard for a class.",
+        "description": "Returns an anonymized class leaderboard for life-skills progress in the requested academic year, limited to the requested number of entries.",
         "operationId": "get_skill_leaderboard_api_v1_skills_leaderboard__class_id__get",
         "security": [
           {
@@ -12871,7 +12901,7 @@
           "compliance"
         ],
         "summary": "List MEN curricula",
-        "description": "List MEN curricula available to the school.",
+        "description": "Returns MEN curriculum references available to the school context. Supports filtering by level, grade, subject, academic year, and active state.",
         "operationId": "list_curricula_api_v1_compliance_curricula_get",
         "security": [
           {
@@ -12988,7 +13018,7 @@
           "compliance"
         ],
         "summary": "Create MEN curriculum",
-        "description": "Create a MEN curriculum reference.",
+        "description": "Creates a MEN curriculum reference and returns the saved curriculum record for later objective and mapping management.",
         "operationId": "create_curriculum_api_v1_compliance_curricula_post",
         "security": [
           {
@@ -13035,7 +13065,7 @@
           "compliance"
         ],
         "summary": "List MEN objectives for a curriculum",
-        "description": "List MEN objectives for a curriculum.",
+        "description": "Lists MEN learning objectives attached to a curriculum, with optional filtering by trimester.",
         "operationId": "list_objectives_api_v1_compliance_curricula__curriculum_id__objectives_get",
         "security": [
           {
@@ -13100,7 +13130,7 @@
           "compliance"
         ],
         "summary": "Create MEN objective",
-        "description": "Create a MEN objective under a curriculum.",
+        "description": "Creates a MEN objective under the specified curriculum and returns the saved objective definition.",
         "operationId": "create_objective_api_v1_compliance_curricula__curriculum_id__objectives_post",
         "security": [
           {
@@ -13159,7 +13189,7 @@
           "compliance"
         ],
         "summary": "Create curriculum mapping",
-        "description": "Create a curriculum-to-course mapping.",
+        "description": "Creates a mapping between MEN curriculum content and school learning assets, then returns the stored mapping record.",
         "operationId": "create_mapping_api_v1_compliance_mappings_post",
         "security": [
           {
@@ -13204,7 +13234,7 @@
           "compliance"
         ],
         "summary": "List curriculum mappings",
-        "description": "List curriculum mappings for the school.",
+        "description": "Returns curriculum mappings visible to the authenticated school. Supports filtering by curriculum, objective, course, and content item.",
         "operationId": "list_mappings_api_v1_compliance_mappings_get",
         "security": [
           {
@@ -13311,7 +13341,7 @@
           "compliance"
         ],
         "summary": "Delete curriculum mapping",
-        "description": "Delete a curriculum mapping.",
+        "description": "Deletes a curriculum mapping by ID. Returns an empty 204 response when the mapping is removed successfully.",
         "operationId": "delete_mapping_api_v1_compliance_mappings__mapping_id__delete",
         "security": [
           {
@@ -13353,7 +13383,7 @@
           "compliance"
         ],
         "summary": "Get MEN compliance dashboard",
-        "description": "Return the MEN compliance dashboard summary.",
+        "description": "Returns the MEN compliance dashboard summary for the requested academic year, with optional level, grade, and subject filters.",
         "operationId": "get_dashboard_api_v1_compliance_dashboard_get",
         "security": [
           {
@@ -13450,7 +13480,7 @@
           "compliance"
         ],
         "summary": "Generate compliance report",
-        "description": "Generate a MEN compliance report.",
+        "description": "Queues or generates a MEN compliance report for the requested scope and returns the created report job payload.",
         "operationId": "generate_report_api_v1_compliance_reports_generate_post",
         "requestBody": {
           "content": {
@@ -13497,7 +13527,7 @@
           "compliance"
         ],
         "summary": "List compliance reports",
-        "description": "List generated MEN compliance reports.",
+        "description": "Lists generated MEN compliance reports available to the authenticated school, with optional curriculum and academic-year filters.",
         "operationId": "list_reports_api_v1_compliance_reports_get",
         "security": [
           {
@@ -13570,7 +13600,7 @@
           "compliance"
         ],
         "summary": "Get compliance report detail",
-        "description": "Fetch one MEN compliance report.",
+        "description": "Fetches a single MEN compliance report by ID and returns its stored metadata and generation outcome.",
         "operationId": "get_report_api_v1_compliance_reports__report_id__get",
         "security": [
           {
@@ -13619,7 +13649,7 @@
           "compliance"
         ],
         "summary": "Download compliance report PDF",
-        "description": "Download a MEN compliance report PDF.",
+        "description": "Streams the selected MEN compliance report as a PDF download for external review or archival.",
         "operationId": "download_report_api_v1_compliance_reports__report_id__download_get",
         "security": [
           {
@@ -13668,7 +13698,7 @@
           "sync"
         ],
         "summary": "Register sync device",
-        "description": "Register a sync-capable device for the authenticated school.",
+        "description": "Registers a device for offline synchronization and returns the stored device record used for future push and pull operations.",
         "operationId": "register_device_api_v1_sync_devices_post",
         "security": [
           {
@@ -13713,7 +13743,7 @@
           "sync"
         ],
         "summary": "List sync devices",
-        "description": "List registered sync devices for the authenticated school.",
+        "description": "Returns sync-capable devices for the authenticated school. Supports filtering by activation state and device type.",
         "operationId": "list_devices_api_v1_sync_devices_get",
         "security": [
           {
@@ -13785,7 +13815,7 @@
           "sync"
         ],
         "summary": "Push offline changes",
-        "description": "Accept queued offline changes from a device.",
+        "description": "Accepts queued offline changes from a device, validates them within school scope, and returns the accepted sync queue items.",
         "operationId": "push_changes_api_v1_sync_push_post",
         "security": [
           {
@@ -13844,7 +13874,7 @@
           "sync"
         ],
         "summary": "Pull synced changes",
-        "description": "Return synced server-side changes for a device.",
+        "description": "Returns server-side changes available to a device after an optional checkpoint, with a configurable batch limit for incremental sync.",
         "operationId": "pull_changes_api_v1_sync_pull_post",
         "security": [
           {
@@ -13921,7 +13951,7 @@
           "sync"
         ],
         "summary": "Get sync status",
-        "description": "Return queue status counts for a device.",
+        "description": "Returns queue counters and current synchronization status for a specific device in the authenticated school.",
         "operationId": "get_sync_status_api_v1_sync_status_get",
         "security": [
           {
@@ -13970,7 +14000,7 @@
           "sync"
         ],
         "summary": "List sync conflicts",
-        "description": "List sync conflicts for the authenticated school.",
+        "description": "Lists sync conflicts visible to the authenticated school. Supports filtering by resolution state and limiting the result set.",
         "operationId": "list_conflicts_api_v1_sync_conflicts_get",
         "security": [
           {
@@ -14039,7 +14069,7 @@
           "sync"
         ],
         "summary": "Resolve sync conflict",
-        "description": "Resolve a queued sync conflict.",
+        "description": "Applies a resolution decision to a queued sync conflict and returns the updated conflict record for auditability.",
         "operationId": "resolve_conflict_api_v1_sync_conflicts__conflict_id__resolve_post",
         "security": [
           {
@@ -14098,7 +14128,7 @@
           "sync"
         ],
         "summary": "List sync checkpoints",
-        "description": "List device sync checkpoints.",
+        "description": "Returns stored sync checkpoints for the authenticated school, optionally filtered to a specific device.",
         "operationId": "list_checkpoints_api_v1_sync_checkpoints_get",
         "security": [
           {
@@ -14166,7 +14196,7 @@
           "sync"
         ],
         "summary": "Create sync checkpoint",
-        "description": "Create a checkpoint for incremental sync pulls.",
+        "description": "Creates a checkpoint for a device so future pull operations can request only changes after the recorded sync marker.",
         "operationId": "create_checkpoint_api_v1_sync_checkpoint_post",
         "security": [
           {
@@ -14225,7 +14255,7 @@
           "sync"
         ],
         "summary": "Get sync device health",
-        "description": "Return the current health summary for a sync device.",
+        "description": "Returns the current sync health summary for a device, including queue backlogs and recent synchronization signals.",
         "operationId": "get_sync_health_api_v1_sync_health_get",
         "security": [
           {
@@ -14274,7 +14304,7 @@
           "financial-health"
         ],
         "summary": "List retention metrics",
-        "description": "List stored retention metrics.",
+        "description": "Returns stored retention metrics for the authenticated school using offset pagination parameters.",
         "operationId": "list_retention_metrics_api_v1_financial_health_retention_get",
         "security": [
           {
@@ -14336,7 +14366,7 @@
           "financial-health"
         ],
         "summary": "Compute retention metric",
-        "description": "Compute a retention metric for two academic years.",
+        "description": "Computes a retention metric for the requested academic-year comparison and returns the generated metric payload.",
         "operationId": "compute_retention_api_v1_financial_health_retention_compute_post",
         "requestBody": {
           "content": {
@@ -14383,7 +14413,7 @@
           "financial-health"
         ],
         "summary": "List cashflow forecasts",
-        "description": "List stored cashflow forecasts.",
+        "description": "Returns stored cashflow forecasts for the authenticated school. Supports filtering by month range and offset pagination.",
         "operationId": "list_cashflow_forecasts_api_v1_financial_health_cashflow_get",
         "security": [
           {
@@ -14479,7 +14509,7 @@
           "financial-health"
         ],
         "summary": "Compute cashflow forecast",
-        "description": "Compute forward-looking cashflow forecasts.",
+        "description": "Computes forward-looking cashflow forecasts and returns the generated forecast set for the requested parameters.",
         "operationId": "compute_cashflow_api_v1_financial_health_cashflow_compute_post",
         "requestBody": {
           "content": {
@@ -14526,7 +14556,7 @@
           "financial-health"
         ],
         "summary": "Get cost-per-student analysis",
-        "description": "Fetch the stored cost-per-student analysis.",
+        "description": "Fetches the stored cost-per-student analysis for a specific academic year within the authenticated school scope.",
         "operationId": "get_cost_per_student_api_v1_financial_health_cost_per_student_get",
         "security": [
           {
@@ -14575,7 +14605,7 @@
           "financial-health"
         ],
         "summary": "Compute cost-per-student analysis",
-        "description": "Compute cost-per-student analysis for an academic year.",
+        "description": "Computes a cost-per-student analysis for an academic year and returns the generated analysis payload.",
         "operationId": "compute_cost_per_student_api_v1_financial_health_cost_per_student_compute_post",
         "requestBody": {
           "content": {
@@ -14622,7 +14652,7 @@
           "financial-health"
         ],
         "summary": "Get financial snapshot",
-        "description": "Fetch a stored financial snapshot.",
+        "description": "Fetches a stored point-in-time financial snapshot for the authenticated school, optionally scoped to a specific date.",
         "operationId": "get_snapshot_api_v1_financial_health_snapshot_get",
         "security": [
           {
@@ -14678,7 +14708,7 @@
           "financial-health"
         ],
         "summary": "Compute financial snapshot",
-        "description": "Compute a point-in-time financial snapshot.",
+        "description": "Computes a financial snapshot for the requested inputs and returns the generated point-in-time summary.",
         "operationId": "compute_snapshot_api_v1_financial_health_snapshot_compute_post",
         "requestBody": {
           "content": {
@@ -14725,7 +14755,7 @@
           "financial-health"
         ],
         "summary": "Get financial health dashboard",
-        "description": "Return the financial health dashboard summary.",
+        "description": "Returns the consolidated financial health dashboard for the authenticated school across retention, cashflow, and cost metrics.",
         "operationId": "get_dashboard_api_v1_financial_health_dashboard_get",
         "responses": {
           "200": {
@@ -14752,7 +14782,7 @@
           "financial-health"
         ],
         "summary": "Get financial health trends",
-        "description": "Return financial health trend series.",
+        "description": "Returns financial health trend series for the requested number of months to support dashboard charting.",
         "operationId": "get_trends_api_v1_financial_health_trends_get",
         "security": [
           {
@@ -14803,7 +14833,7 @@
           "financial-health"
         ],
         "summary": "Export financial health CSV",
-        "description": "Export the financial health dashboard as CSV.",
+        "description": "Exports the financial health dashboard data as a CSV file for spreadsheet analysis or offline reporting.",
         "operationId": "export_financial_health_csv_api_v1_financial_health_export_csv_get",
         "responses": {
           "200": {
@@ -14830,7 +14860,7 @@
           "financial-health"
         ],
         "summary": "Export financial health PDF",
-        "description": "Export the financial health dashboard as PDF.",
+        "description": "Exports the financial health dashboard as a PDF document for sharing and archival purposes.",
         "operationId": "export_financial_health_pdf_api_v1_financial_health_export_pdf_get",
         "responses": {
           "200": {
@@ -19330,6 +19360,36 @@
         "title": "AnnouncementUpdateRequest",
         "description": "Update a draft announcement."
       },
+      "ApiResponse_ClassResponse_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ClassResponse"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiResponse[ClassResponse]"
+      },
+      "ApiResponse_SchoolResponse_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SchoolResponse"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiResponse[SchoolResponse]"
+      },
       "AssessmentCreateRequest": {
         "properties": {
           "class_id": {
@@ -20070,6 +20130,49 @@
           "new_password"
         ],
         "title": "ChangePasswordRequest"
+      },
+      "ClassResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "school_id": {
+            "type": "string",
+            "title": "School Id"
+          },
+          "academic_year_id": {
+            "type": "string",
+            "title": "Academic Year Id"
+          },
+          "teacher_count": {
+            "type": "integer",
+            "title": "Teacher Count"
+          },
+          "student_count": {
+            "type": "integer",
+            "title": "Student Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "name",
+          "school_id",
+          "academic_year_id",
+          "teacher_count",
+          "student_count"
+        ],
+        "title": "ClassResponse"
       },
       "CmsContentCreateRequest": {
         "properties": {
@@ -21723,6 +21826,30 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "version",
+          "timestamp"
+        ],
+        "title": "HealthResponse",
+        "description": "Health check response payload."
+      },
       "HolidayCreateRequest": {
         "properties": {
           "code": {
@@ -22115,6 +22242,30 @@
         ],
         "title": "LevelInput"
       },
+      "LoginData": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "bearer"
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In",
+            "description": "Token lifetime in seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "expires_in"
+        ],
+        "title": "LoginData"
+      },
       "LoginRequest": {
         "properties": {
           "email": {
@@ -22140,6 +22291,53 @@
           "school_id"
         ],
         "title": "LoginRequest"
+      },
+      "LoginResponseEnvelope": {
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LoginData"
+              },
+              {
+                "$ref": "#/components/schemas/LoginTwoFactorData"
+              }
+            ],
+            "title": "Data"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "LoginResponseEnvelope"
+      },
+      "LoginTwoFactorData": {
+        "properties": {
+          "requires_2fa": {
+            "type": "boolean",
+            "title": "Requires 2Fa"
+          },
+          "temp_token": {
+            "type": "string",
+            "title": "Temp Token"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "requires_2fa",
+          "temp_token",
+          "message"
+        ],
+        "title": "LoginTwoFactorData"
       },
       "MarkReadRequest": {
         "properties": {
@@ -22309,6 +22507,23 @@
         ],
         "title": "MessageCreateRequest",
         "description": "Send a message in a conversation."
+      },
+      "Meta": {
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "default": "0.1.0"
+          }
+        },
+        "type": "object",
+        "title": "Meta",
+        "description": "Metadata for single-item responses."
       },
       "MicroBudgetCreateRequest": {
         "properties": {
@@ -23469,6 +23684,33 @@
         "type": "object",
         "title": "QuizUpdateRequest"
       },
+      "ReadinessResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "checks": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Checks"
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "checks",
+          "timestamp"
+        ],
+        "title": "ReadinessResponse",
+        "description": "Readiness probe response payload."
+      },
       "RecoveryRequestCreate": {
         "properties": {
           "email": {
@@ -24362,6 +24604,235 @@
           "code"
         ],
         "title": "SchoolCreateRequest"
+      },
+      "SchoolResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "name_ar": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name Ar"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "massar_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Massar Code"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "region": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website"
+          },
+          "logo_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Path"
+          },
+          "max_students": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Students"
+          },
+          "max_teachers": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Teachers"
+          },
+          "subscription_plan": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subscription Plan"
+          },
+          "subscription_expires_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subscription Expires At"
+          },
+          "timezone": {
+            "type": "string",
+            "title": "Timezone"
+          },
+          "default_language": {
+            "type": "string",
+            "title": "Default Language"
+          },
+          "grading_scale": {
+            "type": "string",
+            "title": "Grading Scale"
+          },
+          "settings": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Settings"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "is_subscription_valid": {
+            "type": "boolean",
+            "title": "Is Subscription Valid"
+          },
+          "deleted_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deleted At"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "code",
+          "status",
+          "timezone",
+          "default_language",
+          "grading_scale",
+          "settings",
+          "is_active",
+          "is_subscription_valid",
+          "created_at"
+        ],
+        "title": "SchoolResponse"
       },
       "SchoolUpdateRequest": {
         "properties": {

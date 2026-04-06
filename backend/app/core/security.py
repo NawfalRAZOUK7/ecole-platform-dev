@@ -2,7 +2,7 @@
 
 Reference: S-029 — JWT token infrastructure, Pack C6 (RBAC Model), D6 (Security Enforcement)
 - Access token: short-lived (default 30min), sent in Authorization: Bearer header
-- Refresh token: longer-lived (default 7d), HttpOnly/Secure/SameSite=Lax cookie
+- Refresh token: longer-lived (default 2d), HttpOnly/Secure/SameSite=Lax cookie
 - Token claims: sub (user_id), role, school_id, session_id, exp, iat, jti
 - Password hashing: bcrypt (direct library, compatible with bcrypt 5.x)
 """
@@ -59,13 +59,18 @@ def create_refresh_token(
     user_id: uuid.UUID,
     school_id: uuid.UUID,
     session_id: uuid.UUID,
+    expire_days: float | None = None,
 ) -> tuple[str, str]:
     """Create a long-lived refresh JWT.
 
     Returns (token_string, jti) — jti is stored in Redis for rotation tracking.
     """
     now = datetime.now(timezone.utc)
-    expire = now + timedelta(days=settings.refresh_token_expire_days)
+    expire = now + timedelta(
+        days=expire_days
+        if expire_days is not None
+        else settings.refresh_token_expire_days
+    )
     jti = str(uuid.uuid4())
     payload = {
         "sub": str(user_id),
@@ -90,6 +95,27 @@ def create_csrf_token() -> str:
 # ---------------------------------------------------------------------------
 # JWT token validation (S-029)
 # ---------------------------------------------------------------------------
+def _decode_jwt(token: str) -> dict:
+    """Decode JWT trying current key first, then previous key during rotation."""
+    try:
+        return jwt.decode(
+            token,
+            settings.jwt_secret_key,
+            algorithms=[settings.jwt_algorithm],
+        )
+    except JWTError:
+        if settings.jwt_previous_key:
+            try:
+                return jwt.decode(
+                    token,
+                    settings.jwt_previous_key,
+                    algorithms=[settings.jwt_algorithm],
+                )
+            except JWTError:
+                pass
+        raise
+
+
 def decode_access_token(token: str) -> dict:
     """Decode and validate an access token.
 
@@ -97,11 +123,7 @@ def decode_access_token(token: str) -> dict:
     Returns decoded payload dict.
     """
     try:
-        payload = jwt.decode(
-            token,
-            settings.jwt_secret_key,
-            algorithms=[settings.jwt_algorithm],
-        )
+        payload = _decode_jwt(token)
     except JWTError as exc:
         raise AuthenticationError(
             "Invalid or expired access token",
@@ -124,11 +146,7 @@ def decode_refresh_token(token: str) -> dict:
     Returns decoded payload dict.
     """
     try:
-        payload = jwt.decode(
-            token,
-            settings.jwt_secret_key,
-            algorithms=[settings.jwt_algorithm],
-        )
+        payload = _decode_jwt(token)
     except JWTError as exc:
         raise AuthenticationError(
             "Invalid or expired refresh token",

@@ -39,10 +39,11 @@ class Settings(BaseSettings):
     redis_url: str = "redis://:change-me-dev-redis@localhost:6379/0"
 
     # Authentication (JWT)
-    jwt_secret_key: str = "change-me-in-production"
+    jwt_secret_key: str = "change-me-in-production-use-a-strong-random-secret"
+    jwt_previous_key: str = ""  # Previous key, used during rotation window
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
-    refresh_token_expire_days: int = 7
+    refresh_token_expire_days: int = 2
     max_sessions_per_user: int = 5
 
     # Rate limiting (Phase 2A)
@@ -145,6 +146,7 @@ class Settings(BaseSettings):
             "database_replica_url": _read_secret_file("DATABASE_REPLICA_URL"),
             "redis_url": _read_secret_file("REDIS_URL"),
             "jwt_secret_key": _read_secret_file("JWT_SECRET_KEY"),
+            "jwt_previous_key": _read_secret_file("JWT_PREVIOUS_KEY"),
             "smtp_password": _read_secret_file("SMTP_PASSWORD"),
         }
         for field_name, value in secret_overrides.items():

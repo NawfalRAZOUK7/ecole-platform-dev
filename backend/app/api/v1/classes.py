@@ -14,7 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, requires_permission
-from app.core.response import success_response
+from app.core.response import ApiResponse, success_response
+from app.schemas.erp import ClassResponse
 from app.services.erp import ERPService
 
 router = APIRouter(prefix="/classes", tags=["erp-classes"])
@@ -22,6 +23,7 @@ router = APIRouter(prefix="/classes", tags=["erp-classes"])
 
 @router.get(
     "/{class_id}",
+    response_model=ApiResponse[ClassResponse],
     summary="Get class details",
     response_description="Class with capacity, level, academic year",
 )

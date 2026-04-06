@@ -51,6 +51,7 @@ router = APIRouter(prefix="/micro", tags=["micro-school"])
     "/schools",
     status_code=201,
     summary="Create micro-school",
+    description="Creates a micro-school under the authenticated school and returns the newly created record with its configured capacity and operating details.",
     response_description="Created micro-school",
 )
 async def create_micro_school(
@@ -73,6 +74,7 @@ async def create_micro_school(
 @router.get(
     "/schools",
     summary="List micro-schools",
+    description="Returns micro-schools visible to the authenticated school. Supports optional filtering by educator, city, and operating status.",
     response_description="List of micro-schools",
 )
 async def list_micro_schools(
@@ -96,6 +98,7 @@ async def list_micro_schools(
 @router.put(
     "/schools/{micro_school_id}",
     summary="Update micro-school",
+    description="Updates an existing micro-school within the caller's school scope and returns the latest persisted configuration.",
     response_description="Updated micro-school",
 )
 async def update_micro_school(
@@ -121,6 +124,7 @@ async def update_micro_school(
     "/groups",
     status_code=201,
     summary="Create micro-group",
+    description="Creates a micro-group within a micro-school and returns the saved group record for scheduling and enrollment workflows.",
     response_description="Created micro-group",
 )
 async def create_micro_group(
@@ -143,6 +147,7 @@ async def create_micro_group(
 @router.get(
     "/schools/{micro_school_id}/groups",
     summary="List micro-groups",
+    description="Lists the micro-groups attached to a specific micro-school within the authenticated user's school boundary.",
     response_description="List of micro-groups",
 )
 async def list_micro_groups(
@@ -164,6 +169,7 @@ async def list_micro_groups(
     "/enrollments",
     status_code=201,
     summary="Create micro-enrollment",
+    description="Enrolls a child into a micro-group and returns the created enrollment record, including the current enrollment status.",
     response_description="Created micro-enrollment",
 )
 async def create_micro_enrollment(
@@ -186,6 +192,7 @@ async def create_micro_enrollment(
 @router.get(
     "/enrollments",
     summary="List micro-enrollments",
+    description="Returns micro-school enrollments for the authenticated school. Supports filtering by micro-group, parent, and enrollment status.",
     response_description="List of micro-enrollments",
 )
 async def list_micro_enrollments(
@@ -211,6 +218,7 @@ async def list_micro_enrollments(
     "/payments",
     status_code=201,
     summary="Create micro-payment",
+    description="Records a micro-school payment for the authenticated school and returns the stored payment entry with its current status.",
     response_description="Created micro-payment",
 )
 async def create_micro_payment(
@@ -233,6 +241,7 @@ async def create_micro_payment(
 @router.get(
     "/payments",
     summary="List micro-payments",
+    description="Lists micro-school payments within the authenticated school scope with optional filters for school, parent, enrollment, and payment state.",
     response_description="List of micro-payments",
 )
 async def list_micro_payments(
@@ -259,6 +268,7 @@ async def list_micro_payments(
 @router.get(
     "/payments/analytics",
     summary="Get micro-payment analytics",
+    description="Returns aggregate micro-school payment analytics for the authenticated school, optionally scoped to a specific micro-school.",
     response_description="Micro-payment analytics",
 )
 async def get_micro_payment_analytics(
@@ -280,6 +290,7 @@ async def get_micro_payment_analytics(
     "/resources",
     status_code=201,
     summary="Create micro-resource",
+    description="Creates a learning resource for the micro-school program and returns the saved resource metadata for catalog management.",
     response_description="Created micro-resource",
 )
 async def create_micro_resource(
@@ -302,6 +313,7 @@ async def create_micro_resource(
 @router.get(
     "/resources",
     summary="List micro-resources",
+    description="Returns micro-school resources available to the authenticated school. Supports filtering by type, language, age group, and premium status.",
     response_description="List of micro-resources",
 )
 async def list_micro_resources(
@@ -332,6 +344,7 @@ async def list_micro_resources(
     "/progress-logs",
     status_code=201,
     summary="Create micro progress log",
+    description="Creates a progress log entry for a micro-enrollment and returns the recorded observation for follow-up and reporting.",
     response_description="Created micro progress log",
 )
 async def create_micro_progress_log(
@@ -354,6 +367,7 @@ async def create_micro_progress_log(
 @router.get(
     "/progress-logs",
     summary="List micro progress logs",
+    description="Lists progress logs for micro-enrollments visible to the authenticated school, with optional filters for enrollment, educator, and date range.",
     response_description="List of micro progress logs",
 )
 async def list_micro_progress_logs(

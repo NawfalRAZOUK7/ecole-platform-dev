@@ -8,6 +8,7 @@ import redis.asyncio as aioredis
 from fastapi import APIRouter, Depends, Query, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.dependencies import (
     AuthContext,
@@ -42,6 +43,9 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 
 
 def _set_auth_cookies(response: Response, result: dict) -> None:
+    max_age = int(
+        result.get("refresh_expires_in", settings.refresh_token_expire_days * 86400)
+    )
     response.set_cookie(
         key="refresh_token",
         value=result["refresh_token"],
@@ -49,7 +53,7 @@ def _set_auth_cookies(response: Response, result: dict) -> None:
         secure=True,
         samesite="lax",
         path="/api/v1/auth",
-        max_age=7 * 24 * 3600,
+        max_age=max_age,
     )
     response.set_cookie(
         key="csrf_token",
@@ -58,7 +62,7 @@ def _set_auth_cookies(response: Response, result: dict) -> None:
         secure=True,
         samesite="lax",
         path="/api/v1/auth",
-        max_age=7 * 24 * 3600,
+        max_age=max_age,
     )
 
 

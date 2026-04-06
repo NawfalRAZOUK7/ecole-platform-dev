@@ -46,7 +46,12 @@ Routes:
 
 from datetime import datetime, timezone
 
-from fastapi import APIRouter
+import redis.asyncio as redis
+from fastapi import APIRouter, Depends
+from pydantic import BaseModel
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.responses import JSONResponse
 
 # Phase 2 routers
 from app.api.v1.auth import router as auth_router
@@ -143,13 +148,32 @@ from app.api.v1.events import router as events_router
 
 # Phase 16 — Documents
 from app.api.v1.documents import router as documents_router
+from app.core.database import get_db
+from app.core.redis import get_redis
 
 router = APIRouter()
+
+
+class HealthResponse(BaseModel):
+    """Health check response payload."""
+
+    status: str
+    version: str
+    timestamp: str
+
+
+class ReadinessResponse(BaseModel):
+    """Readiness probe response payload."""
+
+    status: str
+    checks: dict[str, str]
+    timestamp: str
 
 
 # Health check (public, no auth)
 @router.get(
     "/health",
+    response_model=HealthResponse,
     tags=["system"],
     summary="Health check",
     response_description="Service status, version, and timestamp",
@@ -160,11 +184,57 @@ async def health_check():
     Returns service status and version. Used by Docker health checks
     and monitoring systems (Pack F2).
     """
-    return {
-        "status": "healthy",
-        "version": "0.1.0",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-    }
+    return HealthResponse(
+        status="healthy",
+        version="0.1.0",
+        timestamp=datetime.now(timezone.utc).isoformat(),
+    )
+
+
+@router.get(
+    "/readiness",
+    response_model=ReadinessResponse,
+    tags=["system"],
+    summary="Readiness probe",
+    response_description="Database and Redis connectivity status",
+)
+async def readiness_check(
+    db: AsyncSession = Depends(get_db),
+    redis_client: redis.Redis = Depends(get_redis),
+):
+    """Readiness probe for container orchestration.
+
+    Verifies that both PostgreSQL and Redis are reachable.
+    Returns 200 if all dependencies are healthy, 503 if any are down.
+    Used by Kubernetes readiness probes and load balancers.
+    """
+    checks: dict[str, str] = {}
+    all_ok = True
+
+    try:
+        result = await db.execute(text("SELECT 1"))
+        result.scalar_one()
+        checks["database"] = "ok"
+    except Exception as exc:
+        checks["database"] = f"error: {str(exc)[:100]}"
+        all_ok = False
+
+    try:
+        await redis_client.ping()
+        checks["redis"] = "ok"
+    except Exception as exc:
+        checks["redis"] = f"error: {str(exc)[:100]}"
+        all_ok = False
+
+    payload = ReadinessResponse(
+        status="ready" if all_ok else "degraded",
+        checks=checks,
+        timestamp=datetime.now(timezone.utc).isoformat(),
+    )
+    return JSONResponse(
+        status_code=200 if all_ok else 503,
+        content=payload.model_dump(mode="json"),
+    )
 
 
 # Mount sub-routers — Phase 2

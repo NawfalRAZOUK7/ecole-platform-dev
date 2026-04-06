@@ -101,6 +101,45 @@ class AuthService:
     def _session_ttl(self) -> int:
         return settings.refresh_token_expire_days * 86400
 
+    def _ttl_from_days(self, expire_days: float | None = None) -> int:
+        days = (
+            expire_days
+            if expire_days is not None
+            else float(settings.refresh_token_expire_days)
+        )
+        return max(int(days * 86400), 1)
+
+    def _claim_to_datetime(self, value: Any) -> datetime | None:
+        if value is None:
+            return None
+        if isinstance(value, datetime):
+            return (
+                value.astimezone(timezone.utc)
+                if value.tzinfo is not None
+                else value.replace(tzinfo=timezone.utc)
+            )
+        try:
+            return datetime.fromtimestamp(float(value), tz=timezone.utc)
+        except (TypeError, ValueError, OSError):
+            return None
+
+    def _refresh_window(self, payload: dict[str, Any]) -> tuple[float | None, int]:
+        """Return refresh expiry days and Redis TTL for sliding-window rotation."""
+        issued_at = self._claim_to_datetime(payload.get("iat"))
+        expires_at = self._claim_to_datetime(payload.get("exp"))
+        if issued_at is None or expires_at is None or expires_at <= issued_at:
+            return None, self._session_ttl()
+
+        now = datetime.now(timezone.utc)
+        total_seconds = max((expires_at - issued_at).total_seconds(), 1.0)
+        remaining_seconds = max((expires_at - now).total_seconds(), 1.0)
+        token_age_ratio = max((now - issued_at).total_seconds(), 0.0) / total_seconds
+        extend_refresh = token_age_ratio > 0.75
+
+        if extend_refresh:
+            return float(settings.refresh_token_expire_days), self._session_ttl()
+        return remaining_seconds / 86400, max(int(remaining_seconds), 1)
+
     def _network_fingerprint_source(self, ip_address: str | None) -> str:
         if not ip_address:
             return ""
@@ -128,10 +167,11 @@ class AuthService:
         session_id: uuid.UUID,
         refresh_jti: str,
         csrf_token: str,
+        ttl: int | None = None,
     ) -> None:
-        ttl = self._session_ttl()
-        await self.redis.setex(f"refresh_jti:{session_id}", ttl, refresh_jti)
-        await self.redis.setex(f"csrf:{session_id}", ttl, csrf_token)
+        expires_in = ttl if ttl is not None else self._session_ttl()
+        await self.redis.setex(f"refresh_jti:{session_id}", expires_in, refresh_jti)
+        await self.redis.setex(f"csrf:{session_id}", expires_in, csrf_token)
 
     async def _clear_session_tokens(self, session_id: uuid.UUID) -> None:
         await self.redis.delete(f"refresh_jti:{session_id}")
@@ -144,14 +184,22 @@ class AuthService:
         role: str,
         school_id: uuid.UUID,
         session_id: uuid.UUID,
+        refresh_expire_days: float | None = None,
     ) -> dict[str, Any]:
         access_token = create_access_token(user_id, role, school_id, session_id)
-        refresh_token, refresh_jti = create_refresh_token(user_id, school_id, session_id)
+        refresh_ttl = self._ttl_from_days(refresh_expire_days)
+        refresh_token, refresh_jti = create_refresh_token(
+            user_id,
+            school_id,
+            session_id,
+            refresh_expire_days,
+        )
         csrf_token = create_csrf_token()
         await self._store_tokens(
             session_id=session_id,
             refresh_jti=refresh_jti,
             csrf_token=csrf_token,
+            ttl=refresh_ttl,
         )
         return {
             "access_token": access_token,
@@ -159,6 +207,7 @@ class AuthService:
             "csrf_token": csrf_token,
             "token_type": "bearer",
             "expires_in": settings.access_token_expire_minutes * 60,
+            "refresh_expires_in": refresh_ttl,
             "session_id": session_id,
         }
 
@@ -597,16 +646,17 @@ class AuthService:
             user.id, school_id, session.id
         )
         csrf_token = create_csrf_token()
+        refresh_ttl = self._session_ttl()
 
         # Store refresh JTI and CSRF in Redis
         await self.redis.setex(
             f"refresh_jti:{session.id}",
-            settings.refresh_token_expire_days * 86400,
+            refresh_ttl,
             refresh_jti,
         )
         await self.redis.setex(
             f"csrf:{session.id}",
-            settings.refresh_token_expire_days * 86400,
+            refresh_ttl,
             csrf_token,
         )
 
@@ -616,6 +666,7 @@ class AuthService:
             "csrf_token": csrf_token,
             "token_type": "bearer",
             "expires_in": settings.access_token_expire_minutes * 60,
+            "refresh_expires_in": refresh_ttl,
             "user_id": user.id,
             "school_id": school_id,
             "role": role,
@@ -684,13 +735,18 @@ class AuthService:
 
         role = membership.role_code
 
-        # 6. Issue new tokens (rotation)
+        # 6. Issue new tokens (rotation + sliding window)
+        refresh_expire_days, ttl = self._refresh_window(payload)
         new_access = create_access_token(user_id, role, school_id, session_id)
-        new_refresh, new_jti = create_refresh_token(user_id, school_id, session_id)
+        new_refresh, new_jti = create_refresh_token(
+            user_id,
+            school_id,
+            session_id,
+            refresh_expire_days,
+        )
         new_csrf = create_csrf_token()
 
         # 7. Update Redis with new JTI and CSRF
-        ttl = settings.refresh_token_expire_days * 86400
         await self.redis.setex(f"refresh_jti:{session_id}", ttl, new_jti)
         await self.redis.setex(f"csrf:{session_id}", ttl, new_csrf)
 
@@ -711,6 +767,7 @@ class AuthService:
             "csrf_token": new_csrf,
             "token_type": "bearer",
             "expires_in": settings.access_token_expire_minutes * 60,
+            "refresh_expires_in": ttl,
         }
 
     # ------------------------------------------------------------------

@@ -13,6 +13,19 @@ from pydantic import BaseModel, Field
 
 
 # ---------------------------------------------------------------------------
+# Class
+# ---------------------------------------------------------------------------
+class ClassResponse(BaseModel):
+    id: str
+    code: str
+    name: str
+    school_id: str
+    academic_year_id: str
+    teacher_count: int
+    student_count: int
+
+
+# ---------------------------------------------------------------------------
 # Teacher Assignment (S-047)
 # ---------------------------------------------------------------------------
 class TeacherAssignmentCreateRequest(BaseModel):

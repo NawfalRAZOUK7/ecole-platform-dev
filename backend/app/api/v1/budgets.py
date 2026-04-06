@@ -39,6 +39,7 @@ router = APIRouter(prefix="/budgets", tags=["budget"])
     "",
     status_code=201,
     summary="Create budget",
+    description="Creates a micro-budget for the authenticated school and returns the new budget envelope with its initial allocation totals.",
     response_description="Created budget",
 )
 async def create_budget(
@@ -61,6 +62,7 @@ async def create_budget(
 @router.get(
     "",
     summary="List budgets",
+    description="Returns budgets within the authenticated school scope. Supports filtering by academic year and lifecycle status.",
     response_description="List of budgets",
 )
 async def list_budgets(
@@ -83,6 +85,7 @@ async def list_budgets(
 @router.get(
     "/analytics",
     summary="Get budget analytics",
+    description="Returns budget utilization analytics for the authenticated school, optionally scoped to a single academic year.",
     response_description="Budget analytics summary",
 )
 async def get_budget_analytics(
@@ -103,6 +106,7 @@ async def get_budget_analytics(
 @router.get(
     "/{budget_id}",
     summary="Get budget",
+    description="Fetches a single budget by ID and returns its current totals, status, and related academic-year context.",
     response_description="Budget detail",
 )
 async def get_budget(
@@ -119,6 +123,7 @@ async def get_budget(
     "/{budget_id}/allocations",
     status_code=201,
     summary="Create allocation",
+    description="Creates a budget allocation within the selected budget and returns the stored allocation record for downstream request tracking.",
     response_description="Created allocation",
 )
 async def create_allocation(
@@ -143,6 +148,7 @@ async def create_allocation(
 @router.get(
     "/{budget_id}/allocations",
     summary="List allocations for budget",
+    description="Lists allocations attached to a budget. Supports filtering by class, teacher, and allocation status.",
     response_description="List of allocations",
 )
 async def list_budget_allocations(
@@ -169,6 +175,7 @@ async def list_budget_allocations(
 @router.get(
     "/allocations/{allocation_id}",
     summary="Get allocation",
+    description="Fetches a single allocation by ID and returns its current balances, ownership, and related budget metadata.",
     response_description="Allocation detail",
 )
 async def get_allocation(
@@ -190,6 +197,7 @@ async def get_allocation(
     "/allocations/{allocation_id}/requests",
     status_code=201,
     summary="Create budget request",
+    description="Creates a spending request for a specific allocation and returns the pending request for review workflows.",
     response_description="Created budget request",
 )
 async def create_budget_request(
@@ -214,6 +222,7 @@ async def create_budget_request(
 @router.get(
     "/allocations/{allocation_id}/requests",
     summary="List budget requests",
+    description="Returns spending requests linked to an allocation, with optional filters for requester and approval status.",
     response_description="List of budget requests",
 )
 async def list_budget_requests(
@@ -238,6 +247,7 @@ async def list_budget_requests(
 @router.post(
     "/requests/{request_id}/approve",
     summary="Approve budget request",
+    description="Approves a pending budget request and returns the updated request record with the applied approval decision.",
     response_description="Approved budget request",
 )
 async def approve_budget_request(
@@ -262,6 +272,7 @@ async def approve_budget_request(
 @router.post(
     "/requests/{request_id}/reject",
     summary="Reject budget request",
+    description="Rejects a pending budget request and returns the updated request record, including the reviewer decision details.",
     response_description="Rejected budget request",
 )
 async def reject_budget_request(
@@ -286,6 +297,7 @@ async def reject_budget_request(
 @router.get(
     "/requests/{request_id}",
     summary="Get budget request",
+    description="Fetches a single budget request by ID and returns its request, approval, and allocation metadata.",
     response_description="Budget request detail",
 )
 async def get_budget_request(
@@ -302,6 +314,7 @@ async def get_budget_request(
     "/allocations/{allocation_id}/transactions",
     status_code=201,
     summary="Record budget transaction",
+    description="Records a transaction against an allocation and returns the saved financial movement for audit and reconciliation flows.",
     response_description="Created budget transaction",
 )
 async def create_budget_transaction(
@@ -326,6 +339,7 @@ async def create_budget_transaction(
 @router.get(
     "/allocations/{allocation_id}/transactions",
     summary="List budget transactions",
+    description="Lists transactions recorded for an allocation, with optional filters for source request and transaction type.",
     response_description="List of budget transactions",
 )
 async def list_budget_transactions(

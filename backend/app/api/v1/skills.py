@@ -34,6 +34,7 @@ router = APIRouter(prefix="/skills", tags=["skills"])
 @router.get(
     "/dimensions",
     summary="List skill dimensions",
+    description="Returns the life-skills dimensions configured for the school context. Supports filtering by active state.",
     response_description="List of skill dimensions",
 )
 async def list_skill_dimensions(
@@ -50,6 +51,7 @@ async def list_skill_dimensions(
     "/dimensions",
     status_code=201,
     summary="Create skill dimension",
+    description="Creates a life-skills dimension and returns the saved framework record for milestone configuration.",
     response_description="Created skill dimension",
 )
 async def create_skill_dimension(
@@ -72,6 +74,7 @@ async def create_skill_dimension(
 @router.get(
     "/milestones",
     summary="List skill milestones",
+    description="Lists milestones defined in the life-skills framework, with optional filters for dimension and active state.",
     response_description="List of skill milestones",
 )
 async def list_skill_milestones(
@@ -94,6 +97,7 @@ async def list_skill_milestones(
     "/milestones",
     status_code=201,
     summary="Create skill milestone",
+    description="Creates a milestone under the life-skills framework and returns the new milestone definition.",
     response_description="Created skill milestone",
 )
 async def create_skill_milestone(
@@ -116,6 +120,7 @@ async def create_skill_milestone(
 @router.get(
     "/progress/student/{student_id}",
     summary="Get student skill progress",
+    description="Returns the recorded life-skills progress for a student within the requested academic year as a list of progress entries.",
     response_description="Student skill progress detail",
 )
 async def get_student_skill_progress(
@@ -138,6 +143,7 @@ async def get_student_skill_progress(
 @router.post(
     "/evaluate/{student_id}",
     summary="Evaluate student life skills",
+    description="Runs a life-skills evaluation for a student in the specified academic year and returns the resulting assessment payload.",
     response_description="Evaluation result",
 )
 async def evaluate_student_skills(
@@ -162,6 +168,7 @@ async def evaluate_student_skills(
 @router.get(
     "/passport/{student_id}",
     summary="Get student skill passport",
+    description="Fetches the generated life-skills passport for a student for the requested academic year.",
     response_description="Skill passport detail",
 )
 async def get_skill_passport(
@@ -184,6 +191,7 @@ async def get_skill_passport(
 @router.post(
     "/passport/{student_id}/generate",
     summary="Generate student skill passport",
+    description="Generates or refreshes a student's life-skills passport for the requested academic year and returns the updated passport record.",
     response_description="Generated skill passport",
 )
 async def generate_skill_passport(
@@ -208,6 +216,7 @@ async def generate_skill_passport(
 @router.get(
     "/passport/{student_id}/download",
     summary="Download student skill passport PDF",
+    description="Streams the generated skill passport as a PDF download for the requested student and academic year.",
     response_description="PDF bytes",
 )
 async def download_skill_passport(
@@ -241,6 +250,7 @@ async def download_skill_passport(
 @router.get(
     "/analytics/class/{class_id}",
     summary="Get class life-skills analytics",
+    description="Returns class-level life-skills analytics for the requested academic year, including aggregated progress indicators.",
     response_description="Class analytics summary",
 )
 async def get_skill_class_analytics(
@@ -263,6 +273,7 @@ async def get_skill_class_analytics(
 @router.get(
     "/analytics/school",
     summary="Get school life-skills analytics",
+    description="Returns school-level life-skills analytics for the requested academic year across all students in scope.",
     response_description="School analytics summary",
 )
 async def get_skill_school_analytics(
@@ -283,6 +294,7 @@ async def get_skill_school_analytics(
 @router.get(
     "/leaderboard/{class_id}",
     summary="Get anonymized class skill leaderboard",
+    description="Returns an anonymized class leaderboard for life-skills progress in the requested academic year, limited to the requested number of entries.",
     response_description="Anonymized leaderboard",
 )
 async def get_skill_leaderboard(

@@ -1,3 +1,16 @@
+# Alertmanager Configuration — Ecole Platform
+#
+# PRODUCTION SETUP:
+# 1. Create a Slack webhook at https://api.slack.com/messaging/webhooks
+# 2. Replace REPLACE/THIS/WEBHOOK with your actual webhook path
+# 3. Set via environment variable: ALERTMANAGER_SLACK_WEBHOOK_URL
+# 4. Alternatively, mount the webhook URL as a Docker secret
+#
+# Alert channels:
+#   #ecole-critical  — P1 alerts (service down, DB unreachable)
+#   #ecole-warnings  — P2 alerts (high error rate, slow queries)
+#   #ecole-info      — P3 alerts (deployment events, scaling)
+#
 # Alertmanager configuration — École Platform
 #
 # Reference: S-130 — Alertmanager rules, F2 Ch08 — Alerting & Severity Model

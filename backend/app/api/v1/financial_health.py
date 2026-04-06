@@ -35,6 +35,7 @@ router = APIRouter(prefix="/financial-health", tags=["financial-health"])
 @router.get(
     "/retention",
     summary="List retention metrics",
+    description="Returns stored retention metrics for the authenticated school using offset pagination parameters.",
     response_description="List of retention metrics",
 )
 async def list_retention_metrics(
@@ -58,6 +59,7 @@ async def list_retention_metrics(
     "/retention/compute",
     status_code=202,
     summary="Compute retention metric",
+    description="Computes a retention metric for the requested academic-year comparison and returns the generated metric payload.",
     response_description="Computed retention metric",
 )
 async def compute_retention(
@@ -80,6 +82,7 @@ async def compute_retention(
 @router.get(
     "/cashflow",
     summary="List cashflow forecasts",
+    description="Returns stored cashflow forecasts for the authenticated school. Supports filtering by month range and offset pagination.",
     response_description="List of cashflow forecasts",
 )
 async def list_cashflow_forecasts(
@@ -107,6 +110,7 @@ async def list_cashflow_forecasts(
     "/cashflow/compute",
     status_code=202,
     summary="Compute cashflow forecast",
+    description="Computes forward-looking cashflow forecasts and returns the generated forecast set for the requested parameters.",
     response_description="Computed cashflow forecasts",
 )
 async def compute_cashflow(
@@ -129,6 +133,7 @@ async def compute_cashflow(
 @router.get(
     "/cost-per-student",
     summary="Get cost-per-student analysis",
+    description="Fetches the stored cost-per-student analysis for a specific academic year within the authenticated school scope.",
     response_description="Cost-per-student analysis",
 )
 async def get_cost_per_student(
@@ -150,6 +155,7 @@ async def get_cost_per_student(
     "/cost-per-student/compute",
     status_code=202,
     summary="Compute cost-per-student analysis",
+    description="Computes a cost-per-student analysis for an academic year and returns the generated analysis payload.",
     response_description="Computed cost-per-student analysis",
 )
 async def compute_cost_per_student(
@@ -172,6 +178,7 @@ async def compute_cost_per_student(
 @router.get(
     "/snapshot",
     summary="Get financial snapshot",
+    description="Fetches a stored point-in-time financial snapshot for the authenticated school, optionally scoped to a specific date.",
     response_description="Financial snapshot",
 )
 async def get_snapshot(
@@ -193,6 +200,7 @@ async def get_snapshot(
     "/snapshot/compute",
     status_code=202,
     summary="Compute financial snapshot",
+    description="Computes a financial snapshot for the requested inputs and returns the generated point-in-time summary.",
     response_description="Computed financial snapshot",
 )
 async def compute_snapshot(
@@ -215,6 +223,7 @@ async def compute_snapshot(
 @router.get(
     "/dashboard",
     summary="Get financial health dashboard",
+    description="Returns the consolidated financial health dashboard for the authenticated school across retention, cashflow, and cost metrics.",
     response_description="Financial dashboard summary",
 )
 async def get_dashboard(
@@ -229,6 +238,7 @@ async def get_dashboard(
 @router.get(
     "/trends",
     summary="Get financial health trends",
+    description="Returns financial health trend series for the requested number of months to support dashboard charting.",
     response_description="Financial trend series",
 )
 async def get_trends(
@@ -244,6 +254,7 @@ async def get_trends(
 @router.get(
     "/export/csv",
     summary="Export financial health CSV",
+    description="Exports the financial health dashboard data as a CSV file for spreadsheet analysis or offline reporting.",
     response_description="CSV export",
 )
 async def export_financial_health_csv(
@@ -263,6 +274,7 @@ async def export_financial_health_csv(
 @router.get(
     "/export/pdf",
     summary="Export financial health PDF",
+    description="Exports the financial health dashboard as a PDF document for sharing and archival purposes.",
     response_description="PDF export",
 )
 async def export_financial_health_pdf(

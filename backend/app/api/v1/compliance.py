@@ -35,6 +35,7 @@ router = APIRouter(prefix="/compliance", tags=["compliance"])
 @router.get(
     "/curricula",
     summary="List MEN curricula",
+    description="Returns MEN curriculum references available to the school context. Supports filtering by level, grade, subject, academic year, and active state.",
     response_description="List of MEN curricula",
 )
 async def list_curricula(
@@ -63,6 +64,7 @@ async def list_curricula(
     "/curricula",
     status_code=201,
     summary="Create MEN curriculum",
+    description="Creates a MEN curriculum reference and returns the saved curriculum record for later objective and mapping management.",
     response_description="Created MEN curriculum",
 )
 async def create_curriculum(
@@ -85,6 +87,7 @@ async def create_curriculum(
 @router.get(
     "/curricula/{curriculum_id}/objectives",
     summary="List MEN objectives for a curriculum",
+    description="Lists MEN learning objectives attached to a curriculum, with optional filtering by trimester.",
     response_description="List of MEN objectives",
 )
 async def list_objectives(
@@ -107,6 +110,7 @@ async def list_objectives(
     "/curricula/{curriculum_id}/objectives",
     status_code=201,
     summary="Create MEN objective",
+    description="Creates a MEN objective under the specified curriculum and returns the saved objective definition.",
     response_description="Created MEN objective",
 )
 async def create_objective(
@@ -132,6 +136,7 @@ async def create_objective(
     "/mappings",
     status_code=201,
     summary="Create curriculum mapping",
+    description="Creates a mapping between MEN curriculum content and school learning assets, then returns the stored mapping record.",
     response_description="Created mapping",
 )
 async def create_mapping(
@@ -154,6 +159,7 @@ async def create_mapping(
 @router.get(
     "/mappings",
     summary="List curriculum mappings",
+    description="Returns curriculum mappings visible to the authenticated school. Supports filtering by curriculum, objective, course, and content item.",
     response_description="List of curriculum mappings",
 )
 async def list_mappings(
@@ -182,6 +188,7 @@ async def list_mappings(
     status_code=204,
     response_class=Response,
     summary="Delete curriculum mapping",
+    description="Deletes a curriculum mapping by ID. Returns an empty 204 response when the mapping is removed successfully.",
     response_description="Mapping deleted",
 )
 async def delete_mapping(
@@ -203,6 +210,7 @@ async def delete_mapping(
 @router.get(
     "/dashboard",
     summary="Get MEN compliance dashboard",
+    description="Returns the MEN compliance dashboard summary for the requested academic year, with optional level, grade, and subject filters.",
     response_description="Compliance dashboard summary",
 )
 async def get_dashboard(
@@ -230,6 +238,7 @@ async def get_dashboard(
     "/reports/generate",
     status_code=202,
     summary="Generate compliance report",
+    description="Queues or generates a MEN compliance report for the requested scope and returns the created report job payload.",
     response_description="Generated compliance report",
 )
 async def generate_report(
@@ -252,6 +261,7 @@ async def generate_report(
 @router.get(
     "/reports",
     summary="List compliance reports",
+    description="Lists generated MEN compliance reports available to the authenticated school, with optional curriculum and academic-year filters.",
     response_description="List of compliance reports",
 )
 async def list_reports(
@@ -274,6 +284,7 @@ async def list_reports(
 @router.get(
     "/reports/{report_id}",
     summary="Get compliance report detail",
+    description="Fetches a single MEN compliance report by ID and returns its stored metadata and generation outcome.",
     response_description="Compliance report detail",
 )
 async def get_report(
@@ -289,6 +300,7 @@ async def get_report(
 @router.get(
     "/reports/{report_id}/download",
     summary="Download compliance report PDF",
+    description="Streams the selected MEN compliance report as a PDF download for external review or archival.",
     response_description="PDF bytes",
 )
 async def download_report(
