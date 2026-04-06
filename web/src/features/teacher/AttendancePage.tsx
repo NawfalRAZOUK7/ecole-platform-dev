@@ -119,7 +119,7 @@ export function AttendancePage() {
       />
 
       {success && (
-        <div className="card" style={{ background: '#ecfdf5', borderColor: 'var(--color-success)', marginBottom: 16, padding: 12, fontSize: 14 }}>
+        <div className="card" style={{ background: 'var(--color-surface-success)', borderColor: 'var(--color-success)', marginBottom: 16, padding: 12, fontSize: 14 }}>
           {success}
         </div>
       )}

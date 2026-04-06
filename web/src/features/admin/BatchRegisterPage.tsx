@@ -160,12 +160,12 @@ export function BatchRegisterPage() {
           </h3>
 
           <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
-            <div style={{ padding: 12, background: '#ecfdf5', borderRadius: 'var(--radius)', flex: 1 }}>
+            <div style={{ padding: 12, background: 'var(--color-surface-success)', borderRadius: 'var(--radius)', flex: 1 }}>
               <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-success)' }}>{result.total_created}</div>
               <div style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{t('register.batchCreated')}</div>
             </div>
             {result.total_errors > 0 && (
-              <div style={{ padding: 12, background: '#fef2f2', borderRadius: 'var(--radius)', flex: 1 }}>
+              <div style={{ padding: 12, background: 'var(--color-surface-error)', borderRadius: 'var(--radius)', flex: 1 }}>
                 <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-danger)' }}>{result.total_errors}</div>
                 <div style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{t('register.batchErrors')}</div>
               </div>

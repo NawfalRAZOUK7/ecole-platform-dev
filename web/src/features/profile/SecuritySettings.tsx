@@ -30,7 +30,7 @@ export function SecuritySettings({
           <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>{t('profile.changePassword')}</h3>
           <ErrorBanner error={passwordError} onDismiss={onDismissError} />
           {passwordSuccess && (
-            <div style={{ padding: 12, background: '#ecfdf5', border: '1px solid var(--color-success)', borderRadius: 'var(--radius)', marginBottom: 12, fontSize: 14, color: 'var(--color-success)' }}>
+            <div style={{ padding: 12, background: 'var(--color-surface-success)', border: '1px solid var(--color-success)', borderRadius: 'var(--radius)', marginBottom: 12, fontSize: 14, color: 'var(--color-success)' }}>
               {t('profile.passwordChanged')}
             </div>
           )}

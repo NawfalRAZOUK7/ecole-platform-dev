@@ -3,21 +3,21 @@ import type { ClassOption, ExceptionForm, SlotForm, TimetableSlot } from './time
 export const DAYS = [1, 2, 3, 4, 5, 6] as const;
 
 const SUBJECT_COLORS: Record<string, string> = {
-  math: '#eff6ff',
-  french: '#fef3c7',
-  arabic: '#ecfdf5',
-  science: '#f0fdf4',
-  history: '#faf5ff',
-  geography: '#fff7ed',
-  english: '#fdf2f8',
-  islamic_studies: '#f0f9ff',
-  art: '#fefce8',
-  sport: '#f0fdfa',
+  math: 'var(--color-surface-primary)',
+  french: 'var(--color-surface-warning)',
+  arabic: 'var(--color-surface-success)',
+  science: 'var(--color-surface-success)',
+  history: 'var(--color-surface-secondary)',
+  geography: 'var(--color-surface-warning)',
+  english: 'var(--color-surface-secondary)',
+  islamic_studies: 'var(--color-surface-info)',
+  art: 'var(--color-surface-warning)',
+  sport: 'var(--color-surface-info)',
 };
 
 export function getSubjectColor(subject: string): string {
   const key = subject.toLowerCase().replace(/\s+/g, '_');
-  return SUBJECT_COLORS[key] || '#f3f4f6';
+  return SUBJECT_COLORS[key] || 'var(--color-bg-secondary)';
 }
 
 export const EMPTY_SLOT_FORM: SlotForm = {

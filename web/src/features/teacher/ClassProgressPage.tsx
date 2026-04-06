@@ -58,7 +58,7 @@ export function ClassProgressPage() {
     : [];
 
   const sortArrow = (key: SortKey) => (sortKey === key ? (sortAsc ? ' ▲' : ' ▼') : '');
-  const colorForGrade = (value: number) => (value >= 80 ? '#10b981' : value >= 50 ? '#f59e0b' : '#ef4444');
+  const colorForGrade = (value: number) => (value >= 80 ? 'var(--color-success)' : value >= 50 ? 'var(--color-warning)' : 'var(--color-error)');
 
   function handleSort(key: SortKey) {
     if (sortKey === key) {
@@ -118,11 +118,11 @@ export function ClassProgressPage() {
               <h3 className="chart-title">{t('progress.gradeComparison')}</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={gradeChartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                   <XAxis dataKey="name" tick={{ fontSize: 10 }} angle={-30} textAnchor="end" height={60} />
                   <YAxis domain={[0, 100]} />
                   <Tooltip />
-                  <Bar dataKey={data.charts.grade_comparison.datasets[0]?.label || 'grade'} fill="#2563eb" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey={data.charts.grade_comparison.datasets[0]?.label || 'grade'} fill="var(--color-primary)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

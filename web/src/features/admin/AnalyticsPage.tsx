@@ -113,16 +113,16 @@ export function AnalyticsPage() {
       />
 
       <div className="stats-grid">
-        <KpiCard title={t('analytics.adoption')} kpi={adoptionKpi} color="#4CAF50" />
-        <KpiCard title={t('analytics.usage')} kpi={usageKpi} color="#2196F3" />
+        <KpiCard title={t('analytics.adoption')} kpi={adoptionKpi} color="var(--color-success)" />
+        <KpiCard title={t('analytics.usage')} kpi={usageKpi} color="var(--color-primary)" />
         <KpiCard
           title={t('analytics.authErrors')}
           kpi={authErrorKpi}
-          color={authErrorKpi && authErrorKpi.value !== null && authErrorKpi.value > 1 ? '#F44336' : '#4CAF50'}
+          color={authErrorKpi && authErrorKpi.value !== null && authErrorKpi.value > 1 ? 'var(--color-error)' : 'var(--color-success)'}
         />
-        <KpiCard title={t('analytics.latency')} kpi={latencyKpi} color="#FF9800" />
-        <KpiCard title={t('analytics.incidents')} kpi={incidentKpi} color="#9C27B0" />
-        <KpiCard title={t('analytics.conversion')} kpi={conversionKpi} color="#009688" />
+        <KpiCard title={t('analytics.latency')} kpi={latencyKpi} color="var(--color-accent)" />
+        <KpiCard title={t('analytics.incidents')} kpi={incidentKpi} color="var(--color-secondary)" />
+        <KpiCard title={t('analytics.conversion')} kpi={conversionKpi} color="var(--color-info)" />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginTop: 24 }}>
@@ -132,14 +132,14 @@ export function AnalyticsPage() {
           </h3>
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={trendData}>
-              <CartesianGrid strokeDasharray="3 3" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
               <XAxis dataKey="point" />
               <YAxis unit="%" />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="adoption" stroke="#4CAF50" name={t('analytics.adoption')} strokeWidth={2} />
-              <Line type="monotone" dataKey="usage" stroke="#2196F3" name={t('analytics.usage')} strokeWidth={2} />
-              <Line type="monotone" dataKey="authErrors" stroke="#F44336" name={t('analytics.authErrors')} strokeWidth={2} />
+              <Line type="monotone" dataKey="adoption" stroke="var(--color-success)" name={t('analytics.adoption')} strokeWidth={2} />
+              <Line type="monotone" dataKey="usage" stroke="var(--color-primary)" name={t('analytics.usage')} strokeWidth={2} />
+              <Line type="monotone" dataKey="authErrors" stroke="var(--color-error)" name={t('analytics.authErrors')} strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -150,7 +150,7 @@ export function AnalyticsPage() {
           </h3>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={barData}>
-              <CartesianGrid strokeDasharray="3 3" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
               <XAxis dataKey="name" />
               <YAxis unit="%" />
               <Tooltip
@@ -161,13 +161,13 @@ export function AnalyticsPage() {
                   return [`${value}% (${payload?.numerator ?? 0}/${payload?.denominator ?? 0})`, ''];
                 }}
               />
-              <Bar dataKey="value" fill="#2196F3" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="value" fill="var(--color-primary)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      <div style={{ textAlign: 'center', marginTop: 16, color: '#999', fontSize: 12 }}>
+      <div style={{ textAlign: 'center', marginTop: 16, color: 'var(--color-text-secondary)', fontSize: 12 }}>
         {t('analytics.autoRefresh')}
         {kpis.length > 0 && kpis[0].computed_at && (
           <span> — {t('analytics.lastUpdated')}: {new Date(kpis[0].computed_at).toLocaleTimeString()}</span>
@@ -199,7 +199,7 @@ function KpiCard({ title, kpi, color }: { title: string; kpi?: KpiItem; color: s
       <div className="stat-value" style={{ color }}>{displayValue}</div>
       <div className="stat-label">{title}</div>
       {subtitle && (
-        <div style={{ fontSize: 11, color: '#999', marginTop: 4 }}>{subtitle}</div>
+        <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 4 }}>{subtitle}</div>
       )}
     </div>
   );

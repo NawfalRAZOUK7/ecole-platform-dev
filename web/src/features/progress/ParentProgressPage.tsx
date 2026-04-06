@@ -21,7 +21,7 @@ import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
 import { useChildrenProgressOverview } from './useProgress';
 
-const BAR_COLORS = ['#2563eb', '#10b981', '#f59e0b'];
+const BAR_COLORS = ['var(--color-primary)', 'var(--color-success)', 'var(--color-warning)'];
 
 export function ParentProgressPage() {
   const { t } = useTranslation();
@@ -65,7 +65,7 @@ export function ParentProgressPage() {
                 <span className="metric-label">{t('progress.gradeAvg')}</span>
                 <span
                   className="metric-value"
-                  style={{ color: child.grade_average >= 80 ? '#10b981' : child.grade_average >= 50 ? '#f59e0b' : '#ef4444' }}
+                  style={{ color: child.grade_average >= 80 ? 'var(--color-success)' : child.grade_average >= 50 ? 'var(--color-warning)' : 'var(--color-error)' }}
                 >
                   {child.grade_average.toFixed(1)}
                 </span>
@@ -94,7 +94,7 @@ export function ParentProgressPage() {
           <h3 className="chart-title">{t('progress.comparison')}</h3>
           <ResponsiveContainer width="100%" height={320}>
             <BarChart data={comparisonData}>
-              <CartesianGrid strokeDasharray="3 3" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
               <XAxis dataKey="name" />
               <YAxis domain={[0, 100]} />
               <Tooltip />

@@ -101,11 +101,11 @@ export function ParentChildLinksPage() {
   function getStatusColor(status: string): string {
     switch (status) {
       case 'active':
-        return '#10b981';
+        return 'var(--color-success)';
       case 'revoked':
-        return '#ef4444';
+        return 'var(--color-error)';
       default:
-        return '#6b7280';
+        return 'var(--color-text-secondary)';
     }
   }
 

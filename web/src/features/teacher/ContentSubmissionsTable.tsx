@@ -22,7 +22,7 @@ export function ContentSubmissionsTable() {
 
   const statusColors: Record<string, string> = {
     PENDING: 'var(--color-warning)',
-    UNDER_REVIEW: 'var(--color-info, #2196f3)',
+    UNDER_REVIEW: 'var(--color-info)',
     APPROVED: 'var(--color-success)',
     REJECTED: 'var(--color-error)',
   };

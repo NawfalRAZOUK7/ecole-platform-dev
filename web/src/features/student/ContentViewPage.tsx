@@ -131,8 +131,8 @@ export function ContentViewPage() {
                         fontSize: 11,
                         padding: '2px 6px',
                         borderRadius: 4,
-                        background: progress === 'completed' ? 'var(--color-success)' : 'var(--color-warning)',
-                        color: '#fff',
+                        background: progress === 'completed' ? 'var(--color-surface-success)' : 'var(--color-surface-warning)',
+                        color: progress === 'completed' ? 'var(--color-success)' : 'var(--color-warning)',
                       }}
                     >
                       {t(`content.progress.${progress}`, progress)}
@@ -177,7 +177,7 @@ function ContentPlayer({
         <div
           style={{
             marginBottom: 16,
-            background: '#000',
+            background: 'color-mix(in srgb, var(--color-text) 92%, transparent)',
             borderRadius: 8,
             overflow: 'hidden',
             minHeight: 300,
@@ -207,7 +207,7 @@ function ContentPlayer({
           )}
 
           {item.content_type === 'interactive' && (
-            <div style={{ color: '#fff', padding: 40, textAlign: 'center' }}>
+            <div style={{ color: 'var(--color-inverse-text)', padding: 40, textAlign: 'center' }}>
               <p>{t('studentContent.interactiveHint')}</p>
               <a href={streamUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
                 {t('studentContent.openInteractive')}

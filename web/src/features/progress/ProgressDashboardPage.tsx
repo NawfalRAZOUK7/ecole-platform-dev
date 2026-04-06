@@ -27,8 +27,8 @@ import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
 import { useProgressDashboard } from './useProgress';
 
-const PIE_COLORS = ['#10b981', '#f59e0b', '#ef4444'];
-const DONUT_COLORS = ['#10b981', '#ef4444', '#3b82f6', '#f59e0b'];
+const PIE_COLORS = ['var(--color-success)', 'var(--color-warning)', 'var(--color-error)'];
+const DONUT_COLORS = ['var(--color-success)', 'var(--color-error)', 'var(--color-primary)', 'var(--color-warning)'];
 
 export function ProgressDashboardPage() {
   const { t } = useTranslation();
@@ -107,11 +107,11 @@ export function ProgressDashboardPage() {
           {gradeTrendData.length > 0 ? (
             <ResponsiveContainer width="100%" height={280}>
               <LineChart data={gradeTrendData}>
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                 <YAxis domain={[0, 100]} />
                 <Tooltip />
-                <Line type="monotone" dataKey={gradeKey} stroke="#2563eb" strokeWidth={2} dot={{ r: 4 }} />
+                <Line type="monotone" dataKey={gradeKey} stroke="var(--color-primary)" strokeWidth={2} dot={{ r: 4 }} />
               </LineChart>
             </ResponsiveContainer>
           ) : (
@@ -151,11 +151,11 @@ export function ProgressDashboardPage() {
           {activityBarData.length > 0 ? (
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={activityBarData}>
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                 <YAxis domain={[0, 100]} />
                 <Tooltip />
-                <Bar dataKey={activityKey} fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                <Bar dataKey={activityKey} fill="var(--color-secondary)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -200,13 +200,13 @@ export function ProgressDashboardPage() {
           {assessmentBarData.length > 0 ? (
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={assessmentBarData}>
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                 <XAxis dataKey="name" tick={{ fontSize: 10 }} angle={-20} textAnchor="end" height={50} />
                 <YAxis domain={[0, 'auto']} />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey={assessScoreKey} fill="#2563eb" radius={[4, 4, 0, 0]} />
-                <Bar dataKey={assessMaxKey} fill="#e5e7eb" radius={[4, 4, 0, 0]} />
+                <Bar dataKey={assessScoreKey} fill="var(--color-primary)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey={assessMaxKey} fill="var(--color-border)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (

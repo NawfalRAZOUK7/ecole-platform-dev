@@ -102,13 +102,13 @@ export function InvitationsPage() {
   function getStatusColor(status: string): string {
     switch (status) {
       case 'active':
-        return '#10b981';
+        return 'var(--color-success)';
       case 'consumed':
-        return '#2563eb';
+        return 'var(--color-primary)';
       case 'expired':
-        return '#6b7280';
+        return 'var(--color-text-secondary)';
       default:
-        return '#6b7280';
+        return 'var(--color-text-secondary)';
     }
   }
 

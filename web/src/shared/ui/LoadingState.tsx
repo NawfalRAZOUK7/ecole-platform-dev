@@ -22,7 +22,7 @@ export function LoadingState({ message }: LoadingStateProps) {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '48px 24px',
-        color: '#6b7280',
+        color: 'var(--color-text-secondary)',
       }}
     >
       <div className="spinner" />

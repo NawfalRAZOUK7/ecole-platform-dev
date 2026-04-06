@@ -82,13 +82,13 @@ export function UsersPage() {
   function getStatusColor(status: string): string {
     switch (status) {
       case 'active':
-        return '#10b981';
+        return 'var(--color-success)';
       case 'suspended':
-        return '#ef4444';
+        return 'var(--color-error)';
       case 'inactive':
-        return '#6b7280';
+        return 'var(--color-text-secondary)';
       default:
-        return '#6b7280';
+        return 'var(--color-text-secondary)';
     }
   }
 

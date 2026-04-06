@@ -97,7 +97,7 @@ async function exportChart(container: HTMLDivElement | null, filename: string) {
       }
 
       context.scale(2, 2);
-      context.fillStyle = '#ffffff';
+      context.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--color-surface').trim() || 'white';
       context.fillRect(0, 0, width, height);
       context.drawImage(image, 0, 0, width, height);
       canvas.toBlob((blob) => {
@@ -252,12 +252,12 @@ export function AnalyticsDashboardPage() {
           </div>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={attendance.series}>
-              <CartesianGrid strokeDasharray="3 3" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
               <XAxis dataKey="label" />
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="value" stroke="#2563eb" strokeWidth={2} name={t('analytics.kpis.attendanceRate')} />
+              <Line type="monotone" dataKey="value" stroke="var(--color-primary)" strokeWidth={2} name={t('analytics.kpis.attendanceRate')} />
             </LineChart>
           </ResponsiveContainer>
         </article>
@@ -282,11 +282,11 @@ export function AnalyticsDashboardPage() {
           </div>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={grades.distribution}>
-              <CartesianGrid strokeDasharray="3 3" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
               <XAxis dataKey="label" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="count" fill="#16a34a" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="count" fill="var(--color-success)" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </article>
@@ -312,11 +312,11 @@ export function AnalyticsDashboardPage() {
           </div>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={billingWaterfall}>
-              <CartesianGrid strokeDasharray="3 3" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
               <XAxis dataKey="label" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="value" fill="#f59e0b" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="value" fill="var(--color-accent)" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </article>
@@ -334,7 +334,7 @@ export function AnalyticsDashboardPage() {
           <ResponsiveContainer width="100%" height={300}>
             <FunnelChart>
               <Tooltip />
-              <Funnel dataKey="value" data={engagement.funnel} isAnimationActive fill="#0f766e" />
+              <Funnel dataKey="value" data={engagement.funnel} isAnimationActive fill="var(--color-info)" />
             </FunnelChart>
           </ResponsiveContainer>
         </article>

@@ -65,13 +65,13 @@ export function JustificationReviewPage() {
   function getStatusColor(status: string): string {
     switch (status) {
       case 'pending':
-        return '#f59e0b';
+        return 'var(--color-warning)';
       case 'justified':
-        return '#10b981';
+        return 'var(--color-success)';
       case 'rejected':
-        return '#ef4444';
+        return 'var(--color-error)';
       default:
-        return '#6b7280';
+        return 'var(--color-text-secondary)';
     }
   }
 
@@ -124,7 +124,7 @@ export function JustificationReviewPage() {
               </div>
 
               {item.rejection_reason && (
-                <div style={{ marginBottom: 8, padding: 8, background: '#fef2f2', borderRadius: 'var(--radius)' }}>
+                <div style={{ marginBottom: 8, padding: 8, background: 'var(--color-surface-error)', borderRadius: 'var(--radius)' }}>
                   <span style={{ fontWeight: 600, fontSize: 12, color: 'var(--color-danger)' }}>
                     {t('admin.justifications.rejectionReason')}:
                   </span>

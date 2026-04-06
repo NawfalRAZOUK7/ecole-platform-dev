@@ -16,14 +16,14 @@ interface ErrorBannerProps {
 }
 
 const CATEGORY_STYLES: Record<string, { bg: string; border: string; icon: string }> = {
-  validation: { bg: '#fff3cd', border: '#ffc107', icon: '!' },
-  authn: { bg: '#f8d7da', border: '#dc3545', icon: '🔒' },
-  authz: { bg: '#f8d7da', border: '#dc3545', icon: '🚫' },
-  conflict: { bg: '#fff3cd', border: '#ffc107', icon: '⚠' },
-  system: { bg: '#f8d7da', border: '#dc3545', icon: '⚙' },
-  rate_limit: { bg: '#fff3cd', border: '#ffc107', icon: '⏱' },
-  not_found: { bg: '#cce5ff', border: '#0d6efd', icon: '?' },
-  network: { bg: '#f8d7da', border: '#dc3545', icon: '📡' },
+  validation: { bg: 'var(--color-surface-warning)', border: 'var(--color-warning)', icon: '!' },
+  authn: { bg: 'var(--color-surface-error)', border: 'var(--color-error)', icon: '🔒' },
+  authz: { bg: 'var(--color-surface-error)', border: 'var(--color-error)', icon: '🚫' },
+  conflict: { bg: 'var(--color-surface-warning)', border: 'var(--color-warning)', icon: '⚠' },
+  system: { bg: 'var(--color-surface-error)', border: 'var(--color-error)', icon: '⚙' },
+  rate_limit: { bg: 'var(--color-surface-warning)', border: 'var(--color-warning)', icon: '⏱' },
+  not_found: { bg: 'var(--color-surface-info)', border: 'var(--color-info)', icon: '?' },
+  network: { bg: 'var(--color-surface-error)', border: 'var(--color-error)', icon: '📡' },
 };
 
 export function ErrorBanner({ error, onDismiss, onRetry }: ErrorBannerProps) {
@@ -51,6 +51,7 @@ export function ErrorBanner({ error, onDismiss, onRetry }: ErrorBannerProps) {
         display: 'flex',
         alignItems: 'center',
         gap: '12px',
+        color: 'var(--color-text)',
       }}
     >
       <span style={{ fontSize: '18px' }}>{style.icon}</span>
@@ -68,6 +69,7 @@ export function ErrorBanner({ error, onDismiss, onRetry }: ErrorBannerProps) {
             borderRadius: '4px',
             border: `1px solid ${style.border}`,
             background: 'transparent',
+            color: 'var(--color-text)',
             cursor: 'pointer',
             fontSize: '13px',
           }}

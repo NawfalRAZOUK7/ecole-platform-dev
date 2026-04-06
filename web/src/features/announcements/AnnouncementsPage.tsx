@@ -109,13 +109,13 @@ export function AnnouncementsPage() {
   function getStatusColor(status: string): string {
     switch (status) {
       case 'PUBLISHED':
-        return '#10b981';
+        return 'var(--color-success)';
       case 'DRAFT':
-        return '#f59e0b';
+        return 'var(--color-warning)';
       case 'ARCHIVED':
-        return '#6b7280';
+        return 'var(--color-text-secondary)';
       default:
-        return '#6b7280';
+        return 'var(--color-text-secondary)';
     }
   }
 

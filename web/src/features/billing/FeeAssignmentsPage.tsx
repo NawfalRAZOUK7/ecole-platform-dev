@@ -226,7 +226,7 @@ export function FeeAssignmentsPage() {
             </div>
 
             {bulkResult ? (
-              <div style={{ padding: 12, background: '#ecfdf5', borderRadius: 8, marginTop: 12 }}>
+              <div style={{ padding: 12, background: 'var(--color-surface-success)', borderRadius: 8, marginTop: 12 }}>
                 <strong>{t('billing.feeAssignments.bulkResult')}:</strong>{' '}
                 {t('billing.feeAssignments.created')}: {bulkResult.created},{' '}
                 {t('billing.feeAssignments.skipped')}: {bulkResult.skipped}

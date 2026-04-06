@@ -21,7 +21,7 @@ export function EmptyState({ message, icon = '📭' }: EmptyStateProps) {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '48px 24px',
-        color: '#9ca3af',
+        color: 'var(--color-text-secondary)',
       }}
     >
       <span style={{ fontSize: '48px', marginBottom: '16px' }}>{icon}</span>

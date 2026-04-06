@@ -42,7 +42,7 @@ export function AuditLogPage() {
   );
 
   function getOutcomeColor(outcome: string): string {
-    return outcome === 'success' ? '#10b981' : '#ef4444';
+    return outcome === 'success' ? 'var(--color-success)' : 'var(--color-error)';
   }
 
   if (auditLogsQuery.isLoading) {

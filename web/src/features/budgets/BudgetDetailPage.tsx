@@ -32,7 +32,7 @@ const madFormatter = new Intl.NumberFormat('fr-MA', {
   currency: 'MAD',
 });
 
-const PIE_COLORS = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+const PIE_COLORS = ['var(--color-primary)', 'var(--color-success)', 'var(--color-warning)', 'var(--color-error)', 'var(--color-secondary)'];
 
 export function BudgetDetailPage() {
   const { t, i18n } = useTranslation();

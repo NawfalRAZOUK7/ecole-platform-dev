@@ -69,7 +69,7 @@ function TimetableSlotCard({
   return (
     <div
       className={`timetable-slot-card ${isCanceled ? 'timetable-slot--canceled' : ''}`}
-      style={{ background: isCanceled ? '#fee2e2' : getSubjectColor(slot.subject) }}
+      style={{ background: isCanceled ? 'var(--color-surface-error)' : getSubjectColor(slot.subject) }}
     >
       <div className="timetable-slot-time">
         {slot.start_time.slice(0, 5)} – {slot.end_time.slice(0, 5)}
