@@ -81,3 +81,40 @@ export interface CreateMicroResourcePayload {
   language: MicroResource['language'];
   file_url?: string;
 }
+
+export interface MicroGroup {
+  id: string;
+  micro_school_id: string;
+  name: string;
+  description?: string | null;
+  student_ids: string[];
+}
+
+export interface CreateMicroGroupPayload {
+  name: string;
+  description?: string;
+  student_ids?: string[];
+}
+
+export interface MicroProgressLog {
+  id: string;
+  student_id: string;
+  micro_school_id: string;
+  date: string;
+  note: string;
+  created_at: string;
+}
+
+export interface CreateMicroProgressLogPayload {
+  student_id: string;
+  micro_school_id: string;
+  date: string;
+  note: string;
+}
+
+export interface MicroPaymentAnalytics {
+  total_collected: number;
+  total_pending: number;
+  total_overdue: number;
+  payment_rate: number;
+}

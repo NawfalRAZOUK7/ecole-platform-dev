@@ -146,3 +146,15 @@ export function useGenerateSkillPassport() {
     },
   });
 }
+
+export function useDownloadSkillPassport() {
+  return useMutation({
+    mutationFn: async ({
+      studentId,
+      academicYearId,
+    }: {
+      studentId: string;
+      academicYearId: string;
+    }) => skillsService.downloadPassport(studentId, academicYearId),
+  });
+}

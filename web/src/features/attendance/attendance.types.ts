@@ -56,3 +56,28 @@ export interface JustificationMutationInput {
   justification: string;
   file?: File;
 }
+
+export interface JustificationPayload {
+  student_id: string;
+  class_id: string;
+  date: string;
+  reason: string;
+  file_url?: string;
+}
+
+export interface JustificationReviewPayload {
+  status: 'approved' | 'rejected';
+  reviewer_note?: string;
+}
+
+export interface Justification {
+  id: string;
+  student_id: string;
+  class_id: string;
+  date: string;
+  reason: string;
+  status: 'pending' | 'approved' | 'rejected';
+  reviewer_note?: string;
+  file_url?: string;
+  created_at: string;
+}

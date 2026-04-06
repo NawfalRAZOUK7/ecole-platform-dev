@@ -6,6 +6,9 @@ import type {
   AttendanceRecord,
   AttendanceTrend,
   BulkAttendancePayload,
+  Justification,
+  JustificationPayload,
+  JustificationReviewPayload,
 } from './attendance.types';
 
 export const attendanceService = {
@@ -56,5 +59,13 @@ export const attendanceService = {
       class_id: classId,
       format,
     });
+  },
+
+  submitJustificationDirect(payload: JustificationPayload) {
+    return api.post<Justification>('/attendance/justifications', payload);
+  },
+
+  reviewJustification(justificationId: string, payload: JustificationReviewPayload) {
+    return api.put<Justification>(`/attendance/justifications/${justificationId}/review`, payload);
   },
 };

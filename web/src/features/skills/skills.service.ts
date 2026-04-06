@@ -58,6 +58,12 @@ export const skillsService = {
     return `/api/v1/skills/passport/${studentId}/download?academic_year_id=${encodeURIComponent(academicYearId)}`;
   },
 
+  downloadPassport(studentId: string, academicYearId: string) {
+    return api.get<Blob>(`/skills/passport/${studentId}/download`, {
+      academic_year_id: academicYearId,
+    });
+  },
+
   getClassAnalytics(classId: string, academicYearId: string) {
     return api.get<SkillClassAnalytics>(`/skills/analytics/class/${classId}`, {
       academic_year_id: academicYearId,

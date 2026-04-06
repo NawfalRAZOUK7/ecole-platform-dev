@@ -5,6 +5,8 @@ import type {
   AttendanceRecord,
   BulkAttendancePayload,
   JustificationMutationInput,
+  JustificationPayload,
+  JustificationReviewPayload,
 } from './attendance.types';
 
 export const attendanceQueryKeys = {
@@ -125,5 +127,32 @@ export function useStudentHistory(studentId: string) {
     queryFn: async () => (await attendanceService.getStudentHistory(studentId)).data,
     enabled: Boolean(studentId),
     staleTime: STALE_DEFAULT,
+  });
+}
+
+export function useSubmitJustificationDirect() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: JustificationPayload) =>
+      attendanceService.submitJustificationDirect(payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: attendanceQueryKeys.all });
+    },
+  });
+}
+
+export function useReviewJustification() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      justificationId,
+      payload,
+    }: {
+      justificationId: string;
+      payload: JustificationReviewPayload;
+    }) => attendanceService.reviewJustification(justificationId, payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: attendanceQueryKeys.all });
+    },
   });
 }

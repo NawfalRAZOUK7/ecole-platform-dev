@@ -60,3 +60,29 @@ export interface GradebookExportResponse {
   download_url?: string;
   file_name?: string;
 }
+
+export interface GradebookCategory {
+  id: string;
+  class_id: string;
+  name: string;
+  weight: number;
+}
+
+export interface CreateCategoryPayload {
+  class_id: string;
+  name: string;
+  weight: number;
+}
+
+export interface GradebookTranscript {
+  student_id: string;
+  student_name: string;
+  academic_year: string;
+  subjects: Array<{
+    subject: string;
+    average: number;
+    grade: string;
+  }>;
+  overall_average: number;
+  rank?: number;
+}
