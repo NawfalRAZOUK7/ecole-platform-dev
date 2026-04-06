@@ -3,18 +3,18 @@ import { setupServer } from 'msw/node';
 import type { GradebookGrid } from '@/features/gradebook/gradebook.types';
 import { createAttendanceRecord, createBudget, createClass, createGrade, createInvoice, createStudent, createUser, type AttendanceClassResponse } from './factories';
 
-function apiResponse<T>(data: T) {
-  return {
+export function apiResponse<T>(data: T) {
+  return HttpResponse.json({
     data,
     meta: {
       timestamp: new Date().toISOString(),
       version: 'test',
     },
-  };
+  });
 }
 
-function apiListResponse<T>(data: T[]) {
-  return {
+export function apiListResponse<T>(data: T[]) {
+  return HttpResponse.json({
     data,
     meta: {
       next_cursor: null,
@@ -22,12 +22,51 @@ function apiListResponse<T>(data: T[]) {
       timestamp: new Date().toISOString(),
       version: 'test',
     },
-  };
+  });
+}
+
+export function apiErrorResponse(message: string, status = 500) {
+  return HttpResponse.json(
+    {
+      error: {
+        code: `ERR-SYS-${status}`,
+        message,
+        category: 'system',
+        retryable: false,
+        timestamp: new Date().toISOString(),
+      },
+    },
+    { status }
+  );
 }
 
 export const handlers = [
   http.get('/api/v1/auth/me', () => {
-    return HttpResponse.json(apiResponse(createUser()));
+    return apiResponse(createUser());
+  }),
+
+  http.get('/api/v1/teacher/classes', () => {
+    return apiResponse([
+      createClass({ id: 'class-1', code: '6A', name: 'Class 6A' }),
+      createClass({ id: 'class-2', code: '6B', name: 'Class 6B' }),
+    ]);
+  }),
+
+  http.get('/api/v1/teacher/periods', () => {
+    return apiResponse([
+      {
+        id: 'period-1',
+        label: 'Term 1',
+        date_start: '2026-09-01',
+        date_end: '2026-12-20',
+      },
+      {
+        id: 'period-2',
+        label: 'Term 2',
+        date_start: '2027-01-10',
+        date_end: '2027-03-30',
+      },
+    ]);
   }),
 
   http.get('/api/v1/attendance/class/:id', ({ params }) => {
@@ -48,7 +87,11 @@ export const handlers = [
       ],
     };
 
-    return HttpResponse.json(apiResponse(payload));
+    return apiResponse(payload);
+  }),
+
+  http.post('/api/v1/attendance/class/:id', () => {
+    return apiResponse({});
   }),
 
   http.get('/api/v1/gradebook/class/:id', ({ params }) => {
@@ -70,15 +113,29 @@ export const handlers = [
       ],
     };
 
-    return HttpResponse.json(apiResponse(payload));
+    return apiResponse(payload);
+  }),
+
+  http.get('/api/v1/gradebook/class/:id/weighted-summary', ({ params }) => {
+    return apiResponse({
+      class_id: String(params.id),
+      class_average: 16,
+      pass_rate: 100,
+      highest_average: 18,
+      lowest_average: 14,
+    });
+  }),
+
+  http.put('/api/v1/gradebook/class/:id/grades', () => {
+    return apiResponse({});
   }),
 
   http.get('/api/v1/invoices', () => {
-    return HttpResponse.json(apiListResponse([createInvoice(), createInvoice({ id: 'invoice-2', status: 'paid', invoice_number: 'INV-2026-002' })]));
+    return apiListResponse([createInvoice(), createInvoice({ id: 'invoice-2', status: 'paid', invoice_number: 'INV-2026-002' })]);
   }),
 
   http.get('/api/v1/budgets', () => {
-    return HttpResponse.json(apiListResponse([createBudget(), createBudget({ id: 'budget-2', name: 'Facilities', status: 'frozen' })]));
+    return apiListResponse([createBudget(), createBudget({ id: 'budget-2', name: 'Facilities', status: 'frozen' })]);
   }),
 ];
 
