@@ -1,32 +1,60 @@
-/**
- * Content library page — list content items with filters.
- *
- * Reference: S-081 — Content page with type/level filters
- * Calls GET /content-items with cursor pagination and query params.
- */
-
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
-import { EmptyState } from '@/shared/ui/EmptyState';
-import { ErrorBanner } from '@/shared/ui/ErrorBanner';
-import { LoadingState } from '@/shared/ui/LoadingState';
+import {
+  Badge,
+  EmptyState,
+  ErrorBanner,
+  LoadingState,
+  SearchInput,
+  Tabs,
+} from '@/shared/ui';
 import { toBannerError } from '@/shared/ui/errorUtils';
-import { formatDate } from '@/shared/i18n';
-import { useContentItems } from './useContent';
 import type { ContentItem } from './content.service';
+import { useContentItems } from './useContent';
+
+const CONTENT_TYPE_TABS = [
+  { id: 'all', label: 'content.tabAll' },
+  { id: 'video', label: 'content.types.video' },
+  { id: 'document', label: 'content.types.document' },
+  { id: 'quiz', label: 'content.types.quiz' },
+  { id: 'link', label: 'content.types.link' },
+] as const;
+
+function normalizeContentType(contentType: string | null | undefined) {
+  const value = (contentType || '').toLowerCase();
+
+  if (value === 'video') {
+    return 'video';
+  }
+  if (['document', 'pdf', 'audio'].includes(value)) {
+    return 'document';
+  }
+  if (value === 'quiz') {
+    return 'quiz';
+  }
+  if (['interactive', 'link', 'external'].includes(value)) {
+    return 'link';
+  }
+
+  return 'link';
+}
+
+function getLevel(item: ContentItem) {
+  return item.level_band || item.level_tag || null;
+}
 
 export function ContentPage() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
   const [levelFilter, setLevelFilter] = useState('');
   const contentQuery = useContentItems({
     search: search || undefined,
-    content_type: typeFilter || undefined,
-    level_tag: levelFilter || undefined,
+    level_band: levelFilter || undefined,
   });
-  const items: ContentItem[] = useMemo(
+  const items = useMemo(
     () => contentQuery.data?.pages.flatMap((page) => page.data) ?? [],
     [contentQuery.data]
   );
@@ -38,29 +66,29 @@ export function ContentPage() {
 
   return (
     <div className="page">
-      <h1 className="page-title">{t('content.title')}</h1>
-
-      <div className="filters-bar">
-        <input
-          type="search"
-          className="filter-input"
-          placeholder={t('content.searchPlaceholder')}
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-        />
-        <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)} className="filter-select">
-          <option value="">{t('content.allTypes')}</option>
-          <option value="video">Video</option>
-          <option value="document">Document</option>
-          <option value="quiz">Quiz</option>
-          <option value="interactive">Interactive</option>
-        </select>
-        <select value={levelFilter} onChange={(event) => setLevelFilter(event.target.value)} className="filter-select">
-          <option value="">{t('content.allLevels')}</option>
-          <option value="beginner">Beginner</option>
-          <option value="intermediate">Intermediate</option>
-          <option value="advanced">Advanced</option>
-        </select>
+      <div className="page-header page-header--split">
+        <div>
+          <h1 className="page-title">{t('content.title')}</h1>
+          <p className="page-subtitle">{t('content.subtitle')}</p>
+        </div>
+        <div className="page-actions">
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="content.searchPlaceholder"
+          />
+          <select
+            value={levelFilter}
+            className="filter-select"
+            aria-label={t('content.level')}
+            onChange={(event) => setLevelFilter(event.target.value)}
+          >
+            <option value="">{t('content.allLevels')}</option>
+            <option value="beginner">{t('content.levels.beginner')}</option>
+            <option value="intermediate">{t('content.levels.intermediate')}</option>
+            <option value="advanced">{t('content.levels.advanced')}</option>
+          </select>
+        </div>
       </div>
 
       <ErrorBanner
@@ -73,29 +101,73 @@ export function ContentPage() {
         <EmptyState message={t('content.empty')} icon="📚" />
       ) : (
         <>
-          <div className="card-list">
-            {items.map((item) => (
-              <div key={item.id} className="card content-card">
-                <div className="content-header">
-                  <span className="content-type-badge">{item.content_type}</span>
-                  {item.level_tag && <span className="content-level-badge">{item.level_tag}</span>}
-                </div>
-                <h3 className="content-title">{item.title}</h3>
-                <div className="content-meta">
-                  {item.language && <span>{item.language}</span>}
-                  <time>{formatDate(item.created_at, i18n.language)}</time>
-                </div>
-              </div>
-            ))}
-          </div>
+          <Tabs
+            defaultTab="all"
+            tabs={CONTENT_TYPE_TABS.map((tab) => {
+              const filteredItems =
+                tab.id === 'all'
+                  ? items
+                  : items.filter((item) => normalizeContentType(item.content_type) === tab.id);
 
-          {contentQuery.hasNextPage && (
+              return {
+                id: tab.id,
+                label: tab.label,
+                content: filteredItems.length === 0 ? (
+                  <EmptyState message={t('content.emptyFiltered')} icon="🔎" />
+                ) : (
+                  <div className="card-list">
+                    {filteredItems.map((item) => (
+                      <article key={item.id} className="card content-card">
+                        <div className="content-header">
+                          <Badge variant="info">
+                            {t(`content.types.${normalizeContentType(item.content_type)}`)}
+                          </Badge>
+                          {item.status ? (
+                            <Badge variant={item.status === 'published' ? 'success' : 'warning'}>
+                              {t(`content.status.${item.status}`, { defaultValue: item.status })}
+                            </Badge>
+                          ) : null}
+                        </div>
+                        <h3 className="content-title">{item.title}</h3>
+                        <div className="content-meta">
+                          {item.language ? <span>{item.language}</span> : null}
+                          {getLevel(item) ? <span>{getLevel(item)}</span> : null}
+                        </div>
+                        <div className="page-actions">
+                          <button
+                            type="button"
+                            className="btn btn-secondary"
+                            onClick={() => navigate(`/content/${item.id}`)}
+                          >
+                            {t('content.viewDetails')}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-primary"
+                            onClick={() => navigate(`/content/${item.id}/play`)}
+                          >
+                            {t('content.openPlayer')}
+                          </button>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                ),
+              };
+            })}
+          />
+
+          {contentQuery.hasNextPage ? (
             <div style={{ textAlign: 'center', marginTop: '16px' }}>
-              <button className="btn btn-secondary" onClick={() => void contentQuery.fetchNextPage()} disabled={contentQuery.isFetchingNextPage}>
+              <button
+                className="btn btn-secondary"
+                onClick={() => void contentQuery.fetchNextPage()}
+                disabled={contentQuery.isFetchingNextPage}
+              >
                 {contentQuery.isFetchingNextPage ? t('app.loading') : t('feed.loadMore')}
               </button>
             </div>
-          )}
+          ) : null}
         </>
       )}
     </div>

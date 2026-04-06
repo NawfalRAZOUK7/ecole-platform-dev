@@ -20,6 +20,8 @@ import { NotificationSettingsPage } from '@/features/notifications/NotificationS
 import { ReportsPage } from '@/features/reports/ReportsPage';
 import { CalendarPage } from '@/features/calendar/CalendarPage';
 import { EventDetailPage } from '@/features/calendar/EventDetailPage';
+import { ContentDetailPage } from '@/features/content/ContentDetailPage';
+import { ContentPlayerPage } from '@/features/content/ContentPlayerPage';
 import { ContentPage } from '@/features/content/ContentPage';
 import { ResultsPage } from '@/features/results/ResultsPage';
 import { InvoiceDetailPage } from '@/features/invoices/InvoiceDetailPage';
@@ -543,6 +545,22 @@ function App() {
           element={
             <ProtectedRoute roles={['STD', 'PAR', 'TCH', 'ADM']}>
               <ContentPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/content/:id"
+          element={
+            <ProtectedRoute roles={['STD', 'PAR', 'TCH', 'ADM']}>
+              <ContentDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/content/:id/play"
+          element={
+            <ProtectedRoute roles={['STD', 'PAR', 'TCH', 'ADM']}>
+              <ContentPlayerPage />
             </ProtectedRoute>
           }
         />
