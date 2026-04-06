@@ -24,6 +24,7 @@ import { ContentPage } from '@/features/content/ContentPage';
 import { ResultsPage } from '@/features/results/ResultsPage';
 import { InvoiceDetailPage } from '@/features/invoices/InvoiceDetailPage';
 import { InvoicesPage } from '@/features/invoices/InvoicesPage';
+import { ActivityDetailPage } from '@/features/activities/ActivityDetailPage';
 import { ActivitiesPage } from '@/features/activities/ActivitiesPage';
 import { ProfilePage } from '@/features/profile/ProfilePage';
 import { SessionsPage } from '@/features/profile/SessionsPage';
@@ -574,6 +575,14 @@ function App() {
           element={
             <ProtectedRoute roles={['STD', 'TCH', 'ADM']}>
               <ActivitiesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/activities/:id"
+          element={
+            <ProtectedRoute roles={['STD', 'TCH', 'ADM']}>
+              <ActivityDetailPage />
             </ProtectedRoute>
           }
         />
