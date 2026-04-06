@@ -86,7 +86,25 @@
   "feed": {
     "title": "آخر الأخبار",
     "empty": "لا توجد أخبار حالياً",
-    "loadMore": "تحميل المزيد"
+    "subtitle": "تابع الإعلانات وتحديثات الدرجات وتنبيهات الحضور والمدفوعات في تدفق واحد.",
+    "loadMore": "تحميل المزيد",
+    "filterType": "التصفية حسب النوع",
+    "filterDate": "منشور منذ",
+    "filterRead": "التصفية حسب القراءة",
+    "allTypes": "كل الأنواع",
+    "allStatuses": "كل الحالات",
+    "read": "مقروء",
+    "unread": "غير مقروء",
+    "open": "فتح",
+    "markRead": "تحديد كمقروء",
+    "realtimeNewItem": "وصل عنصر جديد إلى آخر الأخبار.",
+    "types": {
+      "announcement": "إعلان",
+      "attendance_alert": "تنبيه حضور",
+      "feed_new": "تحديث جديد",
+      "grade_published": "تحديث درجة",
+      "payment": "تحديث دفعة"
+    }
   },
   "notifications": {
     "title": "الإشعارات",

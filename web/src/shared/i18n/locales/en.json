@@ -86,7 +86,25 @@
   "feed": {
     "title": "News Feed",
     "empty": "No news at the moment",
-    "loadMore": "Load more"
+    "subtitle": "See announcements, grade changes, attendance alerts, and payment updates in one stream.",
+    "loadMore": "Load more",
+    "filterType": "Filter by type",
+    "filterDate": "Published since",
+    "filterRead": "Filter by read status",
+    "allTypes": "All types",
+    "allStatuses": "All statuses",
+    "read": "Read",
+    "unread": "Unread",
+    "open": "Open",
+    "markRead": "Mark as read",
+    "realtimeNewItem": "A new feed item just arrived.",
+    "types": {
+      "announcement": "Announcement",
+      "attendance_alert": "Attendance alert",
+      "feed_new": "Feed update",
+      "grade_published": "Grade update",
+      "payment": "Payment update"
+    }
   },
   "notifications": {
     "title": "Notifications",

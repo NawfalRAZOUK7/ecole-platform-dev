@@ -7,6 +7,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/services/api/client';
 import { useAuth } from '@/services/auth/AuthContext';
+import { useFeedUnreadSummary } from '@/features/feed/useFeed';
 import { useFocusManagement } from '@/shared/hooks/useFocusManagement';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { LanguageSwitcher } from '@/shared/ui/LanguageSwitcher';
@@ -102,10 +103,11 @@ export function Layout() {
   const [recentNotifications, setRecentNotifications] = useState<NotificationPreview[]>([]);
   const navRef = useRef<HTMLElement>(null);
   const { theme, toggleTheme } = useTheme();
+  const userRole = user?.role || '';
+  const feedUnreadSummary = useFeedUnreadSummary(userRole === 'PAR');
+  const { unreadCount: feedUnreadCount, refetch: refetchFeedUnread } = feedUnreadSummary;
 
   useFocusManagement();
-
-  const userRole = user?.role || '';
   const visibleItems = useMemo(
     () => NAV_ITEMS.filter((item) => item.roles.includes(userRole)),
     [userRole]
@@ -170,12 +172,18 @@ export function Layout() {
       if (eventName === 'announcement_published') {
         addToast(t('ws.announcementPublished'));
       }
+      if (eventName === 'feed_new') {
+        if (userRole === 'PAR') {
+          void refetchFeedUnread();
+        }
+        addToast(t('feed.realtimeNewItem'));
+      }
     });
     return () => {
       unsubscribe();
       wsClient.disconnect();
     };
-  }, [addToast, fetchNotificationSummary, t]);
+  }, [addToast, fetchNotificationSummary, refetchFeedUnread, t, userRole]);
 
   async function handleLogout() {
     await logout();
@@ -267,6 +275,11 @@ export function Layout() {
               )}
               {item.to === '/messages' && msgCount > 0 && (
                 <span className="notif-badge">{msgCount > 99 ? '99+' : msgCount}</span>
+              )}
+              {item.to === '/feed' && feedUnreadCount > 0 && (
+                <span className="notif-badge">
+                  {feedUnreadCount > 99 ? '99+' : feedUnreadCount}
+                </span>
               )}
             </NavLink>
           ))}

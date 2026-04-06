@@ -86,7 +86,25 @@
   "feed": {
     "title": "Fil d'actualite",
     "empty": "Aucune actualite pour le moment",
-    "loadMore": "Charger plus"
+    "subtitle": "Retrouvez annonces, notes, alertes d'absence et paiements dans un seul flux.",
+    "loadMore": "Charger plus",
+    "filterType": "Filtrer par type",
+    "filterDate": "Publie depuis",
+    "filterRead": "Filtrer par lecture",
+    "allTypes": "Tous les types",
+    "allStatuses": "Tous les statuts",
+    "read": "Lu",
+    "unread": "Non lu",
+    "open": "Ouvrir",
+    "markRead": "Marquer comme lu",
+    "realtimeNewItem": "Un nouvel element vient d'arriver dans le fil.",
+    "types": {
+      "announcement": "Annonce",
+      "attendance_alert": "Alerte d'absence",
+      "feed_new": "Mise a jour du fil",
+      "grade_published": "Mise a jour de note",
+      "payment": "Mise a jour de paiement"
+    }
   },
   "notifications": {
     "title": "Notifications",
