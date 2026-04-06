@@ -92,6 +92,9 @@ import { SkillsOverviewPage } from '@/features/skills/SkillsOverviewPage';
 import { ComplianceDashboardPage } from '@/features/compliance/ComplianceDashboardPage';
 import { ComplianceReportPage } from '@/features/compliance/ComplianceReportPage';
 import { CurriculumMappingPage } from '@/features/compliance/CurriculumMappingPage';
+import { FinancialDashboardPage } from '@/features/financial-health/FinancialDashboardPage';
+import { FinancialExportPage } from '@/features/financial-health/FinancialExportPage';
+import { FinancialSnapshotsPage } from '@/features/financial-health/FinancialSnapshotsPage';
 import { SyncConflictsPage } from '@/features/sync/SyncConflictsPage';
 import { SyncSettingsPage } from '@/features/sync/SyncSettingsPage';
 import { SyncStatusPage } from '@/features/sync/SyncStatusPage';
@@ -675,6 +678,30 @@ function App() {
           element={
             <ProtectedRoute roles={['ADM', 'DIR']}>
               <SyncStatusPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/financial-health"
+          element={
+            <ProtectedRoute roles={['ADM', 'SYS']}>
+              <FinancialDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/financial-health/snapshots"
+          element={
+            <ProtectedRoute roles={['ADM', 'SYS']}>
+              <FinancialSnapshotsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/financial-health/export"
+          element={
+            <ProtectedRoute roles={['ADM', 'SYS']}>
+              <FinancialExportPage />
             </ProtectedRoute>
           }
         />
