@@ -48,7 +48,7 @@ interface AuthState {
   twoFactorPending: TwoFactorPending | null;
 }
 
-interface AuthContextValue extends AuthState {
+export interface AuthContextValue extends AuthState {
   login: (email: string, password: string, schoolId: string) => Promise<void>;
   verify2fa: (code: string) => Promise<void>;
   cancel2fa: () => void;
@@ -56,7 +56,7 @@ interface AuthContextValue extends AuthState {
   clearError: () => void;
 }
 
-const AuthContext = createContext<AuthContextValue | null>(null);
+export const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
