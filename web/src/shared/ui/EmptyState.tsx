@@ -2,6 +2,7 @@
  * Empty state component — shown when a list has no items.
  */
 
+import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 interface EmptyStateProps {
@@ -9,7 +10,7 @@ interface EmptyStateProps {
   icon?: string;
 }
 
-export function EmptyState({ message, icon = '📭' }: EmptyStateProps) {
+export const EmptyState = memo(function EmptyState({ message, icon = '📭' }: EmptyStateProps) {
   const { t } = useTranslation();
 
   return (
@@ -28,4 +29,4 @@ export function EmptyState({ message, icon = '📭' }: EmptyStateProps) {
       <p style={{ fontSize: '15px' }}>{message || t('app.empty')}</p>
     </div>
   );
-}
+});

@@ -33,7 +33,7 @@ export function DocumentViewer({
         ) : (
           <div className="documents-preview-card__content">
             <strong>{previewItem.original_filename}</strong>
-            {previewItem.preview_url && isImage(previewItem.mime_type) && <img src={previewItem.preview_url} alt={previewItem.original_filename} className="documents-preview-card__image" />}
+            {previewItem.preview_url && isImage(previewItem.mime_type) && <img src={previewItem.preview_url} alt={previewItem.original_filename} className="documents-preview-card__image" loading="lazy" />}
             {previewItem.preview_url && isPdf(previewItem.mime_type) && <iframe src={previewItem.preview_url} title={previewItem.original_filename} className="documents-preview-card__frame" />}
             {!previewItem.preview_url && <div className="documents-preview-card__fallback">📄</div>}
             <p>{previewItem.mime_type}</p>
@@ -55,7 +55,7 @@ export function DocumentViewer({
               <LoadingState />
             ) : (
               <>
-                {selectedResource.preview_url && selectedResource.document && 'mime_type' in selectedResource.document && isImage(selectedResource.document.mime_type) && <img src={selectedResource.preview_url} alt={selectedResource.title} className="documents-resource-modal__image" />}
+                {selectedResource.preview_url && selectedResource.document && 'mime_type' in selectedResource.document && isImage(selectedResource.document.mime_type) && <img src={selectedResource.preview_url} alt={selectedResource.title} className="documents-resource-modal__image" loading="lazy" />}
                 {selectedResource.preview_url && selectedResource.document && 'mime_type' in selectedResource.document && isPdf(selectedResource.document.mime_type) && <iframe src={selectedResource.preview_url} title={selectedResource.title} className="documents-resource-modal__frame" />}
                 <p>{selectedResource.description || '—'}</p>
                 <p>{[selectedResource.subject, selectedResource.level].filter(Boolean).join(' · ') || '—'}</p>

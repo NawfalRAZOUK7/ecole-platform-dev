@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -10,7 +11,7 @@ interface BreadcrumbProps {
   items: BreadcrumbItem[];
 }
 
-export function Breadcrumb({ items }: BreadcrumbProps) {
+export const Breadcrumb = memo(function Breadcrumb({ items }: BreadcrumbProps) {
   const { t, i18n } = useTranslation();
   const separator = i18n.dir() === 'rtl' ? '←' : '/';
 
@@ -35,4 +36,4 @@ export function Breadcrumb({ items }: BreadcrumbProps) {
       })}
     </nav>
   );
-}
+});

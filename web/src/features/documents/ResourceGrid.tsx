@@ -21,7 +21,7 @@ export function ResourceGrid({ hasNextPage, isFetchingNextPage, onFetchNextPage,
         <div className="documents-resource-grid">
           {resources.map((resource) => (
             <button key={resource.id} type="button" className="documents-resource-card" onClick={() => onSelectResource(resource.id)}>
-              {resource.thumbnail_url ? <img src={resource.thumbnail_url} alt={resource.title} className="documents-resource-card__thumb" /> : <div className="documents-resource-card__thumb documents-resource-card__thumb--empty">📄</div>}
+              {resource.thumbnail_url ? <img src={resource.thumbnail_url} alt={resource.title} className="documents-resource-card__thumb" loading="lazy" /> : <div className="documents-resource-card__thumb documents-resource-card__thumb--empty">📄</div>}
               <div>
                 <strong>{resource.title}</strong>
                 <p>{[resource.subject, resource.level].filter(Boolean).join(' · ')}</p>

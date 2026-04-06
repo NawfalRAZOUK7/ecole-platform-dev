@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { memo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 interface Trend {
@@ -13,7 +13,7 @@ interface StatCardProps {
   icon?: ReactNode;
 }
 
-export function StatCard({ label, value, trend, icon }: StatCardProps) {
+export const StatCard = memo(function StatCard({ label, value, trend, icon }: StatCardProps) {
   const { t } = useTranslation();
   const trendSymbol = trend?.direction === 'up' ? '↗' : trend?.direction === 'down' ? '↘' : '→';
 
@@ -32,4 +32,4 @@ export function StatCard({ label, value, trend, icon }: StatCardProps) {
       )}
     </article>
   );
-}
+});

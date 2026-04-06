@@ -189,6 +189,15 @@ export function GradebookPage() {
 
   const summary = weightedSummaryQuery.data ?? buildFallbackSummary(gradebookQuery.data);
 
+  const gridColumns = useMemo(
+    () => gradebookQuery.data?.columns ?? [],
+    [gradebookQuery.data]
+  );
+  const gridEntries = useMemo(
+    () => gradebookQuery.data?.entries ?? [],
+    [gradebookQuery.data]
+  );
+
   async function handleExport() {
     if (!selectedClassId) {
       return;
@@ -328,7 +337,7 @@ export function GradebookPage() {
                   <thead>
                     <tr>
                       <th>{t('gradebook.student')}</th>
-                      {(gradebookQuery.data?.columns ?? []).map((column) => (
+                      {gridColumns.map((column) => (
                         <th key={column.assessment_id}>
                           <div className="gradebook-table__header">
                             <strong>{column.title}</strong>
@@ -340,10 +349,10 @@ export function GradebookPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {(gradebookQuery.data?.entries ?? []).map((entry) => {
+                    {gridEntries.map((entry) => {
                       const weightedAverage = computeWeightedAverage(
                         entry.student_id,
-                        gradebookQuery.data?.columns ?? [],
+                        gridColumns,
                         watchedGrades ?? {}
                       );
 
@@ -352,7 +361,7 @@ export function GradebookPage() {
                           <td className="gradebook-table__student">
                             <strong>{entry.student_name}</strong>
                           </td>
-                          {(gradebookQuery.data?.columns ?? []).map((column) => {
+                          {gridColumns.map((column) => {
                             const fieldName =
                               `grades.${entry.student_id}.${column.assessment_id}` as const;
                             const cellValue = getNumericValue(

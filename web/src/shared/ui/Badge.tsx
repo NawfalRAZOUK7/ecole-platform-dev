@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { memo, type ReactNode } from 'react';
 
 interface BadgeProps {
   variant: 'success' | 'warning' | 'error' | 'info' | 'neutral';
@@ -6,10 +6,10 @@ interface BadgeProps {
   size?: 'sm' | 'md';
 }
 
-export function Badge({ variant, children, size = 'md' }: BadgeProps) {
+export const Badge = memo(function Badge({ variant, children, size = 'md' }: BadgeProps) {
   return (
     <span className={`badge badge--${variant} badge--${size}`}>
       {children}
     </span>
   );
-}
+});

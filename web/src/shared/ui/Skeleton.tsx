@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { Fragment, memo } from 'react';
 
 interface SkeletonProps {
   variant: 'line' | 'card' | 'table-row' | 'circle';
@@ -7,7 +7,7 @@ interface SkeletonProps {
   count?: number;
 }
 
-export function Skeleton({
+export const Skeleton = memo(function Skeleton({
   variant,
   width,
   height,
@@ -31,4 +31,4 @@ export function Skeleton({
       ))}
     </>
   );
-}
+});

@@ -178,6 +178,10 @@ export function AnalyticsDashboardPage() {
     ];
   }, [billing, t]);
 
+  const attendanceSeries = useMemo(() => attendance?.series ?? [], [attendance]);
+  const gradesDistribution = useMemo(() => grades?.distribution ?? [], [grades]);
+  const engagementFunnel = useMemo(() => engagement?.funnel ?? [], [engagement]);
+
   if (dashboardQuery.isLoading || !overview || !attendance || !grades || !billing || !engagement) {
     return <LoadingState />;
   }
@@ -251,7 +255,7 @@ export function AnalyticsDashboardPage() {
             </div>
           </div>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={attendance.series}>
+            <LineChart data={attendanceSeries}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
               <XAxis dataKey="label" />
               <YAxis />
@@ -281,7 +285,7 @@ export function AnalyticsDashboardPage() {
             </div>
           </div>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={grades.distribution}>
+            <BarChart data={gradesDistribution}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
               <XAxis dataKey="label" />
               <YAxis />
@@ -334,7 +338,7 @@ export function AnalyticsDashboardPage() {
           <ResponsiveContainer width="100%" height={300}>
             <FunnelChart>
               <Tooltip />
-              <Funnel dataKey="value" data={engagement.funnel} isAnimationActive fill="var(--color-info)" />
+              <Funnel dataKey="value" data={engagementFunnel} isAnimationActive fill="var(--color-info)" />
             </FunnelChart>
           </ResponsiveContainer>
         </article>

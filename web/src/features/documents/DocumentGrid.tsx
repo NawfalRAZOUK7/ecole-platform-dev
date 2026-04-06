@@ -23,7 +23,7 @@ export function DocumentGrid({ documents, onDelete, onDownload, onPreview, onTog
         <article key={item.id} className="documents-card">
           <label className="documents-card__select"><input type="checkbox" checked={selectedDocumentIds.includes(item.id)} onChange={() => onToggleSelection(item.id)} /></label>
           <button type="button" className="documents-card__preview" onClick={() => onPreview(item)}>
-            {item.thumbnail_url ? <img src={item.thumbnail_url} alt={item.original_filename} /> : <span>{isPdf(item.mime_type) ? '📕' : isImage(item.mime_type) ? '🖼️' : '📄'}</span>}
+            {item.thumbnail_url ? <img src={item.thumbnail_url} alt={item.original_filename} loading="lazy" /> : <span>{isPdf(item.mime_type) ? '📕' : isImage(item.mime_type) ? '🖼️' : '📄'}</span>}
           </button>
           <div className="documents-card__body">
             <strong>{item.original_filename}</strong>

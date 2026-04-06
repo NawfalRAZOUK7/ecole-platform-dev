@@ -5,8 +5,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import { api } from '@/services/api/client';
 import { useAuth } from '@/services/auth/AuthContext';
+import { adminQueryKeys } from '@/features/admin/useAdmin';
+import { adminService } from '@/features/admin/admin.service';
+import { invoicesQueryKeys } from '@/features/invoices/useInvoices';
+import { invoicesService } from '@/features/invoices/invoices.service';
+import { notificationQueryKeys } from '@/features/notifications/useNotifications';
+import { notificationsService } from '@/features/notifications/notifications.service';
 import { useFeedUnreadSummary } from '@/features/feed/useFeed';
 import { useSyncDevices, useSyncHealth, useSyncStatus } from '@/features/sync/useSync';
 import { useFocusManagement } from '@/shared/hooks/useFocusManagement';
@@ -115,6 +122,35 @@ export function Layout() {
   const primarySyncDeviceId = syncDevicesQuery.data?.[0]?.id ?? '';
   const syncStatusQuery = useSyncStatus(primarySyncDeviceId, syncEnabled);
   const syncHealthQuery = useSyncHealth(primarySyncDeviceId, syncEnabled);
+
+  const queryClient = useQueryClient();
+
+  const handleNavPrefetch = useCallback(
+    (to: string) => {
+      if (to === '/admin') {
+        void queryClient.prefetchQuery({
+          queryKey: adminQueryKeys.dashboard(),
+          queryFn: () => adminService.getDashboard().then((r) => r.data),
+          staleTime: 5 * 60 * 1000,
+        });
+      } else if (to === '/invoices') {
+        void queryClient.prefetchQuery({
+          queryKey: invoicesQueryKeys.list({}),
+          queryFn: () => invoicesService.listInvoices({}).then((r) => r.data),
+          staleTime: 5 * 60 * 1000,
+        });
+      } else if (to === '/notifications') {
+        void queryClient.prefetchQuery({
+          queryKey: notificationQueryKeys.list({}),
+          queryFn: () => notificationsService.list({}).then((r) => r.data),
+          staleTime: 5 * 60 * 1000,
+        });
+      } else if (to === '/attendance' || to === '/gradebook') {
+        // These pages depend on dynamic classId; prefetch is skipped as params unknown
+      }
+    },
+    [queryClient]
+  );
 
   useFocusManagement();
   const visibleItems = useMemo(
@@ -273,6 +309,7 @@ export function Layout() {
               to={item.to}
               className={({ isActive }) => `nav-link ${isActive ? 'nav-link--active' : ''}`}
               aria-label={t(item.labelKey)}
+              onMouseEnter={() => handleNavPrefetch(item.to)}
               onClick={() => {
                 if (item.to === '/messages') setMsgCount(0);
               }}
