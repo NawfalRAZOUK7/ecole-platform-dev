@@ -19,6 +19,7 @@
   --color-primary-hover: #1d4ed8;
   --color-danger: #ef4444;
   --color-danger-hover: #dc2626;
+  --color-error: #ef4444;
   --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-bg: #f9fafb;
@@ -39,6 +40,13 @@
 
 body {
   min-height: 100vh;
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
 }
 
 /* ── Layout ── */
@@ -258,6 +266,102 @@ body {
   display: block;
   font-size: 12px;
   color: var(--color-text-secondary);
+}
+
+/* ── Shared Forms ── */
+.form-field,
+.form-select,
+.form-textarea,
+.form-checkbox,
+.form-date {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-block-end: 1rem;
+}
+
+.form-field__label,
+.form-select__label,
+.form-textarea__label,
+.form-date__label {
+  color: var(--color-text);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.form-field__input,
+.form-select__input,
+.form-textarea__input,
+.form-date__input {
+  width: 100%;
+  min-height: 44px;
+  padding-block: 0.7rem;
+  padding-inline: 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-field__input:focus,
+.form-select__input:focus,
+.form-textarea__input:focus,
+.form-date__input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+
+.form-field__input[aria-invalid='true'],
+.form-select__input[aria-invalid='true'],
+.form-textarea__input[aria-invalid='true'],
+.form-date__input[aria-invalid='true'],
+.form-checkbox__input[aria-invalid='true'] {
+  border-color: var(--color-error);
+}
+
+.form-field__error,
+.form-select__error,
+.form-textarea__error,
+.form-checkbox__error,
+.form-date__error {
+  color: var(--color-error);
+  font-size: 0.85rem;
+}
+
+.form-field__input:disabled,
+.form-select__input:disabled,
+.form-textarea__input:disabled,
+.form-date__input:disabled,
+.form-checkbox__input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form-checkbox__label {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  cursor: pointer;
+}
+
+.form-checkbox__input {
+  inline-size: 1.1rem;
+  block-size: 1.1rem;
+  margin-block-start: 0.2rem;
+  accent-color: var(--color-primary);
+}
+
+.form-checkbox__copy {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.form-checkbox__description {
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
 }
 
 .logout-btn {
