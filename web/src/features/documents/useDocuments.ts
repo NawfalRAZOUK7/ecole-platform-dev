@@ -10,6 +10,9 @@ export const documentsQueryKeys = {
   studentChecklist: (studentId: string | null) => [...documentsQueryKeys.all, 'student-checklist', studentId] as const,
   resources: (filters: Omit<ResourceFilters, 'cursor'>) => [...documentsQueryKeys.all, 'resources', filters] as const,
   resource: (resourceId: string | null) => [...documentsQueryKeys.all, 'resource', resourceId] as const,
+  versions: (docId: string | null) => [...documentsQueryKeys.all, 'versions', docId] as const,
+  preview: (docId: string | null) => [...documentsQueryKeys.all, 'preview', docId] as const,
+  resourceRating: (resourceId: string | null) => [...documentsQueryKeys.all, 'resource-rating', resourceId] as const,
 };
 
 export function useDocumentsOptions() {
@@ -176,6 +179,67 @@ export function useRateResource() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['documents', 'resources'] }),
         queryClient.invalidateQueries({ queryKey: documentsQueryKeys.resource(resourceId) }),
+      ]);
+    },
+  });
+}
+
+export function useDocumentVersions(docId: string | null | undefined) {
+  return useQuery({
+    queryKey: documentsQueryKeys.versions(docId ?? null),
+    queryFn: async () => (await documentsService.getVersions(docId!)).data,
+    enabled: Boolean(docId),
+    staleTime: STALE_DEFAULT,
+  });
+}
+
+export function useRestoreVersion() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ docId, versionNum }: { docId: string; versionNum: number }) =>
+      (await documentsService.restoreVersion(docId, versionNum)).data,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: documentsQueryKeys.all });
+    },
+  });
+}
+
+export function useDocumentPreview(docId: string | null | undefined) {
+  return useQuery({
+    queryKey: documentsQueryKeys.preview(docId ?? null),
+    queryFn: async () => (await documentsService.previewDocument(docId!)).data,
+    enabled: Boolean(docId),
+    staleTime: STALE_DEFAULT,
+  });
+}
+
+export function useResourceRating(resourceId: string | null | undefined) {
+  return useQuery({
+    queryKey: documentsQueryKeys.resourceRating(resourceId ?? null),
+    queryFn: async () => (await documentsService.getResourceRating(resourceId!)).data,
+    enabled: Boolean(resourceId),
+    staleTime: STALE_DEFAULT,
+  });
+}
+
+export function useUploadStudentDocument() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      studentId,
+      payload,
+      onProgress,
+      onRequestCreated,
+    }: {
+      studentId: string;
+      payload: { file: File; category: string; language: string };
+      onProgress?: (progress: number) => void;
+      onRequestCreated?: (xhr: XMLHttpRequest) => void;
+    }) => documentsService.uploadStudentDocument(studentId, payload, onProgress, onRequestCreated),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['documents', 'student-documents'] }),
+        queryClient.invalidateQueries({ queryKey: ['documents', 'student-checklist'] }),
       ]);
     },
   });

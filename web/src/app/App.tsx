@@ -67,6 +67,9 @@ import {
   ReportsPage,
   DocumentsPage,
   ResourcesPage,
+  DocumentVersionsPage,
+  DocumentPreviewPage,
+  StudentDocumentsPage,
   ContentPage,
   ContentDetailPage,
   ContentPlayerPage,
@@ -582,6 +585,30 @@ function App() {
           element={
             <ProtectedRoute roles={['PAR', 'TCH', 'ADM', 'DIR', 'STD']}>
               <ResourcesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/documents/:docId/versions"
+          element={
+            <ProtectedRoute roles={['PAR', 'TCH', 'ADM', 'DIR', 'STD']}>
+              <DocumentVersionsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/documents/:docId/preview"
+          element={
+            <ProtectedRoute roles={['PAR', 'TCH', 'ADM', 'DIR', 'STD']}>
+              <DocumentPreviewPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/students/:studentId/documents"
+          element={
+            <ProtectedRoute roles={['ADM', 'DIR', 'TCH', 'PAR', 'STD']}>
+              <StudentDocumentsPage />
             </ProtectedRoute>
           }
         />

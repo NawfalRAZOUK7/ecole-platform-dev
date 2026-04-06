@@ -252,6 +252,29 @@
       "tags": "Tags (separes par des virgules)",
       "description": "Description",
       "empty": "Aucune ressource trouvee"
+    },
+    "versions": {
+      "title": "Historique des versions",
+      "empty": "Aucune version disponible",
+      "version": "Version",
+      "date": "Date",
+      "author": "Auteur",
+      "size": "Taille",
+      "current": "Actuelle",
+      "restore": "Restaurer",
+      "noPreview": "Apercu non disponible pour ce type de fichier",
+      "confirmRestoreTitle": "Restaurer cette version ?",
+      "confirmRestoreBody": "La version v{{version}} sera restauree. La version actuelle sera conservee dans l'historique."
+    },
+    "studentDocuments": {
+      "title": "Documents eleve",
+      "selectStudent": "Selectionner un eleve",
+      "checklist": "Documents requis",
+      "required": "Obligatoire",
+      "filename": "Nom du fichier",
+      "size": "Taille",
+      "category": "Categorie",
+      "file": "Fichier"
     }
   },
   "content": {

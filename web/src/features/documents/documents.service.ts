@@ -75,6 +75,34 @@ export interface DocumentsOptionsPayload {
   categories: string[];
 }
 
+export interface DocumentVersion {
+  version_number: number;
+  created_at: string;
+  author_name: string | null;
+  size_bytes: number;
+  download_url: string | null;
+  preview_url: string | null;
+}
+
+export interface DocumentPreviewInfo {
+  preview_url: string | null;
+  download_url: string | null;
+  mime_type: string;
+  original_filename: string;
+}
+
+export interface ResourceRating {
+  resource_id: string;
+  avg_rating: number;
+  rating_count: number;
+  my_rating: number | null;
+}
+
+export interface BulkDownloadStatus {
+  download_url: string | null;
+  status: 'pending' | 'ready' | 'expired';
+}
+
 export interface ResourceFilters extends Record<string, string | number | undefined> {
   cursor?: string;
   q?: string;
@@ -240,5 +268,53 @@ export const documentsService = {
 
   rateResource(resourceId: string, rating: number) {
     return api.post<void>(`/resources/${resourceId}/rate`, { rating });
+  },
+
+  getVersions(docId: string) {
+    return api.get<DocumentVersion[]>(`/documents/${docId}/versions`);
+  },
+
+  getVersion(docId: string, versionNum: number) {
+    return api.get<DocumentVersion>(`/documents/${docId}/versions/${versionNum}`);
+  },
+
+  restoreVersion(docId: string, versionNum: number) {
+    return api.post<DocumentItem>(`/documents/${docId}/versions/${versionNum}/restore`);
+  },
+
+  downloadDocument(docId: string) {
+    return api.get<{ download_url: string }>(`/documents/${docId}/download`);
+  },
+
+  previewDocument(docId: string) {
+    return api.get<DocumentPreviewInfo>(`/documents/${docId}/preview`);
+  },
+
+  getBulkDownloadStatus() {
+    return api.get<BulkDownloadStatus>('/documents/bulk-download');
+  },
+
+  uploadStudentDocument(
+    studentId: string,
+    payload: { file: File; category: string; language: string },
+    onProgress?: (progress: number) => void,
+    onRequestCreated?: (xhr: XMLHttpRequest) => void
+  ) {
+    return uploadMultipart(
+      `/students/${studentId}/documents`,
+      payload.file,
+      { category: payload.category },
+      payload.language,
+      onProgress,
+      onRequestCreated
+    );
+  },
+
+  getResourceRating(resourceId: string) {
+    return api.get<ResourceRating>(`/resources/${resourceId}/rating`);
+  },
+
+  downloadResource(resourceId: string) {
+    return api.get<{ download_url: string }>(`/resources/${resourceId}/download`);
   },
 };
