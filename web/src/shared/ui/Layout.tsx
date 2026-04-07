@@ -66,6 +66,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/teacher/assessments', labelKey: 'nav.teacherAssessments', icon: '📊', roles: ['TCH'] },
   { to: '/teacher/content-library', labelKey: 'nav.teacherContentLibrary', icon: '📚', roles: ['TCH'] },
   { to: '/teacher/quizzes', labelKey: 'nav.teacherQuizzes', icon: '❓', roles: ['TCH'] },
+  { to: '/question-bank', labelKey: 'nav.questionBank', icon: '🗃️', roles: ['TCH', 'CONTENT_MGR'] },
   { to: '/teacher/class-progress', labelKey: 'nav.teacherClassProgress', icon: '📊', roles: ['TCH'] },
   { to: '/student/content', labelKey: 'nav.studentContent', icon: '📚', roles: ['STD'] },
   { to: '/student/quizzes', labelKey: 'nav.studentQuizzes', icon: '❓', roles: ['STD'] },
@@ -92,6 +93,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/profile', labelKey: 'nav.profile', icon: '👤', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR', 'SUP'] },
   { to: '/profile/sessions', labelKey: 'nav.sessions', icon: '🔒', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR', 'SUP'] },
   { to: '/profile/2fa', labelKey: 'nav.twoFactor', icon: '🛡️', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR', 'SUP'] },
+  { to: '/profile/login-history', labelKey: 'nav.loginHistory', icon: '🕐', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR', 'SUP'] },
 ];
 
 interface Toast {

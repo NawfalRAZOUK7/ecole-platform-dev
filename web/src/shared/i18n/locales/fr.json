@@ -70,7 +70,8 @@
     "teacherClassProgress": "Progrès de la classe",
     "progress": "Mon progrès",
     "parentProgress": "Progrès des enfants",
-    "loginHistory": "Historique de connexion"
+    "loginHistory": "Historique de connexion",
+    "questionBank": "Banque de questions"
   },
   "login": {
     "title": "Connexion",
@@ -129,6 +130,63 @@
     "statuses": {
       "success": "Reussie",
       "failed": "Echouee"
+    }
+  },
+  "questionBank": {
+    "title": "Banque de questions",
+    "subtitle": "Gerez, importez et generez des questions pour vos evaluations.",
+    "empty": "Aucune question dans la banque",
+    "addQuestion": "Ajouter une question",
+    "importFromQuiz": "Importer depuis un quiz",
+    "generateQuiz": "Generer un quiz",
+    "filterSubject": "Filtrer par matiere",
+    "allTypes": "Tous les types",
+    "allDifficulties": "Toutes les difficultes",
+    "choices": "Choix de reponse",
+    "choiceText": "Texte du choix",
+    "correct": "Correct",
+    "addChoice": "Ajouter un choix",
+    "tags": "Etiquettes",
+    "tagsPlaceholder": "maths, algebre, fractions",
+    "cols": {
+      "text": "Question",
+      "subject": "Matiere",
+      "type": "Type",
+      "difficulty": "Difficulte",
+      "tags": "Etiquettes"
+    },
+    "types": {
+      "mcq": "QCM",
+      "true_false": "Vrai / Faux",
+      "short_answer": "Reponse courte",
+      "essay": "Dissertation"
+    },
+    "difficulty": {
+      "easy": "Facile",
+      "medium": "Moyen",
+      "hard": "Difficile"
+    },
+    "stats": {
+      "total": "Total"
+    },
+    "import": {
+      "title": "Importer depuis un quiz",
+      "subtitle": "Selectionnez un quiz pour importer ses questions dans la banque.",
+      "quizId": "Identifiant du quiz",
+      "quizIdPlaceholder": "ex : 00000000-0000-4000-8000-000000000001",
+      "quizIdHint": "Entrez l'UUID du quiz existant.",
+      "submit": "Importer",
+      "imported": "{{count}} question(s) importee(s)",
+      "skipped": "{{count}} ignoree(s) (doublons)",
+      "previewTitle": "Questions importees"
+    },
+    "generate": {
+      "title": "Generer un quiz",
+      "subtitle": "Generez automatiquement un ensemble de questions selon vos criteres.",
+      "count": "Nombre de questions",
+      "submit": "Generer",
+      "previewTitle": "{{count}} question(s) generee(s)",
+      "saveAll": "Enregistrer tout"
     }
   },
   "feed": {

@@ -112,6 +112,9 @@ import {
   CmsReviewQueuePage,
   CmsQuizBuilderPage,
   CmsAnalyticsPage,
+  QuestionBankPage,
+  QuestionBankImportPage,
+  GenerateQuizPage,
 } from './LazyPages';
 
 /** Redirect based on user role */
@@ -819,6 +822,31 @@ function App() {
           element={
             <ProtectedRoute roles={['PAR']}>
               <ParentJustificationPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* Question Bank routes */}
+        <Route
+          path="/question-bank"
+          element={
+            <ProtectedRoute roles={['TCH', 'ADM', 'DIR', 'CONTENT_MGR']}>
+              <QuestionBankPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/question-bank/import"
+          element={
+            <ProtectedRoute roles={['TCH', 'ADM', 'DIR', 'CONTENT_MGR']}>
+              <QuestionBankImportPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/question-bank/generate"
+          element={
+            <ProtectedRoute roles={['TCH', 'ADM', 'DIR', 'CONTENT_MGR']}>
+              <GenerateQuizPage />
             </ProtectedRoute>
           }
         />
