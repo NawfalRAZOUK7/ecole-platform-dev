@@ -24,6 +24,17 @@ export interface NotificationPreference {
   digest_frequency: string;
 }
 
+export interface ConsentItem {
+  id: string;
+  user_id: string;
+  school_id: string;
+  topic: string;
+  channel: string;
+  scope_type: string;
+  scope_ref_id: string | null;
+  status: 'opted_in' | 'opted_out';
+}
+
 export interface NotificationPreferencesResponse {
   user_id: string;
   preferences: NotificationPreference[];

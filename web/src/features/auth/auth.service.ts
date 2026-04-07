@@ -79,6 +79,10 @@ export const authService = {
     return api.get<LoginHistoryEntry[]>('/auth/login-history');
   },
 
+  consumeInvite(code: string) {
+    return api.post<void>('/invites/consume', { code });
+  },
+
   requestRecovery(email: string) {
     return api.post<void>('/recovery/request', { email });
   },

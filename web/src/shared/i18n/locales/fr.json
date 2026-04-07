@@ -14,7 +14,8 @@
     "delete": "Supprimer",
     "optional": "Optionnel",
     "actions": "Actions",
-    "saved": "Enregistre"
+    "saved": "Enregistre",
+    "table": "Tableau"
   },
   "nav": {
     "feed": "Fil d'actualite",
@@ -271,6 +272,7 @@
     "disabled": "Desactive",
     "preferenceMatrixTitle": "Canaux par categorie",
     "preferenceMatrixSubtitle": "Activez ou desactivez chaque canal pour chaque type de notification.",
+    "consentSync": "Les consentements correspondants sont mis a jour quand vous enregistrez ces choix.",
     "digestTitle": "Digest e-mail",
     "digestSubtitle": "Recevez un resume quotidien ou hebdomadaire a 07:00 heure de Casablanca.",
     "devicesTitle": "Appareils enregistres",
@@ -814,6 +816,7 @@
     "role": "Role",
     "school": "Ecole",
     "email": "Email",
+    "phone": "Telephone",
     "permissions": "Permissions",
     "language": "Langue",
     "logout": "Se deconnecter",
@@ -835,7 +838,11 @@
       "digit": "Au moins un chiffre",
       "special": "Au moins un caractere special"
     },
-    "rewardPoints": "Points de récompense"
+    "rewardPoints": "Points de recompense",
+    "adminView": {
+      "title": "Consultation du profil",
+      "subtitle": "Affichage en lecture seule du profil utilisateur selectionne."
+    }
   },
   "sessions": {
     "title": "Sessions actives",
@@ -1133,9 +1140,14 @@
     },
     "settings": {
       "title": "Parametres de l'ecole",
+      "subtitle": "Mettez a jour les coordonnees principales de l'ecole.",
       "schoolName": "Nom de l'ecole",
       "schoolNamePlaceholder": "Entrer le nom de l'ecole",
       "schoolId": "Identifiant ecole",
+      "schoolCode": "Code ecole",
+      "address": "Adresse",
+      "city": "Ville",
+      "phone": "Telephone",
       "timezone": "Fuseau horaire",
       "notificationPrefs": "Preferences de notification",
       "notifEmail": "Notifications par email",
@@ -1546,7 +1558,8 @@
     "tempPassword": "Mot de passe temporaire",
     "csvInvalidFormat": "Veuillez telecharger un fichier .csv",
     "csvEmpty": "Le fichier CSV est vide ou invalide",
-    "csvTooMany": "Maximum 100 utilisateurs par lot"
+    "csvTooMany": "Maximum 100 utilisateurs par lot",
+    "inviteConsumeFailed": "Compte cree, mais le jeton d'invitation n'a pas pu etre consomme."
   },
   "teacherContent": {
     "title": "Bibliotheque de contenus",
@@ -1682,7 +1695,11 @@
       "allStatuses": "Tous les statuts",
       "allOrigins": "Toutes les origines",
       "empty": "Aucun contenu trouve",
-      "loadMore": "Charger plus"
+      "loadMore": "Charger plus",
+      "tabs": {
+        "managed": "Contenus geres",
+        "library": "Parcourir la bibliotheque"
+      }
     },
     "contentTypes": {
       "video": "Video",
@@ -1859,7 +1876,73 @@
       "teacher": "Enseignant",
       "submissions": "Soumissions",
       "noData": "Aucune donnee disponible"
+    },
+    "library": {
+      "empty": "Aucun contenu de bibliotheque trouve",
+      "submissionsTitle": "Soumissions pour revision",
+      "submissionsSubtitle": "Suivez les contenus soumis a la revue plateforme depuis le CMS."
     }
+  },
+  "gdpr": {
+    "title": "Confidentialite et RGPD",
+    "subtitle": "Gerez l'export de donnees, la suppression du compte et l'historique des consentements.",
+    "export": {
+      "title": "Exporter mes donnees",
+      "description": "Telechargez un export JSON des donnees personnelles actuellement stockees pour votre compte.",
+      "action": "Telecharger mes donnees",
+      "success": "Export prepare le {{date}}."
+    },
+    "deletion": {
+      "title": "Demander la suppression du compte",
+      "description": "Cette action lance une anonymisation de votre compte et retire les acces futurs.",
+      "action": "Demander la suppression",
+      "success": "{{message}}",
+      "confirmTitle": "Confirmer la suppression",
+      "confirmBody": "Cette action est irreversible. Voulez-vous envoyer la demande maintenant ?",
+      "confirmAction": "Supprimer mes donnees"
+    },
+    "consent": {
+      "title": "Journal des consentements",
+      "subtitle": "Consultez l'etat courant des consentements associes a votre compte.",
+      "empty": "Aucun consentement trouve.",
+      "topic": "Sujet",
+      "channel": "Canal",
+      "scope": "Portee",
+      "status": "Statut"
+    },
+    "history": {
+      "title": "Historique recent",
+      "empty": "Aucun changement de consentement enregistre.",
+      "meta": "Auteur : {{actor}} | IP : {{ip}} | {{date}}"
+    },
+    "status": {
+      "opted_in": "Accepte",
+      "opted_out": "Refuse"
+    }
+  },
+  "featureToggles": {
+    "title": "Fonctionnalites",
+    "subtitle": "Consultez l'etat global des fonctionnalites et ajustez leur diffusion.",
+    "empty": "Aucune fonctionnalite trouvee.",
+    "enabled": "Activee",
+    "disabled": "Desactivee",
+    "on": "Oui",
+    "off": "Non",
+    "editTitle": "Modifier la fonctionnalite",
+    "toggleAria": "Basculer {{name}}",
+    "columns": {
+      "key": "Cle",
+      "name": "Nom affiche",
+      "description": "Description",
+      "status": "Statut",
+      "roles": "Roles actifs",
+      "schools": "Ecoles actives"
+    }
+  },
+  "exports": {
+    "title": "Exporter",
+    "csv": "Exporter en CSV",
+    "xlsx": "Exporter en XLSX"
   },
   "timetable": {
     "title": "Emploi du temps",

@@ -1,9 +1,11 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { getAccessToken } from '@/services/api/client';
 import { EmptyState } from './EmptyState';
 import { Skeleton } from './Skeleton';
 
 type SortDirection = 'asc' | 'desc' | null;
+type ExportFormat = 'csv' | 'xlsx';
 
 export interface ColumnDef<T> {
   key: keyof T;
@@ -11,6 +13,13 @@ export interface ColumnDef<T> {
   render?: (value: T[keyof T], row: T) => ReactNode;
   sortable?: boolean;
   width?: string;
+}
+
+export interface DataTableExportOptions {
+  entity: string;
+  filters?: Record<string, boolean | number | string | undefined>;
+  filename?: string;
+  formats?: ExportFormat[];
 }
 
 interface DataTableProps<T> {
@@ -21,6 +30,7 @@ interface DataTableProps<T> {
   onRowClick?: (row: T) => void;
   sortable?: boolean;
   ariaLabel?: string;
+  exportOptions?: DataTableExportOptions;
 }
 
 function compareValues(left: unknown, right: unknown) {
@@ -31,6 +41,17 @@ function compareValues(left: unknown, right: unknown) {
   return String(left ?? '').localeCompare(String(right ?? ''));
 }
 
+function getDownloadName(format: ExportFormat, options: DataTableExportOptions, response: Response) {
+  const disposition = response.headers.get('content-disposition');
+  const filenameMatch = disposition?.match(/filename="?([^"]+)"?/i);
+  if (filenameMatch?.[1]) {
+    return filenameMatch[1];
+  }
+
+  const baseName = options.filename || options.entity;
+  return `${baseName}.${format}`;
+}
+
 export function DataTable<T extends Record<string, unknown>>({
   columns,
   data,
@@ -39,10 +60,13 @@ export function DataTable<T extends Record<string, unknown>>({
   onRowClick,
   sortable = true,
   ariaLabel,
+  exportOptions,
 }: DataTableProps<T>) {
   const { t } = useTranslation();
   const [sortKey, setSortKey] = useState<keyof T | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
+  const [exporting, setExporting] = useState<ExportFormat | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   const sortedData = useMemo(() => {
     if (!sortKey || !sortDirection) {
@@ -80,12 +104,78 @@ export function DataTable<T extends Record<string, unknown>>({
     setSortDirection('asc');
   }
 
+  async function handleExport(format: ExportFormat) {
+    if (!exportOptions) {
+      return;
+    }
+
+    const token = getAccessToken();
+    const query = new URLSearchParams({ entity: exportOptions.entity });
+    const filters = Object.fromEntries(
+      Object.entries(exportOptions.filters || {}).filter(([, value]) => value !== undefined && value !== '')
+    );
+    if (Object.keys(filters).length > 0) {
+      query.set('filters', JSON.stringify(filters));
+    }
+
+    setExportError(null);
+    setExporting(format);
+
+    try {
+      const response = await fetch(`/api/v1/export/${format}?${query.toString()}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const failure = await response.text();
+        throw new Error(failure || t('app.error'));
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = getDownloadName(format, exportOptions, response);
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      setExportError(error instanceof Error ? error.message : t('app.error'));
+    } finally {
+      setExporting(null);
+    }
+  }
+
   if (!loading && data.length === 0) {
     return <EmptyState message={t(emptyMessage)} />;
   }
 
   return (
-    <div className="data-table__scroll">
+    <div>
+      {exportOptions ? (
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 12, alignItems: 'center' }}>
+          <div style={{ color: 'var(--color-error)', fontSize: 13 }}>{exportError}</div>
+          <details>
+            <summary className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
+              {exporting ? t('app.loading') : t('exports.title')}
+            </summary>
+            <div className="card" style={{ position: 'absolute', marginTop: 8, padding: 8, display: 'grid', gap: 8, minWidth: 160, zIndex: 5 }}>
+              {(exportOptions.formats || ['csv', 'xlsx']).map((format) => (
+                <button
+                  key={format}
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  disabled={Boolean(exporting)}
+                  onClick={() => void handleExport(format)}
+                >
+                  {t(`exports.${format}`)}
+                </button>
+              ))}
+            </div>
+          </details>
+        </div>
+      ) : null}
+      <div className="data-table__scroll">
       <table className="data-table" role="table" aria-label={ariaLabel || t('app.table', { defaultValue: 'Table' })}>
         <thead className="data-table__head" role="rowgroup">
           <tr className="data-table__header-row" role="row">
@@ -159,6 +249,7 @@ export function DataTable<T extends Record<string, unknown>>({
           )}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

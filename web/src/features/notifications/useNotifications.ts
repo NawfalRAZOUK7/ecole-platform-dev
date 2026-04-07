@@ -138,9 +138,18 @@ export function useSaveNotificationSettings() {
 
   return useMutation({
     mutationFn: async ({ preferences, digestFrequency }: NotificationSettingsInput) => {
+      const consents = (await notificationsService.listConsents()).data;
+      const consentUpdates = preferences.flatMap((preference) => {
+        const nextStatus = preference.enabled ? 'opted_in' : 'opted_out';
+        return consents
+          .filter((consent) => consent.topic === preference.category && consent.channel === preference.channel && consent.status !== nextStatus)
+          .map((consent) => notificationsService.updateConsent(consent.id, nextStatus));
+      });
+
       await Promise.all([
         notificationsService.updatePreferences(preferences),
         notificationsService.updateDigestPreferences(digestFrequency),
+        ...consentUpdates,
       ]);
       return { preferences, digestFrequency };
     },

@@ -1,5 +1,6 @@
 import { api } from '@/services/api/client';
 import type {
+  ConsentItem,
   DeviceItem,
   NotificationDigestResponse,
   NotificationItem,
@@ -51,6 +52,14 @@ export const notificationsService = {
     return api.post<void>('/notifications/digest/preferences', {
       digest_frequency: digestFrequency,
     });
+  },
+
+  listConsents() {
+    return api.get<ConsentItem[]>('/consents');
+  },
+
+  updateConsent(consentId: string, status: ConsentItem['status']) {
+    return api.put<void>(`/consents/${consentId}`, { status });
   },
 
   listDevices() {

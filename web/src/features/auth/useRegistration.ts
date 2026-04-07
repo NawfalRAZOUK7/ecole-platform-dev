@@ -20,3 +20,11 @@ export function useVerifyEmail() {
     },
   });
 }
+
+export function useConsumeInvite() {
+  return useMutation({
+    mutationFn: async (code: string) => {
+      await authService.consumeInvite(code);
+    },
+  });
+}

@@ -132,6 +132,7 @@ export function NotificationSettingsPage() {
         <div className="settings-card__header">
           <h2>{t('notifications.preferenceMatrixTitle')}</h2>
           <p>{t('notifications.preferenceMatrixSubtitle')}</p>
+          <p>{t('notifications.consentSync')}</p>
         </div>
         <div className="table-container">
           <table className="data-table">

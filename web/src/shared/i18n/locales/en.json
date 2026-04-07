@@ -9,7 +9,10 @@
     "save": "Save",
     "cancel": "Cancel",
     "confirm": "Confirm",
-    "close": "Close"
+    "close": "Close",
+    "edit": "Edit",
+    "actions": "Actions",
+    "table": "Table"
   },
   "nav": {
     "feed": "Feed",
@@ -129,6 +132,7 @@
     "disabled": "Disabled",
     "preferenceMatrixTitle": "Channels by category",
     "preferenceMatrixSubtitle": "Turn each channel on or off for each notification type.",
+    "consentSync": "Matching consent records are updated when you save these notification choices.",
     "digestTitle": "Email digest",
     "digestSubtitle": "Receive a daily or weekly summary at 07:00 Africa/Casablanca.",
     "devicesTitle": "Registered devices",
@@ -649,6 +653,7 @@
     "role": "Role",
     "school": "School",
     "email": "Email",
+    "phone": "Phone",
     "permissions": "Permissions",
     "language": "Language",
     "logout": "Sign Out",
@@ -670,7 +675,11 @@
       "digit": "At least one digit",
       "special": "At least one special character"
     },
-    "rewardPoints": "Reward Points"
+    "rewardPoints": "Reward Points",
+    "adminView": {
+      "title": "Profile Review",
+      "subtitle": "Viewing the selected user profile in read-only mode."
+    }
   },
   "sessions": {
     "title": "Active Sessions",
@@ -968,9 +977,14 @@
     },
     "settings": {
       "title": "School Settings",
+      "subtitle": "Update the primary school contact and address details.",
       "schoolName": "School Name",
       "schoolNamePlaceholder": "Enter school name",
       "schoolId": "School ID",
+      "schoolCode": "School Code",
+      "address": "Address",
+      "city": "City",
+      "phone": "Phone",
       "timezone": "Timezone",
       "notificationPrefs": "Notification Preferences",
       "notifEmail": "Email notifications",
@@ -1358,7 +1372,8 @@
     "tempPassword": "Temporary Password",
     "csvInvalidFormat": "Please upload a .csv file",
     "csvEmpty": "CSV file is empty or has invalid format",
-    "csvTooMany": "Maximum 100 users per batch"
+    "csvTooMany": "Maximum 100 users per batch",
+    "inviteConsumeFailed": "Account created, but the invitation token could not be consumed."
   },
   "teacherContent": {
     "title": "Content Library",
@@ -1494,7 +1509,11 @@
       "allStatuses": "All statuses",
       "allOrigins": "All origins",
       "empty": "No content found",
-      "loadMore": "Load more"
+      "loadMore": "Load more",
+      "tabs": {
+        "managed": "Managed content",
+        "library": "Library browse"
+      }
     },
     "contentTypes": {
       "video": "Video",
@@ -1671,7 +1690,73 @@
       "teacher": "Teacher",
       "submissions": "Submissions",
       "noData": "No data available"
+    },
+    "library": {
+      "empty": "No library content found",
+      "submissionsTitle": "Library review submissions",
+      "submissionsSubtitle": "Track content you submitted for platform review from the CMS workspace."
     }
+  },
+  "gdpr": {
+    "title": "Privacy & GDPR",
+    "subtitle": "Manage data export, account deletion, and your consent history.",
+    "export": {
+      "title": "Request data export",
+      "description": "Download a JSON export of the personal data currently stored for your account.",
+      "action": "Download my data",
+      "success": "Export prepared on {{date}}."
+    },
+    "deletion": {
+      "title": "Request account deletion",
+      "description": "This sends an anonymization request for your account and removes future access.",
+      "action": "Request deletion",
+      "success": "{{message}}",
+      "confirmTitle": "Confirm deletion request",
+      "confirmBody": "This action cannot be undone. Do you want to submit the deletion request now?",
+      "confirmAction": "Delete my data"
+    },
+    "consent": {
+      "title": "Consent log",
+      "subtitle": "Review the current consent status recorded for your account.",
+      "empty": "No consent records found.",
+      "topic": "Topic",
+      "channel": "Channel",
+      "scope": "Scope",
+      "status": "Status"
+    },
+    "history": {
+      "title": "Recent history",
+      "empty": "No consent changes recorded yet.",
+      "meta": "Actor: {{actor}} | IP: {{ip}} | {{date}}"
+    },
+    "status": {
+      "opted_in": "Opted in",
+      "opted_out": "Opted out"
+    }
+  },
+  "featureToggles": {
+    "title": "Feature Toggles",
+    "subtitle": "Review global feature availability and update rollout targeting.",
+    "empty": "No feature toggles found.",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "on": "On",
+    "off": "Off",
+    "editTitle": "Edit feature toggle",
+    "toggleAria": "Toggle {{name}}",
+    "columns": {
+      "key": "Key",
+      "name": "Display name",
+      "description": "Description",
+      "status": "Status",
+      "roles": "Enabled roles",
+      "schools": "Enabled schools"
+    }
+  },
+  "exports": {
+    "title": "Export",
+    "csv": "Export CSV",
+    "xlsx": "Export XLSX"
   },
   "timetable": {
     "title": "Timetable",

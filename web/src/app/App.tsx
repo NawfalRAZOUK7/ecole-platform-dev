@@ -14,7 +14,9 @@ import { Layout } from '@/shared/ui/Layout';
 import { OfflineIndicator } from '@/shared/ui/OfflineIndicator';
 import { ROLE_REDIRECT } from '@/features/auth/LoginPage';
 import { ProtectedRoute } from '@/features/auth/ProtectedRoute';
+import { FeatureTogglesPage } from '@/features/admin/FeatureTogglesPage';
 import { CmsLayout } from '@/features/cms/CmsLayout';
+import { GDPRPage } from '@/features/settings/GDPRPage';
 import { LoadingState } from '@/shared/ui/LoadingState';
 
 import {
@@ -193,6 +195,22 @@ function App() {
           element={
             <ProtectedRoute roles={['ADM']}>
               <SchoolSettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/school"
+          element={
+            <ProtectedRoute roles={['ADM']}>
+              <SchoolSettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/features"
+          element={
+            <ProtectedRoute roles={['SYS', 'ADM']}>
+              <FeatureTogglesPage />
             </ProtectedRoute>
           }
         />
@@ -655,6 +673,14 @@ function App() {
           element={
             <ProtectedRoute roles={['PAR', 'TCH', 'ADM', 'DIR', 'STD']}>
               <NotificationSettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings/privacy"
+          element={
+            <ProtectedRoute>
+              <GDPRPage />
             </ProtectedRoute>
           }
         />

@@ -42,6 +42,19 @@ export interface CmsContentItem {
   original_content_id: string | null;
 }
 
+export interface CmsLibraryItem {
+  id: string;
+  school_id: string | null;
+  title: string;
+  content_type: string;
+  level_band: string | null;
+  language: string | null;
+  subject: string | null;
+  description: string | null;
+  origin: string;
+  status: string;
+}
+
 export interface CmsContentFilters extends Record<string, string | number | undefined> {
   cursor?: string;
   content_type?: string;
@@ -51,6 +64,16 @@ export interface CmsContentFilters extends Record<string, string | number | unde
   status?: string;
   origin?: string;
   search?: string;
+}
+
+export interface CmsLibraryFilters extends Record<string, string | number | undefined> {
+  cursor?: string;
+  limit?: number;
+  content_type?: string;
+  subject?: string;
+  level_band?: string;
+  origin?: string;
+  status?: string;
 }
 
 export interface CmsSubmission {
@@ -73,6 +96,29 @@ export interface CmsSubmissionFilters extends Record<string, string | number | u
   status?: string;
   subject?: string;
   level_band?: string;
+}
+
+export interface CmsLibrarySubmission {
+  id: string;
+  content_item_id: string;
+  content_title: string;
+  status: string;
+  submitted_at: string | null;
+  review_notes: string | null;
+  promoted_content_id: string | null;
+}
+
+export interface CmsClassContentItem {
+  id: string;
+  content_item_id: string;
+  title: string;
+  content_type: string;
+  level_band: string | null;
+  language: string | null;
+  subject: string | null;
+  description: string | null;
+  assigned_at: string | null;
+  teacher_notes: string | null;
 }
 
 export interface CmsContentStats {
@@ -173,6 +219,30 @@ export const cmsService = {
 
   deleteContent(contentId: string) {
     return api.delete<void>(`/cms/content/${contentId}`);
+  },
+
+  listLibraryContent(params: CmsLibraryFilters) {
+    return api.list<CmsLibraryItem>('/content/library', params);
+  },
+
+  assignLibraryContent(payload: { content_item_id: string; class_id: string; notes: string | null }) {
+    return api.post<void>('/content/assign', payload);
+  },
+
+  removeLibraryAssignment(assignmentId: string) {
+    return api.delete<void>(`/content/assign/${assignmentId}`);
+  },
+
+  submitLibraryContentForReview(contentItemId: string) {
+    return api.post<void>('/content/submit-for-review', { content_item_id: contentItemId });
+  },
+
+  listLibrarySubmissions(params: CmsLibraryFilters) {
+    return api.list<CmsLibrarySubmission>('/content/my-submissions', params);
+  },
+
+  listClassContent(classId: string) {
+    return api.list<CmsClassContentItem>(`/classes/${classId}/content`);
   },
 
   uploadContentAsset(contentId: string, file: File, onProgress?: (progress: number) => void) {

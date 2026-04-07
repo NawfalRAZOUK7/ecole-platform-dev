@@ -5,6 +5,7 @@ import { profileService } from './profile.service';
 export const profileQueryKeys = {
   all: ['profile'] as const,
   details: () => [...profileQueryKeys.all, 'details'] as const,
+  adminView: (userId: string | null) => [...profileQueryKeys.all, 'admin-view', userId] as const,
   children: () => [...profileQueryKeys.all, 'children'] as const,
   sessions: () => [...profileQueryKeys.all, 'sessions'] as const,
   loginHistory: () => [...profileQueryKeys.all, 'loginHistory'] as const,
@@ -36,6 +37,15 @@ export function useProfileChildren(enabled: boolean) {
     queryKey: profileQueryKeys.children(),
     queryFn: async () => (await profileService.listChildren()).data,
     enabled,
+    staleTime: STALE_DEFAULT,
+  });
+}
+
+export function useAdminUserProfile(userId: string | null | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: profileQueryKeys.adminView(userId || null),
+    queryFn: async () => (await profileService.getAdminUserProfile(userId!)).data,
+    enabled: enabled && Boolean(userId),
     staleTime: STALE_DEFAULT,
   });
 }

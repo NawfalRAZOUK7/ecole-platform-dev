@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { setAccessToken } from '@/services/api/client';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
@@ -10,7 +10,7 @@ import { RegisterSteps } from './RegisterSteps';
 import { SchoolInfoStep } from './SchoolInfoStep';
 import { VerificationStep } from './VerificationStep';
 import type { RegisterStep } from './register.types';
-import { useRegister, useVerifyEmail } from './useRegistration';
+import { useConsumeInvite, useRegister, useVerifyEmail } from './useRegistration';
 
 const ROLE_REDIRECT: Record<string, string> = {
   PAR: '/feed',
@@ -19,6 +19,8 @@ const ROLE_REDIRECT: Record<string, string> = {
   ADM: '/admin',
   DIR: '/admin',
   SUP: '/notifications',
+  SYS: '/admin/features',
+  CONTENT_MGR: '/cms',
 };
 
 const PASSWORD_RULES = [
@@ -34,8 +36,10 @@ const RELATIONSHIP_TYPES = ['father', 'mother', 'guardian', 'other'] as const;
 export function RegisterPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const registerMutation = useRegister();
   const verifyEmailMutation = useVerifyEmail();
+  const consumeInviteMutation = useConsumeInvite();
   const loading = registerMutation.isPending || verifyEmailMutation.isPending;
   const [step, setStep] = useState<RegisterStep>('code');
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +60,7 @@ export function RegisterPage() {
   const [userId, setUserId] = useState('');
   const [schoolId, setSchoolId] = useState('');
   const [registeredRole, setRegisteredRole] = useState('');
+  const inviteToken = searchParams.get('invite');
 
   async function handleCodeSubmit(event: FormEvent) {
     event.preventDefault();
@@ -109,6 +114,15 @@ export function RegisterPage() {
       });
 
       setAccessToken(data.access_token);
+
+      if (inviteToken) {
+        try {
+          await consumeInviteMutation.mutateAsync(inviteToken);
+        } catch (inviteError) {
+          setError(inviteError instanceof Error ? inviteError.message : t('register.inviteConsumeFailed'));
+        }
+      }
+
       setUserId(data.user_id);
       setSchoolId(data.school_id);
       setRegisteredRole(data.role);

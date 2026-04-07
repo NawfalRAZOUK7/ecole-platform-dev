@@ -1,12 +1,15 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { STALE_CONTENT, STALE_DEFAULT, STALE_RESULTS } from '@/shared/hooks/useQueryDefaults';
-import { cmsService, type CmsContentFilters, type CmsSubmissionFilters } from './cms.service';
+import { cmsService, type CmsContentFilters, type CmsLibraryFilters, type CmsSubmissionFilters } from './cms.service';
 
 export const cmsQueryKeys = {
   all: ['cms'] as const,
   quizzes: () => [...cmsQueryKeys.all, 'quizzes'] as const,
   quiz: (quizId: string | null) => [...cmsQueryKeys.all, 'quiz', quizId] as const,
   content: (filters: Omit<CmsContentFilters, 'cursor'>) => [...cmsQueryKeys.all, 'content', filters] as const,
+  libraryContent: (filters: Omit<CmsLibraryFilters, 'cursor' | 'limit'>) => [...cmsQueryKeys.all, 'library-content', filters] as const,
+  librarySubmissions: (filters: Omit<CmsLibraryFilters, 'cursor' | 'limit'>) => [...cmsQueryKeys.all, 'library-submissions', filters] as const,
+  classContent: (classId: string | null) => [...cmsQueryKeys.all, 'class-content', classId] as const,
   contentItem: (contentId: string | null) => [...cmsQueryKeys.all, 'content-item', contentId] as const,
   submissions: (filters: Omit<CmsSubmissionFilters, 'cursor'>) => [...cmsQueryKeys.all, 'submissions', filters] as const,
   analytics: () => [...cmsQueryKeys.all, 'analytics'] as const,
@@ -89,6 +92,93 @@ export function useCmsContentItem(contentId: string | null | undefined) {
     queryFn: async () => cmsService.getContent(contentId!),
     enabled: Boolean(contentId),
     staleTime: STALE_CONTENT,
+  });
+}
+
+export function useCmsLibraryContent(filters: Omit<CmsLibraryFilters, 'cursor' | 'limit'>) {
+  return useInfiniteQuery({
+    queryKey: cmsQueryKeys.libraryContent(filters),
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam }) =>
+      cmsService.listLibraryContent({
+        limit: 20,
+        ...filters,
+        cursor: pageParam,
+      }),
+    getNextPageParam: (lastPage) =>
+      lastPage.meta.has_more ? lastPage.meta.next_cursor ?? undefined : undefined,
+    staleTime: STALE_CONTENT,
+  });
+}
+
+export function useCmsAssignLibraryContent() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: { content_item_id: string; class_id: string; notes: string | null }) => {
+      await cmsService.assignLibraryContent(payload);
+    },
+    onSuccess: async (_, payload) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['cms', 'library-content'] }),
+        queryClient.invalidateQueries({ queryKey: cmsQueryKeys.classContent(payload.class_id) }),
+      ]);
+    },
+  });
+}
+
+export function useCmsUnassignLibraryContent() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (assignmentId: string) => {
+      await cmsService.removeLibraryAssignment(assignmentId);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['cms', 'class-content'] });
+    },
+  });
+}
+
+export function useCmsSubmitLibraryContentForReview() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (contentItemId: string) => {
+      await cmsService.submitLibraryContentForReview(contentItemId);
+      return contentItemId;
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['cms', 'library-content'] }),
+        queryClient.invalidateQueries({ queryKey: ['cms', 'library-submissions'] }),
+      ]);
+    },
+  });
+}
+
+export function useCmsLibrarySubmissions(filters: Omit<CmsLibraryFilters, 'cursor' | 'limit'>) {
+  return useInfiniteQuery({
+    queryKey: cmsQueryKeys.librarySubmissions(filters),
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam }) =>
+      cmsService.listLibrarySubmissions({
+        limit: 20,
+        ...filters,
+        cursor: pageParam,
+      }),
+    getNextPageParam: (lastPage) =>
+      lastPage.meta.has_more ? lastPage.meta.next_cursor ?? undefined : undefined,
+    staleTime: STALE_DEFAULT,
+  });
+}
+
+export function useCmsClassContent(classId: string | null | undefined) {
+  return useQuery({
+    queryKey: cmsQueryKeys.classContent(classId || null),
+    queryFn: async () => (await cmsService.listClassContent(classId!)).data,
+    enabled: Boolean(classId),
+    staleTime: STALE_DEFAULT,
   });
 }
 

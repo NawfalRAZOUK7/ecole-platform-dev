@@ -28,9 +28,24 @@ export interface TeacherProfileData {
 }
 
 export interface ProfileResponse {
+  user_id?: string;
+  email?: string;
+  full_name?: string;
+  phone?: string | null;
+  role?: string;
+  school_id?: string;
   student_profile?: StudentProfileData | null;
   parent_profile?: ParentProfileData | null;
   teacher_profile?: TeacherProfileData | null;
+}
+
+export interface AdminUserProfileResponse extends ProfileResponse {
+  user_id: string;
+  email: string;
+  full_name: string;
+  phone: string | null;
+  role: string;
+  school_id: string;
 }
 
 export interface ChildEntry {
@@ -89,6 +104,10 @@ export const profileService = {
 
   listChildren() {
     return api.get<ChildEntry[]>('/me/children');
+  },
+
+  getAdminUserProfile(userId: string) {
+    return api.get<AdminUserProfileResponse>(`/admin/users/${userId}/profile`);
   },
 
   changePassword(payload: { current_password: string; new_password: string }) {
