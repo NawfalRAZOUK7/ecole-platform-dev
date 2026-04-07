@@ -7,6 +7,7 @@ export const profileQueryKeys = {
   details: () => [...profileQueryKeys.all, 'details'] as const,
   children: () => [...profileQueryKeys.all, 'children'] as const,
   sessions: () => [...profileQueryKeys.all, 'sessions'] as const,
+  loginHistory: () => [...profileQueryKeys.all, 'loginHistory'] as const,
 };
 
 export function useProfileData() {
@@ -85,5 +86,13 @@ export function useDisableTwoFactor() {
     mutationFn: async (code: string) => {
       await profileService.disableTwoFactor(code);
     },
+  });
+}
+
+export function useLoginHistory() {
+  return useQuery({
+    queryKey: profileQueryKeys.loginHistory(),
+    queryFn: async () => (await profileService.getLoginHistory()).data,
+    staleTime: STALE_DEFAULT,
   });
 }

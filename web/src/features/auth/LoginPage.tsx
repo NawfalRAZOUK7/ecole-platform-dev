@@ -217,6 +217,11 @@ export function LoginPage() {
               {t('register.hasCode')}
             </Link>
           </div>
+          <div style={{ textAlign: 'center', marginTop: 8 }}>
+            <Link to="/forgot-password" style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
+              {t('login.forgotPassword')}
+            </Link>
+          </div>
         </form>
       </div>
     </div>

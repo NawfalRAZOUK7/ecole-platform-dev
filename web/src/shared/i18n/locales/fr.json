@@ -69,7 +69,8 @@
     "microSchools": "Micro-ecoles",
     "teacherClassProgress": "Progrès de la classe",
     "progress": "Mon progrès",
-    "parentProgress": "Progrès des enfants"
+    "parentProgress": "Progrès des enfants",
+    "loginHistory": "Historique de connexion"
   },
   "login": {
     "title": "Connexion",
@@ -93,6 +94,41 @@
       "verify": "Verifier",
       "useBackup": "Utiliser un code de secours",
       "useApp": "Utiliser l'application"
+    },
+    "forgotPassword": "Mot de passe oublie ?"
+  },
+  "forgotPassword": {
+    "title": "Mot de passe oublie",
+    "instructions": "Entrez votre adresse e-mail pour recevoir un lien de reinitialisation.",
+    "submit": "Envoyer le lien",
+    "sent": "Un e-mail de reinitialisation vous a ete envoye. Verifiez votre boite de reception.",
+    "backToLogin": "Retour a la connexion"
+  },
+  "resetPassword": {
+    "title": "Reinitialiser le mot de passe",
+    "newPassword": "Nouveau mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "submit": "Reinitialiser",
+    "mismatch": "Les mots de passe ne correspondent pas",
+    "invalidToken": "Lien de reinitialisation invalide ou expire",
+    "strength": {
+      "weak": "Faible",
+      "medium": "Moyen",
+      "strong": "Fort"
+    }
+  },
+  "loginHistory": {
+    "title": "Historique de connexion",
+    "subtitle": "Consultez vos dernieres tentatives de connexion.",
+    "empty": "Aucun historique de connexion",
+    "date": "Date",
+    "ip": "Adresse IP",
+    "location": "Localisation",
+    "userAgent": "Appareil",
+    "status": "Statut",
+    "statuses": {
+      "success": "Reussie",
+      "failed": "Echouee"
     }
   },
   "feed": {

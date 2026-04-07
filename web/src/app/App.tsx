@@ -82,6 +82,9 @@ import {
   ProfilePage,
   SessionsPage,
   TwoFactorPage,
+  LoginHistoryPage,
+  ForgotPasswordPage,
+  ResetPasswordPage,
   StudentSubmissionPage,
   SkillsOverviewPage,
   SkillPassportPage,
@@ -133,6 +136,8 @@ function App() {
             {/* Public routes */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
 
       {/* Protected routes with layout */}
       <Route
@@ -800,6 +805,7 @@ function App() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/profile/sessions" element={<SessionsPage />} />
         <Route path="/profile/2fa" element={<TwoFactorPage />} />
+        <Route path="/profile/login-history" element={<LoginHistoryPage />} />
         <Route
           path="/submissions"
           element={

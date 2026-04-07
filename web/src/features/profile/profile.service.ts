@@ -94,4 +94,8 @@ export const profileService = {
   changePassword(payload: { current_password: string; new_password: string }) {
     return api.post<void>('/auth/change-password', payload);
   },
+
+  getLoginHistory() {
+    return api.get<import('@/features/auth/auth.service').LoginHistoryEntry[]>('/auth/login-history');
+  },
 };
