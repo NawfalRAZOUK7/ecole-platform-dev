@@ -1,0 +1,54 @@
+name: Web E2E
+
+on:
+  push:
+    branches: [main]
+    paths: ['web/**']
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/cache@v4
+        with:
+          path: web/node_modules
+          key: "node-modules-${{ hashFiles('web/package-lock.json') }}"
+      - run: npm ci
+      - run: npx playwright install --with-deps
+      - name: Start dev server
+        run: |
+          npm run dev -- --host 127.0.0.1 > /tmp/web-vite.log 2>&1 &
+          echo $! > /tmp/web-vite.pid
+      - name: Wait for dev server
+        run: |
+          for i in {1..60}; do
+            if curl -fsS http://127.0.0.1:5173 > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/web-vite.log
+          exit 1
+      - name: Run Playwright
+        env:
+          BASE_URL: http://127.0.0.1:5173
+          PLAYWRIGHT_HTML_OPEN: never
+        run: npm run test:e2e -- --reporter=html
+      - name: Stop dev server
+        if: always()
+        run: |
+          if [ -f /tmp/web-vite.pid ]; then
+            kill "$(cat /tmp/web-vite.pid)" || true
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-html-report
+          path: web/playwright-report/
