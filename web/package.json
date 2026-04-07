@@ -11,6 +11,7 @@
     "test": "node ./scripts/run-vitest.mjs",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:contract": "vitest run tests/contract/",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "prepare": "cd .. && ./web/node_modules/.bin/husky web/.husky",
