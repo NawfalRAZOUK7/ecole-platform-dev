@@ -521,7 +521,9 @@
     "tabQuizzes": "الاختبارات",
     "quiz": "اختبار",
     "attempt": "محاولة",
-    "completedAt": "اكتمل في"
+    "completedAt": "اكتمل في",
+    "actions": "الإجراءات",
+    "viewDetails": "عرض التفاصيل"
   },
   "invoices": {
     "title": "الفواتير",
@@ -1452,6 +1454,7 @@
     "points": "النقاط",
     "status": "الحالة",
     "actions": "الإجراءات",
+    "analytics": "التحليلات",
     "publish": "نشر",
     "save": "حفظ الاختبار",
     "questionText": "نص السؤال",
@@ -1498,6 +1501,47 @@
     "selectZone": "اختر منطقة",
     "matchHint": "طابق كل عنصر من اليسار مع نظيره",
     "selectMatch": "اختر"
+  },
+  "quizAnalytics": {
+    "subtitle": "راجع المشاركة ومتوسط الأداء والأسئلة التي وجدها الطلاب الأكثر صعوبة.",
+    "empty": "لا تتوفر تحليلات لهذا الاختبار بعد.",
+    "totalAttempts": "إجمالي المحاولات",
+    "completedAttempts": "المحاولات المكتملة",
+    "completionRate": "معدل الإكمال",
+    "averageScore": "متوسط الدرجة",
+    "scoreDistribution": "لقطة لتوزيع الدرجات",
+    "scoreDistributionHint": "يعرض الخادم حالياً الحد الأدنى والمتوسط والحد الأقصى للدرجات المكتملة لهذا الاختبار.",
+    "difficultyBreakdown": "توزيع صعوبة الأسئلة",
+    "questionBreakdown": "دقة الإجابة لكل سؤال",
+    "noQuestions": "لا توجد تحليلات للأسئلة حتى الآن.",
+    "buckets": {
+      "easy": "أجيب عنها بشكل صحيح غالباً",
+      "medium": "أداء متفاوت",
+      "hard": "غالباً ما تكون خاطئة",
+      "unanswered": "لا توجد إجابات بعد"
+    },
+    "distribution": {
+      "minimum": "الحد الأدنى",
+      "average": "المتوسط",
+      "maximum": "الحد الأقصى"
+    }
+  },
+  "quizResults": {
+    "title": "نتائج الاختبار",
+    "subtitle": "راجع كل إجابة والنقاط الممنوحة وملخص المحاولة بالكامل.",
+    "empty": "نتائج الاختبار غير متاحة.",
+    "scoreSummary": "ملخص الدرجة",
+    "percentage": "النسبة المئوية",
+    "timeTaken": "الوقت المستغرق",
+    "completedAt": "اكتمل في",
+    "emptyResponses": "لم يتم إرجاع أي إجابات لهذه المحاولة.",
+    "questionLabel": "السؤال {{index}}",
+    "correct": "صحيح",
+    "incorrect": "غير صحيح",
+    "notGraded": "غير مقيم",
+    "yourAnswer": "إجابتك",
+    "correctAnswer": "الإجابة الصحيحة",
+    "pointsLabel": "{{earned}} / {{total}} نقطة"
   },
   "roles": {
     "ADM": "مدير",

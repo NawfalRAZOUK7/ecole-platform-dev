@@ -1,4 +1,5 @@
 import { getAccessToken, api } from '@/services/api/client';
+import { quizzesService, type QuizPayload } from '@/features/quizzes/quizzes.service';
 
 export type QuestionType = 'MCQ' | 'TRUE_FALSE' | 'FILL_IN' | 'DRAG_DROP' | 'MATCHING';
 
@@ -177,23 +178,23 @@ function uploadAsset(contentId: string, file: File, onProgress?: (progress: numb
 
 export const cmsService = {
   listQuizzes(params: Record<string, string | number | undefined> = {}) {
-    return api.list<Quiz>('/quizzes', params);
+    return quizzesService.listQuizzes(params);
   },
 
   getQuiz(quizId: string) {
-    return api.get<Quiz>(`/quizzes/${quizId}`);
+    return quizzesService.getQuiz(quizId);
   },
 
   createQuiz(payload: Record<string, unknown>) {
-    return api.post<{ id: string }>('/quizzes', payload);
+    return quizzesService.createQuiz(payload as unknown as QuizPayload);
   },
 
   updateQuiz(quizId: string, payload: Record<string, unknown>) {
-    return api.put<void>(`/quizzes/${quizId}`, payload);
+    return quizzesService.updateQuiz(quizId, payload);
   },
 
   publishQuiz(quizId: string) {
-    return api.post<void>(`/quizzes/${quizId}/publish`);
+    return quizzesService.publishQuiz(quizId);
   },
 
   listContent(params: CmsContentFilters) {

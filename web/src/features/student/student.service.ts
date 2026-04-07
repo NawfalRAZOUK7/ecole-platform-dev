@@ -1,60 +1,19 @@
 import { api, getAccessToken } from '@/services/api/client';
+import {
+  quizzesService,
+  type QuizAttempt as QuizEngineAttempt,
+  type QuizAttemptResult as QuizEngineAttemptResult,
+  type QuizDetail as QuizEngineDetail,
+  type QuizQuestion as QuizEngineQuestion,
+  type QuizSummary as QuizEngineSummary,
+} from '@/features/quizzes/quizzes.service';
 
-export interface QuizListItem {
-  id: string;
-  title: string;
-  description: string | null;
-  subject: string | null;
-  difficulty: string;
-  time_limit_minutes: number | null;
-  max_attempts: number;
-  question_count: number;
-  total_points: number;
-  status: string;
-}
-
-export interface Question {
-  id: string;
-  question_type: string;
-  question_text: string;
-  question_media_path: string | null;
-  options: Record<string, unknown> | null;
-  points: number;
-  order: number;
-}
-
-export interface QuizDetail {
-  questions: Question[];
-  [key: string]: unknown;
-}
-
-export interface Attempt {
-  id: string;
-  quiz_id: string;
-  attempt_no: number;
-  started_at: string | null;
-  completed_at: string | null;
-  score: number | null;
-  max_score: number | null;
-  status: string;
-}
-
-export interface ResultResponse {
-  question_id: string;
-  question_type: string;
-  question_text: string;
-  student_answer: unknown;
-  correct_answer: unknown;
-  is_correct: boolean | null;
-  points_earned: number | null;
-  points: number;
-  explanation: string | null;
-}
-
-export interface AttemptResult {
-  attempt: Attempt;
-  responses: ResultResponse[];
-}
+export type QuizListItem = QuizEngineSummary;
+export type Question = QuizEngineQuestion;
+export type QuizDetail = QuizEngineDetail;
+export type Attempt = QuizEngineAttempt;
+export type ResultResponse = QuizEngineAttemptResult['responses'][number];
+export type AttemptResult = QuizEngineAttemptResult;
 
 export interface StudentClassOption {
   class_id: string;
@@ -76,27 +35,27 @@ export interface ClassContentItem {
 
 export const studentService = {
   listPublishedQuizzes() {
-    return api.list<QuizListItem>('/quizzes', { status: 'published' });
+    return quizzesService.listQuizzes({ status: 'published' });
   },
 
   getQuizDetail(quizId: string) {
-    return api.get<QuizDetail>(`/quizzes/${quizId}`);
+    return quizzesService.getQuiz(quizId);
   },
 
   startQuizAttempt(quizId: string) {
-    return api.post<Attempt>(`/quizzes/${quizId}/start`);
+    return quizzesService.startAttempt(quizId);
   },
 
   respondToAttempt(attemptId: string, payload: { question_id: string; student_answer: unknown }) {
-    return api.post<void>(`/attempts/${attemptId}/respond`, payload);
+    return quizzesService.respondToQuestion(attemptId, payload);
   },
 
   submitAttempt(attemptId: string) {
-    return api.post<void>(`/attempts/${attemptId}/submit`);
+    return quizzesService.submitAttempt(attemptId);
   },
 
   getAttemptResults(attemptId: string) {
-    return api.get<AttemptResult>(`/attempts/${attemptId}/results`);
+    return quizzesService.getResults(attemptId);
   },
 
   listStudentClasses() {

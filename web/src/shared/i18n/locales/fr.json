@@ -684,7 +684,9 @@
     "tabQuizzes": "Quiz",
     "quiz": "Quiz",
     "attempt": "Tentative",
-    "completedAt": "Termine"
+    "completedAt": "Termine",
+    "actions": "Actions",
+    "viewDetails": "Voir le detail"
   },
   "invoices": {
     "title": "Factures",
@@ -1618,6 +1620,7 @@
     "points": "Points",
     "status": "Statut",
     "actions": "Actions",
+    "analytics": "Analytique",
     "publish": "Publier",
     "save": "Enregistrer le quiz",
     "questionText": "Texte de la question",
@@ -1664,6 +1667,47 @@
     "selectZone": "Selectionner une zone",
     "matchHint": "Associez chaque element de gauche a son correspondant",
     "selectMatch": "Selectionner"
+  },
+  "quizAnalytics": {
+    "subtitle": "Consultez la participation, la performance moyenne et les questions les plus difficiles pour les eleves.",
+    "empty": "Aucune analytique de quiz n'est encore disponible.",
+    "totalAttempts": "Tentatives totales",
+    "completedAttempts": "Tentatives terminees",
+    "completionRate": "Taux de completion",
+    "averageScore": "Note moyenne",
+    "scoreDistribution": "Apercu de la distribution des notes",
+    "scoreDistributionHint": "Le backend expose actuellement l'instantane des notes minimum, moyenne et maximum pour ce quiz.",
+    "difficultyBreakdown": "Repartition de la difficulte des questions",
+    "questionBreakdown": "Precision question par question",
+    "noQuestions": "Aucune analytique par question n'est disponible.",
+    "buckets": {
+      "easy": "Majoritairement reussies",
+      "medium": "Performance mixte",
+      "hard": "Souvent ratees",
+      "unanswered": "Aucune reponse"
+    },
+    "distribution": {
+      "minimum": "Minimum",
+      "average": "Moyenne",
+      "maximum": "Maximum"
+    }
+  },
+  "quizResults": {
+    "title": "Resultats du quiz",
+    "subtitle": "Consultez chaque reponse, les points accordes et le resume global de la tentative.",
+    "empty": "Les resultats du quiz ne sont pas disponibles.",
+    "scoreSummary": "Resume de la note",
+    "percentage": "Pourcentage",
+    "timeTaken": "Temps passe",
+    "completedAt": "Termine le",
+    "emptyResponses": "Aucune reponse n'a ete renvoyee pour cette tentative.",
+    "questionLabel": "Question {{index}}",
+    "correct": "Correct",
+    "incorrect": "Incorrect",
+    "notGraded": "Non evalue",
+    "yourAnswer": "Votre reponse",
+    "correctAnswer": "Bonne reponse",
+    "pointsLabel": "{{earned}} / {{total}} points"
   },
   "roles": {
     "ADM": "Administrateur",

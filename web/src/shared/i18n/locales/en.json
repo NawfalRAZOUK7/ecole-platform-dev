@@ -521,7 +521,9 @@
     "tabQuizzes": "Quizzes",
     "quiz": "Quiz",
     "attempt": "Attempt",
-    "completedAt": "Completed"
+    "completedAt": "Completed",
+    "actions": "Actions",
+    "viewDetails": "View details"
   },
   "invoices": {
     "title": "Invoices",
@@ -1432,6 +1434,7 @@
     "points": "Points",
     "status": "Status",
     "actions": "Actions",
+    "analytics": "Analytics",
     "publish": "Publish",
     "save": "Save Quiz",
     "questionText": "Question text",
@@ -1478,6 +1481,47 @@
     "selectZone": "Select zone",
     "matchHint": "Match each left item with its right pair",
     "selectMatch": "Select match"
+  },
+  "quizAnalytics": {
+    "subtitle": "Review participation, average performance, and the questions that students found hardest.",
+    "empty": "Quiz analytics are not available yet.",
+    "totalAttempts": "Total attempts",
+    "completedAttempts": "Completed attempts",
+    "completionRate": "Completion rate",
+    "averageScore": "Average score",
+    "scoreDistribution": "Score distribution snapshot",
+    "scoreDistributionHint": "The backend currently exposes the minimum, average, and maximum completed score snapshot for this quiz.",
+    "difficultyBreakdown": "Question difficulty breakdown",
+    "questionBreakdown": "Question-by-question accuracy",
+    "noQuestions": "No question analytics are available yet.",
+    "buckets": {
+      "easy": "Mostly answered correctly",
+      "medium": "Mixed performance",
+      "hard": "Often missed",
+      "unanswered": "No responses yet"
+    },
+    "distribution": {
+      "minimum": "Minimum",
+      "average": "Average",
+      "maximum": "Maximum"
+    }
+  },
+  "quizResults": {
+    "title": "Quiz results",
+    "subtitle": "Review each answer, the awarded points, and the overall attempt summary.",
+    "empty": "Quiz results are not available.",
+    "scoreSummary": "Score summary",
+    "percentage": "Percentage",
+    "timeTaken": "Time taken",
+    "completedAt": "Completed at",
+    "emptyResponses": "No question responses were returned for this attempt.",
+    "questionLabel": "Question {{index}}",
+    "correct": "Correct",
+    "incorrect": "Incorrect",
+    "notGraded": "Not graded",
+    "yourAnswer": "Your answer",
+    "correctAnswer": "Correct answer",
+    "pointsLabel": "{{earned}} / {{total}} points"
   },
   "roles": {
     "ADM": "Administrator",

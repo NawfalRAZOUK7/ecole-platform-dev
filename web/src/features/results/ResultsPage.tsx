@@ -7,6 +7,7 @@
  */
 
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
 import { EmptyState } from '@/shared/ui/EmptyState';
@@ -19,6 +20,7 @@ import type { QuizAttemptResult, Result } from './results.service';
 
 export function ResultsPage() {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const [tab, setTab] = useState<'assignments' | 'quizzes'>('assignments');
   const assignmentsQuery = useAssignmentResults();
   const quizResultsQuery = useQuizAttemptResults();
@@ -70,6 +72,7 @@ export function ResultsPage() {
                 <th>{t('results.score')}</th>
                 <th>{t('results.status')}</th>
                 <th>{t('results.completedAt')}</th>
+                <th>{t('results.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -90,6 +93,16 @@ export function ResultsPage() {
                     </td>
                     <td style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
                       {result.completed_at ? formatDate(result.completed_at, i18n.language) : '—'}
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        style={{ fontSize: 12, padding: '4px 10px' }}
+                        onClick={() => navigate(`/quizzes/attempts/${result.id}/results`)}
+                      >
+                        {t('results.viewDetails')}
+                      </button>
                     </td>
                   </tr>
                 );

@@ -1,4 +1,5 @@
 import { api, getAccessToken } from '@/services/api/client';
+import { quizzesService, type QuizPayload } from '@/features/quizzes/quizzes.service';
 
 export interface TeacherCursorFilters extends Record<string, string | number | undefined> {
   cursor?: string;
@@ -119,7 +120,7 @@ export interface Quiz {
   description: string | null;
   subject: string | null;
   level_band: string | null;
-  difficulty: string;
+  difficulty: string | null;
   status: string;
   question_count: number;
   total_points: number;
@@ -320,15 +321,15 @@ export const teacherService = {
   },
 
   listQuizzes(params: TeacherCursorFilters = {}) {
-    return api.list<Quiz>('/quizzes', params);
+    return quizzesService.listQuizzes(params);
   },
 
   createQuiz(payload: Record<string, unknown>) {
-    return api.post<void>('/quizzes', payload);
+    return quizzesService.createQuiz(payload as unknown as QuizPayload);
   },
 
   publishQuiz(quizId: string) {
-    return api.post<void>(`/quizzes/${quizId}/publish`);
+    return quizzesService.publishQuiz(quizId);
   },
 
   listTeacherSubmissions(params: TeacherSubmissionFilters) {

@@ -16,6 +16,8 @@ import { ROLE_REDIRECT } from '@/features/auth/LoginPage';
 import { ProtectedRoute } from '@/features/auth/ProtectedRoute';
 import { FeatureTogglesPage } from '@/features/admin/FeatureTogglesPage';
 import { CmsLayout } from '@/features/cms/CmsLayout';
+import { QuizAnalyticsPage } from '@/features/quizzes/QuizAnalyticsPage';
+import { QuizResultsPage } from '@/features/quizzes/QuizResultsPage';
 import { GDPRPage } from '@/features/settings/GDPRPage';
 import { LoadingState } from '@/shared/ui/LoadingState';
 
@@ -376,6 +378,14 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/quizzes/:id/analytics"
+          element={
+            <ProtectedRoute roles={['TCH']}>
+              <QuizAnalyticsPage />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Student routes */}
         <Route
@@ -713,6 +723,14 @@ function App() {
           element={
             <ProtectedRoute roles={['STD', 'PAR']}>
               <ResultsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/quizzes/attempts/:id/results"
+          element={
+            <ProtectedRoute roles={['STD', 'PAR', 'TCH', 'ADM', 'DIR']}>
+              <QuizResultsPage />
             </ProtectedRoute>
           }
         />

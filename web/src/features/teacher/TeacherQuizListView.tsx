@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { EmptyState } from '@/shared/ui/EmptyState';
 import type { Quiz } from './teacher.service';
@@ -20,6 +21,7 @@ export function TeacherQuizListView({
   onPublish,
 }: TeacherQuizListViewProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   return (
     <>
@@ -51,11 +53,30 @@ export function TeacherQuizListView({
                   <tr key={quiz.id}>
                     <td style={{ fontWeight: 600 }}>{quiz.title}</td>
                     <td>{quiz.subject ? t(`cms.subjects.${quiz.subject}`, quiz.subject) : '-'}</td>
-                    <td>{quiz.difficulty}</td>
+                    <td>{quiz.difficulty || '-'}</td>
                     <td>{quiz.question_count}</td>
                     <td>{quiz.total_points}</td>
                     <td><span className={`status-badge status-${quiz.status}`}>{quiz.status}</span></td>
-                    <td>{quiz.status === 'draft' && quiz.school_id ? <button className="btn btn-primary" style={{ fontSize: 12, padding: '4px 10px' }} onClick={() => onPublish(quiz.id)}>{t('teacherQuiz.publish')}</button> : null}</td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        <button
+                          className="btn btn-secondary"
+                          style={{ fontSize: 12, padding: '4px 10px' }}
+                          onClick={() => navigate(`/quizzes/${quiz.id}/analytics`)}
+                        >
+                          {t('teacherQuiz.analytics')}
+                        </button>
+                        {quiz.status === 'draft' && quiz.school_id ? (
+                          <button
+                            className="btn btn-primary"
+                            style={{ fontSize: 12, padding: '4px 10px' }}
+                            onClick={() => onPublish(quiz.id)}
+                          >
+                            {t('teacherQuiz.publish')}
+                          </button>
+                        ) : null}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
