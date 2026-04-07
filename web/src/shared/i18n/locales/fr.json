@@ -71,7 +71,8 @@
     "progress": "Mon progrès",
     "parentProgress": "Progrès des enfants",
     "loginHistory": "Historique de connexion",
-    "questionBank": "Banque de questions"
+    "questionBank": "Banque de questions",
+    "rubrics": "Grilles d'evaluation"
   },
   "login": {
     "title": "Connexion",
@@ -130,6 +131,42 @@
     "statuses": {
       "success": "Reussie",
       "failed": "Echouee"
+    }
+  },
+  "rubrics": {
+    "title": "Grilles d'evaluation",
+    "subtitle": "Creez et gerez vos grilles d'evaluation par criteres.",
+    "empty": "Aucune grille d'evaluation",
+    "create": "Creer une grille",
+    "createAndEdit": "Creer et modifier",
+    "edit": "Modifier",
+    "grade": "Evaluer",
+    "duplicate": "Dupliquer",
+    "editorSubtitle": "Definissez les criteres et les niveaux de performance.",
+    "gradingTitle": "Evaluation par grille",
+    "criterion": "Critere",
+    "weight": "Poids",
+    "total": "Total",
+    "percentage": "Pourcentage",
+    "levelLabel": "Niveau",
+    "levelScore": "Score",
+    "levelDescription": "Description du niveau",
+    "criterionName": "Nom du critere",
+    "addLevel": "Niveau",
+    "addCriterion": "Ajouter un critere",
+    "studentId": "Identifiant eleve",
+    "studentIdPlaceholder": "UUID ou identifiant de l'eleve",
+    "saveGrade": "Enregistrer l'evaluation",
+    "gradeSaved": "Evaluation enregistree pour l'eleve {{studentId}}",
+    "previousResults": "Evaluations precedentes",
+    "cols": {
+      "title": "Titre",
+      "subject": "Matiere",
+      "description": "Description",
+      "criteria": "Criteres",
+      "maxScore": "Score max",
+      "createdAt": "Cree le",
+      "score": "Score"
     }
   },
   "questionBank": {

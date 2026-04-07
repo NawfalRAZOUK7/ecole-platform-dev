@@ -115,6 +115,9 @@ import {
   QuestionBankPage,
   QuestionBankImportPage,
   GenerateQuizPage,
+  RubricsListPage,
+  RubricEditorPage,
+  RubricGradingPage,
 } from './LazyPages';
 
 /** Redirect based on user role */
@@ -822,6 +825,31 @@ function App() {
           element={
             <ProtectedRoute roles={['PAR']}>
               <ParentJustificationPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* Rubrics routes */}
+        <Route
+          path="/rubrics"
+          element={
+            <ProtectedRoute roles={['TCH', 'ADM', 'DIR']}>
+              <RubricsListPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/rubrics/:id/edit"
+          element={
+            <ProtectedRoute roles={['TCH', 'ADM', 'DIR']}>
+              <RubricEditorPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/rubrics/:id/grade"
+          element={
+            <ProtectedRoute roles={['TCH', 'ADM', 'DIR']}>
+              <RubricGradingPage />
             </ProtectedRoute>
           }
         />

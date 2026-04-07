@@ -66,6 +66,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/teacher/assessments', labelKey: 'nav.teacherAssessments', icon: '📊', roles: ['TCH'] },
   { to: '/teacher/content-library', labelKey: 'nav.teacherContentLibrary', icon: '📚', roles: ['TCH'] },
   { to: '/teacher/quizzes', labelKey: 'nav.teacherQuizzes', icon: '❓', roles: ['TCH'] },
+  { to: '/rubrics', labelKey: 'nav.rubrics', icon: '📊', roles: ['TCH'] },
   { to: '/question-bank', labelKey: 'nav.questionBank', icon: '🗃️', roles: ['TCH', 'CONTENT_MGR'] },
   { to: '/teacher/class-progress', labelKey: 'nav.teacherClassProgress', icon: '📊', roles: ['TCH'] },
   { to: '/student/content', labelKey: 'nav.studentContent', icon: '📚', roles: ['STD'] },
