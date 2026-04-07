@@ -118,6 +118,8 @@ import {
   RubricsListPage,
   RubricEditorPage,
   RubricGradingPage,
+  TimetableConstraintsPage,
+  TimetableGeneratePage,
 } from './LazyPages';
 
 /** Redirect based on user role */
@@ -485,6 +487,22 @@ function App() {
           element={
             <ProtectedRoute roles={['ADM', 'DIR', 'TCH', 'STD', 'PAR']}>
               <TimetablePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/timetable/constraints"
+          element={
+            <ProtectedRoute roles={['ADM', 'DIR']}>
+              <TimetableConstraintsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/timetable/generate"
+          element={
+            <ProtectedRoute roles={['ADM', 'DIR']}>
+              <TimetableGeneratePage />
             </ProtectedRoute>
           }
         />

@@ -72,7 +72,9 @@
     "parentProgress": "Progrès des enfants",
     "loginHistory": "Historique de connexion",
     "questionBank": "Banque de questions",
-    "rubrics": "Grilles d'evaluation"
+    "rubrics": "Grilles d'evaluation",
+    "timetableConstraints": "Contraintes emploi du temps",
+    "timetableGenerate": "Generer emploi du temps"
   },
   "login": {
     "title": "Connexion",
@@ -1891,6 +1893,58 @@
       "4": "Jeudi",
       "5": "Vendredi",
       "6": "Samedi"
+    },
+    "constraints": {
+      "title": "Contraintes d'emploi du temps",
+      "subtitle": "Definissez les contraintes avant de lancer la generation automatique.",
+      "global": "Parametres globaux",
+      "academicYear": "Annee academique (ID)",
+      "academicYearPlaceholder": "UUID de l'annee academique",
+      "maxConsecutive": "Max. cours consecutifs",
+      "teacherAvailability": "Disponibilites des enseignants",
+      "addAvailability": "Ajouter disponibilite",
+      "noAvailability": "Aucune disponibilite definie.",
+      "teacherId": "Enseignant (ID)",
+      "teacherIdPlaceholder": "UUID de l'enseignant",
+      "day": "Jour",
+      "from": "De",
+      "until": "A",
+      "rooms": "Salles de classe",
+      "addRoom": "Ajouter une salle",
+      "noRooms": "Aucune salle definie.",
+      "roomName": "Nom de la salle",
+      "roomNamePlaceholder": "Ex: Salle 101",
+      "capacity": "Capacite"
+    },
+    "generate": {
+      "title": "Generation automatique",
+      "subtitle": "Generez automatiquement l'emploi du temps a partir des contraintes definies.",
+      "triggerTitle": "Lancer la generation",
+      "academicYear": "Annee academique",
+      "noConstraints": "Veuillez d'abord definir les contraintes.",
+      "trigger": "Generer",
+      "jobStatus": "Statut du job",
+      "jobId": "ID",
+      "previewTitle": "{{count}} creneau(x) genere(s)",
+      "apply": "Appliquer",
+      "applyConfirm": "Oui, appliquer",
+      "applied": "{{applied}} creneau(x) applique(s), {{skipped}} ignore(s).",
+      "confirmApplyTitle": "Appliquer l'emploi du temps",
+      "confirmApplyBody": "Cette action remplacera les creneaux existants. Continuer ?",
+      "statuses": {
+        "pending": "En attente",
+        "running": "En cours",
+        "completed": "Termine",
+        "failed": "Echec"
+      },
+      "cols": {
+        "day": "Jour",
+        "time": "Horaire",
+        "subject": "Matiere",
+        "class": "Classe",
+        "teacher": "Enseignant",
+        "room": "Salle"
+      }
     }
   },
   "billing": {

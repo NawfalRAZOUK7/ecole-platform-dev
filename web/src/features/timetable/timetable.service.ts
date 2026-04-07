@@ -1,5 +1,59 @@
 import { api } from '@/services/api/client';
 
+// ─── Generation types ───────────────────────────────────────────────────────
+
+export interface TeacherAvailability {
+  teacher_id: string;
+  day_of_week: number; // 1=Mon … 6=Sat
+  available_from: string; // HH:MM
+  available_until: string; // HH:MM
+}
+
+export interface RoomConstraint {
+  room_name: string;
+  capacity: number;
+}
+
+export interface TimetableConstraints {
+  academic_year_id: string;
+  max_consecutive_classes: number;
+  teacher_availability: TeacherAvailability[];
+  room_constraints: RoomConstraint[];
+}
+
+export type GenerationJobStatus = 'pending' | 'running' | 'completed' | 'failed';
+
+export interface GenerationJob {
+  job_id: string;
+  status: GenerationJobStatus;
+  progress: number; // 0-100
+  error: string | null;
+  created_at: string;
+}
+
+export interface GeneratedSlot {
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  subject: string;
+  teacher_id: string;
+  room: string | null;
+  class_id: string;
+}
+
+export interface GenerationPreview {
+  job_id: string;
+  slots: GeneratedSlot[];
+  warnings: string[];
+}
+
+export interface ApplyResult {
+  applied: number;
+  skipped: number;
+}
+
+// ─── Timetable viewing types ─────────────────────────────────────────────────
+
 export interface TimetableSlot {
   id: string;
   day_of_week: number;
@@ -75,5 +129,31 @@ export const timetableService = {
 
   createException(payload: Record<string, unknown>) {
     return api.post<void>('/timetable/exceptions', payload);
+  },
+
+  // ── Generation endpoints ────────────────────────────────────────────────
+
+  getConstraints() {
+    return api.get<TimetableConstraints>('/timetable/constraints');
+  },
+
+  saveConstraints(payload: TimetableConstraints) {
+    return api.post<TimetableConstraints>('/timetable/constraints', payload);
+  },
+
+  triggerGeneration(payload: { academic_year_id: string }) {
+    return api.post<GenerationJob>('/timetable/generate', payload);
+  },
+
+  getGenerationJob(jobId: string) {
+    return api.get<GenerationJob>(`/timetable/generate/${jobId}`);
+  },
+
+  getGenerationPreview(jobId: string) {
+    return api.get<GenerationPreview>(`/timetable/generate/${jobId}/preview`);
+  },
+
+  applyGeneration(jobId: string) {
+    return api.post<ApplyResult>(`/timetable/generate/${jobId}/apply`, {});
   },
 };
