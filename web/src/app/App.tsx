@@ -64,6 +64,7 @@ import {
   NotificationSettingsPage,
   CalendarPage,
   EventDetailPage,
+  HolidayManagerPage,
   ReportsPage,
   DocumentsPage,
   ResourcesPage,
@@ -561,6 +562,14 @@ function App() {
           element={
             <ProtectedRoute roles={['PAR', 'TCH', 'ADM', 'DIR', 'STD']}>
               <EventDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/calendar/holidays"
+          element={
+            <ProtectedRoute roles={['ADM', 'DIR']}>
+              <HolidayManagerPage />
             </ProtectedRoute>
           }
         />

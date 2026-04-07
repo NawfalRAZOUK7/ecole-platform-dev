@@ -9,7 +9,12 @@
     "save": "Enregistrer",
     "cancel": "Annuler",
     "confirm": "Confirmer",
-    "close": "Fermer"
+    "close": "Fermer",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "optional": "Optionnel",
+    "actions": "Actions",
+    "saved": "Enregistre"
   },
   "nav": {
     "feed": "Fil d'actualite",
@@ -59,6 +64,7 @@
     "billingSiblingPolicy": "Politique fratrie",
     "billingLateFees": "Penalites de retard",
     "billingPaymentPlans": "Plans de paiement",
+    "calendarHolidays": "Jours feries",
     "budgets": "Budgets",
     "microSchools": "Micro-ecoles",
     "teacherClassProgress": "Progrès de la classe",
@@ -1272,6 +1278,29 @@
       "recurrence": "Recurrence",
       "interval": "Intervalle",
       "until": "Repeter jusqu'au"
+    },
+    "exportIcal": "Exporter iCal",
+    "holidays": {
+      "title": "Jours feries",
+      "create": "Ajouter un jour ferie",
+      "edit": "Modifier le jour ferie",
+      "empty": "Aucun jour ferie configure",
+      "name": "Nom",
+      "startDate": "Date de debut",
+      "endDate": "Date de fin",
+      "type": "Type",
+      "description": "Description",
+      "types": {
+        "national": "National",
+        "school": "Ecole"
+      },
+      "confirmDeleteTitle": "Supprimer ce jour ferie ?",
+      "confirmDeleteBody": "Cette action est irreversible."
+    },
+    "reminderPreferences": {
+      "title": "Preferences de rappel",
+      "enabled": "Actif",
+      "disabled": "Desactive"
     }
   },
   "reports": {

@@ -92,6 +92,15 @@ export function CalendarPage() {
           <div className="calendar-view-toggle">
             {(['month', 'week', 'agenda'] as CalendarView[]).map((item) => <button key={item} type="button" className={`btn ${view === item ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setView(item)}>{t(`calendar.views.${item}`)}</button>)}
           </div>
+          {options.ical_url && (
+            <a
+              href={options.ical_url}
+              download="calendar.ics"
+              className="btn btn-secondary"
+            >
+              {t('calendar.exportIcal')}
+            </a>
+          )}
           {canCreate && <button className="btn btn-primary" type="button" onClick={() => { setEditorEvent(null); setEditorOpen(true); }}>{t('calendar.createEvent')}</button>}
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { STALE_CONTENT, STALE_DEFAULT } from '@/shared/hooks/useQueryDefaults';
-import { calendarService, type CalendarEventPayload, type CalendarEventsFilters } from './calendar.service';
+import { calendarService, type CalendarEventPayload, type CalendarEventsFilters, type HolidayPayload } from './calendar.service';
+import type { ReminderPreference } from './types';
 
 export const calendarQueryKeys = {
   all: ['calendar'] as const,
@@ -9,6 +10,8 @@ export const calendarQueryKeys = {
   options: () => [...calendarQueryKeys.all, 'options'] as const,
   eventDetails: () => [...calendarQueryKeys.all, 'event'] as const,
   eventDetail: (id: string) => [...calendarQueryKeys.eventDetails(), id] as const,
+  holidays: () => [...calendarQueryKeys.all, 'holidays'] as const,
+  eventRsvps: (id: string) => [...calendarQueryKeys.all, 'rsvps', id] as const,
 };
 
 export function useCalendarEvents(filters: CalendarEventsFilters) {
@@ -101,7 +104,73 @@ export function useCalendarEventRsvp() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: calendarQueryKeys.events() }),
         queryClient.invalidateQueries({ queryKey: calendarQueryKeys.eventDetail(eventId) }),
+        queryClient.invalidateQueries({ queryKey: calendarQueryKeys.eventRsvps(eventId) }),
       ]);
+    },
+  });
+}
+
+export function useEventRSVPs(eventId: string | null | undefined) {
+  return useQuery({
+    queryKey: calendarQueryKeys.eventRsvps(eventId ?? ''),
+    queryFn: async () => (await calendarService.getEventRSVPs(eventId!)).data,
+    enabled: Boolean(eventId),
+    staleTime: STALE_DEFAULT,
+  });
+}
+
+export function useHolidays() {
+  return useQuery({
+    queryKey: calendarQueryKeys.holidays(),
+    queryFn: async () => (await calendarService.getHolidays()).data,
+    staleTime: STALE_CONTENT,
+  });
+}
+
+export function useCreateHoliday() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: HolidayPayload) => (await calendarService.createHoliday(payload)).data,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: calendarQueryKeys.holidays() });
+      await queryClient.invalidateQueries({ queryKey: calendarQueryKeys.events() });
+    },
+  });
+}
+
+export function useUpdateHoliday() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, payload }: { id: string; payload: HolidayPayload }) =>
+      (await calendarService.updateHoliday(id, payload)).data,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: calendarQueryKeys.holidays() });
+      await queryClient.invalidateQueries({ queryKey: calendarQueryKeys.events() });
+    },
+  });
+}
+
+export function useDeleteHoliday() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await calendarService.deleteHoliday(id);
+      return id;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: calendarQueryKeys.holidays() });
+      await queryClient.invalidateQueries({ queryKey: calendarQueryKeys.events() });
+    },
+  });
+}
+
+export function useUpdateReminderPreferences() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (preferences: ReminderPreference[]) =>
+      (await calendarService.updateReminderPreferences(preferences)).data,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: calendarQueryKeys.options() });
     },
   });
 }
