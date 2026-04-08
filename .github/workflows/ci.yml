@@ -134,7 +134,7 @@ jobs:
         run: pip install "bandit[toml]"
 
       - name: Run Bandit
-        run: bandit -r backend/app/ -c backend/pyproject.toml -f json -o bandit-report.json
+        run: bandit -r backend/app/ -c backend/pyproject.toml -ll -f json -o bandit-report.json
 
       - name: Upload Bandit report
         uses: actions/upload-artifact@v4
@@ -261,7 +261,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd backend
-          pip install -r requirements-dev.txt
+          pip install -r requirements-test.txt
 
       - name: Run unit tests with coverage
         run: |
@@ -351,7 +351,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd backend
-          pip install -r requirements-dev.txt
+          pip install -r requirements-test.txt
 
       - name: Run migrations
         run: |
@@ -449,7 +449,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd backend
-          pip install -r requirements-dev.txt
+          pip install -r requirements-test.txt
 
       - name: Run migrations + seed
         run: |
@@ -543,7 +543,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd backend
-          pip install -r requirements-dev.txt
+          pip install -r requirements-test.txt
 
       - name: Run migrations + seed
         run: |
@@ -742,7 +742,7 @@ jobs:
       - name: Install backend dependencies
         run: |
           cd backend
-          pip install -r requirements-dev.txt
+          pip install -r requirements-test.txt
 
       - name: Run migrations + seed
         run: |
@@ -851,7 +851,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd backend
-          pip install -r requirements-dev.txt
+          pip install -r requirements-test.txt
 
       - name: Run migrations + seed
         run: |
@@ -945,7 +945,7 @@ jobs:
       - name: Install backend dependencies
         run: |
           cd backend
-          pip install -r requirements-dev.txt
+          pip install -r requirements-test.txt
 
       - name: Run migrations + seed
         run: |
