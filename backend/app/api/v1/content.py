@@ -6,6 +6,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, Query, Request, UploadFile
 from fastapi.responses import FileResponse
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -16,6 +17,7 @@ from app.core.dependencies import (
     verify_teacher_assignment,
 )
 from app.core.filtering import FilterSpec, SortSpec, parse_filters, parse_sort
+from app.core.exceptions import NotFoundError
 from app.core.permissions import (
     PERM_LMS_CONTENT_ASSET_DELETE,
     PERM_LMS_CONTENT_ASSET_READ,
@@ -26,6 +28,8 @@ from app.core.permissions import (
 from app.core.request_utils import get_client_ip
 from app.core.response import clamp_page_size, list_response, success_response
 from app.core.search import parse_search
+from app.core.storage import storage
+from app.models.lms import ContentItemAsset
 from app.schemas.lms import ContentProgressRequest
 from app.schemas.student_work import StudentWorkListResponse
 from app.services.lms import ContentService
@@ -123,6 +127,38 @@ async def get_content_item(
     service = ContentService(db)
     return success_response(
         await service.get_content_item(content_item_id=content_item_id, auth=auth)
+    )
+
+
+@router.get(
+    "/{content_item_id}/stream",
+    summary="Compatibility: stream the first content asset",
+    response_description="Binary content stream",
+)
+async def stream_content_item(
+    content_item_id: uuid.UUID,
+    auth: AuthContext = Depends(requires_permission(PERM_LMS_CONTENT_READ)),
+    db: AsyncSession = Depends(get_db),
+):
+    """Stream the first asset associated with a published content item."""
+    service = ContentService(db)
+    await service.get_content_item(content_item_id=content_item_id, auth=auth)
+
+    result = await db.execute(
+        select(ContentItemAsset)
+        .where(ContentItemAsset.content_item_id == content_item_id)
+        .order_by(ContentItemAsset.created_at.asc(), ContentItemAsset.id.asc())
+        .limit(1)
+    )
+    asset = result.scalar_one_or_none()
+    if asset is None:
+        raise NotFoundError("Asset not found", error_code="ERR-UPLOAD-404")
+
+    path = await storage.read(asset.file_path)
+    return FileResponse(
+        path=path,
+        media_type=asset.mime_type or "application/octet-stream",
+        filename=path.name,
     )
 
 

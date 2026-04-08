@@ -25,10 +25,12 @@ from app.core.request_utils import get_client_ip
 from app.core.response import list_response, success_response
 from app.schemas.budget import (
     BudgetAllocationCreateRequest,
+    BudgetAllocationUpdateRequest,
     BudgetRequestCreateRequest,
     BudgetRequestReviewRequest,
     BudgetTransactionCreateRequest,
     MicroBudgetCreateRequest,
+    MicroBudgetUpdateRequest,
 )
 from app.services.budget_service import BudgetService
 
@@ -119,6 +121,53 @@ async def get_budget(
     return success_response(await service.get_budget(budget_id=budget_id, auth=auth))
 
 
+@router.put(
+    "/{budget_id}",
+    summary="Compatibility: update budget",
+    description="Legacy update alias for budget pages.",
+    response_description="Updated budget",
+)
+async def update_budget(
+    budget_id: uuid.UUID,
+    body: MicroBudgetUpdateRequest,
+    request: Request,
+    auth: AuthContext = Depends(requires_permission(PERM_BUDGET_CREATE)),
+    db: AsyncSession = Depends(get_db),
+) -> Any:
+    service = BudgetService(db)
+    return success_response(
+        await service.update_budget(
+            budget_id=budget_id,
+            body=body,
+            auth=auth,
+            ip_address=get_client_ip(request),
+        )
+    )
+
+
+@router.delete(
+    "/{budget_id}",
+    summary="Compatibility: close budget",
+    description="Legacy delete alias that soft-closes the budget.",
+    response_description="Closed budget",
+)
+async def delete_budget(
+    budget_id: uuid.UUID,
+    request: Request,
+    auth: AuthContext = Depends(requires_permission(PERM_BUDGET_CREATE)),
+    db: AsyncSession = Depends(get_db),
+) -> Any:
+    service = BudgetService(db)
+    return success_response(
+        await service.update_budget(
+            budget_id=budget_id,
+            body=MicroBudgetUpdateRequest(status="closed"),
+            auth=auth,
+            ip_address=get_client_ip(request),
+        )
+    )
+
+
 @router.post(
     "/{budget_id}/allocations",
     status_code=201,
@@ -189,6 +238,30 @@ async def get_allocation(
         await service.get_allocation(
             allocation_id=allocation_id,
             auth=auth,
+        )
+    )
+
+
+@router.put(
+    "/allocations/{allocation_id}",
+    summary="Compatibility: update allocation",
+    description="Legacy update alias for allocation pages.",
+    response_description="Updated allocation",
+)
+async def update_budget_allocation(
+    allocation_id: uuid.UUID,
+    body: BudgetAllocationUpdateRequest,
+    request: Request,
+    auth: AuthContext = Depends(requires_permission(PERM_BUDGET_ALLOCATE)),
+    db: AsyncSession = Depends(get_db),
+) -> Any:
+    service = BudgetService(db)
+    return success_response(
+        await service.update_allocation(
+            allocation_id=allocation_id,
+            body=body,
+            auth=auth,
+            ip_address=get_client_ip(request),
         )
     )
 

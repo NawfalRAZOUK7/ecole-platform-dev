@@ -24,17 +24,14 @@ export const attendanceService = {
   },
 
   submitJustification(recordId: string, justification: string, file?: File) {
-    const formData = new FormData();
-    formData.append('reason', justification);
-    if (file) {
-      formData.append('file', file);
-    }
-    return api.post<void>(`/attendance/${recordId}/justify`, formData);
+    return api.post<void>('/attendance/justifications', {
+      attendance_record_id: recordId,
+      reason: file ? `${justification}\n\nAttachment: ${file.name}` : justification,
+    });
   },
 
   getAttendanceTrends(classId: string, from: string, to: string) {
-    return api.get<AttendanceTrend[]>('/analytics/attendance/trends', {
-      class_id: classId,
+    return api.get<AttendanceTrend[]>(`/analytics/attendance/trends/${classId}`, {
       from,
       to,
     });
@@ -54,10 +51,42 @@ export const attendanceService = {
     return api.get<AttendanceClassStats>(`/analytics/attendance/class/${classId}`);
   },
 
-  exportAttendance(classId: string, format: 'csv' | 'pdf') {
-    return api.get<AttendanceExportResponse>('/analytics/attendance/export', {
-      class_id: classId,
-      format,
+  async exportAttendance(classId: string, format: 'csv' | 'pdf') {
+    const endpoint = format === 'pdf' ? '/api/v1/export/xlsx' : '/api/v1/export/csv';
+    const filters = JSON.stringify({ class_id: classId, scope: 'attendance' });
+    const response = await fetch(
+      `${endpoint}?entity=attendance&filters=${encodeURIComponent(filters)}`,
+      {
+        headers: {
+          Accept: format === 'pdf' ? 'application/octet-stream' : 'text/csv',
+        },
+        credentials: 'include',
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error('Attendance export failed');
+    }
+
+    const blob = await response.blob();
+    const filename = `attendance-${classId}.${format === 'pdf' ? 'xlsx' : 'csv'}`;
+    const downloadUrl = URL.createObjectURL(blob);
+
+    return {
+      data: {
+        download_url: downloadUrl,
+        file_name: filename,
+      } satisfies AttendanceExportResponse,
+      meta: {
+        timestamp: new Date().toISOString(),
+        version: '0.1.0',
+      },
+    };
+  },
+
+  exportAttendanceAnalytics(classId: string) {
+    return api.get<AttendanceClassStats>(`/analytics/attendance/class/${classId}`, {
+      export: 'true',
     });
   },
 
@@ -66,6 +95,6 @@ export const attendanceService = {
   },
 
   reviewJustification(justificationId: string, payload: JustificationReviewPayload) {
-    return api.put<Justification>(`/attendance/justifications/${justificationId}/review`, payload);
+    return api.post<Justification>(`/attendance/justifications/${justificationId}/review`, payload);
   },
 };

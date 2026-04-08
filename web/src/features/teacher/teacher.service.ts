@@ -261,7 +261,7 @@ export const teacherService = {
   },
 
   listAssignableClasses() {
-    return api.list<ClassOption>('/classes');
+    return api.list<ClassOption>('/teacher/classes');
   },
 
   assignContent(payload: { content_item_id: string; class_id: string; notes: string | null }) {
@@ -276,48 +276,37 @@ export const teacherService = {
     return api.list<ContentSubmissionItem>('/content/my-submissions', params);
   },
 
-  uploadContentItem(payload: ContentUploadPayload, onProgress?: (progress: number) => void) {
-    return new Promise<void>((resolve, reject) => {
-      const formData = new FormData();
-      formData.append('title', payload.title.trim());
-      if (payload.description?.trim()) {
-        formData.append('description', payload.description.trim());
-      }
-      formData.append('content_type', payload.content_type);
-      if (payload.level_band) {
-        formData.append('level_band', payload.level_band);
-      }
-      if (payload.subject) {
-        formData.append('subject', payload.subject);
-      }
-      formData.append('language', payload.language);
-      formData.append('file', payload.file);
+  async uploadContentItem(payload: ContentUploadPayload, onProgress?: (progress: number) => void) {
+    onProgress?.(15);
 
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', '/api/v1/content-items');
-
-      const token = getAccessToken();
-      if (token) {
-        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-      }
-
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable && onProgress) {
-          onProgress(Math.round((event.loaded / event.total) * 100));
-        }
-      };
-
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          resolve();
-          return;
-        }
-        reject(new Error('Upload failed'));
-      };
-
-      xhr.onerror = () => reject(new Error('Upload failed'));
-      xhr.send(formData);
+    const createResponse = await api.post<{ id: string }>('/cms/content', {
+      title: payload.title.trim(),
+      description: payload.description?.trim() || null,
+      content_type: payload.content_type,
+      level_band: payload.level_band || null,
+      subject: payload.subject || null,
+      language: payload.language,
+      status: 'draft',
     });
+
+    onProgress?.(55);
+
+    const formData = new FormData();
+    formData.append('file', payload.file);
+
+    const token = getAccessToken();
+    const uploadResponse = await fetch(`/api/v1/content-items/${createResponse.data.id}/assets`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'include',
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+
+    if (!uploadResponse.ok) {
+      throw new Error('Upload failed');
+    }
+
+    onProgress?.(100);
   },
 
   listQuizzes(params: TeacherCursorFilters = {}) {

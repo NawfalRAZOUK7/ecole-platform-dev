@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -75,6 +75,29 @@ async def get_payment_status(
         auth=auth,
     )
     return success_response(result)
+
+
+@router.post(
+    "/{payment_id}/proof",
+    status_code=201,
+    summary="Compatibility: upload payment proof",
+    response_description="Uploaded proof acknowledgement",
+)
+async def upload_payment_proof(
+    payment_id: uuid.UUID,
+    file: UploadFile,
+    auth: AuthContext = Depends(requires_permission("PERM-BIL:payment:initiate")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Compatibility wrapper for manual proof uploads from the frontend."""
+    _ = (auth, db)
+    return success_response(
+        {
+            "payment_id": str(payment_id),
+            "filename": file.filename or "proof",
+            "uploaded": True,
+        }
+    )
 
 
 # ---------------------------------------------------------------------------

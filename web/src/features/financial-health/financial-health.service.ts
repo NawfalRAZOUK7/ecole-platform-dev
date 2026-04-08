@@ -30,11 +30,16 @@ async function downloadExport(format: 'csv' | 'pdf'): Promise<FinancialExportRes
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const response = await fetch(`/api/v1/financial-health/export/${format}`, {
-    method: 'GET',
-    headers,
-    credentials: 'include',
-  });
+  const response = await fetch(
+    format === 'pdf'
+      ? '/api/v1/financial-health/export/pdf'
+      : '/api/v1/financial-health/export/csv',
+    {
+      method: 'GET',
+      headers,
+      credentials: 'include',
+    },
+  );
 
   if (!response.ok) {
     const body = await response.json().catch(() => null);
@@ -48,10 +53,12 @@ async function downloadExport(format: 'csv' | 'pdf'): Promise<FinancialExportRes
 }
 
 export const financialHealthService = {
-  listRetentionMetrics(params: {
-    skip?: number;
-    limit?: number;
-  } = {}) {
+  listRetentionMetrics(
+    params: {
+      skip?: number;
+      limit?: number;
+    } = {},
+  ) {
     return api.list<RetentionMetric>('/financial-health/retention', params);
   },
 
@@ -59,12 +66,14 @@ export const financialHealthService = {
     return api.post<RetentionMetric>('/financial-health/retention/compute', payload);
   },
 
-  listCashflowForecasts(params: {
-    start_month?: string;
-    end_month?: string;
-    skip?: number;
-    limit?: number;
-  } = {}) {
+  listCashflowForecasts(
+    params: {
+      start_month?: string;
+      end_month?: string;
+      skip?: number;
+      limit?: number;
+    } = {},
+  ) {
     return api.list<CashflowForecast>('/financial-health/cashflow', params);
   },
 

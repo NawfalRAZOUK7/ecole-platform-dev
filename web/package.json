@@ -12,8 +12,10 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:contract": "vitest run tests/contract/",
+    "test:contract:report": "STRICT_API_CONTRACT=false vitest run tests/contract/",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
+    "audit:endpoints": "node ./scripts/audit-endpoints.mjs",
     "prepare": "cd .. && ./web/node_modules/.bin/husky web/.husky",
     "format": "prettier --write src/",
     "format:check": "prettier --check src/"

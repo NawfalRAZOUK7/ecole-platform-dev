@@ -9,7 +9,7 @@ export interface GradebookColumn {
   assessment_id: string;
   title: string;
   weight: number;
-  max_score: 20;
+  max_score: number;
   date: string;
   type: 'exam' | 'quiz' | 'homework' | 'project';
 }

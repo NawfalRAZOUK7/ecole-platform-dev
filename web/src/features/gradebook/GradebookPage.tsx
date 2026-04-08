@@ -46,11 +46,11 @@ function createGradebookSchema(grid: GradebookGrid | undefined) {
           entry.student_id,
           z.object(
             Object.fromEntries(
-              grid.columns.map((column) => [column.assessment_id, gradeCellSchema])
-            )
+              grid.columns.map((column) => [column.assessment_id, gradeCellSchema]),
+            ),
           ),
-        ])
-      )
+        ]),
+      ),
     ),
   });
 }
@@ -64,9 +64,9 @@ function buildDefaultValues(grid: GradebookGrid | undefined): GradebookFormValue
           (grid?.columns ?? []).map((column) => [
             column.assessment_id,
             entry.grades[column.assessment_id] ?? null,
-          ])
+          ]),
         ),
-      ])
+      ]),
     ),
   };
 }
@@ -78,7 +78,7 @@ function getNumericValue(value: number | null | undefined) {
 function computeWeightedAverage(
   studentId: string,
   columns: GradebookGrid['columns'],
-  gradeValues: GradebookFormValues['grades']
+  gradeValues: GradebookFormValues['grades'],
 ) {
   const totals = columns.reduce(
     (accumulator, column) => {
@@ -91,7 +91,7 @@ function computeWeightedAverage(
       accumulator.totalWeight += column.weight;
       return accumulator;
     },
-    { weightedSum: 0, totalWeight: 0 }
+    { weightedSum: 0, totalWeight: 0 },
   );
 
   if (totals.totalWeight === 0) {
@@ -104,9 +104,7 @@ function computeWeightedAverage(
 function buildFallbackSummary(grid: GradebookGrid | undefined): GradebookWeightedSummary {
   const averages = (grid?.entries ?? []).map((entry) => entry.weighted_average);
   const classAverage =
-    averages.length === 0
-      ? 0
-      : averages.reduce((sum, value) => sum + value, 0) / averages.length;
+    averages.length === 0 ? 0 : averages.reduce((sum, value) => sum + value, 0) / averages.length;
 
   return {
     class_id: grid?.class_id ?? '',
@@ -132,12 +130,12 @@ export function GradebookPage() {
 
   const classesQuery = useTeacherClasses();
   const periodsQuery = useTeacherPeriods();
-  const gradebookQuery = useClassGradebook(selectedClassId);
-  const weightedSummaryQuery = useWeightedSummary(selectedClassId);
+  const gradebookQuery = useClassGradebook(selectedClassId, selectedPeriodId);
+  const weightedSummaryQuery = useWeightedSummary(selectedClassId, selectedPeriodId);
   const updateGradesMutation = useUpdateGrades();
   const gradebookSchema = useMemo(
     () => createGradebookSchema(gradebookQuery.data),
-    [gradebookQuery.data]
+    [gradebookQuery.data],
   );
 
   const methods = useForm<GradebookFormValues>({
@@ -158,7 +156,7 @@ export function GradebookPage() {
           weightedSummaryQuery.error ??
           updateGradesMutation.error ??
           exportError,
-        t('app.error')
+        t('app.error'),
       ),
     [
       classesQuery.error,
@@ -168,7 +166,7 @@ export function GradebookPage() {
       t,
       updateGradesMutation.error,
       weightedSummaryQuery.error,
-    ]
+    ],
   );
 
   useEffect(() => {
@@ -189,14 +187,8 @@ export function GradebookPage() {
 
   const summary = weightedSummaryQuery.data ?? buildFallbackSummary(gradebookQuery.data);
 
-  const gridColumns = useMemo(
-    () => gradebookQuery.data?.columns ?? [],
-    [gradebookQuery.data]
-  );
-  const gridEntries = useMemo(
-    () => gradebookQuery.data?.entries ?? [],
-    [gradebookQuery.data]
-  );
+  const gridColumns = useMemo(() => gradebookQuery.data?.columns ?? [], [gradebookQuery.data]);
+  const gridEntries = useMemo(() => gradebookQuery.data?.entries ?? [], [gradebookQuery.data]);
 
   async function handleExport() {
     if (!selectedClassId) {
@@ -208,7 +200,11 @@ export function GradebookPage() {
     setIsExporting(true);
 
     try {
-      const response = await gradebookService.exportGrades(selectedClassId, exportFormat);
+      const response = await gradebookService.exportGrades(
+        selectedClassId,
+        exportFormat,
+        selectedPeriodId,
+      );
       if (response.data.download_url) {
         window.open(response.data.download_url, '_blank', 'noopener,noreferrer');
       }
@@ -240,7 +236,7 @@ export function GradebookPage() {
               value,
             },
           ];
-        })
+        }),
       ),
     };
 
@@ -253,7 +249,9 @@ export function GradebookPage() {
       <div className="page-header page-header--split">
         <div>
           <h1 className="page-title">{t('gradebook.title')}</h1>
-          <p className="page-subtitle">{gradebookQuery.data?.class_name ?? t('gradebook.subtitle')}</p>
+          <p className="page-subtitle">
+            {gradebookQuery.data?.class_name ?? t('gradebook.subtitle')}
+          </p>
         </div>
         <div className="gradebook-page__toolbar">
           <label className="attendance-filter">
@@ -280,7 +278,8 @@ export function GradebookPage() {
             >
               {(periodsQuery.data ?? []).map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.label || `${formatDate(item.date_start, i18n.language)} → ${formatDate(item.date_end, i18n.language)}`}
+                  {item.label ||
+                    `${formatDate(item.date_start, i18n.language)} → ${formatDate(item.date_end, i18n.language)}`}
                 </option>
               ))}
             </select>
@@ -313,8 +312,12 @@ export function GradebookPage() {
 
       <ErrorBanner error={bannerError} />
 
-      {successMessage && <div className="attendance-banner attendance-banner--success">{successMessage}</div>}
-      {exportMessage && <div className="attendance-banner attendance-banner--success">{exportMessage}</div>}
+      {successMessage && (
+        <div className="attendance-banner attendance-banner--success">{successMessage}</div>
+      )}
+      {exportMessage && (
+        <div className="attendance-banner attendance-banner--success">{exportMessage}</div>
+      )}
 
       {classesQuery.isLoading || periodsQuery.isLoading || gradebookQuery.isLoading ? (
         <div className="gradebook-page__loading">
@@ -353,7 +356,7 @@ export function GradebookPage() {
                       const weightedAverage = computeWeightedAverage(
                         entry.student_id,
                         gridColumns,
-                        watchedGrades ?? {}
+                        watchedGrades ?? {},
                       );
 
                       return (
@@ -365,7 +368,7 @@ export function GradebookPage() {
                             const fieldName =
                               `grades.${entry.student_id}.${column.assessment_id}` as const;
                             const cellValue = getNumericValue(
-                              watchedGrades?.[entry.student_id]?.[column.assessment_id]
+                              watchedGrades?.[entry.student_id]?.[column.assessment_id],
                             );
                             const isPass = cellValue !== null && cellValue >= 10;
 

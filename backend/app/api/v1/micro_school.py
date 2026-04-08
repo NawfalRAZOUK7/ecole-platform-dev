@@ -214,6 +214,31 @@ async def list_micro_enrollments(
     )
 
 
+@router.delete(
+    "/schools/{micro_school_id}/enrollments/{micro_enrollment_id}",
+    summary="Compatibility: delete micro-enrollment",
+    description="Legacy nested delete alias for micro-school enrollment pages.",
+    response_description="Deleted micro-enrollment",
+)
+async def delete_micro_enrollment_legacy(
+    micro_school_id: uuid.UUID,
+    micro_enrollment_id: uuid.UUID,
+    request: Request,
+    auth: AuthContext = Depends(requires_permission(PERM_MICRO_ENROLLMENT_CREATE)),
+    db: AsyncSession = Depends(get_db),
+) -> Any:
+    """Delete a micro-enrollment through the legacy nested school route."""
+    _ = micro_school_id
+    service = MicroGroupService(db)
+    return success_response(
+        await service.delete_enrollment(
+            micro_enrollment_id=micro_enrollment_id,
+            auth=auth,
+            ip_address=get_client_ip(request),
+        )
+    )
+
+
 @router.post(
     "/payments",
     status_code=201,

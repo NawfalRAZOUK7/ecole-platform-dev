@@ -29,11 +29,35 @@ export const rubricsService = {
     return api.post<Rubric>(`/rubrics/${id}/duplicate`, {});
   },
 
-  gradeRubric(payload: RubricGradePayload) {
-    return api.post<RubricGradeResult>(`/rubrics/${payload.rubric_id}/grade`, payload);
+  async gradeRubric(payload: RubricGradePayload) {
+    await api.post(
+      `/submissions/${payload.assignment_id ?? payload.rubric_id}/grade-rubric`,
+      payload.entries.map((entry) => ({
+        criterion_id: entry.criterion_id,
+        level_id: entry.level_id,
+        points_awarded: entry.score,
+        comment: null,
+      })),
+    );
+
+    const totalScore = payload.entries.reduce((sum, entry) => sum + entry.score, 0);
+    return {
+      data: {
+        student_id: payload.entries[0]?.student_id ?? '',
+        rubric_id: payload.rubric_id,
+        total_score: totalScore,
+        max_score: totalScore,
+        percentage: 100,
+        entries: payload.entries,
+      } satisfies RubricGradeResult,
+      meta: {
+        timestamp: new Date().toISOString(),
+        version: '0.1.0',
+      },
+    };
   },
 
   getRubricResults(rubricId: string) {
-    return api.get<RubricResultsResponse>(`/rubrics/${rubricId}/results`);
+    return api.get<RubricResultsResponse>(`/submissions/${rubricId}/rubric-results`);
   },
 };

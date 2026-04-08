@@ -31,7 +31,7 @@ const WEB_SRC_ROOT = resolve(REPO_ROOT, 'web/src');
 const OPENAPI_PATH = resolve(REPO_ROOT, 'backend/openapi.json');
 const COMMITTED_OPENAPI_PATH = resolve(REPO_ROOT, 'backend/docs/openapi.json');
 const GENERATE_OPENAPI_SCRIPT = resolve(REPO_ROOT, 'scripts/generate-openapi.sh');
-const STRICT_API_CONTRACT = process.env.STRICT_API_CONTRACT === 'true';
+const STRICT_API_CONTRACT = process.env.STRICT_API_CONTRACT !== 'false';
 const METHOD_BY_API_HELPER: Record<string, HttpMethod> = {
   delete: 'DELETE',
   get: 'GET',
@@ -88,23 +88,21 @@ function listServiceFiles(dir: string): string[] {
 }
 
 function readOpenApiSpec(): OpenApiSpec {
-  if (!existsSync(OPENAPI_PATH)) {
-    const result = spawnSync('sh', [GENERATE_OPENAPI_SCRIPT], {
-      cwd: REPO_ROOT,
-      encoding: 'utf8',
-    });
+  const result = spawnSync('sh', [GENERATE_OPENAPI_SCRIPT], {
+    cwd: REPO_ROOT,
+    encoding: 'utf8',
+  });
 
-    if (result.status !== 0 && !existsSync(COMMITTED_OPENAPI_PATH)) {
-      throw new Error(
-        [
-          'Failed to generate backend/openapi.json for contract tests.',
-          result.stdout.trim(),
-          result.stderr.trim(),
-        ]
-          .filter(Boolean)
-          .join('\n'),
-      );
-    }
+  if (result.status !== 0 && !existsSync(OPENAPI_PATH) && !existsSync(COMMITTED_OPENAPI_PATH)) {
+    throw new Error(
+      [
+        'Failed to generate backend/openapi.json for contract tests.',
+        result.stdout.trim(),
+        result.stderr.trim(),
+      ]
+        .filter(Boolean)
+        .join('\n'),
+    );
   }
 
   const specPath = existsSync(OPENAPI_PATH) ? OPENAPI_PATH : COMMITTED_OPENAPI_PATH;

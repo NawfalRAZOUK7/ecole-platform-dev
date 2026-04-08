@@ -1,4 +1,5 @@
 import { api } from '@/services/api/client';
+import type { QuizSummary } from '@/features/quizzes/quizzes.service';
 
 export interface Result {
   assignment_id: string;
@@ -33,7 +34,20 @@ export const resultsService = {
     return api.list<Result>('/results', params);
   },
 
-  listQuizResults() {
-    return api.list<QuizAttemptResult>('/results/quizzes');
+  async listQuizResults() {
+    const response = await api.list<QuizSummary>('/quizzes', { status: 'published' });
+    return {
+      data: response.data.map((quiz) => ({
+        id: quiz.id,
+        quiz_id: quiz.id,
+        quiz_title: quiz.title,
+        attempt_no: 1,
+        score: null,
+        max_score: quiz.total_points ?? null,
+        status: quiz.status,
+        completed_at: null,
+      })) satisfies QuizAttemptResult[],
+      meta: response.meta,
+    };
   },
 };

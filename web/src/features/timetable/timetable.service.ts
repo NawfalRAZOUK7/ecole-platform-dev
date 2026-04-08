@@ -108,11 +108,13 @@ export interface ClassOption {
 
 export const timetableService = {
   listClasses() {
-    return api.list<ClassOption>('/classes');
+    return api.list<ClassOption>('/teacher/classes');
   },
 
   getWeeklyTimetable(classId?: string) {
-    return api.get<WeeklyResponse>(classId ? `/timetable/class/${classId}/weekly` : '/timetable/me/weekly');
+    return api.get<WeeklyResponse>(
+      classId ? `/timetable/class/${classId}/weekly` : '/timetable/me/weekly',
+    );
   },
 
   createSlot(payload: Record<string, unknown>) {

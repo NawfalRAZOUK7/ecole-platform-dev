@@ -53,7 +53,7 @@ export const invoicesService = {
   },
 
   createPayment(invoiceId: string, amount: number, method: string) {
-    return api.post<PaymentRecord>('/payments', {
+    return api.post<PaymentRecord>('/payments/initiate', {
       invoice_id: invoiceId,
       amount,
       method,

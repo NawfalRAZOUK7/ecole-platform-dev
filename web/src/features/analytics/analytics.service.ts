@@ -108,8 +108,15 @@ export const analyticsService = {
     };
   },
 
-  async downloadExport(format: 'csv' | 'xlsx', entity: ExportEntity, filters: Record<string, string>) {
-    const url = new URL(`/api/v1/export/${format}`, window.location.origin);
+  async downloadExport(
+    format: 'csv' | 'xlsx',
+    entity: ExportEntity,
+    filters: Record<string, string>,
+  ) {
+    const url = new URL(
+      format === 'xlsx' ? '/api/v1/export/xlsx' : '/api/v1/export/csv',
+      window.location.origin,
+    );
     url.searchParams.set('entity', entity);
     url.searchParams.set('filters', JSON.stringify(filters));
 

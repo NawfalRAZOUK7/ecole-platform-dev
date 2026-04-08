@@ -70,8 +70,19 @@ export const activitiesService = {
     return api.list<Activity>('/activities', filters);
   },
 
-  getDetail(activityId: string) {
-    return api.get<ActivityDetail>(`/activities/${activityId}`);
+  async getDetail(activityId: string) {
+    const response = await api.list<Activity>('/activities', { limit: 200 });
+    const activity = response.data.find((item) => item.id === activityId);
+    return {
+      data: {
+        ...(activity ?? {
+          id: activityId,
+          title: '',
+          difficulty: null,
+        }),
+      } as ActivityDetail,
+      meta: response.meta,
+    };
   },
 
   createSession(activityId: string) {
