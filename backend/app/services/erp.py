@@ -160,7 +160,9 @@ class ERPService:
             teacher_id=str(slot.teacher_id),
             room=slot.room,
             is_recurring=slot.is_recurring,
-            effective_from=slot.effective_from.isoformat() if slot.effective_from else None,
+            effective_from=slot.effective_from.isoformat()
+            if slot.effective_from
+            else None,
             effective_until=slot.effective_until.isoformat()
             if slot.effective_until
             else None,
@@ -636,7 +638,9 @@ class ERPService:
                 raise NotFoundError("Class not found", error_code="ERR-ERP-404")
             verify_school_boundary(class_room.school_id, auth)
 
-            academic_year = await self.repo.get_academic_year(slot_request.academic_year_id)
+            academic_year = await self.repo.get_academic_year(
+                slot_request.academic_year_id
+            )
             if academic_year is None:
                 raise NotFoundError("Academic year not found", error_code="ERR-ERP-404")
             verify_school_boundary(academic_year.school_id, auth)

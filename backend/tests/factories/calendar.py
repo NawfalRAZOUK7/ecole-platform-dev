@@ -7,7 +7,13 @@ from datetime import datetime, timedelta, timezone
 
 import factory
 
-from app.models.calendar import Event, EventRSVP, EventRsvpStatus, EventType, EventVisibility
+from app.models.calendar import (
+    Event,
+    EventRSVP,
+    EventRsvpStatus,
+    EventType,
+    EventVisibility,
+)
 from tests.factories.base import AsyncSQLAlchemyFactory
 from tests.factories.iam import UserFactory
 from tests.factories.school import SchoolFactory

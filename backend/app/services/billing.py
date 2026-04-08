@@ -196,7 +196,9 @@ class BillingService:
             amount=float(policy.amount) if policy is not None else 0.0,
             frequency=policy.frequency if policy is not None else "once",
             grace_days=policy.grace_days if policy is not None else 5,
-            max_fee=float(policy.max_fee) if policy is not None and policy.max_fee is not None else None,
+            max_fee=float(policy.max_fee)
+            if policy is not None and policy.max_fee is not None
+            else None,
             created_at=policy.created_at.isoformat() if policy is not None else None,
             updated_at=policy.updated_at.isoformat()
             if policy is not None and policy.updated_at
@@ -304,7 +306,9 @@ class BillingService:
 
         invoice_principal = self._invoice_principal_total(invoice)
         if policy.fee_type == "fixed":
-            target_fee = Money.from_float(float(policy.amount), invoice.currency) * fee_units
+            target_fee = (
+                Money.from_float(float(policy.amount), invoice.currency) * fee_units
+            )
         else:
             target_fee = invoice_principal * ((float(policy.amount) * fee_units) / 100)
 
@@ -844,13 +848,9 @@ class BillingService:
                 description = fee_structure.name
                 applied_discounts: list[str] = []
                 if manual_discount_percent:
-                    applied_discounts.append(
-                        f"manual {manual_discount_percent:.0f}%"
-                    )
+                    applied_discounts.append(f"manual {manual_discount_percent:.0f}%")
                 if sibling_discount_percent:
-                    applied_discounts.append(
-                        f"sibling {sibling_discount_percent:.0f}%"
-                    )
+                    applied_discounts.append(f"sibling {sibling_discount_percent:.0f}%")
                 if applied_discounts:
                     description += f" ({', '.join(applied_discounts)})"
 
@@ -937,10 +937,12 @@ class BillingService:
                     "total_fee_applied": 0.0,
                 }
 
-            overdue_invoices = await enhancements_repo.list_overdue_invoices_for_late_fees(
-                school_id=school_id,
-                overdue_before=effective_date,
-                limit=limit,
+            overdue_invoices = (
+                await enhancements_repo.list_overdue_invoices_for_late_fees(
+                    school_id=school_id,
+                    overdue_before=effective_date,
+                    limit=limit,
+                )
             )
             updated = 0
             total_fee_applied = 0.0
@@ -1122,7 +1124,9 @@ class BillingService:
                         if invoice.currency == "MAD":
                             revenue_amount = float(invoice.total_amount)
                         if invoice.fee_structure_id is not None:
-                            fee_structure = await repo.get_fee_structure(invoice.fee_structure_id)
+                            fee_structure = await repo.get_fee_structure(
+                                invoice.fee_structure_id
+                            )
                             if fee_structure is not None:
                                 revenue_plan = fee_structure.frequency.lower()
                         payment_event = PaymentReceived(
@@ -1147,7 +1151,9 @@ class BillingService:
                     )
 
                     try:
-                        from app.services.payment_retry import schedule_retry_for_failed_payment
+                        from app.services.payment_retry import (
+                            schedule_retry_for_failed_payment,
+                        )
 
                         await schedule_retry_for_failed_payment(
                             payment_attempt.id,
@@ -1178,7 +1184,11 @@ class BillingService:
             )
             await uow.commit()
 
-        if payment_attempt is not None and body.status in ("paid", "failed", "canceled"):
+        if payment_attempt is not None and body.status in (
+            "paid",
+            "failed",
+            "canceled",
+        ):
             await publish_payment_updated(
                 parent_id=payment_attempt.parent_id,
                 payment_attempt_id=payment_attempt.id,
@@ -1201,7 +1211,9 @@ class BillingService:
             except Exception:
                 logger.exception(
                     "Failed to dispatch payment event for %s",
-                    payment_attempt.id if payment_attempt is not None else body.payment_attempt_id,
+                    payment_attempt.id
+                    if payment_attempt is not None
+                    else body.payment_attempt_id,
                 )
         return self._webhook_to_response(webhook_event)
 

@@ -170,7 +170,9 @@ class Invoice(TimestampMixin, SchoolScopedMixin, Base):
 
     @property
     def is_overdue(self) -> bool:
-        return self.status == InvoiceStatus.PENDING.value and self.due_date < date.today()
+        return (
+            self.status == InvoiceStatus.PENDING.value and self.due_date < date.today()
+        )
 
     @property
     def is_paid(self) -> bool:

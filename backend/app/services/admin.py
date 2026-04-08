@@ -82,7 +82,9 @@ class AdminService:
             user_ids=[user.id for user in rows],
             school_id=auth.school_id,
         )
-        memberships_map = {membership.user_id: membership.role_code for membership in memberships}
+        memberships_map = {
+            membership.user_id: membership.role_code for membership in memberships
+        }
         data = [
             {
                 "id": str(user.id),
@@ -183,7 +185,9 @@ class AdminService:
         if user is None:
             raise NotFoundError("User not found", error_code="ERR-ADMIN-404")
         if user.id == auth.user_id:
-            raise ValidationError("Cannot change your own role", error_code="ERR-ADMIN-422")
+            raise ValidationError(
+                "Cannot change your own role", error_code="ERR-ADMIN-422"
+            )
 
         async with UnitOfWork(self.db) as uow:
             repo = AdminRepository(uow.session)
@@ -233,7 +237,9 @@ class AdminService:
                 "consumed_at": invitation.consumed_at.isoformat()
                 if invitation.consumed_at
                 else None,
-                "consumed_by": str(invitation.consumed_by) if invitation.consumed_by else None,
+                "consumed_by": str(invitation.consumed_by)
+                if invitation.consumed_by
+                else None,
                 "expires_at": invitation.expires_at.isoformat(),
                 "created_at": invitation.created_at.isoformat()
                 if invitation.created_at
@@ -292,7 +298,9 @@ class AdminService:
                 "target_type": log.target_type,
                 "target_id": str(log.target_id) if log.target_id else None,
                 "error_code": log.error_code,
-                "correlation_id": str(log.correlation_id) if log.correlation_id else None,
+                "correlation_id": str(log.correlation_id)
+                if log.correlation_id
+                else None,
                 "ip_address": log.ip_address,
                 "created_at": log.created_at.isoformat() if log.created_at else None,
             }

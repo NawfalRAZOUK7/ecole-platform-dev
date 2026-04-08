@@ -80,7 +80,9 @@ class MicroEnrollmentFactory(AsyncSQLAlchemyFactory):
     micro_group = factory.SubFactory(MicroGroupFactory)
     parent = factory.SubFactory(
         UserFactory,
-        school_id=factory.SelfAttribute("..micro_group.micro_school.educator.school_id"),
+        school_id=factory.SelfAttribute(
+            "..micro_group.micro_school.educator.school_id"
+        ),
     )
     micro_group_id = factory.LazyAttribute(lambda o: o.micro_group.id)
     parent_id = factory.LazyAttribute(lambda o: o.parent.id)
@@ -99,7 +101,9 @@ class MicroPaymentFactory(AsyncSQLAlchemyFactory):
 
     id = factory.LazyFunction(uuid.uuid4)
     child_enrollment = factory.SubFactory(MicroEnrollmentFactory)
-    micro_school = factory.LazyAttribute(lambda o: o.child_enrollment.micro_group.micro_school)
+    micro_school = factory.LazyAttribute(
+        lambda o: o.child_enrollment.micro_group.micro_school
+    )
     parent = factory.LazyAttribute(lambda o: o.child_enrollment.parent)
     micro_school_id = factory.LazyAttribute(lambda o: o.micro_school.id)
     parent_id = factory.LazyAttribute(lambda o: o.parent.id)
@@ -125,7 +129,9 @@ class MicroResourceFactory(AsyncSQLAlchemyFactory):
     resource_type = MicroResourceType.ACTIVITY_SHEET.value
     age_group = "3-5"
     language = "fr"
-    file_url = factory.LazyFunction(lambda: f"https://cdn.ecole.ma/{uuid.uuid4().hex}.pdf")
+    file_url = factory.LazyFunction(
+        lambda: f"https://cdn.ecole.ma/{uuid.uuid4().hex}.pdf"
+    )
     is_premium = False
 
 
@@ -138,12 +144,16 @@ class MicroProgressLogFactory(AsyncSQLAlchemyFactory):
 
     id = factory.LazyFunction(uuid.uuid4)
     micro_enrollment = factory.SubFactory(MicroEnrollmentFactory)
-    educator = factory.LazyAttribute(lambda o: o.micro_enrollment.micro_group.micro_school.educator)
+    educator = factory.LazyAttribute(
+        lambda o: o.micro_enrollment.micro_group.micro_school.educator
+    )
     micro_enrollment_id = factory.LazyAttribute(lambda o: o.micro_enrollment.id)
     educator_id = factory.LazyAttribute(lambda o: o.educator.id)
     date = factory.LazyFunction(date.today)
     note = factory.LazyFunction(lambda: "Participation active aux activites du jour.")
-    photo_url = factory.LazyFunction(lambda: f"https://cdn.ecole.ma/{uuid.uuid4().hex}.jpg")
+    photo_url = factory.LazyFunction(
+        lambda: f"https://cdn.ecole.ma/{uuid.uuid4().hex}.jpg"
+    )
     milestone_tag = "language"
 
 

@@ -17,7 +17,9 @@ from app.services.gradebook import GradebookService
 router = APIRouter(prefix="/gradebook", tags=["gradebook"])
 
 
-@router.post("/categories", status_code=201, summary="Set grade categories for a class period")
+@router.post(
+    "/categories", status_code=201, summary="Set grade categories for a class period"
+)
 async def set_grade_categories(
     body: GradeCategorySetRequest,
     request: Request,

@@ -43,7 +43,9 @@ class TimetableGenerationRepository(BaseRepository):
                 TimetableConstraint.school_id == school_id,
                 TimetableConstraint.academic_year_id == academic_year_id,
             )
-            .order_by(TimetableConstraint.created_at.asc(), TimetableConstraint.id.asc())
+            .order_by(
+                TimetableConstraint.created_at.asc(), TimetableConstraint.id.asc()
+            )
         )
         return list(result.scalars().all())
 
@@ -140,7 +142,9 @@ class TimetableGenerationRepository(BaseRepository):
                 Class.academic_year_id == academic_year_id,
             )
             .distinct()
-            .order_by(TeacherAssignment.class_id.asc(), TeacherAssignment.teacher_id.asc())
+            .order_by(
+                TeacherAssignment.class_id.asc(), TeacherAssignment.teacher_id.asc()
+            )
         )
         return [(class_id, teacher_id) for class_id, teacher_id in result.all()]
 

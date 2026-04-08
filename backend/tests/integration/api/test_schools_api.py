@@ -4,7 +4,14 @@ from __future__ import annotations
 
 import pytest
 
-from .helpers import SCHOOL_ID, SUPERADMIN_EMAIL, SUPERADMIN_PASSWORD, auth_header, login_token, unique_suffix
+from .helpers import (
+    SCHOOL_ID,
+    SUPERADMIN_EMAIL,
+    SUPERADMIN_PASSWORD,
+    auth_header,
+    login_token,
+    unique_suffix,
+)
 
 
 class TestSchoolsApi:
@@ -19,7 +26,9 @@ class TestSchoolsApi:
 
     @pytest.mark.asyncio
     async def test_admin_can_get_seeded_school(self, client, admin_token):
-        response = await client.get(f"/schools/{SCHOOL_ID}", headers=auth_header(admin_token))
+        response = await client.get(
+            f"/schools/{SCHOOL_ID}", headers=auth_header(admin_token)
+        )
 
         assert response.status_code == 200
         assert response.json()["data"]["id"] == SCHOOL_ID

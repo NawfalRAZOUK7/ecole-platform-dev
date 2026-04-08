@@ -168,7 +168,11 @@ class QuestionBankService(LMSServiceBase):
         elif quiz.status != "published" and quiz.created_by != auth.user_id:
             raise NotFoundError("Quiz not found", error_code="ERR-QUIZ-404")
 
-        if auth.role == TCH and quiz.created_by != auth.user_id and quiz.status != "published":
+        if (
+            auth.role == TCH
+            and quiz.created_by != auth.user_id
+            and quiz.status != "published"
+        ):
             raise NotFoundError("Quiz not found", error_code="ERR-QUIZ-404")
 
         questions = await self.quiz_repo.list_quiz_questions(quiz_id)
@@ -190,7 +194,9 @@ class QuestionBankService(LMSServiceBase):
                         teacher_id=auth.user_id,
                         subject=quiz.subject or "General",
                         level=quiz.level_band,
-                        difficulty=difficulty if difficulty in {"easy", "medium", "hard"} else "medium",
+                        difficulty=difficulty
+                        if difficulty in {"easy", "medium", "hard"}
+                        else "medium",
                         question_type=question.question_type,
                         question_data={
                             "question_type": question.question_type,
@@ -314,4 +320,6 @@ class QuestionBankService(LMSServiceBase):
         *,
         auth: AuthContext,
     ) -> list[dict[str, Any]]:
-        return await self.question_bank_repo.get_question_stats(school_id=auth.school_id)
+        return await self.question_bank_repo.get_question_stats(
+            school_id=auth.school_id
+        )

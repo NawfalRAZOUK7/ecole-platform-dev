@@ -160,7 +160,9 @@ class QuizService(LMSServiceBase):
         if quiz is None:
             raise NotFoundError("Quiz not found", error_code="ERR-QUIZ-404")
         if quiz.status != "draft":
-            raise ValidationError("Can only edit draft quizzes", error_code="ERR-QUIZ-400")
+            raise ValidationError(
+                "Can only edit draft quizzes", error_code="ERR-QUIZ-400"
+            )
         if auth.role == TCH and quiz.created_by != auth.user_id:
             raise NotFoundError("Quiz not found", error_code="ERR-QUIZ-404")
 
@@ -224,7 +226,9 @@ class QuizService(LMSServiceBase):
         if auth.role == TCH and quiz.created_by != auth.user_id:
             raise NotFoundError("Quiz not found", error_code="ERR-QUIZ-404")
         if quiz.status != "draft":
-            raise ValidationError("Quiz is not in draft status", error_code="ERR-QUIZ-400")
+            raise ValidationError(
+                "Quiz is not in draft status", error_code="ERR-QUIZ-400"
+            )
 
         question_count = await self.quiz_repo.count_quiz_questions(quiz_id)
         if question_count == 0:
@@ -301,7 +305,10 @@ class QuizService(LMSServiceBase):
                 outcome="success",
                 target_type="quiz_attempt",
                 target_id=attempt.id,
-                entity_after={"quiz_id": str(quiz_id), "attempt_no": attempt.attempt_no},
+                entity_after={
+                    "quiz_id": str(quiz_id),
+                    "attempt_no": attempt.attempt_no,
+                },
                 ip_address=ip_address,
             )
             await uow.commit()
@@ -319,7 +326,9 @@ class QuizService(LMSServiceBase):
         if attempt is None or attempt.student_id != auth.user_id:
             raise NotFoundError("Attempt not found", error_code="ERR-QUIZ-404")
         if attempt.status != "STARTED":
-            raise ValidationError("Attempt already completed", error_code="ERR-QUIZ-400")
+            raise ValidationError(
+                "Attempt already completed", error_code="ERR-QUIZ-400"
+            )
 
         quiz = await self.quiz_repo.get_quiz(attempt.quiz_id)
         if quiz is None:
@@ -386,7 +395,9 @@ class QuizService(LMSServiceBase):
         if attempt is None or attempt.student_id != auth.user_id:
             raise NotFoundError("Attempt not found", error_code="ERR-QUIZ-404")
         if attempt.status != "STARTED":
-            raise ValidationError("Attempt already completed", error_code="ERR-QUIZ-400")
+            raise ValidationError(
+                "Attempt already completed", error_code="ERR-QUIZ-400"
+            )
 
         async with UnitOfWork(self.db) as uow:
             quiz_repo = QuizRepository(uow.session)
@@ -434,9 +445,13 @@ class QuizService(LMSServiceBase):
             if quiz.school_id is not None and quiz.school_id != auth.school_id:
                 raise NotFoundError("Quiz not found", error_code="ERR-QUIZ-404")
 
-        total_attempts, completed, avg_score, max_achieved, min_achieved = (
-            await self.quiz_repo.get_attempt_stats(quiz_id)
-        )
+        (
+            total_attempts,
+            completed,
+            avg_score,
+            max_achieved,
+            min_achieved,
+        ) = await self.quiz_repo.get_attempt_stats(quiz_id)
         max_possible = await self.quiz_repo.sum_quiz_points(quiz_id)
         avg_pct = (
             round(avg_score / max_possible * 100, 1)
@@ -447,9 +462,10 @@ class QuizService(LMSServiceBase):
         questions = await self.quiz_repo.list_quiz_questions(quiz_id)
         question_stats = []
         for question in questions:
-            total_responses, correct_responses = await self.quiz_repo.get_question_response_stats(
-                question.id
-            )
+            (
+                total_responses,
+                correct_responses,
+            ) = await self.quiz_repo.get_question_response_stats(question.id)
             question_stats.append(
                 {
                     "question_id": str(question.id),

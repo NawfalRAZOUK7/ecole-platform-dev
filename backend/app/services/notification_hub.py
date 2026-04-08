@@ -89,7 +89,10 @@ class NotificationHubService:
             limit=limit,
         )
         return (
-            [self.serialize_notification(notification) for notification in notifications],
+            [
+                self.serialize_notification(notification)
+                for notification in notifications
+            ],
             next_cursor,
             has_more,
         )
@@ -211,7 +214,9 @@ class NotificationHubService:
         return {
             "id": str(notification.id),
             "read": notification.is_read,
-            "read_at": notification.read_at.isoformat() if notification.read_at else None,
+            "read_at": notification.read_at.isoformat()
+            if notification.read_at
+            else None,
             "deleted": False,
         }
 
@@ -359,7 +364,9 @@ class NotificationHubService:
     ) -> Notification:
         async with UnitOfWork(self.db) as uow:
             repo = NotificationRepository(uow.session)
-            resolved_idempotency_key = idempotency_key or f"{category}:{user_id}:{uuid.uuid4()}"
+            resolved_idempotency_key = (
+                idempotency_key or f"{category}:{user_id}:{uuid.uuid4()}"
+            )
             existing = await repo.find_notification_by_idempotency_key(
                 resolved_idempotency_key
             )
@@ -485,21 +492,25 @@ class NotificationHubService:
                 user_id=user_id,
             )
         enabled_channels = {
-            pref.channel
-            for pref in prefs
-            if pref.category == category and pref.enabled
+            pref.channel for pref in prefs if pref.category == category and pref.enabled
         }
 
         if preferred_channels:
-            allowed = [channel for channel in preferred_channels if channel in enabled_channels]
+            allowed = [
+                channel for channel in preferred_channels if channel in enabled_channels
+            ]
             if allowed:
                 return self._normalize_channels(allowed)
 
         channels = [DeliveryChannel.IN_APP.value]
-        if priority in {
-            NotificationPriority.HIGH.value,
-            NotificationPriority.CRITICAL.value,
-        } and DeliveryChannel.PUSH.value in enabled_channels:
+        if (
+            priority
+            in {
+                NotificationPriority.HIGH.value,
+                NotificationPriority.CRITICAL.value,
+            }
+            and DeliveryChannel.PUSH.value in enabled_channels
+        ):
             channels.append(DeliveryChannel.PUSH.value)
 
         if priority == NotificationPriority.CRITICAL.value:
@@ -597,11 +608,7 @@ class NotificationHubService:
                 )
             )
 
-        if (
-            DeliveryChannel.SMS.value in channels
-            and user is not None
-            and user.phone
-        ):
+        if DeliveryChannel.SMS.value in channels and user is not None and user.phone:
             sms_success = await sms_service.send_notification_fallback(
                 to=user.phone,
                 title=notification.title,

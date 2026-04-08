@@ -8,7 +8,12 @@ from decimal import Decimal
 
 import factory
 
-from app.models.financial_health import CashflowForecast, CostPerStudent, FinancialSnapshot, RetentionMetric
+from app.models.financial_health import (
+    CashflowForecast,
+    CostPerStudent,
+    FinancialSnapshot,
+    RetentionMetric,
+)
 from tests.factories.base import AsyncSQLAlchemyFactory
 from tests.factories.erp import AcademicYearFactory
 from tests.factories.school import SchoolFactory

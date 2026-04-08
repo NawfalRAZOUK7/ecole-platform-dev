@@ -59,7 +59,9 @@ class RubricRepository(BaseRepository):
             query = query.where(
                 or_(Rubric.teacher_id == teacher_id, Rubric.is_template.is_(True))
             )
-        query = query.order_by(Rubric.is_template.desc(), Rubric.title.asc(), Rubric.id.asc())
+        query = query.order_by(
+            Rubric.is_template.desc(), Rubric.title.asc(), Rubric.id.asc()
+        )
         result = await self.db.execute(query)
         return list(result.scalars().all())
 

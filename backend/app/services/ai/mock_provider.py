@@ -209,12 +209,22 @@ class MockProvider:
             threshold = str(metric.get("threshold") or "").lower()
             if value is None:
                 continue
-            if "critical" in threshold or (isinstance(value, (int, float)) and value < 0):
-                insights.append(f"{name} needs immediate review because it is outside the expected range.")
+            if "critical" in threshold or (
+                isinstance(value, (int, float)) and value < 0
+            ):
+                insights.append(
+                    f"{name} needs immediate review because it is outside the expected range."
+                )
             elif isinstance(value, (int, float)) and value == 0:
-                insights.append(f"{name} is flat for the selected period; verify whether this reflects real inactivity or missing data.")
+                insights.append(
+                    f"{name} is flat for the selected period; verify whether this reflects real inactivity or missing data."
+                )
             elif isinstance(value, (int, float)) and value > 0:
-                insights.append(f"{name} shows measurable activity; compare it with the previous period to confirm the trend.")
+                insights.append(
+                    f"{name} shows measurable activity; compare it with the previous period to confirm the trend."
+                )
         if not insights:
-            insights.append("Current KPI signals are broadly stable, with no immediate anomalies detected in the selected period.")
+            insights.append(
+                "Current KPI signals are broadly stable, with no immediate anomalies detected in the selected period."
+            )
         return insights[:4]

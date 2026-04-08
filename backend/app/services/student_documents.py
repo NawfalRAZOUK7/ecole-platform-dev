@@ -229,7 +229,11 @@ class StudentDocumentsService:
         actor_role: str,
     ) -> Document:
         document = await self.repo.get_document(document_id)
-        if document is None or document.school_id != school_id or document.deleted_at is not None:
+        if (
+            document is None
+            or document.school_id != school_id
+            or document.deleted_at is not None
+        ):
             raise NotFoundError("Document not found", error_code="ERR-DOC-404")
         await self._enforce_document_visibility(
             document=document,
@@ -308,7 +312,9 @@ class StudentDocumentsService:
         if version is None:
             raise NotFoundError("Document version not found", error_code="ERR-DOC-404")
 
-        content = (await file_storage_service.local_path(version.storage_path)).read_bytes()
+        content = (
+            await file_storage_service.local_path(version.storage_path)
+        ).read_bytes()
         async with UnitOfWork(self.db) as uow:
             repo = DocumentsRepository(uow.session)
             audit = AuditService(uow.session)
@@ -347,7 +353,9 @@ class StudentDocumentsService:
             )
             await uow.commit()
 
-        DOCUMENT_STORAGE_TOTAL_BYTES.labels(env=settings.app_env).inc(version.size_bytes)
+        DOCUMENT_STORAGE_TOTAL_BYTES.labels(env=settings.app_env).inc(
+            version.size_bytes
+        )
         return await self.serialize_document(
             stored_document,
             role=actor_role,
@@ -455,19 +463,27 @@ class StudentDocumentsService:
             document = latest_by_category.get(requirement.category)
             status = "missing"
             if document:
-                status = "expired" if document.expires_at and document.expires_at <= now else "uploaded"
+                status = (
+                    "expired"
+                    if document.expires_at and document.expires_at <= now
+                    else "uploaded"
+                )
             items.append(
                 {
                     "category": requirement.category,
                     "required": requirement.required,
                     "description": requirement.description,
                     "status": status,
-                    "expires_at": document.expires_at.isoformat() if document and document.expires_at else None,
+                    "expires_at": document.expires_at.isoformat()
+                    if document and document.expires_at
+                    else None,
                     "document": await self.serialize_document(
                         document,
                         role=actor_role,
                         actor_id=actor_id,
-                        uploader_name=uploader_names.get(document.id) if document else None,
+                        uploader_name=uploader_names.get(document.id)
+                        if document
+                        else None,
                     )
                     if document
                     else None,
@@ -503,7 +519,9 @@ class StudentDocumentsService:
         if hard_delete:
             version_assets = [
                 (version.storage_path, version.size_bytes, version.thumbnail_path)
-                for version in await self.repo.list_document_versions(document_id=document.id)
+                for version in await self.repo.list_document_versions(
+                    document_id=document.id
+                )
             ]
 
         async with UnitOfWork(self.db) as uow:
@@ -611,12 +629,12 @@ class StudentDocumentsService:
 
         archive_dir = Path(tempfile.gettempdir()) / "ecole-platform-bulk-downloads"
         archive_dir.mkdir(parents=True, exist_ok=True)
-        archive_name = (
-            f"documents_{_utc_now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8]}.zip"
-        )
+        archive_name = f"documents_{_utc_now().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8]}.zip"
         archive_path = archive_dir / archive_name
         used_names: set[str] = set()
-        with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        with zipfile.ZipFile(
+            archive_path, "w", compression=zipfile.ZIP_DEFLATED
+        ) as archive:
             for document in scoped_documents:
                 local_path = await self.read_document_file(document=document)
                 archive.write(
@@ -693,7 +711,9 @@ class StudentDocumentsService:
                 algorithms=[settings.jwt_algorithm],
             )
         except JWTError as exc:
-            raise NotFoundError("Bulk download not found", error_code="ERR-DOC-404") from exc
+            raise NotFoundError(
+                "Bulk download not found", error_code="ERR-DOC-404"
+            ) from exc
         if payload.get("action") != DOCUMENT_BULK_DOWNLOAD_ACTION:
             raise NotFoundError("Bulk download not found", error_code="ERR-DOC-404")
         archive_path = Path(str(payload["archive_path"]))
@@ -738,7 +758,10 @@ class StudentDocumentsService:
         preview_path = document.thumbnail_path
         if preview_path and await file_storage_service.exists(preview_path):
             return await file_storage_service.local_path(preview_path)
-        if document.mime_type.startswith("image/") or document.mime_type == "application/pdf":
+        if (
+            document.mime_type.startswith("image/")
+            or document.mime_type == "application/pdf"
+        ):
             return await file_storage_service.local_path(document.storage_path)
         raise NotFoundError("Preview not available", error_code="ERR-DOC-404")
 
@@ -804,7 +827,9 @@ class StudentDocumentsService:
                 document_id=document.id,
                 student_id=document.linked_student_id,
                 document_name=document.original_filename,
-                expires_at=document.expires_at.isoformat() if document.expires_at else "",
+                expires_at=document.expires_at.isoformat()
+                if document.expires_at
+                else "",
             )
             pending_recipients: list[tuple[uuid.UUID, str]] = []
             for recipient_id in recipient_ids:
@@ -869,14 +894,24 @@ class StudentDocumentsService:
                     )
                 )
                 asset_cleanup_queue.extend(
-                    (version.storage_path, version.size_bytes, version.thumbnail_path, None)
+                    (
+                        version.storage_path,
+                        version.size_bytes,
+                        version.thumbnail_path,
+                        None,
+                    )
                     for version in versions
                 )
                 await repo.hard_delete_document(document)
                 deleted += 1
             await uow.commit()
         seen_storage_paths: set[str] = set()
-        for storage_path, size_bytes, thumbnail_path, exclude_document_id in asset_cleanup_queue:
+        for (
+            storage_path,
+            size_bytes,
+            thumbnail_path,
+            exclude_document_id,
+        ) in asset_cleanup_queue:
             if storage_path in seen_storage_paths:
                 continue
             seen_storage_paths.add(storage_path)
@@ -912,7 +947,11 @@ class StudentDocumentsService:
         can_hard_delete = role in {ADM, DIR}
         can_delete = can_hard_delete or document.uploader_id == actor_id
         preview_url = None
-        if document.thumbnail_path or document.mime_type.startswith("image/") or document.mime_type == "application/pdf":
+        if (
+            document.thumbnail_path
+            or document.mime_type.startswith("image/")
+            or document.mime_type == "application/pdf"
+        ):
             preview_url = _api_url(
                 f"documents/{document.id}/preview?token={preview_token}"
             )
@@ -924,15 +963,21 @@ class StudentDocumentsService:
             "size_bytes": document.size_bytes,
             "sha256": document.sha256,
             "category": document.category,
-            "linked_student_id": str(document.linked_student_id) if document.linked_student_id else None,
+            "linked_student_id": str(document.linked_student_id)
+            if document.linked_student_id
+            else None,
             "linked_student_name": student_name,
             "uploader_id": str(document.uploader_id),
             "uploader_name": uploader_name,
-            "expires_at": document.expires_at.isoformat() if document.expires_at else None,
+            "expires_at": document.expires_at.isoformat()
+            if document.expires_at
+            else None,
             "is_expired": bool(document.expires_at and document.expires_at <= now),
             "is_expiring_soon": bool(
                 document.expires_at
-                and now < document.expires_at <= now + timedelta(days=settings.document_expiry_notice_days)
+                and now
+                < document.expires_at
+                <= now + timedelta(days=settings.document_expiry_notice_days)
             ),
             "download_count": document.download_count,
             "thumbnail_url": preview_url if document.thumbnail_path else None,
@@ -941,7 +986,9 @@ class StudentDocumentsService:
                 f"documents/{document.id}/download?token={download_token}"
             ),
             "created_at": document.created_at.isoformat(),
-            "deleted_at": document.deleted_at.isoformat() if document.deleted_at else None,
+            "deleted_at": document.deleted_at.isoformat()
+            if document.deleted_at
+            else None,
             "deduplicated": deduplicated,
             "can_delete": can_delete,
             "can_hard_delete": can_hard_delete,
@@ -955,7 +1002,9 @@ class StudentDocumentsService:
         actor_role: str,
         student_id: uuid.UUID,
     ) -> None:
-        student = await self.repo.get_user_in_school(user_id=student_id, school_id=school_id)
+        student = await self.repo.get_user_in_school(
+            user_id=student_id, school_id=school_id
+        )
         if student is None:
             raise NotFoundError("Student not found", error_code="ERR-DOC-404")
         await self._verify_student_view_access(
@@ -1090,7 +1139,9 @@ class StudentDocumentsService:
         document: Document,
         change_note: str | None,
     ) -> DocumentVersion:
-        version_number = await repo.get_next_document_version_number(document_id=document.id)
+        version_number = await repo.get_next_document_version_number(
+            document_id=document.id
+        )
         version = DocumentVersion(
             document_id=document.id,
             version_number=version_number,

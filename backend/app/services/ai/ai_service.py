@@ -177,7 +177,9 @@ def validate_ai_output(
 
 
 _UNSAFE_PATTERNS = [
-    re.compile(r"(?:password|mot de passe|كلمة المرور)\s*(?:is|est|هي)\s*[:=]", re.IGNORECASE),
+    re.compile(
+        r"(?:password|mot de passe|كلمة المرور)\s*(?:is|est|هي)\s*[:=]", re.IGNORECASE
+    ),
     re.compile(r"(?:hack|exploit|inject|xss|sql\s*injection)", re.IGNORECASE),
 ]
 
@@ -257,7 +259,9 @@ class AIService:
         if any("\u0600" <= char <= "\u06ff" for char in text):
             return "ar"
         lowered = text.lower()
-        if any(token in lowered for token in (" le ", " la ", " les ", " pour ", " avec ")):
+        if any(
+            token in lowered for token in (" le ", " la ", " les ", " pour ", " avec ")
+        ):
             return "fr"
         return "en"
 
@@ -274,13 +278,17 @@ class AIService:
         request_type = "writing_assist"
 
         try:
-            sanitized_text, _, warnings = validate_ai_input(text, request_type=request_type)
+            sanitized_text, _, warnings = validate_ai_input(
+                text, request_type=request_type
+            )
             prompt_template = get_prompt_template("PROMPT-G3-002")
             if prompt_template is None:
                 return get_fallback_response(request_type, "missing_prompt_template")
 
             resolved_language = self._resolve_language(sanitized_text, language)
-            result = await self._provider.analyze_writing(sanitized_text, resolved_language)
+            result = await self._provider.analyze_writing(
+                sanitized_text, resolved_language
+            )
             validated, is_valid = validate_ai_output(
                 result,
                 expected_fields={"suggestion", "hints"},
@@ -610,7 +618,9 @@ class AIService:
     ) -> dict[str, Any]:
         kpis = await compute_all_kpis(self.db, school_id=school_id, period_days=period)
         try:
-            insights = await self._provider.compute_kpi_insights({"kpis": kpis, "period": period})
+            insights = await self._provider.compute_kpi_insights(
+                {"kpis": kpis, "period": period}
+            )
             logger.debug("Computed %d KPI insights from provider", len(insights))
         except Exception:
             logger.exception("AI KPI insights failed; returning raw KPIs only")

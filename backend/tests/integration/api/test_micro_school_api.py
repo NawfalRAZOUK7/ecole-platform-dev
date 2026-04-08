@@ -273,7 +273,9 @@ class TestMicroSchoolApi:
         assert response.json()["data"]["name"] == "Groupe Papillons"
 
     @pytest.mark.asyncio
-    async def test_educator_can_list_groups_for_micro_school(self, client, micro_api_context):
+    async def test_educator_can_list_groups_for_micro_school(
+        self, client, micro_api_context
+    ):
         response = await client.get(
             f"/micro/schools/{micro_api_context['micro_school'].id}/groups",
             headers=auth_header(micro_api_context["educator"]["token"]),
@@ -322,7 +324,9 @@ class TestMicroSchoolApi:
 
         assert response.status_code == 200, response.text
         items = response.json()["data"]
-        assert [item["id"] for item in items] == [str(micro_api_context["enrollment"].id)]
+        assert [item["id"] for item in items] == [
+            str(micro_api_context["enrollment"].id)
+        ]
 
     @pytest.mark.asyncio
     async def test_educator_can_create_payment(self, client, micro_api_context):
@@ -395,7 +399,9 @@ class TestMicroSchoolApi:
 
         assert response.status_code == 200, response.text
         items = response.json()["data"]
-        assert any(item["id"] == str(micro_api_context["resource"].id) for item in items)
+        assert any(
+            item["id"] == str(micro_api_context["resource"].id) for item in items
+        )
 
     @pytest.mark.asyncio
     async def test_educator_can_create_progress_log(self, client, micro_api_context):
@@ -414,7 +420,9 @@ class TestMicroSchoolApi:
         assert response.json()["data"]["milestone_tag"] == "language"
 
     @pytest.mark.asyncio
-    async def test_parent_can_list_progress_logs_for_own_child(self, client, micro_api_context):
+    async def test_parent_can_list_progress_logs_for_own_child(
+        self, client, micro_api_context
+    ):
         response = await client.get(
             "/micro/progress-logs",
             headers=auth_header(micro_api_context["parent"]["token"]),

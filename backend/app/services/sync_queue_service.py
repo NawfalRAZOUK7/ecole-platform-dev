@@ -100,7 +100,9 @@ class SyncService:
             client_payload=dict(conflict.client_payload or {}),
             server_payload=dict(conflict.server_payload or {}),
             resolution=conflict.resolution,
-            resolved_by=str(conflict.resolved_by) if conflict.resolved_by is not None else None,
+            resolved_by=str(conflict.resolved_by)
+            if conflict.resolved_by is not None
+            else None,
             resolved_at=_iso(conflict.resolved_at),
             created_at=_iso(conflict.created_at) or "",
             updated_at=_iso(conflict.updated_at),
@@ -156,10 +158,9 @@ class SyncService:
             SyncQueueStatus.CONFLICT.value,
         }:
             return False
-        return (
-            existing_item.operation != incoming_item.operation
-            or dict(existing_item.payload or {}) != dict(incoming_item.payload or {})
-        )
+        return existing_item.operation != incoming_item.operation or dict(
+            existing_item.payload or {}
+        ) != dict(incoming_item.payload or {})
 
     async def register_device(
         self,
@@ -233,7 +234,9 @@ class SyncService:
             audit = AuditService(uow.session)
             dispatcher = EventDispatcher(uow.session)
 
-            device = await self._get_device_or_404(repo=repo, device_id=device_id, auth=auth)
+            device = await self._get_device_or_404(
+                repo=repo, device_id=device_id, auth=auth
+            )
             if not device.is_active:
                 raise ValidationError(
                     "Sync device is inactive",
@@ -334,7 +337,9 @@ class SyncService:
         since_checkpoint: str | None = None,
         limit: int = 100,
     ) -> dict[str, Any]:
-        device = await self._get_device_or_404(repo=self.repo, device_id=device_id, auth=auth)
+        device = await self._get_device_or_404(
+            repo=self.repo, device_id=device_id, auth=auth
+        )
 
         checkpoint = None
         since_created_at = None
@@ -370,7 +375,9 @@ class SyncService:
             device_id=str(device.id),
             since_checkpoint=since_checkpoint,
             changes=[self._queue_item_to_response(item) for item in changes],
-            next_checkpoint_id=str(latest_checkpoint.id) if latest_checkpoint is not None else None,
+            next_checkpoint_id=str(latest_checkpoint.id)
+            if latest_checkpoint is not None
+            else None,
             conflict_count=len(pending_conflicts),
         ).model_dump()
 
@@ -380,7 +387,9 @@ class SyncService:
         device_id: uuid.UUID,
         auth: AuthContext,
     ) -> dict[str, Any]:
-        device = await self._get_device_or_404(repo=self.repo, device_id=device_id, auth=auth)
+        device = await self._get_device_or_404(
+            repo=self.repo, device_id=device_id, auth=auth
+        )
         queue_items = await self.repo.list_queue_items(
             school_id=auth.school_id,
             device_id=device.id,
@@ -444,7 +453,9 @@ class SyncService:
                 include_queue_item=True,
             )
             if conflict is None:
-                raise NotFoundError("Sync conflict not found", error_code="ERR-SYNC-404")
+                raise NotFoundError(
+                    "Sync conflict not found", error_code="ERR-SYNC-404"
+                )
 
             conflict.resolution = body.resolution
             conflict.resolved_by = auth.user_id
@@ -453,7 +464,9 @@ class SyncService:
 
             queue_item = conflict.queue_item
             if queue_item is None:
-                raise NotFoundError("Sync queue item not found", error_code="ERR-SYNC-404")
+                raise NotFoundError(
+                    "Sync queue item not found", error_code="ERR-SYNC-404"
+                )
             queue_item.status = (
                 SyncQueueStatus.FAILED.value
                 if body.resolution == SyncConflictResolution.SERVER_WINS.value
@@ -502,7 +515,9 @@ class SyncService:
                 include_conflicts=True,
             )
             if queue_item is None:
-                raise NotFoundError("Sync queue item not found", error_code="ERR-SYNC-404")
+                raise NotFoundError(
+                    "Sync queue item not found", error_code="ERR-SYNC-404"
+                )
 
             has_pending_conflict = any(
                 conflict.resolution == SyncConflictResolution.PENDING.value
@@ -539,7 +554,9 @@ class SyncService:
         limit: int = 100,
     ) -> list[dict[str, Any]]:
         if device_id is not None:
-            await self._get_device_or_404(repo=self.repo, device_id=device_id, auth=auth)
+            await self._get_device_or_404(
+                repo=self.repo, device_id=device_id, auth=auth
+            )
         checkpoints = await self.repo.list_checkpoints(
             school_id=auth.school_id,
             device_id=device_id,
@@ -561,7 +578,9 @@ class SyncService:
             audit = AuditService(uow.session)
             dispatcher = EventDispatcher(uow.session)
 
-            device = await self._get_device_or_404(repo=repo, device_id=device_id, auth=auth)
+            device = await self._get_device_or_404(
+                repo=repo, device_id=device_id, auth=auth
+            )
             device.last_seen_at = now
             await repo.save_device(device)
 
@@ -603,7 +622,9 @@ class SyncService:
         device_id: uuid.UUID,
         auth: AuthContext,
     ) -> dict[str, Any]:
-        device = await self._get_device_or_404(repo=self.repo, device_id=device_id, auth=auth)
+        device = await self._get_device_or_404(
+            repo=self.repo, device_id=device_id, auth=auth
+        )
         queue_items = await self.repo.list_queue_items(
             school_id=auth.school_id,
             device_id=device.id,
@@ -611,11 +632,15 @@ class SyncService:
         )
         latest_checkpoint = await self.repo.get_latest_checkpoint(device.id)
 
-        pending_count = sum(1 for item in queue_items if item.status == SyncQueueStatus.PENDING.value)
+        pending_count = sum(
+            1 for item in queue_items if item.status == SyncQueueStatus.PENDING.value
+        )
         conflict_count = sum(
             1 for item in queue_items if item.status == SyncQueueStatus.CONFLICT.value
         )
-        failed_count = sum(1 for item in queue_items if item.status == SyncQueueStatus.FAILED.value)
+        failed_count = sum(
+            1 for item in queue_items if item.status == SyncQueueStatus.FAILED.value
+        )
 
         age = datetime.now(UTC) - device.last_seen_at
         if not device.is_active or age > HEALTHY_DEVICE_WINDOW:

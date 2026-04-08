@@ -60,7 +60,6 @@ async def list_enrollments(
     return list_response(items, next_cursor=None, has_more=False)
 
 
-
 @router.post(
     "",
     status_code=201,

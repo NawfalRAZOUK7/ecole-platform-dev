@@ -29,7 +29,16 @@ from app.core.exceptions import (
     ValidationError,
 )
 from app.core.middleware import get_correlation_id
-from app.core.permissions import ADM, DIR, PAR, STD, SUP, SYS, TCH, get_permissions_for_role
+from app.core.permissions import (
+    ADM,
+    DIR,
+    PAR,
+    STD,
+    SUP,
+    SYS,
+    TCH,
+    get_permissions_for_role,
+)
 from app.core.unit_of_work import UnitOfWork
 from app.core.security import (
     create_access_token,
@@ -432,7 +441,9 @@ class AuthService:
                     revoked_session_id = oldest.id
                     await repo.revoke_session(oldest.id, datetime.now(timezone.utc))
 
-            known_fingerprints = await login_history_repo.get_device_fingerprints(user.id)
+            known_fingerprints = await login_history_repo.get_device_fingerprints(
+                user.id
+            )
             is_new_device = bool(
                 device_fingerprint and device_fingerprint not in known_fingerprints
             )
@@ -922,7 +933,9 @@ class AuthService:
                     "success": row.success,
                     "failure_reason": row.failure_reason,
                     "is_new_device": row.is_new_device,
-                    "created_at": row.created_at.isoformat() if row.created_at else None,
+                    "created_at": row.created_at.isoformat()
+                    if row.created_at
+                    else None,
                 }
                 for row in rows
             ],
@@ -952,7 +965,9 @@ class AuthService:
                 error_code="ERR-IAM-CONFLICT",
             )
 
-        target_user = await self.repo.get_user_in_school(target_user_id, admin_auth.school_id)
+        target_user = await self.repo.get_user_in_school(
+            target_user_id, admin_auth.school_id
+        )
         if target_user is None:
             raise NotFoundError("User not found", error_code="ERR-IAM-404")
 
@@ -1021,7 +1036,9 @@ class AuthService:
         device_name: str | None = None,
     ) -> dict[str, Any]:
         """End an impersonation session and return tokens for the impersonator."""
-        current_session = await self.repo.get_session_by_id(session_id, active_only=True)
+        current_session = await self.repo.get_session_by_id(
+            session_id, active_only=True
+        )
         if current_session is None or current_session.impersonator_id is None:
             raise AuthorizationError(
                 "Current session is not an impersonation session",
@@ -1055,7 +1072,9 @@ class AuthService:
             admin_role = admin_membership.role_code
 
             if original_session_id is not None:
-                candidate = await repo.get_session_by_id(original_session_id, active_only=True)
+                candidate = await repo.get_session_by_id(
+                    original_session_id, active_only=True
+                )
                 if (
                     candidate is not None
                     and candidate.user_id == shadow_session.impersonator_id
@@ -1255,7 +1274,9 @@ class InvitationService:
                     error_code="ERR-VAL-001",
                 )
             # Check student exists in the same school with STD role
-            student = await self.repo.get_student_in_school(target_student_id, school_id)
+            student = await self.repo.get_student_in_school(
+                target_student_id, school_id
+            )
             if student is None:
                 from app.core.exceptions import NotFoundError
 
@@ -1949,7 +1970,9 @@ class TwoFactorService:
                     revoked_session_id = oldest.id
                     await repo.revoke_session(oldest.id, datetime.now(timezone.utc))
 
-            known_fingerprints = await login_history_repo.get_device_fingerprints(user.id)
+            known_fingerprints = await login_history_repo.get_device_fingerprints(
+                user.id
+            )
             is_new_device = bool(
                 device_fingerprint and device_fingerprint not in known_fingerprints
             )
@@ -1991,11 +2014,7 @@ class TwoFactorService:
                     ip_address=auth_service._trim_text(stored_ip, 45),
                     user_agent=auth_service._trim_text(user_agent, 500),
                 )
-            action = (
-                "AUTH_2FA_VERIFIED_BACKUP"
-                if used_backup
-                else "AUTH_2FA_VERIFIED"
-            )
+            action = "AUTH_2FA_VERIFIED_BACKUP" if used_backup else "AUTH_2FA_VERIFIED"
             await audit.log_event(
                 school_id=school_id,
                 actor_id=user.id,

@@ -39,21 +39,22 @@ class QuizGradingRepository(Protocol):
         *,
         quiz_id: UUID,
         student_id: UUID,
-    ) -> QuizAttemptLike | None:
-        ...
+    ) -> QuizAttemptLike | None: ...
 
-    async def list_quiz_questions(self, quiz_id: UUID) -> list[QuizQuestionLike]:
-        ...
+    async def list_quiz_questions(self, quiz_id: UUID) -> list[QuizQuestionLike]: ...
 
-    async def list_attempt_responses(self, attempt_id: UUID) -> list[QuizResponseLike]:
-        ...
+    async def list_attempt_responses(
+        self, attempt_id: UUID
+    ) -> list[QuizResponseLike]: ...
 
 
 class GradingStrategy(ABC):
     """Abstract grading strategy."""
 
     @abstractmethod
-    async def grade(self, item_id: UUID, student_id: UUID, **kwargs: Any) -> MoroccanGrade:
+    async def grade(
+        self, item_id: UUID, student_id: UUID, **kwargs: Any
+    ) -> MoroccanGrade:
         """Compute the Moroccan-scale grade for one student work item."""
         ...
 
@@ -69,7 +70,9 @@ class QuizAutoGradeStrategy(GradingStrategy):
     def __init__(self, quiz_repository: QuizGradingRepository) -> None:
         self._quiz_repository = quiz_repository
 
-    async def grade(self, item_id: UUID, student_id: UUID, **kwargs: Any) -> MoroccanGrade:
+    async def grade(
+        self, item_id: UUID, student_id: UUID, **kwargs: Any
+    ) -> MoroccanGrade:
         attempt = await self._quiz_repository.get_latest_attempt_for_student(
             quiz_id=item_id,
             student_id=student_id,
@@ -110,7 +113,9 @@ class QuizAutoGradeStrategy(GradingStrategy):
 class ManualGradeStrategy(GradingStrategy):
     """Manual grading by teacher for assignments and assessments."""
 
-    async def grade(self, item_id: UUID, student_id: UUID, **kwargs: Any) -> MoroccanGrade:
+    async def grade(
+        self, item_id: UUID, student_id: UUID, **kwargs: Any
+    ) -> MoroccanGrade:
         score = kwargs.get("score")
         if score is None:
             raise ValueError("Manual grading requires a score")
@@ -143,7 +148,9 @@ def _grade_mcq(student: Any, correct: Any) -> bool:
         student = [student]
     if isinstance(correct, str):
         correct = [correct]
-    return sorted(str(value) for value in student) == sorted(str(value) for value in correct)
+    return sorted(str(value) for value in student) == sorted(
+        str(value) for value in correct
+    )
 
 
 def _grade_true_false(student: Any, correct: Any) -> bool:

@@ -240,7 +240,9 @@ class ERPRepository(BaseRepository):
         justification_id: uuid.UUID,
     ) -> AbsenceJustification | None:
         result = await self.db.execute(
-            select(AbsenceJustification).where(AbsenceJustification.id == justification_id)
+            select(AbsenceJustification).where(
+                AbsenceJustification.id == justification_id
+            )
         )
         return result.scalar_one_or_none()
 
@@ -409,7 +411,9 @@ class ERPRepository(BaseRepository):
         )
 
         if timetable_slot_id:
-            query = query.where(TimetableException.timetable_slot_id == timetable_slot_id)
+            query = query.where(
+                TimetableException.timetable_slot_id == timetable_slot_id
+            )
         if date_from:
             query = query.where(TimetableException.exception_date >= date_from)
         if date_to:

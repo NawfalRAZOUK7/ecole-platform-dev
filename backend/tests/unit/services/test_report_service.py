@@ -118,7 +118,9 @@ class TestReportsService:
         service.repo = AsyncMock()
         service.repo.find_cached_report.return_value = job
         service._resolve_parameters = AsyncMock(return_value={"student_id": "abc"})
-        monkeypatch.setattr(reports_module.storage, "exists", AsyncMock(return_value=True))
+        monkeypatch.setattr(
+            reports_module.storage, "exists", AsyncMock(return_value=True)
+        )
 
         payload, cache_hit = await service.submit_report_job(
             school_id=uuid.uuid4(),
@@ -180,7 +182,9 @@ class TestReportSchedulerService:
         assert uow.committed is True
 
     @pytest.mark.asyncio
-    async def test_disable_schedule_clears_next_run_at(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_disable_schedule_clears_next_run_at(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth("ADM")
         service, repo_in_uow, audit, uow = setup_scheduler_service(monkeypatch)
         schedule = make_schedule(auth)

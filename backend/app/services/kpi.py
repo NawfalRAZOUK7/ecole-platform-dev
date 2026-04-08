@@ -174,7 +174,9 @@ async def compute_kpi_g1_006(
     repo = AnalyticsRepository(db)
     cutoff = datetime.now(timezone.utc) - timedelta(days=period_days)
     created = await repo.count_invitations_created(school_id=school_id, from_dt=cutoff)
-    consumed = await repo.count_invitations_consumed(school_id=school_id, from_dt=cutoff)
+    consumed = await repo.count_invitations_consumed(
+        school_id=school_id, from_dt=cutoff
+    )
     rate = (consumed / created * 100) if created > 0 else 0.0
     return {
         "kpi_id": "KPI-G1-006",
@@ -208,7 +210,9 @@ async def compute_all_kpis(
             result["computed_at"] = datetime.now(timezone.utc).isoformat()
             kpis.append(result)
         except Exception as exc:
-            logger.warning("KPI computation failed for %s: %s", compute_fn.__name__, exc)
+            logger.warning(
+                "KPI computation failed for %s: %s", compute_fn.__name__, exc
+            )
             kpis.append(
                 {
                     "kpi_id": compute_fn.__name__.replace("compute_", "")

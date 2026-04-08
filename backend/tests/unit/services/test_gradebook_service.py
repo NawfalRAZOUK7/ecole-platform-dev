@@ -65,9 +65,13 @@ def setup_service(monkeypatch: pytest.MonkeyPatch):
     uow = FakeUnitOfWork()
 
     monkeypatch.setattr(gradebook_module, "UnitOfWork", lambda _db: uow)
-    monkeypatch.setattr(gradebook_module, "GradebookRepository", lambda _session: repo_in_uow)
+    monkeypatch.setattr(
+        gradebook_module, "GradebookRepository", lambda _session: repo_in_uow
+    )
     monkeypatch.setattr(gradebook_module, "AuditService", lambda _session: audit)
-    monkeypatch.setattr(gradebook_module, "role_has_permission", lambda _role, _perm: True)
+    monkeypatch.setattr(
+        gradebook_module, "role_has_permission", lambda _role, _perm: True
+    )
 
     return service, repo_in_uow, audit, uow
 
@@ -113,7 +117,10 @@ class TestGradebookPublicMethods:
         auth = make_auth("ADM")
         service, _repo_in_uow, _audit, _uow = setup_service(monkeypatch)
         service._ensure_class_access = AsyncMock(
-            return_value=(SimpleNamespace(id=uuid.uuid4()), SimpleNamespace(id=uuid.uuid4()))
+            return_value=(
+                SimpleNamespace(id=uuid.uuid4()),
+                SimpleNamespace(id=uuid.uuid4()),
+            )
         )
 
         with pytest.raises(ValidationError, match="weights must sum to 1.0"):
@@ -289,7 +296,9 @@ class TestGradebookPublicMethods:
             id=student_id,
             school_id=auth.school_id,
         )
-        cached_class = SimpleNamespace(id=uuid.uuid4(), name="6A", school_id=auth.school_id)
+        cached_class = SimpleNamespace(
+            id=uuid.uuid4(), name="6A", school_id=auth.school_id
+        )
         cached_period = SimpleNamespace(
             id=uuid.uuid4(),
             label="T1",
@@ -302,7 +311,9 @@ class TestGradebookPublicMethods:
             total_students=25,
             computed_at=datetime(2026, 10, 1, tzinfo=timezone.utc),
         )
-        live_class = SimpleNamespace(id=uuid.uuid4(), name="6B", school_id=auth.school_id)
+        live_class = SimpleNamespace(
+            id=uuid.uuid4(), name="6B", school_id=auth.school_id
+        )
         live_period = SimpleNamespace(
             id=uuid.uuid4(),
             label="T2",

@@ -15,7 +15,11 @@ from app.main import app
 from app.models.iam import RoleCode
 from tests.factories.iam import MembershipFactory, SessionFactory, UserFactory
 from tests.factories.school import SchoolFactory
-from tests.factories.sync_queue import SyncConflictFactory, SyncDeviceFactory, SyncQueueFactory
+from tests.factories.sync_queue import (
+    SyncConflictFactory,
+    SyncDeviceFactory,
+    SyncQueueFactory,
+)
 
 
 def auth_header(token: str) -> dict[str, str]:
@@ -116,7 +120,9 @@ async def sync_rbac_context(session_factory):
             (RoleCode.SUP.value, "superadmin"),
             (RoleCode.SYS.value, "system"),
         ):
-            actors[label] = await _create_actor(session, school=school, role=role, label=label)
+            actors[label] = await _create_actor(
+                session, school=school, role=role, label=label
+            )
 
         device = await SyncDeviceFactory.create(
             session=session,

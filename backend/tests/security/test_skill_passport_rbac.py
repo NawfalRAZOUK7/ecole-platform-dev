@@ -15,7 +15,12 @@ from app.core.security import create_access_token
 from app.main import app
 from app.models.iam import RoleCode
 from app.models.lms import SubmissionStatus
-from tests.factories.erp import AcademicYearFactory, ClassFactory, EnrollmentFactory, PeriodFactory
+from tests.factories.erp import (
+    AcademicYearFactory,
+    ClassFactory,
+    EnrollmentFactory,
+    PeriodFactory,
+)
 from tests.factories.iam import (
     MembershipFactory,
     ParentChildLinkFactory,
@@ -130,7 +135,9 @@ async def skill_rbac_context(session_factory):
             (RoleCode.STD.value, "student"),
             (RoleCode.SUP.value, "superadmin"),
         ):
-            actors[label] = await _create_actor(session, school=school, role=role, label=label)
+            actors[label] = await _create_actor(
+                session, school=school, role=role, label=label
+            )
 
         await ParentChildLinkFactory.create(
             session=session,
@@ -180,7 +187,11 @@ async def skill_rbac_context(session_factory):
             session=session,
             dimension=dimension,
             code=f"{dimension_code}_level_1",
-            rule_config={"metric": "submissions_on_time", "threshold": 1, "period_days": 30},
+            rule_config={
+                "metric": "submissions_on_time",
+                "threshold": 1,
+                "period_days": 30,
+            },
         )
         await session.commit()
 
@@ -220,7 +231,11 @@ async def test_parent_cannot_create_milestone(client, skill_rbac_context):
             "name_fr": "Niveau 2",
             "name_ar": "المستوى 2",
             "level": 2,
-            "rule_config": {"metric": "submissions_on_time", "threshold": 1, "period_days": 30},
+            "rule_config": {
+                "metric": "submissions_on_time",
+                "threshold": 1,
+                "period_days": 30,
+            },
         },
     )
 

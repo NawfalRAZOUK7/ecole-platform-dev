@@ -78,7 +78,9 @@ class TimetableGeneratorService:
 
     def _ensure_admin(self, auth: AuthContext) -> None:
         if auth.role != ADM:
-            raise NotFoundError("Timetable generation not found", error_code="ERR-ERP-404")
+            raise NotFoundError(
+                "Timetable generation not found", error_code="ERR-ERP-404"
+            )
 
     def _constraint_to_response(self, constraint: TimetableConstraint) -> dict:
         return TimetableConstraintResponse(
@@ -160,11 +162,18 @@ class TimetableGeneratorService:
                 error_code="ERR-ERP-422",
             )
         if constraint.constraint_type == "teacher_unavailable":
-            teacher_id = constraint.entity_id or self._parse_uuid(params.get("teacher_id"))
+            teacher_id = constraint.entity_id or self._parse_uuid(
+                params.get("teacher_id")
+            )
             day = params.get("day")
             start_value = params.get("start")
             end_value = params.get("end")
-            if teacher_id is None or day is None or start_value is None or end_value is None:
+            if (
+                teacher_id is None
+                or day is None
+                or start_value is None
+                or end_value is None
+            ):
                 raise ValidationError(
                     "teacher_unavailable requires teacher_id, day, start, and end",
                     error_code="ERR-ERP-422",
@@ -244,7 +253,9 @@ class TimetableGeneratorService:
                 slot_index += 1
         return slots
 
-    def _room_names_from_constraints(self, constraints: list[TimetableConstraint]) -> list[str]:
+    def _room_names_from_constraints(
+        self, constraints: list[TimetableConstraint]
+    ) -> list[str]:
         names: list[str] = []
         seen: set[str] = set()
         for constraint in constraints:
@@ -259,7 +270,12 @@ class TimetableGeneratorService:
         *,
         constraints: list[TimetableConstraint],
         available_time_slots: list[_TimeSlot],
-    ) -> tuple[set[tuple[uuid.UUID, int, int]], dict[str, int], dict[uuid.UUID, int], set[uuid.UUID]]:
+    ) -> tuple[
+        set[tuple[uuid.UUID, int, int]],
+        dict[str, int],
+        dict[uuid.UUID, int],
+        set[uuid.UUID],
+    ]:
         teacher_unavailable: set[tuple[uuid.UUID, int, int]] = set()
         room_capacities: dict[str, int] = {}
         max_hours_per_day: dict[uuid.UUID, int] = {}
@@ -268,23 +284,32 @@ class TimetableGeneratorService:
         for constraint in constraints:
             params = constraint.params or {}
             if constraint.constraint_type == "teacher_unavailable":
-                teacher_id = constraint.entity_id or self._parse_uuid(params.get("teacher_id"))
+                teacher_id = constraint.entity_id or self._parse_uuid(
+                    params.get("teacher_id")
+                )
                 day = int(params["day"])
                 start_time_value = self._parse_time(params["start"])
                 end_time_value = self._parse_time(params["end"])
                 for slot in available_time_slots:
                     if slot.day_of_week != day:
                         continue
-                    if slot.start_time < end_time_value and slot.end_time > start_time_value:
+                    if (
+                        slot.start_time < end_time_value
+                        and slot.end_time > start_time_value
+                    ):
                         teacher_unavailable.add((teacher_id, day, slot.slot_index))
             elif constraint.constraint_type == "room_capacity":
                 room = str(params["room"]).strip()
                 room_capacities[room] = int(params["max_students"])
             elif constraint.constraint_type == "max_hours_per_day":
-                class_id = constraint.entity_id or self._parse_uuid(params.get("class_id"))
+                class_id = constraint.entity_id or self._parse_uuid(
+                    params.get("class_id")
+                )
                 max_hours_per_day[class_id] = int(params["max_hours"])
             elif constraint.constraint_type == "no_consecutive_same_subject":
-                class_id = constraint.entity_id or self._parse_uuid(params.get("class_id"))
+                class_id = constraint.entity_id or self._parse_uuid(
+                    params.get("class_id")
+                )
                 no_consecutive_same_subject.add(class_id)
 
         return (
@@ -390,7 +415,9 @@ class TimetableGeneratorService:
             available_time_slots,
             key=lambda slot: (
                 class_day_counts[(unit.class_id, slot.day_of_week)],
-                class_subject_day_counts[(unit.class_id, slot.day_of_week, unit.subject)],
+                class_subject_day_counts[
+                    (unit.class_id, slot.day_of_week, unit.subject)
+                ],
                 slot.day_of_week,
                 slot.slot_index,
             ),
@@ -422,14 +449,32 @@ class TimetableGeneratorService:
             room=candidate["room"],
         )
         placements[unit.requirement_id] = placement
-        class_busy[(unit.class_id, placement.time_slot.day_of_week, placement.time_slot.slot_index)] = placement
+        class_busy[
+            (
+                unit.class_id,
+                placement.time_slot.day_of_week,
+                placement.time_slot.slot_index,
+            )
+        ] = placement
         teacher_busy[
-            (placement.teacher_id, placement.time_slot.day_of_week, placement.time_slot.slot_index)
+            (
+                placement.teacher_id,
+                placement.time_slot.day_of_week,
+                placement.time_slot.slot_index,
+            )
         ] = placement
         if placement.room is not None:
-            room_busy[(placement.room, placement.time_slot.day_of_week, placement.time_slot.slot_index)] = placement
+            room_busy[
+                (
+                    placement.room,
+                    placement.time_slot.day_of_week,
+                    placement.time_slot.slot_index,
+                )
+            ] = placement
         class_day_counts[(unit.class_id, placement.time_slot.day_of_week)] += 1
-        class_subject_day_counts[(unit.class_id, placement.time_slot.day_of_week, unit.subject)] += 1
+        class_subject_day_counts[
+            (unit.class_id, placement.time_slot.day_of_week, unit.subject)
+        ] += 1
         return placement
 
     def _unplace(
@@ -445,21 +490,39 @@ class TimetableGeneratorService:
     ) -> None:
         placements.pop(placement.unit.requirement_id, None)
         class_busy.pop(
-            (placement.unit.class_id, placement.time_slot.day_of_week, placement.time_slot.slot_index),
+            (
+                placement.unit.class_id,
+                placement.time_slot.day_of_week,
+                placement.time_slot.slot_index,
+            ),
             None,
         )
         teacher_busy.pop(
-            (placement.teacher_id, placement.time_slot.day_of_week, placement.time_slot.slot_index),
+            (
+                placement.teacher_id,
+                placement.time_slot.day_of_week,
+                placement.time_slot.slot_index,
+            ),
             None,
         )
         if placement.room is not None:
             room_busy.pop(
-                (placement.room, placement.time_slot.day_of_week, placement.time_slot.slot_index),
+                (
+                    placement.room,
+                    placement.time_slot.day_of_week,
+                    placement.time_slot.slot_index,
+                ),
                 None,
             )
-        class_day_counts[(placement.unit.class_id, placement.time_slot.day_of_week)] -= 1
+        class_day_counts[
+            (placement.unit.class_id, placement.time_slot.day_of_week)
+        ] -= 1
         class_subject_day_counts[
-            (placement.unit.class_id, placement.time_slot.day_of_week, placement.unit.subject)
+            (
+                placement.unit.class_id,
+                placement.time_slot.day_of_week,
+                placement.unit.subject,
+            )
         ] -= 1
 
     def _find_candidate(
@@ -497,11 +560,16 @@ class TimetableGeneratorService:
                 class_day_counts=class_day_counts,
                 class_subject_day_counts=class_subject_day_counts,
             ):
-                if (teacher_id, slot.day_of_week, slot.slot_index) in teacher_unavailable:
+                if (
+                    teacher_id,
+                    slot.day_of_week,
+                    slot.slot_index,
+                ) in teacher_unavailable:
                     continue
                 if (
                     unit.max_hours_per_day is not None
-                    and class_day_counts[(unit.class_id, slot.day_of_week)] >= unit.max_hours_per_day
+                    and class_day_counts[(unit.class_id, slot.day_of_week)]
+                    >= unit.max_hours_per_day
                 ):
                     continue
                 if unit.no_consecutive_same_subject:
@@ -518,8 +586,12 @@ class TimetableGeneratorService:
                 for room in candidate_rooms:
                     blockers: list[_PlacedUnit] = []
                     for placed in (
-                        class_busy.get((unit.class_id, slot.day_of_week, slot.slot_index)),
-                        teacher_busy.get((teacher_id, slot.day_of_week, slot.slot_index)),
+                        class_busy.get(
+                            (unit.class_id, slot.day_of_week, slot.slot_index)
+                        ),
+                        teacher_busy.get(
+                            (teacher_id, slot.day_of_week, slot.slot_index)
+                        ),
                         room_busy.get((room, slot.day_of_week, slot.slot_index))
                         if room is not None
                         else None,
@@ -582,7 +654,9 @@ class TimetableGeneratorService:
         teacher_busy: dict[tuple[uuid.UUID, int, int], _PlacedUnit] = {}
         room_busy: dict[tuple[str, int, int], _PlacedUnit] = {}
         class_day_counts: dict[tuple[uuid.UUID, int], int] = defaultdict(int)
-        class_subject_day_counts: dict[tuple[uuid.UUID, int, str], int] = defaultdict(int)
+        class_subject_day_counts: dict[tuple[uuid.UUID, int, str], int] = defaultdict(
+            int
+        )
         unresolved: list[tuple[_RequirementUnit, list[tuple[dict, _PlacedUnit]]]] = []
         deadline = time_module.monotonic() + 25.0
 
@@ -594,7 +668,9 @@ class TimetableGeneratorService:
                     )
                 )
                 unresolved.append((unit, []))
-                unresolved.extend((remaining, []) for remaining in units[units.index(unit) + 1 :])
+                unresolved.extend(
+                    (remaining, []) for remaining in units[units.index(unit) + 1 :]
+                )
                 break
             candidate, suggestions = self._find_candidate(
                 unit=unit,
@@ -840,14 +916,23 @@ class TimetableGeneratorService:
                 academic_year_id=body.academic_year_id,
             )
             class_teachers: dict[uuid.UUID, list[uuid.UUID]] = defaultdict(list)
-            for class_id, teacher_id in await self.repo.list_teacher_assignments_for_academic_year(
+            for (
+                class_id,
+                teacher_id,
+            ) in await self.repo.list_teacher_assignments_for_academic_year(
                 school_id=auth.school_id,
                 academic_year_id=body.academic_year_id,
             ):
                 if teacher_id not in class_teachers[class_id]:
                     class_teachers[class_id].append(teacher_id)
-            subject_teacher_map: dict[tuple[uuid.UUID, str], list[uuid.UUID]] = defaultdict(list)
-            for class_id, subject, teacher_id in await self.repo.list_existing_subject_teacher_pairs(
+            subject_teacher_map: dict[tuple[uuid.UUID, str], list[uuid.UUID]] = (
+                defaultdict(list)
+            )
+            for (
+                class_id,
+                subject,
+                teacher_id,
+            ) in await self.repo.list_existing_subject_teacher_pairs(
                 school_id=auth.school_id,
                 academic_year_id=body.academic_year_id,
             ):
@@ -923,7 +1008,9 @@ class TimetableGeneratorService:
         self._ensure_admin(auth)
         job = await self.repo.get_job(job_id)
         if job is None:
-            raise NotFoundError("Timetable generation job not found", error_code="ERR-ERP-404")
+            raise NotFoundError(
+                "Timetable generation job not found", error_code="ERR-ERP-404"
+            )
         verify_school_boundary(job.school_id, auth)
         return self._job_to_response(job)
 
@@ -936,7 +1023,9 @@ class TimetableGeneratorService:
         self._ensure_admin(auth)
         job = await self.repo.get_job(job_id)
         if job is None:
-            raise NotFoundError("Timetable generation job not found", error_code="ERR-ERP-404")
+            raise NotFoundError(
+                "Timetable generation job not found", error_code="ERR-ERP-404"
+            )
         verify_school_boundary(job.school_id, auth)
         payload = job.result_payload or {}
         return TimetableGenerationPreviewResponse(
@@ -961,7 +1050,9 @@ class TimetableGeneratorService:
         self._ensure_admin(auth)
         job = await self.repo.get_job(job_id)
         if job is None:
-            raise NotFoundError("Timetable generation job not found", error_code="ERR-ERP-404")
+            raise NotFoundError(
+                "Timetable generation job not found", error_code="ERR-ERP-404"
+            )
         verify_school_boundary(job.school_id, auth)
         if job.status == "applied":
             raise ConflictError(

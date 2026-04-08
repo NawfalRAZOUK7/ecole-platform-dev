@@ -317,8 +317,12 @@ async def preview_document(
     if document.id != document_id:
         raise ValidationError("Document token mismatch", error_code="ERR-DOC-422")
     abs_path = await service.read_document_preview(document=document)
-    media_type = "image/png" if abs_path.suffix.lower() == ".png" else document.mime_type
-    return FileResponse(path=str(abs_path), media_type=media_type, filename=abs_path.name)
+    media_type = (
+        "image/png" if abs_path.suffix.lower() == ".png" else document.mime_type
+    )
+    return FileResponse(
+        path=str(abs_path), media_type=media_type, filename=abs_path.name
+    )
 
 
 @router.delete(

@@ -40,7 +40,9 @@ class TestTimetableApi:
         assert isinstance(list_response.json()["data"], list)
 
     @pytest.mark.asyncio
-    async def test_admin_can_generate_and_preview_timetable_job(self, client, admin_token):
+    async def test_admin_can_generate_and_preview_timetable_job(
+        self, client, admin_token
+    ):
         generate_response = await client.post(
             "/timetable/generate",
             headers=auth_header(admin_token),

@@ -127,7 +127,9 @@ class AttendanceAnalyticsService:
         verify_school_boundary(period.school_id, auth)
 
         if auth.role == STD and student_id != auth.user_id:
-            raise NotFoundError("Attendance analytics not found", error_code="ERR-ERP-404")
+            raise NotFoundError(
+                "Attendance analytics not found", error_code="ERR-ERP-404"
+            )
         if auth.role == PAR:
             child_ids = await self.erp_repo.list_parent_child_ids(
                 parent_id=auth.user_id,
@@ -141,7 +143,9 @@ class AttendanceAnalyticsService:
                 school_id=auth.school_id,
             )
             if enrollment is None:
-                raise NotFoundError("Attendance analytics not found", error_code="ERR-ERP-404")
+                raise NotFoundError(
+                    "Attendance analytics not found", error_code="ERR-ERP-404"
+                )
             teacher_class_ids = await self.erp_repo.list_teacher_class_ids(
                 teacher_id=auth.user_id,
                 school_id=auth.school_id,
@@ -163,7 +167,9 @@ class AttendanceAnalyticsService:
         verify_school_boundary(period.school_id, auth)
 
         if auth.role in {PAR, STD}:
-            raise NotFoundError("Attendance analytics not found", error_code="ERR-ERP-404")
+            raise NotFoundError(
+                "Attendance analytics not found", error_code="ERR-ERP-404"
+            )
         if auth.role == TCH:
             teacher_class_ids = await self.erp_repo.list_teacher_class_ids(
                 teacher_id=auth.user_id,
@@ -204,8 +210,12 @@ class AttendanceAnalyticsService:
         period_id: uuid.UUID,
         auth: AuthContext,
     ) -> dict:
-        await self._ensure_class_scope(class_id=class_id, period_id=period_id, auth=auth)
-        students = await self.repo.list_class_students(class_id=class_id, period_id=period_id)
+        await self._ensure_class_scope(
+            class_id=class_id, period_id=period_id, auth=auth
+        )
+        students = await self.repo.list_class_students(
+            class_id=class_id, period_id=period_id
+        )
         counts = {
             student_id: (absence_count, total_sessions)
             for student_id, absence_count, total_sessions in (
@@ -249,7 +259,9 @@ class AttendanceAnalyticsService:
         granularity: str,
         auth: AuthContext,
     ) -> dict:
-        await self._ensure_class_scope(class_id=class_id, period_id=period_id, auth=auth)
+        await self._ensure_class_scope(
+            class_id=class_id, period_id=period_id, auth=auth
+        )
         rows = await self.repo.get_absence_trends(
             class_id=class_id,
             period_id=period_id,
@@ -340,7 +352,10 @@ class AttendanceAnalyticsService:
             skipped = 0
 
             for student_id, student_name in students:
-                absence_count, total_sessions = await repo.compute_student_absence_count(
+                (
+                    absence_count,
+                    total_sessions,
+                ) = await repo.compute_student_absence_count(
                     student_id=student_id,
                     period_id=body.period_id,
                 )

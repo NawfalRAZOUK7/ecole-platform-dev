@@ -125,9 +125,21 @@ class TestDocumentManagementIntegration:
         uploads: list[dict] = []
         samples = [
             ("phase16.pdf", _sample_pdf_bytes(), "application/pdf"),
-            ("phase16.docx", _sample_zip_bytes(), "application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
-            ("phase16.xlsx", _sample_zip_bytes(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
-            ("phase16.pptx", _sample_zip_bytes(), "application/vnd.openxmlformats-officedocument.presentationml.presentation"),
+            (
+                "phase16.docx",
+                _sample_zip_bytes(),
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            ),
+            (
+                "phase16.xlsx",
+                _sample_zip_bytes(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ),
+            (
+                "phase16.pptx",
+                _sample_zip_bytes(),
+                "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            ),
             ("phase16.png", _sample_png_bytes(), "image/png"),
             ("phase16.webp", _sample_png_bytes(), "image/webp"),
             ("phase16.zip", _sample_zip_bytes(), "application/zip"),
@@ -153,16 +165,24 @@ class TestDocumentManagementIntegration:
             listed_ids = {item["id"] for item in list_response.json()["data"]}
             assert {item["id"] for item in uploads}.issubset(listed_ids)
 
-            pdf_document = next(item for item in uploads if item["mime_type"] == "application/pdf")
+            pdf_document = next(
+                item for item in uploads if item["mime_type"] == "application/pdf"
+            )
             pdf_download = await client.get(
-                pdf_document["download_url"].replace("http://localhost:8000/api/v1", ""),
+                pdf_document["download_url"].replace(
+                    "http://localhost:8000/api/v1", ""
+                ),
             )
             assert pdf_download.status_code == 200
             assert pdf_download.content.startswith(b"%PDF")
 
-            image_document = next(item for item in uploads if item["mime_type"] == "image/png")
+            image_document = next(
+                item for item in uploads if item["mime_type"] == "image/png"
+            )
             preview = await client.get(
-                image_document["preview_url"].replace("http://localhost:8000/api/v1", ""),
+                image_document["preview_url"].replace(
+                    "http://localhost:8000/api/v1", ""
+                ),
             )
             assert preview.status_code == 200
             assert preview.headers["content-type"].startswith("image/")
@@ -229,7 +249,9 @@ class TestDocumentManagementIntegration:
             )
             assert checklist_response.status_code == 200
             checklist = checklist_response.json()["data"]
-            medical_item = next(item for item in checklist if item["category"] == "medical")
+            medical_item = next(
+                item for item in checklist if item["category"] == "medical"
+            )
             assert medical_item["status"] == "uploaded"
             assert medical_item["document"]["id"] in {first["id"], second["id"]}
         finally:
@@ -271,7 +293,9 @@ class TestDocumentManagementIntegration:
                 },
             )
             assert search_response.status_code == 200
-            assert any(item["id"] == resource["id"] for item in search_response.json()["data"])
+            assert any(
+                item["id"] == resource["id"] for item in search_response.json()["data"]
+            )
 
             rate_response = await client.post(
                 f"/resources/{resource['id']}/rate",
@@ -307,7 +331,9 @@ class TestDocumentManagementIntegration:
                     "type": "worksheet",
                     "visibility": "school",
                 },
-                files={"file": ("forbidden.pdf", _sample_pdf_bytes(), "application/pdf")},
+                files={
+                    "file": ("forbidden.pdf", _sample_pdf_bytes(), "application/pdf")
+                },
             )
             assert forbidden.status_code == 403
         finally:
@@ -388,7 +414,9 @@ class TestDocumentStorageBackends:
             def __init__(self) -> None:
                 self.objects: dict[tuple[str, str], bytes] = {}
 
-            def put_object(self, *, Bucket: str, Key: str, Body: bytes, ContentType: str):
+            def put_object(
+                self, *, Bucket: str, Key: str, Body: bytes, ContentType: str
+            ):
                 self.objects[(Bucket, Key)] = Body
 
             def head_object(self, *, Bucket: str, Key: str):
@@ -399,7 +427,9 @@ class TestDocumentStorageBackends:
             def delete_object(self, *, Bucket: str, Key: str):
                 self.objects.pop((Bucket, Key), None)
 
-            def download_fileobj(self, bucket: str, key: str, handle: io.BufferedWriter):
+            def download_fileobj(
+                self, bucket: str, key: str, handle: io.BufferedWriter
+            ):
                 handle.write(self.objects[(bucket, key)])
 
         backend = S3FileStorageBackend(client=_FakeS3Client())

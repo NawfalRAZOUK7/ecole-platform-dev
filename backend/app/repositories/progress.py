@@ -186,7 +186,9 @@ class ProgressRepository(BaseRepository):
         school_id: uuid.UUID,
     ) -> dict[str, int]:
         result = await self.db.execute(
-            select(AttendanceRecord.status, func.count(AttendanceRecord.id).label("cnt"))
+            select(
+                AttendanceRecord.status, func.count(AttendanceRecord.id).label("cnt")
+            )
             .where(
                 AttendanceRecord.student_id == student_id,
                 AttendanceRecord.school_id == school_id,
@@ -325,10 +327,7 @@ class ProgressRepository(BaseRepository):
             )
             .group_by(Submission.student_id)
         )
-        return {
-            row.student_id: float(row.avg_score or 0)
-            for row in result
-        }
+        return {row.student_id: float(row.avg_score or 0) for row in result}
 
     async def get_attendance_rates_for_students(
         self,

@@ -90,7 +90,8 @@ class GradebookRepository(BaseRepository):
             )
             .outerjoin(
                 Grade,
-                (Grade.submission_id == Submission.id) & (Grade.published_at.is_not(None)),
+                (Grade.submission_id == Submission.id)
+                & (Grade.published_at.is_not(None)),
             )
             .where(
                 GradeCategory.class_id == class_id,
@@ -100,7 +101,9 @@ class GradebookRepository(BaseRepository):
             .group_by(GradeCategory.id)
             .order_by(GradeCategory.position.asc(), GradeCategory.name.asc())
         )
-        return [(category, category_average) for category, category_average in result.all()]
+        return [
+            (category, category_average) for category, category_average in result.all()
+        ]
 
     async def delete_student_period_averages_for_scope(
         self,

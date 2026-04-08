@@ -81,16 +81,26 @@ class RubricService(LMSServiceBase):
 
     def _ensure_can_view_rubric(self, rubric: Rubric, auth: AuthContext) -> None:
         verify_school_boundary(rubric.school_id, auth)
-        if auth.role == TCH and rubric.teacher_id != auth.user_id and not rubric.is_template:
+        if (
+            auth.role == TCH
+            and rubric.teacher_id != auth.user_id
+            and not rubric.is_template
+        ):
             raise NotFoundError("Rubric not found", error_code="ERR-LMS-404")
 
     def _ensure_can_duplicate_rubric(self, rubric: Rubric, auth: AuthContext) -> None:
         verify_school_boundary(rubric.school_id, auth)
-        if auth.role == TCH and rubric.teacher_id != auth.user_id and not rubric.is_template:
+        if (
+            auth.role == TCH
+            and rubric.teacher_id != auth.user_id
+            and not rubric.is_template
+        ):
             raise NotFoundError("Rubric not found", error_code="ERR-LMS-404")
 
     def _rubric_feedback_summary(self, grade: MoroccanGrade) -> str:
-        return f"Rubric graded: {grade.mention}. See rubric results for criterion details."
+        return (
+            f"Rubric graded: {grade.mention}. See rubric results for criterion details."
+        )
 
     def _calculate_grade(
         self,
@@ -327,7 +337,9 @@ class RubricService(LMSServiceBase):
         auth: AuthContext,
         ip_address: str | None,
     ) -> dict:
-        bundle = await self.rubric_repo.get_submission_with_rubric_context(submission_id)
+        bundle = await self.rubric_repo.get_submission_with_rubric_context(
+            submission_id
+        )
         if bundle is None:
             raise NotFoundError("Submission not found", error_code="ERR-LMS-404")
         submission, assignment, course, rubric = bundle
@@ -433,7 +445,9 @@ class RubricService(LMSServiceBase):
         submission_id: uuid.UUID,
         auth: AuthContext,
     ) -> dict:
-        bundle = await self.rubric_repo.get_submission_with_rubric_context(submission_id)
+        bundle = await self.rubric_repo.get_submission_with_rubric_context(
+            submission_id
+        )
         if bundle is None:
             raise NotFoundError("Submission not found", error_code="ERR-LMS-404")
         submission, assignment, course, rubric = bundle
@@ -443,7 +457,9 @@ class RubricService(LMSServiceBase):
 
         if auth.role == STD:
             if submission.student_id != auth.user_id:
-                raise NotFoundError("Rubric results not found", error_code="ERR-LMS-404")
+                raise NotFoundError(
+                    "Rubric results not found", error_code="ERR-LMS-404"
+                )
         elif auth.role == PAR:
             child_ids = await self.repo.list_parent_child_ids(
                 parent_id=auth.user_id,

@@ -146,7 +146,9 @@ class RequiresAnyPermission:
         self,
         auth: AuthContext = Depends(get_current_user),
     ) -> AuthContext:
-        if not any(role_has_permission(auth.role, perm) for perm in self.allowed_permissions):
+        if not any(
+            role_has_permission(auth.role, perm) for perm in self.allowed_permissions
+        ):
             raise AuthorizationError(
                 "Insufficient permissions",
                 error_code="ERR-AUTHZ-001",

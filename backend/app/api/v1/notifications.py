@@ -28,8 +28,6 @@ from app.services.notification_hub import NotificationHubService
 router = APIRouter(prefix="/notifications", tags=["com-notifications"])
 
 
-
-
 @router.get(
     "",
     summary="Notification history",

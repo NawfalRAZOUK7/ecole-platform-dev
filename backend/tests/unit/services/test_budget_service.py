@@ -325,7 +325,9 @@ class TestBudgetService:
             teacher_id=teacher.id,
             class_id=school_class.id,
         )
-        transaction = make_transaction(auth, allocation=allocation, amount=1000, transaction_type="allocation")
+        transaction = make_transaction(
+            auth, allocation=allocation, amount=1000, transaction_type="allocation"
+        )
         service.repo.get_budget.return_value = budget
         service.repo.get_class.return_value = school_class
         service.repo.get_user.return_value = teacher
@@ -378,7 +380,9 @@ class TestBudgetService:
     ) -> None:
         auth = make_auth("TCH")
         service, *_ = setup_budget_service(monkeypatch)
-        allocation = make_allocation(auth, budget=make_budget(auth), amount=1000, spent=900)
+        allocation = make_allocation(
+            auth, budget=make_budget(auth), amount=1000, spent=900
+        )
         service.repo.get_allocation.return_value = allocation
 
         with pytest.raises(ValidationError, match="enough remaining funds"):
@@ -441,7 +445,9 @@ class TestBudgetService:
             )
 
     @pytest.mark.asyncio
-    async def test_approve_request_rejects_non_pending(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    async def test_approve_request_rejects_non_pending(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         auth = make_auth("DIR")
         service, *_ = setup_budget_service(monkeypatch)
         allocation = make_allocation(auth, budget=make_budget(auth))
@@ -468,7 +474,9 @@ class TestBudgetService:
         service, repo_in_uow, audit, dispatcher, uow = setup_budget_service(monkeypatch)
         budget = make_budget(approver)
         allocation = make_allocation(approver, budget=budget, amount=800, spent=500)
-        request = make_request(allocation=allocation, requester_id=uuid.uuid4(), amount=300)
+        request = make_request(
+            allocation=allocation, requester_id=uuid.uuid4(), amount=300
+        )
         transaction = make_transaction(approver, allocation=allocation, amount=300)
         service.repo.get_request.return_value = request
         repo_in_uow.get_request.return_value = request
@@ -528,7 +536,9 @@ class TestBudgetService:
     ) -> None:
         auth = make_auth("DIR")
         service, *_ = setup_budget_service(monkeypatch)
-        allocation = make_allocation(auth, budget=make_budget(auth), amount=1000, spent=950)
+        allocation = make_allocation(
+            auth, budget=make_budget(auth), amount=1000, spent=950
+        )
         service.repo.get_allocation.return_value = allocation
 
         with pytest.raises(ValidationError, match="enough remaining funds"):
@@ -551,7 +561,9 @@ class TestBudgetService:
         service, repo_in_uow, audit, dispatcher, uow = setup_budget_service(monkeypatch)
         budget = make_budget(auth, total=5000, allocated=1000)
         allocation = make_allocation(auth, budget=budget, amount=1000, spent=200)
-        transaction = make_transaction(auth, allocation=allocation, amount=500, transaction_type="adjustment")
+        transaction = make_transaction(
+            auth, allocation=allocation, amount=500, transaction_type="adjustment"
+        )
         service.repo.get_allocation.return_value = allocation
         repo_in_uow.get_allocation.return_value = allocation
         repo_in_uow.create_transaction.return_value = transaction

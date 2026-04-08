@@ -282,7 +282,9 @@ class BudgetRequest(TimestampMixin, Base):
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
-    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    reviewed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     review_comment: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     allocation: Mapped["BudgetAllocation"] = relationship(back_populates="requests")
@@ -357,7 +359,9 @@ class BudgetTransaction(TimestampMixin, Base):
     )
 
     allocation: Mapped["BudgetAllocation"] = relationship(back_populates="transactions")
-    request: Mapped["BudgetRequest | None"] = relationship(back_populates="transactions")
+    request: Mapped["BudgetRequest | None"] = relationship(
+        back_populates="transactions"
+    )
     recorder = relationship("User", foreign_keys=[recorded_by])
 
     __table_args__ = (

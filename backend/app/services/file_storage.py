@@ -109,17 +109,15 @@ class StoredObject:
 
 @runtime_checkable
 class FileStorageBackend(Protocol):
-    async def save_bytes(self, *, relative_path: str, content: bytes, mime_type: str) -> StoredObject:
-        ...
+    async def save_bytes(
+        self, *, relative_path: str, content: bytes, mime_type: str
+    ) -> StoredObject: ...
 
-    async def exists(self, relative_path: str) -> bool:
-        ...
+    async def exists(self, relative_path: str) -> bool: ...
 
-    async def delete(self, relative_path: str) -> None:
-        ...
+    async def delete(self, relative_path: str) -> None: ...
 
-    async def local_path(self, relative_path: str) -> Path:
-        ...
+    async def local_path(self, relative_path: str) -> Path: ...
 
 
 class LocalFileStorageBackend:
@@ -128,7 +126,9 @@ class LocalFileStorageBackend:
         self.base_dir = root
         self.base_dir.mkdir(parents=True, exist_ok=True)
 
-    async def save_bytes(self, *, relative_path: str, content: bytes, mime_type: str) -> StoredObject:
+    async def save_bytes(
+        self, *, relative_path: str, content: bytes, mime_type: str
+    ) -> StoredObject:
         target = self.base_dir / relative_path
         target.parent.mkdir(parents=True, exist_ok=True)
         if not target.exists():
@@ -169,7 +169,9 @@ class S3FileStorageBackend:
         self.client = client
         self.bucket = settings.document_storage_bucket
 
-    async def save_bytes(self, *, relative_path: str, content: bytes, mime_type: str) -> StoredObject:
+    async def save_bytes(
+        self, *, relative_path: str, content: bytes, mime_type: str
+    ) -> StoredObject:
         self.client.put_object(
             Bucket=self.bucket,
             Key=relative_path,

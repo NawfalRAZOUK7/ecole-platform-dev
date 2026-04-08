@@ -153,7 +153,9 @@ class ProgressService:
         if cached:
             return cached
 
-        status_counts = await self.repo.get_content_completion_counts(student_id=student_id)
+        status_counts = await self.repo.get_content_completion_counts(
+            student_id=student_id
+        )
         total = sum(status_counts.values())
         data = {
             "labels": ["Terminé", "En cours", "Non commencé"],
@@ -320,10 +322,14 @@ class ProgressService:
             "student_id": str(student_id),
             "student_name": student_name,
             "grade_trends": await self.get_grade_trends(student_id, school_id),
-            "content_completion": await self.get_content_completion(student_id, school_id),
+            "content_completion": await self.get_content_completion(
+                student_id, school_id
+            ),
             "activity_scores": await self.get_activity_scores(student_id, school_id),
             "attendance": await self.get_attendance_rates(student_id, school_id),
-            "assessment_results": await self.get_assessment_results(student_id, school_id),
+            "assessment_results": await self.get_assessment_results(
+                student_id, school_id
+            ),
         }
         await _set_cached(cache_key, data)
         return data
@@ -338,10 +344,14 @@ class ProgressService:
         if cached:
             return cached
 
-        class_info = await self.repo.get_class_info(class_id=class_id, school_id=school_id)
+        class_info = await self.repo.get_class_info(
+            class_id=class_id, school_id=school_id
+        )
         class_name = f"{class_info[0]} ({class_info[1]})" if class_info else "Classe"
 
-        students = await self.repo.list_class_students(class_id=class_id, school_id=school_id)
+        students = await self.repo.list_class_students(
+            class_id=class_id, school_id=school_id
+        )
         student_ids = [student_id for student_id, _ in students]
         if not student_ids:
             data = {
@@ -398,9 +408,13 @@ class ProgressService:
                 all_content.append(content_rate)
 
         student_summaries.sort(key=lambda item: item["student_name"])
-        class_grade_avg = round(sum(all_grades) / len(all_grades), 2) if all_grades else None
+        class_grade_avg = (
+            round(sum(all_grades) / len(all_grades), 2) if all_grades else None
+        )
         class_att_avg = (
-            round(sum(all_attendance) / len(all_attendance), 1) if all_attendance else None
+            round(sum(all_attendance) / len(all_attendance), 1)
+            if all_attendance
+            else None
         )
         class_content_avg = (
             round(sum(all_content) / len(all_content), 1) if all_content else None
@@ -418,20 +432,30 @@ class ProgressService:
             },
             "charts": {
                 "grade_comparison": {
-                    "labels": [student["student_name"] for student in student_summaries],
+                    "labels": [
+                        student["student_name"] for student in student_summaries
+                    ],
                     "datasets": [
                         {
                             "label": "Moyenne des notes",
-                            "data": [student["grade_average"] for student in student_summaries],
+                            "data": [
+                                student["grade_average"]
+                                for student in student_summaries
+                            ],
                         }
                     ],
                 },
                 "attendance_comparison": {
-                    "labels": [student["student_name"] for student in student_summaries],
+                    "labels": [
+                        student["student_name"] for student in student_summaries
+                    ],
                     "datasets": [
                         {
                             "label": "Taux de présence (%)",
-                            "data": [student["attendance_rate"] for student in student_summaries],
+                            "data": [
+                                student["attendance_rate"]
+                                for student in student_summaries
+                            ],
                         }
                     ],
                 },
@@ -450,7 +474,9 @@ class ProgressService:
         if cached:
             return cached
 
-        children = await self.repo.list_children(parent_id=parent_id, school_id=school_id)
+        children = await self.repo.list_children(
+            parent_id=parent_id, school_id=school_id
+        )
         if not children:
             data = {"children": [], "child_count": 0}
             await _set_cached(cache_key, data)
@@ -466,8 +492,10 @@ class ProgressService:
                 student_id=child_id,
                 school_id=school_id,
             )
-            content_completion_rate = await self.repo.get_student_content_completion_rate(
-                student_id=child_id,
+            content_completion_rate = (
+                await self.repo.get_student_content_completion_rate(
+                    student_id=child_id,
+                )
             )
             latest_grade = await self.repo.get_latest_grade(
                 student_id=child_id,
@@ -499,7 +527,9 @@ class ProgressService:
                         },
                         {
                             "label": "Taux de présence (%)",
-                            "data": [child["attendance_rate"] for child in children_data],
+                            "data": [
+                                child["attendance_rate"] for child in children_data
+                            ],
                         },
                         {
                             "label": "Contenu terminé (%)",

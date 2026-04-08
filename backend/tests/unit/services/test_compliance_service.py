@@ -158,9 +158,13 @@ def setup_service(monkeypatch: pytest.MonkeyPatch):
     uow = FakeUnitOfWork()
 
     monkeypatch.setattr(compliance_module, "UnitOfWork", lambda _db: uow)
-    monkeypatch.setattr(compliance_module, "ComplianceRepository", lambda _session: repo_in_uow)
+    monkeypatch.setattr(
+        compliance_module, "ComplianceRepository", lambda _session: repo_in_uow
+    )
     monkeypatch.setattr(compliance_module, "AuditService", lambda _session: audit)
-    monkeypatch.setattr(compliance_module, "EventDispatcher", lambda _session: dispatcher)
+    monkeypatch.setattr(
+        compliance_module, "EventDispatcher", lambda _session: dispatcher
+    )
 
     return service, repo_in_uow, audit, dispatcher, uow
 
@@ -248,7 +252,9 @@ class TestComplianceService:
         service, *_ = setup_service(monkeypatch)
         service.repo.get_objective.return_value = make_objective()
 
-        with pytest.raises(ValidationError, match="requires a course_id or content_item_id"):
+        with pytest.raises(
+            ValidationError, match="requires a course_id or content_item_id"
+        ):
             await service.create_mapping(
                 body=compliance_module.CurriculumMappingCreateRequest(
                     objective_id=uuid.uuid4(),
@@ -297,7 +303,10 @@ class TestComplianceService:
                 ),
                 (
                     curriculum_two,
-                    [make_objective(curriculum=curriculum_two, code=f"ARAB-3C-0{i}") for i in range(1, 3)],
+                    [
+                        make_objective(curriculum=curriculum_two, code=f"ARAB-3C-0{i}")
+                        for i in range(1, 3)
+                    ],
                     [],
                     [],
                     100.0,

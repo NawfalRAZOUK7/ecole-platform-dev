@@ -159,7 +159,9 @@ def setup_service(monkeypatch: pytest.MonkeyPatch):
     uow = FakeUnitOfWork()
 
     monkeypatch.setattr(sync_module, "UnitOfWork", lambda _db: uow)
-    monkeypatch.setattr(sync_module, "SyncQueueRepository", lambda _session: repo_in_uow)
+    monkeypatch.setattr(
+        sync_module, "SyncQueueRepository", lambda _session: repo_in_uow
+    )
     monkeypatch.setattr(sync_module, "AuditService", lambda _session: audit)
     monkeypatch.setattr(sync_module, "EventDispatcher", lambda _session: dispatcher)
 
@@ -237,7 +239,9 @@ class TestSyncService:
         auth = make_auth(role="TCH")
         service, repo_in_uow, audit, dispatcher, uow = setup_service(monkeypatch)
         device = make_device(auth)
-        queue_item = make_queue_item(auth, device.id, status=SyncQueueStatus.PENDING.value)
+        queue_item = make_queue_item(
+            auth, device.id, status=SyncQueueStatus.PENDING.value
+        )
         repo_in_uow.get_device.return_value = device
         repo_in_uow.get_latest_queue_item.return_value = None
         repo_in_uow.create_queue_item.return_value = queue_item
@@ -330,7 +334,9 @@ class TestSyncService:
         service.repo = AsyncMock()
         device = make_device(auth)
         checkpoint = make_checkpoint(auth, device.id)
-        change = make_queue_item(auth, uuid.uuid4(), status=SyncQueueStatus.SYNCED.value)
+        change = make_queue_item(
+            auth, uuid.uuid4(), status=SyncQueueStatus.SYNCED.value
+        )
         service.repo.get_device.return_value = device
         service.repo.get_checkpoint.return_value = checkpoint
         service.repo.list_queue_items.return_value = [change]
@@ -374,7 +380,9 @@ class TestSyncService:
         auth = make_auth(role="DIR")
         service = SyncService(AsyncMock())
         service.repo = AsyncMock()
-        queue_item = make_queue_item(auth, uuid.uuid4(), status=SyncQueueStatus.CONFLICT.value)
+        queue_item = make_queue_item(
+            auth, uuid.uuid4(), status=SyncQueueStatus.CONFLICT.value
+        )
         service.repo.list_conflicts.return_value = [make_conflict(auth, queue_item)]
 
         result = await service.list_conflicts(auth=auth)
@@ -389,7 +397,9 @@ class TestSyncService:
     ) -> None:
         auth = make_auth(role="DIR")
         service, repo_in_uow, audit, dispatcher, uow = setup_service(monkeypatch)
-        queue_item = make_queue_item(auth, uuid.uuid4(), status=SyncQueueStatus.CONFLICT.value)
+        queue_item = make_queue_item(
+            auth, uuid.uuid4(), status=SyncQueueStatus.CONFLICT.value
+        )
         conflict = make_conflict(auth, queue_item)
         repo_in_uow.get_conflict.return_value = conflict
         repo_in_uow.save_conflict.return_value = conflict
@@ -415,7 +425,9 @@ class TestSyncService:
     ) -> None:
         auth = make_auth(role="ADM")
         service, repo_in_uow, *_ = setup_service(monkeypatch)
-        queue_item = make_queue_item(auth, uuid.uuid4(), status=SyncQueueStatus.CONFLICT.value)
+        queue_item = make_queue_item(
+            auth, uuid.uuid4(), status=SyncQueueStatus.CONFLICT.value
+        )
         conflict = make_conflict(auth, queue_item)
         repo_in_uow.get_conflict.return_value = conflict
 
@@ -450,7 +462,9 @@ class TestSyncService:
     ) -> None:
         auth = make_auth(role="ADM")
         service, repo_in_uow, audit, _, uow = setup_service(monkeypatch)
-        queue_item = make_queue_item(auth, uuid.uuid4(), status=SyncQueueStatus.PENDING.value)
+        queue_item = make_queue_item(
+            auth, uuid.uuid4(), status=SyncQueueStatus.PENDING.value
+        )
         queue_item.conflicts = [make_conflict(auth, queue_item, resolution="manual")]
         repo_in_uow.get_queue_item.return_value = queue_item
 
@@ -471,7 +485,9 @@ class TestSyncService:
     ) -> None:
         auth = make_auth(role="ADM")
         service, repo_in_uow, *_ = setup_service(monkeypatch)
-        queue_item = make_queue_item(auth, uuid.uuid4(), status=SyncQueueStatus.PENDING.value)
+        queue_item = make_queue_item(
+            auth, uuid.uuid4(), status=SyncQueueStatus.PENDING.value
+        )
         queue_item.conflicts = [make_conflict(auth, queue_item, resolution="pending")]
         repo_in_uow.get_queue_item.return_value = queue_item
 
@@ -553,7 +569,9 @@ class TestSyncService:
         service.repo.list_queue_items.return_value = [
             make_queue_item(auth, device.id, status=SyncQueueStatus.CONFLICT.value)
         ]
-        service.repo.get_latest_checkpoint.return_value = make_checkpoint(auth, device.id)
+        service.repo.get_latest_checkpoint.return_value = make_checkpoint(
+            auth, device.id
+        )
 
         result = await service.get_device_health(device_id=device.id, auth=auth)
 
@@ -569,7 +587,9 @@ class TestSyncService:
         service.repo.list_queue_items.return_value = [
             make_queue_item(auth, device.id, status=SyncQueueStatus.SYNCED.value)
         ]
-        service.repo.get_latest_checkpoint.return_value = make_checkpoint(auth, device.id)
+        service.repo.get_latest_checkpoint.return_value = make_checkpoint(
+            auth, device.id
+        )
 
         result = await service.get_device_health(device_id=device.id, auth=auth)
 

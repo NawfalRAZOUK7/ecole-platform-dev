@@ -132,7 +132,9 @@ class TestMicroSchoolRepository:
         assert len(stmt._with_options) == 2
 
     @pytest.mark.asyncio
-    async def test_list_micro_groups_applies_school_scope_and_school_filter(self) -> None:
+    async def test_list_micro_groups_applies_school_scope_and_school_filter(
+        self,
+    ) -> None:
         expected = [object()]
         repo, db = make_repo(_FakeExecuteResult(many=expected))
         micro_school_id = uuid.uuid4()
@@ -305,7 +307,9 @@ class TestMicroSchoolRepository:
         assert db.flush.await_count == 3
 
     @pytest.mark.asyncio
-    async def test_get_micro_progress_log_applies_school_scope_and_loaders(self) -> None:
+    async def test_get_micro_progress_log_applies_school_scope_and_loaders(
+        self,
+    ) -> None:
         expected = object()
         repo, db = make_repo(_FakeExecuteResult(one_or_none=expected))
 
@@ -357,7 +361,9 @@ class TestMicroSchoolRepository:
         assert db.flush.await_count == 3
 
     @pytest.mark.asyncio
-    async def test_parent_has_school_access_applies_parent_and_school_scope(self) -> None:
+    async def test_parent_has_school_access_applies_parent_and_school_scope(
+        self,
+    ) -> None:
         repo, db = make_repo(_FakeExecuteResult(one=2))
 
         has_access = await repo.parent_has_school_access(

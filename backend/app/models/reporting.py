@@ -136,10 +136,20 @@ class ReportJob(TimestampMixin, SchoolScopedMixin, Base):
     )
 
     __table_args__ = (
-        Index("idx_report_jobs_school_requester_created", "school_id", "requester_id", "created_at"),
+        Index(
+            "idx_report_jobs_school_requester_created",
+            "school_id",
+            "requester_id",
+            "created_at",
+        ),
         Index("idx_report_jobs_requester_id", "requester_id"),
         Index("idx_report_jobs_school_type_status", "school_id", "type", "status"),
-        Index("idx_report_jobs_school_params_hash_created", "school_id", "parameters_hash", "created_at"),
+        Index(
+            "idx_report_jobs_school_params_hash_created",
+            "school_id",
+            "parameters_hash",
+            "created_at",
+        ),
         Index("idx_report_jobs_expires_at", "expires_at"),
     )
 
@@ -149,7 +159,9 @@ class ReportJob(TimestampMixin, SchoolScopedMixin, Base):
 
     @property
     def is_expired(self) -> bool:
-        return self.expires_at is not None and self.expires_at < datetime.now(timezone.utc)
+        return self.expires_at is not None and self.expires_at < datetime.now(
+            timezone.utc
+        )
 
     @validates("status")
     def validate_status(self, key: str, value: str) -> str:
@@ -161,7 +173,9 @@ class ReportJob(TimestampMixin, SchoolScopedMixin, Base):
         return value
 
     def __repr__(self) -> str:
-        return f"<ReportJob id={_short_id(self.id)} type={self.type} status={self.status}>"
+        return (
+            f"<ReportJob id={_short_id(self.id)} type={self.type} status={self.status}>"
+        )
 
 
 class DataExport(TimestampMixin, SchoolScopedMixin, Base):

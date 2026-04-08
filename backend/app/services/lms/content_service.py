@@ -5,7 +5,11 @@ from __future__ import annotations
 import uuid
 from typing import BinaryIO
 
-from app.core.dependencies import AuthContext, verify_school_boundary, verify_teacher_assignment
+from app.core.dependencies import (
+    AuthContext,
+    verify_school_boundary,
+    verify_teacher_assignment,
+)
 from app.core.exceptions import NotFoundError, ValidationError
 from app.core.filtering import FilterSpec, SortSpec
 from app.core.response import encode_cursor
@@ -46,7 +50,9 @@ class ContentService(LMSServiceBase):
             limit=limit,
         )
         items = [self._content_item_to_dict(item) for item in items_list]
-        next_cursor = encode_cursor(items_list[-1].id) if has_more and items_list else None
+        next_cursor = (
+            encode_cursor(items_list[-1].id) if has_more and items_list else None
+        )
         return items, next_cursor, has_more
 
     async def update_content_progress(
@@ -231,7 +237,9 @@ class ContentService(LMSServiceBase):
         items = [
             {
                 "id": str(content_item.id),
-                "school_id": str(content_item.school_id) if content_item.school_id else None,
+                "school_id": str(content_item.school_id)
+                if content_item.school_id
+                else None,
                 "title": content_item.title,
                 "content_type": content_item.content_type,
                 "level_band": content_item.level_band,
@@ -243,7 +251,9 @@ class ContentService(LMSServiceBase):
             }
             for content_item in items_list
         ]
-        next_cursor = encode_cursor(items_list[-1].id) if has_more and items_list else None
+        next_cursor = (
+            encode_cursor(items_list[-1].id) if has_more and items_list else None
+        )
         return items, next_cursor, has_more
 
     async def assign_content_to_class(
@@ -262,7 +272,10 @@ class ContentService(LMSServiceBase):
         content_item = await self.repo.get_content_item(body.content_item_id)
         if content_item is None or content_item.status != "published":
             raise NotFoundError("Content item not found", error_code="ERR-CMS-404")
-        if content_item.school_id is not None and content_item.school_id != auth.school_id:
+        if (
+            content_item.school_id is not None
+            and content_item.school_id != auth.school_id
+        ):
             raise NotFoundError("Content item not found", error_code="ERR-CMS-404")
 
         duplicate = await self.repo.find_class_content_assignment(
@@ -408,7 +421,9 @@ class ContentService(LMSServiceBase):
             "id": str(submission.id),
             "content_item_id": str(submission.content_item_id),
             "status": submission.status,
-            "submitted_at": submission.submitted_at.isoformat() if submission.submitted_at else None,
+            "submitted_at": submission.submitted_at.isoformat()
+            if submission.submitted_at
+            else None,
         }
 
     async def list_my_content_submissions(
@@ -431,10 +446,14 @@ class ContentService(LMSServiceBase):
                 "content_item_id": str(submission.content_item_id),
                 "content_title": content_item.title,
                 "status": submission.status,
-                "submitted_at": submission.submitted_at.isoformat() if submission.submitted_at else None,
+                "submitted_at": submission.submitted_at.isoformat()
+                if submission.submitted_at
+                else None,
                 "review_notes": submission.review_notes,
                 "promoted_content_id": (
-                    str(submission.promoted_content_id) if submission.promoted_content_id else None
+                    str(submission.promoted_content_id)
+                    if submission.promoted_content_id
+                    else None
                 ),
             }
             for submission, content_item in rows
@@ -466,7 +485,9 @@ class ContentService(LMSServiceBase):
                 "language": content_item.language,
                 "subject": content_item.subject,
                 "description": content_item.description,
-                "assigned_at": assignment.assigned_at.isoformat() if assignment.assigned_at else None,
+                "assigned_at": assignment.assigned_at.isoformat()
+                if assignment.assigned_at
+                else None,
                 "teacher_notes": assignment.notes,
             }
             for assignment, content_item in rows

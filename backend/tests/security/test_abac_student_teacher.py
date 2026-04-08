@@ -7,7 +7,9 @@ import pytest
 from .conftest import ADMIN_ID, PARENT_ID, STUDENT_ID, TEACHER_ID, auth_header
 
 
-async def create_direct_conversation(client, *, token: str, participant_id: str, message: str):
+async def create_direct_conversation(
+    client, *, token: str, participant_id: str, message: str
+):
     return await client.post(
         "/messages/conversations",
         headers=auth_header(token),
@@ -92,7 +94,9 @@ async def test_student_can_search_own_messages(client, student_token):
     )
 
     assert response.status_code == 200, response.text
-    assert any("motcle-securite-professeur" in item["body"] for item in response.json()["data"])
+    assert any(
+        "motcle-securite-professeur" in item["body"] for item in response.json()["data"]
+    )
 
 
 @pytest.mark.asyncio

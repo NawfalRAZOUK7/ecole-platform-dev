@@ -25,7 +25,12 @@ from app.services.lms._helpers import LMSServiceBase, calculate_late_penalty
 from app.services.payment_plan import PaymentPlanService
 from app.services.school import SchoolService
 from tests.factories.billing import FeeStructureFactory
-from tests.factories.erp import AcademicYearFactory, ClassFactory, EnrollmentFactory, PeriodFactory
+from tests.factories.erp import (
+    AcademicYearFactory,
+    ClassFactory,
+    EnrollmentFactory,
+    PeriodFactory,
+)
 from tests.factories.iam import InvitationCodeFactory, UserFactory
 from tests.factories.school import SchoolFactory
 
@@ -108,7 +113,9 @@ def setup_payment_plan_service(monkeypatch: pytest.MonkeyPatch) -> PaymentPlanSe
         "BillingEnhancementsRepository",
         lambda _session: repo_in_uow,
     )
-    monkeypatch.setattr(payment_plan_module, "AuditService", lambda _session: audit_in_uow)
+    monkeypatch.setattr(
+        payment_plan_module, "AuditService", lambda _session: audit_in_uow
+    )
     return service
 
 
@@ -121,7 +128,9 @@ def setup_billing_service(monkeypatch: pytest.MonkeyPatch) -> BillingService:
     uow = FakeUnitOfWork()
 
     monkeypatch.setattr(billing_module, "UnitOfWork", lambda _db: uow)
-    monkeypatch.setattr(billing_module, "BillingRepository", lambda _session: AsyncMock())
+    monkeypatch.setattr(
+        billing_module, "BillingRepository", lambda _session: AsyncMock()
+    )
     monkeypatch.setattr(
         billing_module,
         "BillingEnhancementsRepository",
@@ -379,7 +388,9 @@ class TestServiceErrorPaths:
 
 class TestRepositoryAndDatabaseErrorPaths:
     @pytest.mark.asyncio
-    async def test_duplicate_school_code_raises_integrity_error(self, db_session) -> None:
+    async def test_duplicate_school_code_raises_integrity_error(
+        self, db_session
+    ) -> None:
         school_id = uuid.uuid4()
         await SchoolFactory.create(
             session=db_session,
@@ -397,7 +408,9 @@ class TestRepositoryAndDatabaseErrorPaths:
             )
 
     @pytest.mark.asyncio
-    async def test_duplicate_invitation_code_hash_raises_integrity_error(self, db_session) -> None:
+    async def test_duplicate_invitation_code_hash_raises_integrity_error(
+        self, db_session
+    ) -> None:
         school = await SchoolFactory.create(
             session=db_session,
             code="EDGE-INV-SCHOOL",
@@ -417,7 +430,9 @@ class TestRepositoryAndDatabaseErrorPaths:
             )
 
     @pytest.mark.asyncio
-    async def test_duplicate_active_enrollment_raises_integrity_error(self, db_session) -> None:
+    async def test_duplicate_active_enrollment_raises_integrity_error(
+        self, db_session
+    ) -> None:
         school = await SchoolFactory.create(
             session=db_session,
             code="EDGE-ENROLL-SCHOOL",

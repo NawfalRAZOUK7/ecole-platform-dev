@@ -85,7 +85,9 @@ class TestSyncSchemaValidation:
 
 class TestSyncServiceEdges:
     @pytest.mark.asyncio
-    async def test_pull_changes_invalid_checkpoint_raises_validation_error(self) -> None:
+    async def test_pull_changes_invalid_checkpoint_raises_validation_error(
+        self,
+    ) -> None:
         auth = AuthContext(
             user_id=uuid.uuid4(),
             role="PAR",

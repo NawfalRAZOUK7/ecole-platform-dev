@@ -112,7 +112,9 @@ class MenObjective(TimestampMixin, Base):
     )
 
     __table_args__ = (
-        UniqueConstraint("curriculum_id", "code", name="uq_men_objectives_curriculum_code"),
+        UniqueConstraint(
+            "curriculum_id", "code", name="uq_men_objectives_curriculum_code"
+        ),
         CheckConstraint("trimester >= 1", name="ck_men_objectives_trimester_min"),
         CheckConstraint("trimester <= 3", name="ck_men_objectives_trimester_max"),
         CheckConstraint("unit_number >= 1", name="ck_men_objectives_unit_number"),

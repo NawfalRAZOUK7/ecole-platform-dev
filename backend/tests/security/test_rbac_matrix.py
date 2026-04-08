@@ -178,4 +178,6 @@ async def test_endpoint_group_requires_token(
 ):
     response = await client.get(path, params=params)
 
-    assert response.status_code == 401, f"{group} expected 401, got {response.status_code}"
+    assert (
+        response.status_code == 401
+    ), f"{group} expected 401, got {response.status_code}"

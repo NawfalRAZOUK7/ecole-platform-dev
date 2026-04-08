@@ -22,7 +22,12 @@ from tests.factories.budget import (
     BudgetTransactionFactory,
     MicroBudgetFactory,
 )
-from tests.factories.erp import AcademicYearFactory, ClassFactory, EnrollmentFactory, PeriodFactory
+from tests.factories.erp import (
+    AcademicYearFactory,
+    ClassFactory,
+    EnrollmentFactory,
+    PeriodFactory,
+)
 from tests.factories.iam import MembershipFactory, SessionFactory, UserFactory
 from tests.factories.school import SchoolFactory
 
@@ -113,7 +118,9 @@ async def finhealth_api_context(session_factory):
             name="Financial Health API School",
             city="Rabat",
         )
-        admin = await _create_actor(session, school=school, role=RoleCode.ADM.value, label="admin")
+        admin = await _create_actor(
+            session, school=school, role=RoleCode.ADM.value, label="admin"
+        )
         teacher = await _create_actor(
             session,
             school=school,
@@ -315,7 +322,9 @@ class TestFinancialHealthApi:
         assert response.json()["data"]["retained"] == 2
 
     @pytest.mark.asyncio
-    async def test_admin_can_list_retention_metrics(self, client, finhealth_api_context):
+    async def test_admin_can_list_retention_metrics(
+        self, client, finhealth_api_context
+    ):
         await client.post(
             "/financial-health/retention/compute",
             headers=auth_header(finhealth_api_context["admin"]["token"]),
@@ -361,7 +370,9 @@ class TestFinancialHealthApi:
         assert len(response.json()["data"]) >= 2
 
     @pytest.mark.asyncio
-    async def test_admin_can_compute_cost_per_student(self, client, finhealth_api_context):
+    async def test_admin_can_compute_cost_per_student(
+        self, client, finhealth_api_context
+    ):
         response = await client.post(
             "/financial-health/cost-per-student/compute",
             headers=auth_header(finhealth_api_context["admin"]["token"]),
@@ -372,7 +383,9 @@ class TestFinancialHealthApi:
         assert response.json()["data"]["total_students"] == 4
 
     @pytest.mark.asyncio
-    async def test_admin_can_get_cost_per_student_analysis(self, client, finhealth_api_context):
+    async def test_admin_can_get_cost_per_student_analysis(
+        self, client, finhealth_api_context
+    ):
         response = await client.get(
             "/financial-health/cost-per-student",
             headers=auth_header(finhealth_api_context["admin"]["token"]),

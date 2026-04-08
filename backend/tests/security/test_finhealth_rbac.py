@@ -121,7 +121,9 @@ async def finhealth_rbac_context(session_factory):
             (RoleCode.SUP.value, "superadmin"),
             (RoleCode.SYS.value, "system"),
         ):
-            actors[label] = await _create_actor(session, school=school, role=role, label=label)
+            actors[label] = await _create_actor(
+                session, school=school, role=role, label=label
+            )
         await session.commit()
 
     return {"school": school, "academic_year": academic_year, **actors}
@@ -129,7 +131,9 @@ async def finhealth_rbac_context(session_factory):
 
 @pytest.mark.parametrize("actor_label", ["admin", "director", "superadmin", "system"])
 @pytest.mark.asyncio
-async def test_read_roles_can_list_retention(client, finhealth_rbac_context, actor_label):
+async def test_read_roles_can_list_retention(
+    client, finhealth_rbac_context, actor_label
+):
     response = await client.get(
         "/financial-health/retention",
         headers=auth_header(finhealth_rbac_context[actor_label]["token"]),
@@ -140,7 +144,9 @@ async def test_read_roles_can_list_retention(client, finhealth_rbac_context, act
 
 @pytest.mark.parametrize("actor_label", ["teacher", "parent", "student"])
 @pytest.mark.asyncio
-async def test_non_read_roles_cannot_list_retention(client, finhealth_rbac_context, actor_label):
+async def test_non_read_roles_cannot_list_retention(
+    client, finhealth_rbac_context, actor_label
+):
     response = await client.get(
         "/financial-health/retention",
         headers=auth_header(finhealth_rbac_context[actor_label]["token"]),
@@ -151,7 +157,9 @@ async def test_non_read_roles_cannot_list_retention(client, finhealth_rbac_conte
 
 @pytest.mark.parametrize("actor_label", ["admin", "director", "superadmin", "system"])
 @pytest.mark.asyncio
-async def test_compute_roles_can_trigger_snapshot_compute(client, finhealth_rbac_context, actor_label):
+async def test_compute_roles_can_trigger_snapshot_compute(
+    client, finhealth_rbac_context, actor_label
+):
     response = await client.post(
         "/financial-health/snapshot/compute",
         headers=auth_header(finhealth_rbac_context[actor_label]["token"]),
@@ -179,7 +187,9 @@ async def test_non_compute_roles_cannot_trigger_snapshot_compute(
 
 @pytest.mark.parametrize("actor_label", ["admin", "director", "superadmin", "system"])
 @pytest.mark.asyncio
-async def test_export_roles_can_download_csv(client, finhealth_rbac_context, actor_label):
+async def test_export_roles_can_download_csv(
+    client, finhealth_rbac_context, actor_label
+):
     response = await client.get(
         "/financial-health/export/csv",
         headers=auth_header(finhealth_rbac_context[actor_label]["token"]),
@@ -191,7 +201,9 @@ async def test_export_roles_can_download_csv(client, finhealth_rbac_context, act
 
 @pytest.mark.parametrize("actor_label", ["teacher", "parent", "student"])
 @pytest.mark.asyncio
-async def test_non_export_roles_cannot_download_csv(client, finhealth_rbac_context, actor_label):
+async def test_non_export_roles_cannot_download_csv(
+    client, finhealth_rbac_context, actor_label
+):
     response = await client.get(
         "/financial-health/export/csv",
         headers=auth_header(finhealth_rbac_context[actor_label]["token"]),

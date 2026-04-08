@@ -50,7 +50,9 @@ class ClaudeProvider:
                 messages=[{"role": "user", "content": prompt}],
             )
             text = self._extract_text(response)
-            return text or await self._fallback.complete(prompt, system, max_tokens=max_tokens)
+            return text or await self._fallback.complete(
+                prompt, system, max_tokens=max_tokens
+            )
         except Exception:
             logger.exception("Claude complete() failed, using mock fallback")
             return await self._fallback.complete(prompt, system, max_tokens=max_tokens)
@@ -58,7 +60,7 @@ class ClaudeProvider:
     async def analyze_writing(self, text: str, language: str) -> WritingFeedback:
         prompt = (
             "Analyze the following student writing and return JSON with keys "
-            "\"suggestion\" (string) and \"hints\" (array of up to 3 strings).\n\n"
+            '"suggestion" (string) and "hints" (array of up to 3 strings).\n\n'
             f"Language: {language}\nText:\n{text}"
         )
         system = (
@@ -112,10 +114,14 @@ class ClaudeProvider:
                             ),
                         }
                     )
-                if cleaned and all(item["title"] and item["reason_code"] for item in cleaned):
+                if cleaned and all(
+                    item["title"] and item["reason_code"] for item in cleaned
+                ):
                     return cleaned
         except Exception:
-            logger.exception("Claude generate_recommendations() failed, using mock fallback")
+            logger.exception(
+                "Claude generate_recommendations() failed, using mock fallback"
+            )
         return await self._fallback.generate_recommendations(student_data)
 
     async def compute_kpi_insights(self, metrics: dict[str, Any]) -> list[str]:
@@ -133,5 +139,7 @@ class ClaudeProvider:
             if isinstance(parsed, list) and parsed:
                 return [str(item) for item in parsed[:4] if str(item).strip()]
         except Exception:
-            logger.exception("Claude compute_kpi_insights() failed, using mock fallback")
+            logger.exception(
+                "Claude compute_kpi_insights() failed, using mock fallback"
+            )
         return await self._fallback.compute_kpi_insights(metrics)

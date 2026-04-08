@@ -77,7 +77,9 @@ class BudgetService:
         return BudgetAllocationResponse(
             id=str(allocation.id),
             budget_id=str(allocation.budget_id),
-            class_id=str(allocation.class_id) if allocation.class_id is not None else None,
+            class_id=str(allocation.class_id)
+            if allocation.class_id is not None
+            else None,
             teacher_id=str(allocation.teacher_id)
             if allocation.teacher_id is not None
             else None,
@@ -103,7 +105,9 @@ class BudgetService:
             description=request.description,
             justification=request.justification,
             status=request.status,
-            reviewed_by=str(request.reviewed_by) if request.reviewed_by is not None else None,
+            reviewed_by=str(request.reviewed_by)
+            if request.reviewed_by is not None
+            else None,
             reviewed_at=_iso(request.reviewed_at),
             review_comment=request.review_comment,
             created_at=_iso(request.created_at) or "",
@@ -117,7 +121,9 @@ class BudgetService:
         return BudgetTransactionResponse(
             id=str(transaction.id),
             allocation_id=str(transaction.allocation_id),
-            request_id=str(transaction.request_id) if transaction.request_id is not None else None,
+            request_id=str(transaction.request_id)
+            if transaction.request_id is not None
+            else None,
             amount=float(transaction.amount),
             transaction_type=transaction.transaction_type,
             description=transaction.description,
@@ -128,7 +134,9 @@ class BudgetService:
             updated_at=_iso(transaction.updated_at),
         ).model_dump()
 
-    async def _get_budget_or_404(self, budget_id: uuid.UUID, auth: AuthContext) -> MicroBudget:
+    async def _get_budget_or_404(
+        self, budget_id: uuid.UUID, auth: AuthContext
+    ) -> MicroBudget:
         budget = await self.repo.get_budget(budget_id, school_id=auth.school_id)
         if budget is None:
             raise NotFoundError("Budget not found", error_code="ERR-BUDGET-404")
@@ -151,7 +159,9 @@ class BudgetService:
             include_transactions=include_transactions,
         )
         if allocation is None:
-            raise NotFoundError("Budget allocation not found", error_code="ERR-BUDGET-404")
+            raise NotFoundError(
+                "Budget allocation not found", error_code="ERR-BUDGET-404"
+            )
         return allocation
 
     async def _get_request_or_404(
@@ -265,7 +275,9 @@ class BudgetService:
     ) -> dict[str, Any]:
         budget = await self._get_budget_or_404(budget_id, auth)
         payload = body.model_dump(exclude_unset=True)
-        if "total_amount" in payload and payload["total_amount"] < float(budget.allocated_amount):
+        if "total_amount" in payload and payload["total_amount"] < float(
+            budget.allocated_amount
+        ):
             raise ValidationError(
                 "Budget total_amount cannot be lower than allocated_amount",
                 error_code="ERR-BUDGET-422",
@@ -449,7 +461,9 @@ class BudgetService:
                 raise NotFoundError("Class not found", error_code="ERR-BUDGET-404")
             verify_school_boundary(school_class.school_id, auth)
         if "teacher_id" in payload and payload["teacher_id"] is not None:
-            await self._ensure_user_in_school(payload["teacher_id"], auth, label="Teacher")
+            await self._ensure_user_in_school(
+                payload["teacher_id"], auth, label="Teacher"
+            )
 
         new_amount = payload.get("amount", float(allocation.amount))
         if new_amount < float(allocation.spent):
@@ -458,7 +472,9 @@ class BudgetService:
                 error_code="ERR-BUDGET-422",
             )
         budget_delta = new_amount - float(allocation.amount)
-        if budget_delta > 0 and budget_delta > float(allocation.budget.remaining_amount):
+        if budget_delta > 0 and budget_delta > float(
+            allocation.budget.remaining_amount
+        ):
             raise ValidationError(
                 "Budget does not have enough unallocated funds",
                 error_code="ERR-BUDGET-422",
@@ -473,7 +489,9 @@ class BudgetService:
                 include_budget=True,
             )
             if current_allocation is None or current_allocation.budget is None:
-                raise NotFoundError("Budget allocation not found", error_code="ERR-BUDGET-404")
+                raise NotFoundError(
+                    "Budget allocation not found", error_code="ERR-BUDGET-404"
+                )
             allocation = current_allocation
             before = self._allocation_to_response(allocation)
             for field, value in payload.items():
@@ -606,7 +624,9 @@ class BudgetService:
             )
         payload = body.model_dump(exclude_unset=True)
         next_amount = payload.get("amount", float(request.amount))
-        if request.allocation is not None and next_amount > float(request.allocation.remaining):
+        if request.allocation is not None and next_amount > float(
+            request.allocation.remaining
+        ):
             raise ValidationError(
                 "Allocation does not have enough remaining funds",
                 error_code="ERR-BUDGET-422",
@@ -621,7 +641,9 @@ class BudgetService:
                 include_allocation=True,
             )
             if current_request is None:
-                raise NotFoundError("Budget request not found", error_code="ERR-BUDGET-404")
+                raise NotFoundError(
+                    "Budget request not found", error_code="ERR-BUDGET-404"
+                )
             request = current_request
             before = self._request_to_response(request)
             for field, value in payload.items():
@@ -661,7 +683,9 @@ class BudgetService:
                 error_code="ERR-BUDGET-409",
             )
         if request.allocation is None or request.allocation.budget is None:
-            raise NotFoundError("Budget allocation not found", error_code="ERR-BUDGET-404")
+            raise NotFoundError(
+                "Budget allocation not found", error_code="ERR-BUDGET-404"
+            )
         if float(request.amount) > float(request.allocation.remaining):
             raise ValidationError(
                 "Allocation does not have enough remaining funds",
@@ -683,7 +707,9 @@ class BudgetService:
                 or current_request.allocation is None
                 or current_request.allocation.budget is None
             ):
-                raise NotFoundError("Budget request not found", error_code="ERR-BUDGET-404")
+                raise NotFoundError(
+                    "Budget request not found", error_code="ERR-BUDGET-404"
+                )
             request = current_request
             if request.status != "pending":
                 raise ConflictError(
@@ -772,9 +798,13 @@ class BudgetService:
             repo = BudgetRepository(uow.session)
             audit = AuditService(uow.session)
             dispatcher = EventDispatcher(uow.session)
-            current_request = await repo.get_request(request_id, school_id=auth.school_id)
+            current_request = await repo.get_request(
+                request_id, school_id=auth.school_id
+            )
             if current_request is None:
-                raise NotFoundError("Budget request not found", error_code="ERR-BUDGET-404")
+                raise NotFoundError(
+                    "Budget request not found", error_code="ERR-BUDGET-404"
+                )
             request = current_request
             if request.status != "pending":
                 raise ConflictError(
@@ -827,9 +857,13 @@ class BudgetService:
         if allocation.budget is None:
             raise NotFoundError("Budget not found", error_code="ERR-BUDGET-404")
         if body.request_id is not None:
-            request = await self.repo.get_request(body.request_id, school_id=auth.school_id)
+            request = await self.repo.get_request(
+                body.request_id, school_id=auth.school_id
+            )
             if request is None or request.allocation_id != allocation_id:
-                raise NotFoundError("Budget request not found", error_code="ERR-BUDGET-404")
+                raise NotFoundError(
+                    "Budget request not found", error_code="ERR-BUDGET-404"
+                )
 
         async with UnitOfWork(self.db) as uow:
             repo = BudgetRepository(uow.session)
@@ -841,7 +875,9 @@ class BudgetService:
                 include_budget=True,
             )
             if current_allocation is None or current_allocation.budget is None:
-                raise NotFoundError("Budget allocation not found", error_code="ERR-BUDGET-404")
+                raise NotFoundError(
+                    "Budget allocation not found", error_code="ERR-BUDGET-404"
+                )
             allocation = current_allocation
             budget = allocation.budget
 
@@ -868,7 +904,9 @@ class BudgetService:
                 await repo.save_budget(budget)
 
             allocation.remaining = float(allocation.amount) - float(allocation.spent)
-            allocation.status = "exhausted" if allocation.remaining <= 0 else allocation.status
+            allocation.status = (
+                "exhausted" if allocation.remaining <= 0 else allocation.status
+            )
             await repo.save_allocation(allocation)
             transaction = BudgetTransaction(
                 allocation_id=allocation.id,
@@ -928,9 +966,13 @@ class BudgetService:
         auth: AuthContext,
         ip_address: str | None = None,
     ) -> dict[str, Any]:
-        transaction = await self.repo.get_transaction(transaction_id, school_id=auth.school_id)
+        transaction = await self.repo.get_transaction(
+            transaction_id, school_id=auth.school_id
+        )
         if transaction is None:
-            raise NotFoundError("Budget transaction not found", error_code="ERR-BUDGET-404")
+            raise NotFoundError(
+                "Budget transaction not found", error_code="ERR-BUDGET-404"
+            )
 
         async with UnitOfWork(self.db) as uow:
             repo = BudgetRepository(uow.session)
@@ -940,7 +982,9 @@ class BudgetService:
                 school_id=auth.school_id,
             )
             if transaction is None:
-                raise NotFoundError("Budget transaction not found", error_code="ERR-BUDGET-404")
+                raise NotFoundError(
+                    "Budget transaction not found", error_code="ERR-BUDGET-404"
+                )
             before = self._transaction_to_response(transaction)
             for field, value in body.model_dump(exclude_unset=True).items():
                 setattr(transaction, field, value)
@@ -989,11 +1033,15 @@ class BudgetService:
             school_id=auth.school_id,
             transaction_type=None,
         )
-        transactions = [item for item in transactions if item.allocation_id in allocation_ids]
+        transactions = [
+            item for item in transactions if item.allocation_id in allocation_ids
+        ]
 
         total_budget_amount = sum(float(item.total_amount) for item in budgets)
         total_allocated_amount = sum(float(item.allocated_amount) for item in budgets)
-        total_remaining_unallocated = sum(float(item.remaining_amount) for item in budgets)
+        total_remaining_unallocated = sum(
+            float(item.remaining_amount) for item in budgets
+        )
         total_spent_amount = sum(float(item.spent) for item in allocations)
         total_allocation_remaining = sum(float(item.remaining) for item in allocations)
         pending_request_amount = sum(
@@ -1005,7 +1053,9 @@ class BudgetService:
 
         return BudgetAnalyticsResponse(
             school_id=str(auth.school_id),
-            academic_year_id=str(academic_year_id) if academic_year_id is not None else None,
+            academic_year_id=str(academic_year_id)
+            if academic_year_id is not None
+            else None,
             budget_count=len(budgets),
             allocation_count=len(allocations),
             request_count=len(requests),

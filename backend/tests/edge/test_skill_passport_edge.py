@@ -89,13 +89,19 @@ class TestSkillServiceEdges:
     def test_normalize_metric_config_rejects_non_positive_threshold(self) -> None:
         service = SkillPassportService(AsyncMock())
 
-        with pytest.raises(ValidationError, match="threshold must be greater than zero"):
-            service._normalize_metric_config({"metric": "quiz_attempts", "threshold": 0})
+        with pytest.raises(
+            ValidationError, match="threshold must be greater than zero"
+        ):
+            service._normalize_metric_config(
+                {"metric": "quiz_attempts", "threshold": 0}
+            )
 
     def test_normalize_metric_config_rejects_non_positive_period_days(self) -> None:
         service = SkillPassportService(AsyncMock())
 
-        with pytest.raises(ValidationError, match="period_days must be greater than zero"):
+        with pytest.raises(
+            ValidationError, match="period_days must be greater than zero"
+        ):
             service._normalize_metric_config(
                 {"metric": "quiz_attempts", "threshold": 1, "period_days": 0}
             )
@@ -103,7 +109,9 @@ class TestSkillServiceEdges:
     def test_build_minimal_pdf_emits_pdf_header(self) -> None:
         service = SkillPassportService(AsyncMock())
 
-        payload = service._build_minimal_pdf(["Life Skills Passport", "Overall score: 100"])
+        payload = service._build_minimal_pdf(
+            ["Life Skills Passport", "Overall score: 100"]
+        )
 
         assert payload.startswith(b"%PDF-1.4")
 

@@ -40,7 +40,6 @@ class LegacyClassAttendanceRequest(BaseModel):
     records: list[LegacyAttendanceRecordInput]
 
 
-
 # ---------------------------------------------------------------------------
 # S-048: POST /attendance/sessions — Take attendance (TCH)
 # ---------------------------------------------------------------------------

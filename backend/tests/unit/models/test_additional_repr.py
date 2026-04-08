@@ -36,11 +36,15 @@ class TestAuditHelpers:
             ("abcdef123456", "abcdef12"),
         ],
     )
-    def test_short_id_handles_none_uuid_and_strings(self, value: object | None, expected: str):
+    def test_short_id_handles_none_uuid_and_strings(
+        self, value: object | None, expected: str
+    ):
         assert _short_id(value) == expected
 
     @pytest.mark.parametrize("target_type", [None, "invoice", "payment_plan"])
-    def test_audit_log_repr_includes_action_and_target_type(self, target_type: str | None):
+    def test_audit_log_repr_includes_action_and_target_type(
+        self, target_type: str | None
+    ):
         audit_log = AuditLog(
             school_id=uuid.uuid4(),
             action_type="billing.payment_plan.create",

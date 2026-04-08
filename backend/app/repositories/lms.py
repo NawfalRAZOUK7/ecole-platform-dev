@@ -104,7 +104,9 @@ class LMSRepository(BaseRepository):
         self,
         activity_id: uuid.UUID,
     ) -> Activity | None:
-        result = await self.db.execute(select(Activity).where(Activity.id == activity_id))
+        result = await self.db.execute(
+            select(Activity).where(Activity.id == activity_id)
+        )
         return result.scalar_one_or_none()
 
     async def get_next_activity_attempt_no(
@@ -871,7 +873,10 @@ class AssignmentRepository(LMSRepository):
             .order_by(Assignment.due_at.asc(), Assignment.id.asc())
         )
         assignments = list(result.scalars().all())
-        return [self._serialize_assignment(assignment=assignment) for assignment in assignments]
+        return [
+            self._serialize_assignment(assignment=assignment)
+            for assignment in assignments
+        ]
 
     async def list_for_student(
         self,
@@ -942,7 +947,9 @@ class AssignmentRepository(LMSRepository):
                 "submitted_at": _dt_to_iso(submission.submitted_at),
                 "score": float(grade.score) if grade is not None else None,
                 "feedback_text": grade.feedback_text if grade is not None else None,
-                "published_at": _dt_to_iso(grade.published_at) if grade is not None else None,
+                "published_at": _dt_to_iso(grade.published_at)
+                if grade is not None
+                else None,
             }
             for submission, grade in rows
         ]
@@ -1000,8 +1007,13 @@ class AssessmentRepository(LMSRepository):
         )
         assessments = list(result.scalars().all())
         if status is not None:
-            assessments = [assessment for assessment in assessments if assessment.status == status]
-        return [self._serialize_assessment(assessment=assessment) for assessment in assessments]
+            assessments = [
+                assessment for assessment in assessments if assessment.status == status
+            ]
+        return [
+            self._serialize_assessment(assessment=assessment)
+            for assessment in assessments
+        ]
 
     async def list_for_student(
         self,

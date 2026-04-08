@@ -293,7 +293,9 @@ class TestBudgetApi:
         assert len(response.json()["data"]) == 1
 
     @pytest.mark.asyncio
-    async def test_director_can_approve_budget_request(self, client, budget_api_context):
+    async def test_director_can_approve_budget_request(
+        self, client, budget_api_context
+    ):
         response = await client.post(
             f"/budgets/requests/{budget_api_context['request'].id}/approve",
             headers=auth_header(budget_api_context["director"]["token"]),
@@ -325,7 +327,9 @@ class TestBudgetApi:
         assert response.json()["data"]["status"] == "rejected"
 
     @pytest.mark.asyncio
-    async def test_director_can_get_budget_request_detail(self, client, budget_api_context):
+    async def test_director_can_get_budget_request_detail(
+        self, client, budget_api_context
+    ):
         response = await client.get(
             f"/budgets/requests/{budget_api_context['request'].id}",
             headers=auth_header(budget_api_context["director"]["token"]),
@@ -335,7 +339,9 @@ class TestBudgetApi:
         assert response.json()["data"]["id"] == str(budget_api_context["request"].id)
 
     @pytest.mark.asyncio
-    async def test_director_can_record_budget_transaction(self, client, budget_api_context):
+    async def test_director_can_record_budget_transaction(
+        self, client, budget_api_context
+    ):
         response = await client.post(
             f"/budgets/allocations/{budget_api_context['allocation'].id}/transactions",
             headers=auth_header(budget_api_context["director"]["token"]),
@@ -350,7 +356,9 @@ class TestBudgetApi:
         assert response.json()["data"]["transaction_type"] == "expense"
 
     @pytest.mark.asyncio
-    async def test_teacher_can_list_budget_transactions(self, client, budget_api_context):
+    async def test_teacher_can_list_budget_transactions(
+        self, client, budget_api_context
+    ):
         response = await client.get(
             f"/budgets/allocations/{budget_api_context['allocation'].id}/transactions",
             headers=auth_header(budget_api_context["teacher"]["token"]),

@@ -37,7 +37,6 @@ from app.services.lms import CourseService
 router = APIRouter(prefix="/activities", tags=["lms-activities"])
 
 
-
 # ---------------------------------------------------------------------------
 # S-058: GET /activities — List activities (STD)
 # ---------------------------------------------------------------------------
@@ -127,7 +126,9 @@ async def complete_activity_session(
     session_id: uuid.UUID,
     body: ActivitySessionCompleteRequest,
     request: Request,
-    auth: AuthContext = Depends(requires_permission(PERM_LMS_ACTIVITY_SESSION_COMPLETE)),
+    auth: AuthContext = Depends(
+        requires_permission(PERM_LMS_ACTIVITY_SESSION_COMPLETE)
+    ),
     db: AsyncSession = Depends(get_db),
 ):
     """Complete an activity session with optional score.

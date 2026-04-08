@@ -171,7 +171,9 @@ class TestLogin:
         service.audit.log_event.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_wrong_password_increments_attempt_counter(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_wrong_password_increments_attempt_counter(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         service, redis = setup_service()
         school_id = uuid.uuid4()
         user = make_user(school_id)
@@ -208,7 +210,9 @@ class TestLogin:
         service._record_login_history.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_rejects_login_without_membership(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_rejects_login_without_membership(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         service, _redis = setup_service()
         school_id = uuid.uuid4()
         user = make_user(school_id)
@@ -225,7 +229,9 @@ class TestLogin:
             )
 
     @pytest.mark.asyncio
-    async def test_totp_enabled_login_returns_temp_token(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_totp_enabled_login_returns_temp_token(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         service, redis = setup_service()
         school_id = uuid.uuid4()
         user = make_user(school_id, totp_enabled=True)
@@ -270,10 +276,14 @@ class TestLogin:
         )
         monkeypatch.setattr(auth_module, "verify_password", lambda _pwd, _hash: True)
         monkeypatch.setattr(auth_module, "get_correlation_id", lambda: None)
-        monkeypatch.setattr(auth_module.settings, "max_sessions_per_user", 1, raising=False)
+        monkeypatch.setattr(
+            auth_module.settings, "max_sessions_per_user", 1, raising=False
+        )
         repo_in_uow, audit, login_history_repo, uow = patch_auth_uow(monkeypatch)
         repo_in_uow.count_active_sessions.return_value = 1
-        repo_in_uow.get_oldest_active_session.return_value = SimpleNamespace(id=uuid.uuid4())
+        repo_in_uow.get_oldest_active_session.return_value = SimpleNamespace(
+            id=uuid.uuid4()
+        )
         login_history_repo.get_device_fingerprints.return_value = []
         repo_in_uow.create_session.return_value = current_session
 
@@ -288,7 +298,10 @@ class TestLogin:
 
         assert result["access_token"] == "access"
         repo_in_uow.revoke_session.assert_awaited_once()
-        assert login_history_repo.create_login_record.await_args.kwargs["is_new_device"] is True
+        assert (
+            login_history_repo.create_login_record.await_args.kwargs["is_new_device"]
+            is True
+        )
         service._dispatch_event.assert_awaited_once()
         audit.log_event.assert_awaited()
         assert rate_key not in redis.store
@@ -348,7 +361,9 @@ class TestRefresh:
             await service.refresh("refresh-token", csrf_token="wrong-csrf")
 
     @pytest.mark.asyncio
-    async def test_refresh_rejects_revoked_session(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_refresh_rejects_revoked_session(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         service, redis = setup_service()
         session_id = uuid.uuid4()
         user_id = uuid.uuid4()
@@ -370,7 +385,9 @@ class TestRefresh:
             await service.refresh("refresh-token", csrf_token="csrf-ok")
 
     @pytest.mark.asyncio
-    async def test_refresh_detects_replay_and_revokes_session(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_refresh_detects_replay_and_revokes_session(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         service, redis = setup_service()
         session_id = uuid.uuid4()
         user_id = uuid.uuid4()
@@ -397,7 +414,9 @@ class TestRefresh:
         assert f"csrf:{session_id}" not in redis.store
 
     @pytest.mark.asyncio
-    async def test_refresh_rotates_tokens_and_audits(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_refresh_rotates_tokens_and_audits(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         service, redis = setup_service()
         session_id = uuid.uuid4()
         user_id = uuid.uuid4()
@@ -412,7 +431,9 @@ class TestRefresh:
                 "jti": "stored-jti",
             },
         )
-        monkeypatch.setattr(auth_module, "create_access_token", lambda *_args: "new-access")
+        monkeypatch.setattr(
+            auth_module, "create_access_token", lambda *_args: "new-access"
+        )
         monkeypatch.setattr(
             auth_module,
             "create_refresh_token",
@@ -459,19 +480,25 @@ class TestImpersonation:
         service, _redis = setup_service()
         auth = make_auth("ADM")
         target_user_id = uuid.uuid4()
-        service.repo.get_user_in_school.return_value = SimpleNamespace(id=target_user_id)
+        service.repo.get_user_in_school.return_value = SimpleNamespace(
+            id=target_user_id
+        )
         service.repo.get_membership.return_value = SimpleNamespace(role_code="SUP")
 
         with pytest.raises(AuthorizationError, match="Cannot impersonate SUP or SYS"):
             await service.impersonate(target_user_id=target_user_id, admin_auth=auth)
 
     @pytest.mark.asyncio
-    async def test_impersonate_returns_shadow_token_bundle(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_impersonate_returns_shadow_token_bundle(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         service, _redis = setup_service()
         auth = make_auth("ADM")
         target_user_id = uuid.uuid4()
         shadow_session = SimpleNamespace(id=uuid.uuid4())
-        service.repo.get_user_in_school.return_value = SimpleNamespace(id=target_user_id)
+        service.repo.get_user_in_school.return_value = SimpleNamespace(
+            id=target_user_id
+        )
         service.repo.get_membership.return_value = SimpleNamespace(role_code="STD")
         service._issue_token_bundle = AsyncMock(return_value={"access_token": "shadow"})
         repo_in_uow, audit, _history_repo, uow = patch_auth_uow(monkeypatch)
@@ -491,7 +518,9 @@ class TestImpersonation:
     @pytest.mark.asyncio
     async def test_stop_impersonation_requires_shadow_session(self):
         service, _redis = setup_service()
-        service.repo.get_session_by_id.return_value = SimpleNamespace(impersonator_id=None)
+        service.repo.get_session_by_id.return_value = SimpleNamespace(
+            impersonator_id=None
+        )
 
         with pytest.raises(AuthorizationError, match="not an impersonation session"):
             await service.stop_impersonation(session_id=uuid.uuid4())

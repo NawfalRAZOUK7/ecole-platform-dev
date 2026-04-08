@@ -86,7 +86,9 @@ def _overview_metric(response_json: dict, key: str) -> float:
 
 def _date_bounds(from_date: date, to_date: date) -> tuple[datetime, datetime]:
     start_dt = datetime.combine(from_date, time.min, tzinfo=timezone.utc)
-    end_dt = datetime.combine(to_date + timedelta(days=1), time.min, tzinfo=timezone.utc)
+    end_dt = datetime.combine(
+        to_date + timedelta(days=1), time.min, tzinfo=timezone.utc
+    )
     return start_dt, end_dt
 
 

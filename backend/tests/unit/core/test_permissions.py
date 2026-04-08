@@ -71,7 +71,9 @@ class TestPermissionHierarchy:
 
     def test_parent_and_student_stay_outside_admin_branch(self):
         assert not perms.role_has_permission(perms.PAR, perms.PERM_ERP_CLASS_READ)
-        assert not perms.role_has_permission(perms.PAR, perms.PERM_LMS_ASSIGNMENT_CREATE)
+        assert not perms.role_has_permission(
+            perms.PAR, perms.PERM_LMS_ASSIGNMENT_CREATE
+        )
         assert not perms.role_has_permission(perms.STD, perms.PERM_ERP_CLASS_READ)
         assert not perms.role_has_permission(perms.STD, perms.PERM_ADM_SCHOOL_MANAGE)
 

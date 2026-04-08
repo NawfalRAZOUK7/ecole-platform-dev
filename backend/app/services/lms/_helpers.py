@@ -242,7 +242,11 @@ class LMSServiceBase(LMSSerializerMixin):
             verify_school_boundary(content_item.school_id, auth)
 
         abs_path = await storage.read(asset.file_path)
-        return str(abs_path), asset.mime_type or "application/octet-stream", abs_path.name
+        return (
+            str(abs_path),
+            asset.mime_type or "application/octet-stream",
+            abs_path.name,
+        )
 
     async def get_quiz_attempt_results(
         self,
@@ -256,7 +260,9 @@ class LMSServiceBase(LMSSerializerMixin):
         if auth.role == STD and attempt.student_id != auth.user_id:
             raise NotFoundError("Attempt not found", error_code="ERR-QUIZ-404")
         if attempt.status == "STARTED":
-            raise ValidationError("Attempt not yet submitted", error_code="ERR-QUIZ-400")
+            raise ValidationError(
+                "Attempt not yet submitted", error_code="ERR-QUIZ-400"
+            )
 
         rows = await self.quiz_repo.list_attempt_responses_with_questions(attempt_id)
         return {
@@ -300,7 +306,9 @@ class LMSServiceBase(LMSSerializerMixin):
                 )
             )
         except Exception:
-            logger.exception("Failed to dispatch AssignmentCreated for %s", assignment.id)
+            logger.exception(
+                "Failed to dispatch AssignmentCreated for %s", assignment.id
+            )
 
     async def _dispatch_submission_received(
         self,
@@ -317,13 +325,17 @@ class LMSServiceBase(LMSSerializerMixin):
                     school_id=course.school_id,
                     actor_id=actor_id,
                     submission_id=submission.id,
-                    student_name=student.full_name if student is not None else str(actor_id),
+                    student_name=student.full_name
+                    if student is not None
+                    else str(actor_id),
                     assignment_title=assignment.title,
                     teacher_id=course.teacher_id,
                 )
             )
         except Exception:
-            logger.exception("Failed to dispatch SubmissionReceived for %s", submission.id)
+            logger.exception(
+                "Failed to dispatch SubmissionReceived for %s", submission.id
+            )
 
     async def _send_grade_published_fallback_email(
         self,
@@ -391,7 +403,9 @@ class LMSServiceBase(LMSSerializerMixin):
                     student_id=submission.student_id,
                     course_title=course.title,
                     score=score,
-                    teacher_name=teacher.full_name if teacher is not None else str(actor_id),
+                    teacher_name=teacher.full_name
+                    if teacher is not None
+                    else str(actor_id),
                 )
             )
         except Exception:

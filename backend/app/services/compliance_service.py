@@ -93,11 +93,17 @@ DEFAULT_CURRICULA: list[dict[str, Any]] = [
                 ("Multiplier des nombres decimaux", "ضرب الأعداد العشرية"),
                 ("Diviser des nombres decimaux", "قسمة الأعداد العشرية"),
                 ("Resoudre une proportionnalite directe", "حل وضعية التناسب المباشر"),
-                ("Utiliser le pourcentage dans un probleme", "استعمال النسبة المئوية في مسألة"),
+                (
+                    "Utiliser le pourcentage dans un probleme",
+                    "استعمال النسبة المئوية في مسألة",
+                ),
                 ("Representer un point dans le plan", "تمثيل نقطة في المستوى"),
                 ("Calculer une distance sur repere", "حساب مسافة على معلم"),
                 ("Construire un triangle avec contraintes", "إنشاء مثلث وفق معطيات"),
-                ("Identifier les proprietes du parallelogramme", "تحديد خصائص متوازي الأضلاع"),
+                (
+                    "Identifier les proprietes du parallelogramme",
+                    "تحديد خصائص متوازي الأضلاع",
+                ),
                 ("Calculer le perimetre d une figure composee", "حساب محيط شكل مركب"),
                 ("Calculer l aire d un triangle", "حساب مساحة مثلث"),
                 ("Calculer le volume d un prisme droit", "حساب حجم منشور قائم"),
@@ -106,7 +112,10 @@ DEFAULT_CURRICULA: list[dict[str, Any]] = [
                 ("Calculer une moyenne simple", "حساب معدل بسيط"),
                 ("Ecrire une expression algebrique", "كتابة عبارة جبرية"),
                 ("Reduire une expression simple", "اختزال عبارة بسيطة"),
-                ("Resoudre une equation du premier degre", "حل معادلة من الدرجة الأولى"),
+                (
+                    "Resoudre une equation du premier degre",
+                    "حل معادلة من الدرجة الأولى",
+                ),
                 ("Verifier une egalite", "التحقق من مساواة"),
                 ("Modeliser un probleme par equation", "نمذجة مسألة بمعادلة"),
                 ("Lire une fonction lineaire", "قراءة دالة خطية"),
@@ -128,8 +137,14 @@ DEFAULT_CURRICULA: list[dict[str, Any]] = [
                 ("Identifier les champs lexicaux", "تحديد الحقول المعجمية"),
                 ("Distinguer narration et description", "التمييز بين السرد والوصف"),
                 ("Reperer les articulateurs logiques", "رصد الروابط المنطقية"),
-                ("Employer correctement la phrase nominale", "استعمال الجملة الاسمية بشكل صحيح"),
-                ("Employer correctement la phrase verbale", "استعمال الجملة الفعلية بشكل صحيح"),
+                (
+                    "Employer correctement la phrase nominale",
+                    "استعمال الجملة الاسمية بشكل صحيح",
+                ),
+                (
+                    "Employer correctement la phrase verbale",
+                    "استعمال الجملة الفعلية بشكل صحيح",
+                ),
                 ("Maitriser l accord sujet verbe", "إتقان المطابقة بين الفعل والفاعل"),
                 ("Utiliser le complement d objet", "استعمال المفعول به"),
                 ("Analyser un groupe nominal", "تحليل مركب اسمي"),
@@ -143,7 +158,10 @@ DEFAULT_CURRICULA: list[dict[str, Any]] = [
                 ("Identifier la these d un texte", "تحديد أطروحة النص"),
                 ("Analyser une image support", "تحليل صورة داعمة"),
                 ("Presenter oralement un sujet", "تقديم موضوع شفهيا"),
-                ("Prendre des notes pendant l ecoute", "تدوين الملاحظات أثناء الاستماع"),
+                (
+                    "Prendre des notes pendant l ecoute",
+                    "تدوين الملاحظات أثناء الاستماع",
+                ),
                 ("Reutiliser un vocabulaire specifique", "إعادة توظيف معجم خاص"),
                 ("Comparer deux textes", "مقارنة نصين"),
                 ("Reviser un ecrit selon une grille", "مراجعة كتابة وفق شبكة"),
@@ -188,7 +206,9 @@ class ComplianceService:
             id=str(objective.id),
             curriculum_id=str(objective.curriculum_id),
             curriculum_subject=(
-                objective.curriculum.subject if objective.curriculum is not None else None
+                objective.curriculum.subject
+                if objective.curriculum is not None
+                else None
             ),
             code=objective.code,
             title_fr=objective.title_fr,
@@ -325,7 +345,9 @@ class ComplianceService:
             include_curriculum=True,
         )
         if report is None:
-            raise NotFoundError("Compliance report not found", error_code="ERR-COMPLY-404")
+            raise NotFoundError(
+                "Compliance report not found", error_code="ERR-COMPLY-404"
+            )
         return report
 
     async def _ensure_academic_year_or_404(
@@ -364,7 +386,9 @@ class ComplianceService:
         *,
         school_id: uuid.UUID,
         curriculum_id: uuid.UUID,
-    ) -> tuple[MenCurriculum, list[MenObjective], list[CurriculumMapping], list[str], float]:
+    ) -> tuple[
+        MenCurriculum, list[MenObjective], list[CurriculumMapping], list[str], float
+    ]:
         curriculum = await self.repo.get_curriculum(curriculum_id)
         if curriculum is None:
             raise NotFoundError("MEN curriculum not found", error_code="ERR-COMPLY-404")
@@ -381,7 +405,9 @@ class ComplianceService:
         total_objectives = len(objectives)
         mapped_objectives = len(mapped_objective_ids)
         unmapped_codes = [
-            objective.code for objective in objectives if objective.id not in mapped_objective_ids
+            objective.code
+            for objective in objectives
+            if objective.id not in mapped_objective_ids
         ]
         compliance_percent = round(
             (mapped_objectives / total_objectives) * 100.0 if total_objectives else 0.0,
@@ -515,9 +541,13 @@ class ComplianceService:
                 display_order=body.display_order,
             )
             created = await repo.create_objective(objective)
-            hydrated_objective = await repo.get_objective(created.id, include_curriculum=True)
+            hydrated_objective = await repo.get_objective(
+                created.id, include_curriculum=True
+            )
             if hydrated_objective is None:
-                raise NotFoundError("MEN objective not found", error_code="ERR-COMPLY-404")
+                raise NotFoundError(
+                    "MEN objective not found", error_code="ERR-COMPLY-404"
+                )
             response = self._objective_to_response(hydrated_objective)
             await audit.log_event(
                 school_id=auth.school_id,
@@ -594,7 +624,9 @@ class ComplianceService:
                 include_objective=True,
             )
             if hydrated_mapping is None:
-                raise NotFoundError("Curriculum mapping not found", error_code="ERR-COMPLY-404")
+                raise NotFoundError(
+                    "Curriculum mapping not found", error_code="ERR-COMPLY-404"
+                )
             response = self._mapping_to_response(hydrated_mapping)
             await audit.log_event(
                 school_id=auth.school_id,
@@ -651,7 +683,9 @@ class ComplianceService:
             include_objective=True,
         )
         if mapping is None:
-            raise NotFoundError("Curriculum mapping not found", error_code="ERR-COMPLY-404")
+            raise NotFoundError(
+                "Curriculum mapping not found", error_code="ERR-COMPLY-404"
+            )
         before = self._mapping_to_response(mapping)
 
         async with UnitOfWork(self.db) as uow:
@@ -702,7 +736,13 @@ class ComplianceService:
         mapped_objectives = 0
 
         for curriculum in curricula:
-            _, objectives, _, unmapped_codes, compliance_percent = await self._calculate_snapshot(
+            (
+                _,
+                objectives,
+                _,
+                unmapped_codes,
+                compliance_percent,
+            ) = await self._calculate_snapshot(
                 school_id=auth.school_id,
                 curriculum_id=curriculum.id,
             )
@@ -730,7 +770,9 @@ class ComplianceService:
         )
         return ComplianceDashboardResponse(
             school_id=str(auth.school_id),
-            academic_year_id=str(academic_year_id) if academic_year_id is not None else None,
+            academic_year_id=str(academic_year_id)
+            if academic_year_id is not None
+            else None,
             curriculum_count=len(items),
             total_objectives=total_objectives,
             mapped_objectives=mapped_objectives,
@@ -746,7 +788,13 @@ class ComplianceService:
         ip_address: str | None = None,
     ) -> dict[str, Any]:
         await self._ensure_academic_year_or_404(body.academic_year_id, auth)
-        curriculum, objectives, _, unmapped_codes, compliance_percent = await self._calculate_snapshot(
+        (
+            curriculum,
+            objectives,
+            _,
+            unmapped_codes,
+            compliance_percent,
+        ) = await self._calculate_snapshot(
             school_id=auth.school_id,
             curriculum_id=body.curriculum_id,
         )
@@ -776,7 +824,9 @@ class ComplianceService:
                 include_curriculum=True,
             )
             if hydrated_report is None:
-                raise NotFoundError("Compliance report not found", error_code="ERR-COMPLY-404")
+                raise NotFoundError(
+                    "Compliance report not found", error_code="ERR-COMPLY-404"
+                )
             response = self._report_to_response(hydrated_report)
             await audit.log_event(
                 school_id=auth.school_id,
@@ -832,7 +882,9 @@ class ComplianceService:
         auth: AuthContext,
     ) -> bytes:
         report = await self._get_report_or_404(report_id, auth)
-        curriculum = report.curriculum or await self._get_curriculum_or_404(report.curriculum_id)
+        curriculum = report.curriculum or await self._get_curriculum_or_404(
+            report.curriculum_id
+        )
         lines = [
             "MEN Compliance Report",
             f"School ID: {report.school_id}",

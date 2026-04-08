@@ -198,14 +198,18 @@ async def ensure_grade_category() -> uuid.UUID:
     category_id = uuid.uuid5(uuid.NAMESPACE_URL, "security-grade-category")
     async with async_session() as db:
         existing_for_scope = (
-            await db.execute(
-                select(GradeCategory).where(
-                    GradeCategory.school_id == SCHOOL_UUID,
-                    GradeCategory.class_id == CLASS_UUID,
-                    GradeCategory.period_id == PERIOD_UUID,
+            (
+                await db.execute(
+                    select(GradeCategory).where(
+                        GradeCategory.school_id == SCHOOL_UUID,
+                        GradeCategory.class_id == CLASS_UUID,
+                        GradeCategory.period_id == PERIOD_UUID,
+                    )
                 )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         if existing_for_scope:
             return existing_for_scope[0].id
 
@@ -226,7 +230,9 @@ async def ensure_grade_category() -> uuid.UUID:
     return category_id
 
 
-async def create_grading_scope_submission(*, teacher_id: uuid.UUID) -> dict[str, uuid.UUID]:
+async def create_grading_scope_submission(
+    *, teacher_id: uuid.UUID
+) -> dict[str, uuid.UUID]:
     course_id = uuid.uuid4()
     assignment_id = uuid.uuid4()
     submission_id = uuid.uuid4()

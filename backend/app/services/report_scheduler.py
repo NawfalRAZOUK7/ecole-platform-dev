@@ -53,8 +53,12 @@ class ReportSchedulerService:
             parameters=schedule.parameters or {},
             recipient_roles=list(schedule.recipient_roles or []),
             enabled=bool(schedule.enabled),
-            last_run_at=schedule.last_run_at.isoformat() if schedule.last_run_at else None,
-            next_run_at=schedule.next_run_at.isoformat() if schedule.next_run_at else None,
+            last_run_at=schedule.last_run_at.isoformat()
+            if schedule.last_run_at
+            else None,
+            next_run_at=schedule.next_run_at.isoformat()
+            if schedule.next_run_at
+            else None,
             created_at=schedule.created_at.isoformat(),
             updated_at=schedule.updated_at.isoformat() if schedule.updated_at else None,
         ).model_dump()
@@ -67,9 +71,13 @@ class ReportSchedulerService:
     ) -> ReportSchedule:
         schedule = await self.repo.get_schedule(schedule_id)
         if schedule is None:
-            raise NotFoundError("Report schedule not found", error_code="ERR-REPORT-404")
+            raise NotFoundError(
+                "Report schedule not found", error_code="ERR-REPORT-404"
+            )
         if schedule.school_id != school_id:
-            raise NotFoundError("Report schedule not found", error_code="ERR-REPORT-404")
+            raise NotFoundError(
+                "Report schedule not found", error_code="ERR-REPORT-404"
+            )
         return schedule
 
     def _add_month(self, value: datetime) -> datetime:
@@ -113,7 +121,9 @@ class ReportSchedulerService:
             )
             if period is None:
                 raise NotFoundError("Period not found", error_code="ERR-REPORT-404")
-            next_run_at = datetime.combine(period.date_end, time(hour=6), tzinfo=timezone.utc)
+            next_run_at = datetime.combine(
+                period.date_end, time(hour=6), tzinfo=timezone.utc
+            )
             if next_run_at <= now:
                 if reschedule_after_run:
                     return None
@@ -122,7 +132,9 @@ class ReportSchedulerService:
                     error_code="ERR-REPORT-422",
                 )
             return next_run_at
-        raise ValidationError("Unsupported schedule frequency", error_code="ERR-REPORT-422")
+        raise ValidationError(
+            "Unsupported schedule frequency", error_code="ERR-REPORT-422"
+        )
 
     async def _validate_schedule_payload(
         self,
@@ -136,7 +148,9 @@ class ReportSchedulerService:
         validated_request = ReportGenerateRequest.model_validate(
             {"type": report_type, **(parameters or {})}
         )
-        normalized_parameters = validated_request.model_dump(mode="json", exclude={"type"})
+        normalized_parameters = validated_request.model_dump(
+            mode="json", exclude={"type"}
+        )
         resolved_next_run_at = await self._resolve_next_run_at(
             school_id=school_id,
             frequency=frequency,
@@ -157,9 +171,9 @@ class ReportSchedulerService:
 
     def _report_email_body(self, *, locale: str, report_label: str) -> str:
         bodies = {
-            "fr": f"Le rapport planifié \"{report_label}\" est prêt à être consulté ou téléchargé.",
-            "ar": f"التقرير المجدول \"{report_label}\" جاهز للعرض أو التنزيل.",
-            "en": f"The scheduled \"{report_label}\" report is ready to view or download.",
+            "fr": f'Le rapport planifié "{report_label}" est prêt à être consulté ou téléchargé.',
+            "ar": f'التقرير المجدول "{report_label}" جاهز للعرض أو التنزيل.',
+            "en": f'The scheduled "{report_label}" report is ready to view or download.',
         }
         return bodies.get(locale, bodies["fr"])
 
@@ -187,7 +201,9 @@ class ReportSchedulerService:
             return 0
 
         locale = str((schedule.parameters or {}).get("locale") or "fr")
-        report_label = ReportsService(self.db)._report_title(schedule.report_type, locale)
+        report_label = ReportsService(self.db)._report_title(
+            schedule.report_type, locale
+        )
         action_url = self._absolute_action_url(job_payload.get("download_url"))
         sent_count = 0
         for user in recipients:
@@ -326,7 +342,11 @@ class ReportSchedulerService:
         )
         report_type = body.report_type or schedule.report_type
         frequency = body.frequency or schedule.frequency
-        parameters_input = body.parameters if body.parameters is not None else (schedule.parameters or {})
+        parameters_input = (
+            body.parameters
+            if body.parameters is not None
+            else (schedule.parameters or {})
+        )
         parameters, computed_next_run_at = await self._validate_schedule_payload(
             school_id=auth.school_id,
             report_type=report_type,
@@ -347,7 +367,9 @@ class ReportSchedulerService:
             audit = AuditService(uow.session)
             stored = await repo.get_schedule(schedule_id)
             if stored is None:
-                raise NotFoundError("Report schedule not found", error_code="ERR-REPORT-404")
+                raise NotFoundError(
+                    "Report schedule not found", error_code="ERR-REPORT-404"
+                )
             before = self._serialize_schedule(stored)
             stored.report_type = report_type
             stored.frequency = frequency
@@ -378,13 +400,17 @@ class ReportSchedulerService:
         auth: AuthContext,
         ip_address: str,
     ) -> dict[str, Any]:
-        await self._get_schedule_in_school(schedule_id=schedule_id, school_id=auth.school_id)
+        await self._get_schedule_in_school(
+            schedule_id=schedule_id, school_id=auth.school_id
+        )
         async with UnitOfWork(self.db) as uow:
             repo = ReportScheduleRepository(uow.session)
             audit = AuditService(uow.session)
             stored = await repo.get_schedule(schedule_id)
             if stored is None:
-                raise NotFoundError("Report schedule not found", error_code="ERR-REPORT-404")
+                raise NotFoundError(
+                    "Report schedule not found", error_code="ERR-REPORT-404"
+                )
             before = self._serialize_schedule(stored)
             stored.enabled = False
             stored.next_run_at = None

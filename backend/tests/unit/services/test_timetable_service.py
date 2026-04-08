@@ -101,7 +101,9 @@ def setup_service(monkeypatch: pytest.MonkeyPatch):
 
 class TestTimetableConstraints:
     @pytest.mark.asyncio
-    async def test_set_constraints_requires_admin(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_set_constraints_requires_admin(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth("TCH")
         service, _repo_in_uow, _audit, _uow = setup_service(monkeypatch)
 
@@ -136,7 +138,9 @@ class TestTimetableConstraints:
         service, repo_in_uow, audit, uow = setup_service(monkeypatch)
         academic_year_id = uuid.uuid4()
         created_constraint = make_constraint(auth, academic_year_id)
-        service._load_academic_year = AsyncMock(return_value=SimpleNamespace(id=academic_year_id))
+        service._load_academic_year = AsyncMock(
+            return_value=SimpleNamespace(id=academic_year_id)
+        )
         repo_in_uow.create_constraint.return_value = created_constraint
 
         result = await service.set_constraints(
@@ -230,9 +234,15 @@ class TestTimetablePreviewAndApply:
         service.repo.get_job.return_value = job
         repo_in_uow.get_job.return_value = job
 
-        result = await service.apply_generated(job_id=job.id, auth=auth, ip_address="127.0.0.1")
+        result = await service.apply_generated(
+            job_id=job.id, auth=auth, ip_address="127.0.0.1"
+        )
 
-        assert result == {"job_id": str(job.id), "status": "applied", "created_count": 1}
+        assert result == {
+            "job_id": str(job.id),
+            "status": "applied",
+            "created_count": 1,
+        }
         assert job.status == "applied"
         repo_in_uow.create_timetable_slot.assert_awaited_once()
         repo_in_uow.save_job.assert_awaited_once_with(job)

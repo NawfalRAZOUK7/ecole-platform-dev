@@ -5,7 +5,17 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, date, datetime
 
-from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKey, Index, Integer, Numeric, String, UniqueConstraint
+from sqlalchemy import (
+    CheckConstraint,
+    Date,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.core.database import Base, SchoolScopedMixin, TimestampMixin
@@ -175,7 +185,9 @@ class CostPerStudent(TimestampMixin, SchoolScopedMixin, Base):
         ForeignKey("academic_years.id", ondelete="CASCADE"),
         nullable=False,
     )
-    total_operational_cost: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
+    total_operational_cost: Mapped[float] = mapped_column(
+        Numeric(14, 2), nullable=False
+    )
     total_students: Mapped[int] = mapped_column(Integer, nullable=False)
     cost_per_student: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
     revenue_per_student: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
@@ -250,7 +262,9 @@ class FinancialSnapshot(TimestampMixin, SchoolScopedMixin, Base):
     collection_rate: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False)
     overdue_amount: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
     overdue_count: Mapped[int] = mapped_column(Integer, nullable=False)
-    avg_payment_delay_days: Mapped[float | None] = mapped_column(Numeric(6, 2), nullable=True)
+    avg_payment_delay_days: Mapped[float | None] = mapped_column(
+        Numeric(6, 2), nullable=True
+    )
     currency: Mapped[str] = mapped_column(String(3), nullable=False, default="MAD")
     computed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

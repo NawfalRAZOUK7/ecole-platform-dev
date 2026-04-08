@@ -101,11 +101,14 @@ class TestValidateParentChildAccess:
         db = AsyncMock()
         db.execute.return_value = result
 
-        assert await validate_parent_child_access(
-            db,
-            parent_id=uuid.uuid4(),
-            student_id=uuid.uuid4(),
-        ) is True
+        assert (
+            await validate_parent_child_access(
+                db,
+                parent_id=uuid.uuid4(),
+                student_id=uuid.uuid4(),
+            )
+            is True
+        )
 
     @pytest.mark.asyncio
     async def test_returns_false_for_inactive_link(self):
@@ -114,11 +117,14 @@ class TestValidateParentChildAccess:
         db = AsyncMock()
         db.execute.return_value = result
 
-        assert await validate_parent_child_access(
-            db,
-            parent_id=uuid.uuid4(),
-            student_id=uuid.uuid4(),
-        ) is False
+        assert (
+            await validate_parent_child_access(
+                db,
+                parent_id=uuid.uuid4(),
+                student_id=uuid.uuid4(),
+            )
+            is False
+        )
 
         query = db.execute.await_args.args[0]
         assert "parent_child_links" in compiled_sql(query)
@@ -132,11 +138,14 @@ class TestValidateParentChildAccess:
         db = AsyncMock()
         db.execute.return_value = result
 
-        assert await validate_parent_child_access(
-            db,
-            parent_id=uuid.uuid4(),
-            student_id=uuid.uuid4(),
-        ) is False
+        assert (
+            await validate_parent_child_access(
+                db,
+                parent_id=uuid.uuid4(),
+                student_id=uuid.uuid4(),
+            )
+            is False
+        )
 
 
 class TestValidateTeacherClassAccess:
@@ -147,11 +156,14 @@ class TestValidateTeacherClassAccess:
         db = AsyncMock()
         db.execute.return_value = result
 
-        assert await validate_teacher_class_access(
-            db,
-            teacher_id=uuid.uuid4(),
-            class_id=uuid.uuid4(),
-        ) is True
+        assert (
+            await validate_teacher_class_access(
+                db,
+                teacher_id=uuid.uuid4(),
+                class_id=uuid.uuid4(),
+            )
+            is True
+        )
 
     @pytest.mark.asyncio
     async def test_returns_false_for_unassigned_teacher(self):
@@ -160,11 +172,14 @@ class TestValidateTeacherClassAccess:
         db = AsyncMock()
         db.execute.return_value = result
 
-        assert await validate_teacher_class_access(
-            db,
-            teacher_id=uuid.uuid4(),
-            class_id=uuid.uuid4(),
-        ) is False
+        assert (
+            await validate_teacher_class_access(
+                db,
+                teacher_id=uuid.uuid4(),
+                class_id=uuid.uuid4(),
+            )
+            is False
+        )
 
         query = db.execute.await_args.args[0]
         assert "teacher_assignments" in compiled_sql(query)
@@ -178,11 +193,14 @@ class TestValidateStudentTeacherAccess:
         db = AsyncMock()
         db.execute.return_value = result
 
-        assert await validate_student_teacher_access(
-            db,
-            student_id=uuid.uuid4(),
-            teacher_id=uuid.uuid4(),
-        ) is True
+        assert (
+            await validate_student_teacher_access(
+                db,
+                student_id=uuid.uuid4(),
+                teacher_id=uuid.uuid4(),
+            )
+            is True
+        )
 
     @pytest.mark.asyncio
     async def test_returns_false_when_student_and_teacher_do_not_share_class(self):
@@ -191,11 +209,14 @@ class TestValidateStudentTeacherAccess:
         db = AsyncMock()
         db.execute.return_value = result
 
-        assert await validate_student_teacher_access(
-            db,
-            student_id=uuid.uuid4(),
-            teacher_id=uuid.uuid4(),
-        ) is False
+        assert (
+            await validate_student_teacher_access(
+                db,
+                student_id=uuid.uuid4(),
+                teacher_id=uuid.uuid4(),
+            )
+            is False
+        )
 
     @pytest.mark.asyncio
     async def test_query_requires_active_enrollment_and_intersection(self):

@@ -415,7 +415,9 @@ class BillingRepository(BaseRepository):
                 PaymentAttempt.next_retry_at.isnot(None),
                 PaymentAttempt.next_retry_at <= now,
             )
-            .order_by(PaymentAttempt.next_retry_at.asc(), PaymentAttempt.created_at.asc())
+            .order_by(
+                PaymentAttempt.next_retry_at.asc(), PaymentAttempt.created_at.asc()
+            )
             .limit(limit)
         )
         return list(result.scalars().all())

@@ -297,7 +297,9 @@ class MicroSchoolRepository(BaseRepository):
         await self.db.delete(micro_payment)
         await self.db.flush()
 
-    async def get_micro_resource(self, micro_resource_id: uuid.UUID) -> MicroResource | None:
+    async def get_micro_resource(
+        self, micro_resource_id: uuid.UUID
+    ) -> MicroResource | None:
         result = await self.db.execute(
             select(MicroResource).where(MicroResource.id == micro_resource_id)
         )
@@ -325,7 +327,9 @@ class MicroSchoolRepository(BaseRepository):
         )
         return list(result.scalars().all())
 
-    async def create_micro_resource(self, micro_resource: MicroResource) -> MicroResource:
+    async def create_micro_resource(
+        self, micro_resource: MicroResource
+    ) -> MicroResource:
         self.db.add(micro_resource)
         await self.db.flush()
         return micro_resource
@@ -346,7 +350,9 @@ class MicroSchoolRepository(BaseRepository):
         school_id: uuid.UUID | None = None,
         include_enrollment: bool = False,
     ) -> MicroProgressLog | None:
-        query = select(MicroProgressLog).where(MicroProgressLog.id == micro_progress_log_id)
+        query = select(MicroProgressLog).where(
+            MicroProgressLog.id == micro_progress_log_id
+        )
         if school_id is not None:
             query = (
                 query.join(
@@ -389,7 +395,9 @@ class MicroSchoolRepository(BaseRepository):
                 .where(User.school_id == school_id)
             )
         if micro_enrollment_id is not None:
-            query = query.where(MicroProgressLog.micro_enrollment_id == micro_enrollment_id)
+            query = query.where(
+                MicroProgressLog.micro_enrollment_id == micro_enrollment_id
+            )
         if educator_id is not None:
             query = query.where(MicroProgressLog.educator_id == educator_id)
         if date_from is not None:
@@ -417,7 +425,9 @@ class MicroSchoolRepository(BaseRepository):
         await self.db.flush()
         return micro_progress_log
 
-    async def delete_micro_progress_log(self, micro_progress_log: MicroProgressLog) -> None:
+    async def delete_micro_progress_log(
+        self, micro_progress_log: MicroProgressLog
+    ) -> None:
         await self.db.delete(micro_progress_log)
         await self.db.flush()
 

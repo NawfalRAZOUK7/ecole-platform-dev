@@ -162,7 +162,9 @@ class SyncQueueRepository(BaseRepository):
         if resolution is not None:
             query = query.where(SyncConflict.resolution == resolution)
         result = await self.db.execute(
-            query.order_by(SyncConflict.created_at.desc(), SyncConflict.id.asc()).limit(limit)
+            query.order_by(SyncConflict.created_at.desc(), SyncConflict.id.asc()).limit(
+                limit
+            )
         )
         return list(result.scalars().all())
 
@@ -211,9 +213,9 @@ class SyncQueueRepository(BaseRepository):
         if device_id is not None:
             query = query.where(SyncCheckpoint.device_id == device_id)
         result = await self.db.execute(
-            query.order_by(SyncCheckpoint.last_sync_at.desc(), SyncCheckpoint.id.desc()).limit(
-                limit
-            )
+            query.order_by(
+                SyncCheckpoint.last_sync_at.desc(), SyncCheckpoint.id.desc()
+            ).limit(limit)
         )
         return list(result.scalars().all())
 

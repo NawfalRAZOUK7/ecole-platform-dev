@@ -165,7 +165,9 @@ class SkillClassAnalyticsResponse(BaseModel):
     progress_record_count: int
     unlocked_record_count: int
     average_overall_score: float
-    dimension_summaries: list[SkillDimensionAnalyticsResponse] = Field(default_factory=list)
+    dimension_summaries: list[SkillDimensionAnalyticsResponse] = Field(
+        default_factory=list
+    )
 
 
 class SkillSchoolAnalyticsResponse(BaseModel):
@@ -179,7 +181,9 @@ class SkillSchoolAnalyticsResponse(BaseModel):
     progress_record_count: int
     unlocked_record_count: int
     average_overall_score: float
-    dimension_summaries: list[SkillDimensionAnalyticsResponse] = Field(default_factory=list)
+    dimension_summaries: list[SkillDimensionAnalyticsResponse] = Field(
+        default_factory=list
+    )
 
 
 class SkillLeaderboardEntryResponse(BaseModel):

@@ -59,7 +59,9 @@ async def send_overdue_reminders() -> int:
                         continue
 
                     # Check consent: topic="billing", channel="email"
-                    consent = await repo.get_billing_email_consent(user_id=invoice.parent_id)
+                    consent = await repo.get_billing_email_consent(
+                        user_id=invoice.parent_id
+                    )
                     # If consent exists and is opted_out, skip
                     if consent and consent.status == "opted_out":
                         logger.info(
@@ -106,7 +108,9 @@ async def send_overdue_reminders() -> int:
                     sent_count += 1
 
                 except Exception:
-                    logger.exception("Error sending reminder for invoice %s", invoice.id)
+                    logger.exception(
+                        "Error sending reminder for invoice %s", invoice.id
+                    )
 
             await uow.commit()
 

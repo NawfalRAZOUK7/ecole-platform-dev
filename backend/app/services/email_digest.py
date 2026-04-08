@@ -22,7 +22,10 @@ from app.models.com import (
     NotificationPreference,
 )
 from app.models.iam import User
-from app.repositories.notifications import NotificationDeliveryRepository, NotificationRepository
+from app.repositories.notifications import (
+    NotificationDeliveryRepository,
+    NotificationRepository,
+)
 from app.services.email import email_service
 
 logger = logging.getLogger(__name__)

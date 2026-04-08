@@ -52,7 +52,9 @@ LOGIN_TIMEOUT = httpx.Timeout(30.0, connect=5.0)
 _seed_attempted = False
 
 
-def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+def pytest_collection_modifyitems(
+    config: pytest.Config, items: list[pytest.Item]
+) -> None:
     """Keep `-k "sync"` scoped to the sync feature slice.
 
     Pytest keyword matching treats ``sync`` as a substring of ``asyncio``, which
@@ -117,7 +119,11 @@ def _reseed_dev_database() -> None:
             text=True,
             timeout=30,
         )
-    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError):
+    except (
+        subprocess.CalledProcessError,
+        subprocess.TimeoutExpired,
+        FileNotFoundError,
+    ):
         # Docker may not be available; fall back to direct seed if possible.
         try:
             subprocess.run(
@@ -205,11 +211,15 @@ async def parent_token(client: httpx.AsyncClient) -> str:
 def postgres_url() -> str:
     """Disposable PostgreSQL URL for integration-style tests."""
     with PostgresContainer("postgres:16-alpine") as pg:
-        yield pg.get_connection_url().replace(
-            "postgresql+psycopg2://",
-            "postgresql+asyncpg://",
-            1,
-        ).replace("postgresql://", "postgresql+asyncpg://", 1)
+        yield (
+            pg.get_connection_url()
+            .replace(
+                "postgresql+psycopg2://",
+                "postgresql+asyncpg://",
+                1,
+            )
+            .replace("postgresql://", "postgresql+asyncpg://", 1)
+        )
 
 
 @pytest_asyncio.fixture(loop_scope="function")

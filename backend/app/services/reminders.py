@@ -11,7 +11,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.unit_of_work import UnitOfWork
-from app.models.calendar import Event, EventReminder, EventReminderChannel, EventVisibility
+from app.models.calendar import (
+    Event,
+    EventReminder,
+    EventReminderChannel,
+    EventVisibility,
+)
 from app.models.com import DeliveryChannel, NotificationCategory, NotificationPriority
 from app.repositories.calendar import CalendarRepository
 from app.services.calendar import CalendarService
@@ -61,13 +66,22 @@ class ReminderService:
         event: Event,
         reminder_offsets_minutes: list[int] | None = None,
     ) -> int:
-        offsets = sorted({offset for offset in (reminder_offsets_minutes or _default_offsets()) if offset > 0}, reverse=True)
+        offsets = sorted(
+            {
+                offset
+                for offset in (reminder_offsets_minutes or _default_offsets())
+                if offset > 0
+            },
+            reverse=True,
+        )
         if not offsets:
             return 0
 
         now = _utc_now()
         horizon = now + timedelta(days=settings.calendar_reminder_horizon_days)
-        occurrences = self.calendar._expand_occurrences(event, from_dt=now, to_dt=horizon)
+        occurrences = self.calendar._expand_occurrences(
+            event, from_dt=now, to_dt=horizon
+        )
         reminders: list[EventReminder] = []
 
         for occurrence in occurrences:
@@ -211,7 +225,9 @@ class ReminderService:
         return resolved or [DeliveryChannel.IN_APP.value]
 
     def _notification_title(self, event: Event) -> str:
-        return event.title_fr or event.title_en or event.title_ar or "Rappel d'evenement"
+        return (
+            event.title_fr or event.title_en or event.title_ar or "Rappel d'evenement"
+        )
 
     def _notification_body(self, event: Event, occurrence_start_at: datetime) -> str:
         local_dt = occurrence_start_at.astimezone(CASABLANCA_TZ)

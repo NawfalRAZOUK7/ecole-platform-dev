@@ -129,7 +129,9 @@ class GDPRService:
                     "created_at": session.created_at.isoformat()
                     if session.created_at
                     else None,
-                    "revoke_at": session.revoke_at.isoformat() if session.revoke_at else None,
+                    "revoke_at": session.revoke_at.isoformat()
+                    if session.revoke_at
+                    else None,
                 }
                 for session in sessions
             ],
@@ -141,7 +143,9 @@ class GDPRService:
                     "target_type": log.target_type,
                     "target_id": str(log.target_id) if log.target_id else None,
                     "ip_address": log.ip_address,
-                    "created_at": log.created_at.isoformat() if log.created_at else None,
+                    "created_at": log.created_at.isoformat()
+                    if log.created_at
+                    else None,
                 }
                 for log in audit_logs
             ],
@@ -196,7 +200,9 @@ class GDPRService:
                     "issued_at": invoice.issued_date.isoformat()
                     if invoice.issued_date
                     else None,
-                    "due_at": invoice.due_date.isoformat() if invoice.due_date else None,
+                    "due_at": invoice.due_date.isoformat()
+                    if invoice.due_date
+                    else None,
                 }
                 for invoice in invoices
             ],
@@ -333,7 +339,9 @@ class GDPRService:
                     "entity_after": log.entity_after,
                     "actor_id": str(log.actor_id) if log.actor_id else None,
                     "ip_address": log.ip_address,
-                    "created_at": log.created_at.isoformat() if log.created_at else None,
+                    "created_at": log.created_at.isoformat()
+                    if log.created_at
+                    else None,
                 }
                 for log in change_history
             ],
@@ -368,7 +376,9 @@ class GDPRService:
                 "topic": consent.topic,
                 "channel": consent.channel,
                 "scope_type": consent.scope_type,
-                "scope_ref_id": str(consent.scope_ref_id) if consent.scope_ref_id else None,
+                "scope_ref_id": str(consent.scope_ref_id)
+                if consent.scope_ref_id
+                else None,
                 "status": consent.status,
             }
             for consent in rows
@@ -386,11 +396,15 @@ class GDPRService:
     ) -> dict:
         consent = await self.repo.get_consent_preference(consent_id)
         if consent is None:
-            raise NotFoundError("Consent preference not found", error_code="ERR-COM-404")
+            raise NotFoundError(
+                "Consent preference not found", error_code="ERR-COM-404"
+            )
 
         verify_school_boundary(consent.school_id, auth)
         if not self._can_manage_consents(auth) and consent.user_id != auth.user_id:
-            raise NotFoundError("Consent preference not found", error_code="ERR-COM-404")
+            raise NotFoundError(
+                "Consent preference not found", error_code="ERR-COM-404"
+            )
 
         old_status = consent.status
         consent.status = status

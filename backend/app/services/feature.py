@@ -127,7 +127,9 @@ class FeatureService:
     async def get_feature_toggle(self, toggle_id: uuid.UUID) -> dict:
         toggle = await self.repo.get_toggle_by_id(toggle_id)
         if toggle is None:
-            raise NotFoundError("Feature toggle not found", error_code="ERR-FEATURE-404")
+            raise NotFoundError(
+                "Feature toggle not found", error_code="ERR-FEATURE-404"
+            )
         return _toggle_to_response(toggle)
 
     async def update_feature_toggle(
@@ -144,7 +146,9 @@ class FeatureService:
     ) -> dict:
         toggle = await self.repo.get_toggle_by_id(toggle_id)
         if toggle is None:
-            raise NotFoundError("Feature toggle not found", error_code="ERR-FEATURE-404")
+            raise NotFoundError(
+                "Feature toggle not found", error_code="ERR-FEATURE-404"
+            )
 
         before = _toggle_snapshot(toggle)
         if display_name is not None:
@@ -185,7 +189,9 @@ class FeatureService:
     ) -> dict:
         toggle = await self.repo.get_toggle_by_id(toggle_id)
         if toggle is None:
-            raise NotFoundError("Feature toggle not found", error_code="ERR-FEATURE-404")
+            raise NotFoundError(
+                "Feature toggle not found", error_code="ERR-FEATURE-404"
+            )
 
         before = _toggle_snapshot(toggle)
         feature_key = toggle.feature_key

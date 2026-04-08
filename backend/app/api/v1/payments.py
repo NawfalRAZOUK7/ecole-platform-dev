@@ -23,7 +23,6 @@ from app.services.billing import BillingService
 router = APIRouter(prefix="/payments", tags=["billing-payments"])
 
 
-
 # ---------------------------------------------------------------------------
 # S-062: POST /payments/initiate — Initiate payment (PAR)
 # ---------------------------------------------------------------------------

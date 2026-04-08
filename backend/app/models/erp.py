@@ -145,7 +145,9 @@ class Period(TimestampMixin, SchoolScopedMixin, Base):
     )
 
     def __repr__(self) -> str:
-        return f"<Period id={_short_id(self.id)} label={self.label} status={self.status}>"
+        return (
+            f"<Period id={_short_id(self.id)} label={self.label} status={self.status}>"
+        )
 
 
 class Class(TimestampMixin, SchoolScopedMixin, Base):
@@ -569,7 +571,9 @@ class TimetableGenerationJob(TimestampMixin, SchoolScopedMixin, Base):
         nullable=False,
         default=TimetableJobStatus.PENDING.value,
     )
-    constraints_snapshot: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    constraints_snapshot: Mapped[dict] = mapped_column(
+        JSONB, nullable=False, default=dict
+    )
     result_payload: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     result_slot_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     conflicts_found: Mapped[int | None] = mapped_column(Integer, nullable=True)

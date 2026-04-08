@@ -36,7 +36,9 @@ class SkillPassportRepository(BaseRepository):
         result = await self.db.execute(select(User).where(User.id == user_id))
         return result.scalar_one_or_none()
 
-    async def get_academic_year(self, academic_year_id: uuid.UUID) -> AcademicYear | None:
+    async def get_academic_year(
+        self, academic_year_id: uuid.UUID
+    ) -> AcademicYear | None:
         result = await self.db.execute(
             select(AcademicYear).where(AcademicYear.id == academic_year_id)
         )
@@ -84,7 +86,9 @@ class SkillPassportRepository(BaseRepository):
         if is_active is not None:
             query = query.where(SkillDimension.is_active.is_(is_active))
         result = await self.db.execute(
-            query.order_by(SkillDimension.display_order.asc(), SkillDimension.code.asc())
+            query.order_by(
+                SkillDimension.display_order.asc(), SkillDimension.code.asc()
+            )
         )
         return list(result.scalars().all())
 
@@ -149,7 +153,9 @@ class SkillPassportRepository(BaseRepository):
 
     async def count_active_milestones(self) -> int:
         result = await self.db.execute(
-            select(func.count(SkillMilestone.id)).where(SkillMilestone.is_active.is_(True))
+            select(func.count(SkillMilestone.id)).where(
+                SkillMilestone.is_active.is_(True)
+            )
         )
         return int(result.scalar_one() or 0)
 
@@ -214,7 +220,9 @@ class SkillPassportRepository(BaseRepository):
                 )
             )
         result = await self.db.execute(
-            query.order_by(SkillProgress.student_id.asc(), SkillProgress.created_at.asc())
+            query.order_by(
+                SkillProgress.student_id.asc(), SkillProgress.created_at.asc()
+            )
         )
         return list(result.scalars().all())
 
@@ -407,7 +415,8 @@ class SkillPassportRepository(BaseRepository):
             select(
                 func.coalesce(
                     func.avg(
-                        (QuizAttempt.score * 100.0) / func.nullif(QuizAttempt.max_score, 0)
+                        (QuizAttempt.score * 100.0)
+                        / func.nullif(QuizAttempt.max_score, 0)
                     ),
                     0.0,
                 )

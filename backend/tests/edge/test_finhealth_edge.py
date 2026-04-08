@@ -140,7 +140,9 @@ class TestFinancialHealthServiceEdges:
             )
 
     @pytest.mark.asyncio
-    async def test_compute_snapshot_can_return_zero_overdue_metrics(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    async def test_compute_snapshot_can_return_zero_overdue_metrics(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         auth = AuthContext(
             user_id=uuid.uuid4(),
             role="ADM",
@@ -228,7 +230,9 @@ class TestFinancialHealthServiceEdges:
             permissions=set(),
         )
         service = FinancialHealthService(AsyncMock())
-        service.get_dashboard = AsyncMock(return_value={"school_id": str(auth.school_id)})
+        service.get_dashboard = AsyncMock(
+            return_value={"school_id": str(auth.school_id)}
+        )
 
         payload = await service.export_pdf(auth=auth)
 

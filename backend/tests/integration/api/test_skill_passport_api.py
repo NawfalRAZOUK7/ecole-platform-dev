@@ -15,7 +15,12 @@ from app.core.security import create_access_token
 from app.main import app
 from app.models.iam import RoleCode
 from app.models.lms import SubmissionStatus
-from tests.factories.erp import AcademicYearFactory, ClassFactory, EnrollmentFactory, PeriodFactory
+from tests.factories.erp import (
+    AcademicYearFactory,
+    ClassFactory,
+    EnrollmentFactory,
+    PeriodFactory,
+)
 from tests.factories.iam import (
     MembershipFactory,
     ParentChildLinkFactory,
@@ -125,11 +130,21 @@ async def skill_api_context(session_factory):
             code="4A",
             name="4eme A",
         )
-        admin = await _create_actor(session, school=school, role=RoleCode.ADM.value, label="admin")
-        director = await _create_actor(session, school=school, role=RoleCode.DIR.value, label="director")
-        teacher = await _create_actor(session, school=school, role=RoleCode.TCH.value, label="teacher")
-        parent = await _create_actor(session, school=school, role=RoleCode.PAR.value, label="parent")
-        student = await _create_actor(session, school=school, role=RoleCode.STD.value, label="student")
+        admin = await _create_actor(
+            session, school=school, role=RoleCode.ADM.value, label="admin"
+        )
+        director = await _create_actor(
+            session, school=school, role=RoleCode.DIR.value, label="director"
+        )
+        teacher = await _create_actor(
+            session, school=school, role=RoleCode.TCH.value, label="teacher"
+        )
+        parent = await _create_actor(
+            session, school=school, role=RoleCode.PAR.value, label="parent"
+        )
+        student = await _create_actor(
+            session, school=school, role=RoleCode.STD.value, label="student"
+        )
 
         await ParentChildLinkFactory.create(
             session=session,
@@ -242,7 +257,9 @@ class TestSkillPassportApi:
         )
 
         assert response.status_code == 201, response.text
-        assert response.json()["data"]["dimension_id"] == str(skill_api_context["dimension"].id)
+        assert response.json()["data"]["dimension_id"] == str(
+            skill_api_context["dimension"].id
+        )
 
     @pytest.mark.asyncio
     async def test_teacher_can_list_dimensions(self, client, skill_api_context):
@@ -310,10 +327,14 @@ class TestSkillPassportApi:
         )
 
         assert response.status_code == 200, response.text
-        assert response.json()["data"]["student_id"] == str(skill_api_context["student"]["user"].id)
+        assert response.json()["data"]["student_id"] == str(
+            skill_api_context["student"]["user"].id
+        )
 
     @pytest.mark.asyncio
-    async def test_student_can_download_generated_passport_pdf(self, client, skill_api_context):
+    async def test_student_can_download_generated_passport_pdf(
+        self, client, skill_api_context
+    ):
         await client.post(
             f"/skills/passport/{skill_api_context['student']['user'].id}/generate",
             headers=auth_header(skill_api_context["teacher"]["token"]),

@@ -10,7 +10,13 @@ from pydantic import TypeAdapter
 from app.schemas.billing import FeeStructureResponse, InvoiceResponse
 from app.schemas.billing_enhancements import PaymentPlanSummaryResponse
 from app.schemas.school import SchoolResponse
-from tests.integration.api.helpers import INVOICE_ID, SCHOOL_ID, YEAR_ID, auth_header, unique_suffix
+from tests.integration.api.helpers import (
+    INVOICE_ID,
+    SCHOOL_ID,
+    YEAR_ID,
+    auth_header,
+    unique_suffix,
+)
 
 
 class TestSchoolContracts:
@@ -32,7 +38,9 @@ class TestSchoolContracts:
         TypeAdapter(SchoolResponse).validate_python(response.json()["data"])
 
     @pytest.mark.asyncio
-    async def test_school_list_meta_contains_cursor_fields(self, client, admin_token) -> None:
+    async def test_school_list_meta_contains_cursor_fields(
+        self, client, admin_token
+    ) -> None:
         response = await client.get(
             "/schools",
             headers=auth_header(admin_token),
@@ -47,7 +55,9 @@ class TestSchoolContracts:
 
 class TestBillingContracts:
     @pytest.mark.asyncio
-    async def test_fee_structure_list_items_match_schema(self, client, admin_token) -> None:
+    async def test_fee_structure_list_items_match_schema(
+        self, client, admin_token
+    ) -> None:
         response = await client.get(
             "/billing/fee-structures",
             headers=auth_header(admin_token),
@@ -57,7 +67,9 @@ class TestBillingContracts:
         TypeAdapter(list[FeeStructureResponse]).validate_python(response.json()["data"])
 
     @pytest.mark.asyncio
-    async def test_fee_structure_create_matches_schema(self, client, admin_token) -> None:
+    async def test_fee_structure_create_matches_schema(
+        self, client, admin_token
+    ) -> None:
         suffix = unique_suffix()
         response = await client.post(
             "/billing/fee-structures",
@@ -77,14 +89,18 @@ class TestBillingContracts:
         TypeAdapter(FeeStructureResponse).validate_python(response.json()["data"])
 
     @pytest.mark.asyncio
-    async def test_payment_plan_list_items_match_schema(self, client, parent_token) -> None:
+    async def test_payment_plan_list_items_match_schema(
+        self, client, parent_token
+    ) -> None:
         response = await client.get(
             "/billing/payment-plans",
             headers=auth_header(parent_token),
         )
 
         assert response.status_code == 200
-        TypeAdapter(list[PaymentPlanSummaryResponse]).validate_python(response.json()["data"])
+        TypeAdapter(list[PaymentPlanSummaryResponse]).validate_python(
+            response.json()["data"]
+        )
 
     @pytest.mark.asyncio
     async def test_invoice_detail_matches_schema(self, client, parent_token) -> None:
@@ -97,7 +113,9 @@ class TestBillingContracts:
         TypeAdapter(InvoiceResponse).validate_python(response.json()["data"])
 
     @pytest.mark.asyncio
-    async def test_invoice_list_meta_contains_pagination_fields(self, client, parent_token) -> None:
+    async def test_invoice_list_meta_contains_pagination_fields(
+        self, client, parent_token
+    ) -> None:
         response = await client.get(
             "/invoices",
             headers=auth_header(parent_token),
@@ -112,7 +130,9 @@ class TestBillingContracts:
 
 class TestEnvelopeContracts:
     @pytest.mark.asyncio
-    async def test_success_envelope_contains_data_and_meta(self, client, admin_token) -> None:
+    async def test_success_envelope_contains_data_and_meta(
+        self, client, admin_token
+    ) -> None:
         response = await client.get(
             f"/schools/{SCHOOL_ID}",
             headers=auth_header(admin_token),
@@ -125,7 +145,9 @@ class TestEnvelopeContracts:
         assert body["meta"]["version"] == "0.1.0"
 
     @pytest.mark.asyncio
-    async def test_list_envelope_contains_data_and_meta(self, client, parent_token) -> None:
+    async def test_list_envelope_contains_data_and_meta(
+        self, client, parent_token
+    ) -> None:
         response = await client.get(
             "/billing/payment-plans",
             headers=auth_header(parent_token),
@@ -143,7 +165,14 @@ class TestEnvelopeContracts:
         error = response.json()["error"]
 
         assert response.status_code == 401
-        for field in ("code", "message", "category", "correlation_id", "retryable", "timestamp"):
+        for field in (
+            "code",
+            "message",
+            "category",
+            "correlation_id",
+            "retryable",
+            "timestamp",
+        ):
             assert field in error
         datetime.fromisoformat(error["timestamp"])
 

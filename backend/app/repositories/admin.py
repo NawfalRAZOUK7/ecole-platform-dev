@@ -96,7 +96,9 @@ class AdminRepository(BaseRepository):
 
         if search:
             pattern = f"%{search}%"
-            query = query.where(User.full_name.ilike(pattern) | User.email.ilike(pattern))
+            query = query.where(
+                User.full_name.ilike(pattern) | User.email.ilike(pattern)
+            )
 
         if status:
             query = query.where(User.status == status)

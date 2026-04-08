@@ -90,7 +90,9 @@ async def test_teacher_cannot_manage_timetable_constraints(client, teacher_token
 
 
 @pytest.mark.asyncio
-async def test_director_cannot_create_school_without_superadmin_role(client, director_token):
+async def test_director_cannot_create_school_without_superadmin_role(
+    client, director_token
+):
     suffix = uuid.uuid4().hex[:8]
     response = await client.post(
         "/schools",

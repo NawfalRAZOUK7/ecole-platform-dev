@@ -88,7 +88,9 @@ class CommunicationService:
         if conversation is None:
             raise NotFoundError("Conversation not found", error_code="ERR-COM-404")
 
-        participant_ids = {participant.user_id for participant in conversation.participants}
+        participant_ids = {
+            participant.user_id for participant in conversation.participants
+        }
         if user_id not in participant_ids:
             raise NotFoundError("Conversation not found", error_code="ERR-COM-404")
         return conversation
@@ -108,7 +110,9 @@ class CommunicationService:
                 school_id=auth.school_id,
             )
             if not child_ids:
-                raise ValidationError("No linked children found", error_code="ERR-COM-422")
+                raise ValidationError(
+                    "No linked children found", error_code="ERR-COM-422"
+                )
 
             child_class_ids = await self.repo.list_class_ids_for_students(
                 student_ids=child_ids,
@@ -145,7 +149,9 @@ class CommunicationService:
                 school_id=auth.school_id,
             )
             if not teacher_class_ids:
-                raise ValidationError("No class assignments found", error_code="ERR-COM-422")
+                raise ValidationError(
+                    "No class assignments found", error_code="ERR-COM-422"
+                )
 
             class_student_ids = await self.repo.list_student_ids_for_classes(
                 class_ids=teacher_class_ids,
@@ -257,7 +263,9 @@ class CommunicationService:
                     error_code="ERR-COM-404",
                 )
 
-        await self._validate_messaging_abac(auth=auth, participant_ids=body.participant_ids)
+        await self._validate_messaging_abac(
+            auth=auth, participant_ids=body.participant_ids
+        )
 
         async with UnitOfWork(self.db) as uow:
             repo = MessagingRepository(uow.session)
@@ -340,11 +348,15 @@ class CommunicationService:
         items = [
             self._conversation_to_response(
                 conversation,
-                last_message_at=last_message_at.isoformat() if last_message_at else None,
+                last_message_at=last_message_at.isoformat()
+                if last_message_at
+                else None,
             )
             for conversation, last_message_at in rows
         ]
-        next_cursor = encode_cursor(uuid.UUID(items[-1]["id"])) if has_more and items else None
+        next_cursor = (
+            encode_cursor(uuid.UUID(items[-1]["id"])) if has_more and items else None
+        )
         return items, next_cursor, has_more
 
     async def list_messages(
@@ -562,5 +574,7 @@ class CommunicationService:
             }
             for item in items_list
         ]
-        next_cursor = encode_cursor(items_list[-1].id) if has_more and items_list else None
+        next_cursor = (
+            encode_cursor(items_list[-1].id) if has_more and items_list else None
+        )
         return items, next_cursor, has_more

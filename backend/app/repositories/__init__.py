@@ -19,7 +19,11 @@ from app.repositories.feature import FeatureRepository
 from app.repositories.financial_health import FinancialHealthRepository
 from app.repositories.gdpr import GDPRRepository
 from app.repositories.gradebook import GradebookRepository
-from app.repositories.lms import AssessmentRepository, AssignmentRepository, LMSRepository
+from app.repositories.lms import (
+    AssessmentRepository,
+    AssignmentRepository,
+    LMSRepository,
+)
 from app.repositories.login_history import LoginHistoryRepository
 from app.repositories.messaging import MessagingRepository
 from app.repositories.micro_school import MicroSchoolRepository

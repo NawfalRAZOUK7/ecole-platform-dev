@@ -13,7 +13,11 @@ from app.core.database import get_db
 from app.core.security import create_access_token
 from app.main import app
 from app.models.iam import RoleCode
-from tests.factories.budget import BudgetAllocationFactory, BudgetRequestFactory, MicroBudgetFactory
+from tests.factories.budget import (
+    BudgetAllocationFactory,
+    BudgetRequestFactory,
+    MicroBudgetFactory,
+)
 from tests.factories.erp import AcademicYearFactory, ClassFactory
 from tests.factories.iam import MembershipFactory, SessionFactory, UserFactory
 from tests.factories.school import SchoolFactory

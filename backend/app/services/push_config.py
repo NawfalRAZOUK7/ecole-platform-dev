@@ -12,8 +12,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.unit_of_work import UnitOfWork
-from app.models.com import DeliveryStatus, DeviceToken, Notification, NotificationDelivery
-from app.repositories.notifications import NotificationDeliveryRepository, NotificationRepository
+from app.models.com import (
+    DeliveryStatus,
+    DeviceToken,
+    Notification,
+    NotificationDelivery,
+)
+from app.repositories.notifications import (
+    NotificationDeliveryRepository,
+    NotificationRepository,
+)
 
 logger = logging.getLogger(__name__)
 

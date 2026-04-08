@@ -26,7 +26,9 @@ class ComplianceRepository(BaseRepository):
         result = await self.db.execute(select(User).where(User.id == user_id))
         return result.scalar_one_or_none()
 
-    async def get_academic_year(self, academic_year_id: uuid.UUID) -> AcademicYear | None:
+    async def get_academic_year(
+        self, academic_year_id: uuid.UUID
+    ) -> AcademicYear | None:
         result = await self.db.execute(
             select(AcademicYear).where(AcademicYear.id == academic_year_id)
         )
@@ -219,9 +221,13 @@ class ComplianceRepository(BaseRepository):
         content_item_id: uuid.UUID | None = None,
         include_objective: bool = False,
     ) -> list[CurriculumMapping]:
-        query = select(CurriculumMapping).where(CurriculumMapping.school_id == school_id)
+        query = select(CurriculumMapping).where(
+            CurriculumMapping.school_id == school_id
+        )
         if curriculum_id is not None:
-            query = query.join(MenObjective, MenObjective.id == CurriculumMapping.objective_id)
+            query = query.join(
+                MenObjective, MenObjective.id == CurriculumMapping.objective_id
+            )
             query = query.where(MenObjective.curriculum_id == curriculum_id)
         if objective_id is not None:
             query = query.where(CurriculumMapping.objective_id == objective_id)
@@ -236,7 +242,9 @@ class ComplianceRepository(BaseRepository):
                 )
             )
         result = await self.db.execute(
-            query.order_by(CurriculumMapping.mapped_at.desc(), CurriculumMapping.id.asc())
+            query.order_by(
+                CurriculumMapping.mapped_at.desc(), CurriculumMapping.id.asc()
+            )
         )
         return list(result.scalars().all())
 

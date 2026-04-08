@@ -100,7 +100,9 @@ class TestSchoolService:
             )
 
     @pytest.mark.asyncio
-    async def test_create_school_returns_serialized_school(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_create_school_returns_serialized_school(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth("SUP")
         service, repo_in_uow, uow = setup_service(monkeypatch)
         school = make_school()
@@ -121,7 +123,9 @@ class TestSchoolService:
         assert uow.committed is True
 
     @pytest.mark.asyncio
-    async def test_list_schools_for_sup_returns_paged_items(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_list_schools_for_sup_returns_paged_items(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth("SUP")
         service, _repo_in_uow, _uow = setup_service(monkeypatch)
         school = make_school()
@@ -160,7 +164,9 @@ class TestSchoolService:
         assert has_more is False
 
     @pytest.mark.asyncio
-    async def test_update_school_requires_manage_scope(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_update_school_requires_manage_scope(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         school = make_school()
         auth = make_auth("DIR", school_id=school.id)
         service, _repo_in_uow, _uow = setup_service(monkeypatch)
@@ -174,7 +180,9 @@ class TestSchoolService:
             )
 
     @pytest.mark.asyncio
-    async def test_deactivate_school_requires_sup(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_deactivate_school_requires_sup(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth("ADM")
         service, _repo_in_uow, _uow = setup_service(monkeypatch)
 

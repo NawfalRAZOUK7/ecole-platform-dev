@@ -148,7 +148,9 @@ class SyncQueue(TimestampMixin, SchoolScopedMixin, Base):
         default=SyncQueueOperation.CREATE.value,
     )
     payload: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
-    synced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    synced_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     status: Mapped[str] = mapped_column(
         PgEnum(
             SyncQueueStatus,
@@ -204,8 +206,12 @@ class SyncConflict(TimestampMixin, SchoolScopedMixin, Base):
     )
     entity_type: Mapped[str] = mapped_column(String(100), nullable=False)
     entity_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
-    client_payload: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
-    server_payload: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
+    client_payload: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, default=dict
+    )
+    server_payload: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, default=dict
+    )
     resolution: Mapped[str] = mapped_column(
         PgEnum(
             SyncConflictResolution,
@@ -220,7 +226,9 @@ class SyncConflict(TimestampMixin, SchoolScopedMixin, Base):
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
-    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     queue_item: Mapped["SyncQueue"] = relationship(back_populates="conflicts")
     resolver = relationship("User", foreign_keys=[resolved_by])

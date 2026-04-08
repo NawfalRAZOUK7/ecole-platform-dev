@@ -88,11 +88,15 @@ class Event(TimestampMixin, SchoolScopedMixin, SoftDeleteMixin, Base):
     is_all_day: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     __table_args__ = (
         CheckConstraint("end_at >= start_at", name="ck_events_end_after_start"),
-        CheckConstraint("capacity IS NULL OR capacity > 0", name="ck_events_capacity_positive"),
+        CheckConstraint(
+            "capacity IS NULL OR capacity > 0", name="ck_events_capacity_positive"
+        ),
         Index("idx_events_school_start", "school_id", "start_at"),
         Index("idx_events_school_type_start", "school_id", "type", "start_at"),
         Index("idx_events_school_class_start", "school_id", "class_id", "start_at"),
-        Index("idx_events_school_visibility_start", "school_id", "visibility", "start_at"),
+        Index(
+            "idx_events_school_visibility_start", "school_id", "visibility", "start_at"
+        ),
         Index("idx_events_class_id", "class_id"),
         Index("idx_events_created_by", "created_by"),
     )
@@ -122,7 +126,9 @@ class EventRSVP(TimestampMixin, Base):
         nullable=False,
     )
     status: Mapped[str] = mapped_column(String(20), nullable=False)
-    responded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    responded_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
 
     __table_args__ = (
         UniqueConstraint("event_id", "user_id", name="uq_event_rsvps_event_user"),

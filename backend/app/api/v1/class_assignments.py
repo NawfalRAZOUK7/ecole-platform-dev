@@ -21,7 +21,6 @@ from app.services.erp import ERPService
 router = APIRouter(prefix="/class-assignments", tags=["erp-class-assignments"])
 
 
-
 @router.post(
     "",
     status_code=201,

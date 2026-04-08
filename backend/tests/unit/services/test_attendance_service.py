@@ -242,7 +242,9 @@ class TestAttendanceAlerts:
             await service.list_alerts(auth=auth)
 
     @pytest.mark.asyncio
-    async def test_list_alerts_enriches_student_names(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_list_alerts_enriches_student_names(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth("ADM")
         service, _repo_in_uow, _audit, _uow = setup_service(monkeypatch)
         period_id = uuid.uuid4()
@@ -308,7 +310,12 @@ class TestAttendanceAlerts:
             (student_empty, "Dina"),
         ]
         repo_in_uow.list_alerts.return_value = [
-            make_alert(auth.school_id, period_id, student_existing, threshold_exceeded="critical")
+            make_alert(
+                auth.school_id,
+                period_id,
+                student_existing,
+                threshold_exceeded="critical",
+            )
         ]
 
         counts = {
@@ -321,7 +328,9 @@ class TestAttendanceAlerts:
         async def compute_student_absence_count(*, student_id, period_id):
             return counts[student_id]
 
-        repo_in_uow.compute_student_absence_count.side_effect = compute_student_absence_count
+        repo_in_uow.compute_student_absence_count.side_effect = (
+            compute_student_absence_count
+        )
         created_alert = make_alert(auth.school_id, period_id, student_new)
         repo_in_uow.create_attendance_alert.return_value = created_alert
 

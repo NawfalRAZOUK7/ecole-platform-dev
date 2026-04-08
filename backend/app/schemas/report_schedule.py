@@ -47,7 +47,9 @@ class ReportScheduleCreateRequest(BaseModel):
         roles = [str(role).upper() for role in self.recipient_roles]
         invalid = [role for role in roles if role not in _ALLOWED_RECIPIENT_ROLES]
         if invalid:
-            raise ValueError(f"Unsupported recipient roles: {', '.join(sorted(set(invalid)))}")
+            raise ValueError(
+                f"Unsupported recipient roles: {', '.join(sorted(set(invalid)))}"
+            )
         self.recipient_roles = _dedupe(roles)
         return self
 
@@ -73,7 +75,9 @@ class ReportScheduleUpdateRequest(BaseModel):
         roles = [str(role).upper() for role in self.recipient_roles]
         invalid = [role for role in roles if role not in _ALLOWED_RECIPIENT_ROLES]
         if invalid:
-            raise ValueError(f"Unsupported recipient roles: {', '.join(sorted(set(invalid)))}")
+            raise ValueError(
+                f"Unsupported recipient roles: {', '.join(sorted(set(invalid)))}"
+            )
         if not roles:
             raise ValueError("recipient_roles cannot be empty")
         self.recipient_roles = _dedupe(roles)

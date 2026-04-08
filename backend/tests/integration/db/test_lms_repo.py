@@ -20,7 +20,9 @@ def _uuid(n: int) -> UUID:
     return UUID(f"10000000-0000-4000-8000-{n:012d}")
 
 
-async def _create_course_context(db_session, base: int) -> tuple[UUID, UUID, UUID, UUID]:
+async def _create_course_context(
+    db_session, base: int
+) -> tuple[UUID, UUID, UUID, UUID]:
     school = await SchoolFactory.create(
         session=db_session,
         id=_uuid(base),
@@ -83,7 +85,9 @@ async def test_create_and_get_course(db_session):
 async def test_list_courses_filters_by_teacher_classes_and_cursor(db_session):
     repo = LMSRepository(db_session)
     school_id, _, class_id, teacher_id = await _create_course_context(db_session, 20)
-    _, _, other_class_id, other_teacher_id = await _create_course_context(db_session, 30)
+    _, _, other_class_id, other_teacher_id = await _create_course_context(
+        db_session, 30
+    )
 
     first = await repo.create_course(
         id=_uuid(40),
@@ -179,7 +183,9 @@ async def test_list_courses_supports_search_and_status_filters(db_session):
         school_id=school_id,
         class_id=class_id,
         teacher_class_ids=None,
-        filters=FilterSpec(items=[FilterItem(field="status", operator="eq", value="draft")]),
+        filters=FilterSpec(
+            items=[FilterItem(field="status", operator="eq", value="draft")]
+        ),
         sort=SortSpec(fields=[("id", "asc")]),
         search="Arabic",
         cursor=None,

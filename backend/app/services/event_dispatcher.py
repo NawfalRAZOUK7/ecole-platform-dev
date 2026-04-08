@@ -425,10 +425,14 @@ class EventDispatcher:
                 f"Starts at {event.start_at}." if event.start_at else None,
             )
         if isinstance(event, EventUpdated):
-            change_keys = ", ".join(sorted(event.changes.keys())) if event.changes else None
+            change_keys = (
+                ", ".join(sorted(event.changes.keys())) if event.changes else None
+            )
             return (
                 f"Calendar updated: {event.title or 'Event'}",
-                f"Updated fields: {change_keys}" if change_keys else "Event details changed.",
+                f"Updated fields: {change_keys}"
+                if change_keys
+                else "Event details changed.",
             )
         if isinstance(event, HolidayAdded):
             return (
@@ -518,7 +522,9 @@ class EventDispatcher:
             return NotificationCategory.ACADEMIC.value
         if isinstance(event, (InvoiceGenerated, PaymentReceived, PaymentFailed)):
             return NotificationCategory.BILLING.value
-        if isinstance(event, (EventCreated, EventUpdated, HolidayAdded, EventRSVPReceived)):
+        if isinstance(
+            event, (EventCreated, EventUpdated, HolidayAdded, EventRSVPReceived)
+        ):
             return NotificationCategory.ANNOUNCEMENT.value
         return NotificationCategory.SYSTEM.value
 
@@ -550,7 +556,9 @@ class EventDispatcher:
             ),
         ):
             return "/lms"
-        if isinstance(event, (EventCreated, EventUpdated, HolidayAdded, EventRSVPReceived)):
+        if isinstance(
+            event, (EventCreated, EventUpdated, HolidayAdded, EventRSVPReceived)
+        ):
             return "/calendar"
         if isinstance(event, (InvoiceGenerated, PaymentReceived, PaymentFailed)):
             return "/billing"

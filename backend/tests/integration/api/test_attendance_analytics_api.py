@@ -9,7 +9,9 @@ from .helpers import CLASS_ID, PERIOD_ID, STUDENT_ID, auth_header
 
 class TestAttendanceAnalyticsApi:
     @pytest.mark.asyncio
-    async def test_admin_can_get_student_attendance_analytics(self, client, admin_token):
+    async def test_admin_can_get_student_attendance_analytics(
+        self, client, admin_token
+    ):
         response = await client.get(
             f"/analytics/attendance/student/{STUDENT_ID}",
             headers=auth_header(admin_token),

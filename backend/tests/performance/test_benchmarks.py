@@ -44,7 +44,9 @@ def make_auth(role: str) -> AuthContext:
     )
 
 
-def make_assignment_and_submission(*, late_days: int = 0) -> tuple[Assignment, SimpleNamespace]:
+def make_assignment_and_submission(
+    *, late_days: int = 0
+) -> tuple[Assignment, SimpleNamespace]:
     due_at = datetime(2026, 3, 29, 8, 0, tzinfo=timezone.utc)
     assignment = Assignment(
         due_at=due_at,

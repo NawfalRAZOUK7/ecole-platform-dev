@@ -123,7 +123,9 @@ async def compliance_rbac_context(session_factory):
             (RoleCode.SUP.value, "superadmin"),
             (RoleCode.SYS.value, "system"),
         ):
-            actors[label] = await _create_actor(session, school=school, role=role, label=label)
+            actors[label] = await _create_actor(
+                session, school=school, role=role, label=label
+            )
 
         course = await CourseFactory.create(
             session=session,

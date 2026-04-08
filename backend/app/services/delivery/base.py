@@ -130,7 +130,9 @@ class DeliveryStrategy(ABC):
                 "event_type": type(event).__name__,
                 "context": self._jsonable_value(context),
             },
-            "event_ref": context.get("event_ref", self._snake_case(type(event).__name__)),
+            "event_ref": context.get(
+                "event_ref", self._snake_case(type(event).__name__)
+            ),
         }
 
     def _notification_idempotency_key(

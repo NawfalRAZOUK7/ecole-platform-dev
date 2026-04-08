@@ -58,7 +58,9 @@ class TestCalendarEventsIntegration:
         admin_token: str,
         student_token: str,
     ):
-        start_at = datetime.now(timezone.utc).replace(microsecond=0) + timedelta(days=2, hours=2)
+        start_at = datetime.now(timezone.utc).replace(microsecond=0) + timedelta(
+            days=2, hours=2
+        )
         end_at = start_at + timedelta(hours=2)
         title = f"Phase15 recurrence {uuid.uuid4()}"
 
@@ -111,7 +113,9 @@ class TestCalendarEventsIntegration:
         student_token: str,
         parent_token: str,
     ):
-        start_at = datetime.now(timezone.utc).replace(microsecond=0) + timedelta(days=1, hours=3)
+        start_at = datetime.now(timezone.utc).replace(microsecond=0) + timedelta(
+            days=1, hours=3
+        )
         end_at = start_at + timedelta(hours=1)
         title = f"Phase15 capacity {uuid.uuid4()}"
         created = await _create_event(
@@ -176,7 +180,9 @@ class TestCalendarEventsIntegration:
         admin_token: str,
         student_token: str,
     ):
-        start_at = datetime.now(timezone.utc).replace(microsecond=0) + timedelta(hours=2)
+        start_at = datetime.now(timezone.utc).replace(microsecond=0) + timedelta(
+            hours=2
+        )
         end_at = start_at + timedelta(hours=1)
         title = f"Phase15 reminder {uuid.uuid4()}"
         created = await _create_event(
@@ -195,12 +201,16 @@ class TestCalendarEventsIntegration:
         try:
             async with async_session() as session:
                 result = await session.execute(
-                    select(EventReminder).where(EventReminder.event_id == uuid.UUID(created["id"]))
+                    select(EventReminder).where(
+                        EventReminder.event_id == uuid.UUID(created["id"])
+                    )
                 )
                 reminders = result.scalars().all()
                 assert reminders
                 for reminder in reminders:
-                    reminder.remind_at = datetime.now(timezone.utc) - timedelta(minutes=1)
+                    reminder.remind_at = datetime.now(timezone.utc) - timedelta(
+                        minutes=1
+                    )
                 await session.commit()
 
             async with async_session() as session:
@@ -241,7 +251,9 @@ class TestCalendarEventsIntegration:
             "visibility": "class",
             "class_id": class_id,
             "start_at": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(),
-            "end_at": (datetime.now(timezone.utc) + timedelta(days=1, hours=1)).isoformat(),
+            "end_at": (
+                datetime.now(timezone.utc) + timedelta(days=1, hours=1)
+            ).isoformat(),
         }
 
         unauthenticated = await client.post("/events", json=payload)

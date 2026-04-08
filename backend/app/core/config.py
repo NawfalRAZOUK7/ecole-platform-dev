@@ -32,7 +32,9 @@ class Settings(BaseSettings):
     api_base_url: str = "http://localhost:8000/api/v1"
 
     # Database (PostgreSQL)
-    database_url: str = "postgresql+asyncpg://ecole:change-me@localhost:5432/ecole_platform"
+    database_url: str = (
+        "postgresql+asyncpg://ecole:change-me@localhost:5432/ecole_platform"
+    )
     database_replica_url: str | None = None
 
     # Cache (Redis)

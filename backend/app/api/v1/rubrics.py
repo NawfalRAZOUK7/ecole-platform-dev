@@ -53,7 +53,9 @@ async def list_rubrics(
     return list_response(items, next_cursor=None, has_more=False)
 
 
-@router.get("/rubrics/{rubric_id}", summary="Get rubric details with criteria and levels")
+@router.get(
+    "/rubrics/{rubric_id}", summary="Get rubric details with criteria and levels"
+)
 async def get_rubric(
     rubric_id: uuid.UUID,
     auth: AuthContext = Depends(requires_permission(PERM_LMS_RUBRIC_READ)),
@@ -131,7 +133,9 @@ async def update_rubric(
     return success_response(service._rubric_to_dict(updated))
 
 
-@router.post("/rubrics/{rubric_id}/duplicate", status_code=201, summary="Duplicate a rubric")
+@router.post(
+    "/rubrics/{rubric_id}/duplicate", status_code=201, summary="Duplicate a rubric"
+)
 async def duplicate_rubric(
     rubric_id: uuid.UUID,
     request: Request,

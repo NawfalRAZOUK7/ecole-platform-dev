@@ -133,7 +133,9 @@ class Course(TimestampMixin, SchoolScopedMixin, Base):
     )
 
     def __repr__(self) -> str:
-        return f"<Course id={_short_id(self.id)} title={self.title} status={self.status}>"
+        return (
+            f"<Course id={_short_id(self.id)} title={self.title} status={self.status}>"
+        )
 
 
 class GradeCategory(TimestampMixin, SchoolScopedMixin, Base):
@@ -367,7 +369,9 @@ class Assignment(TimestampMixin, Base):
     @validates("late_penalty_per_day")
     def validate_late_penalty_per_day(self, key: str, value: float) -> float:
         if value < 0 or value > 100:
-            raise ValueError("Assignment late_penalty_per_day must be between 0 and 100")
+            raise ValueError(
+                "Assignment late_penalty_per_day must be between 0 and 100"
+            )
         return value
 
     def __repr__(self) -> str:
@@ -1187,9 +1191,7 @@ class QuizResponse(TimestampMixin, Base):
     )
 
     def __repr__(self) -> str:
-        return (
-            f"<QuizResponse id={_short_id(self.id)} attempt_id={_short_id(self.attempt_id)}>"
-        )
+        return f"<QuizResponse id={_short_id(self.id)} attempt_id={_short_id(self.attempt_id)}>"
 
 
 class QuestionBankItem(TimestampMixin, SchoolScopedMixin, Base):

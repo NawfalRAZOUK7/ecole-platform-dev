@@ -8,10 +8,25 @@ from typing import Any, cast as type_cast
 
 from sqlalchemy import Date, case, cast as sa_cast, distinct, func, select
 
-from app.models.billing import Invoice, InvoiceStatus, PaymentAttempt, PaymentAttemptStatus
-from app.models.budget import BudgetAllocation, BudgetTransaction, BudgetTransactionType, MicroBudget
+from app.models.billing import (
+    Invoice,
+    InvoiceStatus,
+    PaymentAttempt,
+    PaymentAttemptStatus,
+)
+from app.models.budget import (
+    BudgetAllocation,
+    BudgetTransaction,
+    BudgetTransactionType,
+    MicroBudget,
+)
 from app.models.erp import AcademicYear, Enrollment, EnrollmentStatus, Period
-from app.models.financial_health import CashflowForecast, CostPerStudent, FinancialSnapshot, RetentionMetric
+from app.models.financial_health import (
+    CashflowForecast,
+    CostPerStudent,
+    FinancialSnapshot,
+    RetentionMetric,
+)
 from app.repositories.base import BaseRepository
 
 
@@ -159,7 +174,9 @@ class FinancialHealthRepository(BaseRepository):
         if end_month is not None:
             query = query.where(CashflowForecast.forecast_month <= end_month)
         result = await self.db.execute(
-            query.order_by(CashflowForecast.forecast_month.asc()).offset(skip).limit(limit)
+            query.order_by(CashflowForecast.forecast_month.asc())
+            .offset(skip)
+            .limit(limit)
         )
         return list(result.scalars().all())
 
@@ -274,7 +291,9 @@ class FinancialHealthRepository(BaseRepository):
         start_datetime: datetime,
         end_datetime: datetime,
     ) -> dict[date, float]:
-        month_bucket = sa_cast(func.date_trunc("month", PaymentAttempt.finalized_at), Date)
+        month_bucket = sa_cast(
+            func.date_trunc("month", PaymentAttempt.finalized_at), Date
+        )
         result = await self.db.execute(
             select(month_bucket, func.sum(Invoice.total_amount))
             .join(Invoice, Invoice.id == PaymentAttempt.invoice_id)
@@ -297,25 +316,32 @@ class FinancialHealthRepository(BaseRepository):
         start_datetime: datetime,
         end_datetime: datetime,
     ) -> dict[date, float]:
-        month_bucket = sa_cast(func.date_trunc("month", BudgetTransaction.recorded_at), Date)
+        month_bucket = sa_cast(
+            func.date_trunc("month", BudgetTransaction.recorded_at), Date
+        )
         signed_amount = case(
             (
-                BudgetTransaction.transaction_type == BudgetTransactionType.EXPENSE.value,
+                BudgetTransaction.transaction_type
+                == BudgetTransactionType.EXPENSE.value,
                 BudgetTransaction.amount,
             ),
             (
-                BudgetTransaction.transaction_type == BudgetTransactionType.REFUND.value,
+                BudgetTransaction.transaction_type
+                == BudgetTransactionType.REFUND.value,
                 -BudgetTransaction.amount,
             ),
             (
-                BudgetTransaction.transaction_type == BudgetTransactionType.ADJUSTMENT.value,
+                BudgetTransaction.transaction_type
+                == BudgetTransactionType.ADJUSTMENT.value,
                 BudgetTransaction.amount,
             ),
             else_=0,
         )
         result = await self.db.execute(
             select(month_bucket, func.sum(signed_amount))
-            .join(BudgetAllocation, BudgetAllocation.id == BudgetTransaction.allocation_id)
+            .join(
+                BudgetAllocation, BudgetAllocation.id == BudgetTransaction.allocation_id
+            )
             .join(MicroBudget, MicroBudget.id == BudgetAllocation.budget_id)
             .where(
                 MicroBudget.school_id == school_id,
@@ -346,7 +372,10 @@ class FinancialHealthRepository(BaseRepository):
                 func.sum(Invoice.total_amount),
                 func.sum(
                     case(
-                        (Invoice.status == InvoiceStatus.PAID.value, Invoice.total_amount),
+                        (
+                            Invoice.status == InvoiceStatus.PAID.value,
+                            Invoice.total_amount,
+                        ),
                         else_=0,
                     )
                 ),
@@ -385,22 +414,27 @@ class FinancialHealthRepository(BaseRepository):
     ) -> float:
         signed_amount = case(
             (
-                BudgetTransaction.transaction_type == BudgetTransactionType.EXPENSE.value,
+                BudgetTransaction.transaction_type
+                == BudgetTransactionType.EXPENSE.value,
                 BudgetTransaction.amount,
             ),
             (
-                BudgetTransaction.transaction_type == BudgetTransactionType.REFUND.value,
+                BudgetTransaction.transaction_type
+                == BudgetTransactionType.REFUND.value,
                 -BudgetTransaction.amount,
             ),
             (
-                BudgetTransaction.transaction_type == BudgetTransactionType.ADJUSTMENT.value,
+                BudgetTransaction.transaction_type
+                == BudgetTransactionType.ADJUSTMENT.value,
                 BudgetTransaction.amount,
             ),
             else_=0,
         )
         result = await self.db.execute(
             select(func.sum(signed_amount))
-            .join(BudgetAllocation, BudgetAllocation.id == BudgetTransaction.allocation_id)
+            .join(
+                BudgetAllocation, BudgetAllocation.id == BudgetTransaction.allocation_id
+            )
             .join(MicroBudget, MicroBudget.id == BudgetAllocation.budget_id)
             .where(
                 MicroBudget.school_id == school_id,

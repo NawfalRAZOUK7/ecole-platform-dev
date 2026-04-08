@@ -93,7 +93,9 @@ class ComplianceReportFactory(AsyncSQLAlchemyFactory):
     id = factory.LazyFunction(uuid.uuid4)
     school = factory.SubFactory(SchoolFactory)
     curriculum = factory.SubFactory(MenCurriculumFactory)
-    generator = factory.SubFactory(UserFactory, school=factory.SelfAttribute("..school"))
+    generator = factory.SubFactory(
+        UserFactory, school=factory.SelfAttribute("..school")
+    )
     academic_year = factory.SubFactory(
         AcademicYearFactory,
         school=factory.SelfAttribute("..school"),

@@ -132,7 +132,9 @@ class AssignmentService(LMSServiceBase):
             limit=limit,
         )
         items = [self._assignment_to_dict(assignment) for assignment in assignments]
-        next_cursor = encode_cursor(assignments[-1].id) if has_more and assignments else None
+        next_cursor = (
+            encode_cursor(assignments[-1].id) if has_more and assignments else None
+        )
         return items, next_cursor, has_more
 
     async def upload_exercise_pdf(
@@ -253,7 +255,9 @@ class AssignmentService(LMSServiceBase):
         if initial_status == "submitted":
             assignment_submissions.labels(
                 school_id=str(auth.school_id),
-                status=self._submission_metric_status(assignment, submission.submitted_at),
+                status=self._submission_metric_status(
+                    assignment, submission.submitted_at
+                ),
             ).inc()
             await self._dispatch_submission_received(
                 submission=submission,

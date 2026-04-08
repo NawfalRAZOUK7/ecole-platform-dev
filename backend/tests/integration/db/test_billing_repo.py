@@ -12,7 +12,12 @@ from sqlalchemy.exc import IntegrityError
 from app.core.filtering import FilterSpec, SortSpec
 from app.models.billing import PaymentAttemptStatus
 from app.repositories.billing import BillingRepository
-from tests.factories.erp import AcademicYearFactory, ClassFactory, EnrollmentFactory, PeriodFactory
+from tests.factories.erp import (
+    AcademicYearFactory,
+    ClassFactory,
+    EnrollmentFactory,
+    PeriodFactory,
+)
 from tests.factories.iam import ParentChildLinkFactory, UserFactory
 from tests.factories.school import SchoolFactory
 
@@ -107,7 +112,9 @@ async def test_fee_structure_queries_create_and_filter_rows(db_session):
 @pytest.mark.asyncio
 async def test_fee_assignment_queries_cover_existing_student_helpers(db_session):
     repo = BillingRepository(db_session)
-    school_id, year_id, _, _, _, student_id = await _create_billing_context(db_session, 20)
+    school_id, year_id, _, _, _, student_id = await _create_billing_context(
+        db_session, 20
+    )
     fee_structure = await repo.create_fee_structure(
         id=_uuid(30),
         school_id=school_id,
@@ -153,9 +160,18 @@ async def test_fee_assignment_queries_cover_existing_student_helpers(db_session)
 
 
 @pytest.mark.asyncio
-async def test_parent_and_enrollment_lookup_helpers_return_active_relationships(db_session):
+async def test_parent_and_enrollment_lookup_helpers_return_active_relationships(
+    db_session,
+):
     repo = BillingRepository(db_session)
-    school_id, year_id, period_id, class_id, parent_id, student_id = await _create_billing_context(
+    (
+        school_id,
+        year_id,
+        period_id,
+        class_id,
+        parent_id,
+        student_id,
+    ) = await _create_billing_context(
         db_session,
         40,
     )
@@ -194,7 +210,9 @@ async def test_parent_and_enrollment_lookup_helpers_return_active_relationships(
 @pytest.mark.asyncio
 async def test_create_invoice_and_load_items(db_session):
     repo = BillingRepository(db_session)
-    school_id, _, period_id, _, parent_id, _ = await _create_billing_context(db_session, 60)
+    school_id, _, period_id, _, parent_id, _ = await _create_billing_context(
+        db_session, 60
+    )
 
     invoice = await repo.create_invoice(
         id=_uuid(70),
@@ -240,7 +258,9 @@ async def test_create_invoice_and_load_items(db_session):
 @pytest.mark.asyncio
 async def test_list_invoices_applies_parent_scope_status_and_cursor(db_session):
     repo = BillingRepository(db_session)
-    school_id, _, period_id, _, parent_id, _ = await _create_billing_context(db_session, 80)
+    school_id, _, period_id, _, parent_id, _ = await _create_billing_context(
+        db_session, 80
+    )
     other_parent = await UserFactory.create(
         session=db_session,
         id=_uuid(89),
@@ -326,7 +346,9 @@ async def test_list_invoices_applies_parent_scope_status_and_cursor(db_session):
 @pytest.mark.asyncio
 async def test_payment_queries_support_idempotency_lookup_and_ordering(db_session):
     repo = BillingRepository(db_session)
-    school_id, _, period_id, _, parent_id, _ = await _create_billing_context(db_session, 100)
+    school_id, _, period_id, _, parent_id, _ = await _create_billing_context(
+        db_session, 100
+    )
     invoice = await repo.create_invoice(
         id=_uuid(110),
         school_id=school_id,

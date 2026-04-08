@@ -61,13 +61,17 @@ def setup_service(monkeypatch: pytest.MonkeyPatch):
     uow = FakeUnitOfWork()
 
     monkeypatch.setattr(quiz_module, "UnitOfWork", lambda _db: uow)
-    monkeypatch.setattr(quiz_module, "QuizRepository", lambda _session: quiz_repo_in_uow)
+    monkeypatch.setattr(
+        quiz_module, "QuizRepository", lambda _session: quiz_repo_in_uow
+    )
     monkeypatch.setattr(quiz_module, "AuditService", lambda _session: audit)
 
     return service, quiz_repo_in_uow, audit, uow
 
 
-def make_quiz(auth: AuthContext, *, status: str = "draft", school_id=None, max_attempts: int = 2):
+def make_quiz(
+    auth: AuthContext, *, status: str = "draft", school_id=None, max_attempts: int = 2
+):
     return SimpleNamespace(
         id=uuid.uuid4(),
         school_id=auth.school_id if school_id is None else school_id,
@@ -99,7 +103,9 @@ def make_question(quiz_id: uuid.UUID, *, order: int = 0, points: int = 2):
     )
 
 
-def make_attempt(quiz, auth: AuthContext, *, status: str = "STARTED", attempt_no: int = 1):
+def make_attempt(
+    quiz, auth: AuthContext, *, status: str = "STARTED", attempt_no: int = 1
+):
     return SimpleNamespace(
         id=uuid.uuid4(),
         quiz_id=quiz.id,
@@ -115,7 +121,9 @@ def make_attempt(quiz, auth: AuthContext, *, status: str = "STARTED", attempt_no
 
 class TestCreateQuiz:
     @pytest.mark.asyncio
-    async def test_teacher_created_quiz_is_school_scoped(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_teacher_created_quiz_is_school_scoped(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth("TCH")
         service, quiz_repo_in_uow, audit, uow = setup_service(monkeypatch)
         quiz = make_quiz(auth, status="draft")
@@ -150,7 +158,9 @@ class TestCreateQuiz:
         assert uow.committed is True
 
     @pytest.mark.asyncio
-    async def test_content_manager_creates_platform_quiz(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_content_manager_creates_platform_quiz(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth("CONTENT_MGR")
         service, quiz_repo_in_uow, _audit, _uow = setup_service(monkeypatch)
         quiz = make_quiz(auth, status="draft")
@@ -237,7 +247,9 @@ class TestStartQuizAttempt:
             )
 
     @pytest.mark.asyncio
-    async def test_start_attempt_requires_published_quiz(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_start_attempt_requires_published_quiz(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth("STD")
         service, _quiz_repo_in_uow, _audit, _uow = setup_service(monkeypatch)
         service.quiz_repo.get_quiz.return_value = None
@@ -289,7 +301,9 @@ class TestStartQuizAttempt:
         assert result["id"] == str(active_attempt.id)
 
     @pytest.mark.asyncio
-    async def test_start_attempt_creates_new_attempt(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_start_attempt_creates_new_attempt(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth("STD")
         service, quiz_repo_in_uow, audit, uow = setup_service(monkeypatch)
         quiz = make_quiz(auth, status="published", max_attempts=3)
@@ -316,7 +330,9 @@ class TestStartQuizAttempt:
 
 class TestRespondToQuizQuestion:
     @pytest.mark.asyncio
-    async def test_attempt_must_exist_and_belong_to_student(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_attempt_must_exist_and_belong_to_student(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth("STD")
         service, _quiz_repo_in_uow, _audit, _uow = setup_service(monkeypatch)
         service.quiz_repo.get_quiz_attempt.return_value = None
@@ -357,7 +373,9 @@ class TestRespondToQuizQuestion:
         quiz.time_limit_minutes = 10
         attempt = make_attempt(quiz, auth, status="STARTED")
         attempt.started_at = utc_datetime(2026, 3, 30, 9)
-        monkeypatch.setattr(quiz_module, "_utc_now", lambda: utc_datetime(2026, 3, 30, 10, 0))
+        monkeypatch.setattr(
+            quiz_module, "_utc_now", lambda: utc_datetime(2026, 3, 30, 10, 0)
+        )
         service.quiz_repo.get_quiz_attempt.return_value = attempt
         service.quiz_repo.get_quiz.return_value = quiz
 
@@ -381,7 +399,9 @@ class TestRespondToQuizQuestion:
         service.quiz_repo.get_quiz_attempt.return_value = attempt
         service.quiz_repo.get_quiz.return_value = quiz
         service.quiz_repo.get_quiz_question.return_value = None
-        monkeypatch.setattr(quiz_module, "_utc_now", lambda: utc_datetime(2026, 3, 30, 10))
+        monkeypatch.setattr(
+            quiz_module, "_utc_now", lambda: utc_datetime(2026, 3, 30, 10)
+        )
 
         with pytest.raises(NotFoundError, match="Question not found"):
             await service.respond_to_quiz_question(
@@ -477,7 +497,9 @@ class TestSubmitQuizAttempt:
     ):
         auth = make_auth("STD")
         service, _quiz_repo_in_uow, _audit, _uow = setup_service(monkeypatch)
-        attempt = make_attempt(make_quiz(auth, status="published"), auth, status="COMPLETED")
+        attempt = make_attempt(
+            make_quiz(auth, status="published"), auth, status="COMPLETED"
+        )
         service.quiz_repo.get_quiz_attempt.return_value = attempt
 
         with pytest.raises(ValidationError, match="already completed"):
@@ -488,11 +510,17 @@ class TestSubmitQuizAttempt:
             )
 
     @pytest.mark.asyncio
-    async def test_submit_attempt_auto_grades_and_dispatches(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_submit_attempt_auto_grades_and_dispatches(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth("STD")
         service, quiz_repo_in_uow, audit, uow = setup_service(monkeypatch)
-        attempt = make_attempt(make_quiz(auth, status="published"), auth, status="STARTED")
-        completed_attempt = make_attempt(make_quiz(auth, status="published"), auth, status="COMPLETED")
+        attempt = make_attempt(
+            make_quiz(auth, status="published"), auth, status="STARTED"
+        )
+        completed_attempt = make_attempt(
+            make_quiz(auth, status="published"), auth, status="COMPLETED"
+        )
         completed_attempt.id = attempt.id
         completed_attempt.quiz_id = attempt.quiz_id
         completed_attempt.score = 8.0
@@ -517,7 +545,9 @@ class TestSubmitQuizAttempt:
 
 class TestQuizAnalytics:
     @pytest.mark.asyncio
-    async def test_analytics_computes_average_percentage(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_analytics_computes_average_percentage(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth("TCH")
         service, _quiz_repo_in_uow, _audit, _uow = setup_service(monkeypatch)
         quiz = make_quiz(auth, status="published")

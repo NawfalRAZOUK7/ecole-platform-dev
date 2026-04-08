@@ -24,9 +24,7 @@ CASABLANCA = ZoneInfo("Africa/Casablanca")
 
 
 def local_midnight_utc(year: int, month: int, day: int) -> datetime:
-    return datetime(year, month, day, 0, 0, tzinfo=CASABLANCA).astimezone(
-        timezone.utc
-    )
+    return datetime(year, month, day, 0, 0, tzinfo=CASABLANCA).astimezone(timezone.utc)
 
 
 def make_late_penalty_assignment(
@@ -64,7 +62,9 @@ class TestExpiryEdges:
 
     @freeze_time("2026-03-30T12:00:00Z")
     def test_invitation_code_is_not_expired_at_exact_second(self) -> None:
-        invite = InvitationCode(expires_at=datetime(2026, 3, 30, 12, 0, tzinfo=timezone.utc))
+        invite = InvitationCode(
+            expires_at=datetime(2026, 3, 30, 12, 0, tzinfo=timezone.utc)
+        )
 
         assert invite.is_expired is False
 
@@ -100,7 +100,9 @@ class TestExpiryEdges:
 
     @freeze_time("2026-03-30T14:00:01Z")
     def test_document_is_expired_after_deadline(self) -> None:
-        document = Document(expires_at=datetime(2026, 3, 30, 14, 0, tzinfo=timezone.utc))
+        document = Document(
+            expires_at=datetime(2026, 3, 30, 14, 0, tzinfo=timezone.utc)
+        )
 
         assert document.is_expired is True
 
@@ -215,7 +217,9 @@ class TestCasablancaBoundaries:
 
     @pytest.mark.asyncio
     @freeze_time("2026-06-30T12:00:00Z")
-    async def test_current_academic_year_matches_before_july_transition(self, db_session) -> None:
+    async def test_current_academic_year_matches_before_july_transition(
+        self, db_session
+    ) -> None:
         repo = CalendarRepository(db_session)
         school = await SchoolFactory.create(session=db_session, code="CAL-EDGE-001")
         current_year = await AcademicYearFactory.create(
@@ -243,7 +247,9 @@ class TestCasablancaBoundaries:
 
     @pytest.mark.asyncio
     @freeze_time("2026-07-01T12:00:00Z")
-    async def test_current_academic_year_switches_on_july_first(self, db_session) -> None:
+    async def test_current_academic_year_switches_on_july_first(
+        self, db_session
+    ) -> None:
         repo = CalendarRepository(db_session)
         school = await SchoolFactory.create(session=db_session, code="CAL-EDGE-002")
         await AcademicYearFactory.create(

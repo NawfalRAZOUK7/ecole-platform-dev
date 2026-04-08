@@ -164,7 +164,9 @@ class TestGradeSubmission:
     async def test_existing_grade_is_updated(self, monkeypatch: pytest.MonkeyPatch):
         auth = make_auth()
         service, repo_in_uow, _audit, uow = setup_service(monkeypatch)
-        submission, assignment, course = make_bundle(auth=auth, submission_status="graded")
+        submission, assignment, course = make_bundle(
+            auth=auth, submission_status="graded"
+        )
         existing_grade = SimpleNamespace(
             id=uuid.uuid4(),
             submission_id=submission.id,
@@ -245,7 +247,9 @@ class TestGradeSubmission:
             )
 
     @pytest.mark.asyncio
-    async def test_rubric_assignments_require_other_endpoint(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_rubric_assignments_require_other_endpoint(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth()
         service, _repo_in_uow, _audit, _uow = setup_service(monkeypatch)
         service.repo.get_submission_with_context.return_value = make_bundle(
@@ -282,7 +286,9 @@ class TestGradeSubmission:
             )
 
     @pytest.mark.asyncio
-    async def test_score_cannot_exceed_assignment_total(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_score_cannot_exceed_assignment_total(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth()
         service, _repo_in_uow, _audit, _uow = setup_service(monkeypatch)
         service.repo.get_submission_with_context.return_value = make_bundle(
@@ -314,7 +320,9 @@ class TestOverrideLatePenalty:
             )
 
     @pytest.mark.asyncio
-    async def test_wrong_teacher_cannot_override_penalty(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_wrong_teacher_cannot_override_penalty(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth()
         service, _repo_in_uow, _audit, _uow = setup_service(monkeypatch)
         service.repo.get_submission_with_context.return_value = make_bundle(
@@ -405,7 +413,9 @@ class TestOverrideLatePenalty:
         audit.log_event.assert_not_awaited()
 
     @pytest.mark.asyncio
-    async def test_valid_override_restores_original_score(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_valid_override_restores_original_score(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth()
         service, repo_in_uow, audit, uow = setup_service(monkeypatch)
         grade = SimpleNamespace(
@@ -507,7 +517,9 @@ class TestCalculateLatePenalty:
         )
         submission = SimpleNamespace(submitted_at=utc_datetime(2026, 4, 2, 8))
 
-        with pytest.raises(ValidationError, match="maximum allowed late days") as exc_info:
+        with pytest.raises(
+            ValidationError, match="maximum allowed late days"
+        ) as exc_info:
             calculate_late_penalty(
                 assignment=assignment,
                 submission=submission,

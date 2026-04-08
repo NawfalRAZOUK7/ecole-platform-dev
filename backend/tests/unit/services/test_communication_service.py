@@ -63,7 +63,9 @@ def make_participant(user_id: uuid.UUID, *, muted: bool = False):
     )
 
 
-def make_message(conversation_id: uuid.UUID, sender_id: uuid.UUID, *, body: str = "Bonjour"):
+def make_message(
+    conversation_id: uuid.UUID, sender_id: uuid.UUID, *, body: str = "Bonjour"
+):
     now = datetime(2026, 3, 30, 10, 0, tzinfo=timezone.utc)
     return SimpleNamespace(
         id=uuid.uuid4(),
@@ -128,7 +130,9 @@ class TestCreateConversation:
         auth = make_auth("PAR")
         service, _repo_in_uow, _audit, _publish, _uow = setup_service(monkeypatch)
 
-        with pytest.raises(ValidationError, match="require exactly 1 other participant"):
+        with pytest.raises(
+            ValidationError, match="require exactly 1 other participant"
+        ):
             await service.create_conversation(
                 body=ConversationCreateRequest(
                     participant_ids=[uuid.uuid4(), uuid.uuid4()],
@@ -175,7 +179,9 @@ class TestCreateConversation:
             ],
         )
         initial_message = make_message(conversation.id, auth.user_id, body="Bonjour")
-        service.repo.get_membership.return_value = SimpleNamespace(user_id=participant_id)
+        service.repo.get_membership.return_value = SimpleNamespace(
+            user_id=participant_id
+        )
         repo_in_uow.create_conversation.return_value = conversation
         repo_in_uow.get_conversation.return_value = conversation
         repo_in_uow.create_message.return_value = initial_message

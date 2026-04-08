@@ -525,7 +525,9 @@ class TestMicroGroupService:
     ) -> None:
         auth = make_auth("PAR")
         service, *_ = setup_service(monkeypatch, MicroGroupService)
-        group = make_micro_group(micro_school=make_micro_school(educator_id=uuid.uuid4()))
+        group = make_micro_group(
+            micro_school=make_micro_school(educator_id=uuid.uuid4())
+        )
         own = make_micro_enrollment(micro_group=group, parent_id=auth.user_id)
         other = make_micro_enrollment(micro_group=group, parent_id=uuid.uuid4())
         service.repo.list_micro_enrollments.return_value = [own, other]
@@ -570,7 +572,9 @@ class TestMicroGroupService:
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         auth = make_auth("ADM")
-        service, repo_in_uow, audit, _, uow = setup_service(monkeypatch, MicroGroupService)
+        service, repo_in_uow, audit, _, uow = setup_service(
+            monkeypatch, MicroGroupService
+        )
         school = make_micro_school(educator_id=uuid.uuid4())
         group = make_micro_group(micro_school=school)
         service.repo.get_micro_group.return_value = group
@@ -812,7 +816,9 @@ class TestMicroProgressService:
         school = make_micro_school(educator_id=auth.user_id)
         group = make_micro_group(micro_school=school)
         enrollment = make_micro_enrollment(micro_group=group, parent_id=uuid.uuid4())
-        created = make_micro_progress(micro_enrollment=enrollment, educator_id=auth.user_id)
+        created = make_micro_progress(
+            micro_enrollment=enrollment, educator_id=auth.user_id
+        )
         service.repo.get_micro_enrollment.return_value = enrollment
         service.repo.get_user.return_value = SimpleNamespace(id=auth.user_id)
         service.repo.get_membership_role.return_value = "EDUCATOR"
@@ -899,12 +905,23 @@ class TestMicroProgressService:
         service, *_ = setup_service(monkeypatch, MicroProgressService)
         school = make_micro_school(educator_id=uuid.uuid4())
         group = make_micro_group(micro_school=school)
-        own_enrollment = make_micro_enrollment(micro_group=group, parent_id=auth.user_id)
-        other_enrollment = make_micro_enrollment(micro_group=group, parent_id=uuid.uuid4())
-        own = make_micro_progress(micro_enrollment=own_enrollment, educator_id=uuid.uuid4())
-        other = make_micro_progress(micro_enrollment=other_enrollment, educator_id=uuid.uuid4())
+        own_enrollment = make_micro_enrollment(
+            micro_group=group, parent_id=auth.user_id
+        )
+        other_enrollment = make_micro_enrollment(
+            micro_group=group, parent_id=uuid.uuid4()
+        )
+        own = make_micro_progress(
+            micro_enrollment=own_enrollment, educator_id=uuid.uuid4()
+        )
+        other = make_micro_progress(
+            micro_enrollment=other_enrollment, educator_id=uuid.uuid4()
+        )
         service.repo.list_micro_progress_logs.return_value = [own, other]
-        service.repo.get_micro_enrollment.side_effect = [own_enrollment, other_enrollment]
+        service.repo.get_micro_enrollment.side_effect = [
+            own_enrollment,
+            other_enrollment,
+        ]
 
         items = await service.list_progress_logs(
             auth=auth,
@@ -980,7 +997,9 @@ class TestMicroProgressService:
         school = make_micro_school(educator_id=auth.user_id)
         group = make_micro_group(micro_school=school)
         enrollment = make_micro_enrollment(micro_group=group, parent_id=uuid.uuid4())
-        progress = make_micro_progress(micro_enrollment=enrollment, educator_id=auth.user_id)
+        progress = make_micro_progress(
+            micro_enrollment=enrollment, educator_id=auth.user_id
+        )
         service.repo.get_micro_progress_log.return_value = progress
         repo_in_uow.get_micro_progress_log.return_value = progress
 

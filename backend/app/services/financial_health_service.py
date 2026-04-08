@@ -20,7 +20,12 @@ from app.domain.events.financial_health import (
     RetentionMetricComputed,
 )
 from app.models.erp import AcademicYear
-from app.models.financial_health import CashflowForecast, CostPerStudent, FinancialSnapshot, RetentionMetric
+from app.models.financial_health import (
+    CashflowForecast,
+    CostPerStudent,
+    FinancialSnapshot,
+    RetentionMetric,
+)
 from app.repositories.financial_health import FinancialHealthRepository
 from app.schemas.financial_health import (
     CashflowForecastComputeRequest,
@@ -163,7 +168,9 @@ class FinancialHealthService:
             label=label,
         )
         if academic_year is None:
-            raise NotFoundError("Academic year not found", error_code="ERR-FINHEALTH-404")
+            raise NotFoundError(
+                "Academic year not found", error_code="ERR-FINHEALTH-404"
+            )
         return academic_year
 
     async def _get_academic_year_or_404(
@@ -177,7 +184,9 @@ class FinancialHealthService:
             school_id=auth.school_id,
         )
         if academic_year is None:
-            raise NotFoundError("Academic year not found", error_code="ERR-FINHEALTH-404")
+            raise NotFoundError(
+                "Academic year not found", error_code="ERR-FINHEALTH-404"
+            )
         verify_school_boundary(academic_year.school_id, auth)
         return academic_year
 
@@ -321,10 +330,12 @@ class FinancialHealthService:
             start_date=current_month,
             end_date=end_month,
         )
-        historical_scheduled_income = await self.repo.aggregate_invoice_amounts_by_due_month(
-            school_id=auth.school_id,
-            start_date=history_start_month,
-            end_date=history_end_month,
+        historical_scheduled_income = (
+            await self.repo.aggregate_invoice_amounts_by_due_month(
+                school_id=auth.school_id,
+                start_date=history_start_month,
+                end_date=history_end_month,
+            )
         )
         actual_income = await self.repo.aggregate_paid_invoice_amounts_by_month(
             school_id=auth.school_id,
@@ -456,7 +467,9 @@ class FinancialHealthService:
         auth: AuthContext,
         ip_address: str | None = None,
     ) -> dict[str, Any]:
-        await self._get_academic_year_or_404(academic_year_id=body.academic_year_id, auth=auth)
+        await self._get_academic_year_or_404(
+            academic_year_id=body.academic_year_id, auth=auth
+        )
         total_students = await self.repo.count_active_students_for_academic_year(
             school_id=auth.school_id,
             academic_year_id=body.academic_year_id,
@@ -475,7 +488,9 @@ class FinancialHealthService:
             school_id=auth.school_id,
             academic_year_id=body.academic_year_id,
         )
-        total_operational_cost = round(expense_total if expense_total > 0 else budget_total, 2)
+        total_operational_cost = round(
+            expense_total if expense_total > 0 else budget_total, 2
+        )
         revenue_total = await self.repo.get_collected_revenue_for_academic_year(
             school_id=auth.school_id,
             academic_year_id=body.academic_year_id,
@@ -600,7 +615,9 @@ class FinancialHealthService:
                     collection_rate=collection_rate,
                     overdue_amount=round(overdue_amount, 2),
                     overdue_count=overdue_count,
-                    avg_payment_delay_days=None if avg_delay is None else round(avg_delay, 2),
+                    avg_payment_delay_days=None
+                    if avg_delay is None
+                    else round(avg_delay, 2),
                     currency="MAD",
                     computed_at=datetime.now(UTC),
                 )

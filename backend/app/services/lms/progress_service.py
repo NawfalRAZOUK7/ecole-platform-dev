@@ -111,7 +111,9 @@ class ProgressService(LMSServiceBase):
             limit=limit,
         )
         items = [self._assessment_to_dict(assessment) for assessment in assessments]
-        next_cursor = encode_cursor(assessments[-1].id) if has_more and assessments else None
+        next_cursor = (
+            encode_cursor(assessments[-1].id) if has_more and assessments else None
+        )
         return items, next_cursor, has_more
 
     async def publish_assessment(

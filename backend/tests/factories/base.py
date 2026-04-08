@@ -27,5 +27,7 @@ class AsyncSQLAlchemyFactory(factory.Factory):
         return obj
 
     @classmethod
-    async def create_batch(cls, session: AsyncSession, size: int, **kwargs) -> list[ModelT]:
+    async def create_batch(
+        cls, session: AsyncSession, size: int, **kwargs
+    ) -> list[ModelT]:
         return [await cls.create(session, **kwargs) for _ in range(size)]

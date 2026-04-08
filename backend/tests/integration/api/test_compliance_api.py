@@ -145,7 +145,9 @@ async def compliance_api_context(session_factory):
             code="3C-A",
             name="3eme C API",
         )
-        admin = await _create_actor(session, school=school, role=RoleCode.ADM.value, label="admin")
+        admin = await _create_actor(
+            session, school=school, role=RoleCode.ADM.value, label="admin"
+        )
         director = await _create_actor(
             session,
             school=school,
@@ -213,7 +215,9 @@ async def compliance_api_context(session_factory):
 
 class TestComplianceApi:
     @pytest.mark.asyncio
-    async def test_superadmin_can_create_curriculum(self, client, compliance_api_context):
+    async def test_superadmin_can_create_curriculum(
+        self, client, compliance_api_context
+    ):
         response = await client.post(
             "/compliance/curricula",
             headers=auth_header(compliance_api_context["superadmin"]["token"]),
@@ -239,7 +243,9 @@ class TestComplianceApi:
         assert len(response.json()["data"]) >= 1
 
     @pytest.mark.asyncio
-    async def test_superadmin_can_create_objective(self, client, compliance_api_context):
+    async def test_superadmin_can_create_objective(
+        self, client, compliance_api_context
+    ):
         response = await client.post(
             f"/compliance/curricula/{compliance_api_context['curriculum'].id}/objectives",
             headers=auth_header(compliance_api_context["superadmin"]["token"]),
@@ -304,7 +310,9 @@ class TestComplianceApi:
         response = await client.get(
             "/compliance/dashboard",
             headers=auth_header(compliance_api_context["director"]["token"]),
-            params={"academic_year_id": str(compliance_api_context["academic_year"].id)},
+            params={
+                "academic_year_id": str(compliance_api_context["academic_year"].id)
+            },
         )
 
         assert response.status_code == 200, response.text
@@ -340,7 +348,9 @@ class TestComplianceApi:
         response = await client.get(
             "/compliance/reports",
             headers=auth_header(compliance_api_context["director"]["token"]),
-            params={"academic_year_id": str(compliance_api_context["academic_year"].id)},
+            params={
+                "academic_year_id": str(compliance_api_context["academic_year"].id)
+            },
         )
 
         assert response.status_code == 200, response.text
@@ -360,7 +370,9 @@ class TestComplianceApi:
         assert response.json()["data"]["id"] == report["id"]
 
     @pytest.mark.asyncio
-    async def test_director_can_download_report_pdf(self, client, compliance_api_context):
+    async def test_director_can_download_report_pdf(
+        self, client, compliance_api_context
+    ):
         await _create_mapping(client, compliance_api_context)
         report = await _generate_report(client, compliance_api_context)
 

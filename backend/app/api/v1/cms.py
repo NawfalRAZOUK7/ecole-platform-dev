@@ -128,7 +128,9 @@ async def list_submissions(
     return list_response(items, next_cursor=next_cursor, has_more=has_more)
 
 
-@router.post("/submissions/{submission_id}/review", summary="Review a teacher submission")
+@router.post(
+    "/submissions/{submission_id}/review", summary="Review a teacher submission"
+)
 async def review_submission(
     submission_id: uuid.UUID,
     body: ReviewDecisionRequest,

@@ -88,7 +88,11 @@ def make_milestone(
         name_fr=f"Niveau {level}",
         name_ar=f"المستوى {level}",
         level=level,
-        rule_config={"metric": "submissions_on_time", "threshold": 1, "period_days": 30},
+        rule_config={
+            "metric": "submissions_on_time",
+            "threshold": 1,
+            "period_days": 30,
+        },
         badge_icon="badge-star",
         is_active=True,
         created_at=now,
@@ -122,7 +126,9 @@ def make_progress(
     )
 
 
-def make_passport(auth: AuthContext, *, student_id: uuid.UUID | None = None) -> SimpleNamespace:
+def make_passport(
+    auth: AuthContext, *, student_id: uuid.UUID | None = None
+) -> SimpleNamespace:
     now = datetime(2026, 4, 4, 12, 45, tzinfo=UTC)
     return SimpleNamespace(
         id=uuid.uuid4(),
@@ -151,7 +157,9 @@ def setup_skill_service(monkeypatch: pytest.MonkeyPatch):
     uow = FakeUnitOfWork()
 
     monkeypatch.setattr(skill_module, "UnitOfWork", lambda _db: uow)
-    monkeypatch.setattr(skill_module, "SkillPassportRepository", lambda _session: repo_in_uow)
+    monkeypatch.setattr(
+        skill_module, "SkillPassportRepository", lambda _session: repo_in_uow
+    )
     monkeypatch.setattr(skill_module, "AuditService", lambda _session: audit)
     monkeypatch.setattr(skill_module, "EventDispatcher", lambda _session: dispatcher)
 
@@ -271,16 +279,22 @@ class TestSkillPassportService:
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         auth = make_auth(role="TCH")
-        service, _repo_in_uow, audit, _dispatcher, uow = setup_skill_service(monkeypatch)
+        service, _repo_in_uow, audit, _dispatcher, uow = setup_skill_service(
+            monkeypatch
+        )
         student = SimpleNamespace(id=uuid.uuid4(), school_id=auth.school_id)
         academic_year = SimpleNamespace(id=uuid.uuid4(), school_id=auth.school_id)
-        progress = make_progress(auth, student_id=student.id, status="unlocked", current_value=100)
+        progress = make_progress(
+            auth, student_id=student.id, status="unlocked", current_value=100
+        )
         service.repo.get_user.return_value = student
         service.repo.get_academic_year.return_value = academic_year
         monkeypatch.setattr(
             service,
             "_evaluate_student_records",
-            AsyncMock(return_value=([progress], {"submissions_on_time": 1.0}, 1, 1, 100.0)),
+            AsyncMock(
+                return_value=([progress], {"submissions_on_time": 1.0}, 1, 1, 100.0)
+            ),
         )
 
         result = await service.evaluate_student(
@@ -367,11 +381,15 @@ class TestSkillPassportService:
         academic_year = SimpleNamespace(id=uuid.uuid4(), school_id=auth.school_id)
         dimension = make_dimension()
         milestone = make_milestone(dimension=dimension)
-        progress = make_progress(auth, milestone=milestone, status="unlocked", current_value=100)
+        progress = make_progress(
+            auth, milestone=milestone, status="unlocked", current_value=100
+        )
         service.repo.get_academic_year.return_value = academic_year
         service.repo.list_school_student_ids.return_value = [progress.student_id]
         service.repo.list_progress.return_value = [progress]
-        service.repo.list_passports.return_value = [make_passport(auth, student_id=progress.student_id)]
+        service.repo.list_passports.return_value = [
+            make_passport(auth, student_id=progress.student_id)
+        ]
         service.repo.list_dimensions.return_value = [dimension]
         service.repo.list_milestones.return_value = [milestone]
 
@@ -396,10 +414,34 @@ class TestSkillPassportService:
         student_one = uuid.uuid4()
         student_two = uuid.uuid4()
         progress_rows = [
-            make_progress(auth, student_id=student_one, milestone=milestone_one, status="unlocked", current_value=100),
-            make_progress(auth, student_id=student_one, milestone=milestone_two, status="unlocked", current_value=100),
-            make_progress(auth, student_id=student_two, milestone=milestone_one, status="unlocked", current_value=100),
-            make_progress(auth, student_id=student_two, milestone=milestone_two, status="locked", current_value=0),
+            make_progress(
+                auth,
+                student_id=student_one,
+                milestone=milestone_one,
+                status="unlocked",
+                current_value=100,
+            ),
+            make_progress(
+                auth,
+                student_id=student_one,
+                milestone=milestone_two,
+                status="unlocked",
+                current_value=100,
+            ),
+            make_progress(
+                auth,
+                student_id=student_two,
+                milestone=milestone_one,
+                status="unlocked",
+                current_value=100,
+            ),
+            make_progress(
+                auth,
+                student_id=student_two,
+                milestone=milestone_two,
+                status="locked",
+                current_value=0,
+            ),
         ]
         service.repo.get_class.return_value = school_class
         service.repo.get_academic_year.return_value = academic_year
@@ -424,7 +466,9 @@ class TestSkillPassportService:
         service.repo = AsyncMock()
         passport = make_passport(auth)
         student = SimpleNamespace(id=passport.student_id, school_id=auth.school_id)
-        progress = make_progress(auth, student_id=passport.student_id, status="unlocked", current_value=100)
+        progress = make_progress(
+            auth, student_id=passport.student_id, status="unlocked", current_value=100
+        )
         service.repo.get_passport_by_id.return_value = passport
         service.repo.get_user.return_value = student
         service.repo.list_progress.return_value = [progress]

@@ -74,7 +74,9 @@ class TestComplianceServiceEdges:
     def test_build_minimal_pdf_emits_pdf_header(self) -> None:
         service = ComplianceService(AsyncMock())
 
-        payload = service._build_minimal_pdf(["MEN Compliance Report", "Compliance: 100%"])
+        payload = service._build_minimal_pdf(
+            ["MEN Compliance Report", "Compliance: 100%"]
+        )
 
         assert payload.startswith(b"%PDF-1.4")
 
@@ -99,7 +101,9 @@ class TestComplianceServiceEdges:
             permissions=set(),
         )
 
-        with pytest.raises(ValidationError, match="requires a course_id or content_item_id"):
+        with pytest.raises(
+            ValidationError, match="requires a course_id or content_item_id"
+        ):
             await service.create_mapping(
                 body=CurriculumMappingCreateRequest(objective_id=uuid.uuid4()),
                 auth=auth,

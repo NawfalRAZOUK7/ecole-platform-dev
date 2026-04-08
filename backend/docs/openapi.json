@@ -1197,6 +1197,29 @@
       }
     },
     "/api/v1/enrollments": {
+      "get": {
+        "tags": [
+          "erp-enrollments"
+        ],
+        "summary": "Compatibility: list active enrollments for current user",
+        "description": "List active class enrollments for the authenticated student.",
+        "operationId": "list_enrollments_api_v1_enrollments_get",
+        "responses": {
+          "200": {
+            "description": "Active enrollment list",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
       "post": {
         "tags": [
           "erp-enrollments"
@@ -1329,6 +1352,118 @@
             "HTTPBearer": []
           }
         ]
+      }
+    },
+    "/api/v1/attendance/class/{class_id}": {
+      "get": {
+        "tags": [
+          "erp-attendance"
+        ],
+        "summary": "Compatibility: get class attendance records",
+        "description": "Compatibility wrapper for legacy frontend attendance pages.",
+        "operationId": "get_class_attendance_records_api_v1_attendance_class__class_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "class_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Class Id"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Legacy class attendance record list",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "erp-attendance"
+        ],
+        "summary": "Compatibility: mark class attendance",
+        "description": "Compatibility wrapper for legacy class-scoped attendance writes.",
+        "operationId": "mark_class_attendance_legacy_api_v1_attendance_class__class_id__post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "class_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Class Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LegacyClassAttendanceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Legacy attendance write acknowledgement",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/attendance/justifications": {
@@ -2785,6 +2920,53 @@
         }
       }
     },
+    "/api/v1/content-items/{content_item_id}/stream": {
+      "get": {
+        "tags": [
+          "lms-content"
+        ],
+        "summary": "Compatibility: stream the first content asset",
+        "description": "Stream the first asset associated with a published content item.",
+        "operationId": "stream_content_item_api_v1_content_items__content_item_id__stream_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "content_item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Content Item Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Binary content stream",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/content-items/{content_item_id}/progress": {
       "post": {
         "tags": [
@@ -3691,6 +3873,60 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "rubric-engine"
+        ],
+        "summary": "Compatibility: update rubric",
+        "operationId": "update_rubric_api_v1_rubrics__rubric_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "rubric_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Rubric Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RubricCreateRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -4681,6 +4917,63 @@
         "responses": {
           "200": {
             "description": "Payment attempt status",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payments/{payment_id}/proof": {
+      "post": {
+        "tags": [
+          "billing-payments"
+        ],
+        "summary": "Compatibility: upload payment proof",
+        "description": "Compatibility wrapper for manual proof uploads from the frontend.",
+        "operationId": "upload_payment_proof_api_v1_payments__payment_id__proof_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "payment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Payment Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_payment_proof_api_v1_payments__payment_id__proof_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Uploaded proof acknowledgement",
             "content": {
               "application/json": {
                 "schema": {}
@@ -10615,6 +10908,110 @@
             }
           }
         }
+      },
+      "put": {
+        "tags": [
+          "budget"
+        ],
+        "summary": "Compatibility: update budget",
+        "description": "Legacy update alias for budget pages.",
+        "operationId": "update_budget_api_v1_budgets__budget_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "budget_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Budget Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MicroBudgetUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated budget",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Update Budget Api V1 Budgets  Budget Id  Put"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "budget"
+        ],
+        "summary": "Compatibility: close budget",
+        "description": "Legacy delete alias that soft-closes the budget.",
+        "operationId": "delete_budget_api_v1_budgets__budget_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "budget_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Budget Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Closed budget",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Delete Budget Api V1 Budgets  Budget Id  Delete"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/budgets/{budget_id}/allocations": {
@@ -10806,6 +11203,63 @@
               "application/json": {
                 "schema": {
                   "title": "Response Get Allocation Api V1 Budgets Allocations  Allocation Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "budget"
+        ],
+        "summary": "Compatibility: update allocation",
+        "description": "Legacy update alias for allocation pages.",
+        "operationId": "update_budget_allocation_api_v1_budgets_allocations__allocation_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "allocation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Allocation Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BudgetAllocationUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated allocation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Update Budget Allocation Api V1 Budgets Allocations  Allocation Id  Put"
                 }
               }
             }
@@ -11677,6 +12131,65 @@
               "application/json": {
                 "schema": {
                   "title": "Response List Micro Enrollments Api V1 Micro Enrollments Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/micro/schools/{micro_school_id}/enrollments/{micro_enrollment_id}": {
+      "delete": {
+        "tags": [
+          "micro-school"
+        ],
+        "summary": "Compatibility: delete micro-enrollment",
+        "description": "Legacy nested delete alias for micro-school enrollment pages.",
+        "operationId": "delete_micro_enrollment_legacy_api_v1_micro_schools__micro_school_id__enrollments__micro_enrollment_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "micro_school_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Micro School Id"
+            }
+          },
+          {
+            "name": "micro_enrollment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Micro Enrollment Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted micro-enrollment",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Delete Micro Enrollment Legacy Api V1 Micro Schools  Micro School Id  Enrollments  Micro Enrollment Id  Delete"
                 }
               }
             }
@@ -19901,6 +20414,20 @@
         ],
         "title": "Body_upload_exercise_pdf_api_v1_assignments__assignment_id__exercise_pdf_post"
       },
+      "Body_upload_payment_proof_api_v1_payments__payment_id__proof_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_payment_proof_api_v1_payments__payment_id__proof_post"
+      },
       "Body_upload_submission_file_api_v1_submissions__submission_id__files_post": {
         "properties": {
           "file": {
@@ -19983,6 +20510,86 @@
         ],
         "title": "BudgetAllocationCreateRequest",
         "description": "Payload for creating a budget allocation."
+      },
+      "BudgetAllocationUpdateRequest": {
+        "properties": {
+          "class_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Class Id"
+          },
+          "teacher_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teacher Id"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^MAD$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(active|exhausted|frozen)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "title": "BudgetAllocationUpdateRequest",
+        "description": "Payload for updating a budget allocation."
       },
       "BudgetRequestCreateRequest": {
         "properties": {
@@ -22204,6 +22811,58 @@
         "type": "object",
         "title": "LateFeePolicyUpdateRequest"
       },
+      "LegacyAttendanceRecordInput": {
+        "properties": {
+          "student_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Student Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "student_id",
+          "status"
+        ],
+        "title": "LegacyAttendanceRecordInput"
+      },
+      "LegacyClassAttendanceRequest": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "records": {
+            "items": {
+              "$ref": "#/components/schemas/LegacyAttendanceRecordInput"
+            },
+            "type": "array",
+            "title": "Records"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "records"
+        ],
+        "title": "LegacyClassAttendanceRequest"
+      },
       "LevelInput": {
         "properties": {
           "label": {
@@ -22557,6 +23216,49 @@
         ],
         "title": "MicroBudgetCreateRequest",
         "description": "Payload for creating a micro-budget."
+      },
+      "MicroBudgetUpdateRequest": {
+        "properties": {
+          "total_amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Amount"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^MAD$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(active|frozen|closed)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "title": "MicroBudgetUpdateRequest",
+        "description": "Payload for updating a micro-budget."
       },
       "MicroEnrollmentCreateRequest": {
         "properties": {

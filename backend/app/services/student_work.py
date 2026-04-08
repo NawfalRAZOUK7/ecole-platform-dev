@@ -24,9 +24,13 @@ class StudentWorkService:
         student_id: uuid.UUID,
     ) -> list[dict]:
         """Return all student work assigned to one student."""
-        assignments = await self._assignment_repo.list_for_student(school_id, student_id)
+        assignments = await self._assignment_repo.list_for_student(
+            school_id, student_id
+        )
         quizzes = await self._quiz_repo.list_for_student(school_id, student_id)
-        assessments = await self._assessment_repo.list_for_student(school_id, student_id)
+        assessments = await self._assessment_repo.list_for_student(
+            school_id, student_id
+        )
         return self._build_unified_items(
             assignments=assignments,
             quizzes=quizzes,

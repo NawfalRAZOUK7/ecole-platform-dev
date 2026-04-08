@@ -27,7 +27,6 @@ from app.services.auth import RecoveryService
 router = APIRouter(prefix="/recovery", tags=["recovery"])
 
 
-
 # ---------------------------------------------------------------------------
 # POST /recovery/request — Public
 # ---------------------------------------------------------------------------

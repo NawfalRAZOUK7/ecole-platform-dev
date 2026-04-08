@@ -109,7 +109,9 @@ async def sync_api_context(session_factory):
             name="Sync API School",
             city="Rabat",
         )
-        admin = await _create_actor(session, school=school, role=RoleCode.ADM.value, label="admin")
+        admin = await _create_actor(
+            session, school=school, role=RoleCode.ADM.value, label="admin"
+        )
         director = await _create_actor(
             session,
             school=school,
@@ -259,7 +261,9 @@ class TestSyncApi:
         assert response.json()["data"]["accepted_count"] == 1
 
     @pytest.mark.asyncio
-    async def test_teacher_conflicting_push_returns_conflict_count(self, client, sync_api_context):
+    async def test_teacher_conflicting_push_returns_conflict_count(
+        self, client, sync_api_context
+    ):
         payload = await _create_conflict(client, sync_api_context)
 
         assert payload["conflict_count"] == 1

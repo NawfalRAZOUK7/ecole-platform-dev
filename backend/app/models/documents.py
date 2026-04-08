@@ -100,7 +100,9 @@ class Document(TimestampMixin, SchoolScopedMixin, SoftDeleteMixin, Base):
 
     @property
     def is_expired(self) -> bool:
-        return self.expires_at is not None and self.expires_at < datetime.now(timezone.utc)
+        return self.expires_at is not None and self.expires_at < datetime.now(
+            timezone.utc
+        )
 
     def __repr__(self) -> str:
         return (
@@ -228,7 +230,9 @@ class ResourceRating(TimestampMixin, Base):
     rating: Mapped[int] = mapped_column(Integer, nullable=False)
 
     __table_args__ = (
-        UniqueConstraint("resource_id", "user_id", name="uq_resource_ratings_resource_user"),
+        UniqueConstraint(
+            "resource_id", "user_id", name="uq_resource_ratings_resource_user"
+        ),
         Index("idx_resource_ratings_resource", "resource_id"),
         Index("idx_resource_ratings_user", "user_id"),
     )

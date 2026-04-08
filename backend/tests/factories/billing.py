@@ -139,6 +139,8 @@ class InstallmentFactory(AsyncSQLAlchemyFactory):
     plan_id = factory.LazyAttribute(lambda o: o.plan.id)
     installment_number = 1
     amount = Decimal("166.67")
-    due_date = factory.LazyFunction(lambda: datetime.now(timezone.utc) + timedelta(days=30))
+    due_date = factory.LazyFunction(
+        lambda: datetime.now(timezone.utc) + timedelta(days=30)
+    )
     paid_at = None
     status = "pending"

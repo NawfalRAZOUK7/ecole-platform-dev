@@ -18,7 +18,11 @@ from app.core.permissions import (
 )
 from app.core.request_utils import get_client_ip
 from app.core.response import clamp_page_size, list_response, success_response
-from app.schemas.com import ConversationCreateRequest, MarkReadRequest, MessageCreateRequest
+from app.schemas.com import (
+    ConversationCreateRequest,
+    MarkReadRequest,
+    MessageCreateRequest,
+)
 from app.services.communication import CommunicationService
 
 router = APIRouter(prefix="/messages", tags=["messaging"])
@@ -190,7 +194,9 @@ async def mark_read(
 )
 async def get_read_status(
     conversation_id: uuid.UUID,
-    message_id: uuid.UUID | None = Query(None, description="Filter by specific message"),
+    message_id: uuid.UUID | None = Query(
+        None, description="Filter by specific message"
+    ),
     auth: AuthContext = Depends(
         requires_any_permission(
             PERM_COM_CONVERSATION_READ,

@@ -41,9 +41,7 @@ class ReportsRepository(BaseRepository):
         return job
 
     async def get_report_job(self, job_id: uuid.UUID) -> ReportJob | None:
-        result = await self.db.execute(
-            select(ReportJob).where(ReportJob.id == job_id)
-        )
+        result = await self.db.execute(select(ReportJob).where(ReportJob.id == job_id))
         return result.scalar_one_or_none()
 
     async def find_cached_report(
@@ -93,7 +91,9 @@ class ReportsRepository(BaseRepository):
         if status:
             query = query.where(ReportJob.status == status)
         if period_id:
-            query = query.where(ReportJob.parameters["period_id"].astext == str(period_id))
+            query = query.where(
+                ReportJob.parameters["period_id"].astext == str(period_id)
+            )
 
         query = query.order_by(ReportJob.created_at.desc(), ReportJob.id.desc())
 
@@ -395,7 +395,9 @@ class ReportsRepository(BaseRepository):
     ) -> dict[uuid.UUID, str]:
         if not user_ids:
             return {}
-        result = await self.db.execute(select(User.id, User.full_name).where(User.id.in_(user_ids)))
+        result = await self.db.execute(
+            select(User.id, User.full_name).where(User.id.in_(user_ids))
+        )
         return {row.id: row.full_name for row in result}
 
     async def list_student_report_grade_rows(
@@ -440,9 +442,15 @@ class ReportsRepository(BaseRepository):
         result = await self.db.execute(
             select(
                 func.count(AttendanceRecord.id).label("total"),
-                func.count().filter(AttendanceRecord.status == "present").label("present"),
-                func.count().filter(AttendanceRecord.status == "absent").label("absent"),
-                func.count().filter(AttendanceRecord.status == "excused").label("excused"),
+                func.count()
+                .filter(AttendanceRecord.status == "present")
+                .label("present"),
+                func.count()
+                .filter(AttendanceRecord.status == "absent")
+                .label("absent"),
+                func.count()
+                .filter(AttendanceRecord.status == "excused")
+                .label("excused"),
                 func.count().filter(AttendanceRecord.status == "late").label("late"),
             )
             .select_from(AttendanceRecord)
@@ -531,10 +539,7 @@ class ReportsRepository(BaseRepository):
             )
             .group_by(Submission.student_id)
         )
-        return {
-            row.student_id: float(row.average_grade or 0)
-            for row in result
-        }
+        return {row.student_id: float(row.average_grade or 0) for row in result}
 
     async def list_class_student_attendance_rates(
         self,
@@ -551,7 +556,9 @@ class ReportsRepository(BaseRepository):
             select(
                 AttendanceRecord.student_id,
                 func.count(AttendanceRecord.id).label("total"),
-                func.count().filter(AttendanceRecord.status == "present").label("present"),
+                func.count()
+                .filter(AttendanceRecord.status == "present")
+                .label("present"),
                 func.count().filter(AttendanceRecord.status == "late").label("late"),
             )
             .select_from(AttendanceRecord)
@@ -569,7 +576,9 @@ class ReportsRepository(BaseRepository):
             .group_by(AttendanceRecord.student_id)
         )
         return {
-            row.student_id: round((((row.present or 0) + (row.late or 0)) / row.total) * 100, 2)
+            row.student_id: round(
+                (((row.present or 0) + (row.late or 0)) / row.total) * 100, 2
+            )
             if row.total
             else 0.0
             for row in result
@@ -590,12 +599,22 @@ class ReportsRepository(BaseRepository):
             select(
                 AttendanceRecord.student_id,
                 func.count(AttendanceRecord.id).label("total_records"),
-                func.count().filter(AttendanceRecord.status == "present").label("present"),
-                func.count().filter(AttendanceRecord.status == "absent").label("absences"),
-                func.count().filter(AttendanceRecord.status == "excused").label("excused"),
+                func.count()
+                .filter(AttendanceRecord.status == "present")
+                .label("present"),
+                func.count()
+                .filter(AttendanceRecord.status == "absent")
+                .label("absences"),
+                func.count()
+                .filter(AttendanceRecord.status == "excused")
+                .label("excused"),
                 func.count().filter(AttendanceRecord.status == "late").label("late"),
-                func.count().filter(AbsenceJustification.status == "justified").label("justified"),
-                func.count().filter(AbsenceJustification.status == "pending").label("pending"),
+                func.count()
+                .filter(AbsenceJustification.status == "justified")
+                .label("justified"),
+                func.count()
+                .filter(AbsenceJustification.status == "pending")
+                .label("pending"),
             )
             .select_from(AttendanceRecord)
             .join(
@@ -628,8 +647,12 @@ class ReportsRepository(BaseRepository):
         result = await self.db.execute(
             select(
                 AttendanceSession.session_date,
-                func.count().filter(AttendanceRecord.status == "absent").label("absent"),
-                func.count().filter(AttendanceRecord.status == "excused").label("excused"),
+                func.count()
+                .filter(AttendanceRecord.status == "absent")
+                .label("absent"),
+                func.count()
+                .filter(AttendanceRecord.status == "excused")
+                .label("excused"),
                 func.count().filter(AttendanceRecord.status == "late").label("late"),
             )
             .select_from(AttendanceRecord)
@@ -702,12 +725,16 @@ class ReportsRepository(BaseRepository):
         offset: int,
         limit: int,
     ) -> list[dict[str, Any]]:
-        query = self._build_export_query(
-            school_id=school_id,
-            entity=entity,
-            filters=filters,
-            count_only=False,
-        ).offset(offset).limit(limit)
+        query = (
+            self._build_export_query(
+                school_id=school_id,
+                entity=entity,
+                filters=filters,
+                count_only=False,
+            )
+            .offset(offset)
+            .limit(limit)
+        )
         result = await self.db.execute(query)
         return [dict(row._mapping) for row in result]
 
@@ -851,10 +878,14 @@ class ReportsRepository(BaseRepository):
                     )
                     .outerjoin(
                         AbsenceJustification,
-                        AbsenceJustification.attendance_record_id == AttendanceRecord.id,
+                        AbsenceJustification.attendance_record_id
+                        == AttendanceRecord.id,
                     )
                     .where(AttendanceRecord.school_id == school_id)
-                    .order_by(AttendanceSession.session_date.desc(), AttendanceRecord.id.desc())
+                    .order_by(
+                        AttendanceSession.session_date.desc(),
+                        AttendanceRecord.id.desc(),
+                    )
                 )
             if class_id:
                 query = query.where(
@@ -874,7 +905,9 @@ class ReportsRepository(BaseRepository):
 
         if entity == "invoices":
             if count_only:
-                query = select(func.count(Invoice.id)).where(Invoice.school_id == school_id)
+                query = select(func.count(Invoice.id)).where(
+                    Invoice.school_id == school_id
+                )
             else:
                 query = (
                     select(

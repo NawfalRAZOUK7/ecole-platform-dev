@@ -108,7 +108,11 @@ class SchoolService:
                 limit,
                 {"status": status},
             )
-            return [self._to_response(school) for school in schools], next_cursor, has_more
+            return (
+                [self._to_response(school) for school in schools],
+                next_cursor,
+                has_more,
+            )
 
         if auth.role not in {ADM, DIR}:
             raise NotFoundError("School not found", error_code="ERR-RES-404")

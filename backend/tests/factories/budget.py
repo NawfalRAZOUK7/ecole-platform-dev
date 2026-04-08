@@ -66,7 +66,9 @@ class BudgetAllocationFactory(AsyncSQLAlchemyFactory):
         school=factory.SelfAttribute("..budget.school"),
         academic_year=factory.SelfAttribute("..budget.academic_year"),
     )
-    teacher = factory.SubFactory(UserFactory, school=factory.SelfAttribute("..budget.school"))
+    teacher = factory.SubFactory(
+        UserFactory, school=factory.SelfAttribute("..budget.school")
+    )
     allocator = factory.LazyAttribute(lambda o: o.budget.creator)
     budget_id = factory.LazyAttribute(lambda o: o.budget.id)
     class_id = factory.LazyAttribute(lambda o: o.school_class.id)
@@ -123,7 +125,9 @@ class BudgetTransactionFactory(AsyncSQLAlchemyFactory):
     amount = Decimal("350.00")
     transaction_type = BudgetTransactionType.EXPENSE.value
     description = "Achat de peinture"
-    receipt_url = factory.LazyFunction(lambda: f"https://cdn.ecole.ma/{uuid.uuid4().hex}.pdf")
+    receipt_url = factory.LazyFunction(
+        lambda: f"https://cdn.ecole.ma/{uuid.uuid4().hex}.pdf"
+    )
     recorded_by = factory.LazyAttribute(lambda o: o.recorder.id)
     recorded_at = factory.LazyFunction(_utc_now)
 

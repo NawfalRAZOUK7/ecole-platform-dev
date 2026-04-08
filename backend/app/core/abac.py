@@ -91,5 +91,7 @@ async def validate_student_teacher_access(
     teacher_classes = select(TeacherAssignment.class_id).where(
         TeacherAssignment.teacher_id == teacher_id,
     )
-    result = await db.execute(select(exists(student_classes.intersect(teacher_classes))))
+    result = await db.execute(
+        select(exists(student_classes.intersect(teacher_classes)))
+    )
     return bool(result.scalar())

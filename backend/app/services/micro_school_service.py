@@ -336,7 +336,9 @@ class MicroSchoolService(_MicroServiceBase):
         auth: AuthContext,
         ip_address: str | None = None,
     ) -> dict[str, Any]:
-        school = await self._get_school_or_404(micro_school_id, school_id=auth.school_id)
+        school = await self._get_school_or_404(
+            micro_school_id, school_id=auth.school_id
+        )
         await self._ensure_school_manage_access(school, auth)
 
         async with UnitOfWork(self.db) as uow:
@@ -347,7 +349,9 @@ class MicroSchoolService(_MicroServiceBase):
                 school_id=auth.school_id,
             )
             if current_school is None:
-                raise NotFoundError("Micro-school not found", error_code="ERR-MICRO-404")
+                raise NotFoundError(
+                    "Micro-school not found", error_code="ERR-MICRO-404"
+                )
             school = current_school
             before = self._school_to_response(school)
             for field, value in body.model_dump(exclude_unset=True).items():
@@ -375,7 +379,9 @@ class MicroSchoolService(_MicroServiceBase):
         auth: AuthContext,
         ip_address: str | None = None,
     ) -> dict[str, Any]:
-        school = await self._get_school_or_404(micro_school_id, school_id=auth.school_id)
+        school = await self._get_school_or_404(
+            micro_school_id, school_id=auth.school_id
+        )
         await self._ensure_school_manage_access(school, auth)
 
         async with UnitOfWork(self.db) as uow:
@@ -386,7 +392,9 @@ class MicroSchoolService(_MicroServiceBase):
                 school_id=auth.school_id,
             )
             if current_school is None:
-                raise NotFoundError("Micro-school not found", error_code="ERR-MICRO-404")
+                raise NotFoundError(
+                    "Micro-school not found", error_code="ERR-MICRO-404"
+                )
             school = current_school
             before = self._school_to_response(school)
             await repo.delete_micro_school(school)
@@ -469,7 +477,9 @@ class MicroSchoolService(_MicroServiceBase):
             audit = AuditService(uow.session)
             resource = await repo.get_micro_resource(micro_resource_id)
             if resource is None:
-                raise NotFoundError("Micro resource not found", error_code="ERR-MICRO-404")
+                raise NotFoundError(
+                    "Micro resource not found", error_code="ERR-MICRO-404"
+                )
             before = self._resource_to_response(resource)
             for field, value in body.model_dump(exclude_unset=True).items():
                 setattr(resource, field, value)
@@ -506,7 +516,9 @@ class MicroSchoolService(_MicroServiceBase):
             audit = AuditService(uow.session)
             resource = await repo.get_micro_resource(micro_resource_id)
             if resource is None:
-                raise NotFoundError("Micro resource not found", error_code="ERR-MICRO-404")
+                raise NotFoundError(
+                    "Micro resource not found", error_code="ERR-MICRO-404"
+                )
             before = self._resource_to_response(resource)
             await repo.delete_micro_resource(resource)
             await audit.log_event(
@@ -761,7 +773,9 @@ class MicroGroupService(_MicroServiceBase):
             status=status,
         )
         if auth.role == PAR:
-            enrollments = [item for item in enrollments if item.parent_id == auth.user_id]
+            enrollments = [
+                item for item in enrollments if item.parent_id == auth.user_id
+            ]
         return [self._enrollment_to_response(item) for item in enrollments]
 
     async def update_enrollment(
@@ -782,7 +796,9 @@ class MicroGroupService(_MicroServiceBase):
             or enrollment.micro_group is None
             or enrollment.micro_group.micro_school is None
         ):
-            raise NotFoundError("Micro enrollment not found", error_code="ERR-MICRO-404")
+            raise NotFoundError(
+                "Micro enrollment not found", error_code="ERR-MICRO-404"
+            )
         school = enrollment.micro_group.micro_school
         if auth.role == PAR:
             if enrollment.parent_id != auth.user_id:
@@ -807,7 +823,9 @@ class MicroGroupService(_MicroServiceBase):
             audit = AuditService(uow.session)
             enrollment = await repo.get_micro_enrollment(micro_enrollment_id)
             if enrollment is None:
-                raise NotFoundError("Micro enrollment not found", error_code="ERR-MICRO-404")
+                raise NotFoundError(
+                    "Micro enrollment not found", error_code="ERR-MICRO-404"
+                )
             before = self._enrollment_to_response(enrollment)
             for field, value in payload.items():
                 setattr(enrollment, field, value)
@@ -844,15 +862,21 @@ class MicroGroupService(_MicroServiceBase):
             or enrollment.micro_group is None
             or enrollment.micro_group.micro_school is None
         ):
-            raise NotFoundError("Micro enrollment not found", error_code="ERR-MICRO-404")
-        await self._ensure_school_manage_access(enrollment.micro_group.micro_school, auth)
+            raise NotFoundError(
+                "Micro enrollment not found", error_code="ERR-MICRO-404"
+            )
+        await self._ensure_school_manage_access(
+            enrollment.micro_group.micro_school, auth
+        )
 
         async with UnitOfWork(self.db) as uow:
             repo = MicroSchoolRepository(uow.session)
             audit = AuditService(uow.session)
             enrollment = await repo.get_micro_enrollment(micro_enrollment_id)
             if enrollment is None:
-                raise NotFoundError("Micro enrollment not found", error_code="ERR-MICRO-404")
+                raise NotFoundError(
+                    "Micro enrollment not found", error_code="ERR-MICRO-404"
+                )
             before = self._enrollment_to_response(enrollment)
             await repo.delete_micro_enrollment(enrollment)
             await audit.log_event(
@@ -888,7 +912,9 @@ class MicroPaymentService(_MicroServiceBase):
             school_id=auth.school_id,
         )
         if enrollment is None:
-            raise NotFoundError("Micro enrollment not found", error_code="ERR-MICRO-404")
+            raise NotFoundError(
+                "Micro enrollment not found", error_code="ERR-MICRO-404"
+            )
         if auth.role == PAR:
             if body.parent_id != auth.user_id or enrollment.parent_id != auth.user_id:
                 raise AuthorizationError(
@@ -1002,7 +1028,9 @@ class MicroPaymentService(_MicroServiceBase):
             audit = AuditService(uow.session)
             payment = await repo.get_micro_payment(micro_payment_id)
             if payment is None:
-                raise NotFoundError("Micro payment not found", error_code="ERR-MICRO-404")
+                raise NotFoundError(
+                    "Micro payment not found", error_code="ERR-MICRO-404"
+                )
             before = self._payment_to_response(payment)
             payload = body.model_dump(exclude_unset=True)
             for field, value in payload.items():
@@ -1046,7 +1074,9 @@ class MicroPaymentService(_MicroServiceBase):
             audit = AuditService(uow.session)
             payment = await repo.get_micro_payment(micro_payment_id)
             if payment is None:
-                raise NotFoundError("Micro payment not found", error_code="ERR-MICRO-404")
+                raise NotFoundError(
+                    "Micro payment not found", error_code="ERR-MICRO-404"
+                )
             before = self._payment_to_response(payment)
             await repo.delete_micro_payment(payment)
             await audit.log_event(
@@ -1128,7 +1158,9 @@ class MicroProgressService(_MicroServiceBase):
             or enrollment.micro_group is None
             or enrollment.micro_group.micro_school is None
         ):
-            raise NotFoundError("Micro enrollment not found", error_code="ERR-MICRO-404")
+            raise NotFoundError(
+                "Micro enrollment not found", error_code="ERR-MICRO-404"
+            )
         school = enrollment.micro_group.micro_school
         await self._ensure_school_manage_access(school, auth)
         educator_id = body.educator_id or auth.user_id
@@ -1224,7 +1256,9 @@ class MicroProgressService(_MicroServiceBase):
                 if enrollment is not None and enrollment.parent_id == auth.user_id:
                     allowed_enrollment_ids.add(enrollment.id)
             logs = [
-                item for item in logs if item.micro_enrollment_id in allowed_enrollment_ids
+                item
+                for item in logs
+                if item.micro_enrollment_id in allowed_enrollment_ids
             ]
         return [self._progress_to_response(item) for item in logs]
 
@@ -1247,7 +1281,9 @@ class MicroProgressService(_MicroServiceBase):
             or progress.micro_enrollment.micro_group is None
             or progress.micro_enrollment.micro_group.micro_school is None
         ):
-            raise NotFoundError("Micro progress log not found", error_code="ERR-MICRO-404")
+            raise NotFoundError(
+                "Micro progress log not found", error_code="ERR-MICRO-404"
+            )
         school = progress.micro_enrollment.micro_group.micro_school
         if not self._is_admin(auth) and progress.educator_id != auth.user_id:
             await self._ensure_school_manage_access(school, auth)
@@ -1257,7 +1293,9 @@ class MicroProgressService(_MicroServiceBase):
             audit = AuditService(uow.session)
             progress = await repo.get_micro_progress_log(micro_progress_log_id)
             if progress is None:
-                raise NotFoundError("Micro progress log not found", error_code="ERR-MICRO-404")
+                raise NotFoundError(
+                    "Micro progress log not found", error_code="ERR-MICRO-404"
+                )
             before = self._progress_to_response(progress)
             for field, value in body.model_dump(exclude_unset=True).items():
                 setattr(progress, field, value)
@@ -1295,7 +1333,9 @@ class MicroProgressService(_MicroServiceBase):
             or progress.micro_enrollment.micro_group is None
             or progress.micro_enrollment.micro_group.micro_school is None
         ):
-            raise NotFoundError("Micro progress log not found", error_code="ERR-MICRO-404")
+            raise NotFoundError(
+                "Micro progress log not found", error_code="ERR-MICRO-404"
+            )
         school = progress.micro_enrollment.micro_group.micro_school
         if not self._is_admin(auth) and progress.educator_id != auth.user_id:
             await self._ensure_school_manage_access(school, auth)
@@ -1305,7 +1345,9 @@ class MicroProgressService(_MicroServiceBase):
             audit = AuditService(uow.session)
             progress = await repo.get_micro_progress_log(micro_progress_log_id)
             if progress is None:
-                raise NotFoundError("Micro progress log not found", error_code="ERR-MICRO-404")
+                raise NotFoundError(
+                    "Micro progress log not found", error_code="ERR-MICRO-404"
+                )
             before = self._progress_to_response(progress)
             await repo.delete_micro_progress_log(progress)
             await audit.log_event(
@@ -1338,7 +1380,9 @@ class MicroProgressService(_MicroServiceBase):
             or enrollment.micro_group is None
             or enrollment.micro_group.micro_school is None
         ):
-            raise NotFoundError("Micro enrollment not found", error_code="ERR-MICRO-404")
+            raise NotFoundError(
+                "Micro enrollment not found", error_code="ERR-MICRO-404"
+            )
         school = enrollment.micro_group.micro_school
         if auth.role == PAR:
             if enrollment.parent_id != auth.user_id:
@@ -1348,7 +1392,9 @@ class MicroProgressService(_MicroServiceBase):
                 )
         else:
             await self._ensure_school_view_access(school, auth)
-        logs = sorted(enrollment.progress_logs, key=lambda item: (item.date, item.created_at))
+        logs = sorted(
+            enrollment.progress_logs, key=lambda item: (item.date, item.created_at)
+        )
         latest = logs[-1] if logs else None
         return {
             "micro_enrollment_id": str(enrollment.id),

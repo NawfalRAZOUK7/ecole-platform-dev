@@ -4,7 +4,11 @@ from __future__ import annotations
 
 import uuid
 
-from app.core.dependencies import AuthContext, verify_school_boundary, verify_teacher_assignment
+from app.core.dependencies import (
+    AuthContext,
+    verify_school_boundary,
+    verify_teacher_assignment,
+)
 from app.core.exceptions import ConflictError, NotFoundError
 from app.core.filtering import FilterSpec, SortSpec
 from app.core.permissions import TCH
@@ -125,7 +129,9 @@ class CourseService(LMSServiceBase):
             limit=limit,
         )
         items = [self._activity_to_dict(activity) for activity in activities]
-        next_cursor = encode_cursor(activities[-1].id) if has_more and activities else None
+        next_cursor = (
+            encode_cursor(activities[-1].id) if has_more and activities else None
+        )
         return items, next_cursor, has_more
 
     async def create_activity_session(

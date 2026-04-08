@@ -329,7 +329,9 @@ class AuthRepository(BaseRepository):
         request_id: uuid.UUID,
     ) -> AccountRecoveryRequest | None:
         result = await self.db.execute(
-            select(AccountRecoveryRequest).where(AccountRecoveryRequest.id == request_id)
+            select(AccountRecoveryRequest).where(
+                AccountRecoveryRequest.id == request_id
+            )
         )
         return result.scalar_one_or_none()
 

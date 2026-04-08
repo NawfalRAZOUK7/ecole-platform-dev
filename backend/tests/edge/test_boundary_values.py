@@ -9,7 +9,12 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError as PydanticValidationError
 
-from app.core.response import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, clamp_page_size, decode_cursor
+from app.core.response import (
+    DEFAULT_PAGE_SIZE,
+    MAX_PAGE_SIZE,
+    clamp_page_size,
+    decode_cursor,
+)
 from app.domain.value_objects.grade import MoroccanGrade
 from app.models.billing import Invoice, InvoiceItem, SiblingDiscountPolicy
 from app.models.iam import User
@@ -54,7 +59,9 @@ class TestGradeBoundaries:
 
 class TestInvoiceBoundaries:
     @pytest.mark.parametrize("amount", [0, 999999.99])
-    def test_invoice_total_amount_accepts_numeric_boundaries(self, amount: float) -> None:
+    def test_invoice_total_amount_accepts_numeric_boundaries(
+        self, amount: float
+    ) -> None:
         invoice = Invoice()
 
         assert invoice.validate_total_amount("total_amount", amount) == amount
@@ -67,7 +74,9 @@ class TestInvoiceBoundaries:
             ("usd", "USD"),
         ],
     )
-    def test_invoice_currency_is_normalized(self, raw_currency: str, expected: str) -> None:
+    def test_invoice_currency_is_normalized(
+        self, raw_currency: str, expected: str
+    ) -> None:
         invoice = Invoice()
 
         assert invoice.validate_currency("currency", raw_currency) == expected
@@ -181,7 +190,9 @@ class TestStringAndUnicodeBoundaries:
             ("François Côté", "SCH-FR-001"),
         ],
     )
-    def test_school_create_request_accepts_unicode_names(self, name: str, code: str) -> None:
+    def test_school_create_request_accepts_unicode_names(
+        self, name: str, code: str
+    ) -> None:
         payload = SchoolCreateRequest(
             name=name,
             code=code,

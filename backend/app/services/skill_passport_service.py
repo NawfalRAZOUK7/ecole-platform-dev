@@ -10,7 +10,12 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import AuthContext, verify_school_boundary
-from app.core.exceptions import AuthorizationError, ConflictError, NotFoundError, ValidationError
+from app.core.exceptions import (
+    AuthorizationError,
+    ConflictError,
+    NotFoundError,
+    ValidationError,
+)
 from app.core.permissions import ADM, DIR, PAR, STD, SUP, SYS, TCH
 from app.core.unit_of_work import UnitOfWork
 from app.domain.events.skill_passport import (
@@ -167,7 +172,9 @@ class _SkillServiceBase:
         passport_id: uuid.UUID,
         auth: AuthContext,
     ) -> SkillPassport:
-        passport = await self.repo.get_passport_by_id(passport_id, school_id=auth.school_id)
+        passport = await self.repo.get_passport_by_id(
+            passport_id, school_id=auth.school_id
+        )
         if passport is None:
             raise NotFoundError("Skill passport not found", error_code="ERR-SKILL-404")
         await self._ensure_student_access(passport.student_id, auth)
@@ -192,7 +199,9 @@ class _SkillServiceBase:
         return SkillMilestoneResponse(
             id=str(milestone.id),
             dimension_id=str(milestone.dimension_id),
-            dimension_code=milestone.dimension.code if milestone.dimension is not None else None,
+            dimension_code=milestone.dimension.code
+            if milestone.dimension is not None
+            else None,
             code=milestone.code,
             name_fr=milestone.name_fr,
             name_ar=milestone.name_ar,
@@ -248,8 +257,12 @@ class _SkillServiceBase:
             ],
         ).model_dump()
 
-    def _normalize_metric_config(self, rule_config: dict[str, Any]) -> tuple[str, float, int]:
-        raw_metric = str(rule_config.get("metric", "content_items_completed")).strip().lower()
+    def _normalize_metric_config(
+        self, rule_config: dict[str, Any]
+    ) -> tuple[str, float, int]:
+        raw_metric = (
+            str(rule_config.get("metric", "content_items_completed")).strip().lower()
+        )
         metric = METRIC_ALIASES.get(raw_metric)
         if metric is None:
             raise ValidationError(
@@ -397,7 +410,9 @@ class _SkillServiceBase:
                 metric=metric,
                 since=since,
             )
-            completion_percent = round(min(100.0, (actual_value / threshold) * 100.0), 2)
+            completion_percent = round(
+                min(100.0, (actual_value / threshold) * 100.0), 2
+            )
             if actual_value >= threshold:
                 status = SkillProgressStatus.UNLOCKED.value
                 unlocked_at = now
@@ -457,7 +472,13 @@ class _SkillServiceBase:
             (unlocked_count / total_milestones) * 100.0 if total_milestones else 0.0,
             2,
         )
-        return evaluated_records, metrics, total_milestones, unlocked_count, overall_score
+        return (
+            evaluated_records,
+            metrics,
+            total_milestones,
+            unlocked_count,
+            overall_score,
+        )
 
     def _passport_url(self, passport_id: uuid.UUID) -> str:
         return f"/generated/skill-passports/{passport_id}.pdf"
@@ -480,7 +501,9 @@ class _SkillServiceBase:
             if progress.milestone is None or progress.milestone.dimension is None:
                 continue
             dimension_id = progress.milestone.dimension.id
-            progress_values_by_dimension[dimension_id].append(float(progress.current_value))
+            progress_values_by_dimension[dimension_id].append(
+                float(progress.current_value)
+            )
             if progress.status == SkillProgressStatus.UNLOCKED.value:
                 unlocked_count_by_dimension[dimension_id] += 1
 
@@ -494,7 +517,9 @@ class _SkillServiceBase:
                     name_fr=dimension.name_fr,
                     milestone_count=milestone_count_by_dimension.get(dimension.id, 0),
                     unlocked_count=unlocked_count_by_dimension.get(dimension.id, 0),
-                    average_progress=round(sum(values) / len(values), 2) if values else 0.0,
+                    average_progress=round(sum(values) / len(values), 2)
+                    if values
+                    else 0.0,
                 ).model_dump()
             )
         return summaries
@@ -560,7 +585,9 @@ class SkillPassportService(_SkillServiceBase):
         ip_address: str | None = None,
     ) -> dict[str, Any]:
         self._ensure_admin_role(auth)
-        existing = await self.repo.get_dimension_by_code(body.code.strip().lower().replace(" ", "_"))
+        existing = await self.repo.get_dimension_by_code(
+            body.code.strip().lower().replace(" ", "_")
+        )
         if existing is not None:
             raise ConflictError(
                 "Skill dimension code already exists",
@@ -630,7 +657,9 @@ class SkillPassportService(_SkillServiceBase):
             audit = AuditService(uow.session)
             current = await repo.get_dimension(dimension_id)
             if current is None:
-                raise NotFoundError("Skill dimension not found", error_code="ERR-SKILL-404")
+                raise NotFoundError(
+                    "Skill dimension not found", error_code="ERR-SKILL-404"
+                )
             for field in (
                 "code",
                 "name_fr",
@@ -708,9 +737,13 @@ class SkillPassportService(_SkillServiceBase):
                 is_active=body.is_active,
             )
             created = await repo.create_milestone(milestone)
-            hydrated_milestone = await repo.get_milestone(created.id, include_dimension=True)
+            hydrated_milestone = await repo.get_milestone(
+                created.id, include_dimension=True
+            )
             if hydrated_milestone is None:
-                raise NotFoundError("Skill milestone not found", error_code="ERR-SKILL-404")
+                raise NotFoundError(
+                    "Skill milestone not found", error_code="ERR-SKILL-404"
+                )
             response = self._milestone_to_response(hydrated_milestone)
             await audit.log_event(
                 school_id=auth.school_id,
@@ -763,17 +796,30 @@ class SkillPassportService(_SkillServiceBase):
             audit = AuditService(uow.session)
             current = await repo.get_milestone(milestone_id, include_dimension=True)
             if current is None:
-                raise NotFoundError("Skill milestone not found", error_code="ERR-SKILL-404")
-            for field in ("code", "name_fr", "name_ar", "level", "badge_icon", "is_active"):
+                raise NotFoundError(
+                    "Skill milestone not found", error_code="ERR-SKILL-404"
+                )
+            for field in (
+                "code",
+                "name_fr",
+                "name_ar",
+                "level",
+                "badge_icon",
+                "is_active",
+            ):
                 value = getattr(body, field)
                 if value is not None:
                     setattr(current, field, value)
             if body.rule_config is not None:
                 current.rule_config = dict(body.rule_config)
             saved = await repo.save_milestone(current)
-            hydrated_milestone = await repo.get_milestone(saved.id, include_dimension=True)
+            hydrated_milestone = await repo.get_milestone(
+                saved.id, include_dimension=True
+            )
             if hydrated_milestone is None:
-                raise NotFoundError("Skill milestone not found", error_code="ERR-SKILL-404")
+                raise NotFoundError(
+                    "Skill milestone not found", error_code="ERR-SKILL-404"
+                )
             response = self._milestone_to_response(hydrated_milestone)
             await audit.log_event(
                 school_id=auth.school_id,
@@ -837,15 +883,19 @@ class SkillPassportService(_SkillServiceBase):
             repo = SkillPassportRepository(uow.session)
             audit = AuditService(uow.session)
             dispatcher = EventDispatcher(uow.session)
-            progress_items, metrics, total_milestones, unlocked_milestones, overall_score = (
-                await self._evaluate_student_records(
-                    repo,
-                    student_id=student_id,
-                    school_id=auth.school_id,
-                    academic_year_id=academic_year_id,
-                    actor_id=auth.user_id,
-                    dispatcher=dispatcher,
-                )
+            (
+                progress_items,
+                metrics,
+                total_milestones,
+                unlocked_milestones,
+                overall_score,
+            ) = await self._evaluate_student_records(
+                repo,
+                student_id=student_id,
+                school_id=auth.school_id,
+                academic_year_id=academic_year_id,
+                actor_id=auth.user_id,
+                dispatcher=dispatcher,
             )
             response = SkillEvaluationResponse(
                 student_id=str(student_id),
@@ -857,7 +907,9 @@ class SkillPassportService(_SkillServiceBase):
                 overall_score=overall_score,
                 metrics={key: round(value, 2) for key, value in metrics.items()},
                 progress_items=[
-                    SkillProgressResponse.model_validate(self._progress_to_response(item))
+                    SkillProgressResponse.model_validate(
+                        self._progress_to_response(item)
+                    )
                     for item in progress_items
                 ],
             ).model_dump()
@@ -923,15 +975,19 @@ class SkillPassportService(_SkillServiceBase):
             repo = SkillPassportRepository(uow.session)
             audit = AuditService(uow.session)
             dispatcher = EventDispatcher(uow.session)
-            progress_items, _, total_milestones, unlocked_milestones, overall_score = (
-                await self._evaluate_student_records(
-                    repo,
-                    student_id=student_id,
-                    school_id=auth.school_id,
-                    academic_year_id=academic_year_id,
-                    actor_id=auth.user_id,
-                    dispatcher=dispatcher,
-                )
+            (
+                progress_items,
+                _,
+                total_milestones,
+                unlocked_milestones,
+                overall_score,
+            ) = await self._evaluate_student_records(
+                repo,
+                student_id=student_id,
+                school_id=auth.school_id,
+                academic_year_id=academic_year_id,
+                actor_id=auth.user_id,
+                dispatcher=dispatcher,
             )
 
             passport = await repo.get_passport(
@@ -959,7 +1015,9 @@ class SkillPassportService(_SkillServiceBase):
             passport.pdf_url = self._passport_url(passport.id)
             passport = await repo.save_passport(passport)
 
-            response = self._passport_to_response(passport, progress_items=progress_items)
+            response = self._passport_to_response(
+                passport, progress_items=progress_items
+            )
             await audit.log_event(
                 school_id=auth.school_id,
                 actor_id=auth.user_id,
@@ -995,9 +1053,13 @@ class SkillPassportService(_SkillServiceBase):
 
         async with UnitOfWork(self.db) as uow:
             repo = SkillPassportRepository(uow.session)
-            current = await repo.get_passport_by_id(passport_id, school_id=auth.school_id)
+            current = await repo.get_passport_by_id(
+                passport_id, school_id=auth.school_id
+            )
             if current is None:
-                raise NotFoundError("Skill passport not found", error_code="ERR-SKILL-404")
+                raise NotFoundError(
+                    "Skill passport not found", error_code="ERR-SKILL-404"
+                )
             current.pdf_url = self._passport_url(current.id)
             saved = await repo.save_passport(current)
             await uow.commit()
@@ -1025,7 +1087,11 @@ class SkillPassportService(_SkillServiceBase):
             f"Unlocked milestones: {passport.unlocked_milestones}/{passport.total_milestones}",
         ]
         for progress in progress_items[:12]:
-            milestone_code = progress.milestone.code if progress.milestone is not None else str(progress.milestone_id)
+            milestone_code = (
+                progress.milestone.code
+                if progress.milestone is not None
+                else str(progress.milestone_id)
+            )
             lines.append(
                 f"{milestone_code}: {progress.status} ({float(progress.current_value):.2f}%)"
             )
@@ -1043,7 +1109,9 @@ class SkillPassportService(_SkillServiceBase):
         await self._get_academic_year_or_404(academic_year_id, auth)
 
         student_ids = set(
-            await self.repo.list_class_student_ids(class_id=class_id, school_id=auth.school_id)
+            await self.repo.list_class_student_ids(
+                class_id=class_id, school_id=auth.school_id
+            )
         )
         progress_items = await self.repo.list_progress(
             school_id=auth.school_id,
@@ -1057,17 +1125,23 @@ class SkillPassportService(_SkillServiceBase):
             student_ids=student_ids,
         )
         dimensions = await self.repo.list_dimensions(is_active=True)
-        milestones = await self.repo.list_milestones(is_active=True, include_dimension=True)
+        milestones = await self.repo.list_milestones(
+            is_active=True, include_dimension=True
+        )
 
         active_milestone_count = len(milestones)
         student_count = len(student_ids)
         progress_record_count = len(progress_items)
         unlocked_record_count = sum(
-            1 for item in progress_items if item.status == SkillProgressStatus.UNLOCKED.value
+            1
+            for item in progress_items
+            if item.status == SkillProgressStatus.UNLOCKED.value
         )
         possible_records = student_count * active_milestone_count
         average_overall_score = round(
-            (unlocked_record_count / possible_records) * 100.0 if possible_records else 0.0,
+            (unlocked_record_count / possible_records) * 100.0
+            if possible_records
+            else 0.0,
             2,
         )
 
@@ -1099,7 +1173,9 @@ class SkillPassportService(_SkillServiceBase):
     ) -> dict[str, Any]:
         self._ensure_staff_role(auth)
         await self._get_academic_year_or_404(academic_year_id, auth)
-        student_ids = set(await self.repo.list_school_student_ids(school_id=auth.school_id))
+        student_ids = set(
+            await self.repo.list_school_student_ids(school_id=auth.school_id)
+        )
         progress_items = await self.repo.list_progress(
             school_id=auth.school_id,
             academic_year_id=academic_year_id,
@@ -1112,17 +1188,23 @@ class SkillPassportService(_SkillServiceBase):
             student_ids=student_ids,
         )
         dimensions = await self.repo.list_dimensions(is_active=True)
-        milestones = await self.repo.list_milestones(is_active=True, include_dimension=True)
+        milestones = await self.repo.list_milestones(
+            is_active=True, include_dimension=True
+        )
 
         active_milestone_count = len(milestones)
         student_count = len(student_ids)
         progress_record_count = len(progress_items)
         unlocked_record_count = sum(
-            1 for item in progress_items if item.status == SkillProgressStatus.UNLOCKED.value
+            1
+            for item in progress_items
+            if item.status == SkillProgressStatus.UNLOCKED.value
         )
         possible_records = student_count * active_milestone_count
         average_overall_score = round(
-            (unlocked_record_count / possible_records) * 100.0 if possible_records else 0.0,
+            (unlocked_record_count / possible_records) * 100.0
+            if possible_records
+            else 0.0,
             2,
         )
 
@@ -1158,9 +1240,13 @@ class SkillPassportService(_SkillServiceBase):
         await self._get_academic_year_or_404(academic_year_id, auth)
 
         student_ids = set(
-            await self.repo.list_class_student_ids(class_id=class_id, school_id=auth.school_id)
+            await self.repo.list_class_student_ids(
+                class_id=class_id, school_id=auth.school_id
+            )
         )
-        milestones = await self.repo.list_milestones(is_active=True, include_dimension=False)
+        milestones = await self.repo.list_milestones(
+            is_active=True, include_dimension=False
+        )
         total_milestones = len(milestones)
         progress_items = await self.repo.list_progress(
             school_id=auth.school_id,
@@ -1174,7 +1260,9 @@ class SkillPassportService(_SkillServiceBase):
             for student_id in student_ids
         }
         for item in progress_items:
-            bucket = grouped.setdefault(item.student_id, {"unlocked": 0, "total": float(total_milestones)})
+            bucket = grouped.setdefault(
+                item.student_id, {"unlocked": 0, "total": float(total_milestones)}
+            )
             if item.status == SkillProgressStatus.UNLOCKED.value:
                 bucket["unlocked"] += 1
 

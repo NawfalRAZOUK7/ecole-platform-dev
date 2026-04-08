@@ -94,7 +94,9 @@ class SkillMilestone(TimestampMixin, Base):
     name_fr: Mapped[str] = mapped_column(String(200), nullable=False)
     name_ar: Mapped[str] = mapped_column(String(200), nullable=False)
     level: Mapped[int] = mapped_column(Integer, nullable=False)
-    rule_config: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
+    rule_config: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, default=dict
+    )
     badge_icon: Mapped[str | None] = mapped_column(String(50), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
@@ -168,7 +170,9 @@ class SkillProgress(TimestampMixin, SchoolScopedMixin, Base):
     )
 
     student = relationship("User", foreign_keys=[student_id])
-    milestone: Mapped["SkillMilestone"] = relationship(back_populates="progress_entries")
+    milestone: Mapped["SkillMilestone"] = relationship(
+        back_populates="progress_entries"
+    )
     academic_year = relationship("AcademicYear", foreign_keys=[academic_year_id])
 
     __table_args__ = (

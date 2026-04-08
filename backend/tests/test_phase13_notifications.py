@@ -69,7 +69,9 @@ class TestNotificationHubIntegration:
             headers=headers,
         )
         assert original_preferences_response.status_code == 200
-        original_preferences = original_preferences_response.json()["data"]["preferences"]
+        original_preferences = original_preferences_response.json()["data"][
+            "preferences"
+        ]
         assert len(original_preferences) >= 20
 
         target_preference = next(
@@ -110,9 +112,7 @@ class TestNotificationHubIntegration:
                 json={"digest_frequency": "weekly"},
             )
             assert digest_update_response.status_code == 200
-            assert (
-                digest_update_response.json()["data"]["digest_frequency"] == "weekly"
-            )
+            assert digest_update_response.json()["data"]["digest_frequency"] == "weekly"
 
             digest_get_response = await client.get(
                 "/notifications/digest/preferences",
@@ -344,7 +344,9 @@ class TestNotificationDenyOrdering:
                 )
 
     @pytest.mark.asyncio
-    async def test_student_cannot_manage_digest_preferences(self, client, student_token):
+    async def test_student_cannot_manage_digest_preferences(
+        self, client, student_token
+    ):
         response = await client.post(
             "/notifications/digest/preferences",
             headers=_auth_headers(student_token),
@@ -481,10 +483,7 @@ class TestNotificationEmailTemplates:
         assert 'dir="rtl"' in html
         assert "attendance" in html
         assert "academic" in html
-        assert (
-            "Absence aujourd'hui" in html
-            or "Absence aujourd&#39;hui" in html
-        )
+        assert "Absence aujourd'hui" in html or "Absence aujourd&#39;hui" in html
         assert "Math quiz published" in html
         assert "https://example.test/attendance/1" in html
         assert "https://example.test/quizzes/1" in html

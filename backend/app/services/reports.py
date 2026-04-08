@@ -70,7 +70,9 @@ def _normalize_report_type(value: str | ReportType) -> str:
 
 def _datetime_bounds(from_date: date, to_date: date) -> tuple[datetime, datetime]:
     start_dt = datetime.combine(from_date, time.min, tzinfo=timezone.utc)
-    end_dt = datetime.combine(to_date + timedelta(days=1), time.min, tzinfo=timezone.utc)
+    end_dt = datetime.combine(
+        to_date + timedelta(days=1), time.min, tzinfo=timezone.utc
+    )
     return start_dt, end_dt
 
 
@@ -93,7 +95,9 @@ def _format_report_date(value: Any) -> str:
         return value.strftime("%d/%m/%Y")
     if isinstance(value, str):
         try:
-            return datetime.fromisoformat(value.replace("Z", "+00:00")).strftime("%d/%m/%Y")
+            return datetime.fromisoformat(value.replace("Z", "+00:00")).strftime(
+                "%d/%m/%Y"
+            )
         except ValueError:
             try:
                 return date.fromisoformat(value).strftime("%d/%m/%Y")
@@ -181,7 +185,11 @@ class ReportsService:
             since=now - timedelta(hours=settings.report_cache_ttl_hours),
             now=now,
         )
-        if cached_job and cached_job.file_path and await storage.exists(cached_job.file_path):
+        if (
+            cached_job
+            and cached_job.file_path
+            and await storage.exists(cached_job.file_path)
+        ):
             return self.serialize_job(cached_job, cache_hit=True), True
 
         async with UnitOfWork(self.db) as uow:
@@ -334,7 +342,9 @@ class ReportsService:
             raise NotFoundError("Report job not found", error_code="ERR-REPORT-404")
         return job
 
-    def serialize_job(self, job: ReportJob, *, cache_hit: bool = False) -> dict[str, Any]:
+    def serialize_job(
+        self, job: ReportJob, *, cache_hit: bool = False
+    ) -> dict[str, Any]:
         report_type = _normalize_report_type(job.type)
         download_url = None
         if (
@@ -363,13 +373,17 @@ class ReportsService:
         job_id: uuid.UUID,
         expires_at: datetime | None,
     ) -> str:
-        exp = expires_at or (_utc_now() + timedelta(hours=settings.report_download_ttl_hours))
+        exp = expires_at or (
+            _utc_now() + timedelta(hours=settings.report_download_ttl_hours)
+        )
         payload = {
             "job_id": str(job_id),
             "action": DOWNLOAD_ACTION,
             "exp": exp,
         }
-        return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+        return jwt.encode(
+            payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm
+        )
 
     def parse_download_token(self, token: str) -> uuid.UUID:
         try:
@@ -379,7 +393,9 @@ class ReportsService:
                 algorithms=[settings.jwt_algorithm],
             )
         except JWTError as exc:
-            raise NotFoundError("Report job not found", error_code="ERR-REPORT-404") from exc
+            raise NotFoundError(
+                "Report job not found", error_code="ERR-REPORT-404"
+            ) from exc
         if payload.get("action") != DOWNLOAD_ACTION:
             raise NotFoundError("Report job not found", error_code="ERR-REPORT-404")
         return uuid.UUID(payload["job_id"])
@@ -415,7 +431,9 @@ class ReportsService:
                 job.file_size = file_size
                 job.mime_type = "application/pdf"
                 job.completed_at = _utc_now()
-                job.expires_at = _utc_now() + timedelta(hours=settings.report_download_ttl_hours)
+                job.expires_at = _utc_now() + timedelta(
+                    hours=settings.report_download_ttl_hours
+                )
                 await repo.save_report_job(job)
                 await uow.commit()
             await self._notify_report_ready(job)
@@ -582,7 +600,9 @@ class ReportsService:
             )
             if requested_student_id:
                 if requested_student_id not in child_ids:
-                    raise NotFoundError("Student not found", error_code="ERR-REPORT-404")
+                    raise NotFoundError(
+                        "Student not found", error_code="ERR-REPORT-404"
+                    )
                 return requested_student_id
             if len(child_ids) == 1:
                 return next(iter(child_ids))
@@ -668,7 +688,9 @@ class ReportsService:
                     "title": row.assignment_title,
                     "score": float(row.score or 0),
                     "total_points": int(row.total_points or 0),
-                    "published_at": row.published_at.isoformat() if row.published_at else None,
+                    "published_at": row.published_at.isoformat()
+                    if row.published_at
+                    else None,
                 }
             )
             subjects[row.subject]["scores"].append(float(row.score or 0))
@@ -693,23 +715,31 @@ class ReportsService:
             )
         subject_rows.sort(key=lambda item: item["subject"])
 
-        total_records, present_records, absent_records, excused_records, late_records = (
-            await self.repo.get_student_report_attendance_summary(
-                school_id=job.school_id,
-                student_id=student_id,
-                from_date=from_date,
-                to_date=to_date,
-            )
+        (
+            total_records,
+            present_records,
+            absent_records,
+            excused_records,
+            late_records,
+        ) = await self.repo.get_student_report_attendance_summary(
+            school_id=job.school_id,
+            student_id=student_id,
+            from_date=from_date,
+            to_date=to_date,
         )
         attendance_rate = (
-            ((present_records + late_records) / total_records) * 100 if total_records else 0.0
+            ((present_records + late_records) / total_records) * 100
+            if total_records
+            else 0.0
         )
 
         return {
             "lang": job.parameters.get("locale", "fr"),
             "is_rtl": job.parameters.get("locale") == "ar",
             "generated_at": _utc_now().isoformat(),
-            "report_title": self._report_title(job.type, job.parameters.get("locale", "fr")),
+            "report_title": self._report_title(
+                job.type, job.parameters.get("locale", "fr")
+            ),
             "student": {
                 "id": str(student.id),
                 "full_name": student.full_name,
@@ -721,9 +751,13 @@ class ReportsService:
             "period": self._period_label(job.parameters, from_date, to_date),
             "subject_rows": subject_rows,
             "summary": {
-                "average_grade": round(sum(all_scores) / len(all_scores), 2) if all_scores else 0.0,
+                "average_grade": round(sum(all_scores) / len(all_scores), 2)
+                if all_scores
+                else 0.0,
                 "attendance_rate": round(attendance_rate, 2),
-                "assignment_count": sum(len(item["assignments"]) for item in subject_rows),
+                "assignment_count": sum(
+                    len(item["assignments"]) for item in subject_rows
+                ),
                 "attendance": {
                     "total_records": total_records,
                     "present_records": present_records,
@@ -796,7 +830,9 @@ class ReportsService:
             "lang": job.parameters.get("locale", "fr"),
             "is_rtl": job.parameters.get("locale") == "ar",
             "generated_at": _utc_now().isoformat(),
-            "report_title": self._report_title(job.type, job.parameters.get("locale", "fr")),
+            "report_title": self._report_title(
+                job.type, job.parameters.get("locale", "fr")
+            ),
             "class": {
                 "id": str(class_obj.id),
                 "code": class_obj.code,
@@ -826,7 +862,9 @@ class ReportsService:
                     rows,
                     key=lambda item: item["average_grade"],
                 )[:5],
-                "support_count": len([item for item in rows if item["average_grade"] < 10]),
+                "support_count": len(
+                    [item for item in rows if item["average_grade"] < 10]
+                ),
             },
         }
 
@@ -888,7 +926,9 @@ class ReportsService:
             "lang": job.parameters.get("locale", "fr"),
             "is_rtl": job.parameters.get("locale") == "ar",
             "generated_at": _utc_now().isoformat(),
-            "report_title": self._report_title(job.type, job.parameters.get("locale", "fr")),
+            "report_title": self._report_title(
+                job.type, job.parameters.get("locale", "fr")
+            ),
             "class": {
                 "id": str(class_obj.id),
                 "code": class_obj.code,
@@ -908,7 +948,8 @@ class ReportsService:
             "summary": {
                 "student_count": len(student_rows),
                 "average_attendance_rate": round(
-                    sum(item["attendance_rate"] for item in student_rows) / len(student_rows),
+                    sum(item["attendance_rate"] for item in student_rows)
+                    / len(student_rows),
                     2,
                 )
                 if student_rows
@@ -941,7 +982,9 @@ class ReportsService:
         invoice_ids = [invoice.id for invoice in invoices]
 
         payments_map: dict[uuid.UUID, list[dict[str, Any]]] = defaultdict(list)
-        for payment in await self.repo.list_payment_attempts_for_invoice_ids(invoice_ids):
+        for payment in await self.repo.list_payment_attempts_for_invoice_ids(
+            invoice_ids
+        ):
             payments_map[payment.invoice_id].append(
                 {
                     "id": str(payment.id),
@@ -989,7 +1032,9 @@ class ReportsService:
             "lang": job.parameters.get("locale", "fr"),
             "is_rtl": job.parameters.get("locale") == "ar",
             "generated_at": _utc_now().isoformat(),
-            "report_title": self._report_title(job.type, job.parameters.get("locale", "fr")),
+            "report_title": self._report_title(
+                job.type, job.parameters.get("locale", "fr")
+            ),
             "parent": {
                 "id": str(parent.id),
                 "full_name": parent.full_name,
@@ -1029,12 +1074,16 @@ class ReportsService:
             "lang": job.parameters.get("locale", "fr"),
             "is_rtl": job.parameters.get("locale") == "ar",
             "generated_at": _utc_now().isoformat(),
-            "report_title": self._report_title(job.type, job.parameters.get("locale", "fr")),
+            "report_title": self._report_title(
+                job.type, job.parameters.get("locale", "fr")
+            ),
             "period": self._period_label(job.parameters, from_date, to_date),
             "snapshot": snapshot,
         }
 
-    async def _class_student_ids(self, class_id: uuid.UUID, job: ReportJob) -> list[uuid.UUID]:
+    async def _class_student_ids(
+        self, class_id: uuid.UUID, job: ReportJob
+    ) -> list[uuid.UUID]:
         return await self.repo.list_class_student_ids(
             class_id=class_id,
             school_id=job.school_id,
@@ -1056,7 +1105,9 @@ class ReportsService:
         )
         return from_date, to_date
 
-    def _period_label(self, parameters: dict[str, Any], from_date: date, to_date: date) -> str:
+    def _period_label(
+        self, parameters: dict[str, Any], from_date: date, to_date: date
+    ) -> str:
         if parameters.get("period_label"):
             return str(parameters["period_label"])
         return f"{_format_report_date(from_date)} → {_format_report_date(to_date)}"

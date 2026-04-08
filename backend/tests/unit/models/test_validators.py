@@ -57,7 +57,9 @@ class TestSchoolValidators:
     def test_email_normalized(self):
         school = School()
 
-        assert school.validate_email("email", " CONTACT@ECOLE.MA ") == "contact@ecole.ma"
+        assert (
+            school.validate_email("email", " CONTACT@ECOLE.MA ") == "contact@ecole.ma"
+        )
 
     def test_email_invalid(self):
         school = School()
@@ -76,7 +78,9 @@ class TestGradeCategoryValidators:
     def test_weight_rejects_out_of_range_values(self, value: float):
         category = GradeCategory()
 
-        with pytest.raises(ValueError, match="GradeCategory weight must be between 0 and 1"):
+        with pytest.raises(
+            ValueError, match="GradeCategory weight must be between 0 and 1"
+        ):
             category.validate_weight("weight", value)
 
 
@@ -100,9 +104,10 @@ class TestAssignmentValidators:
     def test_late_penalty_per_day_accepts_range(self, value: float):
         assignment = Assignment()
 
-        assert assignment.validate_late_penalty_per_day(
-            "late_penalty_per_day", value
-        ) == value
+        assert (
+            assignment.validate_late_penalty_per_day("late_penalty_per_day", value)
+            == value
+        )
 
     @pytest.mark.parametrize("value", [-1.0, 100.1])
     def test_late_penalty_per_day_rejects_out_of_range(self, value: float):
@@ -166,7 +171,9 @@ class TestInvoiceValidators:
     def test_total_amount_rejects_negative(self):
         invoice = Invoice()
 
-        with pytest.raises(ValueError, match="Invoice total_amount must be non-negative"):
+        with pytest.raises(
+            ValueError, match="Invoice total_amount must be non-negative"
+        ):
             invoice.validate_total_amount("total_amount", -1)
 
     def test_currency_normalizes_to_uppercase(self):
@@ -205,7 +212,9 @@ class TestSiblingDiscountPolicyValidator:
     def test_discount_percent_rejects_values_outside_range(self, value: float):
         policy = SiblingDiscountPolicy()
 
-        with pytest.raises(ValueError, match="second_child_percent must be between 0 and 100"):
+        with pytest.raises(
+            ValueError, match="second_child_percent must be between 0 and 100"
+        ):
             policy.validate_discount_percent("second_child_percent", value)
 
 
@@ -219,7 +228,9 @@ class TestInstallmentValidator:
     def test_amount_rejects_zero_and_negative(self, value: float):
         installment = Installment()
 
-        with pytest.raises(ValueError, match="Installment amount must be greater than 0"):
+        with pytest.raises(
+            ValueError, match="Installment amount must be greater than 0"
+        ):
             installment.validate_amount("amount", value)
 
 
@@ -234,7 +245,9 @@ class TestResourceRatingValidator:
     def test_rating_rejects_out_of_range_values(self, value: int):
         rating = ResourceRating()
 
-        with pytest.raises(ValueError, match="ResourceRating rating must be between 1 and 5"):
+        with pytest.raises(
+            ValueError, match="ResourceRating rating must be between 1 and 5"
+        ):
             rating.validate_rating("rating", value)
 
 

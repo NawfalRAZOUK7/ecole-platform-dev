@@ -287,7 +287,5 @@ async def export_financial_health_pdf(
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={
-            "Content-Disposition": 'attachment; filename="financial-health.pdf"'
-        },
+        headers={"Content-Disposition": 'attachment; filename="financial-health.pdf"'},
     )

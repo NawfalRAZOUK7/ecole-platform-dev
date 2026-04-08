@@ -22,7 +22,9 @@ from app.core.response import list_response
 from app.domain.value_objects.grade import MoroccanGrade
 
 
-def paginate_records(records: list[dict[str, int]], cursor: str | None, limit: int) -> dict:
+def paginate_records(
+    records: list[dict[str, int]], cursor: str | None, limit: int
+) -> dict:
     start = int(cursor) if cursor is not None else 0
     page = records[start : start + limit]
     next_cursor = start + limit if (start + limit) < len(records) else None

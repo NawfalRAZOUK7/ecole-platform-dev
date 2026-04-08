@@ -56,7 +56,9 @@ class FakeUnitOfWork:
         self.committed = True
 
 
-def make_academic_year(auth: AuthContext, *, label: str, year_id: uuid.UUID | None = None):
+def make_academic_year(
+    auth: AuthContext, *, label: str, year_id: uuid.UUID | None = None
+):
     return SimpleNamespace(
         id=year_id or uuid.uuid4(),
         school_id=auth.school_id,
@@ -291,7 +293,9 @@ class TestFinancialHealthService:
         service.repo.get_recent_collection_ratio.return_value = 0.9
         repo_in_uow.get_cashflow_forecast.side_effect = [None, None]
         repo_in_uow.create_cashflow_forecast.side_effect = [
-            make_cashflow(auth, forecast_month=fin_module._first_day_of_month(date.today())),
+            make_cashflow(
+                auth, forecast_month=fin_module._first_day_of_month(date.today())
+            ),
             make_cashflow(
                 auth,
                 forecast_month=fin_module._add_months(
@@ -323,7 +327,9 @@ class TestFinancialHealthService:
         service.repo.aggregate_paid_invoice_amounts_by_month.return_value = {}
         service.repo.aggregate_expense_amounts_by_month.return_value = {}
         service.repo.get_recent_collection_ratio.return_value = 0.5
-        created = make_cashflow(auth, forecast_month=fin_module._first_day_of_month(date.today()))
+        created = make_cashflow(
+            auth, forecast_month=fin_module._first_day_of_month(date.today())
+        )
         repo_in_uow.get_cashflow_forecast.return_value = None
         repo_in_uow.create_cashflow_forecast.return_value = created
 
@@ -351,7 +357,9 @@ class TestFinancialHealthService:
         assert result["margin_per_student"] == 300.0
 
     @pytest.mark.asyncio
-    async def test_get_cost_analysis_computes_when_missing(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    async def test_get_cost_analysis_computes_when_missing(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         auth = make_auth()
         service = FinancialHealthService(AsyncMock())
         service.repo = AsyncMock()
@@ -378,7 +386,9 @@ class TestFinancialHealthService:
 
         with pytest.raises(ValidationError, match="without enrolled students"):
             await service.compute_cost(
-                body=fin_module.CostPerStudentComputeRequest(academic_year_id=academic_year.id),
+                body=fin_module.CostPerStudentComputeRequest(
+                    academic_year_id=academic_year.id
+                ),
                 auth=auth,
             )
 
@@ -400,7 +410,9 @@ class TestFinancialHealthService:
         repo_in_uow.create_cost_per_student.return_value = created
 
         result = await service.compute_cost(
-            body=fin_module.CostPerStudentComputeRequest(academic_year_id=academic_year.id),
+            body=fin_module.CostPerStudentComputeRequest(
+                academic_year_id=academic_year.id
+            ),
             auth=auth,
             ip_address="127.0.0.1",
         )
@@ -428,7 +440,9 @@ class TestFinancialHealthService:
         repo_in_uow.create_cost_per_student.return_value = created
 
         await service.compute_cost(
-            body=fin_module.CostPerStudentComputeRequest(academic_year_id=academic_year.id),
+            body=fin_module.CostPerStudentComputeRequest(
+                academic_year_id=academic_year.id
+            ),
             auth=auth,
         )
 
@@ -443,7 +457,9 @@ class TestFinancialHealthService:
         snapshot = make_snapshot(auth, snapshot_date=date(2026, 4, 5))
         service.repo.get_financial_snapshot.return_value = snapshot
 
-        result = await service.get_snapshot(auth=auth, snapshot_date=snapshot.snapshot_date)
+        result = await service.get_snapshot(
+            auth=auth, snapshot_date=snapshot.snapshot_date
+        )
 
         assert result["overdue_count"] == 3
 
@@ -477,7 +493,9 @@ class TestFinancialHealthService:
         repo_in_uow.save_financial_snapshot.return_value = existing
 
         result = await service.compute_snapshot(
-            body=fin_module.FinancialSnapshotComputeRequest(snapshot_date=existing.snapshot_date),
+            body=fin_module.FinancialSnapshotComputeRequest(
+                snapshot_date=existing.snapshot_date
+            ),
             auth=auth,
             ip_address="127.0.0.1",
         )
@@ -503,7 +521,9 @@ class TestFinancialHealthService:
         repo_in_uow.create_financial_snapshot.return_value = created
 
         await service.compute_snapshot(
-            body=fin_module.FinancialSnapshotComputeRequest(snapshot_date=created.snapshot_date),
+            body=fin_module.FinancialSnapshotComputeRequest(
+                snapshot_date=created.snapshot_date
+            ),
             auth=auth,
         )
 

@@ -107,9 +107,7 @@ class SkillPassportFactory(AsyncSQLAlchemyFactory):
     student_id = factory.LazyAttribute(lambda o: o.student.id)
     academic_year_id = factory.LazyAttribute(lambda o: o.academic_year.id)
     generated_at = factory.LazyFunction(_utc_now)
-    pdf_url = factory.LazyAttribute(
-        lambda o: f"/generated/skill-passports/{o.id}.pdf"
-    )
+    pdf_url = factory.LazyAttribute(lambda o: f"/generated/skill-passports/{o.id}.pdf")
     total_milestones = 4
     unlocked_milestones = 2
     overall_score = 50

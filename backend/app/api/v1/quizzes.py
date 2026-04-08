@@ -112,7 +112,9 @@ async def publish_quiz(
     )
 
 
-@router.post("/quizzes/{quiz_id}/start", status_code=201, summary="Start a quiz attempt")
+@router.post(
+    "/quizzes/{quiz_id}/start", status_code=201, summary="Start a quiz attempt"
+)
 async def start_attempt(
     quiz_id: uuid.UUID,
     request: Request,

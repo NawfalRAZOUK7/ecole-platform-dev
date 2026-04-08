@@ -18,7 +18,9 @@ from app.repositories.analytics import AnalyticsRepository
 
 def _utc_day_bounds(from_date: date, to_date: date) -> tuple[datetime, datetime]:
     start_dt = datetime.combine(from_date, time.min, tzinfo=timezone.utc)
-    end_dt = datetime.combine(to_date + timedelta(days=1), time.min, tzinfo=timezone.utc)
+    end_dt = datetime.combine(
+        to_date + timedelta(days=1), time.min, tzinfo=timezone.utc
+    )
     return start_dt, end_dt
 
 
@@ -118,7 +120,9 @@ class DashboardAnalyticsService:
             from_date=from_date,
             to_date=to_date,
         )
-        attendance_rate = (present_records / total_records * 100) if total_records > 0 else 0.0
+        attendance_rate = (
+            (present_records / total_records * 100) if total_records > 0 else 0.0
+        )
         average_grade = await self.repo.average_grade(
             school_id=school_id,
             from_dt=from_dt,
@@ -141,9 +145,11 @@ class DashboardAnalyticsService:
                 compare=False,
             )
 
-        previous_metrics = {
-            item["key"]: item["value"]["current"] for item in previous["metrics"]
-        } if previous else {}
+        previous_metrics = (
+            {item["key"]: item["value"]["current"] for item in previous["metrics"]}
+            if previous
+            else {}
+        )
 
         response = {
             "from_date": from_date.isoformat(),
@@ -209,7 +215,9 @@ class DashboardAnalyticsService:
         if cached is not None:
             return cached
 
-        bucket = {"daily": "day", "weekly": "week", "monthly": "month"}.get(period, "day")
+        bucket = {"daily": "day", "weekly": "week", "monthly": "month"}.get(
+            period, "day"
+        )
         rows = await self.repo.list_attendance_series(
             school_id=school_id,
             from_date=from_date,
@@ -227,7 +235,9 @@ class DashboardAnalyticsService:
             series.append(
                 {
                     "label": bucket_dt.date().isoformat(),
-                    "value": round((row["present"] / row["total"] * 100) if row["total"] else 0, 2),
+                    "value": round(
+                        (row["present"] / row["total"] * 100) if row["total"] else 0, 2
+                    ),
                     "extra": {
                         "total": row["total"],
                         "present": row["present"],
@@ -355,7 +365,9 @@ class DashboardAnalyticsService:
         if cached is not None:
             return cached
 
-        bucket = {"daily": "day", "weekly": "week", "monthly": "month"}.get(period, "month")
+        bucket = {"daily": "day", "weekly": "week", "monthly": "month"}.get(
+            period, "month"
+        )
         rows = await self.repo.list_billing_series(
             school_id=school_id,
             from_date=from_date,
@@ -480,7 +492,9 @@ class DashboardAnalyticsService:
                 {
                     "feature": feature,
                     "users": users,
-                    "adoption_rate": round((users / active) * 100, 2) if active else 0.0,
+                    "adoption_rate": round((users / active) * 100, 2)
+                    if active
+                    else 0.0,
                 }
             )
 

@@ -49,4 +49,3 @@ class ResourceUpdateRequest(BaseModel):
 
 class ResourceRatingRequest(BaseModel):
     rating: int = Field(..., ge=1, le=5)
-

@@ -52,7 +52,9 @@ class TestUserProperties:
         assert User(totp_secret=None).has_2fa is False
 
     def test_is_email_verified_reflects_timestamp(self):
-        assert User(email_verified_at=utc_datetime(2026, 3, 1)).is_email_verified is True
+        assert (
+            User(email_verified_at=utc_datetime(2026, 3, 1)).is_email_verified is True
+        )
         assert User(email_verified_at=None).is_email_verified is False
 
 
@@ -97,11 +99,18 @@ class TestSessionProperties:
 class TestInvitationCodeProperties:
     @freeze_time("2026-03-30 12:00:00")
     def test_is_expired_reflects_expires_at(self):
-        assert InvitationCode(expires_at=utc_datetime(2026, 3, 29, 12)).is_expired is True
-        assert InvitationCode(expires_at=utc_datetime(2026, 3, 31, 12)).is_expired is False
+        assert (
+            InvitationCode(expires_at=utc_datetime(2026, 3, 29, 12)).is_expired is True
+        )
+        assert (
+            InvitationCode(expires_at=utc_datetime(2026, 3, 31, 12)).is_expired is False
+        )
 
     def test_is_fully_used_supports_current_schema(self):
-        assert InvitationCode(consumed_at=utc_datetime(2026, 3, 30, 9)).is_fully_used is True
+        assert (
+            InvitationCode(consumed_at=utc_datetime(2026, 3, 30, 9)).is_fully_used
+            is True
+        )
         assert InvitationCode(consumed_by=uuid.uuid4()).is_fully_used is True
         assert InvitationCode(consumed_at=None, consumed_by=None).is_fully_used is False
 
@@ -119,20 +128,41 @@ class TestInvitationCodeProperties:
 class TestAccountRecoveryRequestProperties:
     @freeze_time("2026-03-30 12:00:00")
     def test_is_expired_reflects_expires_at(self):
-        assert AccountRecoveryRequest(expires_at=utc_datetime(2026, 3, 29, 12)).is_expired is True
-        assert AccountRecoveryRequest(expires_at=utc_datetime(2026, 3, 31, 12)).is_expired is False
+        assert (
+            AccountRecoveryRequest(expires_at=utc_datetime(2026, 3, 29, 12)).is_expired
+            is True
+        )
+        assert (
+            AccountRecoveryRequest(expires_at=utc_datetime(2026, 3, 31, 12)).is_expired
+            is False
+        )
 
 
 class TestSchoolProperties:
     @freeze_time("2026-03-30 12:00:00")
     def test_is_subscription_valid_handles_none_future_and_past(self):
         assert School(subscription_expires_at=None).is_subscription_valid is True
-        assert School(subscription_expires_at=utc_datetime(2026, 4, 1)).is_subscription_valid is True
-        assert School(subscription_expires_at=utc_datetime(2026, 3, 1)).is_subscription_valid is False
+        assert (
+            School(
+                subscription_expires_at=utc_datetime(2026, 4, 1)
+            ).is_subscription_valid
+            is True
+        )
+        assert (
+            School(
+                subscription_expires_at=utc_datetime(2026, 3, 1)
+            ).is_subscription_valid
+            is False
+        )
 
     def test_is_active_requires_active_status_and_not_deleted(self):
-        assert School(status=SchoolStatus.ACTIVE.value, deleted_at=None).is_active is True
-        assert School(status=SchoolStatus.SUSPENDED.value, deleted_at=None).is_active is False
+        assert (
+            School(status=SchoolStatus.ACTIVE.value, deleted_at=None).is_active is True
+        )
+        assert (
+            School(status=SchoolStatus.SUSPENDED.value, deleted_at=None).is_active
+            is False
+        )
         assert (
             School(
                 status=SchoolStatus.ACTIVE.value,
@@ -230,15 +260,21 @@ class TestInvoiceProperties:
     @freeze_time("2026-03-30 12:00:00")
     def test_is_overdue_requires_pending_and_past_due_date(self):
         assert (
-            Invoice(status=InvoiceStatus.PENDING.value, due_date=date(2026, 3, 29)).is_overdue
+            Invoice(
+                status=InvoiceStatus.PENDING.value, due_date=date(2026, 3, 29)
+            ).is_overdue
             is True
         )
         assert (
-            Invoice(status=InvoiceStatus.PENDING.value, due_date=date(2026, 3, 31)).is_overdue
+            Invoice(
+                status=InvoiceStatus.PENDING.value, due_date=date(2026, 3, 31)
+            ).is_overdue
             is False
         )
         assert (
-            Invoice(status=InvoiceStatus.PAID.value, due_date=date(2026, 3, 29)).is_overdue
+            Invoice(
+                status=InvoiceStatus.PAID.value, due_date=date(2026, 3, 29)
+            ).is_overdue
             is False
         )
 
@@ -254,8 +290,14 @@ class TestPaymentPlanAndInstallmentProperties:
 
     @freeze_time("2026-03-30 12:00:00")
     def test_installment_is_overdue_requires_unpaid_past_due_date(self):
-        assert Installment(due_date=utc_datetime(2026, 3, 29), paid_at=None).is_overdue is True
-        assert Installment(due_date=utc_datetime(2026, 3, 31), paid_at=None).is_overdue is False
+        assert (
+            Installment(due_date=utc_datetime(2026, 3, 29), paid_at=None).is_overdue
+            is True
+        )
+        assert (
+            Installment(due_date=utc_datetime(2026, 3, 31), paid_at=None).is_overdue
+            is False
+        )
         assert (
             Installment(
                 due_date=utc_datetime(2026, 3, 29),

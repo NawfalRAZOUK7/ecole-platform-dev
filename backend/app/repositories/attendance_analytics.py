@@ -8,7 +8,12 @@ from typing import Any
 
 from sqlalchemy import case, func, select
 
-from app.models.erp import AttendanceAlert, AttendanceRecord, AttendanceSession, Enrollment
+from app.models.erp import (
+    AttendanceAlert,
+    AttendanceRecord,
+    AttendanceSession,
+    Enrollment,
+)
 from app.models.iam import User
 from app.repositories.base import BaseRepository
 
@@ -25,15 +30,11 @@ class AttendanceAnalyticsRepository(BaseRepository):
         result = await self.db.execute(
             select(
                 func.coalesce(
-                    func.sum(
-                        case((AttendanceRecord.status == "absent", 1), else_=0)
-                    ),
+                    func.sum(case((AttendanceRecord.status == "absent", 1), else_=0)),
                     0,
                 ),
                 func.coalesce(
-                    func.sum(
-                        case((AttendanceRecord.status != "excused", 1), else_=0)
-                    ),
+                    func.sum(case((AttendanceRecord.status != "excused", 1), else_=0)),
                     0,
                 ),
             )
@@ -78,15 +79,11 @@ class AttendanceAnalyticsRepository(BaseRepository):
             select(
                 AttendanceRecord.student_id,
                 func.coalesce(
-                    func.sum(
-                        case((AttendanceRecord.status == "absent", 1), else_=0)
-                    ),
+                    func.sum(case((AttendanceRecord.status == "absent", 1), else_=0)),
                     0,
                 ),
                 func.coalesce(
-                    func.sum(
-                        case((AttendanceRecord.status != "excused", 1), else_=0)
-                    ),
+                    func.sum(case((AttendanceRecord.status != "excused", 1), else_=0)),
                     0,
                 ),
             )

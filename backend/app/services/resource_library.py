@@ -314,7 +314,9 @@ class ResourceLibraryService:
         async with UnitOfWork(self.db) as uow:
             repo = DocumentsRepository(uow.session)
             await repo.save_resource_rating(rating)
-            average, count = await repo.calculate_resource_rating_stats(resource_id=resource.id)
+            average, count = await repo.calculate_resource_rating_stats(
+                resource_id=resource.id
+            )
             resource.avg_rating = average
             resource.rating_count = count
             await repo.save_resource(resource)
@@ -448,7 +450,9 @@ class ResourceLibraryService:
             "document": preview,
             "my_rating": my_rating,
             "created_at": resource.created_at.isoformat(),
-            "updated_at": resource.updated_at.isoformat() if resource.updated_at else None,
+            "updated_at": resource.updated_at.isoformat()
+            if resource.updated_at
+            else None,
             "can_edit": can_manage,
             "can_delete": can_manage,
             "can_rate": actor_role == TCH,

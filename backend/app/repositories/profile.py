@@ -217,7 +217,10 @@ class ProfileRepository(BaseRepository):
         result = await self.db.execute(
             query.order_by(Submission.created_at.desc()).limit(limit + 1)
         )
-        return [(submission, assignment, user) for submission, assignment, user in result.all()]
+        return [
+            (submission, assignment, user)
+            for submission, assignment, user in result.all()
+        ]
 
     async def list_grades_for_submissions(
         self,

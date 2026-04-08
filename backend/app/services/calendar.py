@@ -55,7 +55,9 @@ def _utc_now() -> datetime:
 
 def _day_window(from_date: date, to_date: date) -> tuple[datetime, datetime]:
     start_dt = datetime.combine(from_date, time.min, tzinfo=timezone.utc)
-    end_dt = datetime.combine(to_date + timedelta(days=1), time.min, tzinfo=timezone.utc)
+    end_dt = datetime.combine(
+        to_date + timedelta(days=1), time.min, tzinfo=timezone.utc
+    )
     return start_dt, end_dt
 
 
@@ -122,7 +124,9 @@ class CalendarService:
         for event in events:
             if not self._can_view_event(event, actor, class_scope):
                 continue
-            for occurrence in self._expand_occurrences(event, from_dt=from_dt, to_dt=to_dt):
+            for occurrence in self._expand_occurrences(
+                event, from_dt=from_dt, to_dt=to_dt
+            ):
                 items.append(
                     self._serialize_event(
                         event,
@@ -134,8 +138,12 @@ class CalendarService:
                 )
 
         if event_type in (None, EventType.HOLIDAY.value):
-            holidays = await self.repo.list_holidays(from_date=from_date, to_date=to_date)
-            items.extend(self._serialize_holiday(holiday, actor=actor) for holiday in holidays)
+            holidays = await self.repo.list_holidays(
+                from_date=from_date, to_date=to_date
+            )
+            items.extend(
+                self._serialize_holiday(holiday, actor=actor) for holiday in holidays
+            )
 
         if event_type in (None, EventType.CUSTOM.value):
             periods, academic_years = await self.repo.list_period_boundaries(
@@ -143,10 +151,26 @@ class CalendarService:
                 from_date=from_date,
                 to_date=to_date,
             )
-            items.extend(self._serialize_period_start(period) for period in periods if from_date <= period.date_start <= to_date)
-            items.extend(self._serialize_period_end(period) for period in periods if from_date <= period.date_end <= to_date)
-            items.extend(self._serialize_academic_year_start(year) for year in academic_years if from_date <= year.date_start <= to_date)
-            items.extend(self._serialize_academic_year_end(year) for year in academic_years if from_date <= year.date_end <= to_date)
+            items.extend(
+                self._serialize_period_start(period)
+                for period in periods
+                if from_date <= period.date_start <= to_date
+            )
+            items.extend(
+                self._serialize_period_end(period)
+                for period in periods
+                if from_date <= period.date_end <= to_date
+            )
+            items.extend(
+                self._serialize_academic_year_start(year)
+                for year in academic_years
+                if from_date <= year.date_start <= to_date
+            )
+            items.extend(
+                self._serialize_academic_year_end(year)
+                for year in academic_years
+                if from_date <= year.date_end <= to_date
+            )
 
         items.sort(key=lambda item: (item["start_at"], item["instance_id"]))
         return items
@@ -168,7 +192,9 @@ class CalendarService:
                 user_id=user_id,
                 role=role,
             )
-            counts = (await self.repo.list_rsvp_counts([accessible.id])).get(accessible.id, {})
+            counts = (await self.repo.list_rsvp_counts([accessible.id])).get(
+                accessible.id, {}
+            )
             my_rsvp = (
                 await self.repo.list_user_rsvps(
                     user_id=user_id,
@@ -199,7 +225,9 @@ class CalendarService:
         holiday = await self.repo.get_holiday(event_id)
         if holiday is None:
             raise NotFoundError("Event not found", error_code="ERR-CAL-404")
-        return EventDetailResponse(**self._serialize_holiday(holiday, actor=actor)).model_dump()
+        return EventDetailResponse(
+            **self._serialize_holiday(holiday, actor=actor)
+        ).model_dump()
 
     async def list_holidays(
         self,
@@ -346,7 +374,10 @@ class CalendarService:
                     school_id=school_id,
                     actor_id=user_id,
                     event_id=created.id,
-                    title=created.title_en or created.title_fr or created.title_ar or "",
+                    title=created.title_en
+                    or created.title_fr
+                    or created.title_ar
+                    or "",
                     start_at=created.start_at.isoformat(),
                     class_id=created.class_id,
                 )
@@ -380,14 +411,22 @@ class CalendarService:
         next_role_codes = payload.get("role_codes", event.role_codes)
 
         if next_visibility == EventVisibility.CLASS.value and next_class_id is None:
-            raise ValidationError("class_id is required for class visibility", error_code="ERR-CAL-422")
+            raise ValidationError(
+                "class_id is required for class visibility", error_code="ERR-CAL-422"
+            )
         if next_visibility == EventVisibility.ROLE.value and not next_role_codes:
-            raise ValidationError("role_codes are required for role visibility", error_code="ERR-CAL-422")
+            raise ValidationError(
+                "role_codes are required for role visibility", error_code="ERR-CAL-422"
+            )
 
         async with UnitOfWork(self.db) as uow:
             repo = CalendarRepository(uow.session)
             event = await repo.get_event(event_id)
-            if event is None or event.deleted_at is not None or event.school_id != school_id:
+            if (
+                event is None
+                or event.deleted_at is not None
+                or event.school_id != school_id
+            ):
                 raise NotFoundError("Event not found", error_code="ERR-CAL-404")
             for field, value in payload.items():
                 if field == "recurrence_rule" and value is not None:
@@ -396,9 +435,13 @@ class CalendarService:
                     setattr(event, field, value)
 
             if event.end_at < event.start_at:
-                raise ValidationError("end_at must be after start_at", error_code="ERR-CAL-422")
+                raise ValidationError(
+                    "end_at must be after start_at", error_code="ERR-CAL-422"
+                )
             if event.rsvp_deadline and event.rsvp_deadline > event.start_at:
-                raise ValidationError("rsvp_deadline must be before start_at", error_code="ERR-CAL-422")
+                raise ValidationError(
+                    "rsvp_deadline must be before start_at", error_code="ERR-CAL-422"
+                )
             if role == TCH and event.visibility != EventVisibility.CLASS.value:
                 raise AuthorizationError(
                     "Teachers can only create class events",
@@ -443,7 +486,11 @@ class CalendarService:
         async with UnitOfWork(self.db) as uow:
             repo = CalendarRepository(uow.session)
             event = await repo.get_event(event_id)
-            if event is None or event.school_id != school_id or event.deleted_at is not None:
+            if (
+                event is None
+                or event.school_id != school_id
+                or event.deleted_at is not None
+            ):
                 raise NotFoundError("Event not found", error_code="ERR-CAL-404")
             event.deleted_at = _utc_now()
             saved = await repo.save_event(event)
@@ -459,7 +506,11 @@ class CalendarService:
         role: str,
     ) -> Event:
         event = await self.repo.get_event(event_id)
-        if event is None or event.deleted_at is not None or event.school_id != school_id:
+        if (
+            event is None
+            or event.deleted_at is not None
+            or event.school_id != school_id
+        ):
             raise NotFoundError("Event not found", error_code="ERR-CAL-404")
         actor = CalendarActor(user_id=user_id, role=role, school_id=school_id)
         class_scope = await self._get_class_scope(actor)
@@ -592,7 +643,9 @@ class CalendarService:
             "exp": expires_at
             or (_utc_now() + timedelta(days=settings.calendar_ical_ttl_days)),
         }
-        return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+        return jwt.encode(
+            payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm
+        )
 
     def parse_ical_token(self, token: str) -> CalendarActor:
         try:
@@ -602,7 +655,9 @@ class CalendarService:
                 algorithms=[settings.jwt_algorithm],
             )
         except JWTError as exc:
-            raise NotFoundError("Calendar feed not found", error_code="ERR-CAL-404") from exc
+            raise NotFoundError(
+                "Calendar feed not found", error_code="ERR-CAL-404"
+            ) from exc
         if payload.get("action") != ICAL_ACTION:
             raise NotFoundError("Calendar feed not found", error_code="ERR-CAL-404")
         return CalendarActor(
@@ -662,7 +717,9 @@ class CalendarService:
                     "BEGIN:VEVENT",
                     f"UID:{item['instance_id']}@ecole-platform.ma",
                     f"DTSTAMP:{stamp}",
-                    self._ical_dt("DTSTART", item["start_at"], all_day=item["is_all_day"]),
+                    self._ical_dt(
+                        "DTSTART", item["start_at"], all_day=item["is_all_day"]
+                    ),
                     self._ical_dt("DTEND", item["end_at"], all_day=item["is_all_day"]),
                     f"SUMMARY:{summary}",
                     f"DESCRIPTION:{description}",
@@ -843,7 +900,9 @@ class CalendarService:
         return occurrences
 
     def _event_color(self, event_type: str) -> str:
-        return EVENT_TYPE_COLORS.get(event_type, EVENT_TYPE_COLORS[EventType.CUSTOM.value])
+        return EVENT_TYPE_COLORS.get(
+            event_type, EVENT_TYPE_COLORS[EventType.CUSTOM.value]
+        )
 
     def _serialize_event(
         self,
@@ -856,7 +915,9 @@ class CalendarService:
     ) -> dict[str, Any]:
         can_edit = actor.role in {ADM, DIR} or event.created_by == actor.user_id
         can_delete = actor.role in {ADM, DIR}
-        can_rsvp = actor.role in {PAR, STD, TCH} and event.type != EventType.HOLIDAY.value
+        can_rsvp = (
+            actor.role in {PAR, STD, TCH} and event.type != EventType.HOLIDAY.value
+        )
 
         return EventListItem(
             id=str(event.id),
@@ -876,7 +937,9 @@ class CalendarService:
             class_id=str(event.class_id) if event.class_id else None,
             role_codes=list(event.role_codes or []),
             capacity=event.capacity,
-            rsvp_deadline=event.rsvp_deadline.isoformat() if event.rsvp_deadline else None,
+            rsvp_deadline=event.rsvp_deadline.isoformat()
+            if event.rsvp_deadline
+            else None,
             attendee_count=counts.get("attending", 0),
             maybe_count=counts.get("maybe", 0),
             declined_count=counts.get("declined", 0),
@@ -984,8 +1047,12 @@ class CalendarService:
         ).model_dump()
 
     def _serialize_academic_year_start(self, academic_year) -> dict[str, Any]:
-        event_id = uuid.uuid5(SYSTEM_NAMESPACE, f"academic-year:start:{academic_year.id}")
-        start_dt = datetime.combine(academic_year.date_start, time.min, tzinfo=timezone.utc)
+        event_id = uuid.uuid5(
+            SYSTEM_NAMESPACE, f"academic-year:start:{academic_year.id}"
+        )
+        start_dt = datetime.combine(
+            academic_year.date_start, time.min, tzinfo=timezone.utc
+        )
         end_dt = start_dt + timedelta(days=1)
         return EventListItem(
             id=str(event_id),
@@ -1013,7 +1080,9 @@ class CalendarService:
 
     def _serialize_academic_year_end(self, academic_year) -> dict[str, Any]:
         event_id = uuid.uuid5(SYSTEM_NAMESPACE, f"academic-year:end:{academic_year.id}")
-        start_dt = datetime.combine(academic_year.date_end, time.min, tzinfo=timezone.utc)
+        start_dt = datetime.combine(
+            academic_year.date_end, time.min, tzinfo=timezone.utc
+        )
         end_dt = start_dt + timedelta(days=1)
         return EventListItem(
             id=str(event_id),

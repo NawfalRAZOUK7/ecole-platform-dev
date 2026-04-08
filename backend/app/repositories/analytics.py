@@ -130,9 +130,15 @@ class AnalyticsRepository(BaseRepository):
             select(
                 func.date_trunc(bucket, AttendanceSession.session_date).label("bucket"),
                 func.count(AttendanceRecord.id).label("total"),
-                func.count().filter(AttendanceRecord.status == "present").label("present"),
-                func.count().filter(AttendanceRecord.status == "absent").label("absent"),
-                func.count().filter(AttendanceRecord.status == "excused").label("excused"),
+                func.count()
+                .filter(AttendanceRecord.status == "present")
+                .label("present"),
+                func.count()
+                .filter(AttendanceRecord.status == "absent")
+                .label("absent"),
+                func.count()
+                .filter(AttendanceRecord.status == "excused")
+                .label("excused"),
             )
             .select_from(AttendanceRecord)
             .join(

@@ -28,7 +28,6 @@ from app.services.auth import InvitationService
 router = APIRouter(prefix="/invites", tags=["invitations"])
 
 
-
 # ---------------------------------------------------------------------------
 # POST /invites/create — ADM only
 # ---------------------------------------------------------------------------

@@ -10,7 +10,14 @@ from sqlalchemy import func, select
 
 from app.core.response import decode_cursor
 from app.models.erp import Enrollment
-from app.models.lms import Assignment, Course, Quiz, QuizAttempt, QuizQuestion, QuizResponse
+from app.models.lms import (
+    Assignment,
+    Course,
+    Quiz,
+    QuizAttempt,
+    QuizQuestion,
+    QuizResponse,
+)
 from app.repositories.base import BaseRepository
 
 
@@ -112,10 +119,7 @@ class QuizRepository(BaseRepository):
             .where(QuizQuestion.quiz_id.in_(quiz_ids))
             .group_by(QuizQuestion.quiz_id)
         )
-        return {
-            row[0]: (int(row[1] or 0), int(row[2] or 0))
-            for row in result.all()
-        }
+        return {row[0]: (int(row[1] or 0), int(row[2] or 0)) for row in result.all()}
 
     async def list_quiz_questions(
         self,
@@ -359,7 +363,9 @@ class QuizRepository(BaseRepository):
 
         result = await self.db.execute(query)
         rows = list(result.all())
-        question_counts = await self.get_question_counts([quiz.id for quiz, _assignment in rows])
+        question_counts = await self.get_question_counts(
+            [quiz.id for quiz, _assignment in rows]
+        )
         return [
             self._serialize_evaluatable(
                 quiz=quiz,
@@ -398,7 +404,9 @@ class QuizRepository(BaseRepository):
             .order_by(Assignment.due_at.asc(), Quiz.id.asc())
         )
         rows = list(result.all())
-        question_counts = await self.get_question_counts([quiz.id for quiz, _assignment in rows])
+        question_counts = await self.get_question_counts(
+            [quiz.id for quiz, _assignment in rows]
+        )
 
         items: list[dict] = []
         for quiz, assignment in rows:

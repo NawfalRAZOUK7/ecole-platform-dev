@@ -145,7 +145,9 @@ async def micro_rbac_context(session_factory):
             neighborhood="Maarif",
             phone="+212612355555",
         )
-        group = await MicroGroupFactory.create(session=session, micro_school=micro_school)
+        group = await MicroGroupFactory.create(
+            session=session, micro_school=micro_school
+        )
         enrollment = await MicroEnrollmentFactory.create(
             session=session,
             micro_group=group,

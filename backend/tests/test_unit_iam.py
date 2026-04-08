@@ -178,7 +178,18 @@ class TestPermissionCatalog:
     """Tests for the RBAC permission catalog."""
 
     def test_all_roles_defined(self):
-        expected_roles = {ADM, DIR, TCH, PAR, STD, SUP, SYS, CONTENT_MGR, PUBLIC, EDUCATOR}
+        expected_roles = {
+            ADM,
+            DIR,
+            TCH,
+            PAR,
+            STD,
+            SUP,
+            SYS,
+            CONTENT_MGR,
+            PUBLIC,
+            EDUCATOR,
+        }
         assert set(ROLE_PERMISSIONS.keys()) == expected_roles
 
     def test_admin_has_class_read(self):

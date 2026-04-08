@@ -73,7 +73,9 @@ class SyncConflictFactory(AsyncSQLAlchemyFactory):
 
     id = factory.LazyFunction(uuid.uuid4)
     queue_item = factory.SubFactory(SyncQueueFactory)
-    resolver = factory.SubFactory(UserFactory, school_id=factory.SelfAttribute("..queue_item.school_id"))
+    resolver = factory.SubFactory(
+        UserFactory, school_id=factory.SelfAttribute("..queue_item.school_id")
+    )
     school_id = factory.LazyAttribute(lambda o: o.queue_item.school_id)
     queue_item_id = factory.LazyAttribute(lambda o: o.queue_item.id)
     entity_type = factory.LazyAttribute(lambda o: o.queue_item.entity_type)

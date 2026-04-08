@@ -100,6 +100,7 @@ async def grade_attempt(attempt_id, db: AsyncSession) -> tuple[float, int]:
     Updates each QuizResponse with is_correct and points_earned.
     Updates the QuizAttempt with score, max_score, and status=COMPLETED.
     """
+
     async def _grade_with_repo(repo: QuizRepository) -> tuple[float, int]:
         attempt = await repo.get_quiz_attempt(attempt_id)
         if attempt is None:

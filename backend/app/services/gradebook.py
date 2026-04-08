@@ -176,7 +176,9 @@ class GradebookService(LMSServiceBase):
                 class_id=class_id,
                 period_id=period_id,
             )
-            visible_ids = {student_id for student_id, _ in students if student_id in child_ids}
+            visible_ids = {
+                student_id for student_id, _ in students if student_id in child_ids
+            }
             if not visible_ids:
                 raise NotFoundError("Gradebook not found", error_code="ERR-LMS-404")
             return visible_ids
@@ -241,7 +243,13 @@ class GradebookService(LMSServiceBase):
 
         assignment_scores: dict[tuple[uuid.UUID, uuid.UUID], dict[str, Any]] = {}
         category_scores_by_student: dict[uuid.UUID, dict[uuid.UUID, list[float]]] = {}
-        for student_id, assignment_id, category_id, score, published_at in grade_entries:
+        for (
+            student_id,
+            assignment_id,
+            category_id,
+            score,
+            published_at,
+        ) in grade_entries:
             assignment_scores[(student_id, assignment_id)] = {
                 "score": round(float(score), 2),
                 "published_at": published_at.isoformat() if published_at else None,
@@ -255,7 +263,9 @@ class GradebookService(LMSServiceBase):
 
         ordered_records: list[dict[str, Any]] = []
         ranked_by_student: dict[uuid.UUID, dict[str, Any]] = {}
-        category_averages_by_student: dict[uuid.UUID, dict[uuid.UUID, float | None]] = {}
+        category_averages_by_student: dict[
+            uuid.UUID, dict[uuid.UUID, float | None]
+        ] = {}
         for student_id, student_name in students:
             category_averages = self._build_category_average_map(
                 categories=categories,
@@ -349,7 +359,9 @@ class GradebookService(LMSServiceBase):
                         period_id=body.period_id,
                         name=category_input.name,
                         weight=category_input.weight,
-                        position=category_input.position if category_input.position >= 0 else index,
+                        position=category_input.position
+                        if category_input.position >= 0
+                        else index,
                     )
                 )
 
@@ -519,22 +531,31 @@ class GradebookService(LMSServiceBase):
         rows = []
         for record in metrics["ordered_records"]:
             student_id = record["student_id"]
-            if visible_student_ids is not None and student_id not in visible_student_ids:
+            if (
+                visible_student_ids is not None
+                and student_id not in visible_student_ids
+            ):
                 continue
 
             assignment_cells = []
             for assignment, category in metrics["assignments"]:
-                grade_data = metrics["assignment_scores"].get((student_id, assignment.id))
+                grade_data = metrics["assignment_scores"].get(
+                    (student_id, assignment.id)
+                )
                 assignment_cells.append(
                     {
                         "assignment_id": str(assignment.id),
                         "assignment_title": assignment.title,
                         "category_id": str(category.id),
                         "category_name": category.name,
-                        "score": grade_data["score"] if grade_data is not None else None,
+                        "score": grade_data["score"]
+                        if grade_data is not None
+                        else None,
                         "total_points": assignment.total_points,
                         "published_at": (
-                            grade_data["published_at"] if grade_data is not None else None
+                            grade_data["published_at"]
+                            if grade_data is not None
+                            else None
                         ),
                     }
                 )
@@ -580,7 +601,9 @@ class GradebookService(LMSServiceBase):
                     "category_id": str(category.id),
                     "category_name": category.name,
                     "total_points": assignment.total_points,
-                    "due_at": assignment.due_at.isoformat() if assignment.due_at else None,
+                    "due_at": assignment.due_at.isoformat()
+                    if assignment.due_at
+                    else None,
                 }
                 for assignment, category in metrics["assignments"]
             ],

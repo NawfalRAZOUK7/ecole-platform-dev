@@ -21,7 +21,6 @@ from app.repositories.base import BaseRepository
 
 
 class CalendarRepository(BaseRepository):
-
     async def get_event(self, event_id: uuid.UUID) -> Event | None:
         result = await self.db.execute(select(Event).where(Event.id == event_id))
         return result.scalar_one_or_none()

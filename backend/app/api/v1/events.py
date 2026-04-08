@@ -36,6 +36,7 @@ from app.services.rsvp import RSVPService
 
 router = APIRouter(tags=["calendar"])
 
+
 @router.get(
     "/events",
     summary="List calendar events",

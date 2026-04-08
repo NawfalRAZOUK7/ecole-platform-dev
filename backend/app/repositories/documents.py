@@ -23,7 +23,6 @@ from app.repositories.base import BaseRepository
 
 
 class DocumentsRepository(BaseRepository):
-
     async def get_document(self, document_id: uuid.UUID) -> Document | None:
         result = await self.db.execute(
             select(Document).where(Document.id == document_id)
@@ -72,7 +71,9 @@ class DocumentsRepository(BaseRepository):
         storage_path: str,
         exclude_document_id: uuid.UUID | None = None,
     ) -> int:
-        query = select(func.count(Document.id)).where(Document.storage_path == storage_path)
+        query = select(func.count(Document.id)).where(
+            Document.storage_path == storage_path
+        )
         if exclude_document_id:
             query = query.where(Document.id != exclude_document_id)
         document_result = await self.db.execute(query)
@@ -274,7 +275,8 @@ class DocumentsRepository(BaseRepository):
         category: str,
     ) -> Document | None:
         result = await self.db.execute(
-            select(Document).where(
+            select(Document)
+            .where(
                 Document.school_id == school_id,
                 Document.linked_student_id == linked_student_id,
                 Document.category == category,
@@ -364,9 +366,18 @@ class DocumentsRepository(BaseRepository):
 
         next_cursor = None
         if rows and has_more:
-            next_cursor = encode_cursor(rows[-1][0].id, rows[-1][0].created_at.isoformat())
+            next_cursor = encode_cursor(
+                rows[-1][0].id, rows[-1][0].created_at.isoformat()
+            )
 
-        return [(document, uploader_name, student_name) for document, uploader_name, student_name in rows], next_cursor, has_more
+        return (
+            [
+                (document, uploader_name, student_name)
+                for document, uploader_name, student_name in rows
+            ],
+            next_cursor,
+            has_more,
+        )
 
     async def list_documents_by_ids(
         self,
@@ -479,7 +490,9 @@ class DocumentsRepository(BaseRepository):
         idempotency_key: str,
     ) -> bool:
         result = await self.db.execute(
-            select(Notification.id).where(Notification.idempotency_key == idempotency_key)
+            select(Notification.id).where(
+                Notification.idempotency_key == idempotency_key
+            )
         )
         return result.scalar_one_or_none() is not None
 
@@ -494,7 +507,9 @@ class DocumentsRepository(BaseRepository):
         return resource
 
     async def get_resource(self, resource_id: uuid.UUID) -> Resource | None:
-        result = await self.db.execute(select(Resource).where(Resource.id == resource_id))
+        result = await self.db.execute(
+            select(Resource).where(Resource.id == resource_id)
+        )
         return result.scalar_one_or_none()
 
     async def list_resources(
@@ -550,7 +565,9 @@ class DocumentsRepository(BaseRepository):
             query = query.where(
                 or_(
                     Resource.visibility == "school",
-                    Resource.class_id.in_(visible_class_ids) if visible_class_ids else False,
+                    Resource.class_id.in_(visible_class_ids)
+                    if visible_class_ids
+                    else False,
                     Resource.uploader_id == user_id,
                 )
             )
@@ -558,7 +575,9 @@ class DocumentsRepository(BaseRepository):
             query = query.where(
                 or_(
                     Resource.visibility == "school",
-                    Resource.class_id.in_(visible_class_ids) if visible_class_ids else False,
+                    Resource.class_id.in_(visible_class_ids)
+                    if visible_class_ids
+                    else False,
                 )
             )
 
@@ -582,7 +601,9 @@ class DocumentsRepository(BaseRepository):
 
         next_cursor = None
         if rows and has_more:
-            next_cursor = encode_cursor(rows[-1][0].id, rows[-1][0].created_at.isoformat())
+            next_cursor = encode_cursor(
+                rows[-1][0].id, rows[-1][0].created_at.isoformat()
+            )
         return rows, next_cursor, has_more
 
     async def get_resource_with_document(
@@ -623,9 +644,9 @@ class DocumentsRepository(BaseRepository):
         resource_id: uuid.UUID,
     ) -> tuple[float, int]:
         result = await self.db.execute(
-            select(func.avg(ResourceRating.rating), func.count(ResourceRating.id)).where(
-                ResourceRating.resource_id == resource_id
-            )
+            select(
+                func.avg(ResourceRating.rating), func.count(ResourceRating.id)
+            ).where(ResourceRating.resource_id == resource_id)
         )
         average, count = result.one()
         return float(average or 0), int(count or 0)

@@ -53,7 +53,9 @@ class EventUpdateRequest(BaseModel):
     title_ar: str | None = Field(default=None, max_length=255)
     title_en: str | None = Field(default=None, max_length=255)
     description: str | None = None
-    type: str | None = Field(default=None, pattern="^(holiday|exam|meeting|excursion|ceremony|custom)$")
+    type: str | None = Field(
+        default=None, pattern="^(holiday|exam|meeting|excursion|ceremony|custom)$"
+    )
     visibility: str | None = Field(default=None, pattern="^(school|class|role)$")
     start_at: datetime | None = None
     end_at: datetime | None = None
@@ -82,7 +84,9 @@ class EventRSVPRequest(BaseModel):
 
 
 class ReminderPreferenceItem(BaseModel):
-    event_type: str = Field(..., pattern="^(holiday|exam|meeting|excursion|ceremony|custom)$")
+    event_type: str = Field(
+        ..., pattern="^(holiday|exam|meeting|excursion|ceremony|custom)$"
+    )
     enabled: bool = True
 
 

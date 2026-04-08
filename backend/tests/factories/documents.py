@@ -7,7 +7,13 @@ import uuid
 
 import factory
 
-from app.models.documents import Document, DocumentCategory, Resource, ResourceType, ResourceVisibility
+from app.models.documents import (
+    Document,
+    DocumentCategory,
+    Resource,
+    ResourceType,
+    ResourceVisibility,
+)
 from tests.factories.base import AsyncSQLAlchemyFactory
 from tests.factories.iam import UserFactory
 from tests.factories.school import SchoolFactory

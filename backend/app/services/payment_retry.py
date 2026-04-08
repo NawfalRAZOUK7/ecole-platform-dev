@@ -83,9 +83,13 @@ async def retry_failed_payments() -> int:
                                         or parent.email
                                     ),
                                     invoice_id=str(attempt.invoice_id),
-                                    amount=str(invoice.total_amount) if invoice else "N/A",
+                                    amount=str(invoice.total_amount)
+                                    if invoice
+                                    else "N/A",
                                     currency=invoice.currency if invoice else "MAD",
-                                    due_date=str(invoice.due_date) if invoice else "N/A",
+                                    due_date=str(invoice.due_date)
+                                    if invoice
+                                    else "N/A",
                                 )
                         except Exception:
                             logger.warning(

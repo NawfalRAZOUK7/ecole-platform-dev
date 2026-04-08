@@ -63,7 +63,9 @@ def setup_service(monkeypatch: pytest.MonkeyPatch):
     uow = FakeUnitOfWork()
 
     monkeypatch.setattr(assignment_module, "UnitOfWork", lambda _db: uow)
-    monkeypatch.setattr(assignment_module, "LMSRepository", lambda _session: repo_in_uow)
+    monkeypatch.setattr(
+        assignment_module, "LMSRepository", lambda _session: repo_in_uow
+    )
     monkeypatch.setattr(assignment_module, "AuditService", lambda _session: audit)
 
     return service, repo_in_uow, audit, uow
@@ -79,7 +81,9 @@ def make_course(auth: AuthContext, *, teacher_id: uuid.UUID | None = None):
     )
 
 
-def make_assignment(course, *, exercise_type: str = "STANDARD", pdf_path: str | None = None):
+def make_assignment(
+    course, *, exercise_type: str = "STANDARD", pdf_path: str | None = None
+):
     return SimpleNamespace(
         id=uuid.uuid4(),
         course_id=course.id,
@@ -154,10 +158,14 @@ class TestCreateAssignment:
             )
 
     @pytest.mark.asyncio
-    async def test_wrong_teacher_cannot_create_assignment(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_wrong_teacher_cannot_create_assignment(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth()
         service, _repo_in_uow, _audit, _uow = setup_service(monkeypatch)
-        service.repo.get_course.return_value = make_course(auth, teacher_id=uuid.uuid4())
+        service.repo.get_course.return_value = make_course(
+            auth, teacher_id=uuid.uuid4()
+        )
 
         with pytest.raises(AuthorizationError, match="your own courses"):
             await service.create_assignment(
@@ -172,7 +180,9 @@ class TestCreateAssignment:
 
 class TestListAssignments:
     @pytest.mark.asyncio
-    async def test_list_assignments_returns_items_and_cursor(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_list_assignments_returns_items_and_cursor(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth()
         service, _repo_in_uow, _audit, _uow = setup_service(monkeypatch)
         assignment = make_assignment(make_course(auth))
@@ -193,7 +203,9 @@ class TestListAssignments:
         assert has_more is True
 
     @pytest.mark.asyncio
-    async def test_list_assignments_validates_course_when_given(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_list_assignments_validates_course_when_given(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth()
         service, _repo_in_uow, _audit, _uow = setup_service(monkeypatch)
         service.repo.get_course.return_value = None
@@ -212,7 +224,9 @@ class TestListAssignments:
 
 class TestUploadExercisePdf:
     @pytest.mark.asyncio
-    async def test_upload_raises_when_assignment_missing(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_upload_raises_when_assignment_missing(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth()
         service, _repo_in_uow, _audit, _uow = setup_service(monkeypatch)
         service.repo.get_assignment_with_course.return_value = None
@@ -228,7 +242,9 @@ class TestUploadExercisePdf:
             )
 
     @pytest.mark.asyncio
-    async def test_upload_requires_assignment_owner(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_upload_requires_assignment_owner(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth()
         service, _repo_in_uow, _audit, _uow = setup_service(monkeypatch)
         course = make_course(auth, teacher_id=uuid.uuid4())
@@ -301,7 +317,9 @@ class TestUploadExercisePdf:
         delete_mock.assert_awaited_once_with("old/path.pdf")
 
     @pytest.mark.asyncio
-    async def test_upload_rejects_non_printable_assignments(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_upload_rejects_non_printable_assignments(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth()
         service, _repo_in_uow, _audit, _uow = setup_service(monkeypatch)
         course = make_course(auth)
@@ -355,7 +373,9 @@ class TestCreateSubmission:
             )
 
     @pytest.mark.asyncio
-    async def test_existing_active_submission_is_returned(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_existing_active_submission_is_returned(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth(role="STD")
         service, repo_in_uow, audit, _uow = setup_service(monkeypatch)
         course = make_course(auth)
@@ -375,7 +395,9 @@ class TestCreateSubmission:
         audit.log_event.assert_not_awaited()
 
     @pytest.mark.asyncio
-    async def test_printable_pdf_submission_starts_as_draft(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_printable_pdf_submission_starts_as_draft(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth(role="STD")
         service, repo_in_uow, audit, uow = setup_service(monkeypatch)
         course = make_course(auth)
@@ -423,7 +445,9 @@ class TestCreateSubmission:
 
 class TestUploadSubmissionFile:
     @pytest.mark.asyncio
-    async def test_only_submission_owner_can_upload(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_only_submission_owner_can_upload(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth(role="STD")
         service, _repo_in_uow, _audit, _uow = setup_service(monkeypatch)
         course = make_course(auth)
@@ -434,7 +458,11 @@ class TestUploadSubmissionFile:
             student_id=uuid.uuid4(),
             status="draft",
         )
-        service.repo.get_submission_with_context.return_value = (submission, assignment, course)
+        service.repo.get_submission_with_context.return_value = (
+            submission,
+            assignment,
+            course,
+        )
 
         with pytest.raises(NotFoundError, match="Submission not found"):
             await service.upload_submission_file(
@@ -448,13 +476,19 @@ class TestUploadSubmissionFile:
             )
 
     @pytest.mark.asyncio
-    async def test_cannot_upload_to_graded_submission(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_cannot_upload_to_graded_submission(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth(role="STD")
         service, _repo_in_uow, _audit, _uow = setup_service(monkeypatch)
         course = make_course(auth)
         assignment = make_assignment(course, exercise_type="PRINTABLE_PDF")
         submission = make_submission(assignment, auth, status="graded")
-        service.repo.get_submission_with_context.return_value = (submission, assignment, course)
+        service.repo.get_submission_with_context.return_value = (
+            submission,
+            assignment,
+            course,
+        )
 
         with pytest.raises(ValidationError, match="graded or returned"):
             await service.upload_submission_file(
@@ -468,14 +502,22 @@ class TestUploadSubmissionFile:
             )
 
     @pytest.mark.asyncio
-    async def test_upload_rejects_when_max_files_reached(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_upload_rejects_when_max_files_reached(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth(role="STD")
         service, _repo_in_uow, _audit, _uow = setup_service(monkeypatch)
         course = make_course(auth)
         assignment = make_assignment(course, exercise_type="PRINTABLE_PDF")
         submission = make_submission(assignment, auth)
-        service.repo.get_submission_with_context.return_value = (submission, assignment, course)
-        service.repo.count_submission_files.return_value = assignment_module.MAX_FILES_PER_SUBMISSION
+        service.repo.get_submission_with_context.return_value = (
+            submission,
+            assignment,
+            course,
+        )
+        service.repo.count_submission_files.return_value = (
+            assignment_module.MAX_FILES_PER_SUBMISSION
+        )
 
         with pytest.raises(ValidationError, match="Maximum of"):
             await service.upload_submission_file(
@@ -489,13 +531,19 @@ class TestUploadSubmissionFile:
             )
 
     @pytest.mark.asyncio
-    async def test_upload_rejects_invalid_file_hint(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_upload_rejects_invalid_file_hint(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth(role="STD")
         service, _repo_in_uow, _audit, _uow = setup_service(monkeypatch)
         course = make_course(auth)
         assignment = make_assignment(course, exercise_type="PRINTABLE_PDF")
         submission = make_submission(assignment, auth)
-        service.repo.get_submission_with_context.return_value = (submission, assignment, course)
+        service.repo.get_submission_with_context.return_value = (
+            submission,
+            assignment,
+            course,
+        )
         service.repo.count_submission_files.return_value = 0
 
         with pytest.raises(ValidationError, match="file_type_hint must be one of"):
@@ -532,7 +580,11 @@ class TestUploadSubmissionFile:
             "save",
             AsyncMock(return_value=("submissions/scan.jpg", "abc123", 2048)),
         )
-        service.repo.get_submission_with_context.return_value = (submission, assignment, course)
+        service.repo.get_submission_with_context.return_value = (
+            submission,
+            assignment,
+            course,
+        )
         service.repo.count_submission_files.return_value = 0
         repo_in_uow.create_submission_file.return_value = submission_file
 
@@ -555,7 +607,9 @@ class TestUploadSubmissionFile:
 
 class TestFinalizeSubmission:
     @pytest.mark.asyncio
-    async def test_finalize_requires_existing_submission(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_finalize_requires_existing_submission(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth(role="STD")
         service, _repo_in_uow, _audit, _uow = setup_service(monkeypatch)
         service.repo.get_submission_with_context.return_value = None
@@ -568,7 +622,9 @@ class TestFinalizeSubmission:
             )
 
     @pytest.mark.asyncio
-    async def test_only_owner_can_finalize_submission(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_only_owner_can_finalize_submission(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth(role="STD")
         service, _repo_in_uow, _audit, _uow = setup_service(monkeypatch)
         course = make_course(auth)
@@ -580,7 +636,11 @@ class TestFinalizeSubmission:
             status="draft",
             submitted_at=None,
         )
-        service.repo.get_submission_with_context.return_value = (submission, assignment, course)
+        service.repo.get_submission_with_context.return_value = (
+            submission,
+            assignment,
+            course,
+        )
 
         with pytest.raises(NotFoundError, match="Submission not found"):
             await service.finalize_submission(
@@ -590,13 +650,19 @@ class TestFinalizeSubmission:
             )
 
     @pytest.mark.asyncio
-    async def test_only_draft_submission_can_be_finalized(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_only_draft_submission_can_be_finalized(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth(role="STD")
         service, _repo_in_uow, _audit, _uow = setup_service(monkeypatch)
         course = make_course(auth)
         assignment = make_assignment(course, exercise_type="PRINTABLE_PDF")
         submission = make_submission(assignment, auth, status="submitted")
-        service.repo.get_submission_with_context.return_value = (submission, assignment, course)
+        service.repo.get_submission_with_context.return_value = (
+            submission,
+            assignment,
+            course,
+        )
 
         with pytest.raises(ValidationError, match="Only draft submissions"):
             await service.finalize_submission(
@@ -606,16 +672,24 @@ class TestFinalizeSubmission:
             )
 
     @pytest.mark.asyncio
-    async def test_printable_pdf_requires_uploaded_file(self, monkeypatch: pytest.MonkeyPatch):
+    async def test_printable_pdf_requires_uploaded_file(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
         auth = make_auth(role="STD")
         service, _repo_in_uow, _audit, _uow = setup_service(monkeypatch)
         course = make_course(auth)
         assignment = make_assignment(course, exercise_type="PRINTABLE_PDF")
         submission = make_submission(assignment, auth, status="draft")
-        service.repo.get_submission_with_context.return_value = (submission, assignment, course)
+        service.repo.get_submission_with_context.return_value = (
+            submission,
+            assignment,
+            course,
+        )
         service.repo.count_submission_files.return_value = 0
 
-        with pytest.raises(ValidationError, match="require at least one uploaded solution file"):
+        with pytest.raises(
+            ValidationError, match="require at least one uploaded solution file"
+        ):
             await service.finalize_submission(
                 submission_id=submission.id,
                 auth=auth,
@@ -631,7 +705,11 @@ class TestFinalizeSubmission:
         submission = make_submission(assignment, auth, status="draft")
         fixed_now = utc_datetime(2026, 3, 30, 12)
         monkeypatch.setattr(assignment_module, "_utc_now", lambda: fixed_now)
-        service.repo.get_submission_with_context.return_value = (submission, assignment, course)
+        service.repo.get_submission_with_context.return_value = (
+            submission,
+            assignment,
+            course,
+        )
         service.repo.count_submission_files.return_value = 1
 
         result = await service.finalize_submission(

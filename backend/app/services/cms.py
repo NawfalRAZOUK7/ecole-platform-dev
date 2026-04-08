@@ -49,7 +49,9 @@ class CMSService:
             "thumbnail_path": content_item.thumbnail_path,
             "origin": content_item.origin,
             "status": content_item.status,
-            "created_by": str(content_item.created_by) if content_item.created_by else None,
+            "created_by": str(content_item.created_by)
+            if content_item.created_by
+            else None,
             "original_content_id": str(content_item.original_content_id)
             if content_item.original_content_id
             else None,
@@ -63,7 +65,9 @@ class CMSService:
             title=announcement.title,
             body=announcement.body,
             target_roles=announcement.target_roles or [],
-            target_class_ids=[str(class_id) for class_id in announcement.target_class_ids]
+            target_class_ids=[
+                str(class_id) for class_id in announcement.target_class_ids
+            ]
             if announcement.target_class_ids
             else None,
             published_at=announcement.published_at.isoformat()
@@ -232,7 +236,9 @@ class CMSService:
                 "submitted_at": submission.submitted_at.isoformat()
                 if submission.submitted_at
                 else None,
-                "reviewed_by": str(submission.reviewed_by) if submission.reviewed_by else None,
+                "reviewed_by": str(submission.reviewed_by)
+                if submission.reviewed_by
+                else None,
                 "reviewed_at": submission.reviewed_at.isoformat()
                 if submission.reviewed_at
                 else None,
@@ -293,7 +299,9 @@ class CMSService:
                 )
                 submission.promoted_content_id = promoted.id
 
-                teacher_profile = await repo.get_teacher_profile(submission.submitted_by)
+                teacher_profile = await repo.get_teacher_profile(
+                    submission.submitted_by
+                )
                 if teacher_profile is not None:
                     teacher_profile.reward_points += body.reward_points
 
@@ -417,7 +425,9 @@ class CMSService:
             limit=limit,
         )
         items = [self._announcement_to_response(item) for item in announcements]
-        next_cursor = encode_cursor(announcements[-1].id) if has_more and announcements else None
+        next_cursor = (
+            encode_cursor(announcements[-1].id) if has_more and announcements else None
+        )
         return items, next_cursor, has_more
 
     async def update_announcement(
@@ -453,7 +463,9 @@ class CMSService:
                     )
             announcement.target_roles = body.target_roles
         if body.target_class_ids is not None:
-            announcement.target_class_ids = [str(class_id) for class_id in body.target_class_ids]
+            announcement.target_class_ids = [
+                str(class_id) for class_id in body.target_class_ids
+            ]
 
         async with UnitOfWork(self.db) as uow:
             repo = CMSRepository(uow.session)
@@ -503,12 +515,16 @@ class CMSService:
             )
         )
         if announcement.target_class_ids and STD in (announcement.target_roles or []):
-            class_ids = [uuid.UUID(class_id) for class_id in announcement.target_class_ids]
+            class_ids = [
+                uuid.UUID(class_id) for class_id in announcement.target_class_ids
+            ]
             class_student_ids = await self.repo.list_student_ids_in_classes(
                 class_ids=class_ids,
                 school_id=auth.school_id,
             )
-            non_student_roles = [role for role in announcement.target_roles if role != STD]
+            non_student_roles = [
+                role for role in announcement.target_roles if role != STD
+            ]
             non_student_ids = set(
                 await self.repo.list_membership_user_ids_by_roles(
                     school_id=auth.school_id,

@@ -24,7 +24,9 @@ from app.services.question_bank import QuestionBankService
 router = APIRouter(tags=["question-bank"])
 
 
-@router.post("/question-bank", status_code=201, summary="Add a question to the question bank")
+@router.post(
+    "/question-bank", status_code=201, summary="Add a question to the question bank"
+)
 async def add_question(
     body: QuestionBankCreateRequest,
     request: Request,

@@ -70,14 +70,18 @@ class LMSSerializerMixin:
             "teacher_id": str(grade.teacher_id),
             "score": float(grade.score),
             "feedback_text": grade.feedback_text,
-            "published_at": grade.published_at.isoformat() if grade.published_at else None,
+            "published_at": grade.published_at.isoformat()
+            if grade.published_at
+            else None,
         }
 
     @staticmethod
     def _content_item_to_dict(content_item: ContentItem) -> dict:
         return {
             "id": str(content_item.id),
-            "school_id": str(content_item.school_id) if content_item.school_id else None,
+            "school_id": str(content_item.school_id)
+            if content_item.school_id
+            else None,
             "title": content_item.title,
             "content_type": content_item.content_type,
             "level_band": content_item.level_band,
@@ -172,7 +176,9 @@ class LMSSerializerMixin:
             "quiz_id": str(attempt.quiz_id),
             "student_id": str(attempt.student_id),
             "attempt_no": attempt.attempt_no,
-            "started_at": attempt.started_at.isoformat() if attempt.started_at else None,
+            "started_at": attempt.started_at.isoformat()
+            if attempt.started_at
+            else None,
             "completed_at": (
                 attempt.completed_at.isoformat() if attempt.completed_at else None
             ),

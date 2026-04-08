@@ -263,7 +263,9 @@ class MicroPayment(TimestampMixin, Base):
     )
     period_start: Mapped[date] = mapped_column(Date, nullable=False)
     period_end: Mapped[date] = mapped_column(Date, nullable=False)
-    paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    paid_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     status: Mapped[str] = mapped_column(
         PgEnum(
             MicroPaymentStatus,
@@ -277,7 +279,9 @@ class MicroPayment(TimestampMixin, Base):
 
     micro_school: Mapped["MicroSchool"] = relationship(back_populates="payments")
     parent = relationship("User", foreign_keys=[parent_id])
-    child_enrollment: Mapped["MicroEnrollment"] = relationship(back_populates="payments")
+    child_enrollment: Mapped["MicroEnrollment"] = relationship(
+        back_populates="payments"
+    )
 
     __table_args__ = (
         CheckConstraint("amount > 0", name="ck_micro_payments_amount"),
@@ -367,7 +371,9 @@ class MicroProgressLog(TimestampMixin, Base):
     photo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     milestone_tag: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
-    micro_enrollment: Mapped["MicroEnrollment"] = relationship(back_populates="progress_logs")
+    micro_enrollment: Mapped["MicroEnrollment"] = relationship(
+        back_populates="progress_logs"
+    )
     educator = relationship("User", foreign_keys=[educator_id])
 
     __table_args__ = (

@@ -44,7 +44,11 @@ async def seed_demo(session: AsyncSession) -> None:
 
     school_id = demo_id("school")
     admin_id = demo_id("user-admin")
-    teacher_ids = [demo_id("user-teacher-1"), demo_id("user-teacher-2"), demo_id("user-teacher-3")]
+    teacher_ids = [
+        demo_id("user-teacher-1"),
+        demo_id("user-teacher-2"),
+        demo_id("user-teacher-3"),
+    ]
     parent_ids = [demo_id("user-parent-1"), demo_id("user-parent-2")]
     student_ids = [
         demo_id("user-student-1"),
@@ -297,11 +301,35 @@ async def seed_demo(session: AsyncSession) -> None:
         )
 
     courses = [
-        (course_ids[0], class_ids[0], teacher_ids[0], "Mathématiques", "Algèbre et logique"),
-        (course_ids[1], class_ids[1], teacher_ids[1], "Physique", "Mécanique et mesures"),
-        (course_ids[2], class_ids[0], teacher_ids[2], "Français", "Expression écrite et lecture"),
+        (
+            course_ids[0],
+            class_ids[0],
+            teacher_ids[0],
+            "Mathématiques",
+            "Algèbre et logique",
+        ),
+        (
+            course_ids[1],
+            class_ids[1],
+            teacher_ids[1],
+            "Physique",
+            "Mécanique et mesures",
+        ),
+        (
+            course_ids[2],
+            class_ids[0],
+            teacher_ids[2],
+            "Français",
+            "Expression écrite et lecture",
+        ),
         (course_ids[3], class_ids[2], teacher_ids[2], "Arabe", "Langue et littérature"),
-        (course_ids[4], class_ids[2], teacher_ids[0], "Informatique", "Initiation au numérique"),
+        (
+            course_ids[4],
+            class_ids[2],
+            teacher_ids[0],
+            "Informatique",
+            "Initiation au numérique",
+        ),
     ]
     for course_id, class_id, teacher_id, title, description in courses:
         await upsert(

@@ -648,9 +648,9 @@ async def task_send_event_reminders(ctx: dict) -> int:
             await db.commit()
 
         duration = time.perf_counter() - start
-        TASK_DURATION.labels(
-            env=settings.app_env, task="send_event_reminders"
-        ).observe(duration)
+        TASK_DURATION.labels(env=settings.app_env, task="send_event_reminders").observe(
+            duration
+        )
         TASK_COMPLETED_COUNT.labels(
             env=settings.app_env, task="send_event_reminders"
         ).inc()
@@ -658,9 +658,9 @@ async def task_send_event_reminders(ctx: dict) -> int:
         return sent_count
     except Exception:
         duration = time.perf_counter() - start
-        TASK_DURATION.labels(
-            env=settings.app_env, task="send_event_reminders"
-        ).observe(duration)
+        TASK_DURATION.labels(env=settings.app_env, task="send_event_reminders").observe(
+            duration
+        )
         TASK_FAILED_COUNT.labels(
             env=settings.app_env, task="send_event_reminders"
         ).inc()
