@@ -52,6 +52,14 @@ LOGIN_TIMEOUT = httpx.Timeout(30.0, connect=5.0)
 _seed_attempted = False
 
 
+def _requires_live_redis(request: pytest.FixtureRequest) -> bool:
+    """Only integration-style suites should depend on a running Redis instance."""
+    path = Path(str(request.node.fspath)).resolve()
+    if "unit" in path.parts or path.name.startswith("test_unit_"):
+        return False
+    return True
+
+
 def pytest_collection_modifyitems(
     config: pytest.Config, items: list[pytest.Item]
 ) -> None:
@@ -259,8 +267,12 @@ async def dispose_app_engine_pool():
 
 
 @pytest_asyncio.fixture(autouse=True)
-async def clear_analytics_cache():
+async def clear_analytics_cache(request: pytest.FixtureRequest):
     """Keep Redis-backed caches and throttles deterministic across test reruns."""
+    if not _requires_live_redis(request):
+        yield
+        return
+
     client = redis.from_url(TEST_REDIS_URL, decode_responses=True)
     redis_patterns = (
         "ecole:*:analytics:*",
@@ -285,8 +297,15 @@ async def clear_analytics_cache():
 
 
 @pytest_asyncio.fixture(autouse=True)
-async def override_test_redis(monkeypatch: pytest.MonkeyPatch):
+async def override_test_redis(
+    request: pytest.FixtureRequest,
+    monkeypatch: pytest.MonkeyPatch,
+):
     """Point local service-layer Redis calls at the authenticated dev Redis instance."""
+    if not _requires_live_redis(request):
+        yield
+        return
+
     client = redis.from_url(TEST_REDIS_URL, decode_responses=True)
     for module in (
         core_redis_module,
