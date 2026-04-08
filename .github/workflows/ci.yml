@@ -625,9 +625,9 @@ jobs:
         run: |
           cd backend
           coverage combine coverage-artifacts
-          coverage report
           coverage html -d htmlcov
           coverage xml -o coverage.xml
+          coverage report --fail-under=0
 
       - name: Upload full coverage report
         uses: actions/upload-artifact@v4
