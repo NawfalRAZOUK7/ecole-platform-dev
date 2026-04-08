@@ -258,6 +258,7 @@ export function GradebookPage() {
             <span className="attendance-filter__label">{t('gradebook.class')}</span>
             <select
               className="filter-select"
+              aria-label={t('gradebook.class')}
               value={selectedClassId}
               onChange={(event) => setSelectedClassId(event.target.value)}
             >
@@ -273,6 +274,7 @@ export function GradebookPage() {
             <span className="attendance-filter__label">{t('gradebook.period')}</span>
             <select
               className="filter-select"
+              aria-label={t('gradebook.period')}
               value={selectedPeriodId}
               onChange={(event) => setSelectedPeriodId(event.target.value)}
             >
@@ -289,6 +291,7 @@ export function GradebookPage() {
             <span className="attendance-filter__label">{t('gradebook.export')}</span>
             <select
               className="filter-select"
+              aria-label={t('gradebook.export')}
               value={exportFormat}
               onChange={(event) => setExportFormat(event.target.value as 'csv' | 'pdf')}
             >
@@ -301,6 +304,7 @@ export function GradebookPage() {
             <button
               type="button"
               className="btn btn-secondary"
+              aria-label={t('gradebook.export')}
               disabled={isExporting || !selectedClassId}
               onClick={() => void handleExport()}
             >
@@ -336,7 +340,7 @@ export function GradebookPage() {
           <FormProvider {...methods}>
             <form onSubmit={methods.handleSubmit(handleSubmit)} className="gradebook-page__form">
               <div className="gradebook-table-shell">
-                <table className="gradebook-table">
+                <table className="gradebook-table" aria-label={t('gradebook.title')}>
                   <thead>
                     <tr>
                       <th>{t('gradebook.student')}</th>
@@ -413,6 +417,7 @@ export function GradebookPage() {
                 <button
                   type="submit"
                   className="btn btn-primary"
+                  aria-label={t('gradebook.saveAll')}
                   disabled={updateGradesMutation.isPending || !selectedClassId}
                 >
                   {updateGradesMutation.isPending ? t('app.loading') : t('gradebook.saveAll')}

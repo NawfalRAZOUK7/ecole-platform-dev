@@ -1,76 +1,96 @@
 import userEvent from '@testing-library/user-event';
 import { screen, waitFor } from '@testing-library/react';
 import { delay, http } from 'msw';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GradebookPage } from '@/features/gradebook/GradebookPage';
+import { gradebookService } from '@/features/gradebook/gradebook.service';
 import { renderWithProviders } from '../../utils/render';
 import { apiErrorResponse, apiResponse, server } from '../../utils/mocks';
 
-const gradebookGrid = {
+const backendGradebook = {
   class_id: 'class-1',
   class_name: 'Class 6A',
-  columns: [
+  categories: [
     {
-      assessment_id: 'assessment-quiz',
-      title: 'Quiz 1',
+      id: 'cat-quiz',
+      name: 'Quiz',
       weight: 0.4,
-      max_score: 20 as const,
-      date: '2026-04-01',
-      type: 'quiz' as const,
     },
     {
-      assessment_id: 'assessment-exam',
-      title: 'Exam 1',
+      id: 'cat-exam',
+      name: 'Exam',
       weight: 0.6,
-      max_score: 20 as const,
-      date: '2026-04-04',
-      type: 'exam' as const,
     },
   ],
-  entries: [
+  assignments: [
+    {
+      assignment_id: 'assessment-quiz',
+      title: 'Quiz 1',
+      category_id: 'cat-quiz',
+      total_points: 20,
+      due_at: '2026-04-01',
+    },
+    {
+      assignment_id: 'assessment-exam',
+      title: 'Exam 1',
+      category_id: 'cat-exam',
+      total_points: 20,
+      due_at: '2026-04-04',
+    },
+  ],
+  rows: [
     {
       student_id: 'student-1',
       student_name: 'Amine Student',
-      grades: {
-        'assessment-quiz': 16,
-        'assessment-exam': 18,
-      },
+      assignments: [
+        {
+          assignment_id: 'assessment-quiz',
+          score: 16,
+        },
+        {
+          assignment_id: 'assessment-exam',
+          score: 18,
+        },
+      ],
       weighted_average: 17.2,
     },
     {
       student_id: 'student-2',
       student_name: 'Salma Student',
-      grades: {
-        'assessment-quiz': 14,
-        'assessment-exam': 15,
-      },
+      assignments: [
+        {
+          assignment_id: 'assessment-quiz',
+          score: 14,
+        },
+        {
+          assignment_id: 'assessment-exam',
+          score: 15,
+        },
+      ],
       weighted_average: 14.6,
     },
   ],
 };
 
-const weightedSummary = {
-  class_id: 'class-1',
-  class_average: 15.9,
-  pass_rate: 100,
-  highest_average: 17.2,
-  lowest_average: 14.6,
-};
-
 describe('GradebookPage', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('loads the grid, validates grade entry, and saves valid grades', async () => {
     const user = userEvent.setup();
-    const updateGrades = vi.fn();
+    const updateGrades = vi.spyOn(gradebookService, 'updateGrades').mockResolvedValue({
+      data: {
+        updated: 4,
+      },
+      meta: {
+        timestamp: '2026-04-08T09:00:00.000Z',
+        version: 'test',
+      },
+    });
 
     server.use(
-      http.get('/api/v1/gradebook/class/:id', () => apiResponse(gradebookGrid)),
-      http.get('/api/v1/gradebook/class/:id/weighted-summary', () =>
-        apiResponse(weightedSummary)
-      ),
-      http.put('/api/v1/gradebook/class/:id/grades', async ({ request }) => {
-        updateGrades(await request.json());
-        return apiResponse({});
-      })
+      http.get('/api/v1/gradebook/:classId/:periodId', () => apiResponse(backendGradebook)),
     );
 
     renderWithProviders(<GradebookPage />, {
@@ -105,14 +125,16 @@ describe('GradebookPage', () => {
             value: 19.5,
           }),
         ]),
-      })
+      }),
     );
     expect(await screen.findByText('Grades saved')).toBeInTheDocument();
   });
 
   it('shows an error banner when the gradebook query fails', async () => {
     server.use(
-      http.get('/api/v1/gradebook/class/:id', () => apiErrorResponse('Unable to load gradebook'))
+      http.get('/api/v1/gradebook/:classId/:periodId', () =>
+        apiErrorResponse('Unable to load gradebook'),
+      ),
     );
 
     renderWithProviders(<GradebookPage />, {
@@ -124,14 +146,10 @@ describe('GradebookPage', () => {
 
   it('shows loading skeletons while the gradebook is loading', async () => {
     server.use(
-      http.get('/api/v1/gradebook/class/:id', async () => {
+      http.get('/api/v1/gradebook/:classId/:periodId', async () => {
         await delay(200);
-        return apiResponse(gradebookGrid);
+        return apiResponse(backendGradebook);
       }),
-      http.get('/api/v1/gradebook/class/:id/weighted-summary', async () => {
-        await delay(200);
-        return apiResponse(weightedSummary);
-      })
     );
 
     const { container } = renderWithProviders(<GradebookPage />, {

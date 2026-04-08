@@ -1,7 +1,15 @@
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
-import type { GradebookGrid } from '@/features/gradebook/gradebook.types';
-import { createAttendanceRecord, createBudget, createClass, createGrade, createInvoice, createStudent, createUser, type AttendanceClassResponse } from './factories';
+import {
+  createAttendanceRecord,
+  createBudget,
+  createClass,
+  createGrade,
+  createInvoice,
+  createStudent,
+  createUser,
+  type AttendanceClassResponse,
+} from './factories';
 
 export function apiResponse<T>(data: T) {
   return HttpResponse.json({
@@ -36,7 +44,7 @@ export function apiErrorResponse(message: string, status = 500) {
         timestamp: new Date().toISOString(),
       },
     },
-    { status }
+    { status },
   );
 }
 
@@ -82,8 +90,19 @@ export const handlers = [
         late_count: 0,
       },
       records: [
-        createAttendanceRecord({ class_id: classId, student_id: studentA.id, student_name: studentA.full_name, status: 'present' }),
-        createAttendanceRecord({ class_id: classId, student_id: studentB.id, student_name: studentB.full_name, status: 'absent', justified: true }),
+        createAttendanceRecord({
+          class_id: classId,
+          student_id: studentA.id,
+          student_name: studentA.full_name,
+          status: 'present',
+        }),
+        createAttendanceRecord({
+          class_id: classId,
+          student_id: studentB.id,
+          student_name: studentB.full_name,
+          status: 'absent',
+          justified: true,
+        }),
       ],
     };
 
@@ -94,48 +113,95 @@ export const handlers = [
     return apiResponse({});
   }),
 
-  http.get('/api/v1/gradebook/class/:id', ({ params }) => {
-    const classItem = createClass({ id: String(params.id) });
+  http.get('/api/v1/gradebook/:classId/:periodId', ({ params }) => {
+    const classItem = createClass({ id: String(params.classId) });
     const studentA = createStudent({ full_name: 'Amine Student' });
     const studentB = createStudent({ full_name: 'Salma Student' });
     const quiz = createGrade({ assessment_id: 'assessment-quiz', title: 'Quiz 1', value: 16 });
-    const exam = createGrade({ assessment_id: 'assessment-exam', title: 'Exam 1', type: 'exam', weight: 2, value: 18 });
-    const payload: GradebookGrid = {
+    const exam = createGrade({
+      assessment_id: 'assessment-exam',
+      title: 'Exam 1',
+      type: 'exam',
+      weight: 2,
+      value: 18,
+    });
+    const payload = {
       class_id: classItem.id,
       class_name: classItem.name,
-      columns: [
-        { assessment_id: quiz.assessment_id, title: quiz.title, weight: quiz.weight, max_score: 20, date: quiz.date, type: quiz.type },
-        { assessment_id: exam.assessment_id, title: exam.title, weight: exam.weight, max_score: 20, date: exam.date, type: exam.type },
+      categories: [
+        { id: 'category-quiz', name: 'Quiz', weight: quiz.weight },
+        { id: 'category-exam', name: 'Exam', weight: exam.weight },
       ],
-      entries: [
-        { student_id: studentA.id, student_name: studentA.full_name, grades: { [quiz.assessment_id]: quiz.value, [exam.assessment_id]: exam.value }, weighted_average: 17.3 },
-        { student_id: studentB.id, student_name: studentB.full_name, grades: { [quiz.assessment_id]: 14, [exam.assessment_id]: 15 }, weighted_average: 14.7 },
+      assignments: [
+        {
+          assignment_id: quiz.assessment_id,
+          title: quiz.title,
+          category_id: 'category-quiz',
+          total_points: 20,
+          due_at: quiz.date,
+        },
+        {
+          assignment_id: exam.assessment_id,
+          title: exam.title,
+          category_id: 'category-exam',
+          total_points: 20,
+          due_at: exam.date,
+        },
+      ],
+      rows: [
+        {
+          student_id: studentA.id,
+          student_name: studentA.full_name,
+          assignments: [
+            { assignment_id: quiz.assessment_id, score: quiz.value },
+            { assignment_id: exam.assessment_id, score: exam.value },
+          ],
+          weighted_average: 17.3,
+        },
+        {
+          student_id: studentB.id,
+          student_name: studentB.full_name,
+          assignments: [
+            { assignment_id: quiz.assessment_id, score: 14 },
+            { assignment_id: exam.assessment_id, score: 15 },
+          ],
+          weighted_average: 14.7,
+        },
       ],
     };
 
     return apiResponse(payload);
   }),
 
-  http.get('/api/v1/gradebook/class/:id/weighted-summary', ({ params }) => {
+  http.get('/api/v1/gradebook/transcript/:studentId', ({ params }) => {
     return apiResponse({
-      class_id: String(params.id),
-      class_average: 16,
-      pass_rate: 100,
-      highest_average: 18,
-      lowest_average: 14,
+      student_id: String(params.studentId),
+      student_name: 'Amine Student',
+      periods: [
+        {
+          class_id: 'class-1',
+          class_name: 'Class 6A',
+          period_id: 'period-1',
+          period_label: 'Term 1',
+          weighted_average: 16,
+          class_rank: 1,
+        },
+      ],
     });
   }),
 
-  http.put('/api/v1/gradebook/class/:id/grades', () => {
-    return apiResponse({});
-  }),
-
   http.get('/api/v1/invoices', () => {
-    return apiListResponse([createInvoice(), createInvoice({ id: 'invoice-2', status: 'paid', invoice_number: 'INV-2026-002' })]);
+    return apiListResponse([
+      createInvoice(),
+      createInvoice({ id: 'invoice-2', status: 'paid', invoice_number: 'INV-2026-002' }),
+    ]);
   }),
 
   http.get('/api/v1/budgets', () => {
-    return apiListResponse([createBudget(), createBudget({ id: 'budget-2', name: 'Facilities', status: 'frozen' })]);
+    return apiListResponse([
+      createBudget(),
+      createBudget({ id: 'budget-2', name: 'Facilities', status: 'frozen' }),
+    ]);
   }),
 ];
 

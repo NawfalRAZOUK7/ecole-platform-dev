@@ -56,7 +56,7 @@ test.describe('Invoice payment flow', () => {
       });
     });
 
-    await page.route(/\/api\/v1\/payments$/, async (route) => {
+    await page.route(/\/api\/v1\/payments\/initiate$/, async (route) => {
       const payload = route.request().postDataJSON() as {
         invoice_id: string;
         amount: number;
@@ -87,7 +87,7 @@ test.describe('Invoice payment flow', () => {
       payments = payments.map((payment) =>
         payment.id === paymentId
           ? { ...payment, proof_url: '/uploads/payment-proof.pdf' }
-          : payment
+          : payment,
       );
 
       await route.fulfill({
@@ -100,33 +100,27 @@ test.describe('Invoice payment flow', () => {
     await login(page, 'parent');
     await page.goto(`/invoices/${invoiceId}`);
     await expectPageTitle(page, /INV-2026-001/i);
-    await expect(page.locator('.invoice-detail-page__grid')).toContainText(
-      /Frais trimestriels/i
-    );
+    await expect(page.locator('.invoice-detail-page__grid')).toContainText(/Frais trimestriels/i);
 
     await page.locator('.invoice-detail-page__payment-form input[type="number"]').fill('3000');
     await page.locator('.invoice-detail-page__payment-form .btn.btn-primary').click();
 
     await expect(page.locator('.attendance-banner--success')).toContainText(
-      /Paiement cree|Payment created/i
+      /Paiement cree|Payment created/i,
     );
 
     await page.locator('.invoice-detail-page__proof select').selectOption('payment-2');
-    await page
-      .locator('.invoice-detail-page__proof input[type="file"]')
-      .setInputFiles({
-        name: 'payment-proof.pdf',
-        mimeType: 'application/pdf',
-        buffer: Buffer.from('mock proof bytes'),
-      });
+    await page.locator('.invoice-detail-page__proof input[type="file"]').setInputFiles({
+      name: 'payment-proof.pdf',
+      mimeType: 'application/pdf',
+      buffer: Buffer.from('mock proof bytes'),
+    });
 
-    await expect(page.locator('.invoice-detail-page__proof')).toContainText(
-      /payment-proof\.pdf/i
-    );
+    await expect(page.locator('.invoice-detail-page__proof')).toContainText(/payment-proof\.pdf/i);
     await page.locator('.invoice-detail-page__proof .btn.btn-secondary').click();
 
     await expect(page.locator('.attendance-banner--success')).toContainText(
-      /Justificatif televerse|Proof uploaded/i
+      /Justificatif televerse|Proof uploaded/i,
     );
   });
 });

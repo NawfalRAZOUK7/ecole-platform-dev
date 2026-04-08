@@ -99,29 +99,10 @@ test.describe('Budget flow', () => {
       });
     });
 
-    await page.route(/\/api\/v1\/budgets\/requests(?:\?.*)?$/, async (route) => {
-      const url = new URL(route.request().url());
-      const budgetId = url.searchParams.get('budget_id');
-      const statusFilter = url.searchParams.get('status');
-
-      const filteredRequests = requests.filter((request) => {
-        return (
-          (!budgetId || request.budget_id === budgetId) &&
-          (!statusFilter || request.status === statusFilter)
-        );
-      });
-
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify(apiResponse(filteredRequests)),
-      });
-    });
-
     await page.route(/\/api\/v1\/budgets\/requests\/request-\d+\/approve$/, async (route) => {
       const requestId = route.request().url().split('/').at(-2) ?? '';
       requests = requests.map((request) =>
-        request.id === requestId ? { ...request, status: 'approved' } : request
+        request.id === requestId ? { ...request, status: 'approved' } : request,
       );
 
       const approvedRequest = requests.find((request) => request.id === requestId);
@@ -143,40 +124,64 @@ test.describe('Budget flow', () => {
     });
 
     await page.route(/\/api\/v1\/budgets\/budget-\d+\/allocations$/, async (route) => {
+      const budgetId = route.request().url().split('/').at(-2) ?? '';
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify(
           apiResponse([
             {
-              id: 'allocation-1',
+              id: `allocation-${budgetId}`,
               label: 'Numerique',
               category: 'Innovation',
               amount: 5000,
               remaining: 3200,
             },
-          ])
+          ]),
         ),
       });
     });
 
-    await page.route(/\/api\/v1\/budgets\/budget-\d+\/transactions$/, async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify(
-          apiResponse([
-            {
-              id: 'transaction-1',
-              date: '2026-04-01',
-              amount: 600,
-              type: 'purchase',
-              description: 'Commande fournitures',
-            },
-          ])
-        ),
-      });
-    });
+    await page.route(
+      /\/api\/v1\/budgets\/allocations\/allocation-budget-\d+\/requests(?:\?.*)?$/,
+      async (route) => {
+        const allocationId = route.request().url().split('/').at(-2) ?? '';
+        const budgetId = allocationId.replace('allocation-', '');
+        const statusFilter = new URL(route.request().url()).searchParams.get('status');
+        const filteredRequests = requests.filter((request) => {
+          return (
+            request.budget_id === budgetId && (!statusFilter || request.status === statusFilter)
+          );
+        });
+
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(apiListResponse(filteredRequests)),
+        });
+      },
+    );
+
+    await page.route(
+      /\/api\/v1\/budgets\/allocations\/allocation-budget-\d+\/transactions$/,
+      async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(
+            apiListResponse([
+              {
+                id: 'transaction-1',
+                date: '2026-04-01',
+                amount: 600,
+                type: 'purchase',
+                description: 'Commande fournitures',
+              },
+            ]),
+          ),
+        });
+      },
+    );
 
     await login(page, 'admin');
     await page.goto('/budgets');
@@ -201,7 +206,9 @@ test.describe('Budget flow', () => {
     await expectPageTitle(page, /Budget innovation STEM/i);
 
     await page.getByRole('tab', { name: /Demandes|Requests/i }).click();
-    await page.locator('.tabs__panel button.btn.btn-primary').click();
+    const approveButton = page.locator('.tabs__panel button.btn.btn-primary').first();
+    await expect(approveButton).toBeVisible();
+    await approveButton.click();
     await expect(page.locator('.confirm-dialog')).toBeVisible();
     await page.locator('.confirm-dialog .btn.btn-primary').click();
     await expect(page.locator('.confirm-dialog')).toBeHidden();

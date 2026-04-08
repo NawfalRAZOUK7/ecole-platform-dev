@@ -14,11 +14,6 @@ test.describe('Gradebook flow', () => {
       },
     ];
 
-    const columns = [
-      { assessment_id: 'assessment-1', title: 'Controle 1', weight: 0.4 },
-      { assessment_id: 'assessment-2', title: 'Projet sciences', weight: 0.6 },
-    ];
-
     let studentSummary = {
       student_id: 'student-1',
       student_name: 'Yassine Alaoui',
@@ -60,7 +55,7 @@ test.describe('Gradebook flow', () => {
       });
     });
 
-    await page.route(/\/api\/v1\/gradebook\/class\/class-1$/, async (route) => {
+    await page.route(/\/api\/v1\/gradebook\/class-1\/period-1$/, async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -68,72 +63,78 @@ test.describe('Gradebook flow', () => {
           apiResponse({
             class_id: 'class-1',
             class_name: 'Sixieme A',
-            columns,
-            entries: [
+            categories: [
+              { id: 'category-quiz', name: 'Quiz', weight: 0.4 },
+              { id: 'category-project', name: 'Project', weight: 0.6 },
+            ],
+            assignments: [
+              {
+                assignment_id: 'assessment-1',
+                title: 'Controle 1',
+                category_id: 'category-quiz',
+                total_points: 20,
+                due_at: '2026-02-10',
+              },
+              {
+                assignment_id: 'assessment-2',
+                title: 'Projet sciences',
+                category_id: 'category-project',
+                total_points: 20,
+                due_at: '2026-03-18',
+              },
+            ],
+            rows: [
               {
                 student_id: 'student-1',
                 student_name: 'Yassine Alaoui',
-                grades: {
-                  'assessment-1': 12,
-                  'assessment-2': studentSummary.grades[1]?.value,
-                },
+                assignments: [
+                  { assignment_id: 'assessment-1', score: 12 },
+                  { assignment_id: 'assessment-2', score: studentSummary.grades[1]?.value },
+                ],
                 weighted_average: studentSummary.overall_average,
               },
             ],
-          })
+          }),
         ),
       });
     });
 
-    await page.route(/\/api\/v1\/gradebook\/class\/class-1\/weighted-summary$/, async (route) => {
+    await page.route(/\/api\/v1\/gradebook\/transcript\/student-1(?:\?.*)?$/, async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify(
           apiResponse({
-            class_id: 'class-1',
-            class_average: studentSummary.overall_average,
-            pass_rate: 100,
-            highest_average: studentSummary.overall_average,
-            lowest_average: studentSummary.overall_average,
-          })
+            student_id: studentSummary.student_id,
+            student_name: studentSummary.student_name,
+            periods: [
+              {
+                class_id: 'class-1',
+                class_name: studentSummary.class_name,
+                period_id: 'period-1',
+                period_label: 'Trimestre 1',
+                weighted_average: studentSummary.overall_average,
+                class_rank: 1,
+              },
+              {
+                class_id: 'class-1',
+                class_name: studentSummary.class_name,
+                period_id: 'assessment-1',
+                period_label: 'Controle 1',
+                weighted_average: studentSummary.grades[0]?.value ?? 0,
+                class_rank: 1,
+              },
+              {
+                class_id: 'class-1',
+                class_name: studentSummary.class_name,
+                period_id: 'assessment-2',
+                period_label: 'Projet sciences',
+                weighted_average: studentSummary.grades[1]?.value ?? 0,
+                class_rank: 1,
+              },
+            ],
+          }),
         ),
-      });
-    });
-
-    await page.route(/\/api\/v1\/gradebook\/class\/class-1\/grades$/, async (route) => {
-      const payload = route.request().postDataJSON() as {
-        grades: Array<{ student_id: string; assessment_id: string; value: number }>;
-      };
-      const projectGrade = payload.grades.find(
-        (item) =>
-          item.student_id === 'student-1' && item.assessment_id === 'assessment-2'
-      );
-
-      if (projectGrade) {
-        studentSummary = {
-          ...studentSummary,
-          overall_average: 15.6,
-          grades: studentSummary.grades.map((grade) =>
-            grade.assessment_id === 'assessment-2'
-              ? { ...grade, value: projectGrade.value }
-              : grade
-          ),
-        };
-      }
-
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify(apiResponse(null)),
-      });
-    });
-
-    await page.route(/\/api\/v1\/gradebook\/student\/student-1$/, async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify(apiResponse(studentSummary)),
       });
     });
 
@@ -142,13 +143,22 @@ test.describe('Gradebook flow', () => {
     await expectPageTitle(page, /Carnet de notes|Gradebook/i);
 
     const studentRow = page.locator('.gradebook-table tbody tr').first();
+    await expect(studentRow).toContainText(/Yassine Alaoui/i);
     await studentRow.locator('input').nth(1).fill('18');
     await page.locator('.gradebook-page__footer .btn.btn-primary').click();
 
     await expect(page.locator('.attendance-banner--success')).toContainText(
-      /Notes enregistrees|Grades saved/i
+      /Notes enregistrees|Grades saved/i,
     );
     await expect(studentRow.locator('.gradebook-average')).toContainText('15.60');
+
+    studentSummary = {
+      ...studentSummary,
+      overall_average: 15.6,
+      grades: studentSummary.grades.map((grade) =>
+        grade.assessment_id === 'assessment-2' ? { ...grade, value: 18 } : grade,
+      ),
+    };
 
     await logout(page);
 

@@ -44,6 +44,9 @@ interface BackendGradebookResponse {
 
 interface BackendTranscriptResponse {
   student_id: string;
+  student_name?: string;
+  student_full_name?: string;
+  full_name?: string;
   periods: Array<{
     class_id: string;
     class_name: string;
@@ -124,7 +127,11 @@ export const gradebookService = {
     return {
       data: {
         student_id: response.data.student_id,
-        student_name: response.data.student_id,
+        student_name:
+          response.data.student_name ??
+          response.data.student_full_name ??
+          response.data.full_name ??
+          response.data.student_id,
         class_id: periods[0]?.class_id ?? '',
         class_name: periods[0]?.class_name ?? '',
         overall_average:

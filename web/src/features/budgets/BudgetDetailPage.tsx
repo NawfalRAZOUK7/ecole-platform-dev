@@ -1,13 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
-import {
-  Cell,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-} from 'recharts';
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import type { ColumnDef } from '@/shared/ui/DataTable';
 import { useAuth } from '@/services/auth/AuthContext';
 import { ConfirmDialog, DataTable, ErrorBanner, Tabs } from '@/shared/ui';
@@ -32,7 +26,13 @@ const madFormatter = new Intl.NumberFormat('fr-MA', {
   currency: 'MAD',
 });
 
-const PIE_COLORS = ['var(--color-primary)', 'var(--color-success)', 'var(--color-warning)', 'var(--color-error)', 'var(--color-secondary)'];
+const PIE_COLORS = [
+  'var(--color-primary)',
+  'var(--color-success)',
+  'var(--color-warning)',
+  'var(--color-error)',
+  'var(--color-secondary)',
+];
 
 export function BudgetDetailPage() {
   const { t, i18n } = useTranslation();
@@ -65,7 +65,7 @@ export function BudgetDetailPage() {
         render: (value) => madFormatter.format(Number(value)),
       },
     ],
-    []
+    [],
   );
 
   const transactionColumns: ColumnDef<BudgetTransactionRow>[] = useMemo(
@@ -83,12 +83,16 @@ export function BudgetDetailPage() {
       { key: 'type', header: 'budgets.type' },
       { key: 'description', header: 'budgets.description' },
     ],
-    [i18n.language]
+    [i18n.language],
   );
 
   const requestColumns: ColumnDef<BudgetRequestRow>[] = useMemo(
     () => [
-      { key: 'requester_name', header: 'budgets.requester', render: (value) => String(value ?? '—') },
+      {
+        key: 'requester_name',
+        header: 'budgets.requester',
+        render: (value) => String(value ?? '—'),
+      },
       {
         key: 'amount',
         header: 'budgets.totalAmount',
@@ -106,6 +110,7 @@ export function BudgetDetailPage() {
               <button
                 type="button"
                 className="btn btn-primary btn-sm"
+                aria-label={t('budgets.approve')}
                 onClick={() => setPendingReview({ requestId: row.id, action: 'approve' })}
               >
                 {t('budgets.approve')}
@@ -113,6 +118,7 @@ export function BudgetDetailPage() {
               <button
                 type="button"
                 className="btn btn-danger btn-sm"
+                aria-label={t('budgets.reject')}
                 onClick={() => setPendingReview({ requestId: row.id, action: 'reject' })}
               >
                 {t('budgets.reject')}
@@ -121,7 +127,7 @@ export function BudgetDetailPage() {
           ) : null,
       },
     ],
-    [t, user?.role]
+    [t, user?.role],
   );
 
   return (
@@ -130,7 +136,9 @@ export function BudgetDetailPage() {
         <div>
           <h1 className="page-title">{budgetDetailQuery.data?.name ?? t('budgets.title')}</h1>
           <p className="page-subtitle">
-            {madFormatter.format(budgetDetailQuery.data?.total_amount ?? 0)} · {formatDate(budgetDetailQuery.data?.start_date ?? '', i18n.language)} → {formatDate(budgetDetailQuery.data?.end_date ?? '', i18n.language)}
+            {madFormatter.format(budgetDetailQuery.data?.total_amount ?? 0)} ·{' '}
+            {formatDate(budgetDetailQuery.data?.start_date ?? '', i18n.language)} →{' '}
+            {formatDate(budgetDetailQuery.data?.end_date ?? '', i18n.language)}
           </p>
         </div>
       </div>
@@ -143,7 +151,7 @@ export function BudgetDetailPage() {
             requestsQuery.error ??
             approveRequestMutation.error ??
             rejectRequestMutation.error,
-          t('app.error')
+          t('app.error'),
         )}
       />
 
@@ -224,9 +232,7 @@ export function BudgetDetailPage() {
             ? 'budgets.approveRequestConfirm'
             : 'budgets.rejectRequestConfirm'
         }
-        confirmLabel={
-          pendingReview?.action === 'approve' ? 'budgets.approve' : 'budgets.reject'
-        }
+        confirmLabel={pendingReview?.action === 'approve' ? 'budgets.approve' : 'budgets.reject'}
         variant={pendingReview?.action === 'approve' ? 'info' : 'warning'}
         loading={approveRequestMutation.isPending || rejectRequestMutation.isPending}
         onCancel={() => setPendingReview(null)}

@@ -51,7 +51,8 @@ export function InvoiceDetailPage() {
   const paidAmount = payments
     .filter((payment) => payment.status === 'paid')
     .reduce((sum, payment) => sum + payment.amount, 0);
-  const balanceDue = typeof invoice?.balance_due === 'number' ? invoice.balance_due : total - paidAmount;
+  const balanceDue =
+    typeof invoice?.balance_due === 'number' ? invoice.balance_due : total - paidAmount;
 
   const paymentColumns: ColumnDef<PaymentTableRow>[] = useMemo(
     () => [
@@ -79,7 +80,7 @@ export function InvoiceDetailPage() {
         ),
       },
     ],
-    [i18n.language, t]
+    [i18n.language, t],
   );
 
   async function handleCreatePayment() {
@@ -116,14 +117,19 @@ export function InvoiceDetailPage() {
     <div className="page invoice-detail-page">
       <div className="page-header page-header--split">
         <div>
-          <h1 className="page-title">{invoice?.invoice_number ?? invoice?.label ?? t('invoices.detailTitle')}</h1>
+          <h1 className="page-title">
+            {invoice?.invoice_number ?? invoice?.label ?? t('invoices.detailTitle')}
+          </h1>
           <p className="page-subtitle">
-            {formatDate(invoice?.issued_date ?? '', i18n.language)} · {formatDate(invoice?.due_date ?? '', i18n.language)}
+            {formatDate(invoice?.issued_date ?? '', i18n.language)} ·{' '}
+            {formatDate(invoice?.due_date ?? '', i18n.language)}
           </p>
         </div>
         <div className="invoice-detail-page__totals">
           <strong>{madFormatter.format(total)}</strong>
-          <span>{t('invoices.balanceDue')}: {madFormatter.format(balanceDue)}</span>
+          <span>
+            {t('invoices.balanceDue')}: {madFormatter.format(balanceDue)}
+          </span>
         </div>
       </div>
 
@@ -133,11 +139,13 @@ export function InvoiceDetailPage() {
             paymentsQuery.error ??
             createPaymentMutation.error ??
             uploadProofMutation.error,
-          t('app.error')
+          t('app.error'),
         )}
       />
 
-      {successMessage && <div className="attendance-banner attendance-banner--success">{successMessage}</div>}
+      {successMessage && (
+        <div className="attendance-banner attendance-banner--success">{successMessage}</div>
+      )}
 
       <div className="invoice-detail-page__grid">
         <section className="card">
@@ -181,6 +189,7 @@ export function InvoiceDetailPage() {
             <input
               type="number"
               className="filter-input"
+              aria-label={t('invoices.amount')}
               min="0"
               step="0.01"
               value={amount}
@@ -189,6 +198,7 @@ export function InvoiceDetailPage() {
             />
             <select
               className="filter-select"
+              aria-label={t('invoices.method')}
               value={method}
               onChange={(event) => setMethod(event.target.value)}
             >
@@ -199,6 +209,7 @@ export function InvoiceDetailPage() {
             <button
               type="button"
               className="btn btn-primary"
+              aria-label={t('invoices.pay')}
               disabled={createPaymentMutation.isPending}
               onClick={() => void handleCreatePayment()}
             >
@@ -212,13 +223,15 @@ export function InvoiceDetailPage() {
           <div className="filters-bar">
             <select
               className="filter-select"
+              aria-label={t('invoices.selectPayment')}
               value={selectedPaymentId}
               onChange={(event) => setSelectedPaymentId(event.target.value)}
             >
               <option value="">{t('invoices.selectPayment')}</option>
               {payments.map((payment) => (
                 <option key={payment.id} value={payment.id}>
-                  {formatDate(payment.created_at ?? payment.finalized_at ?? '', i18n.language)} · {madFormatter.format(payment.amount)}
+                  {formatDate(payment.created_at ?? payment.finalized_at ?? '', i18n.language)} ·{' '}
+                  {madFormatter.format(payment.amount)}
                 </option>
               ))}
             </select>
@@ -232,6 +245,7 @@ export function InvoiceDetailPage() {
           <button
             type="button"
             className="btn btn-secondary"
+            aria-label={t('invoices.uploadProof')}
             disabled={uploadProofMutation.isPending || !selectedPaymentId || !proofFile}
             onClick={() => void handleUploadProof()}
           >
