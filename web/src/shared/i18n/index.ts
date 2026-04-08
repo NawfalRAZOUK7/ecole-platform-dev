@@ -5,6 +5,7 @@
  * - French default, Arabic with RTL layout
  * - Africa/Casablanca timezone for date formatting
  * - Language switcher updates Accept-Language header on API calls
+ * - ar/en are lazy-loaded on demand; only fr is in the initial bundle
  */
 
 import i18next from 'i18next';
@@ -12,8 +13,6 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
 import fr from './locales/fr.json';
-import ar from './locales/ar.json';
-import en from './locales/en.json';
 
 export const RTL_LANGUAGES = ['ar'];
 export const SUPPORTED_LANGUAGES = ['fr', 'ar', 'en'] as const;
@@ -25,14 +24,43 @@ export const LANGUAGE_LABELS: Record<SupportedLanguage, string> = {
   en: 'English',
 };
 
+/** Languages whose JSON bundles are already in memory */
+const loadedLanguages = new Set<string>(['fr']);
+
+/**
+ * Dynamically load a locale bundle.
+ * Safe to call multiple times — subsequent calls for a loaded language are no-ops.
+ * Falls back to `fr` silently on import failure.
+ */
+export async function loadLanguage(lang: string): Promise<void> {
+  if (loadedLanguages.has(lang)) return;
+
+  try {
+    let data: Record<string, unknown>;
+
+    if (lang === 'ar') {
+      const m = await import('./locales/ar.json');
+      data = m.default as Record<string, unknown>;
+    } else if (lang === 'en') {
+      const m = await import('./locales/en.json');
+      data = m.default as Record<string, unknown>;
+    } else {
+      return;
+    }
+
+    i18next.addResourceBundle(lang, 'translation', data, true, true);
+    loadedLanguages.add(lang);
+  } catch {
+    // Import failed — i18next will fall back to 'fr' via fallbackLng
+  }
+}
+
 i18next
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources: {
       fr: { translation: fr },
-      ar: { translation: ar },
-      en: { translation: en },
     },
     fallbackLng: 'fr',
     supportedLngs: ['fr', 'ar', 'en'],
@@ -43,7 +71,19 @@ i18next
       order: ['localStorage', 'navigator'],
       caches: ['localStorage'],
     },
+    // Tell i18next that not all language bundles are pre-loaded
+    partialBundledLanguages: true,
   });
+
+// If the detected/stored language is not fr, load it now so the first
+// render shows the correct translations with minimal flicker.
+const detectedLang = i18next.language?.split('-')[0] ?? 'fr';
+if (detectedLang !== 'fr' && SUPPORTED_LANGUAGES.includes(detectedLang as SupportedLanguage)) {
+  void loadLanguage(detectedLang).then(() => {
+    void i18next.changeLanguage(detectedLang);
+    applyDirection(detectedLang);
+  });
+}
 
 /** Apply RTL direction to the document based on language */
 export function applyDirection(lang: string) {
@@ -56,7 +96,7 @@ export function applyDirection(lang: string) {
 export function formatDate(
   dateStr: string | null | undefined,
   lang?: string,
-  options?: Intl.DateTimeFormatOptions
+  options?: Intl.DateTimeFormatOptions,
 ): string {
   if (!dateStr) return '-';
   const locale = lang || i18next.language || 'fr';

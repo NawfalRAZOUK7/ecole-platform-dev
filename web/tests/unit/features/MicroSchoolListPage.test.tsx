@@ -42,7 +42,7 @@ function renderMicroSchoolListPage() {
     {
       route: '/micro-schools',
       user: { role: 'ADM' },
-    }
+    },
   );
 }
 
@@ -50,7 +50,7 @@ describe('MicroSchoolListPage', () => {
   it('loads schools, filters them by search, and navigates to detail', async () => {
     const user = userEvent.setup();
 
-    server.use(http.get('/api/v1/micro-schools', () => apiResponse(microSchools)));
+    server.use(http.get('/api/v1/micro/schools', () => apiResponse(microSchools)));
 
     renderMicroSchoolListPage();
 
@@ -70,7 +70,7 @@ describe('MicroSchoolListPage', () => {
 
   it('shows an error banner when schools fail to load', async () => {
     server.use(
-      http.get('/api/v1/micro-schools', () => apiErrorResponse('Unable to load micro-schools'))
+      http.get('/api/v1/micro/schools', () => apiErrorResponse('Unable to load micro-schools')),
     );
 
     renderMicroSchoolListPage();
@@ -80,10 +80,10 @@ describe('MicroSchoolListPage', () => {
 
   it('stays empty until the school list resolves', async () => {
     server.use(
-      http.get('/api/v1/micro-schools', async () => {
+      http.get('/api/v1/micro/schools', async () => {
         await delay(200);
         return apiResponse(microSchools);
-      })
+      }),
     );
 
     renderMicroSchoolListPage();

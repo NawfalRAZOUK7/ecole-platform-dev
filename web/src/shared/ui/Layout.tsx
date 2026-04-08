@@ -51,10 +51,25 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/admin/settings', labelKey: 'nav.adminSettings', icon: '🏫', roles: ['ADM'] },
   { to: '/admin/fee-structures', labelKey: 'nav.adminFeeStructures', icon: '💰', roles: ['ADM'] },
   { to: '/admin/fee-assignments', labelKey: 'nav.adminFeeAssignments', icon: '📋', roles: ['ADM'] },
-  { to: '/admin/generate-invoices', labelKey: 'nav.adminGenerateInvoices', icon: '🧾', roles: ['ADM'] },
-  { to: '/billing/sibling-policy', labelKey: 'nav.billingSiblingPolicy', icon: '👨‍👩‍👧', roles: ['ADM'] },
+  {
+    to: '/admin/generate-invoices',
+    labelKey: 'nav.adminGenerateInvoices',
+    icon: '🧾',
+    roles: ['ADM'],
+  },
+  {
+    to: '/billing/sibling-policy',
+    labelKey: 'nav.billingSiblingPolicy',
+    icon: '👨‍👩‍👧',
+    roles: ['ADM'],
+  },
   { to: '/billing/late-fees', labelKey: 'nav.billingLateFees', icon: '⏰', roles: ['ADM'] },
-  { to: '/billing/payment-plans', labelKey: 'nav.billingPaymentPlans', icon: '📅', roles: ['ADM', 'DIR', 'PAR'] },
+  {
+    to: '/billing/payment-plans',
+    labelKey: 'nav.billingPaymentPlans',
+    icon: '📅',
+    roles: ['ADM', 'DIR', 'PAR'],
+  },
   { to: '/budgets', labelKey: 'nav.budgets', icon: '💼', roles: ['ADM', 'DIR'] },
   { to: '/financial-health', labelKey: 'nav.financialHealth', icon: '💹', roles: ['ADM', 'SYS'] },
   { to: '/micro-schools', labelKey: 'nav.microSchools', icon: '🏠', roles: ['ADM', 'DIR', 'PAR'] },
@@ -64,23 +79,80 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/teacher/submissions', labelKey: 'nav.teacherSubmissions', icon: '📄', roles: ['TCH'] },
   { to: '/teacher/attendance', labelKey: 'nav.teacherAttendance', icon: '✅', roles: ['TCH'] },
   { to: '/teacher/assessments', labelKey: 'nav.teacherAssessments', icon: '📊', roles: ['TCH'] },
-  { to: '/teacher/content-library', labelKey: 'nav.teacherContentLibrary', icon: '📚', roles: ['TCH'] },
+  {
+    to: '/teacher/content-library',
+    labelKey: 'nav.teacherContentLibrary',
+    icon: '📚',
+    roles: ['TCH'],
+  },
   { to: '/teacher/quizzes', labelKey: 'nav.teacherQuizzes', icon: '❓', roles: ['TCH'] },
   { to: '/rubrics', labelKey: 'nav.rubrics', icon: '📊', roles: ['TCH'] },
   { to: '/question-bank', labelKey: 'nav.questionBank', icon: '🗃️', roles: ['TCH', 'CONTENT_MGR'] },
-  { to: '/teacher/class-progress', labelKey: 'nav.teacherClassProgress', icon: '📊', roles: ['TCH'] },
+  {
+    to: '/teacher/class-progress',
+    labelKey: 'nav.teacherClassProgress',
+    icon: '📊',
+    roles: ['TCH'],
+  },
   { to: '/student/content', labelKey: 'nav.studentContent', icon: '📚', roles: ['STD'] },
   { to: '/student/quizzes', labelKey: 'nav.studentQuizzes', icon: '❓', roles: ['STD'] },
   { to: '/feed', labelKey: 'nav.feed', icon: '📰', roles: ['PAR'] },
-  { to: '/timetable', labelKey: 'nav.timetable', icon: '📅', roles: ['ADM', 'DIR', 'TCH', 'STD', 'PAR'] },
-  { to: '/calendar', labelKey: 'nav.calendar', icon: '🗓️', roles: ['ADM', 'DIR', 'TCH', 'STD', 'PAR'] },
+  {
+    to: '/timetable',
+    labelKey: 'nav.timetable',
+    icon: '📅',
+    roles: ['ADM', 'DIR', 'TCH', 'STD', 'PAR'],
+  },
+  {
+    to: '/timetable/constraints',
+    labelKey: 'nav.timetableConstraints',
+    icon: '⚙️',
+    roles: ['ADM', 'DIR'],
+  },
+  {
+    to: '/timetable/generate',
+    labelKey: 'nav.timetableGenerate',
+    icon: '✨',
+    roles: ['ADM', 'DIR'],
+  },
+  {
+    to: '/calendar',
+    labelKey: 'nav.calendar',
+    icon: '🗓️',
+    roles: ['ADM', 'DIR', 'TCH', 'STD', 'PAR'],
+  },
   { to: '/calendar/holidays', labelKey: 'nav.calendarHolidays', icon: '🏖️', roles: ['ADM', 'DIR'] },
   { to: '/messages', labelKey: 'nav.messages', icon: '💬', roles: ['PAR', 'TCH', 'ADM', 'DIR'] },
-  { to: '/announcements', labelKey: 'nav.announcements', icon: '📢', roles: ['PAR', 'TCH', 'ADM', 'DIR', 'STD'] },
-  { to: '/notifications', labelKey: 'nav.notifications', icon: '🔔', roles: ['PAR', 'TCH', 'ADM', 'DIR', 'STD'] },
-  { to: '/reports', labelKey: 'nav.reports', icon: '🧾', roles: ['PAR', 'TCH', 'ADM', 'DIR', 'STD'] },
-  { to: '/documents', labelKey: 'nav.documents', icon: '🗂️', roles: ['PAR', 'TCH', 'ADM', 'DIR', 'STD'] },
-  { to: '/settings/notifications', labelKey: 'nav.notificationSettings', icon: '⚡', roles: ['PAR', 'TCH', 'ADM', 'DIR', 'STD'] },
+  {
+    to: '/announcements',
+    labelKey: 'nav.announcements',
+    icon: '📢',
+    roles: ['PAR', 'TCH', 'ADM', 'DIR', 'STD'],
+  },
+  {
+    to: '/notifications',
+    labelKey: 'nav.notifications',
+    icon: '🔔',
+    roles: ['PAR', 'TCH', 'ADM', 'DIR', 'STD'],
+  },
+  {
+    to: '/reports',
+    labelKey: 'nav.reports',
+    icon: '🧾',
+    roles: ['PAR', 'TCH', 'ADM', 'DIR', 'STD'],
+  },
+  {
+    to: '/documents',
+    labelKey: 'nav.documents',
+    icon: '🗂️',
+    roles: ['PAR', 'TCH', 'ADM', 'DIR', 'STD'],
+  },
+  {
+    to: '/settings/notifications',
+    labelKey: 'nav.notificationSettings',
+    icon: '⚡',
+    roles: ['PAR', 'TCH', 'ADM', 'DIR', 'STD'],
+  },
   { to: '/content', labelKey: 'nav.content', icon: '📚', roles: ['STD', 'PAR', 'TCH', 'ADM'] },
   { to: '/submissions', labelKey: 'nav.submissions', icon: '📤', roles: ['STD'] },
   { to: '/results', labelKey: 'nav.results', icon: '📊', roles: ['STD', 'PAR'] },
@@ -91,10 +163,30 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/activities', labelKey: 'nav.activities', icon: '🎯', roles: ['STD', 'TCH', 'ADM'] },
   { to: '/skills', labelKey: 'nav.skills', icon: '🧠', roles: ['TCH', 'DIR', 'PAR', 'STD'] },
   { to: '/compliance', labelKey: 'nav.compliance', icon: '📐', roles: ['ADM', 'DIR'] },
-  { to: '/profile', labelKey: 'nav.profile', icon: '👤', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR', 'SUP'] },
-  { to: '/profile/sessions', labelKey: 'nav.sessions', icon: '🔒', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR', 'SUP'] },
-  { to: '/profile/2fa', labelKey: 'nav.twoFactor', icon: '🛡️', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR', 'SUP'] },
-  { to: '/profile/login-history', labelKey: 'nav.loginHistory', icon: '🕐', roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR', 'SUP'] },
+  {
+    to: '/profile',
+    labelKey: 'nav.profile',
+    icon: '👤',
+    roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR', 'SUP'],
+  },
+  {
+    to: '/profile/sessions',
+    labelKey: 'nav.sessions',
+    icon: '🔒',
+    roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR', 'SUP'],
+  },
+  {
+    to: '/profile/2fa',
+    labelKey: 'nav.twoFactor',
+    icon: '🛡️',
+    roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR', 'SUP'],
+  },
+  {
+    to: '/profile/login-history',
+    labelKey: 'nav.loginHistory',
+    icon: '🕐',
+    roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR', 'SUP'],
+  },
 ];
 
 interface Toast {
@@ -156,13 +248,13 @@ export function Layout() {
         // These pages depend on dynamic classId; prefetch is skipped as params unknown
       }
     },
-    [queryClient]
+    [queryClient],
   );
 
   useFocusManagement();
   const visibleItems = useMemo(
     () => NAV_ITEMS.filter((item) => item.roles.includes(userRole)),
-    [userRole]
+    [userRole],
   );
 
   const addToast = useCallback((message: string) => {
@@ -259,16 +351,19 @@ export function Layout() {
       return;
     }
 
-    const links = Array.from(navRef.current?.querySelectorAll<HTMLAnchorElement>('a.nav-link') ?? []);
+    const links = Array.from(
+      navRef.current?.querySelectorAll<HTMLAnchorElement>('a.nav-link') ?? [],
+    );
     if (links.length === 0) {
       return;
     }
 
     const currentIndex = links.findIndex((link) => link === document.activeElement);
     const fallbackIndex = currentIndex === -1 ? 0 : currentIndex;
-    const nextIndex = event.key === 'ArrowDown'
-      ? (fallbackIndex + 1) % links.length
-      : (fallbackIndex - 1 + links.length) % links.length;
+    const nextIndex =
+      event.key === 'ArrowDown'
+        ? (fallbackIndex + 1) % links.length
+        : (fallbackIndex - 1 + links.length) % links.length;
 
     event.preventDefault();
     links[nextIndex]?.focus();
@@ -364,7 +459,9 @@ export function Layout() {
                   className="bell-button__icon"
                   style={{
                     color:
-                      (syncStatusQuery.data?.conflict_count ?? syncHealthQuery.data?.conflict_count ?? 0) > 0
+                      (syncStatusQuery.data?.conflict_count ??
+                        syncHealthQuery.data?.conflict_count ??
+                        0) > 0
                         ? 'var(--color-error)'
                         : (syncStatusQuery.data?.pending_count ?? 0) > 0
                           ? 'var(--color-warning)'
@@ -409,13 +506,9 @@ export function Layout() {
                   </div>
 
                   {dropdownLoading ? (
-                    <div className="notification-dropdown__empty">
-                      {t('app.loading')}
-                    </div>
+                    <div className="notification-dropdown__empty">{t('app.loading')}</div>
                   ) : recentNotifications.length === 0 ? (
-                    <div className="notification-dropdown__empty">
-                      {t('notifications.empty')}
-                    </div>
+                    <div className="notification-dropdown__empty">{t('notifications.empty')}</div>
                   ) : (
                     <div className="notification-dropdown__list">
                       {recentNotifications.map((notification) => (

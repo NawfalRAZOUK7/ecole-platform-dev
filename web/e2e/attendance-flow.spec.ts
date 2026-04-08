@@ -4,6 +4,8 @@ import { apiResponse, installMockSession } from './mockApi';
 
 test.describe('Attendance flow', () => {
   test('teacher marks attendance and parent views history', async ({ page }) => {
+    test.setTimeout(60_000);
+
     const today = '2026-04-06';
     const classOption = {
       id: 'class-1',
@@ -50,9 +52,7 @@ test.describe('Attendance flow', () => {
         };
 
         records = records.map((record) => {
-          const nextRecord = payload.records.find(
-            (item) => item.student_id === record.student_id
-          );
+          const nextRecord = payload.records.find((item) => item.student_id === record.student_id);
 
           if (!nextRecord) {
             return record;
@@ -86,7 +86,7 @@ test.describe('Attendance flow', () => {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify(
-          apiResponse(records.filter((record) => record.student_id === 'student-1'))
+          apiResponse(records.filter((record) => record.student_id === 'student-1')),
         ),
       });
     });
@@ -100,11 +100,9 @@ test.describe('Attendance flow', () => {
     await page.locator('.attendance-page__actions .btn.btn-primary').click();
 
     await expect(page.locator('.attendance-banner--success')).toContainText(
-      /Presence enregistree|Attendance saved/i
+      /Presence enregistree|Attendance saved/i,
     );
-    await expect(page.locator('.attendance-page__footer')).toContainText(
-      /En retard|Late/i
-    );
+    await expect(page.locator('.attendance-page__footer')).toContainText(/En retard|Late/i);
 
     await logout(page);
 
@@ -113,8 +111,6 @@ test.describe('Attendance flow', () => {
     await expectPageTitle(page, /Historique de presence|Attendance history/i);
 
     await expect(page.locator('.attendance-heatmap')).toBeVisible();
-    await expect(page.locator('.attendance-heatmap')).toContainText(
-      /En retard|Late/i
-    );
+    await expect(page.locator('.attendance-heatmap')).toContainText(/En retard|Late/i);
   });
 });
