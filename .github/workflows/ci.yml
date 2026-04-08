@@ -774,11 +774,14 @@ jobs:
           cd web
           npx playwright install --with-deps chromium
 
-      - name: Start web preview server
+      - name: Start web dev server
         run: |
           cd web
-          npx vite preview --port 5173 --host &
-          sleep 3
+          npm run dev -- --host 0.0.0.0 --port 5173 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:5173/login && break
+            sleep 1
+          done
 
       - name: Run Playwright E2E tests
         run: |
@@ -1011,6 +1014,7 @@ jobs:
         id: meta
         run: |
           echo "sha_tag=$(echo '${{ github.sha }}' | cut -c1-8)" >> "$GITHUB_OUTPUT"
+          echo "image_repo=$(echo 'ghcr.io/${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
 
       - name: Build and push backend image
         uses: docker/build-push-action@v5
@@ -1019,8 +1023,8 @@ jobs:
           target: production
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}/backend:${{ steps.meta.outputs.sha_tag }}
-            ghcr.io/${{ github.repository }}/backend:latest
+            ${{ steps.meta.outputs.image_repo }}/backend:${{ steps.meta.outputs.sha_tag }}
+            ${{ steps.meta.outputs.image_repo }}/backend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -1031,22 +1035,22 @@ jobs:
           target: production
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}/web:${{ steps.meta.outputs.sha_tag }}
-            ghcr.io/${{ github.repository }}/web:latest
+            ${{ steps.meta.outputs.image_repo }}/web:${{ steps.meta.outputs.sha_tag }}
+            ${{ steps.meta.outputs.image_repo }}/web:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Generate backend SBOM
         uses: anchore/sbom-action@v0
         with:
-          image: ghcr.io/${{ github.repository }}/backend:${{ steps.meta.outputs.sha_tag }}
+          image: ${{ steps.meta.outputs.image_repo }}/backend:${{ steps.meta.outputs.sha_tag }}
           format: spdx-json
           output-file: sbom-backend.spdx.json
 
       - name: Generate web SBOM
         uses: anchore/sbom-action@v0
         with:
-          image: ghcr.io/${{ github.repository }}/web:${{ steps.meta.outputs.sha_tag }}
+          image: ${{ steps.meta.outputs.image_repo }}/web:${{ steps.meta.outputs.sha_tag }}
           format: spdx-json
           output-file: sbom-web.spdx.json
 
