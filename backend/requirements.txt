@@ -11,7 +11,7 @@ bcrypt==4.2.*
 httpx==0.28.*
 python-multipart==0.0.*
 email-validator==2.2.*
-prometheus-client==0.21.*
+prometheus-client==0.24.*
 pyotp==2.9.*
 qrcode[pil]==8.0.*
 arq==0.26.*
