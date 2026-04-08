@@ -45,7 +45,10 @@ STUDENT_PASSWORD = "student123"
 BASE_URL = os.getenv("BASE_URL", "http://localhost:8000/api/v1")
 TEST_REDIS_URL = os.getenv(
     "TEST_REDIS_URL",
-    f"redis://:{os.getenv('REDIS_PASSWORD', 'change-me-dev-redis')}@localhost:6379/0",
+    os.getenv(
+        "REDIS_URL",
+        f"redis://:{os.getenv('REDIS_PASSWORD', 'change-me-dev-redis')}@localhost:6379/0",
+    ),
 )
 REPO_ROOT = Path(__file__).resolve().parents[2]
 LOGIN_TIMEOUT = httpx.Timeout(30.0, connect=5.0)
