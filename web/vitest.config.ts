@@ -11,7 +11,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    pool: 'vmThreads',
+    pool: process.env.CI ? 'forks' : 'vmThreads',
     setupFiles: ['./tests/setup.ts'],
     include: ['tests/**/*.test.{ts,tsx}', 'src/**/*.test.{ts,tsx}'],
     coverage: {

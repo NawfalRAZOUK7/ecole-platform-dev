@@ -4,9 +4,12 @@
 
 import { test, expect } from '@playwright/test';
 import { login, logout, expectPageTitle } from './helpers';
+import { installMockSession } from './mockApi';
 
 test.describe('J1 — Parent journey', () => {
   test('login → feed → notifications → logout', async ({ page }) => {
+    await installMockSession(page, 'parent');
+
     // 1. Login as parent
     await login(page, 'parent');
 
