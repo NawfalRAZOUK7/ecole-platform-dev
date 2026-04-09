@@ -16,7 +16,7 @@
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "audit:endpoints": "node ./scripts/audit-endpoints.mjs",
-    "prepare": "cd .. && ./web/node_modules/.bin/husky web/.husky",
+    "prepare": "sh -c 'if [ -d ../.git ] && [ -x ./node_modules/.bin/husky ]; then cd .. && ./web/node_modules/.bin/husky web/.husky; fi'",
     "format": "prettier --write src/",
     "format:check": "prettier --check src/"
   },

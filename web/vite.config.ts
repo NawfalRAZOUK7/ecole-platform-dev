@@ -3,6 +3,8 @@ import react from '@vitejs/plugin-react';
 import { visualizer } from 'rollup-plugin-visualizer';
 import path from 'path';
 
+const apiProxyTarget = process.env.VITE_API_PROXY_TARGET ?? 'http://localhost:8000';
+
 export default defineConfig({
   plugins: [react(), visualizer({ open: false, filename: 'dist/bundle-stats.html' })],
   resolve: {
@@ -37,7 +39,7 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: apiProxyTarget,
         changeOrigin: true,
       },
     },

@@ -14,7 +14,7 @@ import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LanguageSwitcher } from '@/shared/ui/LanguageSwitcher';
 
 /** Default school ID from seed data */
-const DEFAULT_SCHOOL_ID = '00000000-0000-4000-8000-000000000001';
+const DEFAULT_SCHOOL_ID = 'bd9a703c-aca8-5fb2-81d7-58e902aa2472';
 
 /** Redirect map based on user role */
 const ROLE_REDIRECT: Record<string, string> = {
@@ -90,8 +90,17 @@ export function LoginPage() {
           </div>
 
           <h2 className="login-subtitle">{t('login.twoFactor.title')}</h2>
-          <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 16, textAlign: 'center' }}>
-            {useBackupCode ? t('login.twoFactor.backupInstructions') : t('login.twoFactor.instructions')}
+          <p
+            style={{
+              fontSize: 13,
+              color: 'var(--color-text-secondary)',
+              marginBottom: 16,
+              textAlign: 'center',
+            }}
+          >
+            {useBackupCode
+              ? t('login.twoFactor.backupInstructions')
+              : t('login.twoFactor.instructions')}
           </p>
 
           <ErrorBanner error={error} onDismiss={clearError} />
@@ -113,15 +122,15 @@ export function LoginPage() {
                 autoFocus
                 autoComplete="one-time-code"
                 disabled={isLoading}
-                style={useBackupCode ? undefined : { textAlign: 'center', fontSize: 18, letterSpacing: 4 }}
+                style={
+                  useBackupCode
+                    ? undefined
+                    : { textAlign: 'center', fontSize: 18, letterSpacing: 4 }
+                }
               />
             </div>
 
-            <button
-              type="submit"
-              className="login-submit"
-              disabled={isLoading || !totpCode.trim()}
-            >
+            <button type="submit" className="login-submit" disabled={isLoading || !totpCode.trim()}>
               {isLoading ? t('app.loading') : t('login.twoFactor.verify')}
             </button>
 
@@ -129,8 +138,17 @@ export function LoginPage() {
               <button
                 type="button"
                 className="btn-link"
-                onClick={() => { setUseBackupCode(!useBackupCode); setTotpCode(''); }}
-                style={{ background: 'none', border: 'none', color: 'var(--color-primary)', cursor: 'pointer', fontSize: 13 }}
+                onClick={() => {
+                  setUseBackupCode(!useBackupCode);
+                  setTotpCode('');
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--color-primary)',
+                  cursor: 'pointer',
+                  fontSize: 13,
+                }}
               >
                 {useBackupCode ? t('login.twoFactor.useApp') : t('login.twoFactor.useBackup')}
               </button>
@@ -138,7 +156,13 @@ export function LoginPage() {
                 type="button"
                 className="btn-link"
                 onClick={handleCancel2fa}
-                style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer', fontSize: 13 }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--color-text-secondary)',
+                  cursor: 'pointer',
+                  fontSize: 13,
+                }}
               >
                 {t('app.cancel')}
               </button>
@@ -160,10 +184,7 @@ export function LoginPage() {
 
         <h2 className="login-subtitle">{t('login.title')}</h2>
 
-        <ErrorBanner
-          error={error}
-          onDismiss={clearError}
-        />
+        <ErrorBanner error={error} onDismiss={clearError} />
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-field">
@@ -218,7 +239,10 @@ export function LoginPage() {
             </Link>
           </div>
           <div style={{ textAlign: 'center', marginTop: 8 }}>
-            <Link to="/forgot-password" style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
+            <Link
+              to="/forgot-password"
+              style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}
+            >
               {t('login.forgotPassword')}
             </Link>
           </div>
