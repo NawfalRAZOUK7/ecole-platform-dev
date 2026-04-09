@@ -1,21 +1,16 @@
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  type KeyboardEvent,
-} from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 interface ConfirmDialogProps {
-  open: boolean;
-  title: string;
-  message: string;
-  confirmLabel?: string;
-  cancelLabel?: string;
-  variant?: 'danger' | 'warning' | 'info';
-  onConfirm: () => void;
-  onCancel: () => void;
-  loading?: boolean;
+  readonly open: boolean;
+  readonly title: string;
+  readonly message: string;
+  readonly confirmLabel?: string;
+  readonly cancelLabel?: string;
+  readonly variant?: 'danger' | 'warning' | 'info';
+  readonly onConfirm: () => void;
+  readonly onCancel: () => void;
+  readonly loading?: boolean;
 }
 
 function getFocusableElements(container: HTMLElement | null) {
@@ -25,9 +20,9 @@ function getFocusableElements(container: HTMLElement | null) {
 
   return Array.from(
     container.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    )
-  ).filter((element) => !element.hasAttribute('disabled'));
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    ),
+  ).filter((element) => !element.hasAttribute('disabled') && element.tabIndex !== -1);
 }
 
 export function ConfirmDialog({
@@ -42,14 +37,17 @@ export function ConfirmDialog({
   loading = false,
 }: ConfirmDialogProps) {
   const { t } = useTranslation();
-  const dialogRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
-  const labels = useMemo(() => ({
-    title: t(title),
-    message: t(message),
-    confirm: t(confirmLabel || 'app.confirm', { defaultValue: confirmLabel || 'Confirm' }),
-    cancel: t(cancelLabel || 'app.cancel', { defaultValue: cancelLabel || 'Cancel' }),
-  }), [cancelLabel, confirmLabel, message, t, title]);
+  const labels = useMemo(
+    () => ({
+      title: t(title),
+      message: t(message),
+      confirm: t(confirmLabel || 'app.confirm', { defaultValue: confirmLabel || 'Confirm' }),
+      cancel: t(cancelLabel || 'app.cancel', { defaultValue: cancelLabel || 'Cancel' }),
+    }),
+    [cancelLabel, confirmLabel, message, t, title],
+  );
 
   useEffect(() => {
     if (!open) {
@@ -57,64 +55,67 @@ export function ConfirmDialog({
       return undefined;
     }
 
-    previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    previousFocusRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const focusable = getFocusableElements(dialogRef.current);
     focusable[0]?.focus();
 
-    function handleEscape(event: globalThis.KeyboardEvent) {
+    function handleGlobalKeyDown(event: globalThis.KeyboardEvent) {
       if (event.key === 'Escape') {
+        event.preventDefault();
         onCancel();
+        return;
+      }
+
+      if (event.key !== 'Tab') {
+        return;
+      }
+
+      const dialog = dialogRef.current;
+      const focusableElements = getFocusableElements(dialog);
+      if (!dialog || focusableElements.length === 0) {
+        return;
+      }
+
+      const first = focusableElements[0];
+      const last = focusableElements[focusableElements.length - 1];
+      const activeElement = document.activeElement;
+      const focusIsOutsideDialog =
+        !(activeElement instanceof HTMLElement) || !dialog.contains(activeElement);
+
+      if (event.shiftKey && (activeElement === first || focusIsOutsideDialog)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (activeElement === last || focusIsOutsideDialog)) {
+        event.preventDefault();
+        first.focus();
       }
     }
 
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
+    globalThis.addEventListener('keydown', handleGlobalKeyDown);
+    return () => globalThis.removeEventListener('keydown', handleGlobalKeyDown);
   }, [onCancel, open]);
 
   if (!open) {
     return null;
   }
 
-  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    if (event.key !== 'Tab') {
-      return;
-    }
-
-    const focusable = getFocusableElements(dialogRef.current);
-    if (focusable.length === 0) {
-      return;
-    }
-
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault();
-      first.focus();
-    }
-  }
-
   return (
-    <div
+    <dialog
+      ref={dialogRef}
       className="confirm-dialog__overlay"
-      onClick={(event) => {
-        if (event.target === event.currentTarget) {
-          onCancel();
-        }
-      }}
+      open
+      aria-labelledby="confirm-dialog-title"
+      aria-describedby="confirm-dialog-message"
     >
-      <div
-        ref={dialogRef}
-        className="confirm-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="confirm-dialog-title"
-        aria-describedby="confirm-dialog-message"
-        onKeyDown={handleKeyDown}
-      >
+      <button
+        type="button"
+        className="confirm-dialog__backdrop"
+        aria-label={t('app.close', { defaultValue: 'Close dialog' })}
+        tabIndex={-1}
+        onClick={onCancel}
+      />
+      <div className="confirm-dialog">
         <div className={`confirm-dialog__content confirm-dialog__content--${variant}`}>
           <h2 id="confirm-dialog-title">{labels.title}</h2>
           <p id="confirm-dialog-message">{labels.message}</p>
@@ -127,13 +128,13 @@ export function ConfirmDialog({
               className={`btn ${variant === 'danger' ? 'btn-danger' : 'btn-primary'}`}
               onClick={onConfirm}
               disabled={loading}
-              aria-busy={loading}
+              aria-busy={loading ? 'true' : 'false'}
             >
               {labels.confirm}
             </button>
           </div>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }

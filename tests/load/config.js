@@ -6,11 +6,20 @@ export const BASE_URL = __ENV.BASE_URL || 'http://localhost:8000/api/v1';
 export const IS_CI = __ENV.CI === 'true' || __ENV.CI === '1';
 export const SCHOOL_ID = '00000000-0000-4000-8000-000000000001';
 
+function getSeedPassword(role) {
+  const override = __ENV[`${role.toUpperCase()}_PASSWORD`];
+  if (override) {
+    return override;
+  }
+
+  return `${role}123`;
+}
+
 export const users = {
-  admin: { email: 'admin@ecole-benani.ma', password: 'admin123' },
-  teacher: { email: 'prof.math@ecole-benani.ma', password: 'teacher123' },
-  parent: { email: 'parent.alaoui@gmail.com', password: 'parent123' },
-  student: { email: 'yassine.alaoui@ecole-benani.ma', password: 'student123' },
+  admin: { email: 'admin@ecole-benani.ma', password: getSeedPassword('admin') },
+  teacher: { email: 'prof.math@ecole-benani.ma', password: getSeedPassword('teacher') },
+  parent: { email: 'parent.alaoui@gmail.com', password: getSeedPassword('parent') },
+  student: { email: 'yassine.alaoui@ecole-benani.ma', password: getSeedPassword('student') },
 };
 
 /**
