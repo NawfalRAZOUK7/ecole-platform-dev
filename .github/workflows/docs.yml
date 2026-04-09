@@ -7,6 +7,8 @@ on:
     paths:
       - backend/app/**
       - backend/scripts/export_openapi.py
+      - .github/workflows/docs.yml
+  workflow_dispatch:
 
 permissions:
   contents: read
