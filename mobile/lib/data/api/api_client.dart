@@ -277,6 +277,22 @@ class ApiClient {
     return ApiResponse(data: respBody['data'] as Map<String, dynamic>);
   }
 
+  Future<ApiListResponse<Map<String, dynamic>>> postList(
+    String path, {
+    dynamic body,
+  }) async {
+    final resp = await _request('POST', path, data: body);
+    final respBody = resp.data as Map<String, dynamic>;
+    final items =
+        (respBody['data'] as List<dynamic>).cast<Map<String, dynamic>>();
+    final meta = respBody['meta'] as Map<String, dynamic>?;
+    return ApiListResponse(
+      data: items,
+      nextCursor: meta?['next_cursor'] as String?,
+      hasMore: meta?['has_more'] as bool? ?? false,
+    );
+  }
+
   Future<ApiResponse<Map<String, dynamic>>> delete(String path) async {
     final resp = await _request('DELETE', path);
     final respBody = resp.data as Map<String, dynamic>;

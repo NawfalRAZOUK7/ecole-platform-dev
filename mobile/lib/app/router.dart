@@ -30,6 +30,8 @@ import 'package:ecole_platform/features/admin/admin_dashboard_screen.dart';
 import 'package:ecole_platform/features/admin/users_screen.dart';
 import 'package:ecole_platform/features/admin/invitations_screen.dart';
 import 'package:ecole_platform/features/admin/justification_review_screen.dart';
+import 'package:ecole_platform/features/attendance/attendance_analytics_screen.dart';
+import 'package:ecole_platform/features/attendance/attendance_history_screen.dart';
 import 'package:ecole_platform/features/teacher/classes_screen.dart';
 import 'package:ecole_platform/features/teacher/assignment_form_screen.dart';
 import 'package:ecole_platform/features/teacher/submissions_screen.dart';
@@ -142,6 +144,19 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/teacher/attendance',
             builder: (context, state) => const AttendanceScreen(),
+          ),
+          GoRoute(
+            path: '/attendance/history',
+            builder: (context, state) => AttendanceHistoryScreen(
+              initialClassId: state.uri.queryParameters['classId'],
+              initialStudentId: state.uri.queryParameters['studentId'],
+            ),
+          ),
+          GoRoute(
+            path: '/attendance/analytics',
+            builder: (context, state) => AttendanceAnalyticsScreen(
+              initialClassId: state.uri.queryParameters['classId'],
+            ),
           ),
           // Phase 10C: Teacher content library
           GoRoute(

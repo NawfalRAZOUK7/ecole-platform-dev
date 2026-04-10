@@ -21,6 +21,7 @@ class CacheTtl {
   static const int results = 10 * 60;      // 10 minutes
   static const int invoices = 10 * 60;     // 10 minutes
   static const int gradebook = 10 * 60;    // 10 minutes
+  static const int attendance = 10 * 60;   // 10 minutes
 }
 
 class CacheStore {

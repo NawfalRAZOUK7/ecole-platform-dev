@@ -18,7 +18,9 @@ import 'package:ecole_platform/data/local_store/offline_queue.dart';
 import 'package:ecole_platform/data/local_store/reports_store.dart';
 import 'package:ecole_platform/data/local_store/events_store.dart';
 import 'package:ecole_platform/data/local_store/documents_store.dart';
+import 'package:ecole_platform/data/local_store/attendance_store.dart';
 import 'package:ecole_platform/data/repositories_impl/auth_repository_impl.dart';
+import 'package:ecole_platform/data/repositories_impl/attendance_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/calendar_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/document_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/feed_repository_impl.dart';
@@ -33,6 +35,7 @@ import 'package:ecole_platform/data/repositories_impl/content_library_repository
 import 'package:ecole_platform/data/repositories_impl/quiz_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/gradebook_repository_impl.dart';
 import 'package:ecole_platform/domain/repositories/auth_repository.dart';
+import 'package:ecole_platform/domain/repositories/attendance_repository.dart';
 import 'package:ecole_platform/domain/repositories/calendar_repository.dart';
 import 'package:ecole_platform/domain/repositories/document_repository.dart';
 import 'package:ecole_platform/domain/repositories/feed_repository.dart';
@@ -87,6 +90,10 @@ final eventsStoreProvider = Provider<EventsStore>((ref) {
 
 final documentsStoreProvider = Provider<DocumentsStore>((ref) {
   return DocumentsStore();
+});
+
+final attendanceStoreProvider = Provider<AttendanceStore>((ref) {
+  return AttendanceStore(cache: ref.watch(cacheStoreProvider));
 });
 
 /// Shared local notifications plugin — used by push + WS.
@@ -224,5 +231,12 @@ final gradebookRepositoryProvider = Provider<GradebookRepository>((ref) {
   return GradebookRepositoryImpl(
     api: ref.watch(apiClientProvider),
     cache: ref.watch(cacheStoreProvider),
+  );
+});
+
+final attendanceRepositoryProvider = Provider<AttendanceRepository>((ref) {
+  return AttendanceRepositoryImpl(
+    api: ref.watch(apiClientProvider),
+    store: ref.watch(attendanceStoreProvider),
   );
 });
