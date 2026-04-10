@@ -77,6 +77,9 @@ import 'package:ecole_platform/features/billing/sibling_policy_screen.dart';
 import 'package:ecole_platform/features/question-bank/generate_quiz_screen.dart';
 import 'package:ecole_platform/features/question-bank/question_bank_import_screen.dart';
 import 'package:ecole_platform/features/question-bank/question_bank_screen.dart';
+import 'package:ecole_platform/features/rubrics/rubric_editor_screen.dart';
+import 'package:ecole_platform/features/rubrics/rubric_grading_screen.dart';
+import 'package:ecole_platform/features/rubrics/rubrics_list_screen.dart';
 import 'package:ecole_platform/presentation/shell_screen.dart';
 
 /// Role-based redirect targets.
@@ -401,6 +404,22 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/question-bank/generate',
             builder: (context, state) => const GenerateQuizScreen(),
+          ),
+          GoRoute(
+            path: '/rubrics',
+            builder: (context, state) => const RubricsListScreen(),
+          ),
+          GoRoute(
+            path: '/rubrics/:id/edit',
+            builder: (context, state) => RubricEditorScreen(
+              rubricId: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/rubrics/:id/grade',
+            builder: (context, state) => RubricGradingScreen(
+              rubricId: state.pathParameters['id']!,
+            ),
           ),
           GoRoute(
             path: '/settings/notifications',
