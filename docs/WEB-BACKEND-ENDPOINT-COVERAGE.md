@@ -22,16 +22,16 @@ Notes:
 ## Summary
 
 - Total backend endpoints: `350`
-- Covered: `338`
-- Partial: `1`
-- Uncovered: `11`
-- Coverage: `96.6%`
+- Covered: `341`
+- Partial: `0`
+- Uncovered: `9`
+- Coverage: `97.4%`
 
 Comparison vs April 8, 2026 snapshot:
 
 - Old coverage: `81.3%` (`283 / 348`)
-- New coverage: `96.6%` (`338 / 350`)
-- Delta: `+15.3` points
+- New coverage: `97.4%` (`341 / 350`)
+- Delta: `+16.1` points
 
 ## Module Coverage
 
@@ -43,7 +43,7 @@ Comparison vs April 8, 2026 snapshot:
 | analytics | 5 | 5 | 0 | 100.0% |
 | announcements | 4 | 4 | 0 | 100.0% |
 | assessments | 4 | 4 | 0 | 100.0% |
-| assignments | 4 | 3 | 0 | 75.0% |
+| assignments | 4 | 4 | 0 | 100.0% |
 | attendance | 5 | 5 | 0 | 100.0% |
 | attendance_analytics | 5 | 5 | 0 | 100.0% |
 | auth | 14 | 14 | 0 | 100.0% |
@@ -54,7 +54,7 @@ Comparison vs April 8, 2026 snapshot:
 | cms | 6 | 6 | 0 | 100.0% |
 | compliance | 12 | 12 | 0 | 100.0% |
 | consents | 2 | 2 | 0 | 100.0% |
-| content | 9 | 7 | 2 | 77.8% |
+| content | 9 | 9 | 0 | 100.0% |
 | content_library | 6 | 6 | 0 | 100.0% |
 | courses | 2 | 2 | 0 | 100.0% |
 | devices | 3 | 3 | 0 | 100.0% |
@@ -90,12 +90,11 @@ Comparison vs April 8, 2026 snapshot:
 | timetable | 9 | 9 | 0 | 100.0% |
 | timetable_generation | 6 | 6 | 0 | 100.0% |
 | ws | 0 | 0 | 0 | 0.0% |
-| TOTAL | 350 | 338 | 11 | 96.6% |
+| TOTAL | 350 | 341 | 9 | 97.4% |
 
 ## Partial Endpoints
 
-- `assignments`
-  - `POST /api/v1/assignments/{assignment_id}/exercise-pdf` -> frontend uses `GET`
+None.
 
 ## Uncovered Endpoints
 
@@ -104,9 +103,6 @@ Comparison vs April 8, 2026 snapshot:
   - `POST /api/v1/ai/preferences/opt-out`
   - `GET /api/v1/recommendations`
   - `GET /api/v1/events/schema`
-- `content`
-  - `GET /api/v1/student-work`
-  - `GET /api/v1/student-work/class/{class_id}`
 - `notifications`
   - `GET /api/v1/notifications/unsubscribe`
   - `GET /api/v1/notifications/email-open`
@@ -115,3 +111,11 @@ Comparison vs April 8, 2026 snapshot:
 - `router`
   - `GET /api/v1/health`
   - `GET /api/v1/readiness`
+
+## Final Notes
+
+- The remaining `9` uncovered endpoints are intentionally excluded from SPA coverage.
+- `ai` endpoints are not wired because the AI module is not active in the current web app surface.
+- `notifications` unsubscribe and email-open endpoints are email tracking and one-click link targets, not frontend service calls.
+- `payments` webhook/provider is a backend-to-backend callback endpoint and is not expected to be called by the web client.
+- `router` health and readiness are infrastructure probe endpoints for platform monitoring, not application UI flows.
