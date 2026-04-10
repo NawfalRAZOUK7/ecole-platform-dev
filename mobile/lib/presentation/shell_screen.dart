@@ -49,6 +49,11 @@ const _allNavItems = [
       icon: Icons.account_balance_wallet_outlined,
       labelKey: 'shell.budgets',
       roles: ['ADM', 'DIR']),
+  _NavItem(
+      route: '/micro-schools',
+      icon: Icons.location_city_outlined,
+      labelKey: 'shell.microSchools',
+      roles: ['ADM', 'DIR', 'PAR']),
   // Teacher tabs
   _NavItem(
       route: '/teacher/classes',

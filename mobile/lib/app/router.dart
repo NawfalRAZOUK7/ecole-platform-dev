@@ -35,6 +35,9 @@ import 'package:ecole_platform/features/attendance/attendance_history_screen.dar
 import 'package:ecole_platform/features/budgets/budget_detail_screen.dart';
 import 'package:ecole_platform/features/budgets/budget_list_screen.dart';
 import 'package:ecole_platform/features/budgets/budget_request_screen.dart';
+import 'package:ecole_platform/features/micro-schools/micro_school_detail_screen.dart';
+import 'package:ecole_platform/features/micro-schools/micro_school_enroll_screen.dart';
+import 'package:ecole_platform/features/micro-schools/micro_school_list_screen.dart';
 import 'package:ecole_platform/features/teacher/classes_screen.dart';
 import 'package:ecole_platform/features/teacher/assignment_form_screen.dart';
 import 'package:ecole_platform/features/teacher/submissions_screen.dart';
@@ -142,6 +145,22 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/budgets/:id',
             builder: (context, state) => BudgetDetailScreen(
               budgetId: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/micro-schools',
+            builder: (context, state) => const MicroSchoolListScreen(),
+          ),
+          GoRoute(
+            path: '/micro-schools/:id/enroll',
+            builder: (context, state) => MicroSchoolEnrollScreen(
+              schoolId: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/micro-schools/:id',
+            builder: (context, state) => MicroSchoolDetailScreen(
+              schoolId: state.pathParameters['id']!,
             ),
           ),
 
