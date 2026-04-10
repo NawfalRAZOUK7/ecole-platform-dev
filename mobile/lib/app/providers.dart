@@ -21,6 +21,7 @@ import 'package:ecole_platform/data/local_store/documents_store.dart';
 import 'package:ecole_platform/data/local_store/attendance_store.dart';
 import 'package:ecole_platform/data/repositories_impl/auth_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/attendance_repository_impl.dart';
+import 'package:ecole_platform/data/repositories_impl/budget_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/calendar_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/document_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/feed_repository_impl.dart';
@@ -36,6 +37,7 @@ import 'package:ecole_platform/data/repositories_impl/quiz_repository_impl.dart'
 import 'package:ecole_platform/data/repositories_impl/gradebook_repository_impl.dart';
 import 'package:ecole_platform/domain/repositories/auth_repository.dart';
 import 'package:ecole_platform/domain/repositories/attendance_repository.dart';
+import 'package:ecole_platform/domain/repositories/budget_repository.dart';
 import 'package:ecole_platform/domain/repositories/calendar_repository.dart';
 import 'package:ecole_platform/domain/repositories/document_repository.dart';
 import 'package:ecole_platform/domain/repositories/feed_repository.dart';
@@ -239,4 +241,8 @@ final attendanceRepositoryProvider = Provider<AttendanceRepository>((ref) {
     api: ref.watch(apiClientProvider),
     store: ref.watch(attendanceStoreProvider),
   );
+});
+
+final budgetRepositoryProvider = Provider<BudgetRepository>((ref) {
+  return BudgetRepositoryImpl(api: ref.watch(apiClientProvider));
 });

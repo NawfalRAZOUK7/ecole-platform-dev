@@ -32,6 +32,9 @@ import 'package:ecole_platform/features/admin/invitations_screen.dart';
 import 'package:ecole_platform/features/admin/justification_review_screen.dart';
 import 'package:ecole_platform/features/attendance/attendance_analytics_screen.dart';
 import 'package:ecole_platform/features/attendance/attendance_history_screen.dart';
+import 'package:ecole_platform/features/budgets/budget_detail_screen.dart';
+import 'package:ecole_platform/features/budgets/budget_list_screen.dart';
+import 'package:ecole_platform/features/budgets/budget_request_screen.dart';
 import 'package:ecole_platform/features/teacher/classes_screen.dart';
 import 'package:ecole_platform/features/teacher/assignment_form_screen.dart';
 import 'package:ecole_platform/features/teacher/submissions_screen.dart';
@@ -126,6 +129,20 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/analytics',
             builder: (context, state) => const AnalyticsSummaryScreen(),
+          ),
+          GoRoute(
+            path: '/budgets',
+            builder: (context, state) => const BudgetListScreen(),
+          ),
+          GoRoute(
+            path: '/budgets/requests',
+            builder: (context, state) => const BudgetRequestScreen(),
+          ),
+          GoRoute(
+            path: '/budgets/:id',
+            builder: (context, state) => BudgetDetailScreen(
+              budgetId: state.pathParameters['id']!,
+            ),
           ),
 
           // ── Teacher routes ──

@@ -44,6 +44,11 @@ const _allNavItems = [
       icon: Icons.insights,
       labelKey: 'shell.analytics',
       roles: ['ADM', 'DIR']),
+  _NavItem(
+      route: '/budgets',
+      icon: Icons.account_balance_wallet_outlined,
+      labelKey: 'shell.budgets',
+      roles: ['ADM', 'DIR']),
   // Teacher tabs
   _NavItem(
       route: '/teacher/classes',
