@@ -1,7 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { STALE_DEFAULT } from '@/shared/hooks/useQueryDefaults';
-import { budgetsService } from './budgets.service';
-import type { CreateAllocationPayload, CreateBudgetPayload, CreateBudgetRequestPayload } from './budgets.types';
+import { budgetsService, type BudgetAllocationRequestFilters } from './budgets.service';
+import type {
+  CreateAllocationPayload,
+  CreateBudgetPayload,
+  CreateBudgetRequestPayload,
+  UpdateAllocationPayload,
+} from './budgets.types';
 
 export const budgetsQueryKeys = {
   all: ['budgets'] as const,
@@ -9,8 +14,11 @@ export const budgetsQueryKeys = {
     [...budgetsQueryKeys.all, 'list', filters] as const,
   detail: (id: string) => [...budgetsQueryKeys.all, 'detail', id] as const,
   allocations: (id: string) => [...budgetsQueryKeys.all, 'allocations', id] as const,
+  allocation: (id: string) => [...budgetsQueryKeys.all, 'allocation', id] as const,
   requests: (filters: Record<string, string | number | undefined>) =>
     [...budgetsQueryKeys.all, 'requests', filters] as const,
+  allocationRequests: (allocationId: string, filters: BudgetAllocationRequestFilters) =>
+    [...budgetsQueryKeys.all, 'allocation-requests', allocationId, filters] as const,
   transactions: (id: string) => [...budgetsQueryKeys.all, 'transactions', id] as const,
   analytics: () => [...budgetsQueryKeys.all, 'analytics'] as const,
 };
@@ -41,10 +49,31 @@ export function useBudgetAllocations(id: string) {
   });
 }
 
+export function useBudgetAllocation(id: string) {
+  return useQuery({
+    queryKey: budgetsQueryKeys.allocation(id),
+    queryFn: async () => (await budgetsService.getAllocation(id)).data,
+    enabled: Boolean(id),
+    staleTime: STALE_DEFAULT,
+  });
+}
+
 export function useBudgetRequests(filters: Record<string, string | number | undefined> = {}) {
   return useQuery({
     queryKey: budgetsQueryKeys.requests(filters),
     queryFn: async () => (await budgetsService.listBudgetRequests(filters)).data,
+    staleTime: STALE_DEFAULT,
+  });
+}
+
+export function useAllocationRequests(
+  allocationId: string,
+  filters: BudgetAllocationRequestFilters = {},
+) {
+  return useQuery({
+    queryKey: budgetsQueryKeys.allocationRequests(allocationId, filters),
+    queryFn: async () => (await budgetsService.getAllocationRequests(allocationId, filters)).data,
+    enabled: Boolean(allocationId),
     staleTime: STALE_DEFAULT,
   });
 }
@@ -71,9 +100,7 @@ export function useCreateBudget() {
   return useMutation({
     mutationFn: async (payload: CreateBudgetPayload) => budgetsService.createBudget(payload),
     onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: budgetsQueryKeys.all }),
-      ]);
+      await Promise.all([queryClient.invalidateQueries({ queryKey: budgetsQueryKeys.all })]);
     },
   });
 }
@@ -91,10 +118,17 @@ export function useDeleteBudget() {
 export function useCreateAllocation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ budgetId, payload }: { budgetId: string; payload: CreateAllocationPayload }) =>
-      budgetsService.createAllocation(budgetId, payload),
+    mutationFn: async ({
+      budgetId,
+      payload,
+    }: {
+      budgetId: string;
+      payload: CreateAllocationPayload;
+    }) => budgetsService.createAllocation(budgetId, payload),
     onSuccess: async (_data, variables) => {
-      await queryClient.invalidateQueries({ queryKey: budgetsQueryKeys.allocations(variables.budgetId) });
+      await queryClient.invalidateQueries({
+        queryKey: budgetsQueryKeys.allocations(variables.budgetId),
+      });
     },
   });
 }
@@ -102,8 +136,13 @@ export function useCreateAllocation() {
 export function useUpdateAllocation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ allocationId, payload }: { allocationId: string; payload: Partial<CreateAllocationPayload> }) =>
-      budgetsService.updateAllocation(allocationId, payload),
+    mutationFn: async ({
+      allocationId,
+      payload,
+    }: {
+      allocationId: string;
+      payload: UpdateAllocationPayload;
+    }) => budgetsService.updateAllocation(allocationId, payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: budgetsQueryKeys.all });
     },
@@ -113,7 +152,8 @@ export function useUpdateAllocation() {
 export function useCreateBudgetRequest() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: CreateBudgetRequestPayload) => budgetsService.createBudgetRequest(payload),
+    mutationFn: async (payload: CreateBudgetRequestPayload) =>
+      budgetsService.createBudgetRequest(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: budgetsQueryKeys.all });
     },
@@ -123,8 +163,13 @@ export function useCreateBudgetRequest() {
 export function useApproveBudgetRequest() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ requestId, reviewComment }: { requestId: string; reviewComment?: string }) =>
-      budgetsService.approveBudgetRequest(requestId, reviewComment),
+    mutationFn: async ({
+      requestId,
+      reviewComment,
+    }: {
+      requestId: string;
+      reviewComment?: string;
+    }) => budgetsService.approveBudgetRequest(requestId, reviewComment),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: budgetsQueryKeys.all });
     },
@@ -134,8 +179,13 @@ export function useApproveBudgetRequest() {
 export function useRejectBudgetRequest() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ requestId, reviewComment }: { requestId: string; reviewComment?: string }) =>
-      budgetsService.rejectBudgetRequest(requestId, reviewComment),
+    mutationFn: async ({
+      requestId,
+      reviewComment,
+    }: {
+      requestId: string;
+      reviewComment?: string;
+    }) => budgetsService.rejectBudgetRequest(requestId, reviewComment),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: budgetsQueryKeys.all });
     },

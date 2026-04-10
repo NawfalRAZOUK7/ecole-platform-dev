@@ -4,12 +4,21 @@ import type {
   BudgetAnalytics,
   BudgetEnvelope,
   BudgetRequest,
+  BudgetRequestStatus,
   BudgetTransaction,
   CreateAllocationPayload,
   CreateBudgetPayload,
   CreateBudgetRequestPayload,
   UpdateAllocationPayload,
 } from './budgets.types';
+
+export interface BudgetAllocationRequestFilters extends Record<
+  string,
+  string | number | undefined
+> {
+  requester_id?: string;
+  status?: BudgetRequestStatus;
+}
 
 function buildMeta() {
   return {
@@ -47,11 +56,27 @@ export const budgetsService = {
     return api.post<BudgetAllocation>(`/budgets/${id}/allocations`, payload);
   },
 
+  getAllocation(allocationId: string) {
+    return api.get<BudgetAllocation>(`/budgets/allocations/${allocationId}`);
+  },
+
   updateAllocation(id: string, payload: UpdateAllocationPayload) {
     return api.put<BudgetAllocation>(`/budgets/allocations/${id}`, payload);
   },
 
+  getAllocationRequests(allocationId: string, params?: BudgetAllocationRequestFilters) {
+    return api.list<BudgetRequest>(`/budgets/allocations/${allocationId}/requests`, params);
+  },
+
   async listBudgetRequests(params?: Record<string, string | number | undefined>) {
+    const requestStatus =
+      params?.status === 'pending' ||
+      params?.status === 'approved' ||
+      params?.status === 'rejected' ||
+      params?.status === 'cancelled'
+        ? params.status
+        : undefined;
+
     const budgetIds =
       params?.budget_id !== undefined
         ? [String(params.budget_id)]
@@ -71,8 +96,8 @@ export const budgetsService = {
 
     const requestPages = await Promise.all(
       allocations.map((allocation) =>
-        api.list<BudgetRequest>(`/budgets/allocations/${allocation.id}/requests`, {
-          status: typeof params?.status === 'string' ? params.status : undefined,
+        budgetsService.getAllocationRequests(allocation.id, {
+          status: requestStatus,
         }),
       ),
     );

@@ -10,6 +10,7 @@ import { STALE_NOTIFICATIONS } from '@/shared/hooks/useQueryDefaults';
 import {
   notificationsService,
   type NotificationListFilters,
+  type NotificationPreferencesUpdatePayload,
   type NotificationSettingsInput,
 } from './notifications.service';
 import type {
@@ -32,7 +33,7 @@ export const notificationQueryKeys = {
 
 function mapNotificationPages(
   data: NotificationPages | undefined,
-  transform: (item: NotificationItem) => NotificationItem
+  transform: (item: NotificationItem) => NotificationItem,
 ): NotificationPages | undefined {
   if (!data) {
     return data;
@@ -57,7 +58,7 @@ export function useNotifications(filters: NotificationListFilters) {
         cursor: pageParam,
       }),
     getNextPageParam: (lastPage) =>
-      lastPage.meta.has_more ? lastPage.meta.next_cursor ?? undefined : undefined,
+      lastPage.meta.has_more ? (lastPage.meta.next_cursor ?? undefined) : undefined,
     staleTime: STALE_NOTIFICATIONS,
   });
 }
@@ -79,8 +80,8 @@ export function useMarkNotificationRead() {
                   is_read: variables.read,
                   read_at: variables.read ? new Date().toISOString() : null,
                 }
-              : item
-          )
+              : item,
+          ),
       );
       void queryClient.invalidateQueries({ queryKey: notificationQueryKeys.lists() });
     },
@@ -102,7 +103,7 @@ export function useMarkAllNotificationsRead() {
             ...item,
             is_read: true,
             read_at: item.read_at || new Date().toISOString(),
-          }))
+          })),
       );
       void queryClient.invalidateQueries({ queryKey: notificationQueryKeys.lists() });
     },
@@ -133,6 +134,20 @@ export function useNotificationDevices() {
   });
 }
 
+export function useUpdateNotificationPreferences() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: NotificationPreferencesUpdatePayload) => {
+      await notificationsService.updateNotificationPreferences(payload);
+      return payload.preferences;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: notificationQueryKeys.preferences() });
+    },
+  });
+}
+
 export function useSaveNotificationSettings() {
   const queryClient = useQueryClient();
 
@@ -142,12 +157,17 @@ export function useSaveNotificationSettings() {
       const consentUpdates = preferences.flatMap((preference) => {
         const nextStatus = preference.enabled ? 'opted_in' : 'opted_out';
         return consents
-          .filter((consent) => consent.topic === preference.category && consent.channel === preference.channel && consent.status !== nextStatus)
+          .filter(
+            (consent) =>
+              consent.topic === preference.category &&
+              consent.channel === preference.channel &&
+              consent.status !== nextStatus,
+          )
           .map((consent) => notificationsService.updateConsent(consent.id, nextStatus));
       });
 
       await Promise.all([
-        notificationsService.updatePreferences(preferences),
+        notificationsService.updateNotificationPreferences({ preferences }),
         notificationsService.updateDigestPreferences(digestFrequency),
         ...consentUpdates,
       ]);

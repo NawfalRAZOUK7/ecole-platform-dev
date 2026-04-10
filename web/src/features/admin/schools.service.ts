@@ -19,8 +19,12 @@ export const schoolsService = {
 
   updateSchool(
     schoolId: string,
-    payload: Partial<Pick<SchoolRecord, 'name' | 'address' | 'city' | 'phone'>>
+    payload: Partial<Pick<SchoolRecord, 'name' | 'address' | 'city' | 'phone'>>,
   ) {
     return api.patch<SchoolRecord>(`/schools/${schoolId}`, payload);
+  },
+
+  deleteSchool(schoolId: string) {
+    return api.delete<SchoolRecord>(`/schools/${schoolId}`);
   },
 };

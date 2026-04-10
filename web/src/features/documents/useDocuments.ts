@@ -1,18 +1,31 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { STALE_CONTENT, STALE_DEFAULT } from '@/shared/hooks/useQueryDefaults';
-import { documentsService, type ResourceFilters } from './documents.service';
+import {
+  documentsService,
+  type CreateResourcePayload,
+  type ResourceFilters,
+  type UpdateResourcePayload,
+  type UploadDocumentPayload,
+} from './documents.service';
 
 export const documentsQueryKeys = {
   all: ['documents'] as const,
   options: () => [...documentsQueryKeys.all, 'options'] as const,
   mine: () => [...documentsQueryKeys.all, 'mine'] as const,
-  studentDocuments: (studentId: string | null) => [...documentsQueryKeys.all, 'student-documents', studentId] as const,
-  studentChecklist: (studentId: string | null) => [...documentsQueryKeys.all, 'student-checklist', studentId] as const,
-  resources: (filters: Omit<ResourceFilters, 'cursor'>) => [...documentsQueryKeys.all, 'resources', filters] as const,
-  resource: (resourceId: string | null) => [...documentsQueryKeys.all, 'resource', resourceId] as const,
+  studentDocuments: (studentId: string | null) =>
+    [...documentsQueryKeys.all, 'student-documents', studentId] as const,
+  studentChecklist: (studentId: string | null) =>
+    [...documentsQueryKeys.all, 'student-checklist', studentId] as const,
+  document: (documentId: string | null) =>
+    [...documentsQueryKeys.all, 'document', documentId] as const,
+  resources: (filters: Omit<ResourceFilters, 'cursor'>) =>
+    [...documentsQueryKeys.all, 'resources', filters] as const,
+  resource: (resourceId: string | null) =>
+    [...documentsQueryKeys.all, 'resource', resourceId] as const,
   versions: (docId: string | null) => [...documentsQueryKeys.all, 'versions', docId] as const,
   preview: (docId: string | null) => [...documentsQueryKeys.all, 'preview', docId] as const,
-  resourceRating: (resourceId: string | null) => [...documentsQueryKeys.all, 'resource-rating', resourceId] as const,
+  resourceRating: (resourceId: string | null) =>
+    [...documentsQueryKeys.all, 'resource-rating', resourceId] as const,
 };
 
 export function useDocumentsOptions() {
@@ -49,6 +62,15 @@ export function useStudentChecklist(studentId: string | null | undefined, enable
   });
 }
 
+export function useDocument(documentId: string | null | undefined) {
+  return useQuery({
+    queryKey: documentsQueryKeys.document(documentId ?? null),
+    queryFn: async () => (await documentsService.getDocument(documentId!)).data,
+    enabled: Boolean(documentId),
+    staleTime: STALE_DEFAULT,
+  });
+}
+
 export function useResources(filters: Omit<ResourceFilters, 'cursor'>) {
   return useInfiniteQuery({
     queryKey: documentsQueryKeys.resources(filters),
@@ -60,7 +82,7 @@ export function useResources(filters: Omit<ResourceFilters, 'cursor'>) {
         cursor: pageParam,
       }),
     getNextPageParam: (lastPage) =>
-      lastPage.meta.has_more ? lastPage.meta.next_cursor ?? undefined : undefined,
+      lastPage.meta.has_more ? (lastPage.meta.next_cursor ?? undefined) : undefined,
     staleTime: STALE_CONTENT,
   });
 }
@@ -83,13 +105,7 @@ export function useUploadDocument() {
       onProgress,
       onRequestCreated,
     }: {
-      payload: {
-        file: File;
-        category: string;
-        linkedStudentId?: string;
-        expiresAt?: string;
-        language: string;
-      };
+      payload: UploadDocumentPayload;
       onProgress?: (progress: number) => void;
       onRequestCreated?: (xhr: XMLHttpRequest) => void;
     }) => documentsService.uploadDocument(payload, onProgress, onRequestCreated),
@@ -103,7 +119,7 @@ export function useUploadDocument() {
   });
 }
 
-export function useUploadResource() {
+function useCreateResourceMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -112,24 +128,22 @@ export function useUploadResource() {
       onProgress,
       onRequestCreated,
     }: {
-      payload: {
-        file: File;
-        title: string;
-        description: string;
-        subject: string;
-        level: string;
-        type: string;
-        tags: string;
-        visibility?: string;
-        language: string;
-      };
+      payload: CreateResourcePayload;
       onProgress?: (progress: number) => void;
       onRequestCreated?: (xhr: XMLHttpRequest) => void;
-    }) => documentsService.uploadResource(payload, onProgress, onRequestCreated),
+    }) => documentsService.createResource(payload, onProgress, onRequestCreated),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['documents', 'resources'] });
     },
   });
+}
+
+export function useCreateResource() {
+  return useCreateResourceMutation();
+}
+
+export function useUploadResource() {
+  return useCreateResourceMutation();
 }
 
 export function useBulkDeleteDocuments() {
@@ -149,7 +163,9 @@ export function useBulkDeleteDocuments() {
         await documentsService.bulkDelete(documentIds);
         return;
       }
-      await Promise.all(documentIds.map((documentId) => documentsService.deleteDocument(documentId, hard)));
+      await Promise.all(
+        documentIds.map((documentId) => documentsService.deleteDocument(documentId, hard)),
+      );
     },
     onSuccess: async () => {
       await Promise.all([
@@ -163,7 +179,8 @@ export function useBulkDeleteDocuments() {
 
 export function useBulkDownloadDocuments() {
   return useMutation({
-    mutationFn: async (documentIds: string[]) => (await documentsService.bulkDownload(documentIds)).data,
+    mutationFn: async (documentIds: string[]) =>
+      (await documentsService.bulkDownload(documentIds)).data,
   });
 }
 
@@ -232,14 +249,52 @@ export function useUploadStudentDocument() {
       onRequestCreated,
     }: {
       studentId: string;
-      payload: { file: File; category: string; language: string };
+      payload: UploadDocumentPayload;
       onProgress?: (progress: number) => void;
       onRequestCreated?: (xhr: XMLHttpRequest) => void;
     }) => documentsService.uploadStudentDocument(studentId, payload, onProgress, onRequestCreated),
     onSuccess: async () => {
       await Promise.all([
+        queryClient.invalidateQueries({ queryKey: documentsQueryKeys.mine() }),
         queryClient.invalidateQueries({ queryKey: ['documents', 'student-documents'] }),
         queryClient.invalidateQueries({ queryKey: ['documents', 'student-checklist'] }),
+      ]);
+    },
+  });
+}
+
+export function useUpdateResource() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      resourceId,
+      payload,
+    }: {
+      resourceId: string;
+      payload: UpdateResourcePayload;
+    }) => (await documentsService.updateResource(resourceId, payload)).data,
+    onSuccess: async (resource) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['documents', 'resources'] }),
+        queryClient.invalidateQueries({ queryKey: documentsQueryKeys.resource(resource.id) }),
+      ]);
+    },
+  });
+}
+
+export function useDeleteResource() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (resourceId: string) => {
+      await documentsService.deleteResource(resourceId);
+      return resourceId;
+    },
+    onSuccess: async (resourceId) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['documents', 'resources'] }),
+        queryClient.invalidateQueries({ queryKey: documentsQueryKeys.resource(resourceId) }),
       ]);
     },
   });

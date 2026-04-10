@@ -58,11 +58,14 @@ export interface ResourceItem {
   download_url: string | null;
   preview_url: string | null;
   thumbnail_url: string | null;
-  document: DocumentItem | {
-    mime_type: string;
-    size_bytes: number;
-    preview_url: string | null;
-  } | null;
+  document:
+    | DocumentItem
+    | {
+        mime_type: string;
+        size_bytes: number;
+        preview_url: string | null;
+      }
+    | null;
   my_rating: number | null;
   created_at: string;
   can_edit: boolean;
@@ -113,15 +116,64 @@ export interface ResourceFilters extends Record<string, string | number | undefi
   tags?: string;
 }
 
-function uploadMultipart(
+export interface UploadDocumentPayload {
+  file: File;
+  category: string;
+  linkedStudentId?: string;
+  expiresAt?: string;
+  language: string;
+}
+
+export interface DocumentLinkPayload {
+  documentId: string;
+  category: string;
+  expiresAt?: string;
+}
+
+export interface CreateResourcePayload {
+  file: File;
+  title: string;
+  description: string;
+  subject: string;
+  level: string;
+  type: string;
+  tags: string;
+  visibility?: string;
+  classId?: string;
+  language: string;
+}
+
+export interface UpdateResourcePayload {
+  title?: string;
+  description?: string | null;
+  subject?: string | null;
+  level?: string | null;
+  type?: string;
+  visibility?: string;
+  classId?: string | null;
+  tags?: string[];
+}
+
+export interface DeleteDocumentResponse {
+  id: string;
+  deleted: boolean;
+  hard_deleted: boolean;
+}
+
+export interface DeleteResourceResponse {
+  id: string;
+  deleted: boolean;
+}
+
+function uploadMultipart<T>(
   path: string,
   file: File,
   fields: Record<string, string>,
   language: string,
   onProgress?: (progress: number) => void,
-  onRequestCreated?: (xhr: XMLHttpRequest) => void
+  onRequestCreated?: (xhr: XMLHttpRequest) => void,
 ) {
-  return new Promise<void>((resolve, reject) => {
+  return new Promise<T>((resolve, reject) => {
     const formData = new FormData();
     formData.append('file', file);
     Object.entries(fields).forEach(([key, value]) => {
@@ -152,7 +204,12 @@ function uploadMultipart(
     xhr.onabort = () => reject(new Error('Upload canceled'));
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
-        resolve();
+        try {
+          const payload = JSON.parse(xhr.responseText);
+          resolve((payload?.data ?? undefined) as T);
+        } catch {
+          resolve(undefined as T);
+        }
         return;
       }
       try {
@@ -190,22 +247,20 @@ export const documentsService = {
     return api.list<ResourceItem>('/resources', params);
   },
 
+  getDocument(documentId: string) {
+    return api.get<DocumentItem>(`/documents/${documentId}`);
+  },
+
   getResource(resourceId: string) {
     return api.get<ResourceItem>(`/resources/${resourceId}`);
   },
 
   uploadDocument(
-    payload: {
-      file: File;
-      category: string;
-      linkedStudentId?: string;
-      expiresAt?: string;
-      language: string;
-    },
+    payload: UploadDocumentPayload,
     onProgress?: (progress: number) => void,
-    onRequestCreated?: (xhr: XMLHttpRequest) => void
+    onRequestCreated?: (xhr: XMLHttpRequest) => void,
   ) {
-    return uploadMultipart(
+    return uploadMultipart<DocumentItem>(
       '/documents/upload',
       payload.file,
       {
@@ -215,26 +270,16 @@ export const documentsService = {
       },
       payload.language,
       onProgress,
-      onRequestCreated
+      onRequestCreated,
     );
   },
 
-  uploadResource(
-    payload: {
-      file: File;
-      title: string;
-      description: string;
-      subject: string;
-      level: string;
-      type: string;
-      tags: string;
-      visibility?: string;
-      language: string;
-    },
+  createResource(
+    payload: CreateResourcePayload,
     onProgress?: (progress: number) => void,
-    onRequestCreated?: (xhr: XMLHttpRequest) => void
+    onRequestCreated?: (xhr: XMLHttpRequest) => void,
   ) {
-    return uploadMultipart(
+    return uploadMultipart<ResourceItem>(
       '/resources',
       payload.file,
       {
@@ -244,12 +289,21 @@ export const documentsService = {
         level: payload.level,
         type: payload.type,
         visibility: payload.visibility || 'school',
+        class_id: payload.classId || '',
         tags: payload.tags,
       },
       payload.language,
       onProgress,
-      onRequestCreated
+      onRequestCreated,
     );
+  },
+
+  uploadResource(
+    payload: CreateResourcePayload,
+    onProgress?: (progress: number) => void,
+    onRequestCreated?: (xhr: XMLHttpRequest) => void,
+  ) {
+    return documentsService.createResource(payload, onProgress, onRequestCreated);
   },
 
   bulkDelete(documentIds: string[]) {
@@ -257,7 +311,9 @@ export const documentsService = {
   },
 
   deleteDocument(documentId: string, hard = false) {
-    return api.delete<{ deleted: boolean }>(`/documents/${documentId}${hard ? '?hard=true' : ''}`);
+    return api.delete<DeleteDocumentResponse>(
+      `/documents/${documentId}${hard ? '?hard=true' : ''}`,
+    );
   },
 
   bulkDownload(documentIds: string[]) {
@@ -294,24 +350,52 @@ export const documentsService = {
     return api.get<BulkDownloadStatus>('/documents/bulk-download');
   },
 
-  uploadStudentDocument(
+  linkStudentDocument(studentId: string, payload: DocumentLinkPayload) {
+    return api.post<DocumentItem>(`/students/${studentId}/documents`, {
+      document_id: payload.documentId,
+      category: payload.category,
+      expires_at: payload.expiresAt ?? null,
+    });
+  },
+
+  async uploadStudentDocument(
     studentId: string,
-    payload: { file: File; category: string; language: string },
+    payload: UploadDocumentPayload,
     onProgress?: (progress: number) => void,
-    onRequestCreated?: (xhr: XMLHttpRequest) => void
+    onRequestCreated?: (xhr: XMLHttpRequest) => void,
   ) {
-    return uploadMultipart(
-      `/students/${studentId}/documents`,
-      payload.file,
-      { category: payload.category },
-      payload.language,
+    const document = await documentsService.uploadDocument(
+      {
+        file: payload.file,
+        category: payload.category,
+        expiresAt: payload.expiresAt,
+        language: payload.language,
+      },
       onProgress,
-      onRequestCreated
+      onRequestCreated,
     );
+
+    return documentsService.linkStudentDocument(studentId, {
+      documentId: document.id,
+      category: payload.category,
+      expiresAt: payload.expiresAt,
+    });
   },
 
   getResourceRating(resourceId: string) {
     return api.get<ResourceRating>(`/resources/${resourceId}/rating`);
+  },
+
+  updateResource(resourceId: string, payload: UpdateResourcePayload) {
+    const { classId, ...rest } = payload;
+    return api.put<ResourceItem>(`/resources/${resourceId}`, {
+      ...rest,
+      ...(classId !== undefined ? { class_id: classId } : {}),
+    });
+  },
+
+  deleteResource(resourceId: string) {
+    return api.delete<DeleteResourceResponse>(`/resources/${resourceId}`);
   },
 
   downloadResource(resourceId: string) {

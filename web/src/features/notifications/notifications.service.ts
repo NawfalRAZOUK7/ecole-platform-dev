@@ -23,6 +23,10 @@ export interface NotificationSettingsInput {
   digestFrequency: string;
 }
 
+export interface NotificationPreferencesUpdatePayload {
+  preferences: NotificationPreference[];
+}
+
 export const notificationsService = {
   list(params: NotificationListFilters) {
     return api.list<NotificationItem>('/notifications', params);
@@ -42,6 +46,10 @@ export const notificationsService = {
 
   updatePreferences(preferences: NotificationPreference[]) {
     return api.post<void>('/notifications/preferences', { preferences });
+  },
+
+  updateNotificationPreferences(payload: NotificationPreferencesUpdatePayload) {
+    return api.put<void>('/notifications/preferences', payload);
   },
 
   getDigestPreferences() {

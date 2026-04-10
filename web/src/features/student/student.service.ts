@@ -20,6 +20,21 @@ export interface StudentClassOption {
   class_name: string;
 }
 
+export interface EnrollmentPayload {
+  student_id: string;
+  class_id: string;
+  period_id: string;
+}
+
+export interface EnrollmentRecord {
+  id: string;
+  student_id: string;
+  class_id: string;
+  period_id: string;
+  school_id: string;
+  status: string;
+}
+
 export interface ClassContentItem {
   id: string;
   content_item_id: string;
@@ -60,6 +75,10 @@ export const studentService = {
 
   listStudentClasses() {
     return api.list<StudentClassOption>('/enrollments');
+  },
+
+  createEnrollment(payload: EnrollmentPayload) {
+    return api.post<EnrollmentRecord>('/enrollments', payload);
   },
 
   listClassContent(classId: string) {

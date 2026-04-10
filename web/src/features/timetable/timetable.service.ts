@@ -106,6 +106,76 @@ export interface ClassOption {
   name: string;
 }
 
+export interface TimetableSlotFilters extends Record<string, string | number | undefined> {
+  class_id?: string;
+  teacher_id?: string;
+  academic_year_id?: string;
+  day_of_week?: number;
+}
+
+export interface TimetableExceptionFilters extends Record<string, string | number | undefined> {
+  timetable_slot_id?: string;
+  date_from?: string;
+  date_to?: string;
+  exception_type?: string;
+}
+
+export interface TimetableExceptionItem {
+  id: string;
+  timetable_slot_id: string;
+  school_id: string;
+  exception_date: string;
+  exception_type: string;
+  substitute_teacher_id: string | null;
+  new_room: string | null;
+  reason: string | null;
+  created_at: string;
+}
+
+export interface TimetableSlotCreatePayload {
+  class_id?: string;
+  academic_year_id?: string;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  subject: string;
+  teacher_id?: string;
+  room?: string | null;
+  is_recurring?: boolean;
+  effective_from?: string | null;
+  effective_until?: string | null;
+}
+
+export interface TimetableSlotBulkCreatePayload {
+  slots: TimetableSlotCreatePayload[];
+}
+
+export interface TimetableSlotUpdatePayload {
+  day_of_week?: number;
+  start_time?: string;
+  end_time?: string;
+  subject?: string;
+  teacher_id?: string;
+  room?: string | null;
+  is_recurring?: boolean;
+  effective_from?: string | null;
+  effective_until?: string | null;
+}
+
+export interface TimetableExceptionCreatePayload {
+  timetable_slot_id: string;
+  exception_date: string;
+  exception_type: string;
+  substitute_teacher_id?: string;
+  new_room?: string;
+  reason?: string;
+}
+
+export interface TimetableSlotDeleteResponse {
+  id: string;
+  deleted: boolean;
+}
+
 export const timetableService = {
   listClasses() {
     return api.list<ClassOption>('/teacher/classes');
@@ -117,20 +187,28 @@ export const timetableService = {
     );
   },
 
-  createSlot(payload: Record<string, unknown>) {
-    return api.post<void>('/timetable/slots', payload);
+  listSlots(params: TimetableSlotFilters = {}) {
+    return api.list<TimetableSlot>('/timetable/slots', params);
   },
 
-  updateSlot(slotId: string, payload: Record<string, unknown>) {
-    return api.put<void>(`/timetable/slots/${slotId}`, payload);
+  createSlot(payload: TimetableSlotCreatePayload | TimetableSlotBulkCreatePayload) {
+    return api.post<TimetableSlot | TimetableSlot[]>('/timetable/slots', payload);
+  },
+
+  updateSlot(slotId: string, payload: TimetableSlotUpdatePayload) {
+    return api.put<TimetableSlot>(`/timetable/slots/${slotId}`, payload);
   },
 
   deleteSlot(slotId: string) {
-    return api.delete<void>(`/timetable/slots/${slotId}`);
+    return api.delete<TimetableSlotDeleteResponse>(`/timetable/slots/${slotId}`);
   },
 
-  createException(payload: Record<string, unknown>) {
-    return api.post<void>('/timetable/exceptions', payload);
+  listExceptions(params: TimetableExceptionFilters = {}) {
+    return api.list<TimetableExceptionItem>('/timetable/exceptions', params);
+  },
+
+  createException(payload: TimetableExceptionCreatePayload) {
+    return api.post<TimetableExceptionItem>('/timetable/exceptions', payload);
   },
 
   // ── Generation endpoints ────────────────────────────────────────────────

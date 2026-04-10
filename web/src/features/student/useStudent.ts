@@ -1,14 +1,17 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { STALE_CONTENT, STALE_DEFAULT, STALE_RESULTS } from '@/shared/hooks/useQueryDefaults';
-import { studentService } from './student.service';
+import { studentService, type EnrollmentPayload } from './student.service';
 
 export const studentQueryKeys = {
   all: ['student'] as const,
   quizzes: () => [...studentQueryKeys.all, 'quizzes'] as const,
-  quizDetail: (quizId: string | null | undefined) => [...studentQueryKeys.all, 'quiz-detail', quizId] as const,
-  attemptResults: (attemptId: string | null | undefined) => [...studentQueryKeys.all, 'attempt-results', attemptId] as const,
+  quizDetail: (quizId: string | null | undefined) =>
+    [...studentQueryKeys.all, 'quiz-detail', quizId] as const,
+  attemptResults: (attemptId: string | null | undefined) =>
+    [...studentQueryKeys.all, 'attempt-results', attemptId] as const,
   classes: () => [...studentQueryKeys.all, 'classes'] as const,
-  classContent: (classId: string | null | undefined) => [...studentQueryKeys.all, 'class-content', classId] as const,
+  classContent: (classId: string | null | undefined) =>
+    [...studentQueryKeys.all, 'class-content', classId] as const,
 };
 
 export function usePublishedQuizzes() {
@@ -78,6 +81,18 @@ export function useStudentClasses() {
   });
 }
 
+export function useCreateEnrollment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: EnrollmentPayload) =>
+      (await studentService.createEnrollment(payload)).data,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: studentQueryKeys.classes() });
+    },
+  });
+}
+
 export function useStudentClassContent(classId: string | null | undefined) {
   return useQuery({
     queryKey: studentQueryKeys.classContent(classId),
@@ -89,13 +104,7 @@ export function useStudentClassContent(classId: string | null | undefined) {
 
 export function useUpdateContentProgress() {
   return useMutation({
-    mutationFn: async ({
-      contentItemId,
-      status,
-    }: {
-      contentItemId: string;
-      status: string;
-    }) => {
+    mutationFn: async ({ contentItemId, status }: { contentItemId: string; status: string }) => {
       await studentService.updateContentProgress(contentItemId, status);
     },
   });

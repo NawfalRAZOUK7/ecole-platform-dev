@@ -13,6 +13,7 @@ import {
   type ParentChildLink,
   type ParentChildLinkRow,
 } from './admin.service';
+import { schoolsService } from './schools.service';
 
 const AUTO_REFRESH_MS = 5 * 60 * 1000;
 
@@ -22,14 +23,20 @@ export const adminQueryKeys = {
   analytics: (period: number) => [...adminQueryKeys.all, 'analytics', period] as const,
   auditLogs: (filters: AdminAuditFilters) => [...adminQueryKeys.all, 'audit', filters] as const,
   users: (filters: AdminUsersFilters) => [...adminQueryKeys.all, 'users', filters] as const,
-  userSearch: (search: string, role: string) => [...adminQueryKeys.all, 'user-search', role, search] as const,
-  invitations: (filters: AdminInvitationFilters) => [...adminQueryKeys.all, 'invitations', filters] as const,
-  justifications: (filters: AdminJustificationFilters) => [...adminQueryKeys.all, 'justifications', filters] as const,
-  parentChildLinks: (filters: AdminParentChildLinkFilters) => [...adminQueryKeys.all, 'parent-child-links', filters] as const,
+  userSearch: (search: string, role: string) =>
+    [...adminQueryKeys.all, 'user-search', role, search] as const,
+  invitations: (filters: AdminInvitationFilters) =>
+    [...adminQueryKeys.all, 'invitations', filters] as const,
+  justifications: (filters: AdminJustificationFilters) =>
+    [...adminQueryKeys.all, 'justifications', filters] as const,
+  parentChildLinks: (filters: AdminParentChildLinkFilters) =>
+    [...adminQueryKeys.all, 'parent-child-links', filters] as const,
 };
 
 async function enrichParentChildLinks(items: ParentChildLink[]): Promise<ParentChildLinkRow[]> {
-  const ids = Array.from(new Set(items.flatMap((item) => [item.parent_user_id, item.child_user_id])));
+  const ids = Array.from(
+    new Set(items.flatMap((item) => [item.parent_user_id, item.child_user_id])),
+  );
   const profiles = await Promise.all(
     ids.map(async (id) => {
       try {
@@ -38,7 +45,7 @@ async function enrichParentChildLinks(items: ParentChildLink[]): Promise<ParentC
       } catch {
         return [id, `${id.slice(0, 8)}...`] as const;
       }
-    })
+    }),
   );
   const nameMap = Object.fromEntries(profiles);
 
@@ -96,7 +103,7 @@ export function useAdminAuditLogs(filters: AdminAuditFilters) {
         cursor: pageParam,
       }),
     getNextPageParam: (lastPage) =>
-      lastPage.meta.has_more ? lastPage.meta.next_cursor ?? undefined : undefined,
+      lastPage.meta.has_more ? (lastPage.meta.next_cursor ?? undefined) : undefined,
     staleTime: STALE_DEFAULT,
   });
 }
@@ -112,7 +119,7 @@ export function useAdminUsers(filters: AdminUsersFilters) {
         cursor: pageParam,
       }),
     getNextPageParam: (lastPage) =>
-      lastPage.meta.has_more ? lastPage.meta.next_cursor ?? undefined : undefined,
+      lastPage.meta.has_more ? (lastPage.meta.next_cursor ?? undefined) : undefined,
     staleTime: STALE_DEFAULT,
   });
 }
@@ -185,7 +192,7 @@ export function useAdminInvitations(filters: AdminInvitationFilters) {
         cursor: pageParam,
       }),
     getNextPageParam: (lastPage) =>
-      lastPage.meta.has_more ? lastPage.meta.next_cursor ?? undefined : undefined,
+      lastPage.meta.has_more ? (lastPage.meta.next_cursor ?? undefined) : undefined,
     staleTime: STALE_NOTIFICATIONS,
   });
 }
@@ -227,7 +234,7 @@ export function useAdminJustifications(filters: AdminJustificationFilters) {
         cursor: pageParam,
       }),
     getNextPageParam: (lastPage) =>
-      lastPage.meta.has_more ? lastPage.meta.next_cursor ?? undefined : undefined,
+      lastPage.meta.has_more ? (lastPage.meta.next_cursor ?? undefined) : undefined,
     staleTime: STALE_DEFAULT,
   });
 }
@@ -273,7 +280,7 @@ export function useAdminParentChildLinks(filters: AdminParentChildLinkFilters) {
       };
     },
     getNextPageParam: (lastPage) =>
-      lastPage.meta.has_more ? lastPage.meta.next_cursor ?? undefined : undefined,
+      lastPage.meta.has_more ? (lastPage.meta.next_cursor ?? undefined) : undefined,
     staleTime: STALE_DEFAULT,
   });
 }
@@ -307,6 +314,20 @@ export function useRevokeParentChildLink() {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['admin', 'parent-child-links'] });
+    },
+  });
+}
+
+export function useDeleteSchool() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (schoolId: string) => (await schoolsService.deleteSchool(schoolId)).data,
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['schools'] }),
+        queryClient.invalidateQueries({ queryKey: adminQueryKeys.all }),
+      ]);
     },
   });
 }
