@@ -15,7 +15,6 @@ final ThemeData appDarkTheme = ThemeData(
     surface: AppColors.darkSurface,
     error: AppColors.error,
   ),
-  colorSchemeSeed: AppColors.darkPrimary,
   useMaterial3: true,
   fontFamily: 'Inter',
   scaffoldBackgroundColor: AppColors.darkBackground,

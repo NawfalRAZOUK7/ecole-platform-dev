@@ -14,7 +14,6 @@ final ThemeData appLightTheme = ThemeData(
     surface: AppColors.surface,
     error: AppColors.error,
   ),
-  colorSchemeSeed: AppColors.primary,
   useMaterial3: true,
   fontFamily: 'Inter',
   scaffoldBackgroundColor: AppColors.background,
