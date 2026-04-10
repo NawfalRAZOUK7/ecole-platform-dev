@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+
 import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/domain/entities/invoice.dart';
 import 'package:ecole_platform/shared/widgets/app_currency_text.dart';
@@ -32,7 +33,28 @@ class InvoicesScreen extends ConsumerWidget {
     final t = AppLocalizations.of(ref);
 
     return Scaffold(
-      appBar: AppBar(title: Text(t.t('invoices.title'))),
+      appBar: AppBar(
+        title: Text(t.t('invoices.title')),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: context.push,
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: '/billing/sibling-policy',
+                child: Text(t.t('billing.siblingPolicy')),
+              ),
+              PopupMenuItem(
+                value: '/billing/late-fees',
+                child: Text(t.t('billing.lateFees')),
+              ),
+              PopupMenuItem(
+                value: '/billing/payment-plans',
+                child: Text(t.t('billing.paymentPlans')),
+              ),
+            ],
+          ),
+        ],
+      ),
       body: _buildBody(context, ref, state, theme, t),
     );
   }

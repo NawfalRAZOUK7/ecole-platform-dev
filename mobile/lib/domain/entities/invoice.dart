@@ -74,3 +74,91 @@ class InvoicePaymentRecord {
     this.proofUrl,
   });
 }
+
+class SiblingDiscountTier {
+  final int siblingRank;
+  final double discountPercent;
+
+  const SiblingDiscountTier({
+    required this.siblingRank,
+    required this.discountPercent,
+  });
+}
+
+class SiblingPolicy {
+  final String? id;
+  final List<SiblingDiscountTier> discounts;
+  final int maxSiblingsCovered;
+
+  const SiblingPolicy({
+    this.id,
+    required this.discounts,
+    required this.maxSiblingsCovered,
+  });
+}
+
+class LateFeePolicy {
+  final String? id;
+  final int gracePeriodDays;
+  final double feePercent;
+  final double maxFeeCap;
+
+  const LateFeePolicy({
+    this.id,
+    required this.gracePeriodDays,
+    required this.feePercent,
+    required this.maxFeeCap,
+  });
+}
+
+class PaymentPlanDraftInstallment {
+  final String dueDate;
+  final double amount;
+
+  const PaymentPlanDraftInstallment({
+    required this.dueDate,
+    required this.amount,
+  });
+}
+
+class PaymentPlanInstallment {
+  final String id;
+  final String planId;
+  final String dueDate;
+  final double amount;
+  final String status;
+  final String? paidAt;
+
+  const PaymentPlanInstallment({
+    required this.id,
+    required this.planId,
+    required this.dueDate,
+    required this.amount,
+    required this.status,
+    this.paidAt,
+  });
+}
+
+class PaymentPlan {
+  final String id;
+  final String studentId;
+  final String? studentName;
+  final String name;
+  final double totalAmount;
+  final String startDate;
+  final String status;
+  final List<PaymentPlanInstallment> installments;
+  final String createdAt;
+
+  const PaymentPlan({
+    required this.id,
+    required this.studentId,
+    this.studentName,
+    required this.name,
+    required this.totalAmount,
+    required this.startDate,
+    required this.status,
+    required this.installments,
+    required this.createdAt,
+  });
+}

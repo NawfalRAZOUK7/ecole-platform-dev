@@ -502,6 +502,63 @@ InvoicePaymentRecord invoicePaymentFromJson(Map<String, dynamic> json) {
   );
 }
 
+SiblingPolicy siblingPolicyFromJson(Map<String, dynamic> json) {
+  return SiblingPolicy(
+    id: json['id'] as String?,
+    discounts: (json['discounts'] as List<dynamic>? ?? const [])
+        .cast<Map<String, dynamic>>()
+        .map(siblingDiscountTierFromJson)
+        .toList(),
+    maxSiblingsCovered: json['max_siblings_covered'] as int? ?? 0,
+  );
+}
+
+SiblingDiscountTier siblingDiscountTierFromJson(Map<String, dynamic> json) {
+  return SiblingDiscountTier(
+    siblingRank: json['sibling_rank'] as int? ?? 1,
+    discountPercent: (json['discount_percent'] as num?)?.toDouble() ?? 0,
+  );
+}
+
+LateFeePolicy lateFeePolicyFromJson(Map<String, dynamic> json) {
+  return LateFeePolicy(
+    id: json['id'] as String?,
+    gracePeriodDays: json['grace_period_days'] as int? ?? 0,
+    feePercent: (json['fee_percent'] as num?)?.toDouble() ?? 0,
+    maxFeeCap: (json['max_fee_cap'] as num?)?.toDouble() ?? 0,
+  );
+}
+
+PaymentPlan paymentPlanFromJson(Map<String, dynamic> json) {
+  return PaymentPlan(
+    id: json['id'] as String? ?? '',
+    studentId: json['student_id'] as String? ?? '',
+    studentName: json['student_name'] as String?,
+    name: json['name'] as String? ?? '',
+    totalAmount: (json['total_amount'] as num?)?.toDouble() ?? 0,
+    startDate: json['start_date'] as String? ?? '',
+    status: json['status'] as String? ?? 'active',
+    installments: (json['installments'] as List<dynamic>? ?? const [])
+        .cast<Map<String, dynamic>>()
+        .map(paymentPlanInstallmentFromJson)
+        .toList(),
+    createdAt: json['created_at'] as String? ?? '',
+  );
+}
+
+PaymentPlanInstallment paymentPlanInstallmentFromJson(
+  Map<String, dynamic> json,
+) {
+  return PaymentPlanInstallment(
+    id: json['id'] as String? ?? '',
+    planId: json['plan_id'] as String? ?? '',
+    dueDate: json['due_date'] as String? ?? '',
+    amount: (json['amount'] as num?)?.toDouble() ?? 0,
+    status: json['status'] as String? ?? 'pending',
+    paidAt: json['paid_at'] as String?,
+  );
+}
+
 // ── Admin ──
 
 DashboardStats dashboardStatsFromJson(Map<String, dynamic> json) {

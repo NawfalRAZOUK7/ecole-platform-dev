@@ -24,4 +24,31 @@ abstract class InvoiceRepository {
   Future<List<InvoicePaymentRecord>> getInvoicePayments(String invoiceId);
 
   Future<File> downloadInvoicePdf(String invoiceId);
+
+  Future<SiblingPolicy> getSiblingPolicy();
+
+  Future<SiblingPolicy> updateSiblingPolicy({
+    required List<SiblingDiscountTier> discounts,
+    required int maxSiblingsCovered,
+  });
+
+  Future<LateFeePolicy> getLateFeePolicy();
+
+  Future<LateFeePolicy> updateLateFeePolicy({
+    required int gracePeriodDays,
+    required double feePercent,
+    required double maxFeeCap,
+  });
+
+  Future<List<PaymentPlan>> listPaymentPlans({String? status});
+
+  Future<PaymentPlan> getPaymentPlan(String id);
+
+  Future<PaymentPlan> createPaymentPlan({
+    required String studentId,
+    required String name,
+    required double totalAmount,
+    required String startDate,
+    required List<PaymentPlanDraftInstallment> installments,
+  });
 }

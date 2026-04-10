@@ -70,6 +70,10 @@ import 'package:ecole_platform/features/sync/sync_conflicts_screen.dart';
 import 'package:ecole_platform/features/sync/sync_status_screen.dart';
 import 'package:ecole_platform/features/financial-health/financial_dashboard_screen.dart';
 import 'package:ecole_platform/features/financial-health/financial_snapshots_screen.dart';
+import 'package:ecole_platform/features/billing/late_fee_policy_screen.dart';
+import 'package:ecole_platform/features/billing/payment_plan_detail_screen.dart';
+import 'package:ecole_platform/features/billing/payment_plans_screen.dart';
+import 'package:ecole_platform/features/billing/sibling_policy_screen.dart';
 import 'package:ecole_platform/presentation/shell_screen.dart';
 
 /// Role-based redirect targets.
@@ -364,6 +368,24 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/financial-health/snapshots',
             builder: (context, state) => const FinancialSnapshotsScreen(),
+          ),
+          GoRoute(
+            path: '/billing/sibling-policy',
+            builder: (context, state) => const SiblingPolicyScreen(),
+          ),
+          GoRoute(
+            path: '/billing/late-fees',
+            builder: (context, state) => const LateFeePolicyScreen(),
+          ),
+          GoRoute(
+            path: '/billing/payment-plans',
+            builder: (context, state) => const PaymentPlansScreen(),
+          ),
+          GoRoute(
+            path: '/billing/payment-plans/:id',
+            builder: (context, state) => PaymentPlanDetailScreen(
+              planId: state.pathParameters['id']!,
+            ),
           ),
           GoRoute(
             path: '/settings/notifications',

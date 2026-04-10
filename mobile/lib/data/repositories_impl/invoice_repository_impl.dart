@@ -86,4 +86,95 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
     final savePath = '${directory.path}/invoice-$invoiceId.pdf';
     return _api.download('/invoices/$invoiceId/pdf', savePath: savePath);
   }
+
+  @override
+  Future<SiblingPolicy> getSiblingPolicy() async {
+    final response = await _api.get('/billing/sibling-policy');
+    return siblingPolicyFromJson(response.data);
+  }
+
+  @override
+  Future<SiblingPolicy> updateSiblingPolicy({
+    required List<SiblingDiscountTier> discounts,
+    required int maxSiblingsCovered,
+  }) async {
+    final response = await _api.put(
+      '/billing/sibling-policy',
+      body: {
+        'discounts': discounts
+            .map((item) => {
+                  'sibling_rank': item.siblingRank,
+                  'discount_percent': item.discountPercent,
+                })
+            .toList(),
+        'max_siblings_covered': maxSiblingsCovered,
+      },
+    );
+    return siblingPolicyFromJson(response.data);
+  }
+
+  @override
+  Future<LateFeePolicy> getLateFeePolicy() async {
+    final response = await _api.get('/billing/late-fee-policy');
+    return lateFeePolicyFromJson(response.data);
+  }
+
+  @override
+  Future<LateFeePolicy> updateLateFeePolicy({
+    required int gracePeriodDays,
+    required double feePercent,
+    required double maxFeeCap,
+  }) async {
+    final response = await _api.put(
+      '/billing/late-fee-policy',
+      body: {
+        'grace_period_days': gracePeriodDays,
+        'fee_percent': feePercent,
+        'max_fee_cap': maxFeeCap,
+      },
+    );
+    return lateFeePolicyFromJson(response.data);
+  }
+
+  @override
+  Future<List<PaymentPlan>> listPaymentPlans({String? status}) async {
+    final response = await _api.list(
+      '/billing/payment-plans',
+      params: status == null || status.isEmpty ? null : {'status': status},
+    );
+    return response.data.map(paymentPlanFromJson).toList();
+  }
+
+  @override
+  Future<PaymentPlan> getPaymentPlan(String id) async {
+    final response = await _api.get('/billing/payment-plans/$id');
+    return paymentPlanFromJson(response.data);
+  }
+
+  @override
+  Future<PaymentPlan> createPaymentPlan({
+    required String studentId,
+    required String name,
+    required double totalAmount,
+    required String startDate,
+    required List<PaymentPlanDraftInstallment> installments,
+  }) async {
+    final response = await _api.post(
+      '/billing/payment-plans',
+      body: {
+        'student_id': studentId,
+        'name': name,
+        'total_amount': totalAmount,
+        'start_date': startDate,
+        'installments': installments
+            .map((item) => {
+                  'due_date': item.dueDate,
+                  'amount': item.amount,
+                })
+            .toList(),
+      },
+    );
+    await _cache.invalidatePrefix('invoices:');
+    return paymentPlanFromJson(response.data);
+  }
 }
