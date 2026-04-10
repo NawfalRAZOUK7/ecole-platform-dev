@@ -1,0 +1,3 @@
+/Users/nawfalrazouk/Ecole-Platform/ecole-platform-dev/mobile/third_party/pdf_render/android/.cxx/Debug/2p6m343k/x86_64/CMakeFiles/bbhelper.dir
+/Users/nawfalrazouk/Ecole-Platform/ecole-platform-dev/mobile/third_party/pdf_render/android/.cxx/Debug/2p6m343k/x86_64/CMakeFiles/edit_cache.dir
+/Users/nawfalrazouk/Ecole-Platform/ecole-platform-dev/mobile/third_party/pdf_render/android/.cxx/Debug/2p6m343k/x86_64/CMakeFiles/rebuild_cache.dir
