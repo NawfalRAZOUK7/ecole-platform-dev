@@ -63,6 +63,9 @@ import 'package:ecole_platform/features/skills/skill_analytics_screen.dart';
 import 'package:ecole_platform/features/skills/skill_evaluation_screen.dart';
 import 'package:ecole_platform/features/skills/skill_passport_screen.dart';
 import 'package:ecole_platform/features/skills/skills_overview_screen.dart';
+import 'package:ecole_platform/features/compliance/compliance_dashboard_screen.dart';
+import 'package:ecole_platform/features/compliance/curriculum_mapping_screen.dart';
+import 'package:ecole_platform/features/compliance/compliance_report_screen.dart';
 import 'package:ecole_platform/presentation/shell_screen.dart';
 
 /// Role-based redirect targets.
@@ -329,6 +332,18 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/skills/analytics',
             builder: (context, state) => const SkillAnalyticsScreen(),
+          ),
+          GoRoute(
+            path: '/compliance',
+            builder: (context, state) => const ComplianceDashboardScreen(),
+          ),
+          GoRoute(
+            path: '/compliance/mapping',
+            builder: (context, state) => const CurriculumMappingScreen(),
+          ),
+          GoRoute(
+            path: '/compliance/reports',
+            builder: (context, state) => const ComplianceReportScreen(),
           ),
           GoRoute(
             path: '/settings/notifications',

@@ -28,6 +28,7 @@ import 'package:ecole_platform/data/repositories_impl/feed_repository_impl.dart'
 import 'package:ecole_platform/data/repositories_impl/notification_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/micro_school_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/skills_repository_impl.dart';
+import 'package:ecole_platform/data/repositories_impl/compliance_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/content_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/result_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/invoice_repository_impl.dart';
@@ -46,6 +47,7 @@ import 'package:ecole_platform/domain/repositories/feed_repository.dart';
 import 'package:ecole_platform/domain/repositories/notification_repository.dart';
 import 'package:ecole_platform/domain/repositories/micro_school_repository.dart';
 import 'package:ecole_platform/domain/repositories/skills_repository.dart';
+import 'package:ecole_platform/domain/repositories/compliance_repository.dart';
 import 'package:ecole_platform/domain/repositories/content_repository.dart';
 import 'package:ecole_platform/domain/repositories/result_repository.dart';
 import 'package:ecole_platform/domain/repositories/invoice_repository.dart';
@@ -257,4 +259,8 @@ final microSchoolRepositoryProvider = Provider<MicroSchoolRepository>((ref) {
 
 final skillsRepositoryProvider = Provider<SkillsRepository>((ref) {
   return SkillsRepositoryImpl(api: ref.watch(apiClientProvider));
+});
+
+final complianceRepositoryProvider = Provider<ComplianceRepository>((ref) {
+  return ComplianceRepositoryImpl(api: ref.watch(apiClientProvider));
 });
