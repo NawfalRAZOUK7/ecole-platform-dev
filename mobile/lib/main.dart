@@ -14,6 +14,7 @@ import 'dart:developer' as dev;
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/app/providers.dart';
@@ -153,6 +154,9 @@ class _EcolePlatformAppState extends ConsumerState<EcolePlatformApp>
     final router = ref.watch(routerProvider);
     final authState = ref.watch(authProvider);
     final themeMode = ref.watch(themeModeProvider);
+    final localeCode = ref.watch(localeProvider);
+    final locale = Locale(localeCode);
+    ref.read(apiClientProvider).setLocale(localeCode);
 
     // Connect/disconnect WebSocket based on auth state
     final wsClient = ref.read(wsClientProvider);
@@ -187,6 +191,24 @@ class _EcolePlatformAppState extends ConsumerState<EcolePlatformApp>
       title: 'École Platform',
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: _scaffoldMessengerKey,
+      locale: locale,
+      supportedLocales: const [
+        Locale('fr'),
+        Locale('ar'),
+        Locale('en'),
+      ],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      builder: (context, child) {
+        return Directionality(
+          textDirection:
+              localeCode == 'ar' ? TextDirection.rtl : TextDirection.ltr,
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       theme: appLightTheme,
       darkTheme: appDarkTheme,
       themeMode: themeMode,
