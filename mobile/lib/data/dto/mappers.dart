@@ -457,28 +457,48 @@ Result resultFromJson(Map<String, dynamic> json) {
 Invoice invoiceFromJson(Map<String, dynamic> json) {
   return Invoice(
     id: json['id'] as String,
-    schoolId: json['school_id'] as String,
-    parentId: json['parent_id'] as String,
+    schoolId: json['school_id'] as String? ?? '',
+    parentId: json['parent_id'] as String? ?? '',
     periodId: json['period_id'] as String?,
-    status: json['status'] as String,
-    totalAmount: (json['total_amount'] as num).toDouble(),
-    currency: json['currency'] as String,
-    issuedDate: json['issued_date'] as String,
-    dueDate: json['due_date'] as String,
+    invoiceNumber: json['invoice_number'] as String?,
+    studentId: json['student_id'] as String?,
+    studentName: json['student_name'] as String?,
+    label: json['label'] as String?,
+    status: json['status'] as String? ?? 'pending',
+    totalAmount: (json['total_amount'] as num?)?.toDouble() ??
+        (json['total_cents'] as num?)?.toDouble() ??
+        0,
+    currency: json['currency'] as String? ?? 'MAD',
+    issuedDate: json['issued_date'] as String? ?? '',
+    dueDate: json['due_date'] as String? ?? '',
     items: (json['items'] as List<dynamic>?)
             ?.map((i) => invoiceItemFromJson(i as Map<String, dynamic>))
             .toList() ??
         [],
+    balanceDue: (json['balance_due'] as num?)?.toDouble(),
   );
 }
 
 InvoiceItem invoiceItemFromJson(Map<String, dynamic> json) {
   return InvoiceItem(
-    id: json['id'] as String,
-    description: json['description'] as String,
-    amount: (json['amount'] as num).toDouble(),
-    unitPrice: (json['unit_price'] as num).toDouble(),
-    quantity: json['quantity'] as int,
+    id: json['id'] as String? ?? '',
+    description: json['description'] as String? ?? '',
+    amount: (json['amount'] as num?)?.toDouble() ?? 0,
+    unitPrice: (json['unit_price'] as num?)?.toDouble() ?? 0,
+    quantity: json['quantity'] as int? ?? 0,
+  );
+}
+
+InvoicePaymentRecord invoicePaymentFromJson(Map<String, dynamic> json) {
+  return InvoicePaymentRecord(
+    id: json['id'] as String? ?? '',
+    invoiceId: json['invoice_id'] as String? ?? '',
+    amount: (json['amount'] as num?)?.toDouble() ?? 0,
+    method: json['method'] as String? ?? 'card',
+    status: json['status'] as String? ?? 'pending',
+    createdAt: json['created_at'] as String?,
+    finalizedAt: json['finalized_at'] as String?,
+    proofUrl: json['proof_url'] as String?,
   );
 }
 

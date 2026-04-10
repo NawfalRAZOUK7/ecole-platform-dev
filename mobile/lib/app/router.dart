@@ -58,6 +58,7 @@ import 'package:ecole_platform/features/documents/documents_screen.dart';
 import 'package:ecole_platform/features/gradebook/grade_detail_screen.dart';
 import 'package:ecole_platform/features/gradebook/gradebook_screen.dart';
 import 'package:ecole_platform/features/gradebook/transcript_screen.dart';
+import 'package:ecole_platform/features/invoices/invoice_detail_screen.dart';
 import 'package:ecole_platform/presentation/shell_screen.dart';
 
 /// Role-based redirect targets.
@@ -300,6 +301,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/documents',
             builder: (context, state) => const DocumentsScreen(),
+          ),
+          GoRoute(
+            path: '/invoices/:id',
+            builder: (context, state) => InvoiceDetailScreen(
+              invoiceId: state.pathParameters['id']!,
+            ),
           ),
           GoRoute(
             path: '/settings/notifications',

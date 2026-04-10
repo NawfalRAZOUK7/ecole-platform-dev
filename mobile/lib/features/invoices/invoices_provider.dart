@@ -73,6 +73,29 @@ class InvoicesNotifier extends StateNotifier<InvoicesState> {
   }
 }
 
+class InvoiceDetailData {
+  final Invoice invoice;
+  final List<InvoicePaymentRecord> payments;
+
+  const InvoiceDetailData({
+    required this.invoice,
+    required this.payments,
+  });
+}
+
+final invoiceDetailProvider =
+    FutureProvider.family<InvoiceDetailData, String>((ref, invoiceId) async {
+  final repository = ref.read(invoiceRepositoryProvider);
+  final results = await Future.wait<dynamic>([
+    repository.getInvoiceDetail(invoiceId),
+    repository.getInvoicePayments(invoiceId),
+  ]);
+  return InvoiceDetailData(
+    invoice: results[0] as Invoice,
+    payments: results[1] as List<InvoicePaymentRecord>,
+  );
+});
+
 final invoicesProvider =
     StateNotifierProvider<InvoicesNotifier, InvoicesState>((ref) {
   return InvoicesNotifier(ref);

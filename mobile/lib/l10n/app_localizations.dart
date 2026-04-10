@@ -157,6 +157,12 @@ const Map<String, Map<String, String>> _translations = {
     'invoices.issued': 'Émise',
     'invoices.due': 'Échéance',
     'invoices.retry': 'Relancer le paiement',
+    'invoices.detail': 'Détail de facture',
+    'invoices.lineItems': 'Lignes de facture',
+    'invoices.paymentHistory': 'Historique des paiements',
+    'invoices.createPayment': 'Créer un paiement',
+    'invoices.noPayments': 'Aucun paiement enregistré',
+    'invoices.balanceDue': 'Solde restant',
 
     // ── Progress (Phase 12C) ──
     'progress.title': 'Mon progrès',
@@ -703,6 +709,12 @@ const Map<String, Map<String, String>> _translations = {
     'invoices.issued': 'صدرت',
     'invoices.due': 'الاستحقاق',
     'invoices.retry': 'إعادة الدفع',
+    'invoices.detail': 'تفاصيل الفاتورة',
+    'invoices.lineItems': 'بنود الفاتورة',
+    'invoices.paymentHistory': 'سجل المدفوعات',
+    'invoices.createPayment': 'إنشاء دفعة',
+    'invoices.noPayments': 'لا توجد مدفوعات',
+    'invoices.balanceDue': 'الرصيد المتبقي',
 
     // ── Progress (Phase 12C) ──
     'progress.title': 'تقدمي',
@@ -1250,6 +1262,12 @@ const Map<String, Map<String, String>> _translations = {
     'invoices.issued': 'Issued',
     'invoices.due': 'Due',
     'invoices.retry': 'Retry payment',
+    'invoices.detail': 'Invoice detail',
+    'invoices.lineItems': 'Line items',
+    'invoices.paymentHistory': 'Payment history',
+    'invoices.createPayment': 'Create payment',
+    'invoices.noPayments': 'No payments recorded',
+    'invoices.balanceDue': 'Balance due',
 
     // ── Progress (Phase 12C) ──
     'progress.title': 'My Progress',
