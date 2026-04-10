@@ -48,6 +48,21 @@ export interface ClassContentItem {
   teacher_notes: string | null;
 }
 
+export interface StudentWorkItem {
+  id: string;
+  type: 'assignment' | 'quiz' | 'assessment';
+  title: string;
+  due_at: string | null;
+  status: string;
+  total_points: number | null;
+  grading_type: string | null;
+}
+
+export interface StudentWorkListResponse {
+  items: StudentWorkItem[];
+  total: number;
+}
+
 export const studentService = {
   listPublishedQuizzes() {
     return quizzesService.listQuizzes({ status: 'published' });
@@ -75,6 +90,14 @@ export const studentService = {
 
   listStudentClasses() {
     return api.list<StudentClassOption>('/enrollments');
+  },
+
+  listStudentWork() {
+    return api.get<StudentWorkListResponse>('/student-work');
+  },
+
+  listClassStudentWork(classId: string) {
+    return api.get<StudentWorkListResponse>(`/student-work/class/${classId}`);
   },
 
   createEnrollment(payload: EnrollmentPayload) {

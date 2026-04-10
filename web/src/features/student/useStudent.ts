@@ -5,6 +5,9 @@ import { studentService, type EnrollmentPayload } from './student.service';
 export const studentQueryKeys = {
   all: ['student'] as const,
   quizzes: () => [...studentQueryKeys.all, 'quizzes'] as const,
+  studentWork: () => [...studentQueryKeys.all, 'student-work'] as const,
+  classStudentWork: (classId: string | null | undefined) =>
+    [...studentQueryKeys.all, 'class-student-work', classId] as const,
   quizDetail: (quizId: string | null | undefined) =>
     [...studentQueryKeys.all, 'quiz-detail', quizId] as const,
   attemptResults: (attemptId: string | null | undefined) =>
@@ -77,6 +80,23 @@ export function useStudentClasses() {
   return useQuery({
     queryKey: studentQueryKeys.classes(),
     queryFn: async () => (await studentService.listStudentClasses()).data,
+    staleTime: STALE_DEFAULT,
+  });
+}
+
+export function useStudentWork() {
+  return useQuery({
+    queryKey: studentQueryKeys.studentWork(),
+    queryFn: async () => (await studentService.listStudentWork()).data,
+    staleTime: STALE_DEFAULT,
+  });
+}
+
+export function useClassStudentWork(classId: string | null | undefined) {
+  return useQuery({
+    queryKey: studentQueryKeys.classStudentWork(classId),
+    queryFn: async () => (await studentService.listClassStudentWork(classId!)).data,
+    enabled: Boolean(classId),
     staleTime: STALE_DEFAULT,
   });
 }

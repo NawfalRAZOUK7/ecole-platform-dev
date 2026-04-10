@@ -10,16 +10,11 @@ export interface AssignmentOption {
   exercise_pdf_path?: string | null;
 }
 
-async function fetchExercisePdfResponse(
-  assignmentId: string,
-  method: 'GET' | 'POST',
-  headers: Record<string, string>,
-) {
-  return fetch(`/api/v1/assignments/${assignmentId}/exercise-pdf`, {
-    method,
-    credentials: 'include',
-    headers,
-  });
+export interface ExercisePdfUploadResponse {
+  id: string;
+  exercise_pdf_path: string;
+  checksum: string;
+  file_size: number;
 }
 
 export const submissionsService = {
@@ -77,32 +72,53 @@ export const submissionsService = {
     return api.post<void>(`/submissions/${submissionId}/submit`);
   },
 
-  async generateExercisePdf(assignmentId: string) {
+  async uploadExercisePdf(assignmentId: string, file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+
     const headers: Record<string, string> = {};
     const token = getAccessToken();
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
 
-    const response = await fetchExercisePdfResponse(assignmentId, 'POST', headers);
-    if (response.ok) {
-      return response.blob();
+    const response = await fetch(`/api/v1/assignments/${assignmentId}/exercise-pdf`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'include',
+      headers,
+    });
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => null);
+      throw new Error(body?.error?.message || 'Upload failed');
     }
 
-    if (![405, 415, 422].includes(response.status)) {
-      throw new Error('Download failed');
-    }
-
-    const fallbackResponse = await fetchExercisePdfResponse(assignmentId, 'GET', headers);
-    if (!fallbackResponse.ok) {
-      throw new Error('Download failed');
-    }
-
-    return fallbackResponse.blob();
+    const body = await response.json().catch(() => null);
+    return (body?.data ?? body) as ExercisePdfUploadResponse;
   },
 
-  downloadExercisePdf(assignmentId: string) {
-    return submissionsService.generateExercisePdf(assignmentId);
+  async downloadExercisePdf(assignmentId: string) {
+    const headers: Record<string, string> = {
+      Accept: 'application/pdf',
+    };
+    const token = getAccessToken();
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`/api/v1/assignments/${assignmentId}/exercise-pdf`, {
+      method: 'GET',
+      credentials: 'include',
+      headers,
+    });
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => null);
+      throw new Error(body?.error?.message || 'Download failed');
+    }
+
+    return response.blob();
   },
 
   overridePenalty(submissionId: string, payload: { penalty_override: number; reason?: string }) {

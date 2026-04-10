@@ -46,17 +46,17 @@ export function useFinalizeStudentSubmission() {
   });
 }
 
-export function useGenerateExercisePdf() {
+export function useUploadExercisePdf() {
   return useMutation({
-    mutationFn: async (assignmentId: string) =>
-      submissionsService.generateExercisePdf(assignmentId),
+    mutationFn: async ({ assignmentId, file }: { assignmentId: string; file: File }) =>
+      submissionsService.uploadExercisePdf(assignmentId, file),
   });
 }
 
 export function useDownloadExercisePdf() {
   return useMutation({
     mutationFn: async (assignmentId: string) =>
-      submissionsService.generateExercisePdf(assignmentId),
+      submissionsService.downloadExercisePdf(assignmentId),
   });
 }
 
