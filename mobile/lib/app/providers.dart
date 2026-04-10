@@ -40,6 +40,7 @@ import 'package:ecole_platform/data/repositories_impl/teacher_repository_impl.da
 import 'package:ecole_platform/data/repositories_impl/content_library_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/quiz_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/gradebook_repository_impl.dart';
+import 'package:ecole_platform/data/repositories_impl/question_bank_repository_impl.dart';
 import 'package:ecole_platform/domain/repositories/auth_repository.dart';
 import 'package:ecole_platform/domain/repositories/attendance_repository.dart';
 import 'package:ecole_platform/domain/repositories/budget_repository.dart';
@@ -62,6 +63,7 @@ import 'package:ecole_platform/domain/repositories/teacher_repository.dart';
 import 'package:ecole_platform/domain/repositories/content_library_repository.dart';
 import 'package:ecole_platform/domain/repositories/quiz_repository.dart';
 import 'package:ecole_platform/domain/repositories/gradebook_repository.dart';
+import 'package:ecole_platform/domain/repositories/question_bank_repository.dart';
 import 'package:ecole_platform/features/auth/biometric_service.dart';
 import 'package:ecole_platform/shared/secure_storage.dart';
 import 'package:ecole_platform/shared/connectivity_service.dart';
@@ -245,6 +247,12 @@ final gradebookRepositoryProvider = Provider<GradebookRepository>((ref) {
   return GradebookRepositoryImpl(
     api: ref.watch(apiClientProvider),
     cache: ref.watch(cacheStoreProvider),
+  );
+});
+
+final questionBankRepositoryProvider = Provider<QuestionBankRepository>((ref) {
+  return QuestionBankRepositoryImpl(
+    api: ref.watch(apiClientProvider),
   );
 });
 

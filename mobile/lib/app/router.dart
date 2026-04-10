@@ -74,6 +74,9 @@ import 'package:ecole_platform/features/billing/late_fee_policy_screen.dart';
 import 'package:ecole_platform/features/billing/payment_plan_detail_screen.dart';
 import 'package:ecole_platform/features/billing/payment_plans_screen.dart';
 import 'package:ecole_platform/features/billing/sibling_policy_screen.dart';
+import 'package:ecole_platform/features/question-bank/generate_quiz_screen.dart';
+import 'package:ecole_platform/features/question-bank/question_bank_import_screen.dart';
+import 'package:ecole_platform/features/question-bank/question_bank_screen.dart';
 import 'package:ecole_platform/presentation/shell_screen.dart';
 
 /// Role-based redirect targets.
@@ -386,6 +389,18 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => PaymentPlanDetailScreen(
               planId: state.pathParameters['id']!,
             ),
+          ),
+          GoRoute(
+            path: '/question-bank',
+            builder: (context, state) => const QuestionBankScreen(),
+          ),
+          GoRoute(
+            path: '/question-bank/import',
+            builder: (context, state) => const QuestionBankImportScreen(),
+          ),
+          GoRoute(
+            path: '/question-bank/generate',
+            builder: (context, state) => const GenerateQuizScreen(),
           ),
           GoRoute(
             path: '/settings/notifications',
