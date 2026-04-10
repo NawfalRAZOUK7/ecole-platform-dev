@@ -59,6 +59,10 @@ import 'package:ecole_platform/features/gradebook/grade_detail_screen.dart';
 import 'package:ecole_platform/features/gradebook/gradebook_screen.dart';
 import 'package:ecole_platform/features/gradebook/transcript_screen.dart';
 import 'package:ecole_platform/features/invoices/invoice_detail_screen.dart';
+import 'package:ecole_platform/features/skills/skill_analytics_screen.dart';
+import 'package:ecole_platform/features/skills/skill_evaluation_screen.dart';
+import 'package:ecole_platform/features/skills/skill_passport_screen.dart';
+import 'package:ecole_platform/features/skills/skills_overview_screen.dart';
 import 'package:ecole_platform/presentation/shell_screen.dart';
 
 /// Role-based redirect targets.
@@ -307,6 +311,24 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => InvoiceDetailScreen(
               invoiceId: state.pathParameters['id']!,
             ),
+          ),
+          GoRoute(
+            path: '/skills',
+            builder: (context, state) => const SkillsOverviewScreen(),
+          ),
+          GoRoute(
+            path: '/skills/passport/:id',
+            builder: (context, state) => SkillPassportScreen(
+              studentId: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/skills/evaluate',
+            builder: (context, state) => const SkillEvaluationScreen(),
+          ),
+          GoRoute(
+            path: '/skills/analytics',
+            builder: (context, state) => const SkillAnalyticsScreen(),
           ),
           GoRoute(
             path: '/settings/notifications',

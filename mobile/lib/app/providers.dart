@@ -27,6 +27,7 @@ import 'package:ecole_platform/data/repositories_impl/document_repository_impl.d
 import 'package:ecole_platform/data/repositories_impl/feed_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/notification_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/micro_school_repository_impl.dart';
+import 'package:ecole_platform/data/repositories_impl/skills_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/content_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/result_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/invoice_repository_impl.dart';
@@ -44,6 +45,7 @@ import 'package:ecole_platform/domain/repositories/document_repository.dart';
 import 'package:ecole_platform/domain/repositories/feed_repository.dart';
 import 'package:ecole_platform/domain/repositories/notification_repository.dart';
 import 'package:ecole_platform/domain/repositories/micro_school_repository.dart';
+import 'package:ecole_platform/domain/repositories/skills_repository.dart';
 import 'package:ecole_platform/domain/repositories/content_repository.dart';
 import 'package:ecole_platform/domain/repositories/result_repository.dart';
 import 'package:ecole_platform/domain/repositories/invoice_repository.dart';
@@ -251,4 +253,8 @@ final budgetRepositoryProvider = Provider<BudgetRepository>((ref) {
 
 final microSchoolRepositoryProvider = Provider<MicroSchoolRepository>((ref) {
   return MicroSchoolRepositoryImpl(api: ref.watch(apiClientProvider));
+});
+
+final skillsRepositoryProvider = Provider<SkillsRepository>((ref) {
+  return SkillsRepositoryImpl(api: ref.watch(apiClientProvider));
 });
