@@ -47,6 +47,9 @@ import 'package:ecole_platform/features/progress/parent_progress_screen.dart';
 import 'package:ecole_platform/features/reports/reports_screen.dart';
 import 'package:ecole_platform/features/analytics/analytics_summary_screen.dart';
 import 'package:ecole_platform/features/documents/documents_screen.dart';
+import 'package:ecole_platform/features/gradebook/grade_detail_screen.dart';
+import 'package:ecole_platform/features/gradebook/gradebook_screen.dart';
+import 'package:ecole_platform/features/gradebook/transcript_screen.dart';
 import 'package:ecole_platform/presentation/shell_screen.dart';
 
 /// Role-based redirect targets.
@@ -144,6 +147,22 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/teacher/content-library',
             builder: (context, state) => const ContentLibraryScreen(),
+          ),
+          GoRoute(
+            path: '/gradebook',
+            builder: (context, state) => const GradebookScreen(),
+          ),
+          GoRoute(
+            path: '/gradebook/student/:id',
+            builder: (context, state) => GradeDetailScreen(
+              studentId: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/gradebook/transcript/:id',
+            builder: (context, state) => TranscriptScreen(
+              studentId: state.pathParameters['id']!,
+            ),
           ),
 
           // ── Parent routes ──

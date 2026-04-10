@@ -31,6 +31,7 @@ import 'package:ecole_platform/data/repositories_impl/reporting_repository_impl.
 import 'package:ecole_platform/data/repositories_impl/teacher_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/content_library_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/quiz_repository_impl.dart';
+import 'package:ecole_platform/data/repositories_impl/gradebook_repository_impl.dart';
 import 'package:ecole_platform/domain/repositories/auth_repository.dart';
 import 'package:ecole_platform/domain/repositories/calendar_repository.dart';
 import 'package:ecole_platform/domain/repositories/document_repository.dart';
@@ -44,6 +45,7 @@ import 'package:ecole_platform/domain/repositories/reporting_repository.dart';
 import 'package:ecole_platform/domain/repositories/teacher_repository.dart';
 import 'package:ecole_platform/domain/repositories/content_library_repository.dart';
 import 'package:ecole_platform/domain/repositories/quiz_repository.dart';
+import 'package:ecole_platform/domain/repositories/gradebook_repository.dart';
 import 'package:ecole_platform/features/auth/biometric_service.dart';
 import 'package:ecole_platform/shared/secure_storage.dart';
 import 'package:ecole_platform/shared/connectivity_service.dart';
@@ -213,6 +215,13 @@ final contentLibraryRepositoryProvider =
 
 final quizRepositoryProvider = Provider<QuizRepository>((ref) {
   return QuizRepositoryImpl(
+    api: ref.watch(apiClientProvider),
+    cache: ref.watch(cacheStoreProvider),
+  );
+});
+
+final gradebookRepositoryProvider = Provider<GradebookRepository>((ref) {
+  return GradebookRepositoryImpl(
     api: ref.watch(apiClientProvider),
     cache: ref.watch(cacheStoreProvider),
   );
