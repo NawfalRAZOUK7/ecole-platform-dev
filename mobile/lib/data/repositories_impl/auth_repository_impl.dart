@@ -155,6 +155,40 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<void> requestRecovery(String email) async {
+    await _api.post(
+      '/recovery/request',
+      body: {'email': email},
+      skipAuth: true,
+    );
+  }
+
+  @override
+  Future<bool> verifyRecovery(String token, String code) async {
+    final response = await _api.post(
+      '/recovery/verify',
+      body: {
+        'token': token,
+        'code': code,
+      },
+      skipAuth: true,
+    );
+    return response.data['valid'] as bool? ?? false;
+  }
+
+  @override
+  Future<void> resetPassword(String token, String newPassword) async {
+    await _api.post(
+      '/recovery/reset',
+      body: {
+        'token': token,
+        'new_password': newPassword,
+      },
+      skipAuth: true,
+    );
+  }
+
+  @override
   Future<void> logout() async {
     try {
       await _api.post('/auth/logout');

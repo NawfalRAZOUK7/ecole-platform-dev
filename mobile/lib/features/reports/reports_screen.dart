@@ -11,6 +11,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/reporting.dart';
 import 'package:ecole_platform/features/auth/auth_provider.dart';
+import 'package:ecole_platform/features/reports/report_schedule_manager.dart';
 import 'package:ecole_platform/l10n/app_localizations.dart';
 
 const Map<String, List<String>> _reportTypesByRole = {
@@ -336,6 +337,11 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     _buildGeneratorCard(t),
                     const SizedBox(height: 16),
                     _buildHistorySection(t),
+                    const SizedBox(height: 16),
+                    ReportScheduleManager(
+                      reportType: _selectedType ?? _availableTypes.first,
+                      defaultParameters: _currentScheduleParameters(),
+                    ),
                     if (_cachedReports.isNotEmpty) ...[
                       const SizedBox(height: 16),
                       _buildCachedSection(t),
@@ -755,6 +761,21 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
   String? _formatDateParam(DateTime? value) {
     if (value == null) return null;
     return DateFormat('yyyy-MM-dd').format(value);
+  }
+
+  Map<String, dynamic> _currentScheduleParameters() {
+    return {
+      'locale': _selectedLocale,
+      if (_periodId.isNotEmpty) 'period_id': _periodId,
+      if (_classId.isNotEmpty) 'class_id': _classId,
+      if (_studentId.isNotEmpty) 'student_id': _studentId,
+      if (_parentId.isNotEmpty) 'parent_id': _parentId,
+      if (_formatDateParam(_fromDate) != null)
+        'from_date': _formatDateParam(_fromDate),
+      if (_formatDateParam(_toDate) != null)
+        'to_date': _formatDateParam(_toDate),
+      'compare': _compare,
+    };
   }
 }
 

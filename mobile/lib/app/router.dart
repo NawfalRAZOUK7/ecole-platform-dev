@@ -11,8 +11,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ecole_platform/features/auth/auth_provider.dart';
+import 'package:ecole_platform/features/auth/forgot_password_screen.dart';
 import 'package:ecole_platform/features/auth/login_screen.dart';
 import 'package:ecole_platform/features/auth/register_screen.dart';
+import 'package:ecole_platform/features/auth/reset_password_screen.dart';
 import 'package:ecole_platform/features/feed/feed_screen.dart';
 import 'package:ecole_platform/features/notifications/notifications_screen.dart';
 import 'package:ecole_platform/features/notifications/notification_preferences_screen.dart';
@@ -70,10 +72,13 @@ import 'package:ecole_platform/features/sync/sync_conflicts_screen.dart';
 import 'package:ecole_platform/features/sync/sync_status_screen.dart';
 import 'package:ecole_platform/features/financial-health/financial_dashboard_screen.dart';
 import 'package:ecole_platform/features/financial-health/financial_snapshots_screen.dart';
+import 'package:ecole_platform/features/admin/feature_toggles_screen.dart';
+import 'package:ecole_platform/features/admin/school_settings_screen.dart';
 import 'package:ecole_platform/features/billing/late_fee_policy_screen.dart';
 import 'package:ecole_platform/features/billing/payment_plan_detail_screen.dart';
 import 'package:ecole_platform/features/billing/payment_plans_screen.dart';
 import 'package:ecole_platform/features/billing/sibling_policy_screen.dart';
+import 'package:ecole_platform/features/profile/gdpr_screen.dart';
 import 'package:ecole_platform/features/question-bank/generate_quiz_screen.dart';
 import 'package:ecole_platform/features/question-bank/question_bank_import_screen.dart';
 import 'package:ecole_platform/features/question-bank/question_bank_screen.dart';
@@ -103,7 +108,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isAuthenticated = authState.isAuthenticated;
       final isLoading = authState.isLoading;
       final loc = state.matchedLocation;
-      final isPublicPage = loc == '/login' || loc == '/register';
+      final isPublicPage = loc == '/login' ||
+          loc == '/register' ||
+          loc == '/forgot-password' ||
+          loc == '/reset-password';
 
       // Still loading — don't redirect
       if (isLoading) return null;
@@ -131,6 +139,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
       ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/reset-password',
+        builder: (context, state) => ResetPasswordScreen(
+          token: state.uri.queryParameters['token'],
+        ),
+      ),
 
       // Shell with bottom navigation
       ShellRoute(
@@ -152,6 +170,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/admin/justifications',
             builder: (context, state) => const JustificationReviewScreen(),
+          ),
+          GoRoute(
+            path: '/admin/features',
+            builder: (context, state) => const FeatureTogglesScreen(),
+          ),
+          GoRoute(
+            path: '/admin/school',
+            builder: (context, state) => const SchoolSettingsScreen(),
           ),
           GoRoute(
             path: '/analytics',
@@ -434,6 +460,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/settings/notifications',
             builder: (context, state) => const NotificationPreferencesScreen(),
+          ),
+          GoRoute(
+            path: '/settings/privacy',
+            builder: (context, state) => const GdprScreen(),
           ),
           GoRoute(
             path: '/content',

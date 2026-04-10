@@ -85,6 +85,30 @@ class ReportJob {
   }
 }
 
+class ReportSchedule {
+  final String id;
+  final String name;
+  final String reportType;
+  final String cronExpression;
+  final Map<String, dynamic> parameters;
+  final bool isActive;
+  final String createdAt;
+  final String? lastRunAt;
+  final String? nextRunAt;
+
+  const ReportSchedule({
+    required this.id,
+    required this.name,
+    required this.reportType,
+    required this.cronExpression,
+    required this.parameters,
+    required this.isActive,
+    required this.createdAt,
+    this.lastRunAt,
+    this.nextRunAt,
+  });
+}
+
 class AnalyticsMetric {
   final double current;
   final double? previous;

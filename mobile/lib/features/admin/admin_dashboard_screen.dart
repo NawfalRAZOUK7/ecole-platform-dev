@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/admin.dart';
@@ -126,6 +127,27 @@ class AdminDashboardScreen extends ConsumerWidget {
                       );
                     }).toList(),
                   ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text('Administration',
+                  style: theme.textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.toggle_on_outlined),
+                  title: const Text('Feature toggles'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/admin/features'),
+                ),
+              ),
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.school_outlined),
+                  title: const Text('School settings'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/admin/school'),
                 ),
               ),
             ],

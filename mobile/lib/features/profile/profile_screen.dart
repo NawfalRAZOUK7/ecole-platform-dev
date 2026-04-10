@@ -320,6 +320,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               onTap: () => context.push('/profile/password'),
             ),
           ),
+          Card(
+            child: ListTile(
+              leading: Icon(Icons.privacy_tip_outlined,
+                  color: theme.colorScheme.primary),
+              title: const Text('Confidentialité'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/settings/privacy'),
+            ),
+          ),
           const SizedBox(height: 24),
 
           // Logout button

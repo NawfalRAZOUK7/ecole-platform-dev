@@ -300,4 +300,83 @@ class ReportingRepositoryImpl implements ReportingRepository {
     }
     return path;
   }
+
+  ReportSchedule _scheduleFromJson(Map<String, dynamic> json) {
+    return ReportSchedule(
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      reportType: json['report_type'] as String? ?? '',
+      cronExpression: json['cron_expression'] as String? ?? '',
+      parameters: Map<String, dynamic>.from(
+        json['parameters'] as Map<String, dynamic>? ?? const {},
+      ),
+      isActive: json['is_active'] as bool? ?? true,
+      createdAt: json['created_at'] as String? ?? '',
+      lastRunAt: json['last_run_at'] as String?,
+      nextRunAt: json['next_run_at'] as String?,
+    );
+  }
+
+  @override
+  Future<ReportSchedule> createSchedule({
+    required String name,
+    required String reportType,
+    required String cronExpression,
+    Map<String, dynamic> parameters = const {},
+    bool isActive = true,
+  }) async {
+    final response = await _api.post(
+      '/reports/schedules',
+      body: {
+        'name': name,
+        'report_type': reportType,
+        'cron_expression': cronExpression,
+        'parameters': parameters,
+        'is_active': isActive,
+      },
+    );
+    return _scheduleFromJson(response.data);
+  }
+
+  @override
+  Future<List<ReportSchedule>> listSchedules() async {
+    final response = await _api.list('/reports/schedules');
+    return response.data.map(_scheduleFromJson).toList();
+  }
+
+  @override
+  Future<ReportSchedule> updateSchedule({
+    required String id,
+    String? name,
+    String? reportType,
+    String? cronExpression,
+    Map<String, dynamic>? parameters,
+    bool? isActive,
+  }) async {
+    final response = await _api.put(
+      '/reports/schedules/$id',
+      body: {
+        if (name != null) 'name': name,
+        if (reportType != null) 'report_type': reportType,
+        if (cronExpression != null) 'cron_expression': cronExpression,
+        if (parameters != null) 'parameters': parameters,
+        if (isActive != null) 'is_active': isActive,
+      },
+    );
+    return _scheduleFromJson(response.data);
+  }
+
+  @override
+  Future<void> deleteSchedule(String scheduleId) async {
+    await _api.delete('/reports/schedules/$scheduleId');
+  }
+
+  @override
+  Future<ReportJob> runSchedule(String scheduleId) async {
+    final response = await _api.post(
+      '/reports/schedules/$scheduleId/run',
+      body: {},
+    );
+    return reportJobFromJson(response.data);
+  }
 }

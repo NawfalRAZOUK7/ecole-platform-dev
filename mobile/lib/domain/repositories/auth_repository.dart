@@ -92,6 +92,12 @@ abstract class AuthRepository {
   /// Refresh the access token using the stored refresh token.
   Future<String?> refreshToken();
 
+  Future<void> requestRecovery(String email);
+
+  Future<bool> verifyRecovery(String token, String code);
+
+  Future<void> resetPassword(String token, String newPassword);
+
   /// Logout — revoke session, clear tokens.
   Future<void> logout();
 

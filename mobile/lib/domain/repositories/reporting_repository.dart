@@ -31,6 +31,29 @@ abstract class ReportingRepository {
 
   Future<List<ReportJob>> getCachedReports();
 
+  Future<ReportSchedule> createSchedule({
+    required String name,
+    required String reportType,
+    required String cronExpression,
+    Map<String, dynamic> parameters = const {},
+    bool isActive = true,
+  });
+
+  Future<List<ReportSchedule>> listSchedules();
+
+  Future<ReportSchedule> updateSchedule({
+    required String id,
+    String? name,
+    String? reportType,
+    String? cronExpression,
+    Map<String, dynamic>? parameters,
+    bool? isActive,
+  });
+
+  Future<void> deleteSchedule(String scheduleId);
+
+  Future<ReportJob> runSchedule(String scheduleId);
+
   Future<AnalyticsOverview> getOverview({
     required String fromDate,
     required String toDate,
