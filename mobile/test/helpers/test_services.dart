@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:local_auth/local_auth.dart';
 
 import 'package:ecole_platform/data/api/ws_client.dart';
+import 'package:ecole_platform/domain/entities/sync.dart';
 import 'package:ecole_platform/features/auth/biometric_service.dart';
 import 'package:ecole_platform/shared/connectivity_service.dart';
 import 'package:ecole_platform/shared/push_notifications.dart';
@@ -63,6 +64,21 @@ class TestWsClient implements WsClient {
 }
 
 class TestConnectivityService implements ConnectivityService {
+  @override
+  String get deviceId => 'test-device';
+
+  @override
+  SyncIndicatorState get indicator => const SyncIndicatorState(
+        online: true,
+        syncing: false,
+        pendingCount: 0,
+        failedCount: 0,
+      );
+
+  @override
+  Stream<SyncIndicatorState> get indicatorStream =>
+      Stream<SyncIndicatorState>.empty();
+
   @override
   bool get isOnline => true;
 

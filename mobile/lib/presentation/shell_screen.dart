@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/features/auth/auth_provider.dart';
 import 'package:ecole_platform/features/notifications/notifications_provider.dart';
 import 'package:ecole_platform/l10n/app_localizations.dart';
@@ -175,6 +176,8 @@ class ShellScreen extends ConsumerWidget {
     final userRole = authState.user?.role ?? '';
     final visibleItems =
         _allNavItems.where((item) => item.roles.contains(userRole)).toList();
+    final syncState = ref.watch(syncIndicatorProvider).value ??
+        ref.watch(connectivityServiceProvider).indicator;
 
     final currentLocation = GoRouterState.of(context).matchedLocation;
     final currentIndex = visibleItems.indexWhere(
@@ -182,6 +185,32 @@ class ShellScreen extends ConsumerWidget {
     );
 
     return Scaffold(
+      appBar: AppBar(
+        toolbarHeight: 44,
+        title: const Text('École Platform'),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Row(
+              children: [
+                Icon(
+                  syncState.online
+                      ? Icons.cloud_done_outlined
+                      : Icons.cloud_off_outlined,
+                  color: syncState.online ? Colors.green : Colors.red,
+                ),
+                if (syncState.pendingCount > 0) ...[
+                  const SizedBox(width: 6),
+                  Text(
+                    '${syncState.pendingCount}',
+                    style: Theme.of(context).textTheme.labelLarge,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
       body: child,
       bottomNavigationBar: NavigationBar(
         selectedIndex: currentIndex >= 0 ? currentIndex : 0,

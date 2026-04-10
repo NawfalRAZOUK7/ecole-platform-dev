@@ -92,6 +92,23 @@ class OfflineQueue {
     return rows.map(QueuedCommand.fromRow).toList();
   }
 
+  Future<List<QueuedCommand>> getFailed() async {
+    final db = await AppDatabase.instance;
+    final rows = await db.query(
+      'offline_queue',
+      where: 'status = ?',
+      whereArgs: ['failed_command'],
+      orderBy: 'created_at DESC',
+    );
+    return rows.map(QueuedCommand.fromRow).toList();
+  }
+
+  Future<List<QueuedCommand>> getAll() async {
+    final db = await AppDatabase.instance;
+    final rows = await db.query('offline_queue', orderBy: 'created_at DESC');
+    return rows.map(QueuedCommand.fromRow).toList();
+  }
+
   /// Mark a command as completed (remove from queue).
   Future<void> markCompleted(int id) async {
     final db = await AppDatabase.instance;
@@ -130,6 +147,15 @@ class OfflineQueue {
     final result = await db.rawQuery(
       'SELECT COUNT(*) as count FROM offline_queue WHERE status = ?',
       ['pending'],
+    );
+    return result.first['count'] as int;
+  }
+
+  Future<int> failedCount() async {
+    final db = await AppDatabase.instance;
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM offline_queue WHERE status = ?',
+      ['failed_command'],
     );
     return result.first['count'] as int;
   }

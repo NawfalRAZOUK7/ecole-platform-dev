@@ -66,6 +66,8 @@ import 'package:ecole_platform/features/skills/skills_overview_screen.dart';
 import 'package:ecole_platform/features/compliance/compliance_dashboard_screen.dart';
 import 'package:ecole_platform/features/compliance/curriculum_mapping_screen.dart';
 import 'package:ecole_platform/features/compliance/compliance_report_screen.dart';
+import 'package:ecole_platform/features/sync/sync_conflicts_screen.dart';
+import 'package:ecole_platform/features/sync/sync_status_screen.dart';
 import 'package:ecole_platform/presentation/shell_screen.dart';
 
 /// Role-based redirect targets.
@@ -344,6 +346,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/compliance/reports',
             builder: (context, state) => const ComplianceReportScreen(),
+          ),
+          GoRoute(
+            path: '/sync',
+            builder: (context, state) => const SyncStatusScreen(),
+          ),
+          GoRoute(
+            path: '/sync/conflicts',
+            builder: (context, state) => const SyncConflictsScreen(),
           ),
           GoRoute(
             path: '/settings/notifications',
