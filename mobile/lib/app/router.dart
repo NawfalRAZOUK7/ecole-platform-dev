@@ -80,6 +80,8 @@ import 'package:ecole_platform/features/question-bank/question_bank_screen.dart'
 import 'package:ecole_platform/features/rubrics/rubric_editor_screen.dart';
 import 'package:ecole_platform/features/rubrics/rubric_grading_screen.dart';
 import 'package:ecole_platform/features/rubrics/rubrics_list_screen.dart';
+import 'package:ecole_platform/features/timetable/timetable_constraints_screen.dart';
+import 'package:ecole_platform/features/timetable/timetable_generate_screen.dart';
 import 'package:ecole_platform/presentation/shell_screen.dart';
 
 /// Role-based redirect targets.
@@ -420,6 +422,14 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => RubricGradingScreen(
               rubricId: state.pathParameters['id']!,
             ),
+          ),
+          GoRoute(
+            path: '/timetable/constraints',
+            builder: (context, state) => const TimetableConstraintsScreen(),
+          ),
+          GoRoute(
+            path: '/timetable/generate',
+            builder: (context, state) => const TimetableGenerateScreen(),
           ),
           GoRoute(
             path: '/settings/notifications',

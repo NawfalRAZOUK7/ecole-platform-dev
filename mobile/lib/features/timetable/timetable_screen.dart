@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/domain/entities/timetable.dart';
 import 'timetable_provider.dart';
@@ -37,7 +38,21 @@ class TimetableScreen extends ConsumerWidget {
     final t = AppLocalizations.of(ref);
 
     return Scaffold(
-      appBar: AppBar(title: Text(t.t('timetable.title'))),
+      appBar: AppBar(
+        title: Text(t.t('timetable.title')),
+        actions: [
+          IconButton(
+            onPressed: () => context.push('/timetable/constraints'),
+            icon: const Icon(Icons.tune_outlined),
+            tooltip: 'Constraints',
+          ),
+          IconButton(
+            onPressed: () => context.push('/timetable/generate'),
+            icon: const Icon(Icons.auto_awesome_outlined),
+            tooltip: 'Generate',
+          ),
+        ],
+      ),
       body: _buildBody(context, ref, state, t),
     );
   }
