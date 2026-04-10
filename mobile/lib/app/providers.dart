@@ -30,6 +30,7 @@ import 'package:ecole_platform/data/repositories_impl/micro_school_repository_im
 import 'package:ecole_platform/data/repositories_impl/skills_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/compliance_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/sync_repository_impl.dart';
+import 'package:ecole_platform/data/repositories_impl/financial_health_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/content_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/result_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/invoice_repository_impl.dart';
@@ -51,6 +52,7 @@ import 'package:ecole_platform/domain/repositories/skills_repository.dart';
 import 'package:ecole_platform/domain/repositories/compliance_repository.dart';
 import 'package:ecole_platform/domain/repositories/sync_repository.dart';
 import 'package:ecole_platform/domain/entities/sync.dart';
+import 'package:ecole_platform/domain/repositories/financial_health_repository.dart';
 import 'package:ecole_platform/domain/repositories/content_repository.dart';
 import 'package:ecole_platform/domain/repositories/result_repository.dart';
 import 'package:ecole_platform/domain/repositories/invoice_repository.dart';
@@ -271,6 +273,11 @@ final complianceRepositoryProvider = Provider<ComplianceRepository>((ref) {
 
 final syncRepositoryProvider = Provider<SyncRepository>((ref) {
   return SyncRepositoryImpl(api: ref.watch(apiClientProvider));
+});
+
+final financialHealthRepositoryProvider =
+    Provider<FinancialHealthRepository>((ref) {
+  return FinancialHealthRepositoryImpl(api: ref.watch(apiClientProvider));
 });
 
 final syncIndicatorProvider = StreamProvider<SyncIndicatorState>((ref) async* {

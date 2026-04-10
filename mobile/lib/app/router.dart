@@ -68,6 +68,8 @@ import 'package:ecole_platform/features/compliance/curriculum_mapping_screen.dar
 import 'package:ecole_platform/features/compliance/compliance_report_screen.dart';
 import 'package:ecole_platform/features/sync/sync_conflicts_screen.dart';
 import 'package:ecole_platform/features/sync/sync_status_screen.dart';
+import 'package:ecole_platform/features/financial-health/financial_dashboard_screen.dart';
+import 'package:ecole_platform/features/financial-health/financial_snapshots_screen.dart';
 import 'package:ecole_platform/presentation/shell_screen.dart';
 
 /// Role-based redirect targets.
@@ -354,6 +356,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/sync/conflicts',
             builder: (context, state) => const SyncConflictsScreen(),
+          ),
+          GoRoute(
+            path: '/financial-health',
+            builder: (context, state) => const FinancialDashboardScreen(),
+          ),
+          GoRoute(
+            path: '/financial-health/snapshots',
+            builder: (context, state) => const FinancialSnapshotsScreen(),
           ),
           GoRoute(
             path: '/settings/notifications',
