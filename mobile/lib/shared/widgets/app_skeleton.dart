@@ -38,32 +38,39 @@ class _AppSkeletonState extends State<AppSkeleton>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, _) {
-        final theme = Theme.of(context);
-        final base = theme.colorScheme.surfaceContainerHighest;
-        final highlight = theme.colorScheme.surfaceContainer;
-        final color = Color.lerp(base, highlight, _controller.value)!;
+    return Semantics(
+      container: true,
+      liveRegion: true,
+      label: 'Loading content',
+      child: ExcludeSemantics(
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, _) {
+            final theme = Theme.of(context);
+            final base = theme.colorScheme.surfaceContainerHighest;
+            final highlight = theme.colorScheme.surfaceContainer;
+            final color = Color.lerp(base, highlight, _controller.value)!;
 
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: List.generate(
-            widget.count,
-            (index) => Padding(
-              padding: EdgeInsets.only(
-                bottom: index == widget.count - 1 ? 0 : AppSpacing.sm,
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(
+                widget.count,
+                (index) => Padding(
+                  padding: EdgeInsets.only(
+                    bottom: index == widget.count - 1 ? 0 : AppSpacing.sm,
+                  ),
+                  child: _SkeletonShape(
+                    variant: widget.variant,
+                    width: widget.width,
+                    height: widget.height,
+                    color: color,
+                  ),
+                ),
               ),
-              child: _SkeletonShape(
-                variant: widget.variant,
-                width: widget.width,
-                height: widget.height,
-                color: color,
-              ),
-            ),
-          ),
-        );
-      },
+            );
+          },
+        ),
+      ),
     );
   }
 }

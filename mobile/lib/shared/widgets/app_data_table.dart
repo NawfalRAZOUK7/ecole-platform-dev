@@ -49,39 +49,46 @@ class AppDataTable<T> extends StatelessWidget {
       );
     }
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DataTable(
-        columns: columns
-            .map(
-              (column) => DataColumn(
-                label: SizedBox(
-                  width: column.width,
-                  child: Text(column.header),
+    return Semantics(
+      container: true,
+      label:
+          'Data table with ${rows.length} rows and ${columns.length} columns',
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: DataTable(
+          columns: columns
+              .map(
+                (column) => DataColumn(
+                  label: SizedBox(
+                    width: column.width,
+                    child: Text(column.header),
+                  ),
+                  tooltip:
+                      column.sortable ? '${column.header} (sortable)' : null,
                 ),
-                tooltip: column.sortable ? '${column.header} (sortable)' : null,
-              ),
-            )
-            .toList(),
-        rows: List.generate(
-          rows.length,
-          (index) {
-            final row = rows[index];
-            return DataRow.byIndex(
-              index: index,
-              onSelectChanged: onRowTap == null ? null : (_) => onRowTap!(row),
-              cells: columns
-                  .map(
-                    (column) => DataCell(
-                      SizedBox(
-                        width: column.width,
-                        child: column.cellBuilder(row),
+              )
+              .toList(),
+          rows: List.generate(
+            rows.length,
+            (index) {
+              final row = rows[index];
+              return DataRow.byIndex(
+                index: index,
+                onSelectChanged:
+                    onRowTap == null ? null : (_) => onRowTap!(row),
+                cells: columns
+                    .map(
+                      (column) => DataCell(
+                        SizedBox(
+                          width: column.width,
+                          child: column.cellBuilder(row),
+                        ),
                       ),
-                    ),
-                  )
-                  .toList(),
-            );
-          },
+                    )
+                    .toList(),
+              );
+            },
+          ),
         ),
       ),
     );

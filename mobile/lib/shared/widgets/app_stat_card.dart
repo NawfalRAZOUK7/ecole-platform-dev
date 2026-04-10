@@ -24,48 +24,62 @@ class AppStatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final trendMeta = _trendMeta(theme);
+    final semanticsLabel = StringBuffer()
+      ..write(label)
+      ..write(', ')
+      ..write(value);
+    if (trendMeta != null && trendValue != null) {
+      semanticsLabel
+        ..write(', trend ')
+        ..write(trend == TrendDirection.down ? 'down ' : 'up ')
+        ..write('${trendValue!.toStringAsFixed(1)} percent');
+    }
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.base),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                if (icon != null) ...[
-                  Icon(icon, color: theme.colorScheme.primary),
-                  const SizedBox(width: AppSpacing.sm),
-                ],
-                Expanded(
-                  child: Text(label, style: theme.textTheme.labelLarge),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.base),
-            Text(
-              value,
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            if (trendMeta != null && trendValue != null) ...[
-              const SizedBox(height: AppSpacing.sm),
+    return Semantics(
+      container: true,
+      label: semanticsLabel.toString(),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.base),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Row(
                 children: [
-                  Icon(trendMeta.icon, size: 18, color: trendMeta.color),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    '${trendValue!.toStringAsFixed(1)}%',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: trendMeta.color,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  if (icon != null) ...[
+                    Icon(icon, color: theme.colorScheme.primary),
+                    const SizedBox(width: AppSpacing.sm),
+                  ],
+                  Expanded(
+                    child: Text(label, style: theme.textTheme.labelLarge),
                   ),
                 ],
               ),
+              const SizedBox(height: AppSpacing.base),
+              Text(
+                value,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              if (trendMeta != null && trendValue != null) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Row(
+                  children: [
+                    Icon(trendMeta.icon, size: 18, color: trendMeta.color),
+                    const SizedBox(width: AppSpacing.xs),
+                    Text(
+                      '${trendValue!.toStringAsFixed(1)}%',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: trendMeta.color,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

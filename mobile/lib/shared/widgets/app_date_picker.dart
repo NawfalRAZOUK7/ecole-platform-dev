@@ -19,20 +19,30 @@ class AppDatePicker extends StatelessWidget {
         ? null
         : DateFormat.yMMMd('fr_MA').format(value!.toLocal());
 
-    return InkWell(
-      onTap: () => _pickDate(context),
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          suffixIcon: const Icon(Icons.calendar_today_outlined),
-        ),
-        child: Text(
-          formatted ?? label,
-          style: formatted == null
-              ? Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  )
-              : null,
+    return Semantics(
+      button: true,
+      label: label,
+      value: formatted ?? 'No date selected',
+      hint: 'Double tap to choose a date',
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48),
+        child: InkWell(
+          onTap: () => _pickDate(context),
+          borderRadius: BorderRadius.circular(12),
+          child: InputDecorator(
+            decoration: InputDecoration(
+              labelText: label,
+              suffixIcon: const Icon(Icons.calendar_today_outlined),
+            ),
+            child: Text(
+              formatted ?? label,
+              style: formatted == null
+                  ? Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      )
+                  : null,
+            ),
+          ),
         ),
       ),
     );

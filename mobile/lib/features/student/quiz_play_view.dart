@@ -9,6 +9,7 @@ extension _QuizPlayView on _QuizPlayerScreenState {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
+          tooltip: 'Quit quiz',
           icon: const Icon(Icons.close),
           onPressed: () => _showExitConfirm(context),
         ),
@@ -182,28 +183,32 @@ class _QuizTimerChip extends StatelessWidget {
     final isWarning = secondsLeft < 60;
     final color = isWarning ? Colors.red : theme.colorScheme.primary;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: isWarning
-            ? Colors.red.withAlpha(25)
-            : theme.colorScheme.primaryContainer,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.timer, size: 16, color: color),
-          const SizedBox(width: 4),
-          Text(
-            '${(secondsLeft ~/ 60).toString().padLeft(2, '0')}:${(secondsLeft % 60).toString().padLeft(2, '0')}',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: color,
+    return Semantics(
+      label:
+          'Time remaining ${secondsLeft ~/ 60} minutes ${secondsLeft % 60} seconds',
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isWarning
+              ? Colors.red.withAlpha(25)
+              : theme.colorScheme.primaryContainer,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.timer, size: 16, color: color),
+            const SizedBox(width: 4),
+            Text(
+              '${(secondsLeft ~/ 60).toString().padLeft(2, '0')}:${(secondsLeft % 60).toString().padLeft(2, '0')}',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -228,7 +233,7 @@ class _ProgressDots extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return SizedBox(
-      height: 40,
+      height: 56,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -236,38 +241,57 @@ class _ProgressDots extends StatelessWidget {
         itemBuilder: (context, index) {
           final isAnswered = answered.containsKey(questions[index].id);
           final isCurrent = index == current;
-          return GestureDetector(
-            onTap: () => onTap(index),
-            child: Container(
-              width: 28,
-              height: 28,
-              margin: const EdgeInsets.symmetric(horizontal: 2),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isCurrent
-                    ? theme.colorScheme.primary
-                    : isAnswered
-                        ? theme.colorScheme.primaryContainer
-                        : theme.colorScheme.surfaceContainerHighest,
-                border: isCurrent
-                    ? null
-                    : Border.all(
-                        color: isAnswered
+          final stateLabel = isCurrent
+              ? 'current'
+              : isAnswered
+                  ? 'answered'
+                  : 'not answered';
+          return Semantics(
+            button: true,
+            label: 'Question ${index + 1}',
+            value: stateLabel,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2),
+              child: SizedBox(
+                width: 48,
+                height: 48,
+                child: InkWell(
+                  onTap: () => onTap(index),
+                  borderRadius: BorderRadius.circular(24),
+                  child: Center(
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isCurrent
                             ? theme.colorScheme.primary
-                            : theme.colorScheme.outline.withAlpha(80),
+                            : isAnswered
+                                ? theme.colorScheme.primaryContainer
+                                : theme.colorScheme.surfaceContainerHighest,
+                        border: isCurrent
+                            ? null
+                            : Border.all(
+                                color: isAnswered
+                                    ? theme.colorScheme.primary
+                                    : theme.colorScheme.outline.withAlpha(80),
+                              ),
                       ),
-              ),
-              child: Center(
-                child: Text(
-                  '${index + 1}',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: isCurrent
-                        ? Colors.white
-                        : isAnswered
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.onSurface,
+                      child: Center(
+                        child: Text(
+                          '${index + 1}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: isCurrent
+                                ? Colors.white
+                                : isAnswered
+                                    ? theme.colorScheme.primary
+                                    : theme.colorScheme.onSurface,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),

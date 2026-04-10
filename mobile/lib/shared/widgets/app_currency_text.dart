@@ -20,9 +20,14 @@ class AppCurrencyText extends StatelessWidget {
       symbol: currency,
     ).format(amount);
 
-    return Text(
-      formatted,
-      style: style ?? Theme.of(context).textTheme.bodyMedium,
+    return Semantics(
+      label: formatted,
+      child: ExcludeSemantics(
+        child: Text(
+          formatted,
+          style: style ?? Theme.of(context).textTheme.bodyMedium,
+        ),
+      ),
     );
   }
 }

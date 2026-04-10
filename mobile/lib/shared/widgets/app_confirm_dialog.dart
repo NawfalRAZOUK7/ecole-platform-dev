@@ -26,6 +26,7 @@ class AppConfirmDialog {
             : null;
 
         return AlertDialog(
+          semanticLabel: title,
           title: Text(title),
           content: Text(message),
           actions: [

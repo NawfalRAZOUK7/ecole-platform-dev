@@ -50,112 +50,142 @@ class SearchFilterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    const chipRowHeight = 56.0;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Search bar
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: TextField(
-            decoration: InputDecoration(
-              hintText: searchHint ?? 'Rechercher...',
-              prefixIcon: const Icon(Icons.search, size: 20),
-              suffixIcon: searchValue.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear, size: 18),
-                      onPressed: () => onSearchChanged(''),
-                    )
-                  : null,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+    return Semantics(
+      container: true,
+      label: 'Search and filter controls',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: searchHint ?? 'Rechercher...',
+                prefixIcon: const Icon(Icons.search, size: 20),
+                suffixIcon: searchValue.isNotEmpty
+                    ? IconButton(
+                        tooltip: 'Clear search',
+                        icon: const Icon(Icons.clear),
+                        onPressed: () => onSearchChanged(''),
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               ),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              isDense: true,
-            ),
-            controller: TextEditingController.fromValue(
-              TextEditingValue(
-                text: searchValue,
-                selection:
-                    TextSelection.collapsed(offset: searchValue.length),
+              controller: TextEditingController.fromValue(
+                TextEditingValue(
+                  text: searchValue,
+                  selection:
+                      TextSelection.collapsed(offset: searchValue.length),
+                ),
               ),
+              onChanged: onSearchChanged,
             ),
-            onChanged: onSearchChanged,
           ),
-        ),
+          if (filters.isNotEmpty || showSort)
+            SizedBox(
+              height: chipRowHeight,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  ...filters.entries.map((entry) {
+                    final key = entry.key;
+                    final options = entry.value;
+                    final selected = filterValues[key];
+                    final selectedLabel =
+                        _selectedLabel(options, selected) ?? key;
 
-        // Filter chips + sort toggle
-        if (filters.isNotEmpty || showSort)
-          SizedBox(
-            height: 44,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                // Filter chips
-                ...filters.entries.map((entry) {
-                  final key = entry.key;
-                  final options = entry.value;
-                  final selected = filterValues[key];
-
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: PopupMenuButton<String?>(
-                      initialValue: selected,
-                      onSelected: (v) => onFilterChanged?.call(key, v),
-                      itemBuilder: (_) => options
-                          .map((o) => PopupMenuItem(
-                                value: o.value,
-                                child: Text(o.label),
-                              ))
-                          .toList(),
-                      child: Chip(
-                        label: Text(
-                          _selectedLabel(options, selected) ?? key,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: selected != null
-                                ? theme.colorScheme.primary
-                                : null,
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          minWidth: 48,
+                          minHeight: 48,
+                        ),
+                        child: Semantics(
+                          button: true,
+                          label: '$key filter',
+                          value: selectedLabel,
+                          child: PopupMenuButton<String?>(
+                            initialValue: selected,
+                            onSelected: (value) =>
+                                onFilterChanged?.call(key, value),
+                            itemBuilder: (_) => options
+                                .map(
+                                  (option) => PopupMenuItem(
+                                    value: option.value,
+                                    child: Text(option.label),
+                                  ),
+                                )
+                                .toList(),
+                            child: Chip(
+                              label: Text(
+                                selectedLabel,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: selected != null
+                                      ? theme.colorScheme.primary
+                                      : null,
+                                ),
+                              ),
+                              avatar: selected != null
+                                  ? Icon(
+                                      Icons.filter_alt,
+                                      size: 16,
+                                      color: theme.colorScheme.primary,
+                                    )
+                                  : const Icon(Icons.filter_list, size: 16),
+                              visualDensity: VisualDensity.standard,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.padded,
+                              side: selected != null
+                                  ? BorderSide(color: theme.colorScheme.primary)
+                                  : null,
+                            ),
                           ),
                         ),
-                        avatar: selected != null
-                            ? Icon(Icons.filter_alt,
-                                size: 16, color: theme.colorScheme.primary)
-                            : const Icon(Icons.filter_list, size: 16),
-                        visualDensity: VisualDensity.compact,
-                        materialTapTargetSize:
-                            MaterialTapTargetSize.shrinkWrap,
-                        side: selected != null
-                            ? BorderSide(color: theme.colorScheme.primary)
-                            : null,
+                      ),
+                    );
+                  }),
+                  if (showSort)
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        minWidth: 48,
+                        minHeight: 48,
+                      ),
+                      child: Semantics(
+                        button: true,
+                        label: 'Sort order',
+                        value: sortLabel ??
+                            (sortAscending ? 'Ascending' : 'Descending'),
+                        child: ActionChip(
+                          label: Text(
+                            sortLabel ?? (sortAscending ? 'A → Z' : 'Z → A'),
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          avatar: Icon(
+                            sortAscending
+                                ? Icons.arrow_upward
+                                : Icons.arrow_downward,
+                            size: 16,
+                          ),
+                          onPressed: onSortToggle,
+                          visualDensity: VisualDensity.standard,
+                          materialTapTargetSize: MaterialTapTargetSize.padded,
+                        ),
                       ),
                     ),
-                  );
-                }),
-
-                // Sort toggle
-                if (showSort)
-                  ActionChip(
-                    label: Text(
-                      sortLabel ?? (sortAscending ? 'A → Z' : 'Z → A'),
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    avatar: Icon(
-                      sortAscending
-                          ? Icons.arrow_upward
-                          : Icons.arrow_downward,
-                      size: 16,
-                    ),
-                    onPressed: onSortToggle,
-                    visualDensity: VisualDensity.compact,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-              ],
+                ],
+              ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 

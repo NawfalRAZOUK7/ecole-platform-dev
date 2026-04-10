@@ -24,17 +24,22 @@ class AppFormField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      validator: validator,
-      keyboardType: keyboardType,
-      obscureText: obscure,
-      textInputAction: textInputAction,
-      maxLines: obscure ? 1 : maxLines,
-      autovalidateMode: AutovalidateMode.onUserInteraction,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
+    return Semantics(
+      textField: true,
+      label: label,
+      hint: hint,
+      child: TextFormField(
+        controller: controller,
+        validator: validator,
+        keyboardType: keyboardType,
+        obscureText: obscure,
+        textInputAction: textInputAction,
+        maxLines: obscure ? 1 : maxLines,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hint,
+        ),
       ),
     );
   }

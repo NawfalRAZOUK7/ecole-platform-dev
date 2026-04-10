@@ -20,30 +20,34 @@ class AppEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 48, color: theme.colorScheme.outline),
-            const SizedBox(height: AppSpacing.base),
-            Text(title, style: theme.textTheme.titleMedium),
-            if (subtitle != null) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                subtitle!,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+    return Semantics(
+      container: true,
+      label: subtitle == null ? title : '$title. $subtitle',
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 48, color: theme.colorScheme.outline),
+              const SizedBox(height: AppSpacing.base),
+              Text(title, style: theme.textTheme.titleMedium),
+              if (subtitle != null) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  subtitle!,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
+              ],
+              if (action != null) ...[
+                const SizedBox(height: AppSpacing.lg),
+                action!,
+              ],
             ],
-            if (action != null) ...[
-              const SizedBox(height: AppSpacing.lg),
-              action!,
-            ],
-          ],
+          ),
         ),
       ),
     );
