@@ -236,4 +236,16 @@ export const timetableService = {
   applyGeneration(jobId: string) {
     return api.post<ApplyResult>(`/timetable/generate/${jobId}/apply`, {});
   },
+
+  getClassWeekly(classId: string) {
+    return api.get<WeeklyResponse>(`/timetable/class/${classId}/weekly`);
+  },
+
+  getTeacherWeekly(teacherId: string) {
+    return api.get<WeeklyResponse>(`/timetable/teacher/${teacherId}/weekly`);
+  },
+
+  getMyWeekly() {
+    return api.get<WeeklyResponse>('/timetable/me/weekly');
+  },
 };

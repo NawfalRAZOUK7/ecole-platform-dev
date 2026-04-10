@@ -73,4 +73,18 @@ export const contentService = {
   updateOrdering(contentId: string, sortOrder: number) {
     return api.put<void>(`/cms/content/${contentId}`, { sort_order: sortOrder });
   },
+
+  streamContent(contentItemId: string) {
+    return api.get<{ stream_url: string; mime_type: string }>(
+      `/content-items/${contentItemId}/stream`,
+    );
+  },
+
+  getAsset(contentItemId: string, assetId: string) {
+    return api.get<ContentAsset>(`/content-items/${contentItemId}/assets/${assetId}`);
+  },
+
+  deleteAsset(contentItemId: string, assetId: string) {
+    return api.delete<void>(`/content-items/${contentItemId}/assets/${assetId}`);
+  },
 };

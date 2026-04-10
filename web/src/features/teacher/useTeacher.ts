@@ -2,7 +2,9 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tansta
 import { STALE_CONTENT, STALE_DEFAULT, STALE_RESULTS } from '@/shared/hooks/useQueryDefaults';
 import {
   teacherService,
+  type AssessmentResultPayload,
   type AttendanceSessionPayload,
+  type ClassAssignmentPayload,
   type ContentUploadPayload,
   type TeacherAssessmentsFilters,
   type TeacherAssignmentsFilters,
@@ -15,16 +17,24 @@ export const teacherQueryKeys = {
   all: ['teacher'] as const,
   classes: () => [...teacherQueryKeys.all, 'classes'] as const,
   periods: () => [...teacherQueryKeys.all, 'periods'] as const,
-  classStudents: (classId: string | null | undefined) => [...teacherQueryKeys.all, 'class-students', classId] as const,
-  courses: (filters: TeacherCoursesFilters) => [...teacherQueryKeys.all, 'courses', filters] as const,
-  assignments: (filters: TeacherAssignmentsFilters) => [...teacherQueryKeys.all, 'assignments', filters] as const,
-  assessments: (filters: TeacherAssessmentsFilters) => [...teacherQueryKeys.all, 'assessments', filters] as const,
+  classStudents: (classId: string | null | undefined) =>
+    [...teacherQueryKeys.all, 'class-students', classId] as const,
+  courses: (filters: TeacherCoursesFilters) =>
+    [...teacherQueryKeys.all, 'courses', filters] as const,
+  assignments: (filters: TeacherAssignmentsFilters) =>
+    [...teacherQueryKeys.all, 'assignments', filters] as const,
+  assessments: (filters: TeacherAssessmentsFilters) =>
+    [...teacherQueryKeys.all, 'assessments', filters] as const,
   classProgress: (classId: string) => [...teacherQueryKeys.all, 'class-progress', classId] as const,
-  contentLibrary: (filters: TeacherContentFilters) => [...teacherQueryKeys.all, 'content-library', filters] as const,
+  contentLibrary: (filters: TeacherContentFilters) =>
+    [...teacherQueryKeys.all, 'content-library', filters] as const,
   assignableClasses: () => [...teacherQueryKeys.all, 'assignable-classes'] as const,
-  contentSubmissions: (filters: TeacherContentFilters) => [...teacherQueryKeys.all, 'content-submissions', filters] as const,
+  contentSubmissions: (filters: TeacherContentFilters) =>
+    [...teacherQueryKeys.all, 'content-submissions', filters] as const,
   quizzes: () => [...teacherQueryKeys.all, 'quizzes'] as const,
-  submissions: (filters: TeacherSubmissionFilters) => [...teacherQueryKeys.all, 'submissions', filters] as const,
+  submissions: (filters: TeacherSubmissionFilters) =>
+    [...teacherQueryKeys.all, 'submissions', filters] as const,
+  classDetail: (classId: string) => [...teacherQueryKeys.all, 'class-detail', classId] as const,
 };
 
 export function useTeacherClasses() {
@@ -63,7 +73,7 @@ export function useTeacherCourses(filters: TeacherCoursesFilters) {
         cursor: pageParam,
       }),
     getNextPageParam: (lastPage) =>
-      lastPage.meta.has_more ? lastPage.meta.next_cursor ?? undefined : undefined,
+      lastPage.meta.has_more ? (lastPage.meta.next_cursor ?? undefined) : undefined,
     staleTime: STALE_DEFAULT,
   });
 }
@@ -92,7 +102,7 @@ export function useTeacherAssignments(filters: TeacherAssignmentsFilters) {
         cursor: pageParam,
       }),
     getNextPageParam: (lastPage) =>
-      lastPage.meta.has_more ? lastPage.meta.next_cursor ?? undefined : undefined,
+      lastPage.meta.has_more ? (lastPage.meta.next_cursor ?? undefined) : undefined,
     staleTime: STALE_DEFAULT,
   });
 }
@@ -121,7 +131,7 @@ export function useTeacherAssessments(filters: TeacherAssessmentsFilters) {
         cursor: pageParam,
       }),
     getNextPageParam: (lastPage) =>
-      lastPage.meta.has_more ? lastPage.meta.next_cursor ?? undefined : undefined,
+      lastPage.meta.has_more ? (lastPage.meta.next_cursor ?? undefined) : undefined,
     staleTime: STALE_DEFAULT,
   });
 }
@@ -163,7 +173,9 @@ export function useCreateAttendanceSession() {
 
 export function useTeacherClassProgress(classId: string | null | undefined) {
   return useQuery({
-    queryKey: classId ? teacherQueryKeys.classProgress(classId) : [...teacherQueryKeys.all, 'class-progress', 'pending'],
+    queryKey: classId
+      ? teacherQueryKeys.classProgress(classId)
+      : [...teacherQueryKeys.all, 'class-progress', 'pending'],
     queryFn: async () => (await teacherService.getClassProgress(classId!)).data.data,
     enabled: Boolean(classId),
     staleTime: STALE_RESULTS,
@@ -181,7 +193,7 @@ export function useTeacherContentLibrary(filters: TeacherContentFilters) {
         cursor: pageParam,
       }),
     getNextPageParam: (lastPage) =>
-      lastPage.meta.has_more ? lastPage.meta.next_cursor ?? undefined : undefined,
+      lastPage.meta.has_more ? (lastPage.meta.next_cursor ?? undefined) : undefined,
     staleTime: STALE_CONTENT,
   });
 }
@@ -198,7 +210,11 @@ export function useAssignContent() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (payload: { content_item_id: string; class_id: string; notes: string | null }) => {
+    mutationFn: async (payload: {
+      content_item_id: string;
+      class_id: string;
+      notes: string | null;
+    }) => {
       await teacherService.assignContent(payload);
     },
     onSuccess: async () => {
@@ -232,7 +248,7 @@ export function useTeacherContentSubmissions(filters: TeacherContentFilters) {
         cursor: pageParam,
       }),
     getNextPageParam: (lastPage) =>
-      lastPage.meta.has_more ? lastPage.meta.next_cursor ?? undefined : undefined,
+      lastPage.meta.has_more ? (lastPage.meta.next_cursor ?? undefined) : undefined,
     staleTime: STALE_DEFAULT,
   });
 }
@@ -267,7 +283,7 @@ export function useTeacherQuizzes() {
         cursor: pageParam,
       }),
     getNextPageParam: (lastPage) =>
-      lastPage.meta.has_more ? lastPage.meta.next_cursor ?? undefined : undefined,
+      lastPage.meta.has_more ? (lastPage.meta.next_cursor ?? undefined) : undefined,
     staleTime: STALE_DEFAULT,
   });
 }
@@ -310,7 +326,7 @@ export function useTeacherSubmissions(filters: TeacherSubmissionFilters) {
         cursor: pageParam,
       }),
     getNextPageParam: (lastPage) =>
-      lastPage.meta.has_more ? lastPage.meta.next_cursor ?? undefined : undefined,
+      lastPage.meta.has_more ? (lastPage.meta.next_cursor ?? undefined) : undefined,
     staleTime: STALE_RESULTS,
   });
 }
@@ -331,6 +347,47 @@ export function useGradeSubmission() {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['teacher', 'submissions'] });
+    },
+  });
+}
+
+export function useCreateClassAssignment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: ClassAssignmentPayload) =>
+      (await teacherService.createClassAssignment(payload)).data,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: teacherQueryKeys.all });
+    },
+  });
+}
+
+export function useClassDetail(classId: string) {
+  return useQuery({
+    queryKey: teacherQueryKeys.classDetail(classId),
+    queryFn: async () => (await teacherService.getClass(classId)).data,
+    enabled: Boolean(classId),
+    staleTime: STALE_DEFAULT,
+  });
+}
+
+export function useSubmitAssessmentResults() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      assessmentId,
+      payload,
+    }: {
+      assessmentId: string;
+      payload: AssessmentResultPayload;
+    }) => {
+      await teacherService.submitAssessmentResults(assessmentId, payload);
+      return assessmentId;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: teacherQueryKeys.all });
     },
   });
 }

@@ -22,7 +22,7 @@ export const attendanceQueryKeys = {
 
 function mergeAttendanceRecords(
   current: AttendanceRecord[] | undefined,
-  payload: BulkAttendancePayload
+  payload: BulkAttendancePayload,
 ) {
   const currentMap = new Map((current ?? []).map((record) => [record.student_id, record]));
 
@@ -65,7 +65,7 @@ export function useMarkAttendance() {
       const previous = queryClient.getQueryData<AttendanceRecord[]>(queryKey);
       queryClient.setQueryData<AttendanceRecord[]>(
         queryKey,
-        mergeAttendanceRecords(previous, payload)
+        mergeAttendanceRecords(previous, payload),
       );
       return { previous, queryKey };
     },
@@ -99,10 +99,7 @@ export function useSubmitJustification() {
   });
 }
 
-export function useAttendanceTrends(
-  classId: string,
-  dateRange: { from: string; to: string }
-) {
+export function useAttendanceTrends(classId: string, dateRange: { from: string; to: string }) {
   return useQuery({
     queryKey: attendanceQueryKeys.trends(classId, dateRange.from, dateRange.to),
     queryFn: async () =>
@@ -154,5 +151,11 @@ export function useReviewJustification() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: attendanceQueryKeys.all });
     },
+  });
+}
+
+export function useCheckAttendanceThresholds() {
+  return useMutation({
+    mutationFn: async () => (await attendanceService.checkThresholds()).data,
   });
 }

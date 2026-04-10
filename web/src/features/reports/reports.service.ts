@@ -44,6 +44,28 @@ export interface ReportHistoryFilters extends Record<string, string | number | u
   status?: ReportStatus | '';
 }
 
+export interface ReportSchedule {
+  id: string;
+  name: string;
+  report_type: ReportType;
+  cron_expression: string;
+  parameters: Record<string, string | boolean | null>;
+  is_active: boolean;
+  created_at: string;
+  last_run_at: string | null;
+  next_run_at: string | null;
+}
+
+export interface CreateSchedulePayload {
+  name: string;
+  report_type: ReportType;
+  cron_expression: string;
+  parameters?: Record<string, string | boolean | null>;
+  is_active?: boolean;
+}
+
+export type UpdateSchedulePayload = Partial<CreateSchedulePayload>;
+
 export const reportsService = {
   getReportOptions(type: ReportType, classId?: string) {
     return api.get<ReportOptionsPayload>('/reports/options', {
@@ -58,5 +80,33 @@ export const reportsService = {
 
   generateReport(payload: Record<string, unknown>) {
     return api.post<ReportJobItem>('/reports/generate', payload);
+  },
+
+  createSchedule(payload: CreateSchedulePayload) {
+    return api.post<ReportSchedule>('/reports/schedules', payload);
+  },
+
+  listSchedules() {
+    return api.list<ReportSchedule>('/reports/schedules');
+  },
+
+  updateSchedule(scheduleId: string, payload: UpdateSchedulePayload) {
+    return api.put<ReportSchedule>(`/reports/schedules/${scheduleId}`, payload);
+  },
+
+  deleteSchedule(scheduleId: string) {
+    return api.delete<void>(`/reports/schedules/${scheduleId}`);
+  },
+
+  runSchedule(scheduleId: string) {
+    return api.post<ReportJobItem>(`/reports/schedules/${scheduleId}/run`, {});
+  },
+
+  getJobStatus(jobId: string) {
+    return api.get<ReportJobItem>(`/reports/${jobId}/status`);
+  },
+
+  downloadReport(jobId: string) {
+    return api.get<{ download_url: string }>(`/reports/${jobId}/download`);
   },
 };

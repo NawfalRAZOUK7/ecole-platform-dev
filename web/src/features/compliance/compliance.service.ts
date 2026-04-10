@@ -12,13 +12,15 @@ import type {
 } from './compliance.types';
 
 export const complianceService = {
-  listCurricula(params: {
-    level?: string;
-    grade?: string;
-    subject?: string;
-    academic_year?: string;
-    is_active?: boolean;
-  } = {}) {
+  listCurricula(
+    params: {
+      level?: string;
+      grade?: string;
+      subject?: string;
+      academic_year?: string;
+      is_active?: boolean;
+    } = {},
+  ) {
     return api.list<MenCurriculum>('/compliance/curricula', {
       ...params,
       is_active: params.is_active === undefined ? undefined : String(params.is_active),
@@ -43,12 +45,14 @@ export const complianceService = {
     return api.post<CurriculumMapping>('/compliance/mappings', payload);
   },
 
-  listMappings(params: {
-    curriculum_id?: string;
-    objective_id?: string;
-    course_id?: string;
-    content_item_id?: string;
-  } = {}) {
+  listMappings(
+    params: {
+      curriculum_id?: string;
+      objective_id?: string;
+      course_id?: string;
+      content_item_id?: string;
+    } = {},
+  ) {
     return api.list<CurriculumMapping>('/compliance/mappings', params);
   },
 
@@ -69,10 +73,12 @@ export const complianceService = {
     return api.post<ComplianceReport>('/compliance/reports/generate', payload);
   },
 
-  listReports(params: {
-    curriculum_id?: string;
-    academic_year_id?: string;
-  } = {}) {
+  listReports(
+    params: {
+      curriculum_id?: string;
+      academic_year_id?: string;
+    } = {},
+  ) {
     return api.list<ComplianceReport>('/compliance/reports', params);
   },
 
@@ -82,5 +88,9 @@ export const complianceService = {
 
   downloadReportUrl(reportId: string) {
     return `/api/v1/compliance/reports/${reportId}/download`;
+  },
+
+  downloadReport(reportId: string) {
+    return api.get<{ download_url: string }>(`/compliance/reports/${reportId}/download`);
   },
 };

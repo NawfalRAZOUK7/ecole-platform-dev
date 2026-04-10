@@ -16,6 +16,10 @@ export const timetableQueryKeys = {
   classes: () => [...timetableQueryKeys.all, 'classes'] as const,
   weekly: (classId: string | null, isAdmin: boolean) =>
     [...timetableQueryKeys.all, 'weekly', isAdmin ? classId : 'me'] as const,
+  classWeekly: (classId: string) => [...timetableQueryKeys.all, 'class-weekly', classId] as const,
+  teacherWeekly: (teacherId: string) =>
+    [...timetableQueryKeys.all, 'teacher-weekly', teacherId] as const,
+  myWeekly: () => [...timetableQueryKeys.all, 'my-weekly'] as const,
   slots: (filters: TimetableSlotFilters) => [...timetableQueryKeys.all, 'slots', filters] as const,
   exceptions: (filters: TimetableExceptionFilters) =>
     [...timetableQueryKeys.all, 'exceptions', filters] as const,
@@ -176,5 +180,31 @@ export function useApplyGeneration() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: timetableQueryKeys.all });
     },
+  });
+}
+
+export function useClassWeeklyTimetable(classId: string, enabled = true) {
+  return useQuery({
+    queryKey: timetableQueryKeys.classWeekly(classId),
+    queryFn: async () => (await timetableService.getClassWeekly(classId)).data,
+    enabled: enabled && Boolean(classId),
+    staleTime: STALE_DEFAULT,
+  });
+}
+
+export function useTeacherWeeklyTimetable(teacherId: string, enabled = true) {
+  return useQuery({
+    queryKey: timetableQueryKeys.teacherWeekly(teacherId),
+    queryFn: async () => (await timetableService.getTeacherWeekly(teacherId)).data,
+    enabled: enabled && Boolean(teacherId),
+    staleTime: STALE_DEFAULT,
+  });
+}
+
+export function useMyWeeklyTimetable() {
+  return useQuery({
+    queryKey: timetableQueryKeys.myWeekly(),
+    queryFn: async () => (await timetableService.getMyWeekly()).data,
+    staleTime: STALE_DEFAULT,
   });
 }

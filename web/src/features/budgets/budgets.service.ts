@@ -9,6 +9,7 @@ import type {
   CreateAllocationPayload,
   CreateBudgetPayload,
   CreateBudgetRequestPayload,
+  CreateTransactionPayload,
   UpdateAllocationPayload,
 } from './budgets.types';
 
@@ -161,5 +162,20 @@ export const budgetsService = {
 
   getBudgetAnalytics() {
     return api.get<BudgetAnalytics>('/budgets/analytics');
+  },
+
+  getBudgetRequest(requestId: string) {
+    return api.get<BudgetRequest>(`/budgets/requests/${requestId}`);
+  },
+
+  createTransaction(allocationId: string, payload: CreateTransactionPayload) {
+    return api.post<BudgetTransaction>(
+      `/budgets/allocations/${allocationId}/transactions`,
+      payload,
+    );
+  },
+
+  getTransactions(allocationId: string) {
+    return api.list<BudgetTransaction>(`/budgets/allocations/${allocationId}/transactions`);
   },
 };

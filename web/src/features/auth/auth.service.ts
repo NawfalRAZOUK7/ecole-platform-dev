@@ -50,6 +50,11 @@ export interface LoginHistoryEntry {
   created_at: string;
 }
 
+export interface Verify2faPayload {
+  code: string;
+  user_id?: string;
+}
+
 export const authService = {
   register(payload: RegisterPayload) {
     return api.post<RegisterResponse>('/auth/register', payload);
@@ -72,7 +77,13 @@ export const authService = {
   },
 
   getMe() {
-    return api.get<{ user_id: string; email: string; full_name: string; role: string; school_id: string }>('/auth/me');
+    return api.get<{
+      user_id: string;
+      email: string;
+      full_name: string;
+      role: string;
+      school_id: string;
+    }>('/auth/me');
   },
 
   getLoginHistory() {
@@ -93,5 +104,9 @@ export const authService = {
 
   resetPassword(token: string, new_password: string) {
     return api.post<void>('/recovery/reset', { token, new_password });
+  },
+
+  verify2fa(payload: Verify2faPayload) {
+    return api.post<LoginResponse>('/auth/2fa/verify', payload);
   },
 };

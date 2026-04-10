@@ -1,4 +1,5 @@
 import { api } from '@/services/api/client';
+import type { SchoolRecord } from './schools.service';
 
 export interface AdminCursorFilters extends Record<string, string | number | undefined> {
   cursor?: string;
@@ -47,7 +48,13 @@ export interface CsvRow {
 }
 
 export interface BatchResult {
-  created: Array<{ user_id: string; email: string; full_name: string; role: string; temp_password: string }>;
+  created: Array<{
+    user_id: string;
+    email: string;
+    full_name: string;
+    role: string;
+    temp_password: string;
+  }>;
   errors: Array<{ email: string; error: string }>;
   total_created: number;
   total_errors: number;
@@ -155,6 +162,26 @@ export interface InvitationCreatePayload {
   target_student_id?: string;
 }
 
+export interface AdminLoginHistoryEntry {
+  id: string;
+  ip_address: string | null;
+  user_agent: string | null;
+  location: string | null;
+  status: 'success' | 'failed';
+  created_at: string;
+}
+
+export interface CreateSchoolPayload {
+  name: string;
+  code: string;
+  address?: string;
+  city?: string;
+  phone?: string;
+  email?: string;
+  timezone?: string;
+  default_language?: string;
+}
+
 export const adminService = {
   getDashboard() {
     return api.get<DashboardData>('/admin/dashboard');
@@ -206,7 +233,7 @@ export const adminService = {
 
   reviewJustification(
     justificationId: string,
-    body: { decision: 'justified' | 'rejected'; rejection_reason?: string }
+    body: { decision: 'justified' | 'rejected'; rejection_reason?: string },
   ) {
     return api.post<void>(`/attendance/justifications/${justificationId}/review`, body);
   },
@@ -221,11 +248,34 @@ export const adminService = {
 
   createParentChildLink(parentUserId: string, childUserId: string) {
     return api.post<void>(
-      `/admin/parent-child-links?parent_user_id=${encodeURIComponent(parentUserId)}&child_user_id=${encodeURIComponent(childUserId)}`
+      `/admin/parent-child-links?parent_user_id=${encodeURIComponent(parentUserId)}&child_user_id=${encodeURIComponent(childUserId)}`,
     );
   },
 
   revokeParentChildLink(linkId: string) {
     return api.delete<void>(`/admin/parent-child-links/${linkId}`);
+  },
+
+  impersonateUser(userId: string) {
+    return api.post<{ access_token: string; user_id: string; role: string }>(
+      `/admin/impersonate/${userId}`,
+      {},
+    );
+  },
+
+  stopImpersonation() {
+    return api.post<void>('/admin/stop-impersonation', {});
+  },
+
+  getUserLoginHistory(userId: string) {
+    return api.get<AdminLoginHistoryEntry[]>(`/admin/users/${userId}/login-history`);
+  },
+
+  createSchool(payload: CreateSchoolPayload) {
+    return api.post<SchoolRecord>('/schools', payload);
+  },
+
+  listSchools() {
+    return api.list<SchoolRecord>('/schools');
   },
 };

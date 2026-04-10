@@ -49,12 +49,17 @@ export const messagesService = {
     return api.post<Conversation>('/messages/conversations', payload);
   },
 
-  listConversationMessages(conversationId: string, params: Record<string, string | number | undefined>) {
+  listConversationMessages(
+    conversationId: string,
+    params: Record<string, string | number | undefined>,
+  ) {
     return api.list<Message>(`/messages/conversations/${conversationId}/messages`, params);
   },
 
   markConversationRead(conversationId: string, messageId: string) {
-    return api.post<void>(`/messages/conversations/${conversationId}/read`, { message_id: messageId });
+    return api.post<void>(`/messages/conversations/${conversationId}/read`, {
+      message_id: messageId,
+    });
   },
 
   listConversationReadStatus(conversationId: string) {
@@ -63,5 +68,9 @@ export const messagesService = {
 
   sendConversationMessage(conversationId: string, body: string) {
     return api.post<Message>(`/messages/conversations/${conversationId}/messages`, { body });
+  },
+
+  searchMessages(query: string) {
+    return api.list<Message>('/messages/search', { q: query });
   },
 };

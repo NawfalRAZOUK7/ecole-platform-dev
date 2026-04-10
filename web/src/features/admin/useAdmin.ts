@@ -8,6 +8,7 @@ import {
   type AdminJustificationFilters,
   type AdminParentChildLinkFilters,
   type AdminUsersFilters,
+  type CreateSchoolPayload,
   type CsvRow,
   type KpiItem,
   type ParentChildLink,
@@ -315,6 +316,56 @@ export function useRevokeParentChildLink() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['admin', 'parent-child-links'] });
     },
+  });
+}
+
+export function useImpersonateUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (userId: string) => (await adminService.impersonateUser(userId)).data,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: adminQueryKeys.all });
+    },
+  });
+}
+
+export function useStopImpersonation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      await adminService.stopImpersonation();
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: adminQueryKeys.all });
+    },
+  });
+}
+
+export function useUserLoginHistory(userId: string) {
+  return useQuery({
+    queryKey: [...adminQueryKeys.all, 'login-history', userId] as const,
+    queryFn: async () => (await adminService.getUserLoginHistory(userId)).data,
+    enabled: Boolean(userId),
+    staleTime: STALE_DEFAULT,
+  });
+}
+
+export function useCreateSchool() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: CreateSchoolPayload) =>
+      (await adminService.createSchool(payload)).data,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['schools'] });
+    },
+  });
+}
+
+export function useListSchools() {
+  return useQuery({
+    queryKey: ['schools', 'list'] as const,
+    queryFn: async () => (await adminService.listSchools()).data,
+    staleTime: STALE_DEFAULT,
   });
 }
 

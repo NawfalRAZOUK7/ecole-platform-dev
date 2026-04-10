@@ -5,6 +5,7 @@ import type {
   CreateAllocationPayload,
   CreateBudgetPayload,
   CreateBudgetRequestPayload,
+  CreateTransactionPayload,
   UpdateAllocationPayload,
 } from './budgets.types';
 
@@ -189,5 +190,39 @@ export function useRejectBudgetRequest() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: budgetsQueryKeys.all });
     },
+  });
+}
+
+export function useBudgetRequestDetail(requestId: string) {
+  return useQuery({
+    queryKey: [...budgetsQueryKeys.all, 'request', requestId] as const,
+    queryFn: async () => (await budgetsService.getBudgetRequest(requestId)).data,
+    enabled: Boolean(requestId),
+    staleTime: STALE_DEFAULT,
+  });
+}
+
+export function useCreateTransaction() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      allocationId,
+      payload,
+    }: {
+      allocationId: string;
+      payload: CreateTransactionPayload;
+    }) => (await budgetsService.createTransaction(allocationId, payload)).data,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: budgetsQueryKeys.all });
+    },
+  });
+}
+
+export function useAllocationTransactions(allocationId: string) {
+  return useQuery({
+    queryKey: [...budgetsQueryKeys.all, 'allocation-transactions', allocationId] as const,
+    queryFn: async () => (await budgetsService.getTransactions(allocationId)).data,
+    enabled: Boolean(allocationId),
+    staleTime: STALE_DEFAULT,
   });
 }

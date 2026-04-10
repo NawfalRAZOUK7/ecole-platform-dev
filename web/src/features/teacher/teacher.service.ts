@@ -207,6 +207,30 @@ export interface ContentUploadPayload {
   file: File;
 }
 
+export interface ClassDetail {
+  id: string;
+  code: string;
+  name: string;
+  academic_year_id: string;
+  level?: string | null;
+  grade?: string | null;
+}
+
+export interface ClassAssignmentPayload {
+  class_id: string;
+  [key: string]: unknown;
+}
+
+export interface AssessmentResultEntry {
+  student_id: string;
+  score: number;
+  feedback?: string;
+}
+
+export interface AssessmentResultPayload {
+  results: AssessmentResultEntry[];
+}
+
 export const teacherService = {
   listTeacherClasses() {
     return api.get<ClassOption[]>('/teacher/classes');
@@ -327,5 +351,17 @@ export const teacherService = {
 
   gradeSubmission(submissionId: string, payload: Record<string, unknown>) {
     return api.post<void>(`/submissions/${submissionId}/grade`, payload);
+  },
+
+  createClassAssignment(payload: ClassAssignmentPayload) {
+    return api.post<{ id: string }>('/class-assignments', payload);
+  },
+
+  getClass(classId: string) {
+    return api.get<ClassDetail>(`/classes/${classId}`);
+  },
+
+  submitAssessmentResults(assessmentId: string, payload: AssessmentResultPayload) {
+    return api.post<void>(`/assessments/${assessmentId}/results`, payload);
   },
 };

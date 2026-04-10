@@ -8,6 +8,20 @@ import type {
   NotificationPreferencesResponse,
 } from './types';
 
+export interface RegisterDevicePayload {
+  token: string;
+  platform: 'android' | 'ios' | 'web';
+  device_name?: string;
+}
+
+export interface BatchNotifyPayload {
+  user_ids: string[];
+  title: string;
+  body: string;
+  category?: string;
+  action_url?: string;
+}
+
 export interface NotificationListFilters extends Record<string, string | number | undefined> {
   limit?: number;
   cursor?: string;
@@ -76,5 +90,21 @@ export const notificationsService = {
 
   removeDevice(deviceId: string) {
     return api.delete<void>(`/devices/${deviceId}`);
+  },
+
+  registerDevice(payload: RegisterDevicePayload) {
+    return api.post<DeviceItem>('/devices/register', payload);
+  },
+
+  getUnreadCount() {
+    return api.get<{ count: number }>('/notifications/unread-count');
+  },
+
+  batchNotify(payload: BatchNotifyPayload) {
+    return api.post<void>('/notifications/batch', payload);
+  },
+
+  deleteNotification(notificationId: string) {
+    return api.delete<void>(`/notifications/${notificationId}`);
   },
 };

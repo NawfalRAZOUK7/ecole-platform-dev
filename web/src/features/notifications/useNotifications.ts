@@ -9,9 +9,11 @@ import type { ApiListResponse } from '@/services/api/client';
 import { STALE_NOTIFICATIONS } from '@/shared/hooks/useQueryDefaults';
 import {
   notificationsService,
+  type BatchNotifyPayload,
   type NotificationListFilters,
   type NotificationPreferencesUpdatePayload,
   type NotificationSettingsInput,
+  type RegisterDevicePayload,
 } from './notifications.service';
 import type {
   DeviceItem,
@@ -29,6 +31,7 @@ export const notificationQueryKeys = {
   preferences: () => [...notificationQueryKeys.all, 'preferences'] as const,
   digest: () => [...notificationQueryKeys.all, 'digest'] as const,
   devices: () => [...notificationQueryKeys.all, 'devices'] as const,
+  unreadCount: () => [...notificationQueryKeys.all, 'unread-count'] as const,
 };
 
 function mapNotificationPages(
@@ -192,6 +195,49 @@ export function useRemoveNotificationDevice() {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: notificationQueryKeys.devices() });
+    },
+  });
+}
+
+export function useRegisterDevice() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: RegisterDevicePayload) =>
+      (await notificationsService.registerDevice(payload)).data,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: notificationQueryKeys.devices() });
+    },
+  });
+}
+
+export function useNotificationUnreadCount() {
+  return useQuery({
+    queryKey: notificationQueryKeys.unreadCount(),
+    queryFn: async () => (await notificationsService.getUnreadCount()).data,
+    staleTime: STALE_NOTIFICATIONS,
+  });
+}
+
+export function useBatchNotify() {
+  return useMutation({
+    mutationFn: async (payload: BatchNotifyPayload) => {
+      await notificationsService.batchNotify(payload);
+    },
+  });
+}
+
+export function useDeleteNotification() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (notificationId: string) => {
+      await notificationsService.deleteNotification(notificationId);
+      return notificationId;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: notificationQueryKeys.lists() });
+      await queryClient.invalidateQueries({ queryKey: notificationQueryKeys.unreadCount() });
     },
   });
 }

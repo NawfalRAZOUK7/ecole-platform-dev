@@ -104,4 +104,24 @@ export const submissionsService = {
   downloadExercisePdf(assignmentId: string) {
     return submissionsService.generateExercisePdf(assignmentId);
   },
+
+  overridePenalty(submissionId: string, payload: { penalty_override: number; reason?: string }) {
+    return api.post<void>(`/submissions/${submissionId}/override-penalty`, payload);
+  },
+
+  uploadFiles(submissionId: string, files: File[]) {
+    return Promise.all(
+      files.map((file) => submissionsService.uploadSubmissionFile(submissionId, file)),
+    );
+  },
+
+  getFile(submissionId: string, fileId: string) {
+    return api.get<{ id: string; filename: string; download_url: string; mime_type: string }>(
+      `/submissions/${submissionId}/files/${fileId}`,
+    );
+  },
+
+  previewSubmission(submissionId: string) {
+    return api.get<{ preview_url: string; status: string }>(`/submissions/${submissionId}/preview`);
+  },
 };

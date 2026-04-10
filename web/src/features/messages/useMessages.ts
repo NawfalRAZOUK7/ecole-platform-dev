@@ -9,6 +9,7 @@ export const messagesQueryKeys = {
     [...messagesQueryKeys.all, 'conversation', conversationId, 'messages'] as const,
   readStatus: (conversationId: string | null | undefined) =>
     [...messagesQueryKeys.all, 'conversation', conversationId, 'read-status'] as const,
+  search: (query: string) => [...messagesQueryKeys.all, 'search', query] as const,
 };
 
 export function useConversations() {
@@ -21,7 +22,7 @@ export function useConversations() {
         cursor: pageParam,
       }),
     getNextPageParam: (lastPage) =>
-      lastPage.meta.has_more ? lastPage.meta.next_cursor ?? undefined : undefined,
+      lastPage.meta.has_more ? (lastPage.meta.next_cursor ?? undefined) : undefined,
     staleTime: STALE_NOTIFICATIONS,
   });
 }
@@ -45,7 +46,8 @@ export function useCreateConversation() {
 export function useConversationMessages(conversationId: string | null | undefined) {
   return useQuery({
     queryKey: messagesQueryKeys.conversationMessages(conversationId),
-    queryFn: async () => (await messagesService.listConversationMessages(conversationId!, { limit: 50 })).data,
+    queryFn: async () =>
+      (await messagesService.listConversationMessages(conversationId!, { limit: 50 })).data,
     enabled: Boolean(conversationId),
     staleTime: STALE_DEFAULT,
   });
@@ -87,13 +89,25 @@ export function useSendConversationMessage(conversationId: string | null | undef
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (body: string) => (await messagesService.sendConversationMessage(conversationId!, body)).data,
+    mutationFn: async (body: string) =>
+      (await messagesService.sendConversationMessage(conversationId!, body)).data,
     onSuccess: async () => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: messagesQueryKeys.conversationMessages(conversationId) }),
+        queryClient.invalidateQueries({
+          queryKey: messagesQueryKeys.conversationMessages(conversationId),
+        }),
         queryClient.invalidateQueries({ queryKey: messagesQueryKeys.conversations() }),
         queryClient.invalidateQueries({ queryKey: messagesQueryKeys.readStatus(conversationId) }),
       ]);
     },
+  });
+}
+
+export function useSearchMessages(query: string) {
+  return useQuery({
+    queryKey: messagesQueryKeys.search(query),
+    queryFn: async () => (await messagesService.searchMessages(query)).data,
+    enabled: query.trim().length >= 2,
+    staleTime: STALE_DEFAULT,
   });
 }

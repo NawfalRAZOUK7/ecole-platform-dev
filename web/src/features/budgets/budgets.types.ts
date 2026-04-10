@@ -83,3 +83,10 @@ export interface CreateBudgetRequestPayload {
   justification: string;
   description: string;
 }
+
+export interface CreateTransactionPayload {
+  amount: number;
+  type: BudgetTransactionType;
+  description: string;
+  date?: string;
+}

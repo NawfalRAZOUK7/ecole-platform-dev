@@ -97,4 +97,16 @@ export const attendanceService = {
   reviewJustification(justificationId: string, payload: JustificationReviewPayload) {
     return api.post<Justification>(`/attendance/justifications/${justificationId}/review`, payload);
   },
+
+  checkThresholds() {
+    return api.post<
+      {
+        class_id: string;
+        student_id: string;
+        attendance_rate: number;
+        threshold: number;
+        triggered: boolean;
+      }[]
+    >('/analytics/attendance/check-thresholds', {});
+  },
 };

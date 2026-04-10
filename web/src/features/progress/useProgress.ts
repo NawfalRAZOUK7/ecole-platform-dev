@@ -4,7 +4,8 @@ import { progressService } from './progress.service';
 
 export const progressQueryKeys = {
   all: ['progress'] as const,
-  dashboard: (studentId: string | null) => [...progressQueryKeys.all, 'dashboard', studentId] as const,
+  dashboard: (studentId: string | null) =>
+    [...progressQueryKeys.all, 'dashboard', studentId] as const,
   children: () => [...progressQueryKeys.all, 'children'] as const,
 };
 
@@ -20,6 +21,23 @@ export function useChildrenProgressOverview() {
   return useQuery({
     queryKey: progressQueryKeys.children(),
     queryFn: async () => (await progressService.getChildrenOverview()).data.data,
+    staleTime: STALE_RESULTS,
+  });
+}
+
+export function useStudentProgress(studentId: string) {
+  return useQuery({
+    queryKey: progressQueryKeys.dashboard(studentId),
+    queryFn: async () => (await progressService.getStudentProgress(studentId)).data.data,
+    enabled: Boolean(studentId),
+    staleTime: STALE_RESULTS,
+  });
+}
+
+export function useMyProgress() {
+  return useQuery({
+    queryKey: progressQueryKeys.dashboard(null),
+    queryFn: async () => (await progressService.getMyProgress()).data.data,
     staleTime: STALE_RESULTS,
   });
 }
