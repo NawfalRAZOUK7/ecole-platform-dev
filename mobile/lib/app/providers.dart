@@ -7,6 +7,7 @@
 /// Phase 10C: Added content library + quiz repository providers.
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/data/api/api_client.dart';
@@ -116,6 +117,10 @@ final wsClientProvider = Provider<WsClient>((ref) {
     baseUrl: 'http://localhost:8000',
     localNotifications: ref.watch(localNotificationsProvider),
   );
+});
+
+final themeModeProvider = StateProvider<ThemeMode>((ref) {
+  return ThemeMode.system;
 });
 
 // ── Repository providers ──

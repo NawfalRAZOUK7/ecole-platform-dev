@@ -22,6 +22,8 @@ import 'package:ecole_platform/data/local_store/cache_store.dart';
 import 'package:ecole_platform/features/auth/auth_provider.dart';
 import 'package:ecole_platform/features/notifications/notifications_provider.dart';
 import 'package:ecole_platform/l10n/app_localizations.dart';
+import 'package:ecole_platform/shared/ui/app_theme.dart';
+import 'package:ecole_platform/shared/ui/app_theme_dark.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -150,6 +152,7 @@ class _EcolePlatformAppState extends ConsumerState<EcolePlatformApp>
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
     final authState = ref.watch(authProvider);
+    final themeMode = ref.watch(themeModeProvider);
 
     // Connect/disconnect WebSocket based on auth state
     final wsClient = ref.read(wsClientProvider);
@@ -184,29 +187,9 @@ class _EcolePlatformAppState extends ConsumerState<EcolePlatformApp>
       title: 'École Platform',
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: _scaffoldMessengerKey,
-      theme: ThemeData(
-        colorSchemeSeed: const Color(0xFF2563EB),
-        useMaterial3: true,
-        fontFamily: 'Inter',
-        appBarTheme: const AppBarTheme(
-          centerTitle: true,
-          elevation: 0,
-        ),
-        cardTheme: CardThemeData(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: const BorderSide(color: Color(0xFFE5E7EB)),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          filled: true,
-          fillColor: const Color(0xFFF9FAFB),
-        ),
-      ),
+      theme: appLightTheme,
+      darkTheme: appDarkTheme,
+      themeMode: themeMode,
       routerConfig: router,
     );
   }
