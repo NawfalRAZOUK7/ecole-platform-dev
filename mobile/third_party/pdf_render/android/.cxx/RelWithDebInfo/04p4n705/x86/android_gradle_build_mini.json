@@ -1,0 +1,27 @@
+{
+  "buildFiles": [
+    "/Users/nawfalrazouk/Ecole-Platform/ecole-platform-dev/mobile/third_party/pdf_render/android/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/Users/nawfalrazouk/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+      "-C",
+      "/Users/nawfalrazouk/Ecole-Platform/ecole-platform-dev/mobile/third_party/pdf_render/android/.cxx/RelWithDebInfo/04p4n705/x86",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/Users/nawfalrazouk/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+    "-C",
+    "/Users/nawfalrazouk/Ecole-Platform/ecole-platform-dev/mobile/third_party/pdf_render/android/.cxx/RelWithDebInfo/04p4n705/x86",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "bbhelper::@6890427a1f51a3e7e1df": {
+      "artifactName": "bbhelper",
+      "abi": "x86",
+      "output": "/Users/nawfalrazouk/Ecole-Platform/ecole-platform-dev/mobile/build/pdf_render/intermediates/cxx/RelWithDebInfo/04p4n705/obj/x86/libbbhelper.so",
+      "runtimeFiles": []
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-RelWithDebInfo-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.4.1"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0
+					]
+				}
+			],
+			"name" : "RelWithDebInfo",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "Project",
+					"targetIndexes" : 
+					[
+						0
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "bbhelper::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-bbhelper-RelWithDebInfo-5cfd5db2f2ccbf318afe.json",
+					"name" : "bbhelper",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/Users/nawfalrazouk/Ecole-Platform/ecole-platform-dev/mobile/third_party/pdf_render/android/.cxx/RelWithDebInfo/04p4n705/x86_64",
+		"source" : "/Users/nawfalrazouk/Ecole-Platform/ecole-platform-dev/mobile/third_party/pdf_render/android"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 3
+	}
+}
