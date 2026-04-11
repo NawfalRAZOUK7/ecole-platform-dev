@@ -104,8 +104,8 @@ class ComplianceDashboardData {
   });
 
   factory ComplianceDashboardData.fromJson(Map<String, dynamic> json) {
-    final metricsJson =
-        (json['metrics'] as List<dynamic>? ?? const []).cast<Map<String, dynamic>>();
+    final metricsJson = (json['metrics'] as List<dynamic>? ?? const [])
+        .cast<Map<String, dynamic>>();
     return ComplianceDashboardData(
       coverageRate: (json['coverage_rate'] as num?)?.toDouble() ??
           (json['coverage'] as num?)?.toDouble() ??

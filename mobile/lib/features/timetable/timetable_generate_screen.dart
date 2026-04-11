@@ -34,11 +34,11 @@ class _TimetableGenerateScreenState
     setState(() => _loading = true);
     try {
       final response = await ref.read(apiClientProvider).post(
-            '/timetable/generate',
-            body: {
-              'academic_year_id': _academicYearController.text.trim(),
-            },
-          );
+        '/timetable/generate',
+        body: {
+          'academic_year_id': _academicYearController.text.trim(),
+        },
+      );
       final job = GenerationJob.fromJson(response.data);
       setState(() {
         _job = job;
@@ -145,7 +145,8 @@ class _TimetableGenerateScreenState
                 const SizedBox(width: 12),
                 Expanded(
                   child: FilledButton.tonal(
-                    onPressed: _loading || _preview == null ? null : _applyGeneration,
+                    onPressed:
+                        _loading || _preview == null ? null : _applyGeneration,
                     child: const Text('Apply'),
                   ),
                 ),

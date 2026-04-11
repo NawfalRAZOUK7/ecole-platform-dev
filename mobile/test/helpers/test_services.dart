@@ -146,7 +146,8 @@ class TestBiometricService implements BiometricService {
   bool _enabled = false;
 
   @override
-  Future<bool> authenticate({String reason = 'Veuillez vous authentifier'}) async {
+  Future<bool> authenticate(
+      {String reason = 'Veuillez vous authentifier'}) async {
     return false;
   }
 

@@ -372,7 +372,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         .toList(),
                     onChanged: (value) {
                       if (value != null) {
-                        ref.read(themeModeProvider.notifier).setThemeMode(value);
+                        ref
+                            .read(themeModeProvider.notifier)
+                            .setThemeMode(value);
                       }
                     },
                   ),

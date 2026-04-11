@@ -95,8 +95,11 @@ class _ChildProgressCard extends StatelessWidget {
     required this.onTap,
   });
 
-  Color _gradeColor(double v) =>
-      v >= 80 ? Colors.green : v >= 50 ? Colors.orange : Colors.red;
+  Color _gradeColor(double v) => v >= 80
+      ? Colors.green
+      : v >= 50
+          ? Colors.orange
+          : Colors.red;
 
   @override
   Widget build(BuildContext context) {
@@ -147,7 +150,9 @@ class _ChildProgressCard extends StatelessWidget {
                   _MetricChip(
                     label: t.t('progress.attendanceRate'),
                     value: '${child.attendanceRate.toStringAsFixed(0)}%',
-                    color: child.attendanceRate >= 85 ? Colors.green : Colors.orange,
+                    color: child.attendanceRate >= 85
+                        ? Colors.green
+                        : Colors.orange,
                   ),
                   const SizedBox(width: 8),
                   _MetricChip(

@@ -7,7 +7,8 @@ abstract class GradebookRepository {
 
   Future<void> updateGrades(BulkGradeUpdate update);
 
-  Future<WeightedSummary> getWeightedSummary(String classId, {String? periodId});
+  Future<WeightedSummary> getWeightedSummary(String classId,
+      {String? periodId});
 
   Future<String?> exportGrades(String classId, {String format = 'csv'});
 

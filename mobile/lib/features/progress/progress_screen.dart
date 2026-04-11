@@ -117,7 +117,8 @@ class _GradeTab extends StatelessWidget {
   final StudentProgress progress;
   final AppLocalizations t;
   final ThemeData theme;
-  const _GradeTab({required this.progress, required this.t, required this.theme});
+  const _GradeTab(
+      {required this.progress, required this.t, required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -140,10 +141,13 @@ class _GradeTab extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(t.t('progress.gradeTrend'),
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+              style: theme.textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          _summaryRow(t.t('progress.gradeAvg'),
-              (ds.data.reduce((a, b) => a + b) / ds.data.length).toStringAsFixed(1)),
+          _summaryRow(
+              t.t('progress.gradeAvg'),
+              (ds.data.reduce((a, b) => a + b) / ds.data.length)
+                  .toStringAsFixed(1)),
           const SizedBox(height: 16),
           Expanded(
             child: LineChart(
@@ -158,7 +162,8 @@ class _GradeTab extends StatelessWidget {
                       reservedSize: 30,
                       getTitlesWidget: (value, meta) {
                         final idx = value.toInt();
-                        if (idx < 0 || idx >= progress.gradeTrends.labels.length) {
+                        if (idx < 0 ||
+                            idx >= progress.gradeTrends.labels.length) {
                           return const SizedBox.shrink();
                         }
                         return Padding(
@@ -172,8 +177,10 @@ class _GradeTab extends StatelessWidget {
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(showTitles: true, reservedSize: 35),
                   ),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
                 ),
                 borderData: FlBorderData(show: true),
                 lineBarsData: [
@@ -202,7 +209,8 @@ class _GradeTab extends StatelessWidget {
           Text(label, style: theme.textTheme.bodyMedium),
           const SizedBox(width: 8),
           Text(value,
-              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+              style: theme.textTheme.titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold)),
         ],
       );
 }
@@ -214,7 +222,8 @@ class _ContentTab extends StatelessWidget {
   final StudentProgress progress;
   final AppLocalizations t;
   final ThemeData theme;
-  const _ContentTab({required this.progress, required this.t, required this.theme});
+  const _ContentTab(
+      {required this.progress, required this.t, required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -225,14 +234,19 @@ class _ContentTab extends StatelessWidget {
       return Center(child: Text(t.t('progress.noData')));
     }
 
-    final colors = [const Color(0xFF10b981), const Color(0xFFf59e0b), const Color(0xFFef4444)];
+    final colors = [
+      const Color(0xFF10b981),
+      const Color(0xFFf59e0b),
+      const Color(0xFFef4444)
+    ];
     final sections = ds.data.asMap().entries.map((e) {
       return PieChartSectionData(
         value: e.value,
         color: colors[e.key % colors.length],
         title: '${e.value.toInt()}',
         radius: 60,
-        titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+        titleStyle: const TextStyle(
+            fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
       );
     }).toList();
 
@@ -241,11 +255,13 @@ class _ContentTab extends StatelessWidget {
       child: Column(
         children: [
           Text(t.t('progress.contentCompletion'),
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+              style: theme.textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Text(
             '${progress.contentSummary.completionRate.toStringAsFixed(0)}% (${progress.contentSummary.completed}/${progress.contentSummary.total})',
-            style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.headlineSmall
+                ?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           Expanded(
@@ -260,11 +276,15 @@ class _ContentTab extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: progress.contentCompletion.labels.asMap().entries.map((e) {
+            children:
+                progress.contentCompletion.labels.asMap().entries.map((e) {
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: Row(children: [
-                  Container(width: 12, height: 12, color: colors[e.key % colors.length]),
+                  Container(
+                      width: 12,
+                      height: 12,
+                      color: colors[e.key % colors.length]),
                   const SizedBox(width: 4),
                   Text(e.value, style: const TextStyle(fontSize: 12)),
                 ]),
@@ -284,7 +304,8 @@ class _ActivityTab extends StatelessWidget {
   final StudentProgress progress;
   final AppLocalizations t;
   final ThemeData theme;
-  const _ActivityTab({required this.progress, required this.t, required this.theme});
+  const _ActivityTab(
+      {required this.progress, required this.t, required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -312,7 +333,8 @@ class _ActivityTab extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(t.t('progress.activityScores'),
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+              style: theme.textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
           Expanded(
             child: BarChart(
@@ -326,7 +348,8 @@ class _ActivityTab extends StatelessWidget {
                       reservedSize: 30,
                       getTitlesWidget: (value, meta) {
                         final idx = value.toInt();
-                        if (idx < 0 || idx >= progress.activityScores.labels.length) {
+                        if (idx < 0 ||
+                            idx >= progress.activityScores.labels.length) {
                           return const SizedBox.shrink();
                         }
                         return Padding(
@@ -340,8 +363,10 @@ class _ActivityTab extends StatelessWidget {
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(showTitles: true, reservedSize: 35),
                   ),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
                 ),
                 borderData: FlBorderData(show: true),
                 barGroups: barGroups,
@@ -361,7 +386,8 @@ class _AttendanceTab extends StatelessWidget {
   final StudentProgress progress;
   final AppLocalizations t;
   final ThemeData theme;
-  const _AttendanceTab({required this.progress, required this.t, required this.theme});
+  const _AttendanceTab(
+      {required this.progress, required this.t, required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -384,7 +410,8 @@ class _AttendanceTab extends StatelessWidget {
         color: colors[e.key % colors.length],
         title: '${e.value.toInt()}',
         radius: 55,
-        titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+        titleStyle: const TextStyle(
+            fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
       );
     }).toList();
 
@@ -393,11 +420,13 @@ class _AttendanceTab extends StatelessWidget {
       child: Column(
         children: [
           Text(t.t('progress.attendance'),
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+              style: theme.textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Text(
             '${progress.attendanceSummary.attendanceRate.toStringAsFixed(1)}%',
-            style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.headlineMedium
+                ?.copyWith(fontWeight: FontWeight.bold),
           ),
           Text(
             '${progress.attendanceSummary.present}/${progress.attendanceSummary.total}',
@@ -416,9 +445,13 @@ class _AttendanceTab extends StatelessWidget {
           const SizedBox(height: 12),
           Wrap(
             spacing: 12,
-            children: progress.attendanceOverview.labels.asMap().entries.map((e) {
+            children:
+                progress.attendanceOverview.labels.asMap().entries.map((e) {
               return Row(mainAxisSize: MainAxisSize.min, children: [
-                Container(width: 12, height: 12, color: colors[e.key % colors.length]),
+                Container(
+                    width: 12,
+                    height: 12,
+                    color: colors[e.key % colors.length]),
                 const SizedBox(width: 4),
                 Text(e.value, style: const TextStyle(fontSize: 12)),
               ]);

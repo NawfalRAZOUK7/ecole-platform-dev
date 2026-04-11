@@ -291,7 +291,8 @@ class FakeBiometricService extends BiometricService {
   }
 
   @override
-  Future<bool> authenticate({String reason = 'Veuillez vous authentifier'}) async {
+  Future<bool> authenticate(
+      {String reason = 'Veuillez vous authentifier'}) async {
     return false;
   }
 
@@ -318,7 +319,8 @@ class FakeAuthRepository implements AuthRepository {
       'teacher@ecole.test' => environment.teacherUser,
       _ => environment.parentUser,
     };
-    await environment.storage.saveRefreshToken('refresh-${environment.currentUser!.id}');
+    await environment.storage
+        .saveRefreshToken('refresh-${environment.currentUser!.id}');
     return const LoginResult(accessToken: 'access-token');
   }
 
@@ -390,7 +392,8 @@ class FakeAuthRepository implements AuthRepository {
   Future<void> disable2fa(String code) async {}
 
   @override
-  Future<void> changePassword(String currentPassword, String newPassword) async {}
+  Future<void> changePassword(
+      String currentPassword, String newPassword) async {}
 
   @override
   Future<List<ChildLink>> getChildren() async {
@@ -468,7 +471,8 @@ class FakeNotificationRepository implements NotificationRepository {
       (item) => item.id == notificationId,
     );
     if (index >= 0) {
-      environment.notifications[index] = environment.notifications[index].copyWith(
+      environment.notifications[index] =
+          environment.notifications[index].copyWith(
         isRead: read,
         readAt: read ? DateTime.now().toIso8601String() : null,
       );

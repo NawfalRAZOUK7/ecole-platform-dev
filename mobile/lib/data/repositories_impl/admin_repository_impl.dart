@@ -96,8 +96,7 @@ class AdminRepositoryImpl implements AdminRepository {
     if (cursor != null) params['cursor'] = cursor;
     if (status != null) params['status'] = status;
 
-    final resp =
-        await _api.list('/admin/justifications', params: params);
+    final resp = await _api.list('/admin/justifications', params: params);
     return PaginatedList(
       items: resp.data.map(justificationFromJson).toList(),
       nextCursor: resp.nextCursor,

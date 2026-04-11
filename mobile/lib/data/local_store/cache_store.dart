@@ -15,13 +15,13 @@ import 'database.dart';
 
 /// TTL policies per endpoint (in seconds).
 class CacheTtl {
-  static const int feed = 5 * 60;         // 5 minutes
+  static const int feed = 5 * 60; // 5 minutes
   static const int notifications = 2 * 60; // 2 minutes
   static const int contentItems = 15 * 60; // 15 minutes
-  static const int results = 10 * 60;      // 10 minutes
-  static const int invoices = 10 * 60;     // 10 minutes
-  static const int gradebook = 10 * 60;    // 10 minutes
-  static const int attendance = 10 * 60;   // 10 minutes
+  static const int results = 10 * 60; // 10 minutes
+  static const int invoices = 10 * 60; // 10 minutes
+  static const int gradebook = 10 * 60; // 10 minutes
+  static const int attendance = 10 * 60; // 10 minutes
 }
 
 class CacheStore {
@@ -44,8 +44,8 @@ class CacheStore {
     // Check TTL
     if (now - createdAt > ttlSeconds) {
       // Expired — delete and return null
-      await db.delete('cache_entries',
-          where: 'cache_key = ?', whereArgs: [key]);
+      await db
+          .delete('cache_entries', where: 'cache_key = ?', whereArgs: [key]);
       return null;
     }
 
@@ -55,7 +55,8 @@ class CacheStore {
   }
 
   /// Store data with TTL.
-  Future<void> put(String key, List<Map<String, dynamic>> data, int ttlSeconds) async {
+  Future<void> put(
+      String key, List<Map<String, dynamic>> data, int ttlSeconds) async {
     final db = await AppDatabase.instance;
     final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
 
@@ -74,8 +75,7 @@ class CacheStore {
   /// Invalidate a specific cache key (pull-to-refresh).
   Future<void> invalidate(String key) async {
     final db = await AppDatabase.instance;
-    await db.delete('cache_entries',
-        where: 'cache_key = ?', whereArgs: [key]);
+    await db.delete('cache_entries', where: 'cache_key = ?', whereArgs: [key]);
   }
 
   /// Invalidate all cache keys matching a prefix.

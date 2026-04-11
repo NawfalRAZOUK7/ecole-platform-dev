@@ -54,8 +54,7 @@ class ContentScreen extends ConsumerWidget {
             },
             showSort: true,
             sortAscending: state.sortAscending,
-            onSortToggle: () =>
-                ref.read(contentProvider.notifier).toggleSort(),
+            onSortToggle: () => ref.read(contentProvider.notifier).toggleSort(),
           ),
 
           // Content list

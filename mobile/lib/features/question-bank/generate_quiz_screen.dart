@@ -31,16 +31,17 @@ class _GenerateQuizScreenState extends ConsumerState<GenerateQuizScreen> {
   Future<void> _generate() async {
     setState(() => _loading = true);
     try {
-      final result = await ref.read(questionBankRepositoryProvider).generateQuiz(
-            subject: _subjectController.text.trim(),
-            difficulty: difficulty,
-            count: int.tryParse(_countController.text) ?? 5,
-            tags: _tagsController.text
-                .split(',')
-                .map((item) => item.trim())
-                .where((item) => item.isNotEmpty)
-                .toList(),
-          );
+      final result =
+          await ref.read(questionBankRepositoryProvider).generateQuiz(
+                subject: _subjectController.text.trim(),
+                difficulty: difficulty,
+                count: int.tryParse(_countController.text) ?? 5,
+                tags: _tagsController.text
+                    .split(',')
+                    .map((item) => item.trim())
+                    .where((item) => item.isNotEmpty)
+                    .toList(),
+              );
       setState(() => _result = result);
     } finally {
       if (mounted) {
@@ -119,7 +120,8 @@ class _GenerateQuizScreenState extends ConsumerState<GenerateQuizScreen> {
                 margin: const EdgeInsets.only(bottom: 12),
                 child: ListTile(
                   title: Text(question.text),
-                  subtitle: Text('${question.subject} · ${question.difficulty}'),
+                  subtitle:
+                      Text('${question.subject} · ${question.difficulty}'),
                 ),
               ),
             ),

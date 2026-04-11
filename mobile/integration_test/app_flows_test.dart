@@ -55,12 +55,14 @@ void main() {
       container.read(routerProvider).go('/teacher/attendance');
       await tester.pumpAndSettle();
 
-      await tester.tap(find.widgetWithText(DropdownButtonFormField<String>, 'Classe *'));
+      await tester.tap(
+          find.widgetWithText(DropdownButtonFormField<String>, 'Classe *'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Class 6A').last);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.widgetWithText(DropdownButtonFormField<String>, 'Période *'));
+      await tester.tap(
+          find.widgetWithText(DropdownButtonFormField<String>, 'Période *'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Morning').last);
       await tester.pumpAndSettle();
@@ -81,8 +83,8 @@ void main() {
       await _loginAs(tester, 'parent@ecole.test');
 
       container.read(routerProvider).go(
-        '/attendance/history?classId=class-1&studentId=student-1',
-      );
+            '/attendance/history?classId=class-1&studentId=student-1',
+          );
       await tester.pumpAndSettle();
 
       expect(find.text('Recent sessions'), findsOneWidget);

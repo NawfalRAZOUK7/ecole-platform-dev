@@ -12,7 +12,8 @@ class LateFeePolicyScreen extends ConsumerStatefulWidget {
   const LateFeePolicyScreen({super.key});
 
   @override
-  ConsumerState<LateFeePolicyScreen> createState() => _LateFeePolicyScreenState();
+  ConsumerState<LateFeePolicyScreen> createState() =>
+      _LateFeePolicyScreenState();
 }
 
 class _LateFeePolicyScreenState extends ConsumerState<LateFeePolicyScreen> {
@@ -39,18 +40,21 @@ class _LateFeePolicyScreenState extends ConsumerState<LateFeePolicyScreen> {
             TextField(
               controller: graceController,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Grace period (days)'),
+              decoration:
+                  const InputDecoration(labelText: 'Grace period (days)'),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: percentController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(labelText: 'Fee percent'),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: capController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(labelText: 'Max fee cap (MAD)'),
             ),
           ],

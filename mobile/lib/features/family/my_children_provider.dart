@@ -21,7 +21,8 @@ class MyChildrenState {
 class MyChildrenNotifier extends StateNotifier<MyChildrenState> {
   final Ref _ref;
 
-  MyChildrenNotifier(this._ref) : super(const MyChildrenState(isLoading: true)) {
+  MyChildrenNotifier(this._ref)
+      : super(const MyChildrenState(isLoading: true)) {
     load();
   }
 

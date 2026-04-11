@@ -149,8 +149,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<String?> refreshToken() async {
-    final token =
-        _api.accessToken != null ? _api.accessToken : null;
+    final token = _api.accessToken != null ? _api.accessToken : null;
     return token;
   }
 
@@ -245,7 +244,8 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<List<ChildLink>> getChildren() async {
     final resp = await _api.get('/me/children');
-    final list = resp.data['children'] as List<dynamic>? ?? resp.data as List<dynamic>;
+    final list =
+        resp.data['children'] as List<dynamic>? ?? resp.data as List<dynamic>;
     return list.map((item) {
       final m = item as Map<String, dynamic>;
       return ChildLink(

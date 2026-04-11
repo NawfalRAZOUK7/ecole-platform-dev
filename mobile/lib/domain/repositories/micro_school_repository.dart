@@ -9,13 +9,15 @@ abstract class MicroSchoolRepository {
 
   Future<MicroSchool> getMicroSchoolDetail(String id);
 
-  Future<MicroSchool> updateMicroSchool(String id, Map<String, dynamic> payload);
+  Future<MicroSchool> updateMicroSchool(
+      String id, Map<String, dynamic> payload);
 
   Future<void> deleteMicroSchool(String id);
 
   Future<List<MicroEnrollment>> getEnrollments(String id);
 
-  Future<MicroEnrollment> enrollStudent(String id, Map<String, dynamic> payload);
+  Future<MicroEnrollment> enrollStudent(
+      String id, Map<String, dynamic> payload);
 
   Future<void> unenrollStudent(String id, String enrollmentId);
 
@@ -31,7 +33,8 @@ abstract class MicroSchoolRepository {
 
   Future<MicroStudentProgress> getStudentProgress(String id, String studentId);
 
-  Future<Map<String, dynamic>> createGroup(String id, Map<String, dynamic> payload);
+  Future<Map<String, dynamic>> createGroup(
+      String id, Map<String, dynamic> payload);
 
   Future<List<Map<String, dynamic>>> getGroups(String id);
 

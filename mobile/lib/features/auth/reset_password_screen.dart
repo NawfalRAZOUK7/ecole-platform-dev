@@ -44,9 +44,8 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       final token = _tokenController.text.trim();
       final code = _codeController.text.trim();
       if (code.isNotEmpty) {
-        final valid = await ref
-            .read(authRepositoryProvider)
-            .verifyRecovery(token, code);
+        final valid =
+            await ref.read(authRepositoryProvider).verifyRecovery(token, code);
         if (!valid) {
           throw Exception('Invalid recovery code');
         }
@@ -56,7 +55,8 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
           .resetPassword(token, _passwordController.text);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(ref).t('auth.resetPassword'))),
+        SnackBar(
+            content: Text(AppLocalizations.of(ref).t('auth.resetPassword'))),
       );
       context.go('/login');
     } finally {

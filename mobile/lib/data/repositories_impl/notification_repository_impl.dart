@@ -71,7 +71,8 @@ class NotificationRepositoryImpl implements NotificationRepository {
 
   @override
   Future<void> markRead(String notificationId, {required bool read}) async {
-    await _api.patch('/notifications/$notificationId/read', body: {'read': read});
+    await _api
+        .patch('/notifications/$notificationId/read', body: {'read': read});
     final cached = await _notificationsStore.readAll();
     final updated = cached
         .map((item) => item['id'] == notificationId
@@ -108,7 +109,8 @@ class NotificationRepositoryImpl implements NotificationRepository {
   }
 
   @override
-  Future<void> updatePreferences(List<NotificationPreferenceItem> preferences) async {
+  Future<void> updatePreferences(
+      List<NotificationPreferenceItem> preferences) async {
     await _api.post(
       '/notifications/preferences',
       body: {

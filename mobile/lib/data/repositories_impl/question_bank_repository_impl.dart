@@ -43,7 +43,8 @@ QuestionBankImportResult _questionBankImportResultFromJson(
   );
 }
 
-GeneratedQuestionQuiz _generatedQuestionQuizFromJson(Map<String, dynamic> json) {
+GeneratedQuestionQuiz _generatedQuestionQuizFromJson(
+    Map<String, dynamic> json) {
   return GeneratedQuestionQuiz(
     questions: (json['questions'] as List<dynamic>? ?? const [])
         .cast<Map<String, dynamic>>()

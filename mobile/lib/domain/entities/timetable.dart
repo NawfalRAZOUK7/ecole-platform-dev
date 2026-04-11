@@ -42,7 +42,8 @@ class TimetableSlot {
       classId: json['class_id'] as String,
       className: json['class_name'] as String?,
       exception: json['exception'] != null
-          ? TimetableException.fromJson(json['exception'] as Map<String, dynamic>)
+          ? TimetableException.fromJson(
+              json['exception'] as Map<String, dynamic>)
           : null,
     );
   }

@@ -58,7 +58,9 @@ class _SiblingPolicyScreenState extends ConsumerState<SiblingPolicyScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                for (var index = 0; index < rankControllers.length; index++) ...[
+                for (var index = 0;
+                    index < rankControllers.length;
+                    index++) ...[
                   Row(
                     children: [
                       Expanded(
@@ -168,9 +170,10 @@ class _SiblingPolicyScreenState extends ConsumerState<SiblingPolicyScreen> {
                     children: [
                       Text(
                         'Discount tiers',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
                       ),
                       const SizedBox(height: 12),
                       if (policy.discounts.isEmpty)

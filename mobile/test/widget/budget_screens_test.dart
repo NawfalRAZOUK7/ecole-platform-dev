@@ -46,7 +46,8 @@ void main() {
         (tester) async {
       final budgetRepository = MockBudgetRepository();
 
-      when(() => budgetRepository.listBudgets()).thenAnswer((_) async => const []);
+      when(() => budgetRepository.listBudgets())
+          .thenAnswer((_) async => const []);
       when(() => budgetRepository.getBudgetAnalytics()).thenAnswer(
         (_) async => _budgetAnalytics,
       );
@@ -66,7 +67,8 @@ void main() {
     testWidgets('BudgetListScreen renders repository errors', (tester) async {
       final budgetRepository = MockBudgetRepository();
 
-      when(() => budgetRepository.listBudgets()).thenThrow(Exception('budgets failed'));
+      when(() => budgetRepository.listBudgets())
+          .thenThrow(Exception('budgets failed'));
       when(() => budgetRepository.getBudgetAnalytics()).thenAnswer(
         (_) async => _budgetAnalytics,
       );
@@ -98,7 +100,8 @@ void main() {
         (_) async => [_transaction],
       );
       when(
-        () => budgetRepository.listBudgetRequests(params: {'budget_id': 'budget-1'}),
+        () => budgetRepository
+            .listBudgetRequests(params: {'budget_id': 'budget-1'}),
       ).thenAnswer((_) async => [_request]);
       when(() => budgetRepository.getBudgetAnalytics()).thenAnswer(
         (_) async => _budgetAnalytics,
@@ -132,7 +135,8 @@ void main() {
         (_) async => [_transaction],
       );
       when(
-        () => budgetRepository.listBudgetRequests(params: {'budget_id': 'budget-1'}),
+        () => budgetRepository
+            .listBudgetRequests(params: {'budget_id': 'budget-1'}),
       ).thenAnswer((_) async => [_request]);
       when(() => budgetRepository.getBudgetAnalytics()).thenAnswer(
         (_) async => _budgetAnalytics,
@@ -168,9 +172,11 @@ void main() {
       );
       when(() => budgetRepository.createBudgetRequest(any()))
           .thenAnswer((_) async => _request);
-      when(() => budgetRepository.approveBudgetRequest(any(), reviewComment: any(named: 'reviewComment')))
+      when(() => budgetRepository.approveBudgetRequest(any(),
+              reviewComment: any(named: 'reviewComment')))
           .thenAnswer((_) async => _request);
-      when(() => budgetRepository.rejectBudgetRequest(any(), reviewComment: any(named: 'reviewComment')))
+      when(() => budgetRepository.rejectBudgetRequest(any(),
+              reviewComment: any(named: 'reviewComment')))
           .thenAnswer((_) async => _request);
 
       await pumpApp(
@@ -200,9 +206,11 @@ void main() {
       when(() => budgetRepository.createBudgetRequest(any())).thenAnswer(
         (_) async => _request,
       );
-      when(() => budgetRepository.approveBudgetRequest(any(), reviewComment: any(named: 'reviewComment')))
+      when(() => budgetRepository.approveBudgetRequest(any(),
+              reviewComment: any(named: 'reviewComment')))
           .thenAnswer((_) async => _request);
-      when(() => budgetRepository.rejectBudgetRequest(any(), reviewComment: any(named: 'reviewComment')))
+      when(() => budgetRepository.rejectBudgetRequest(any(),
+              reviewComment: any(named: 'reviewComment')))
           .thenAnswer((_) async => _request);
 
       await pumpApp(
@@ -216,7 +224,8 @@ void main() {
 
       await tester.enterText(find.byType(TextFormField).at(0), '250');
       await tester.enterText(find.byType(TextFormField).at(1), 'Printer paper');
-      await tester.enterText(find.byType(TextFormField).at(2), 'Needed for exams');
+      await tester.enterText(
+          find.byType(TextFormField).at(2), 'Needed for exams');
       await tester.tap(find.byIcon(Icons.send_outlined));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));

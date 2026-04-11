@@ -17,8 +17,7 @@ class SkillEvaluationScreen extends ConsumerStatefulWidget {
       _SkillEvaluationScreenState();
 }
 
-class _SkillEvaluationScreenState
-    extends ConsumerState<SkillEvaluationScreen> {
+class _SkillEvaluationScreenState extends ConsumerState<SkillEvaluationScreen> {
   String? _classId;
   String? _studentId;
   SkillEvaluation? _result;

@@ -60,8 +60,10 @@ class _PaymentPlansScreenState extends ConsumerState<PaymentPlansScreen> {
               const SizedBox(height: 12),
               TextField(
                 controller: totalController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(labelText: 'Total amount (MAD)'),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                decoration:
+                    const InputDecoration(labelText: 'Total amount (MAD)'),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -84,8 +86,8 @@ class _PaymentPlansScreenState extends ConsumerState<PaymentPlansScreen> {
                     Expanded(
                       child: TextField(
                         controller: amountControllers[index],
-                        keyboardType:
-                            const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
                         decoration: InputDecoration(
                           labelText: 'Amount ${index + 1}',
                         ),
@@ -216,7 +218,8 @@ class _PaymentPlansScreenState extends ConsumerState<PaymentPlansScreen> {
                       return Card(
                         margin: const EdgeInsets.only(bottom: 12),
                         child: ListTile(
-                          onTap: () => context.push('/billing/payment-plans/${plan.id}'),
+                          onTap: () =>
+                              context.push('/billing/payment-plans/${plan.id}'),
                           leading: const Icon(Icons.event_note_outlined),
                           title: Text(plan.name),
                           subtitle: Text(

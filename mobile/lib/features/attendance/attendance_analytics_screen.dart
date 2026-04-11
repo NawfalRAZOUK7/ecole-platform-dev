@@ -158,7 +158,8 @@ class _AnalyticsContent extends ConsumerWidget {
               width: 160,
               child: AppStatCard(
                 label: 'Late / excused',
-                value: '${analytics.stats.lateCount + analytics.stats.excusedCount}',
+                value:
+                    '${analytics.stats.lateCount + analytics.stats.excusedCount}',
                 icon: Icons.schedule,
               ),
             ),
@@ -176,9 +177,10 @@ class _AnalyticsContent extends ConsumerWidget {
                     Expanded(
                       child: Text(
                         'Attendance trends',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
                       ),
                     ),
                     FilledButton.tonalIcon(
@@ -256,8 +258,10 @@ class _TrendChart extends StatelessWidget {
           ),
         ),
         titlesData: FlTitlesData(
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,

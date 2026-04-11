@@ -213,7 +213,8 @@ void main() {
           RetentionMetric(label: 'Apr', rate: 93.0),
         ],
         cashflow: [
-          CashflowForecast(label: 'Apr', inflow: 20000.0, outflow: 8000.0, net: 12000.0),
+          CashflowForecast(
+              label: 'Apr', inflow: 20000.0, outflow: 8000.0, net: 12000.0),
         ],
       );
 

@@ -81,7 +81,8 @@ class _QuestionBankScreenState extends ConsumerState<QuestionBankScreen> {
                   TextField(
                     controller: textController,
                     maxLines: 4,
-                    decoration: const InputDecoration(labelText: 'Question text'),
+                    decoration:
+                        const InputDecoration(labelText: 'Question text'),
                   ),
                   const SizedBox(height: 12),
                   TextField(
@@ -215,8 +216,9 @@ class _QuestionBankScreenState extends ConsumerState<QuestionBankScreen> {
                       labelText: 'Subject filter',
                     ),
                     onChanged: (value) {
-                      ref.read(questionBankSubjectFilterProvider.notifier).state =
-                          value.isEmpty ? null : value;
+                      ref
+                          .read(questionBankSubjectFilterProvider.notifier)
+                          .state = value.isEmpty ? null : value;
                     },
                   ),
                 ),
@@ -242,7 +244,8 @@ class _QuestionBankScreenState extends ConsumerState<QuestionBankScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: DropdownButtonFormField<String?>(
-                    initialValue: ref.read(questionBankDifficultyFilterProvider),
+                    initialValue:
+                        ref.read(questionBankDifficultyFilterProvider),
                     decoration: const InputDecoration(labelText: 'Difficulty'),
                     items: difficulties
                         .map(

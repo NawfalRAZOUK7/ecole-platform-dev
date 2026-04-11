@@ -79,9 +79,10 @@ class _SkillAnalyticsScreenState extends ConsumerState<SkillAnalyticsScreen> {
                       alignment: Alignment.centerLeft,
                       child: Text(
                         t.t('skills.leaderboard'),
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
                       ),
                     ),
                     const SizedBox(height: 12),

@@ -70,7 +70,8 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
     try {
       final repo = _ref.read(notificationRepositoryProvider);
       final result = await repo.getNotifications(
-        category: state.selectedCategory.isEmpty ? null : state.selectedCategory,
+        category:
+            state.selectedCategory.isEmpty ? null : state.selectedCategory,
       );
       int unreadCount = state.unreadCount;
       try {
@@ -96,13 +97,15 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
   }
 
   Future<void> loadMore() async {
-    if (!state.hasMore || state.nextCursor == null || state.isLoadingMore) return;
+    if (!state.hasMore || state.nextCursor == null || state.isLoadingMore)
+      return;
     state = state.copyWith(isLoadingMore: true, clearError: true);
     try {
       final repo = _ref.read(notificationRepositoryProvider);
       final result = await repo.getNotifications(
         cursor: state.nextCursor,
-        category: state.selectedCategory.isEmpty ? null : state.selectedCategory,
+        category:
+            state.selectedCategory.isEmpty ? null : state.selectedCategory,
       );
       state = state.copyWith(
         items: [...state.items, ...result.items],
@@ -121,11 +124,13 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
   }
 
   Future<void> setCategory(String category) async {
-    state = state.copyWith(selectedCategory: category, nextCursor: null, hasMore: false);
+    state = state.copyWith(
+        selectedCategory: category, nextCursor: null, hasMore: false);
     await load();
   }
 
-  Future<void> markRead(NotificationItem notification, {required bool read}) async {
+  Future<void> markRead(NotificationItem notification,
+      {required bool read}) async {
     final repo = _ref.read(notificationRepositoryProvider);
     await repo.markRead(notification.id, read: read);
     final newUnreadCount = read

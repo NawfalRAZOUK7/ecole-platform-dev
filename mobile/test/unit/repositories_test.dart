@@ -343,8 +343,7 @@ void main() {
         ),
       );
 
-      final dashboard =
-          await repository.getDashboard(academicYearId: 'year-1');
+      final dashboard = await repository.getDashboard(academicYearId: 'year-1');
 
       expect(dashboard.coverageRate, 91.5);
       expect(dashboard.metrics.single.label, 'Arabic');
@@ -356,7 +355,8 @@ void main() {
       final cache = MockCacheStore();
       final repository = ContentLibraryRepositoryImpl(api: api, cache: cache);
 
-      when(() => cache.get('class_content:class-1')).thenAnswer((_) async => null);
+      when(() => cache.get('class_content:class-1'))
+          .thenAnswer((_) async => null);
       when(() => api.list('/classes/class-1/content')).thenAnswer(
         (_) async => _listResponse(
           const [
@@ -427,7 +427,8 @@ void main() {
         () async {
       final api = MockApiClient();
       final store = MockDocumentsStore();
-      final repository = DocumentRepositoryImpl(api: api, documentsStore: store);
+      final repository =
+          DocumentRepositoryImpl(api: api, documentsStore: store);
 
       when(() => api.get('/documents/options')).thenThrow(_offlineError());
 
@@ -459,7 +460,8 @@ void main() {
           hasMore: true,
         ),
       );
-      when(() => cache.put('feed:first', any(), any())).thenAnswer((_) async {});
+      when(() => cache.put('feed:first', any(), any()))
+          .thenAnswer((_) async {});
 
       final page = await repository.getFeed();
 
@@ -499,7 +501,8 @@ void main() {
       final cache = MockCacheStore();
       final repository = GradebookRepositoryImpl(api: api, cache: cache);
 
-      when(() => cache.get('gradebook:grid:class-1')).thenAnswer((_) async => null);
+      when(() => cache.get('gradebook:grid:class-1'))
+          .thenAnswer((_) async => null);
       when(() => api.get('/gradebook/classes/class-1')).thenAnswer(
         (_) async => _response(
           {
@@ -748,7 +751,8 @@ void main() {
           ],
         ),
       );
-      when(() => cache.put('results:first', any(), any())).thenAnswer((_) async {});
+      when(() => cache.put('results:first', any(), any()))
+          .thenAnswer((_) async {});
 
       final page = await repository.getResults();
 

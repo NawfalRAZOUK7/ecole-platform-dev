@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:ecole_platform/shared/widgets/search_filter_bar.dart';
 import 'package:ecole_platform/shared/widgets/widgets.dart';
 
 import '../helpers/pump_app.dart';
@@ -172,8 +171,7 @@ void main() {
       expect(find.text('4.0%'), findsOneWidget);
     });
 
-    testWidgets('AppConfirmDialog returns true when confirmed',
-        (tester) async {
+    testWidgets('AppConfirmDialog returns true when confirmed', (tester) async {
       var result = false;
 
       await pumpApp(

@@ -43,7 +43,8 @@ User createUser({
     role: role,
     schoolId: schoolId,
     permissions: permissions,
-    memberships: memberships ?? [createMembership(schoolId: schoolId, role: role)],
+    memberships:
+        memberships ?? [createMembership(schoolId: schoolId, role: role)],
   );
 }
 
@@ -534,7 +535,9 @@ ReportOptions createReportOptions() {
   return ReportOptions(
     classes: [createReportOptionItem(id: 'class-1', label: '6A')],
     periods: [createReportOptionItem(id: 'period-1', label: 'Period 1')],
-    students: [createReportOptionItem(id: 'student-1', label: 'Student Example')],
+    students: [
+      createReportOptionItem(id: 'student-1', label: 'Student Example')
+    ],
     parents: [createReportOptionItem(id: 'parent-1', label: 'Parent Example')],
   );
 }

@@ -106,8 +106,10 @@ class MicroSchoolRepositoryImpl implements MicroSchoolRepository {
       'amount': payload['amount'],
       'currency': 'MAD',
       'period_type': payload['period_type'] ?? 'monthly',
-      'period_start': payload['period_start'] ?? DateTime.now().toIso8601String().split('T').first,
-      'period_end': payload['period_end'] ?? DateTime.now().toIso8601String().split('T').first,
+      'period_start': payload['period_start'] ??
+          DateTime.now().toIso8601String().split('T').first,
+      'period_end': payload['period_end'] ??
+          DateTime.now().toIso8601String().split('T').first,
       'status': payload['status'] ?? 'pending',
     });
     return MicroPayment.fromJson(response.data);
@@ -228,7 +230,8 @@ class MicroSchoolRepositoryImpl implements MicroSchoolRepository {
   }
 
   @override
-  Future<MicroPayment> createTopLevelPayment(Map<String, dynamic> payload) async {
+  Future<MicroPayment> createTopLevelPayment(
+      Map<String, dynamic> payload) async {
     final response = await _api.post('/micro/payments', body: payload);
     return MicroPayment.fromJson(response.data);
   }
@@ -251,7 +254,8 @@ class MicroSchoolRepositoryImpl implements MicroSchoolRepository {
   }
 
   @override
-  Future<MicroResource> createTopLevelResource(Map<String, dynamic> payload) async {
+  Future<MicroResource> createTopLevelResource(
+      Map<String, dynamic> payload) async {
     final response = await _api.post('/micro/resources', body: payload);
     return MicroResource.fromJson(response.data);
   }
@@ -265,7 +269,8 @@ class MicroSchoolRepositoryImpl implements MicroSchoolRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> createProgressLog(Map<String, dynamic> payload) async {
+  Future<Map<String, dynamic>> createProgressLog(
+      Map<String, dynamic> payload) async {
     final response = await _api.post('/micro/progress-logs', body: payload);
     return response.data;
   }

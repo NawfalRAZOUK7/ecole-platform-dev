@@ -114,8 +114,8 @@ class SkillEvaluation {
   });
 
   factory SkillEvaluation.fromJson(Map<String, dynamic> json) {
-    final dimensionsJson =
-        (json['dimensions'] as List<dynamic>? ?? const []).cast<Map<String, dynamic>>();
+    final dimensionsJson = (json['dimensions'] as List<dynamic>? ?? const [])
+        .cast<Map<String, dynamic>>();
     return SkillEvaluation(
       studentId: json['student_id']?.toString() ?? '',
       overallScore: (json['overall_score'] as num?)?.toDouble() ?? 0,
@@ -143,8 +143,8 @@ class SkillPassport {
   });
 
   factory SkillPassport.fromJson(Map<String, dynamic> json) {
-    final dimensionsJson =
-        (json['dimensions'] as List<dynamic>? ?? const []).cast<Map<String, dynamic>>();
+    final dimensionsJson = (json['dimensions'] as List<dynamic>? ?? const [])
+        .cast<Map<String, dynamic>>();
     return SkillPassport(
       studentId: json['student_id']?.toString() ?? '',
       studentName: json['student_name']?.toString() ?? '',
@@ -170,8 +170,8 @@ class SkillClassAnalytics {
   });
 
   factory SkillClassAnalytics.fromJson(Map<String, dynamic> json) {
-    final dimensionsJson =
-        (json['dimensions'] as List<dynamic>? ?? const []).cast<Map<String, dynamic>>();
+    final dimensionsJson = (json['dimensions'] as List<dynamic>? ?? const [])
+        .cast<Map<String, dynamic>>();
     return SkillClassAnalytics(
       classId: json['class_id']?.toString() ?? '',
       averageScore: (json['average_score'] as num?)?.toDouble() ?? 0,
@@ -191,8 +191,8 @@ class SkillSchoolAnalytics {
   });
 
   factory SkillSchoolAnalytics.fromJson(Map<String, dynamic> json) {
-    final dimensionsJson =
-        (json['dimensions'] as List<dynamic>? ?? const []).cast<Map<String, dynamic>>();
+    final dimensionsJson = (json['dimensions'] as List<dynamic>? ?? const [])
+        .cast<Map<String, dynamic>>();
     return SkillSchoolAnalytics(
       overallScore: (json['overall_score'] as num?)?.toDouble() ??
           (json['average_score'] as num?)?.toDouble() ??

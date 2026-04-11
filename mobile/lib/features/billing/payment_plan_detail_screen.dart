@@ -72,8 +72,9 @@ class PaymentPlanDetailScreen extends ConsumerWidget {
                 child: ListTile(
                   leading: const Icon(Icons.schedule_outlined),
                   title: Text(_formatDate(item.dueDate)),
-                  subtitle:
-                      item.paidAt == null ? null : Text('Paid at ${_formatDate(item.paidAt!)}'),
+                  subtitle: item.paidAt == null
+                      ? null
+                      : Text('Paid at ${_formatDate(item.paidAt!)}'),
                   trailing: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.end,

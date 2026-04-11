@@ -150,7 +150,8 @@ class MicroProgressOverview {
       activeStudents: (json['active_students'] as num?)?.toInt() ?? 0,
       completionRate: (json['completion_rate'] as num?)?.toDouble() ?? 0,
       series: seriesJson
-          .map((item) => MicroMetricPoint.fromJson(item as Map<String, dynamic>))
+          .map(
+              (item) => MicroMetricPoint.fromJson(item as Map<String, dynamic>))
           .toList(),
     );
   }
@@ -179,7 +180,8 @@ class MicroStudentProgress {
       milestonesCompleted: (json['milestones_completed'] as num?)?.toInt() ?? 0,
       progressRate: (json['progress_rate'] as num?)?.toDouble() ?? 0,
       series: seriesJson
-          .map((item) => MicroMetricPoint.fromJson(item as Map<String, dynamic>))
+          .map(
+              (item) => MicroMetricPoint.fromJson(item as Map<String, dynamic>))
           .toList(),
     );
   }

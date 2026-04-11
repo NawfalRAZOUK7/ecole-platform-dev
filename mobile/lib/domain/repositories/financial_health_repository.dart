@@ -3,7 +3,8 @@ import 'dart:io';
 import 'package:ecole_platform/domain/entities/financial_health.dart';
 
 abstract class FinancialHealthRepository {
-  Future<List<RetentionMetric>> listRetentionMetrics({Map<String, dynamic>? params});
+  Future<List<RetentionMetric>> listRetentionMetrics(
+      {Map<String, dynamic>? params});
 
   Future<RetentionMetric> computeRetention(Map<String, dynamic> payload);
 
@@ -15,7 +16,8 @@ abstract class FinancialHealthRepository {
 
   Future<CostPerStudentAnalysis> getCostPerStudent(String academicYearId);
 
-  Future<CostPerStudentAnalysis> computeCostPerStudent(Map<String, dynamic> payload);
+  Future<CostPerStudentAnalysis> computeCostPerStudent(
+      Map<String, dynamic> payload);
 
   Future<FinancialSnapshot> getSnapshot({String? snapshotDate});
 

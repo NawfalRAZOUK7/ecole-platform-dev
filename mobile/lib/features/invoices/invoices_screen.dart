@@ -198,8 +198,8 @@ class InvoicesScreen extends ConsumerWidget {
                                       AppCurrencyText(
                                         amount: item.amount,
                                         currency: inv.currency,
-                                        style: theme.textTheme.bodySmall
-                                            ?.copyWith(
+                                        style:
+                                            theme.textTheme.bodySmall?.copyWith(
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),

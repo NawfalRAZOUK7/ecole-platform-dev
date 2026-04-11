@@ -77,9 +77,24 @@ void main() {
         final store = CacheStore();
         final db = await AppDatabase.instance;
 
-        await store.put('feed:first', const [{'id': 'f-1'}], 60);
-        await store.put('feed:second', const [{'id': 'f-2'}], 60);
-        await store.put('results:first', const [{'id': 'r-1'}], 1);
+        await store.put(
+            'feed:first',
+            const [
+              {'id': 'f-1'}
+            ],
+            60);
+        await store.put(
+            'feed:second',
+            const [
+              {'id': 'f-2'}
+            ],
+            60);
+        await store.put(
+            'results:first',
+            const [
+              {'id': 'r-1'}
+            ],
+            1);
         await db.update(
           'cache_entries',
           {'created_at': 0},
@@ -188,7 +203,12 @@ void main() {
       test('stores month events and trims old month buckets', () async {
         final store = EventsStore();
 
-        for (final month in const ['2026-01', '2026-02', '2026-03', '2026-04']) {
+        for (final month in const [
+          '2026-01',
+          '2026-02',
+          '2026-03',
+          '2026-04'
+        ]) {
           await store.replaceMonth(
             month,
             [
@@ -321,7 +341,8 @@ void main() {
             {'id': 'entry-1'},
           ],
         );
-        final records = await store.readClassAttendance('class-1', '2026-04-11');
+        final records =
+            await store.readClassAttendance('class-1', '2026-04-11');
         await store.invalidateClass('class-1');
 
         expect(records, isNotNull);

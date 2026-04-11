@@ -75,7 +75,8 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
   }
 
   @override
-  Future<List<InvoicePaymentRecord>> getInvoicePayments(String invoiceId) async {
+  Future<List<InvoicePaymentRecord>> getInvoicePayments(
+      String invoiceId) async {
     final response = await _api.list('/payments/$invoiceId');
     return response.data.map(invoicePaymentFromJson).toList();
   }

@@ -97,7 +97,8 @@ class _AnnouncementCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.campaign, size: 20, color: theme.colorScheme.primary),
+                Icon(Icons.campaign,
+                    size: 20, color: theme.colorScheme.primary),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(

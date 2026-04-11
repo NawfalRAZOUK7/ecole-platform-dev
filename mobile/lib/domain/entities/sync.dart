@@ -14,7 +14,8 @@ class SyncDevice {
   factory SyncDevice.fromJson(Map<String, dynamic> json) {
     return SyncDevice(
       id: json['id']?.toString() ?? '',
-      deviceName: json['device_name']?.toString() ?? json['name']?.toString() ?? '',
+      deviceName:
+          json['device_name']?.toString() ?? json['name']?.toString() ?? '',
       deviceType: json['device_type']?.toString() ?? 'mobile',
       isActive: json['is_active'] as bool? ?? true,
     );

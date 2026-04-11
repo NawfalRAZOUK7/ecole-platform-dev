@@ -58,8 +58,7 @@ class CostPerStudentAnalysis {
 
   factory CostPerStudentAnalysis.fromJson(Map<String, dynamic> json) {
     return CostPerStudentAnalysis(
-      costPerStudent:
-          (json['cost_per_student'] as num?)?.toDouble() ?? 0,
+      costPerStudent: (json['cost_per_student'] as num?)?.toDouble() ?? 0,
       totalCost: (json['total_cost'] as num?)?.toDouble() ??
           (json['cost_total'] as num?)?.toDouble() ??
           0,
@@ -83,9 +82,8 @@ class FinancialSnapshot {
 
   factory FinancialSnapshot.fromJson(Map<String, dynamic> json) {
     return FinancialSnapshot(
-      snapshotDate: json['snapshot_date']?.toString() ??
-          json['date']?.toString() ??
-          '',
+      snapshotDate:
+          json['snapshot_date']?.toString() ?? json['date']?.toString() ?? '',
       revenue: (json['revenue'] as num?)?.toDouble() ?? 0,
       expenses: (json['expenses'] as num?)?.toDouble() ?? 0,
       netPosition: (json['net_position'] as num?)?.toDouble() ??

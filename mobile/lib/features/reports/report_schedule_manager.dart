@@ -34,7 +34,8 @@ class _ReportScheduleManagerState extends ConsumerState<ReportScheduleManager> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      final schedules = await ref.read(reportingRepositoryProvider).listSchedules();
+      final schedules =
+          await ref.read(reportingRepositoryProvider).listSchedules();
       setState(() => _schedules = schedules);
     } finally {
       if (mounted) {

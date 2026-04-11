@@ -57,8 +57,8 @@ class TimetableScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildBody(
-      BuildContext context, WidgetRef ref, TimetableState state, AppLocalizations t) {
+  Widget _buildBody(BuildContext context, WidgetRef ref, TimetableState state,
+      AppLocalizations t) {
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -143,7 +143,8 @@ class TimetableScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTabletGrid(Map<int, List<TimetableSlot>> byDay, AppLocalizations t) {
+  Widget _buildTabletGrid(
+      Map<int, List<TimetableSlot>> byDay, AppLocalizations t) {
     return SingleChildScrollView(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -200,7 +201,9 @@ class _DayColumn extends StatelessWidget {
           Center(
             child: Padding(
               padding: const EdgeInsets.only(top: 40),
-              child: Text('—', style: theme.textTheme.headlineMedium?.copyWith(color: Colors.grey)),
+              child: Text('—',
+                  style: theme.textTheme.headlineMedium
+                      ?.copyWith(color: Colors.grey)),
             ),
           )
         else
@@ -225,7 +228,8 @@ class _SlotCard extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      color: isCanceled ? const Color(0xFFFEE2E2) : _getSubjectColor(slot.subject),
+      color:
+          isCanceled ? const Color(0xFFFEE2E2) : _getSubjectColor(slot.subject),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -291,7 +295,9 @@ class _SlotCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: color, width: 0.5),
       ),
-      child: Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color)),
+      child: Text(label,
+          style: TextStyle(
+              fontSize: 10, fontWeight: FontWeight.w600, color: color)),
     );
   }
 }

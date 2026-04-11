@@ -14,7 +14,8 @@ class FinancialHealthRepositoryImpl implements FinancialHealthRepository {
   Future<List<RetentionMetric>> listRetentionMetrics({
     Map<String, dynamic>? params,
   }) async {
-    final response = await _api.list('/financial-health/retention', params: params);
+    final response =
+        await _api.list('/financial-health/retention', params: params);
     return response.data.map(RetentionMetric.fromJson).toList();
   }
 
@@ -29,19 +30,22 @@ class FinancialHealthRepositoryImpl implements FinancialHealthRepository {
   Future<List<CashflowForecast>> listCashflowForecasts({
     Map<String, dynamic>? params,
   }) async {
-    final response = await _api.list('/financial-health/cashflow', params: params);
-    return response.data.map(CashflowForecast.fromJson).toList();
-  }
-
-  @override
-  Future<List<CashflowForecast>> computeCashflow(Map<String, dynamic> payload) async {
     final response =
-        await _api.postList('/financial-health/cashflow/compute', body: payload);
+        await _api.list('/financial-health/cashflow', params: params);
     return response.data.map(CashflowForecast.fromJson).toList();
   }
 
   @override
-  Future<CostPerStudentAnalysis> getCostPerStudent(String academicYearId) async {
+  Future<List<CashflowForecast>> computeCashflow(
+      Map<String, dynamic> payload) async {
+    final response = await _api.postList('/financial-health/cashflow/compute',
+        body: payload);
+    return response.data.map(CashflowForecast.fromJson).toList();
+  }
+
+  @override
+  Future<CostPerStudentAnalysis> getCostPerStudent(
+      String academicYearId) async {
     final response = await _api.get(
       '/financial-health/cost-per-student',
       params: {'academic_year_id': academicYearId},
@@ -72,7 +76,8 @@ class FinancialHealthRepositoryImpl implements FinancialHealthRepository {
   }
 
   @override
-  Future<FinancialSnapshot> computeSnapshot(Map<String, dynamic> payload) async {
+  Future<FinancialSnapshot> computeSnapshot(
+      Map<String, dynamic> payload) async {
     final response =
         await _api.post('/financial-health/snapshot/compute', body: payload);
     return FinancialSnapshot.fromJson(response.data);

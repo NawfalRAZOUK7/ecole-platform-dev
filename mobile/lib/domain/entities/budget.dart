@@ -117,8 +117,8 @@ class BudgetRequest {
       currency: json['currency']?.toString() ?? 'MAD',
       description: json['description']?.toString() ?? '',
       justification: json['justification']?.toString(),
-      requesterName: json['requester_name']?.toString() ??
-          json['requester']?.toString(),
+      requesterName:
+          json['requester_name']?.toString() ?? json['requester']?.toString(),
       createdAt: json['created_at']?.toString(),
     );
   }

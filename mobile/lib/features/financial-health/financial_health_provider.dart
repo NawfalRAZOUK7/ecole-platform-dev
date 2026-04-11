@@ -22,6 +22,7 @@ final financialDashboardProvider =
   );
 });
 
-final financialSnapshotProvider = FutureProvider<FinancialSnapshot>((ref) async {
+final financialSnapshotProvider =
+    FutureProvider<FinancialSnapshot>((ref) async {
   return ref.read(financialHealthRepositoryProvider).getSnapshot();
 });

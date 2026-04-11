@@ -238,7 +238,8 @@ void main() {
               .having((e) => e.statusCode, 'statusCode', HttpStatus.badRequest)
               .having((e) => e.apiError.code, 'code', 'ERR-VAL-001')
               .having((e) => e.apiError.category, 'category', 'validation')
-              .having((e) => e.apiError.correlationId, 'correlationId', 'corr-1'),
+              .having(
+                  (e) => e.apiError.correlationId, 'correlationId', 'corr-1'),
         ),
       );
 

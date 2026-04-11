@@ -60,15 +60,15 @@ class _SchoolSettingsScreenState extends ConsumerState<SchoolSettingsScreen> {
     setState(() => _saving = true);
     try {
       await ref.read(apiClientProvider).put(
-            '/admin/school',
-            body: {
-              'name': _nameController.text.trim(),
-              'address': _addressController.text.trim(),
-              'phone': _phoneController.text.trim(),
-              'timezone': _timezoneController.text.trim(),
-              'currency': _currencyController.text.trim(),
-            },
-          );
+        '/admin/school',
+        body: {
+          'name': _nameController.text.trim(),
+          'address': _addressController.text.trim(),
+          'phone': _phoneController.text.trim(),
+          'timezone': _timezoneController.text.trim(),
+          'currency': _currencyController.text.trim(),
+        },
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('School settings saved')),

@@ -71,8 +71,8 @@ void main() {
           ],
         ),
       );
-      when(() => gradebookRepository.exportGrades(any(), format: any(named: 'format')))
-          .thenAnswer((_) async => null);
+      when(() => gradebookRepository.exportGrades(any(),
+          format: any(named: 'format'))).thenAnswer((_) async => null);
       when(() => gradebookRepository.updateGrades(any()))
           .thenAnswer((_) async {});
 
@@ -105,8 +105,8 @@ void main() {
           className: '6A',
         ),
       );
-      when(() => gradebookRepository.exportGrades(any(), format: any(named: 'format')))
-          .thenAnswer((_) async => null);
+      when(() => gradebookRepository.exportGrades(any(),
+          format: any(named: 'format'))).thenAnswer((_) async => null);
       when(() => gradebookRepository.updateGrades(any()))
           .thenAnswer((_) async {});
 
@@ -206,8 +206,8 @@ void main() {
           ],
         ),
       );
-      when(() => gradebookRepository.exportGrades(any(), format: any(named: 'format')))
-          .thenAnswer((_) async => null);
+      when(() => gradebookRepository.exportGrades(any(),
+          format: any(named: 'format'))).thenAnswer((_) async => null);
       when(() => gradebookRepository.updateGrades(any()))
           .thenAnswer((_) async {});
 

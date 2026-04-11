@@ -50,7 +50,8 @@ void main() {
       when(() => teacherRepository.getClassStudents('class-1')).thenAnswer(
         (_) async => [createStudentInfo()],
       );
-      when(() => attendanceRepository.getStudentHistory('student-1')).thenAnswer(
+      when(() => attendanceRepository.getStudentHistory('student-1'))
+          .thenAnswer(
         (_) async => const [],
       );
 
@@ -78,7 +79,8 @@ void main() {
       when(() => teacherRepository.getClassStudents('class-1')).thenAnswer(
         (_) async => [createStudentInfo()],
       );
-      when(() => attendanceRepository.getStudentHistory('student-1')).thenAnswer(
+      when(() => attendanceRepository.getStudentHistory('student-1'))
+          .thenAnswer(
         (_) async => [
           AttendanceEntry.fromJson(
             const {
@@ -129,7 +131,8 @@ void main() {
       when(() => teacherRepository.getClassStudents('class-1')).thenAnswer(
         (_) async => [createStudentInfo()],
       );
-      when(() => attendanceRepository.getStudentHistory('student-1')).thenAnswer(
+      when(() => attendanceRepository.getStudentHistory('student-1'))
+          .thenAnswer(
         (_) async => const [],
       );
 

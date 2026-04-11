@@ -38,9 +38,7 @@ class ContentState {
     var result = items;
     if (search.isNotEmpty) {
       final q = search.toLowerCase();
-      result = result
-          .where((i) => i.title.toLowerCase().contains(q))
-          .toList();
+      result = result.where((i) => i.title.toLowerCase().contains(q)).toList();
     }
     if (sortAscending) {
       result.sort((a, b) => a.title.compareTo(b.title));

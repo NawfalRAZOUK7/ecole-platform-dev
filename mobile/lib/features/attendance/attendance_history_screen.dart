@@ -62,7 +62,8 @@ class _AttendanceHistoryScreenState
               return RefreshIndicator(
                 onRefresh: () async {
                   if (_selectedStudentId != null) {
-                    ref.invalidate(attendanceHistoryProvider(_selectedStudentId!));
+                    ref.invalidate(
+                        attendanceHistoryProvider(_selectedStudentId!));
                   }
                 },
                 child: ListView(
@@ -198,10 +199,13 @@ class _HistoryContent extends StatelessWidget {
       );
     }
 
-    final presentCount = records.where((record) => record.status == 'present').length;
-    final absentCount = records.where((record) => record.status == 'absent').length;
+    final presentCount =
+        records.where((record) => record.status == 'present').length;
+    final absentCount =
+        records.where((record) => record.status == 'absent').length;
     final lateCount = records.where((record) => record.status == 'late').length;
-    final excusedCount = records.where((record) => record.status == 'excused').length;
+    final excusedCount =
+        records.where((record) => record.status == 'excused').length;
     final attendanceRate =
         records.isEmpty ? 0.0 : (presentCount / records.length) * 100;
 

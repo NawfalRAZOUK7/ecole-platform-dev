@@ -128,7 +128,7 @@ class _GradebookScreenState extends ConsumerState<GradebookScreen> {
                 variant: SkeletonVariant.line,
                 height: 52,
               ),
-              ),
+            ),
             const SizedBox(height: AppSpacing.base),
             Expanded(
               child: selectedClassId == null
@@ -282,7 +282,8 @@ class _GradebookGridView extends ConsumerWidget {
                       DataCell(
                         InkWell(
                           onTap: () {
-                            context.push('/gradebook/student/${entry.studentId}');
+                            context
+                                .push('/gradebook/student/${entry.studentId}');
                           },
                           child: Text(entry.studentName),
                         ),
@@ -345,8 +346,7 @@ class _GradeCell extends StatefulWidget {
 class _GradeCellState extends State<_GradeCell> {
   @override
   Widget build(BuildContext context) {
-    final parsed =
-        double.tryParse(widget.controller.text.replaceAll(',', '.'));
+    final parsed = double.tryParse(widget.controller.text.replaceAll(',', '.'));
     final theme = Theme.of(context);
     final fillColor = parsed == null
         ? theme.colorScheme.surfaceContainerHighest

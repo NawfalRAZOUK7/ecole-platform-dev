@@ -23,7 +23,8 @@ class ContentRepositoryImpl implements ContentRepository {
     String? contentType,
     String? levelBand,
   }) async {
-    final cacheKey = 'content:${cursor ?? 'first'}:${contentType ?? ''}:${levelBand ?? ''}';
+    final cacheKey =
+        'content:${cursor ?? 'first'}:${contentType ?? ''}:${levelBand ?? ''}';
 
     final cached = await _cache.get(cacheKey);
     if (cached != null) {

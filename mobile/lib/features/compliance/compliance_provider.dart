@@ -14,7 +14,8 @@ final complianceDashboardProvider =
       );
 });
 
-final complianceCurriculaProvider = FutureProvider<List<MenCurriculum>>((ref) async {
+final complianceCurriculaProvider =
+    FutureProvider<List<MenCurriculum>>((ref) async {
   return ref.read(complianceRepositoryProvider).listCurricula();
 });
 
@@ -23,10 +24,11 @@ final complianceMappingsProvider =
   return ref.read(complianceRepositoryProvider).listMappings();
 });
 
-final complianceReportsProvider = FutureProvider<List<ComplianceReport>>((ref) async {
+final complianceReportsProvider =
+    FutureProvider<List<ComplianceReport>>((ref) async {
   return ref.read(complianceRepositoryProvider).listReports(
-        params: {
-          'academic_year_id': ref.read(complianceAcademicYearIdProvider),
-        },
-      );
+    params: {
+      'academic_year_id': ref.read(complianceAcademicYearIdProvider),
+    },
+  );
 });

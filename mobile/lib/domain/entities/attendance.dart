@@ -27,7 +27,8 @@ class AttendanceEntry {
           json['attendance_record_id']?.toString() ??
           '${json['student_id']}-${json['date']}',
       studentId: json['student_id']?.toString() ?? '',
-      studentName: json['student_name']?.toString() ?? json['full_name']?.toString(),
+      studentName:
+          json['student_name']?.toString() ?? json['full_name']?.toString(),
       classId: json['class_id']?.toString(),
       date: json['date']?.toString() ??
           json['session_date']?.toString() ??
@@ -172,8 +173,9 @@ class AttendanceTrendPoint {
       absentCount: (json['absent_count'] as num?)?.toInt() ??
           (json['absent'] as num?)?.toInt() ??
           0,
-      lateCount:
-          (json['late_count'] as num?)?.toInt() ?? (json['late'] as num?)?.toInt() ?? 0,
+      lateCount: (json['late_count'] as num?)?.toInt() ??
+          (json['late'] as num?)?.toInt() ??
+          0,
     );
   }
 
@@ -254,12 +256,15 @@ class AttendanceClassStats {
       totalSessions: (json['total_sessions'] as num?)?.toInt() ??
           (json['session_count'] as num?)?.toInt() ??
           0,
-      presentCount:
-          (json['present_count'] as num?)?.toInt() ?? (json['present'] as num?)?.toInt() ?? 0,
-      absentCount:
-          (json['absent_count'] as num?)?.toInt() ?? (json['absent'] as num?)?.toInt() ?? 0,
-      lateCount:
-          (json['late_count'] as num?)?.toInt() ?? (json['late'] as num?)?.toInt() ?? 0,
+      presentCount: (json['present_count'] as num?)?.toInt() ??
+          (json['present'] as num?)?.toInt() ??
+          0,
+      absentCount: (json['absent_count'] as num?)?.toInt() ??
+          (json['absent'] as num?)?.toInt() ??
+          0,
+      lateCount: (json['late_count'] as num?)?.toInt() ??
+          (json['late'] as num?)?.toInt() ??
+          0,
       excusedCount: (json['excused_count'] as num?)?.toInt() ??
           (json['excused'] as num?)?.toInt() ??
           0,

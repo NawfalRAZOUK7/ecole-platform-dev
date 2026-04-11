@@ -111,11 +111,13 @@ void main() {
       expect(find.text('95.0'), findsWidgets);
     });
 
-    testWidgets('SkillAnalyticsScreen shows empty class states', (tester) async {
+    testWidgets('SkillAnalyticsScreen shows empty class states',
+        (tester) async {
       final teacherRepository = MockTeacherRepository();
       final skillsRepository = MockSkillsRepository();
 
-      when(() => teacherRepository.getClasses()).thenAnswer((_) async => const []);
+      when(() => teacherRepository.getClasses())
+          .thenAnswer((_) async => const []);
 
       await pumpApp(
         tester,
@@ -173,8 +175,7 @@ void main() {
       expect(find.text('92.0'), findsWidgets);
     });
 
-    testWidgets('SkillPassportScreen renders passport content',
-        (tester) async {
+    testWidgets('SkillPassportScreen renders passport content', (tester) async {
       final skillsRepository = MockSkillsRepository();
 
       when(

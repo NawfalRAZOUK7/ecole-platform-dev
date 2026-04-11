@@ -67,8 +67,7 @@ class _ClassesState {
 class _ClassesNotifier extends StateNotifier<_ClassesState> {
   final Ref _ref;
 
-  _ClassesNotifier(this._ref)
-      : super(const _ClassesState(isLoading: true)) {
+  _ClassesNotifier(this._ref) : super(const _ClassesState(isLoading: true)) {
     load();
   }
 
@@ -99,8 +98,7 @@ class _ClassesNotifier extends StateNotifier<_ClassesState> {
       final students = await repo.getClassStudents(classId);
       state = state.copyWith(students: students, loadingStudents: false);
     } catch (e) {
-      state = state.copyWith(
-          loadingStudents: false, error: e.toString());
+      state = state.copyWith(loadingStudents: false, error: e.toString());
     }
   }
 
@@ -201,9 +199,7 @@ class ClassesScreen extends ConsumerWidget {
                   subtitle: Text(
                       '${cls.studentCount} élèves · ${cls.courseCount} cours'),
                   trailing: Icon(
-                    isExpanded
-                        ? Icons.expand_less
-                        : Icons.expand_more,
+                    isExpanded ? Icons.expand_less : Icons.expand_more,
                   ),
                   onTap: () =>
                       ref.read(_classesProvider.notifier).toggleExpand(cls.id),
@@ -235,8 +231,8 @@ class ClassesScreen extends ConsumerWidget {
                           ),
                           title: Text(s.fullName,
                               style: const TextStyle(fontSize: 14)),
-                          subtitle: Text(s.email,
-                              style: theme.textTheme.bodySmall),
+                          subtitle:
+                              Text(s.email, style: theme.textTheme.bodySmall),
                           trailing: Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 6, vertical: 1),

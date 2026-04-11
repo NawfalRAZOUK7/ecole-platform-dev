@@ -70,7 +70,8 @@ class BiometricService {
 
   /// Authenticate with biometric. Returns true on success.
   /// Increments failure counter on failure.
-  Future<bool> authenticate({String reason = 'Veuillez vous authentifier'}) async {
+  Future<bool> authenticate(
+      {String reason = 'Veuillez vous authentifier'}) async {
     if (shouldFallbackToPassword) return false;
 
     try {

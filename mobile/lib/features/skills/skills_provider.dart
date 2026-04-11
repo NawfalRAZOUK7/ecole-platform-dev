@@ -17,7 +17,8 @@ final skillsStudentsProvider =
   return ref.read(teacherRepositoryProvider).getClassStudents(classId);
 });
 
-final skillsOverviewProvider = FutureProvider<SkillSchoolAnalytics>((ref) async {
+final skillsOverviewProvider =
+    FutureProvider<SkillSchoolAnalytics>((ref) async {
   return ref.read(skillsRepositoryProvider).getSchoolAnalytics(
         academicYearId: ref.read(academicYearIdProvider),
       );
@@ -32,7 +33,8 @@ final skillPassportProvider =
 });
 
 final skillProgressProvider =
-    FutureProvider.family<List<SkillProgressItem>, String>((ref, studentId) async {
+    FutureProvider.family<List<SkillProgressItem>, String>(
+        (ref, studentId) async {
   return ref.read(skillsRepositoryProvider).getStudentProgress(
         studentId,
         academicYearId: ref.read(academicYearIdProvider),

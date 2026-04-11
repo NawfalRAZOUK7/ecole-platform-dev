@@ -93,8 +93,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(_error!,
-                  style:
-                      TextStyle(color: theme.colorScheme.onErrorContainer)),
+                  style: TextStyle(color: theme.colorScheme.onErrorContainer)),
             ),
             const SizedBox(height: 16),
           ],
@@ -110,8 +109,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                     prefixIcon: Icon(Icons.lock_outline),
                     border: OutlineInputBorder(),
                   ),
-                  validator: (v) =>
-                      (v == null || v.isEmpty) ? 'Requis' : null,
+                  validator: (v) => (v == null || v.isEmpty) ? 'Requis' : null,
                   enabled: !_loading,
                 ),
                 const SizedBox(height: 16),

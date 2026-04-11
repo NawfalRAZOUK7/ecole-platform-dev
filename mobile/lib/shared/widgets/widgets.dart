@@ -8,3 +8,4 @@ export 'app_error_widget.dart';
 export 'app_form_field.dart';
 export 'app_skeleton.dart';
 export 'app_stat_card.dart';
+export 'search_filter_bar.dart';

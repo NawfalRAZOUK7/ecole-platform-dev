@@ -17,7 +17,8 @@ class RubricGradingScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<RubricGradingScreen> createState() => _RubricGradingScreenState();
+  ConsumerState<RubricGradingScreen> createState() =>
+      _RubricGradingScreenState();
 }
 
 class _RubricGradingScreenState extends ConsumerState<RubricGradingScreen> {
@@ -38,7 +39,8 @@ class _RubricGradingScreenState extends ConsumerState<RubricGradingScreen> {
     setState(() => _grading = true);
     try {
       final entries = rubric.criteria.map((criterion) {
-        final levelId = _selectedLevels[criterion.id] ?? criterion.levels.first.id;
+        final levelId =
+            _selectedLevels[criterion.id] ?? criterion.levels.first.id;
         final level =
             criterion.levels.firstWhere((candidate) => candidate.id == levelId);
         return RubricGradeEntry(

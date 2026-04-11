@@ -167,13 +167,12 @@ class GradebookRepositoryImpl implements GradebookRepository {
   }
 
   GradebookEntry _entryFromJson(Map<String, dynamic> json) {
-    final grades = (json['grades'] as Map<String, dynamic>? ?? const {})
-        .map(
-          (key, value) => MapEntry(
-            key,
-            value == null ? null : (value as num).toDouble(),
-          ),
-        );
+    final grades = (json['grades'] as Map<String, dynamic>? ?? const {}).map(
+      (key, value) => MapEntry(
+        key,
+        value == null ? null : (value as num).toDouble(),
+      ),
+    );
 
     return GradebookEntry(
       studentId: json['student_id'] as String? ?? '',
@@ -244,10 +243,9 @@ class GradebookRepositoryImpl implements GradebookRepository {
               subjects: (period['subjects'] as List<dynamic>? ?? const [])
                   .map(
                     (subject) => TranscriptSubject(
-                      subjectId:
-                          (subject as Map<String, dynamic>)['subject_id']
-                                  as String? ??
-                              '',
+                      subjectId: (subject as Map<String, dynamic>)['subject_id']
+                              as String? ??
+                          '',
                       subjectName: subject['subject_name'] as String? ?? '',
                       average: (subject['average'] as num?)?.toDouble() ?? 0,
                       grades: (subject['grades'] as List<dynamic>? ?? const [])

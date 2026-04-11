@@ -98,11 +98,13 @@ List<Override> buildMockRepositoryOverrides({
   }
   if (contentLibraryRepository != null) {
     overrides.add(
-      contentLibraryRepositoryProvider.overrideWithValue(contentLibraryRepository),
+      contentLibraryRepositoryProvider
+          .overrideWithValue(contentLibraryRepository),
     );
   }
   if (contentRepository != null) {
-    overrides.add(contentRepositoryProvider.overrideWithValue(contentRepository));
+    overrides
+        .add(contentRepositoryProvider.overrideWithValue(contentRepository));
   }
   if (documentRepository != null) {
     overrides.add(
@@ -118,7 +120,8 @@ List<Override> buildMockRepositoryOverrides({
     );
   }
   if (invoiceRepository != null) {
-    overrides.add(invoiceRepositoryProvider.overrideWithValue(invoiceRepository));
+    overrides
+        .add(invoiceRepositoryProvider.overrideWithValue(invoiceRepository));
   }
   if (notificationRepository != null) {
     overrides.add(
@@ -140,7 +143,8 @@ List<Override> buildMockRepositoryOverrides({
     overrides.add(skillsRepositoryProvider.overrideWithValue(skillsRepository));
   }
   if (teacherRepository != null) {
-    overrides.add(teacherRepositoryProvider.overrideWithValue(teacherRepository));
+    overrides
+        .add(teacherRepositoryProvider.overrideWithValue(teacherRepository));
   }
 
   return overrides;

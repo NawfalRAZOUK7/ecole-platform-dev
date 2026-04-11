@@ -47,9 +47,9 @@ class _FeatureTogglesScreenState extends ConsumerState<FeatureTogglesScreen> {
     setState(() => _saving = true);
     try {
       await ref.read(apiClientProvider).put(
-            '/admin/features',
-            body: {'features': _toggles},
-          );
+        '/admin/features',
+        body: {'features': _toggles},
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Feature toggles saved')),

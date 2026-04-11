@@ -15,7 +15,8 @@ class ReportsStore {
       limit: 5,
     );
     return rows.map((row) {
-      final payload = jsonDecode(row['payload'] as String) as Map<String, dynamic>;
+      final payload =
+          jsonDecode(row['payload'] as String) as Map<String, dynamic>;
       payload['local_file_path'] = row['file_path'];
       return payload;
     }).toList();
@@ -30,7 +31,8 @@ class ReportsStore {
       limit: 1,
     );
     if (rows.isEmpty) return null;
-    final payload = jsonDecode(rows.first['payload'] as String) as Map<String, dynamic>;
+    final payload =
+        jsonDecode(rows.first['payload'] as String) as Map<String, dynamic>;
     payload['local_file_path'] = rows.first['file_path'];
     return payload;
   }
@@ -63,7 +65,8 @@ class ReportsStore {
       offset: 5,
     );
     if (rows.isEmpty) return;
-    final ids = rows.map((row) => row['report_job_id']).whereType<String>().toList();
+    final ids =
+        rows.map((row) => row['report_job_id']).whereType<String>().toList();
     final placeholders = List.filled(ids.length, '?').join(', ');
     await db.delete(
       'cached_reports',

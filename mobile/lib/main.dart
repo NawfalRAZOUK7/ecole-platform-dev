@@ -92,7 +92,8 @@ class _EcolePlatformAppState extends ConsumerState<EcolePlatformApp>
               actions: [
                 TextButton(
                   onPressed: () {
-                    _scaffoldMessengerKey.currentState?.hideCurrentMaterialBanner();
+                    _scaffoldMessengerKey.currentState
+                        ?.hideCurrentMaterialBanner();
                   },
                   child: Text(t.t('notifications.dismiss')),
                 ),

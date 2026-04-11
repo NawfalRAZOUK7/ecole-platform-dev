@@ -53,7 +53,9 @@ class _GdprScreenState extends ConsumerState<GdprScreen> {
     final userId = ref.read(authProvider).user?.id;
     if (userId == null) return;
 
-    await ref.read(apiClientProvider).post('/users/$userId/data-deletion', body: {});
+    await ref
+        .read(apiClientProvider)
+        .post('/users/$userId/data-deletion', body: {});
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Deletion request submitted')),
@@ -99,19 +101,20 @@ class _GdprScreenState extends ConsumerState<GdprScreen> {
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 12),
-                  ...((_consentLog?['current_consents'] as List<dynamic>? ?? const [])
+                  ...((_consentLog?['current_consents'] as List<dynamic>? ??
+                          const [])
                       .map(
-                        (item) => Card(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          child: ListTile(
-                            title: Text(item['topic']?.toString() ?? ''),
-                            subtitle: Text(item['channel']?.toString() ?? ''),
-                            trailing: AppBadge(
-                              label: item['status']?.toString() ?? '',
-                            ),
-                          ),
+                    (item) => Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: ListTile(
+                        title: Text(item['topic']?.toString() ?? ''),
+                        subtitle: Text(item['channel']?.toString() ?? ''),
+                        trailing: AppBadge(
+                          label: item['status']?.toString() ?? '',
                         ),
-                      )),
+                      ),
+                    ),
+                  )),
                   const SizedBox(height: 16),
                   Text(
                     'Export overview',

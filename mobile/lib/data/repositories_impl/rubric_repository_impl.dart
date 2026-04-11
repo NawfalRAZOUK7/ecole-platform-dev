@@ -65,7 +65,8 @@ RubricGradeResult _rubricGradeResultFromJson(Map<String, dynamic> json) {
   );
 }
 
-RubricResultsResponse _rubricResultsResponseFromJson(Map<String, dynamic> json) {
+RubricResultsResponse _rubricResultsResponseFromJson(
+    Map<String, dynamic> json) {
   return RubricResultsResponse(
     rubricId: json['rubric_id'] as String? ?? '',
     results: (json['results'] as List<dynamic>? ?? const [])
@@ -174,7 +175,8 @@ class RubricRepositoryImpl implements RubricRepository {
           .toList(),
     );
 
-    final totalScore = entries.fold<double>(0, (sum, entry) => sum + entry.score);
+    final totalScore =
+        entries.fold<double>(0, (sum, entry) => sum + entry.score);
     return RubricGradeResult(
       studentId: entries.firstOrNull?.studentId ?? '',
       rubricId: rubricId,

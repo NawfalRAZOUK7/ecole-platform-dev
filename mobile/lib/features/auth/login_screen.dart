@@ -138,7 +138,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ? TextInputType.text
                         : TextInputType.number,
                     maxLength: _useBackupCode ? 20 : 6,
-                    textAlign: _useBackupCode ? TextAlign.start : TextAlign.center,
+                    textAlign:
+                        _useBackupCode ? TextAlign.start : TextAlign.center,
                     style: _useBackupCode
                         ? null
                         : const TextStyle(

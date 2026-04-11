@@ -131,7 +131,8 @@ class BudgetRepositoryImpl implements BudgetRepository {
   }
 
   @override
-  Future<BudgetRequest> createBudgetRequest(Map<String, dynamic> payload) async {
+  Future<BudgetRequest> createBudgetRequest(
+      Map<String, dynamic> payload) async {
     final budgetId = payload['budget_id']?.toString();
     if (budgetId == null || budgetId.isEmpty) {
       throw ArgumentError('budget_id is required');

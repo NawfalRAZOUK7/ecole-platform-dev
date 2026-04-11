@@ -15,7 +15,8 @@ class NotificationsStore {
       limit: 100,
     );
     return rows
-        .map((row) => jsonDecode(row['payload'] as String) as Map<String, dynamic>)
+        .map((row) =>
+            jsonDecode(row['payload'] as String) as Map<String, dynamic>)
         .toList();
   }
 
@@ -73,7 +74,8 @@ class NotificationsStore {
       offset: 100,
     );
     if (rows.isEmpty) return;
-    final ids = rows.map((row) => row['notification_id']).whereType<String>().toList();
+    final ids =
+        rows.map((row) => row['notification_id']).whereType<String>().toList();
     final placeholders = List.filled(ids.length, '?').join(', ');
     await db.delete(
       'cached_notifications',

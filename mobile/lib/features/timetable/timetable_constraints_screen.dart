@@ -47,8 +47,7 @@ class _TimetableConstraintsScreenState
       _academicYearController.text = constraints.academicYearId;
       _maxConsecutiveController.text =
           constraints.maxConsecutiveClasses.toString();
-      _availabilityController.text =
-          const JsonEncoder.withIndent('  ').convert(
+      _availabilityController.text = const JsonEncoder.withIndent('  ').convert(
         constraints.teacherAvailability
             .map(
               (item) => {
@@ -81,19 +80,19 @@ class _TimetableConstraintsScreenState
     setState(() => _saving = true);
     try {
       await ref.read(apiClientProvider).post(
-            '/timetable/constraints',
-            body: {
-              'academic_year_id': _academicYearController.text.trim(),
-              'max_consecutive_classes':
-                  int.tryParse(_maxConsecutiveController.text) ?? 0,
-              'teacher_availability':
-                  (jsonDecode(_availabilityController.text) as List<dynamic>)
-                      .cast<Map<String, dynamic>>(),
-              'room_constraints':
-                  (jsonDecode(_roomsController.text) as List<dynamic>)
-                      .cast<Map<String, dynamic>>(),
-            },
-          );
+        '/timetable/constraints',
+        body: {
+          'academic_year_id': _academicYearController.text.trim(),
+          'max_consecutive_classes':
+              int.tryParse(_maxConsecutiveController.text) ?? 0,
+          'teacher_availability':
+              (jsonDecode(_availabilityController.text) as List<dynamic>)
+                  .cast<Map<String, dynamic>>(),
+          'room_constraints':
+              (jsonDecode(_roomsController.text) as List<dynamic>)
+                  .cast<Map<String, dynamic>>(),
+        },
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Constraints saved')),

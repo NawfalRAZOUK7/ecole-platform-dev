@@ -40,7 +40,8 @@ class FinancialDashboardScreen extends ConsumerWidget {
                   width: 170,
                   child: AppStatCard(
                     label: 'Retention',
-                    value: '${bundle.dashboard.retentionRate.toStringAsFixed(1)}%',
+                    value:
+                        '${bundle.dashboard.retentionRate.toStringAsFixed(1)}%',
                     icon: Icons.favorite_outline,
                   ),
                 ),
@@ -106,8 +107,9 @@ class FinancialExportScreen extends ConsumerWidget {
             Expanded(
               child: FilledButton.tonalIcon(
                 onPressed: () async {
-                  final file =
-                      await ref.read(financialHealthRepositoryProvider).exportCsv();
+                  final file = await ref
+                      .read(financialHealthRepositoryProvider)
+                      .exportCsv();
                   if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('CSV exported: ${file.path}')),
@@ -121,8 +123,9 @@ class FinancialExportScreen extends ConsumerWidget {
             Expanded(
               child: FilledButton.tonalIcon(
                 onPressed: () async {
-                  final file =
-                      await ref.read(financialHealthRepositoryProvider).exportPdf();
+                  final file = await ref
+                      .read(financialHealthRepositoryProvider)
+                      .exportPdf();
                   if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('PDF exported: ${file.path}')),
@@ -162,9 +165,12 @@ class _CashflowChart extends StatelessWidget {
           ),
         ],
         titlesData: FlTitlesData(
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          bottomTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          bottomTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         ),
       ),
     );

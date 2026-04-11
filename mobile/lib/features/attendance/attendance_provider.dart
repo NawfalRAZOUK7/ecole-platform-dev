@@ -28,12 +28,14 @@ final attendanceStudentsProvider =
 });
 
 final attendanceHistoryProvider =
-    FutureProvider.family<List<AttendanceEntry>, String>((ref, studentId) async {
+    FutureProvider.family<List<AttendanceEntry>, String>(
+        (ref, studentId) async {
   return ref.read(attendanceRepositoryProvider).getStudentHistory(studentId);
 });
 
 final attendanceAnalyticsProvider =
-    FutureProvider.family<AttendanceAnalyticsBundle, String>((ref, classId) async {
+    FutureProvider.family<AttendanceAnalyticsBundle, String>(
+        (ref, classId) async {
   final repository = ref.read(attendanceRepositoryProvider);
   final authState = ref.read(authProvider);
   final now = DateTime.now();

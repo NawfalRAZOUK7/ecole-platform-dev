@@ -17,6 +17,7 @@ final questionBankQuestionsProvider =
       );
 });
 
-final questionBankStatsProvider = FutureProvider<QuestionBankStats>((ref) async {
+final questionBankStatsProvider =
+    FutureProvider<QuestionBankStats>((ref) async {
   return ref.read(questionBankRepositoryProvider).getStats();
 });

@@ -117,9 +117,8 @@ class WsClient {
     if (!_shouldConnect || _accessToken == null) return;
 
     final wsScheme = _baseUrl.startsWith('https') ? 'wss' : 'ws';
-    final host = _baseUrl
-        .replaceFirst('http://', '')
-        .replaceFirst('https://', '');
+    final host =
+        _baseUrl.replaceFirst('http://', '').replaceFirst('https://', '');
     final uri = Uri.parse('$wsScheme://$host/api/v1/ws?token=$_accessToken');
 
     try {
@@ -174,7 +173,8 @@ class WsClient {
     switch (event.type) {
       case WsEventType.notificationCreated:
         title = 'Nouvelle notification';
-        body = event.data['subject'] as String? ?? 'Vous avez une nouvelle notification';
+        body = event.data['subject'] as String? ??
+            'Vous avez une nouvelle notification';
         break;
       case WsEventType.gradePublished:
         title = 'Note publiée';
@@ -186,7 +186,8 @@ class WsClient {
         break;
       case WsEventType.feedNew:
         title = 'Nouvelle actualité';
-        body = event.data['title'] as String? ?? 'Une nouvelle actualité est disponible';
+        body = event.data['title'] as String? ??
+            'Une nouvelle actualité est disponible';
         break;
       case WsEventType.messageCreated:
         title = 'Nouveau message';
@@ -194,7 +195,8 @@ class WsClient {
         break;
       case WsEventType.announcementPublished:
         title = 'Nouvelle annonce';
-        body = event.data['title'] as String? ?? 'Une nouvelle annonce a été publiée';
+        body = event.data['title'] as String? ??
+            'Une nouvelle annonce a été publiée';
         break;
       default:
         return; // Don't show notification for welcome, pong, unknown

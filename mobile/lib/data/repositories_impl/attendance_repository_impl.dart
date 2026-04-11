@@ -105,7 +105,8 @@ class AttendanceRepositoryImpl implements AttendanceRepository {
       return cached.map(AttendanceEntry.fromJson).toList();
     }
 
-    final response = await _api.list('/analytics/attendance/student/$studentId');
+    final response =
+        await _api.list('/analytics/attendance/student/$studentId');
     await _store.writeStudentHistory(studentId, response.data);
     return response.data.map(AttendanceEntry.fromJson).toList();
   }
@@ -140,7 +141,8 @@ class AttendanceRepositoryImpl implements AttendanceRepository {
     await getClassStats(classId, export: true);
     final normalizedFormat = format == 'pdf' ? 'xlsx' : format;
     return AttendanceExportResult(
-      downloadUrl: '/api/v1/export/$normalizedFormat?entity=attendance&class_id=$classId',
+      downloadUrl:
+          '/api/v1/export/$normalizedFormat?entity=attendance&class_id=$classId',
       fileName: 'attendance-$classId.$normalizedFormat',
     );
   }

@@ -8,7 +8,8 @@ final microSchoolsProvider = FutureProvider<List<MicroSchool>>((ref) async {
 });
 
 final microSchoolDetailProvider =
-    FutureProvider.family<MicroSchoolDetailBundle, String>((ref, schoolId) async {
+    FutureProvider.family<MicroSchoolDetailBundle, String>(
+        (ref, schoolId) async {
   final repository = ref.read(microSchoolRepositoryProvider);
   final results = await Future.wait<dynamic>([
     repository.getMicroSchoolDetail(schoolId),

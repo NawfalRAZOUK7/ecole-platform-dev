@@ -198,12 +198,14 @@ class _RubricsListScreenState extends ConsumerState<RubricsListScreen> {
                         Row(
                           children: [
                             FilledButton.tonal(
-                              onPressed: () => context.push('/rubrics/${rubric.id}/edit'),
+                              onPressed: () =>
+                                  context.push('/rubrics/${rubric.id}/edit'),
                               child: Text(t.t('rubrics.editor')),
                             ),
                             const SizedBox(width: 8),
                             FilledButton.tonal(
-                              onPressed: () => context.push('/rubrics/${rubric.id}/grade'),
+                              onPressed: () =>
+                                  context.push('/rubrics/${rubric.id}/grade'),
                               child: Text(t.t('rubrics.grade')),
                             ),
                             const Spacer(),

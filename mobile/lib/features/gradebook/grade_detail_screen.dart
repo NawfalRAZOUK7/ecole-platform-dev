@@ -79,7 +79,8 @@ class GradeDetailScreen extends ConsumerWidget {
                           showTitles: true,
                           getTitlesWidget: (value, meta) {
                             final index = value.toInt();
-                            if (index < 0 || index >= detail.assessments.length) {
+                            if (index < 0 ||
+                                index >= detail.assessments.length) {
                               return const SizedBox.shrink();
                             }
                             return Padding(

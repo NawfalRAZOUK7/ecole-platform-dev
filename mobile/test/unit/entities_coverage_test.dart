@@ -94,7 +94,8 @@ void main() {
       expect(snapshot.trends.single.label, 'Week 1');
     });
 
-    test('calendar, conversation, and notification entities expose helpers', () {
+    test('calendar, conversation, and notification entities expose helpers',
+        () {
       final event = createCalendarEvent().copyWith(
         myRsvp: 'maybe',
         attendeeCount: 13,
@@ -749,7 +750,8 @@ void main() {
       expect(preference.digestFrequency, 'weekly');
       expect(summary.averages.single.avg, 17.5);
       expect(detail.assessments.single.maxScore, 20.0);
-      expect(transcript.periods.single.subjects.single.grades.single.score, 18.0);
+      expect(
+          transcript.periods.single.subjects.single.grades.single.score, 18.0);
       expect(device.platform, 'ios');
     });
   });

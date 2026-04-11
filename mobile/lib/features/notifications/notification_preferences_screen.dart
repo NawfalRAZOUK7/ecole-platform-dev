@@ -114,10 +114,7 @@ class _NotificationPreferencesScreenState
       );
     }
 
-    final channels = _preferences
-        .map((item) => item.channel)
-        .toSet()
-        .toList()
+    final channels = _preferences.map((item) => item.channel).toSet().toList()
       ..sort();
 
     return Scaffold(
@@ -166,7 +163,8 @@ class _NotificationPreferencesScreenState
                       ...channels.map((channel) {
                         final preference = _preferences.firstWhere(
                           (item) =>
-                              item.category == category && item.channel == channel,
+                              item.category == category &&
+                              item.channel == channel,
                         );
                         return SwitchListTile(
                           dense: true,
@@ -221,7 +219,8 @@ class _NotificationPreferencesScreenState
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),
                   child: ListTile(
-                    title: Text(device.deviceName ?? t.t('notifications.unknownDevice')),
+                    title: Text(device.deviceName ??
+                        t.t('notifications.unknownDevice')),
                     subtitle: Text(
                       '${_platformLabel(device.platform, t)}\n'
                       '${device.tokenPreview}\n'
