@@ -9,6 +9,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 const String _refreshTokenKey = 'ecole_refresh_token';
 const String _csrfTokenKey = 'ecole_csrf_token';
+const String _themeModeKey = 'ecole_theme_mode';
+const String _localeKey = 'ecole_locale';
 
 class SecureTokenStorage {
   final FlutterSecureStorage _storage;
@@ -45,5 +47,25 @@ class SecureTokenStorage {
   Future<void> clearAll() async {
     await _storage.delete(key: _refreshTokenKey);
     await _storage.delete(key: _csrfTokenKey);
+  }
+
+  /// Persist the selected theme mode.
+  Future<void> saveThemeMode(String mode) async {
+    await _storage.write(key: _themeModeKey, value: mode);
+  }
+
+  /// Read the persisted theme mode.
+  Future<String?> getThemeMode() async {
+    return _storage.read(key: _themeModeKey);
+  }
+
+  /// Persist the selected locale code.
+  Future<void> saveLocaleCode(String localeCode) async {
+    await _storage.write(key: _localeKey, value: localeCode);
+  }
+
+  /// Read the persisted locale code.
+  Future<String?> getLocaleCode() async {
+    return _storage.read(key: _localeKey);
   }
 }

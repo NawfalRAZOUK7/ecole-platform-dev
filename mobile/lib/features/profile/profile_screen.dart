@@ -11,6 +11,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/features/auth/auth_provider.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 
 const _roleLabels = {
   'ADM': 'Administrateur',
@@ -30,6 +31,16 @@ const _relationshipLabels = {
 };
 
 const _relationshipTypes = ['father', 'mother', 'guardian', 'other'];
+const _themeModeLabels = {
+  ThemeMode.system: 'Système',
+  ThemeMode.light: 'Clair',
+  ThemeMode.dark: 'Sombre',
+};
+const _localeLabels = {
+  'fr': 'Français',
+  'ar': 'العربية',
+  'en': 'English',
+};
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -164,6 +175,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final authState = ref.watch(authProvider);
     final user = authState.user;
     final theme = Theme.of(context);
+    final themeMode = ref.watch(themeModeProvider);
+    final localeCode = ref.watch(localeProvider);
 
     if (user == null) return const SizedBox.shrink();
 
@@ -327,6 +340,66 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               title: const Text('Confidentialité'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.push('/settings/privacy'),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          Text(
+            'Préférences',
+            style: theme.textTheme.titleSmall
+                ?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  DropdownButtonFormField<ThemeMode>(
+                    key: const Key('profile.theme.mode'),
+                    initialValue: themeMode,
+                    decoration: const InputDecoration(
+                      labelText: 'Thème',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: ThemeMode.values
+                        .map(
+                          (mode) => DropdownMenuItem<ThemeMode>(
+                            value: mode,
+                            child: Text(_themeModeLabels[mode] ?? mode.name),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        ref.read(themeModeProvider.notifier).setThemeMode(value);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    key: const Key('profile.locale.code'),
+                    initialValue: localeCode,
+                    decoration: const InputDecoration(
+                      labelText: 'Langue',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: _localeLabels.entries
+                        .map(
+                          (entry) => DropdownMenuItem<String>(
+                            value: entry.key,
+                            child: Text(entry.value),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        ref.read(localeProvider.notifier).setLocale(value);
+                      }
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 24),

@@ -5,8 +5,50 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ecole_platform/l10n/app_localizations.dart';
+import 'package:ecole_platform/shared/secure_storage.dart';
 import 'package:ecole_platform/shared/ui/app_theme.dart';
 import 'package:ecole_platform/shared/ui/app_theme_dark.dart';
+
+class _TestLocaleStorage implements SecureTokenStorage {
+  _TestLocaleStorage(this.localeCode);
+
+  final String localeCode;
+
+  @override
+  Future<void> clearAll() async {}
+
+  @override
+  Future<String?> getCsrfToken() async {
+    return null;
+  }
+
+  @override
+  Future<String?> getLocaleCode() async {
+    return localeCode;
+  }
+
+  @override
+  Future<String?> getRefreshToken() async {
+    return null;
+  }
+
+  @override
+  Future<String?> getThemeMode() async {
+    return null;
+  }
+
+  @override
+  Future<void> saveCsrfToken(String token) async {}
+
+  @override
+  Future<void> saveLocaleCode(String localeCode) async {}
+
+  @override
+  Future<void> saveRefreshToken(String token) async {}
+
+  @override
+  Future<void> saveThemeMode(String mode) async {}
+}
 
 Future<void> pumpApp(
   WidgetTester tester,
@@ -29,7 +71,9 @@ Future<void> pumpApp(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
-        localeProvider.overrideWith((ref) => localeCode),
+        localeProvider.overrideWith(
+          (ref) => LocaleNotifier(_TestLocaleStorage(localeCode)),
+        ),
         ...overrides,
       ],
       child: MaterialApp.router(

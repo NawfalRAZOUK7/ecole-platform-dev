@@ -146,8 +146,31 @@ final wsClientProvider = Provider<WsClient>((ref) {
   );
 });
 
-final themeModeProvider = StateProvider<ThemeMode>((ref) {
-  return ThemeMode.system;
+class ThemeModeNotifier extends StateNotifier<ThemeMode> {
+  final SecureTokenStorage _storage;
+
+  ThemeModeNotifier(this._storage) : super(ThemeMode.system) {
+    _restore();
+  }
+
+  Future<void> _restore() async {
+    final stored = await _storage.getThemeMode();
+    state = switch (stored) {
+      'light' => ThemeMode.light,
+      'dark' => ThemeMode.dark,
+      _ => ThemeMode.system,
+    };
+  }
+
+  Future<void> setThemeMode(ThemeMode mode) async {
+    state = mode;
+    await _storage.saveThemeMode(mode.name);
+  }
+}
+
+final themeModeProvider =
+    StateNotifierProvider<ThemeModeNotifier, ThemeMode>((ref) {
+  return ThemeModeNotifier(ref.watch(secureStorageProvider));
 });
 
 // ── Repository providers ──

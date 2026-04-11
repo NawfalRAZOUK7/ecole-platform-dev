@@ -92,6 +92,8 @@ class TestConnectivityService implements ConnectivityService {
 class TestSecureTokenStorage implements SecureTokenStorage {
   String? _refreshToken;
   String? _csrfToken;
+  String? _themeMode;
+  String? _localeCode;
 
   @override
   Future<void> clearAll() async {
@@ -110,6 +112,16 @@ class TestSecureTokenStorage implements SecureTokenStorage {
   }
 
   @override
+  Future<String?> getThemeMode() async {
+    return _themeMode;
+  }
+
+  @override
+  Future<String?> getLocaleCode() async {
+    return _localeCode;
+  }
+
+  @override
   Future<void> saveCsrfToken(String token) async {
     _csrfToken = token;
   }
@@ -117,6 +129,16 @@ class TestSecureTokenStorage implements SecureTokenStorage {
   @override
   Future<void> saveRefreshToken(String token) async {
     _refreshToken = token;
+  }
+
+  @override
+  Future<void> saveThemeMode(String mode) async {
+    _themeMode = mode;
+  }
+
+  @override
+  Future<void> saveLocaleCode(String localeCode) async {
+    _localeCode = localeCode;
   }
 }
 

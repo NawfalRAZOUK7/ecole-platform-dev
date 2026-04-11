@@ -10,9 +10,33 @@
 ///   Text(t['contentLibrary.title']!)
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ecole_platform/app/providers.dart';
+import 'package:ecole_platform/shared/secure_storage.dart';
 
 /// Current locale provider.
-final localeProvider = StateProvider<String>((ref) => 'fr');
+class LocaleNotifier extends StateNotifier<String> {
+  final SecureTokenStorage _storage;
+
+  LocaleNotifier(this._storage) : super('fr') {
+    _restore();
+  }
+
+  Future<void> _restore() async {
+    final stored = await _storage.getLocaleCode();
+    if (stored != null && stored.isNotEmpty) {
+      state = stored;
+    }
+  }
+
+  Future<void> setLocale(String localeCode) async {
+    state = localeCode;
+    await _storage.saveLocaleCode(localeCode);
+  }
+}
+
+final localeProvider = StateNotifierProvider<LocaleNotifier, String>((ref) {
+  return LocaleNotifier(ref.watch(secureStorageProvider));
+});
 
 /// Translation strings by locale.
 const Map<String, Map<String, String>> _translations = {
