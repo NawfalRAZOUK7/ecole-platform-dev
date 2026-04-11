@@ -7,6 +7,7 @@ import 'package:ecole_platform/data/local_store/documents_store.dart';
 import 'package:ecole_platform/data/local_store/events_store.dart';
 import 'package:ecole_platform/data/local_store/notifications_store.dart';
 import 'package:ecole_platform/data/local_store/reports_store.dart';
+import 'package:ecole_platform/domain/entities/gradebook.dart';
 
 class MockApiClient extends Mock implements ApiClient {}
 
@@ -31,5 +32,17 @@ void registerTestFallbacks() {
   registerFallbackValue(<String, dynamic>{});
   registerFallbackValue(<Map<String, dynamic>>[]);
   registerFallbackValue(<String>[]);
+  registerFallbackValue(
+    const BulkGradeUpdate(
+      classId: 'class-1',
+      grades: [
+        GradeValueUpdate(
+          studentId: 'student-1',
+          assessmentId: 'assessment-1',
+          value: 15.0,
+        ),
+      ],
+    ),
+  );
   _fallbacksRegistered = true;
 }

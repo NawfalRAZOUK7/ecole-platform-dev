@@ -33,6 +33,15 @@ class _GradebookScreenState extends ConsumerState<GradebookScreen> {
     final t = AppLocalizations.of(ref);
     final classesAsync = ref.watch(gradebookClassesProvider);
     final saveState = ref.watch(gradeUpdateProvider);
+    final loadedClasses = classesAsync.valueOrNull;
+
+    if (_selectedClassId == null &&
+        loadedClasses != null &&
+        loadedClasses.isNotEmpty) {
+      _selectedClassId = loadedClasses.first.id;
+    }
+
+    final selectedClassId = _selectedClassId;
 
     ref.listen<AsyncValue<void>>(gradeUpdateProvider, (previous, next) {
       next.whenOrNull(
@@ -60,14 +69,16 @@ class _GradebookScreenState extends ConsumerState<GradebookScreen> {
         title: Text(t.t('gradebook.title')),
         actions: [
           IconButton(
-            onPressed: _selectedClassId == null ? null : _exportGrades,
+            onPressed: selectedClassId == null
+                ? null
+                : () => _exportGrades(selectedClassId),
             icon: const Icon(Icons.download_outlined),
             tooltip: t.t('gradebook.export'),
           ),
           IconButton(
-            onPressed: _selectedClassId == null || saveState.isLoading
+            onPressed: selectedClassId == null || saveState.isLoading
                 ? null
-                : _saveGrades,
+                : () => _saveGrades(selectedClassId),
             icon: saveState.isLoading
                 ? const SizedBox(
                     width: 20,
@@ -117,16 +128,16 @@ class _GradebookScreenState extends ConsumerState<GradebookScreen> {
                 variant: SkeletonVariant.line,
                 height: 52,
               ),
-            ),
+              ),
             const SizedBox(height: AppSpacing.base),
             Expanded(
-              child: _selectedClassId == null
+              child: selectedClassId == null
                   ? AppEmptyState(
                       icon: Icons.class_outlined,
                       title: t.t('gradebook.noClasses'),
                     )
                   : _GradebookGridView(
-                      classId: _selectedClassId!,
+                      classId: selectedClassId,
                       controllerFor: _controllerFor,
                     ),
             ),
@@ -136,14 +147,11 @@ class _GradebookScreenState extends ConsumerState<GradebookScreen> {
     );
   }
 
-  Future<void> _exportGrades() async {
-    if (_selectedClassId == null) {
-      return;
-    }
+  Future<void> _exportGrades(String classId) async {
     final t = AppLocalizations.of(ref);
     final url = await ref
         .read(gradebookRepositoryProvider)
-        .exportGrades(_selectedClassId!, format: 'csv');
+        .exportGrades(classId, format: 'csv');
     if (!mounted) {
       return;
     }
@@ -158,11 +166,8 @@ class _GradebookScreenState extends ConsumerState<GradebookScreen> {
     );
   }
 
-  Future<void> _saveGrades() async {
-    if (_selectedClassId == null) {
-      return;
-    }
-    final grid = ref.read(gradebookProvider(_selectedClassId!)).valueOrNull;
+  Future<void> _saveGrades(String classId) async {
+    final grid = ref.read(gradebookProvider(classId)).valueOrNull;
     if (grid == null) {
       return;
     }
@@ -191,7 +196,7 @@ class _GradebookScreenState extends ConsumerState<GradebookScreen> {
 
     await ref.read(gradeUpdateProvider.notifier).save(
           BulkGradeUpdate(
-            classId: _selectedClassId!,
+            classId: classId,
             grades: updates,
           ),
         );

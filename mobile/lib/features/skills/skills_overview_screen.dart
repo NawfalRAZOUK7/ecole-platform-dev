@@ -42,11 +42,13 @@ class SkillsOverviewScreen extends ConsumerWidget {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              SizedBox(
-                height: 320,
-                child: _SkillsRadarChart(items: overview.dimensions),
-              ),
-              const SizedBox(height: 16),
+              if (overview.dimensions.length >= 3) ...[
+                SizedBox(
+                  height: 320,
+                  child: _SkillsRadarChart(items: overview.dimensions),
+                ),
+                const SizedBox(height: 16),
+              ],
               AppStatCard(
                 label: t.t('skills.overallScore'),
                 value: overview.overallScore.toStringAsFixed(1),
