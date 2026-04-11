@@ -101,7 +101,11 @@ class _StudentContentScreenState extends ConsumerState<StudentContentScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Mon contenu')),
-      body: _buildBody(context),
+      body: Semantics(
+        container: true,
+        label: 'Contenu pédagogique de l’élève',
+        child: _buildBody(context),
+      ),
     );
   }
 
@@ -197,44 +201,52 @@ class _ContentCard extends StatelessWidget {
     final theme = Theme.of(context);
     final color = _typeColor(theme, item.contentType);
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              // Type icon
-              CircleAvatar(
-                backgroundColor: color.withAlpha(30),
-                radius: 24,
-                child:
-                    Icon(_typeIcon(item.contentType), color: color, size: 24),
-              ),
-              const SizedBox(width: 16),
-              // Title + description
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(item.title,
-                        style: const TextStyle(fontWeight: FontWeight.w600)),
-                    if (item.description != null) ...[
-                      const SizedBox(height: 4),
-                      Text(item.description!,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall),
-                    ],
-                  ],
+    return Semantics(
+      button: true,
+      label:
+          '${item.title}, ${item.subject ?? 'Général'}, progression ${item.progress ?? 'non commencée'}',
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 10),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                // Type icon
+                Semantics(
+                  excludeSemantics: true,
+                  child: CircleAvatar(
+                    backgroundColor: color.withAlpha(30),
+                    radius: 24,
+                    child: Icon(_typeIcon(item.contentType),
+                        color: color, size: 24),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              // Progress indicator
-              _ProgressBadge(progress: item.progress),
-            ],
+                const SizedBox(width: 16),
+                // Title + description
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(item.title,
+                          style: const TextStyle(fontWeight: FontWeight.w600)),
+                      if (item.description != null) ...[
+                        const SizedBox(height: 4),
+                        Text(item.description!,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Progress indicator
+                _ProgressBadge(progress: item.progress),
+              ],
+            ),
           ),
         ),
       ),

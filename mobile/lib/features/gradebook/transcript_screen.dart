@@ -21,47 +21,51 @@ class TranscriptScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(t.t('gradebook.transcript'))),
-      body: transcriptAsync.when(
-        data: (transcript) {
-          return ListView(
-            padding: const EdgeInsets.all(AppSpacing.base),
-            children: [
-              Text(
-                transcript.studentName,
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: AppSpacing.base),
-              ...transcript.periods.map(
-                (period) => Card(
-                  child: ExpansionTile(
-                    title: Text(period.label),
-                    subtitle: Text(
-                      '${t.t('gradebook.average')}: ${period.weightedAverage.toStringAsFixed(1)}',
+      body: Semantics(
+        container: true,
+        label: t.t('gradebook.transcript'),
+        child: transcriptAsync.when(
+          data: (transcript) {
+            return ListView(
+              padding: const EdgeInsets.all(AppSpacing.base),
+              children: [
+                Text(
+                  transcript.studentName,
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: AppSpacing.base),
+                ...transcript.periods.map(
+                  (period) => Card(
+                    child: ExpansionTile(
+                      title: Text(period.label),
+                      subtitle: Text(
+                        '${t.t('gradebook.average')}: ${period.weightedAverage.toStringAsFixed(1)}',
+                      ),
+                      children: period.subjects
+                          .map(
+                            (subject) => ListTile(
+                              title: Text(subject.subjectName),
+                              subtitle: Text(
+                                '${subject.grades.length} ${t.t('gradebook.assessments')}',
+                              ),
+                              trailing: AppBadge(
+                                label: subject.average.toStringAsFixed(1),
+                                variant: subject.average >= 10
+                                    ? AppBadgeVariant.success
+                                    : AppBadgeVariant.error,
+                              ),
+                            ),
+                          )
+                          .toList(),
                     ),
-                    children: period.subjects
-                        .map(
-                          (subject) => ListTile(
-                            title: Text(subject.subjectName),
-                            subtitle: Text(
-                              '${subject.grades.length} ${t.t('gradebook.assessments')}',
-                            ),
-                            trailing: AppBadge(
-                              label: subject.average.toStringAsFixed(1),
-                              variant: subject.average >= 10
-                                  ? AppBadgeVariant.success
-                                  : AppBadgeVariant.error,
-                            ),
-                          ),
-                        )
-                        .toList(),
                   ),
                 ),
-              ),
-            ],
-          );
-        },
-        error: (error, _) => AppErrorWidget(message: error.toString()),
-        loading: () => const Center(child: CircularProgressIndicator()),
+              ],
+            );
+          },
+          error: (error, _) => AppErrorWidget(message: error.toString()),
+          loading: () => const Center(child: CircularProgressIndicator()),
+        ),
       ),
     );
   }

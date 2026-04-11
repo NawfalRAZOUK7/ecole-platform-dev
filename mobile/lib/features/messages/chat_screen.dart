@@ -78,81 +78,95 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     return Scaffold(
       appBar: AppBar(title: Text(t.t('messages.chat'))),
-      body: Column(
-        children: [
-          // Messages
-          Expanded(
-            child: state.isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : state.error != null && state.messages.isEmpty
-                    ? Center(child: Text(state.error!))
-                    : state.messages.isEmpty
-                        ? Center(
-                            child: Text(t.t('messages.noMessages'),
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant)))
-                        : ListView.builder(
-                            controller: _scrollController,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 8),
-                            itemCount: state.messages.length,
-                            itemBuilder: (context, index) {
-                              final msg = state.messages[index];
-                              final isOwn = msg.senderId == userId;
-                              return _MessageBubble(
-                                message: msg,
-                                isOwn: isOwn,
-                              );
-                            },
+      body: Semantics(
+        container: true,
+        label: t.t('messages.chat'),
+        child: Column(
+          children: [
+            // Messages
+            Expanded(
+              child: state.isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : state.error != null && state.messages.isEmpty
+                      ? Center(child: Text(state.error!))
+                      : state.messages.isEmpty
+                          ? Center(
+                              child: Text(t.t('messages.noMessages'),
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                      color:
+                                          theme.colorScheme.onSurfaceVariant)))
+                          : ListView.builder(
+                              controller: _scrollController,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                              itemCount: state.messages.length,
+                              itemBuilder: (context, index) {
+                                final msg = state.messages[index];
+                                final isOwn = msg.senderId == userId;
+                                return _MessageBubble(
+                                  message: msg,
+                                  isOwn: isOwn,
+                                );
+                              },
+                            ),
+            ),
+            // Input bar
+            Container(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                border: Border(
+                  top: BorderSide(color: theme.dividerColor),
+                ),
+              ),
+              child: SafeArea(
+                top: false,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Semantics(
+                        textField: true,
+                        label: t.t('messages.typePlaceholder'),
+                        child: TextField(
+                          controller: _controller,
+                          maxLines: 3,
+                          minLines: 1,
+                          decoration: InputDecoration(
+                            hintText: t.t('messages.typePlaceholder'),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: BorderSide(color: theme.dividerColor),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 10),
+                            isDense: true,
                           ),
-          ),
-          // Input bar
-          Container(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
-              border: Border(
-                top: BorderSide(color: theme.dividerColor),
-              ),
-            ),
-            child: SafeArea(
-              top: false,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _controller,
-                      maxLines: 3,
-                      minLines: 1,
-                      decoration: InputDecoration(
-                        hintText: t.t('messages.typePlaceholder'),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          borderSide: BorderSide(color: theme.dividerColor),
+                          textInputAction: TextInputAction.send,
+                          onSubmitted: (_) => _send(),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 10),
-                        isDense: true,
                       ),
-                      textInputAction: TextInputAction.send,
-                      onSubmitted: (_) => _send(),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton.filled(
-                    onPressed: state.sending ? null : _send,
-                    icon: state.sending
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Icon(Icons.send),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    Semantics(
+                      button: true,
+                      label: t.t('messages.send'),
+                      child: IconButton.filled(
+                        onPressed: state.sending ? null : _send,
+                        icon: state.sending
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2))
+                            : const Icon(Icons.send),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -180,61 +194,65 @@ class _MessageBubble extends StatelessWidget {
       timeStr = DateFormat.Hm().format(dt);
     } catch (_) {}
 
-    return Align(
-      alignment: isOwn ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.75,
-        ),
-        margin: const EdgeInsets.symmetric(vertical: 3),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: isOwn
-              ? theme.colorScheme.primary
-              : theme.colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(isOwn ? 16 : 4),
-            bottomRight: Radius.circular(isOwn ? 4 : 16),
+    return Semantics(
+      label:
+          '${isOwn ? 'Votre message' : 'Message reçu'} à $timeStr. ${message.body}',
+      child: Align(
+        alignment: isOwn ? Alignment.centerRight : Alignment.centerLeft,
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.75,
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              message.body,
-              style: TextStyle(
-                color: isOwn
-                    ? theme.colorScheme.onPrimary
-                    : theme.colorScheme.onSurface,
-                fontSize: 14,
-              ),
+          margin: const EdgeInsets.symmetric(vertical: 3),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: isOwn
+                ? theme.colorScheme.primary
+                : theme.colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.only(
+              topLeft: const Radius.circular(16),
+              topRight: const Radius.circular(16),
+              bottomLeft: Radius.circular(isOwn ? 16 : 4),
+              bottomRight: Radius.circular(isOwn ? 4 : 16),
             ),
-            const SizedBox(height: 4),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  timeStr,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: isOwn
-                        ? theme.colorScheme.onPrimary.withAlpha(180)
-                        : theme.colorScheme.onSurfaceVariant,
-                  ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                message.body,
+                style: TextStyle(
+                  color: isOwn
+                      ? theme.colorScheme.onPrimary
+                      : theme.colorScheme.onSurface,
+                  fontSize: 14,
                 ),
-                if (isOwn) ...[
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.done_all,
-                    size: 14,
-                    color: theme.colorScheme.onPrimary.withAlpha(180),
+              ),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    timeStr,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: isOwn
+                          ? theme.colorScheme.onPrimary.withAlpha(180)
+                          : theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
+                  if (isOwn) ...[
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.done_all,
+                      size: 14,
+                      color: theme.colorScheme.onPrimary.withAlpha(180),
+                    ),
+                  ],
                 ],
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );

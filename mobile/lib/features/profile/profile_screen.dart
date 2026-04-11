@@ -183,245 +183,266 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Mon Profil')),
-      body: ListView(
-        padding: const EdgeInsets.all(24),
-        children: [
-          // Avatar
-          Center(
-            child: CircleAvatar(
-              radius: 48,
-              backgroundColor: theme.colorScheme.primaryContainer,
-              child: Text(
-                user.fullName.isNotEmpty ? user.fullName[0].toUpperCase() : '?',
-                style: TextStyle(
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.primary,
+      body: Semantics(
+        container: true,
+        label: 'Profil utilisateur',
+        child: ListView(
+          padding: const EdgeInsets.all(24),
+          children: [
+            // Avatar
+            Center(
+              child: Semantics(
+                label: 'Avatar de ${user.fullName}',
+                image: true,
+                child: CircleAvatar(
+                  radius: 48,
+                  backgroundColor: theme.colorScheme.primaryContainer,
+                  child: Text(
+                    user.fullName.isNotEmpty
+                        ? user.fullName[0].toUpperCase()
+                        : '?',
+                    style: TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Center(
-            child: Text(
-              user.fullName,
-              style: theme.textTheme.headlineSmall
-                  ?.copyWith(fontWeight: FontWeight.bold),
-            ),
-          ),
-          Center(
-            child: Container(
-              margin: const EdgeInsets.only(top: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(16),
-              ),
+            const SizedBox(height: 16),
+            Center(
               child: Text(
-                _roleLabels[user.role] ?? user.role,
-                style: TextStyle(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w600,
+                user.fullName,
+                style: theme.textTheme.headlineSmall
+                    ?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ),
+            Center(
+              child: Container(
+                margin: const EdgeInsets.only(top: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  _roleLabels[user.role] ?? user.role,
+                  style: TextStyle(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 32),
+            const SizedBox(height: 32),
 
-          // Info cards
-          _InfoTile(
-            icon: Icons.email_outlined,
-            label: 'Email',
-            value: user.email,
-          ),
-          _InfoTile(
-            icon: Icons.business,
-            label: 'Établissement',
-            value: user.schoolId,
-          ),
-          const SizedBox(height: 16),
+            // Info cards
+            _InfoTile(
+              icon: Icons.email_outlined,
+              label: 'Email',
+              value: user.email,
+            ),
+            _InfoTile(
+              icon: Icons.business,
+              label: 'Établissement',
+              value: user.schoolId,
+            ),
+            const SizedBox(height: 16),
 
-          // Permissions
-          if (user.permissions.isNotEmpty) ...[
+            // Permissions
+            if (user.permissions.isNotEmpty) ...[
+              Text(
+                'Permissions',
+                style: theme.textTheme.titleSmall
+                    ?.copyWith(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: user.permissions
+                    .map((p) => Chip(
+                          label: Text(p, style: const TextStyle(fontSize: 10)),
+                          padding: EdgeInsets.zero,
+                          visualDensity: VisualDensity.compact,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                        ))
+                    .toList(),
+              ),
+              const SizedBox(height: 24),
+            ],
+
+            // ── Role-specific profile section (Phase 5C) ──
+            if (['STD', 'PAR', 'TCH'].contains(user.role))
+              _buildRoleProfileSection(theme, user.role),
+
+            // Success banner
+            if (_saveSuccess != null) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: theme.semanticPalette.successContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.check_circle,
+                        color: theme.semanticPalette.success, size: 20),
+                    const SizedBox(width: 8),
+                    Text(_saveSuccess!,
+                        style: TextStyle(
+                          color: theme.semanticPalette.success,
+                          fontSize: 13,
+                        )),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            // ── Security section ──
             Text(
-              'Permissions',
+              'Sécurité',
               style: theme.textTheme.titleSmall
                   ?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: user.permissions
-                  .map((p) => Chip(
-                        label: Text(p, style: const TextStyle(fontSize: 10)),
-                        padding: EdgeInsets.zero,
-                        visualDensity: VisualDensity.compact,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ))
-                  .toList(),
+
+            // 2FA setup
+            Semantics(
+              button: true,
+              label: 'Configurer l’authentification à deux facteurs',
+              child: Card(
+                child: ListTile(
+                  leading:
+                      Icon(Icons.security, color: theme.colorScheme.primary),
+                  title: const Text('Authentification 2FA'),
+                  subtitle: const Text('Configurer la double authentification'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/profile/2fa'),
+                ),
+              ),
+            ),
+
+            // Biometric toggle
+            if (authState.biometricAvailable) ...[
+              Card(
+                child: SwitchListTile(
+                  secondary:
+                      Icon(Icons.fingerprint, color: theme.colorScheme.primary),
+                  title: const Text('Déverrouillage biométrique'),
+                  subtitle: const Text('Empreinte digitale / Face ID'),
+                  value: authState.biometricEnabled,
+                  onChanged: (value) {
+                    ref.read(authProvider.notifier).setBiometricEnabled(value);
+                  },
+                ),
+              ),
+            ],
+
+            // Change password
+            Card(
+              child: ListTile(
+                leading:
+                    Icon(Icons.lock_outline, color: theme.colorScheme.primary),
+                title: const Text('Changer le mot de passe'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/profile/password'),
+              ),
+            ),
+            Card(
+              child: ListTile(
+                leading: Icon(Icons.privacy_tip_outlined,
+                    color: theme.colorScheme.primary),
+                title: const Text('Confidentialité'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/settings/privacy'),
+              ),
             ),
             const SizedBox(height: 24),
-          ],
 
-          // ── Role-specific profile section (Phase 5C) ──
-          if (['STD', 'PAR', 'TCH'].contains(user.role))
-            _buildRoleProfileSection(theme, user.role),
-
-          // Success banner
-          if (_saveSuccess != null) ...[
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: theme.semanticPalette.successContainer,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.check_circle,
-                      color: theme.semanticPalette.success, size: 20),
-                  const SizedBox(width: 8),
-                  Text(_saveSuccess!,
-                      style: TextStyle(
-                        color: theme.semanticPalette.success,
-                        fontSize: 13,
-                      )),
-                ],
-              ),
+            Text(
+              'Préférences',
+              style: theme.textTheme.titleSmall
+                  ?.copyWith(fontWeight: FontWeight.w600),
             ),
-            const SizedBox(height: 16),
-          ],
-
-          // ── Security section ──
-          Text(
-            'Sécurité',
-            style: theme.textTheme.titleSmall
-                ?.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 8),
-
-          // 2FA setup
-          Card(
-            child: ListTile(
-              leading: Icon(Icons.security, color: theme.colorScheme.primary),
-              title: const Text('Authentification 2FA'),
-              subtitle: const Text('Configurer la double authentification'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.push('/profile/2fa'),
-            ),
-          ),
-
-          // Biometric toggle
-          if (authState.biometricAvailable) ...[
+            const SizedBox(height: 8),
             Card(
-              child: SwitchListTile(
-                secondary:
-                    Icon(Icons.fingerprint, color: theme.colorScheme.primary),
-                title: const Text('Déverrouillage biométrique'),
-                subtitle: const Text('Empreinte digitale / Face ID'),
-                value: authState.biometricEnabled,
-                onChanged: (value) {
-                  ref.read(authProvider.notifier).setBiometricEnabled(value);
-                },
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    DropdownButtonFormField<ThemeMode>(
+                      key: const Key('profile.theme.mode'),
+                      initialValue: themeMode,
+                      decoration: const InputDecoration(
+                        labelText: 'Thème',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: ThemeMode.values
+                          .map(
+                            (mode) => DropdownMenuItem<ThemeMode>(
+                              value: mode,
+                              child: Text(_themeModeLabels[mode] ?? mode.name),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          ref
+                              .read(themeModeProvider.notifier)
+                              .setThemeMode(value);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      key: const Key('profile.locale.code'),
+                      initialValue: localeCode,
+                      decoration: const InputDecoration(
+                        labelText: 'Langue',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: _localeLabels.entries
+                          .map(
+                            (entry) => DropdownMenuItem<String>(
+                              value: entry.key,
+                              child: Text(entry.value),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          ref.read(localeProvider.notifier).setLocale(value);
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Logout button
+            Semantics(
+              button: true,
+              label: 'Se déconnecter',
+              child: OutlinedButton.icon(
+                onPressed: () => ref.read(authProvider.notifier).logout(),
+                icon: Icon(Icons.logout, color: theme.colorScheme.error),
+                label: Text('Déconnexion',
+                    style: TextStyle(color: theme.colorScheme.error)),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: theme.colorScheme.error),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
               ),
             ),
           ],
-
-          // Change password
-          Card(
-            child: ListTile(
-              leading:
-                  Icon(Icons.lock_outline, color: theme.colorScheme.primary),
-              title: const Text('Changer le mot de passe'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.push('/profile/password'),
-            ),
-          ),
-          Card(
-            child: ListTile(
-              leading: Icon(Icons.privacy_tip_outlined,
-                  color: theme.colorScheme.primary),
-              title: const Text('Confidentialité'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.push('/settings/privacy'),
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          Text(
-            'Préférences',
-            style: theme.textTheme.titleSmall
-                ?.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 8),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  DropdownButtonFormField<ThemeMode>(
-                    key: const Key('profile.theme.mode'),
-                    initialValue: themeMode,
-                    decoration: const InputDecoration(
-                      labelText: 'Thème',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: ThemeMode.values
-                        .map(
-                          (mode) => DropdownMenuItem<ThemeMode>(
-                            value: mode,
-                            child: Text(_themeModeLabels[mode] ?? mode.name),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        ref
-                            .read(themeModeProvider.notifier)
-                            .setThemeMode(value);
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    key: const Key('profile.locale.code'),
-                    initialValue: localeCode,
-                    decoration: const InputDecoration(
-                      labelText: 'Langue',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: _localeLabels.entries
-                        .map(
-                          (entry) => DropdownMenuItem<String>(
-                            value: entry.key,
-                            child: Text(entry.value),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        ref.read(localeProvider.notifier).setLocale(value);
-                      }
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Logout button
-          OutlinedButton.icon(
-            onPressed: () => ref.read(authProvider.notifier).logout(),
-            icon: Icon(Icons.logout, color: theme.colorScheme.error),
-            label: Text('Déconnexion',
-                style: TextStyle(color: theme.colorScheme.error)),
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: theme.colorScheme.error),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

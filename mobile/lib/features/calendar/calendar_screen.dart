@@ -134,167 +134,184 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         title: Text(t.t('calendar.title')),
         actions: [
           if (_canCreate)
-            IconButton(
-              icon: const Icon(Icons.add_circle_outline),
-              onPressed: _createEvent,
+            Semantics(
+              button: true,
+              label: t.t('calendar.createTitle'),
+              child: IconButton(
+                icon: const Icon(Icons.add_circle_outline),
+                onPressed: _createEvent,
+              ),
             ),
         ],
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: () => _loadForMonth(_focusedDay, refresh: true),
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  if (_error != null) ...[
-                    Card(
-                      color: Theme.of(context).colorScheme.errorContainer,
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Text(
-                          _error!,
-                          style: TextStyle(
-                            color:
-                                Theme.of(context).colorScheme.onErrorContainer,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: _eventTypes
-                        .map(
-                          (type) => FilterChip(
-                            label: Text(t.t('calendar.types.$type')),
-                            selected: _selectedTypes.contains(type),
-                            onSelected: (selected) {
-                              setState(() {
-                                if (selected) {
-                                  _selectedTypes.add(type);
-                                } else {
-                                  _selectedTypes.remove(type);
-                                }
-                              });
-                              _loadForMonth(_focusedDay, refresh: true);
-                            },
-                          ),
-                        )
-                        .toList(),
-                  ),
-                  if (_options.classes.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      key: ValueKey(_selectedClassId),
-                      initialValue:
-                          _selectedClassId.isEmpty ? '' : _selectedClassId,
-                      decoration: InputDecoration(
-                          labelText: t.t('calendar.fields.class')),
-                      items: [
-                        DropdownMenuItem<String>(
-                          value: '',
-                          child: Text(t.t('calendar.classAll')),
-                        ),
-                        ..._options.classes.map(
-                          (item) => DropdownMenuItem<String>(
-                            value: item.id,
-                            child: Text(item.label),
-                          ),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        setState(() => _selectedClassId = value ?? '');
-                        _loadForMonth(_focusedDay, refresh: true);
-                      },
-                    ),
-                  ],
-                  const SizedBox(height: 16),
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: TableCalendar<CalendarEvent>(
-                        firstDay: DateTime.utc(2020, 1, 1),
-                        lastDay: DateTime.utc(2100, 12, 31),
-                        focusedDay: _focusedDay,
-                        selectedDayPredicate: (day) =>
-                            isSameDay(day, _selectedDay),
-                        calendarFormat: CalendarFormat.month,
-                        eventLoader: _eventsForDay,
-                        startingDayOfWeek: StartingDayOfWeek.monday,
-                        onDaySelected: (selectedDay, focusedDay) {
-                          setState(() {
-                            _selectedDay = selectedDay;
-                            _focusedDay = focusedDay;
-                          });
-                        },
-                        onPageChanged: (focusedDay) {
-                          _focusedDay = focusedDay;
-                          _loadForMonth(focusedDay, refresh: true);
-                        },
-                        calendarBuilders: CalendarBuilders(
-                          markerBuilder: (context, day, events) {
-                            if (events.isEmpty) return const SizedBox.shrink();
-                            return Align(
-                              alignment: Alignment.bottomCenter,
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: events.take(3).map((event) {
-                                  return Container(
-                                    width: 6,
-                                    height: 6,
-                                    margin: const EdgeInsets.symmetric(
-                                        horizontal: 1),
-                                    decoration: BoxDecoration(
-                                      color: _eventColor(event.type),
-                                      shape: BoxShape.circle,
-                                    ),
-                                  );
-                                }).toList(),
+      body: Semantics(
+          container: true,
+          label: t.t('calendar.title'),
+          child: _loading
+              ? const Center(child: CircularProgressIndicator())
+              : RefreshIndicator(
+                  onRefresh: () => _loadForMonth(_focusedDay, refresh: true),
+                  child: ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      if (_error != null) ...[
+                        Card(
+                          color: Theme.of(context).colorScheme.errorContainer,
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Text(
+                              _error!,
+                              style: TextStyle(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onErrorContainer,
                               ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    t.t('calendar.dayEvents'),
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 12),
-                  if (dayEvents.isEmpty)
-                    Center(child: Text(t.t('calendar.noDayEvents')))
-                  else
-                    ...dayEvents.map(
-                      (event) => Card(
-                        child: ListTile(
-                          onTap: () => _openEvent(event),
-                          leading: CircleAvatar(
-                            backgroundColor:
-                                _eventColor(event.type).withValues(alpha: 0.18),
-                            child: Icon(
-                              Icons.event_note_outlined,
-                              color: _eventColor(event.type),
                             ),
                           ),
-                          title: Text(_localizedTitle(event)),
-                          subtitle: Text(
-                            event.isAllDay
-                                ? t.t('calendar.allDay')
-                                : DateFormat.Hm().format(
-                                    DateTime.parse(event.startAt).toLocal(),
-                                  ),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _eventTypes
+                            .map(
+                              (type) => FilterChip(
+                                label: Text(t.t('calendar.types.$type')),
+                                selected: _selectedTypes.contains(type),
+                                onSelected: (selected) {
+                                  setState(() {
+                                    if (selected) {
+                                      _selectedTypes.add(type);
+                                    } else {
+                                      _selectedTypes.remove(type);
+                                    }
+                                  });
+                                  _loadForMonth(_focusedDay, refresh: true);
+                                },
+                              ),
+                            )
+                            .toList(),
+                      ),
+                      if (_options.classes.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<String>(
+                          key: ValueKey(_selectedClassId),
+                          initialValue:
+                              _selectedClassId.isEmpty ? '' : _selectedClassId,
+                          decoration: InputDecoration(
+                              labelText: t.t('calendar.fields.class')),
+                          items: [
+                            DropdownMenuItem<String>(
+                              value: '',
+                              child: Text(t.t('calendar.classAll')),
+                            ),
+                            ..._options.classes.map(
+                              (item) => DropdownMenuItem<String>(
+                                value: item.id,
+                                child: Text(item.label),
+                              ),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            setState(() => _selectedClassId = value ?? '');
+                            _loadForMonth(_focusedDay, refresh: true);
+                          },
+                        ),
+                      ],
+                      const SizedBox(height: 16),
+                      Semantics(
+                        label: 'Calendrier mensuel des événements',
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: TableCalendar<CalendarEvent>(
+                              firstDay: DateTime.utc(2020, 1, 1),
+                              lastDay: DateTime.utc(2100, 12, 31),
+                              focusedDay: _focusedDay,
+                              selectedDayPredicate: (day) =>
+                                  isSameDay(day, _selectedDay),
+                              calendarFormat: CalendarFormat.month,
+                              eventLoader: _eventsForDay,
+                              startingDayOfWeek: StartingDayOfWeek.monday,
+                              onDaySelected: (selectedDay, focusedDay) {
+                                setState(() {
+                                  _selectedDay = selectedDay;
+                                  _focusedDay = focusedDay;
+                                });
+                              },
+                              onPageChanged: (focusedDay) {
+                                _focusedDay = focusedDay;
+                                _loadForMonth(focusedDay, refresh: true);
+                              },
+                              calendarBuilders: CalendarBuilders(
+                                markerBuilder: (context, day, events) {
+                                  if (events.isEmpty)
+                                    return const SizedBox.shrink();
+                                  return Align(
+                                    alignment: Alignment.bottomCenter,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: events.take(3).map((event) {
+                                        return Container(
+                                          width: 6,
+                                          height: 6,
+                                          margin: const EdgeInsets.symmetric(
+                                              horizontal: 1),
+                                          decoration: BoxDecoration(
+                                            color: _eventColor(event.type),
+                                            shape: BoxShape.circle,
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                ],
-              ),
-            ),
+                      const SizedBox(height: 16),
+                      Text(
+                        t.t('calendar.dayEvents'),
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 12),
+                      if (dayEvents.isEmpty)
+                        Center(child: Text(t.t('calendar.noDayEvents')))
+                      else
+                        ...dayEvents.map(
+                          (event) => Semantics(
+                            button: true,
+                            label: 'Événement ${_localizedTitle(event)}',
+                            child: Card(
+                              child: ListTile(
+                                onTap: () => _openEvent(event),
+                                leading: CircleAvatar(
+                                  backgroundColor: _eventColor(event.type)
+                                      .withValues(alpha: 0.18),
+                                  child: Icon(
+                                    Icons.event_note_outlined,
+                                    color: _eventColor(event.type),
+                                  ),
+                                ),
+                                title: Text(_localizedTitle(event)),
+                                subtitle: Text(
+                                  event.isAllDay
+                                      ? t.t('calendar.allDay')
+                                      : DateFormat.Hm().format(
+                                          DateTime.parse(event.startAt)
+                                              .toLocal(),
+                                        ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                )),
     );
   }
 

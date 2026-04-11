@@ -57,38 +57,46 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       appBar: AppBar(
         title: Text(t.t('notifications.title')),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.tune),
-            onPressed: () => context.push('/settings/notifications'),
+          Semantics(
+            button: true,
+            label: t.t('notifications.settingsTitle'),
+            child: IconButton(
+              icon: const Icon(Icons.tune),
+              onPressed: () => context.push('/settings/notifications'),
+            ),
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _categoryFilters.map((category) {
-                  final isSelected = state.selectedCategory == category;
-                  return FilterChip(
-                    label: Text(_categoryLabel(category, t)),
-                    selected: isSelected,
-                    onSelected: (_) => ref
-                        .read(notificationsProvider.notifier)
-                        .setCategory(category),
-                  );
-                }).toList(),
+      body: Semantics(
+        container: true,
+        label: t.t('notifications.title'),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _categoryFilters.map((category) {
+                    final isSelected = state.selectedCategory == category;
+                    return FilterChip(
+                      label: Text(_categoryLabel(category, t)),
+                      selected: isSelected,
+                      onSelected: (_) => ref
+                          .read(notificationsProvider.notifier)
+                          .setCategory(category),
+                    );
+                  }).toList(),
+                ),
               ),
             ),
-          ),
-          Expanded(
-            child: _buildBody(context, ref, state, theme, t),
-          ),
-        ],
+            Expanded(
+              child: _buildBody(context, ref, state, theme, t),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -187,52 +195,61 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                   .deleteNotification(notification);
               return true;
             },
-            child: Card(
-              child: ListTile(
-                onTap: () => _openNotification(context, ref, notification),
-                leading: CircleAvatar(
-                  backgroundColor: notification.isRead
-                      ? theme.colorScheme.surfaceContainerHighest
-                      : theme.colorScheme.primaryContainer,
-                  child: Icon(
-                    _categoryIcon(notification.category),
-                    color: notification.isRead
-                        ? theme.colorScheme.onSurfaceVariant
-                        : theme.colorScheme.primary,
-                  ),
-                ),
-                title: Text(
-                  notification.title,
-                  style: TextStyle(
-                    fontWeight:
-                        notification.isRead ? FontWeight.w500 : FontWeight.w700,
-                  ),
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 4),
-                    Text(
-                      _categoryLabel(notification.category, t),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w600,
+            child: Semantics(
+              button: true,
+              label:
+                  '${notification.title}, ${_categoryLabel(notification.category, t)}',
+              child: Card(
+                child: ListTile(
+                  onTap: () => _openNotification(context, ref, notification),
+                  leading: Semantics(
+                    excludeSemantics: true,
+                    child: CircleAvatar(
+                      backgroundColor: notification.isRead
+                          ? theme.colorScheme.surfaceContainerHighest
+                          : theme.colorScheme.primaryContainer,
+                      child: Icon(
+                        _categoryIcon(notification.category),
+                        color: notification.isRead
+                            ? theme.colorScheme.onSurfaceVariant
+                            : theme.colorScheme.primary,
                       ),
                     ),
-                    if (notification.body != null) ...[
+                  ),
+                  title: Text(
+                    notification.title,
+                    style: TextStyle(
+                      fontWeight: notification.isRead
+                          ? FontWeight.w500
+                          : FontWeight.w700,
+                    ),
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       const SizedBox(height: 4),
                       Text(
-                        notification.body!,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                        _categoryLabel(notification.category, t),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (notification.body != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          notification.body!,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                      const SizedBox(height: 6),
+                      Text(
+                        _formatDate(notification.createdAt),
+                        style: theme.textTheme.bodySmall,
                       ),
                     ],
-                    const SizedBox(height: 6),
-                    Text(
-                      _formatDate(notification.createdAt),
-                      style: theme.textTheme.bodySmall,
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),

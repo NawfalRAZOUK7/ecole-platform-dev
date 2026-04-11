@@ -26,7 +26,11 @@ class EventDetailScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(t.t('calendar.eventDetailTitle')),
       ),
-      body: EventDetailSheet(eventId: eventId),
+      body: Semantics(
+        container: true,
+        label: 'Détail de l’événement',
+        child: EventDetailSheet(eventId: eventId),
+      ),
     );
   }
 }

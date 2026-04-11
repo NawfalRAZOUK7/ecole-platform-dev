@@ -72,46 +72,50 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
 
     return Scaffold(
       appBar: AppBar(title: Text(t.t('auth.resetPassword'))),
-      body: ListView(
-        padding: const EdgeInsets.all(24),
-        children: [
-          TextField(
-            controller: _tokenController,
-            decoration: const InputDecoration(
-              labelText: 'Recovery token',
-              border: OutlineInputBorder(),
+      body: Semantics(
+        container: true,
+        label: 'Définition du nouveau mot de passe',
+        child: ListView(
+          padding: const EdgeInsets.all(24),
+          children: [
+            TextField(
+              controller: _tokenController,
+              decoration: const InputDecoration(
+                labelText: 'Recovery token',
+                border: OutlineInputBorder(),
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _codeController,
-            decoration: const InputDecoration(
-              labelText: 'Verification code (optional)',
-              border: OutlineInputBorder(),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _codeController,
+              decoration: const InputDecoration(
+                labelText: 'Verification code (optional)',
+                border: OutlineInputBorder(),
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _passwordController,
-            obscureText: true,
-            decoration: const InputDecoration(
-              labelText: 'New password',
-              border: OutlineInputBorder(),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'New password',
+                border: OutlineInputBorder(),
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          FilledButton.icon(
-            onPressed: _loading ? null : _submit,
-            icon: _loading
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.lock_reset_outlined),
-            label: Text(t.t('auth.resetPassword')),
-          ),
-        ],
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: _loading ? null : _submit,
+              icon: _loading
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.lock_reset_outlined),
+              label: Text(t.t('auth.resetPassword')),
+            ),
+          ],
+        ),
       ),
     );
   }

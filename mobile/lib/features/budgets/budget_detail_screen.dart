@@ -23,36 +23,40 @@ class BudgetDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(t.t('budgets.detail'))),
-      body: detailAsync.when(
-        data: (detail) => DefaultTabController(
-          length: 3,
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: _BudgetOverview(detail: detail, t: t),
-              ),
-              TabBar(
-                tabs: [
-                  Tab(text: t.t('budgets.allocations')),
-                  Tab(text: t.t('budgets.transactions')),
-                  Tab(text: t.t('budgets.requests')),
-                ],
-              ),
-              Expanded(
-                child: TabBarView(
-                  children: [
-                    _AllocationsTab(items: detail.allocations),
-                    _TransactionsTab(items: detail.transactions),
-                    _RequestsTab(items: detail.requests),
+      body: Semantics(
+        container: true,
+        label: 'Détail du budget',
+        child: detailAsync.when(
+          data: (detail) => DefaultTabController(
+            length: 3,
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: _BudgetOverview(detail: detail, t: t),
+                ),
+                TabBar(
+                  tabs: [
+                    Tab(text: t.t('budgets.allocations')),
+                    Tab(text: t.t('budgets.transactions')),
+                    Tab(text: t.t('budgets.requests')),
                   ],
                 ),
-              ),
-            ],
+                Expanded(
+                  child: TabBarView(
+                    children: [
+                      _AllocationsTab(items: detail.allocations),
+                      _TransactionsTab(items: detail.transactions),
+                      _RequestsTab(items: detail.requests),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, _) => AppErrorWidget(message: error.toString()),
         ),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => AppErrorWidget(message: error.toString()),
       ),
     );
   }

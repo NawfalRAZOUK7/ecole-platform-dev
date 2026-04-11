@@ -23,11 +23,19 @@ class ConversationsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(t.t('messages.title'))),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showNewConversation(context, ref, t),
-        child: const Icon(Icons.edit),
+      floatingActionButton: Semantics(
+        button: true,
+        label: t.t('messages.newConversation'),
+        child: FloatingActionButton(
+          onPressed: () => _showNewConversation(context, ref, t),
+          child: const Icon(Icons.edit),
+        ),
       ),
-      body: _buildBody(context, ref, state, t, userId),
+      body: Semantics(
+        container: true,
+        label: t.t('messages.title'),
+        child: _buildBody(context, ref, state, t, userId),
+      ),
     );
   }
 
@@ -131,32 +139,37 @@ class ConversationsScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
-              child: FilledButton(
-                onPressed: () async {
-                  if (recipientCtrl.text.isEmpty || messageCtrl.text.isEmpty)
-                    return;
-                  try {
-                    final api = ref.read(apiClientProvider);
-                    final resp =
-                        await api.post('/messages/conversations', body: {
-                      'type': 'DIRECT',
-                      'participant_ids': [recipientCtrl.text.trim()],
-                      'subject':
-                          subjectCtrl.text.isNotEmpty ? subjectCtrl.text : null,
-                      'initial_message': messageCtrl.text,
-                    });
-                    final convId = resp.data['id'] as String;
-                    if (ctx.mounted) Navigator.pop(ctx);
-                    if (context.mounted) context.push('/messages/$convId');
-                  } catch (e) {
-                    if (ctx.mounted) {
-                      ScaffoldMessenger.of(ctx).showSnackBar(
-                        SnackBar(content: Text(e.toString())),
-                      );
+              child: Semantics(
+                button: true,
+                label: t.t('messages.send'),
+                child: FilledButton(
+                  onPressed: () async {
+                    if (recipientCtrl.text.isEmpty || messageCtrl.text.isEmpty)
+                      return;
+                    try {
+                      final api = ref.read(apiClientProvider);
+                      final resp =
+                          await api.post('/messages/conversations', body: {
+                        'type': 'DIRECT',
+                        'participant_ids': [recipientCtrl.text.trim()],
+                        'subject': subjectCtrl.text.isNotEmpty
+                            ? subjectCtrl.text
+                            : null,
+                        'initial_message': messageCtrl.text,
+                      });
+                      final convId = resp.data['id'] as String;
+                      if (ctx.mounted) Navigator.pop(ctx);
+                      if (context.mounted) context.push('/messages/$convId');
+                    } catch (e) {
+                      if (ctx.mounted) {
+                        ScaffoldMessenger.of(ctx).showSnackBar(
+                          SnackBar(content: Text(e.toString())),
+                        );
+                      }
                     }
-                  }
-                },
-                child: Text(t.t('messages.send')),
+                  },
+                  child: Text(t.t('messages.send')),
+                ),
               ),
             ),
           ],
@@ -193,68 +206,77 @@ class _ConversationTile extends StatelessWidget {
       dateStr = DateFormat.MMMd('fr').add_Hm().format(dt);
     } catch (_) {}
 
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: theme.colorScheme.primaryContainer,
-        child: Icon(
-          conversation.type == 'DIRECT' ? Icons.person : Icons.group,
-          color: theme.colorScheme.onPrimaryContainer,
-        ),
-      ),
-      title: Text(
-        conversation.subject ?? _otherParticipant(),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          fontWeight:
-              conversation.unreadCount > 0 ? FontWeight.w800 : FontWeight.w600,
-        ),
-      ),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (conversation.lastMessageBody != null)
-            Text(
-              conversation.lastMessageBody!.length > 50
-                  ? '${conversation.lastMessageBody!.substring(0, 50)}...'
-                  : conversation.lastMessageBody!,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontWeight:
-                    conversation.unreadCount > 0 ? FontWeight.w600 : null,
-              ),
+    return Semantics(
+      button: true,
+      label:
+          'Conversation ${conversation.subject ?? _otherParticipant()}${conversation.unreadCount > 0 ? ', ${conversation.unreadCount} messages non lus' : ''}',
+      child: ListTile(
+        leading: Semantics(
+          excludeSemantics: true,
+          child: CircleAvatar(
+            backgroundColor: theme.colorScheme.primaryContainer,
+            child: Icon(
+              conversation.type == 'DIRECT' ? Icons.person : Icons.group,
+              color: theme.colorScheme.onPrimaryContainer,
             ),
-          Text(subtitle,
-              style: theme.textTheme.bodySmall?.copyWith(fontSize: 11)),
-        ],
-      ),
-      trailing: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text(dateStr, style: theme.textTheme.bodySmall),
-          if (conversation.unreadCount > 0) ...[
-            const SizedBox(height: 4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                '${conversation.unreadCount}',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onPrimary,
+          ),
+        ),
+        title: Text(
+          conversation.subject ?? _otherParticipant(),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontWeight: conversation.unreadCount > 0
+                ? FontWeight.w800
+                : FontWeight.w600,
+          ),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (conversation.lastMessageBody != null)
+              Text(
+                conversation.lastMessageBody!.length > 50
+                    ? '${conversation.lastMessageBody!.substring(0, 50)}...'
+                    : conversation.lastMessageBody!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight:
+                      conversation.unreadCount > 0 ? FontWeight.w600 : null,
                 ),
               ),
-            ),
+            Text(subtitle,
+                style: theme.textTheme.bodySmall?.copyWith(fontSize: 11)),
           ],
-        ],
+        ),
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(dateStr, style: theme.textTheme.bodySmall),
+            if (conversation.unreadCount > 0) ...[
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '${conversation.unreadCount}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        onTap: onTap,
       ),
-      onTap: onTap,
     );
   }
 

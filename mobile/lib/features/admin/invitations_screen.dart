@@ -156,179 +156,183 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
         onPressed: () => setState(() => _showForm = !_showForm),
         child: Icon(_showForm ? Icons.close : Icons.add),
       ),
-      body: Column(
-        children: [
-          // Filter
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                const Icon(Icons.filter_list, size: 20),
-                const SizedBox(width: 8),
-                ...['active', 'consumed', 'expired'].map((s) {
-                  final selected = state.statusFilter == s;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: FilterChip(
-                      label: Text(_statusLabel(s),
-                          style: const TextStyle(fontSize: 12)),
-                      selected: selected,
-                      onSelected: (v) => ref
-                          .read(_invitationsProvider.notifier)
-                          .setStatusFilter(v ? s : null),
-                      visualDensity: VisualDensity.compact,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                  );
-                }),
-              ],
+      body: Semantics(
+        container: true,
+        label: 'Gestion des invitations',
+        child: Column(
+          children: [
+            // Filter
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  const Icon(Icons.filter_list, size: 20),
+                  const SizedBox(width: 8),
+                  ...['active', 'consumed', 'expired'].map((s) {
+                    final selected = state.statusFilter == s;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: FilterChip(
+                        label: Text(_statusLabel(s),
+                            style: const TextStyle(fontSize: 12)),
+                        selected: selected,
+                        onSelected: (v) => ref
+                            .read(_invitationsProvider.notifier)
+                            .setStatusFilter(v ? s : null),
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    );
+                  }),
+                ],
+              ),
             ),
-          ),
 
-          // Create form
-          if (_showForm) ...[
-            Card(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Créer une invitation',
-                        style: theme.textTheme.titleSmall
-                            ?.copyWith(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: DropdownButtonFormField<String>(
-                            initialValue: _roleTarget,
-                            decoration: const InputDecoration(
-                              labelText: 'Rôle',
-                              border: OutlineInputBorder(),
-                              contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 8),
+            // Create form
+            if (_showForm) ...[
+              Card(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Créer une invitation',
+                          style: theme.textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              initialValue: _roleTarget,
+                              decoration: const InputDecoration(
+                                labelText: 'Rôle',
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 8),
+                              ),
+                              items: const [
+                                DropdownMenuItem(
+                                    value: 'STD', child: Text('Élève')),
+                                DropdownMenuItem(
+                                    value: 'PAR', child: Text('Parent')),
+                                DropdownMenuItem(
+                                    value: 'TCH', child: Text('Enseignant')),
+                                DropdownMenuItem(
+                                    value: 'DIR', child: Text('Directeur')),
+                              ],
+                              onChanged: (v) {
+                                if (v != null) setState(() => _roleTarget = v);
+                              },
                             ),
-                            items: const [
-                              DropdownMenuItem(
-                                  value: 'STD', child: Text('Élève')),
-                              DropdownMenuItem(
-                                  value: 'PAR', child: Text('Parent')),
-                              DropdownMenuItem(
-                                  value: 'TCH', child: Text('Enseignant')),
-                              DropdownMenuItem(
-                                  value: 'DIR', child: Text('Directeur')),
-                            ],
-                            onChanged: (v) {
-                              if (v != null) setState(() => _roleTarget = v);
-                            },
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: DropdownButtonFormField<int>(
-                            initialValue: _expiresInHours,
-                            decoration: const InputDecoration(
-                              labelText: 'Expiration',
-                              border: OutlineInputBorder(),
-                              contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 8),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: DropdownButtonFormField<int>(
+                              initialValue: _expiresInHours,
+                              decoration: const InputDecoration(
+                                labelText: 'Expiration',
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 8),
+                              ),
+                              items: const [
+                                DropdownMenuItem(value: 24, child: Text('24h')),
+                                DropdownMenuItem(value: 48, child: Text('48h')),
+                                DropdownMenuItem(value: 72, child: Text('72h')),
+                                DropdownMenuItem(
+                                    value: 168, child: Text('7 jours')),
+                              ],
+                              onChanged: (v) {
+                                if (v != null) {
+                                  setState(() => _expiresInHours = v);
+                                }
+                              },
                             ),
-                            items: const [
-                              DropdownMenuItem(value: 24, child: Text('24h')),
-                              DropdownMenuItem(value: 48, child: Text('48h')),
-                              DropdownMenuItem(value: 72, child: Text('72h')),
-                              DropdownMenuItem(
-                                  value: 168, child: Text('7 jours')),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      FilledButton(
+                        onPressed: state.creating
+                            ? null
+                            : () => ref
+                                .read(_invitationsProvider.notifier)
+                                .createInvitation(_roleTarget, _expiresInHours),
+                        child: state.creating
+                            ? SizedBox(
+                                height: 16,
+                                width: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: theme.colorScheme.onPrimary,
+                                ),
+                              )
+                            : const Text('Générer'),
+                      ),
+                      if (state.createdCode != null) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: SelectableText(
+                                  state.createdCode!,
+                                  style: TextStyle(
+                                    fontFamily: 'monospace',
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.copy, size: 18),
+                                onPressed: () {
+                                  Clipboard.setData(
+                                      ClipboardData(text: state.createdCode!));
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Code copié')),
+                                  );
+                                },
+                              ),
                             ],
-                            onChanged: (v) {
-                              if (v != null) {
-                                setState(() => _expiresInHours = v);
-                              }
-                            },
                           ),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 12),
-                    FilledButton(
-                      onPressed: state.creating
-                          ? null
-                          : () => ref
-                              .read(_invitationsProvider.notifier)
-                              .createInvitation(_roleTarget, _expiresInHours),
-                      child: state.creating
-                          ? SizedBox(
-                              height: 16,
-                              width: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: theme.colorScheme.onPrimary,
-                              ),
-                            )
-                          : const Text('Générer'),
-                    ),
-                    if (state.createdCode != null) ...[
-                      const SizedBox(height: 12),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: SelectableText(
-                                state.createdCode!,
-                                style: TextStyle(
-                                  fontFamily: 'monospace',
-                                  fontWeight: FontWeight.bold,
-                                  color: theme.colorScheme.primary,
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.copy, size: 18),
-                              onPressed: () {
-                                Clipboard.setData(
-                                    ClipboardData(text: state.createdCode!));
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Code copié')),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
                     ],
-                  ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 8),
+              const SizedBox(height: 8),
+            ],
+
+            // Error banner
+            if (state.error != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.errorContainer,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(state.error!,
+                      style:
+                          TextStyle(color: theme.colorScheme.onErrorContainer)),
+                ),
+              ),
+
+            // List
+            Expanded(child: _buildList(context, ref, state, theme)),
           ],
-
-          // Error banner
-          if (state.error != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.errorContainer,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(state.error!,
-                    style:
-                        TextStyle(color: theme.colorScheme.onErrorContainer)),
-              ),
-            ),
-
-          // List
-          Expanded(child: _buildList(context, ref, state, theme)),
-        ],
+        ),
       ),
     );
   }

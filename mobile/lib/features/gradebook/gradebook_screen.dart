@@ -68,80 +68,95 @@ class _GradebookScreenState extends ConsumerState<GradebookScreen> {
       appBar: AppBar(
         title: Text(t.t('gradebook.title')),
         actions: [
-          IconButton(
-            onPressed: selectedClassId == null
-                ? null
-                : () => _exportGrades(selectedClassId),
-            icon: const Icon(Icons.download_outlined),
-            tooltip: t.t('gradebook.export'),
+          Semantics(
+            button: true,
+            label: t.t('gradebook.export'),
+            child: IconButton(
+              onPressed: selectedClassId == null
+                  ? null
+                  : () => _exportGrades(selectedClassId),
+              icon: const Icon(Icons.download_outlined),
+              tooltip: t.t('gradebook.export'),
+            ),
           ),
-          IconButton(
-            onPressed: selectedClassId == null || saveState.isLoading
-                ? null
-                : () => _saveGrades(selectedClassId),
-            icon: saveState.isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.save_outlined),
-            tooltip: t.t('gradebook.save'),
+          Semantics(
+            button: true,
+            label: t.t('gradebook.save'),
+            child: IconButton(
+              onPressed: selectedClassId == null || saveState.isLoading
+                  ? null
+                  : () => _saveGrades(selectedClassId),
+              icon: saveState.isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.save_outlined),
+              tooltip: t.t('gradebook.save'),
+            ),
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(AppSpacing.base),
-        child: Column(
-          children: [
-            classesAsync.when(
-              data: (classes) {
-                _selectedClassId ??=
-                    classes.isNotEmpty ? classes.first.id : null;
-                return DropdownButtonFormField<String>(
-                  initialValue: _selectedClassId,
-                  decoration: InputDecoration(
-                    labelText: t.t('gradebook.classLabel'),
-                  ),
-                  items: classes
-                      .map(
-                        (item) => DropdownMenuItem<String>(
-                          value: item.id,
-                          child: Text(item.name),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    if (value == null) {
-                      return;
-                    }
-                    setState(() {
-                      _selectedClassId = value;
-                    });
-                  },
-                );
-              },
-              error: (error, _) => AppErrorWidget(
-                message: error.toString(),
-              ),
-              loading: () => const AppSkeleton(
-                variant: SkeletonVariant.line,
-                height: 52,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.base),
-            Expanded(
-              child: selectedClassId == null
-                  ? AppEmptyState(
-                      icon: Icons.class_outlined,
-                      title: t.t('gradebook.noClasses'),
-                    )
-                  : _GradebookGridView(
-                      classId: selectedClassId,
-                      controllerFor: _controllerFor,
+      body: Semantics(
+        container: true,
+        label: 'Carnet de notes',
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.base),
+          child: Column(
+            children: [
+              classesAsync.when(
+                data: (classes) {
+                  _selectedClassId ??=
+                      classes.isNotEmpty ? classes.first.id : null;
+                  return Semantics(
+                    label: t.t('gradebook.classLabel'),
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _selectedClassId,
+                      decoration: InputDecoration(
+                        labelText: t.t('gradebook.classLabel'),
+                      ),
+                      items: classes
+                          .map(
+                            (item) => DropdownMenuItem<String>(
+                              value: item.id,
+                              child: Text(item.name),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        if (value == null) {
+                          return;
+                        }
+                        setState(() {
+                          _selectedClassId = value;
+                        });
+                      },
                     ),
-            ),
-          ],
+                  );
+                },
+                error: (error, _) => AppErrorWidget(
+                  message: error.toString(),
+                ),
+                loading: () => const AppSkeleton(
+                  variant: SkeletonVariant.line,
+                  height: 52,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.base),
+              Expanded(
+                child: selectedClassId == null
+                    ? AppEmptyState(
+                        icon: Icons.class_outlined,
+                        title: t.t('gradebook.noClasses'),
+                      )
+                    : _GradebookGridView(
+                        classId: selectedClassId,
+                        controllerFor: _controllerFor,
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -280,12 +295,16 @@ class _GradebookGridView extends ConsumerWidget {
                   (entry) => DataRow(
                     cells: [
                       DataCell(
-                        InkWell(
-                          onTap: () {
-                            context
-                                .push('/gradebook/student/${entry.studentId}');
-                          },
-                          child: Text(entry.studentName),
+                        Semantics(
+                          button: true,
+                          label: 'Ouvrir le relevé de ${entry.studentName}',
+                          child: InkWell(
+                            onTap: () {
+                              context.push(
+                                  '/gradebook/student/${entry.studentId}');
+                            },
+                            child: Text(entry.studentName),
+                          ),
                         ),
                       ),
                       ...grid.columns.map(
@@ -302,11 +321,15 @@ class _GradebookGridView extends ConsumerWidget {
                         ),
                       ),
                       DataCell(
-                        AppBadge(
-                          label: entry.weightedAverage.toStringAsFixed(1),
-                          variant: entry.weightedAverage >= 10
-                              ? AppBadgeVariant.success
-                              : AppBadgeVariant.error,
+                        Semantics(
+                          label:
+                              'Moyenne de ${entry.studentName}, ${entry.weightedAverage.toStringAsFixed(1)}',
+                          child: AppBadge(
+                            label: entry.weightedAverage.toStringAsFixed(1),
+                            variant: entry.weightedAverage >= 10
+                                ? AppBadgeVariant.success
+                                : AppBadgeVariant.error,
+                          ),
                         ),
                       ),
                     ],
@@ -356,17 +379,21 @@ class _GradeCellState extends State<_GradeCell> {
 
     return SizedBox(
       width: 72,
-      child: TextFormField(
-        controller: widget.controller,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        textAlign: TextAlign.center,
-        decoration: InputDecoration(
-          isDense: true,
-          filled: true,
-          fillColor: fillColor,
-          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+      child: Semantics(
+        textField: true,
+        label: 'Saisir une note',
+        child: TextFormField(
+          controller: widget.controller,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          textAlign: TextAlign.center,
+          decoration: InputDecoration(
+            isDense: true,
+            filled: true,
+            fillColor: fillColor,
+            contentPadding: const EdgeInsets.symmetric(vertical: 10),
+          ),
+          onChanged: (_) => setState(() {}),
         ),
-        onChanged: (_) => setState(() {}),
       ),
     );
   }

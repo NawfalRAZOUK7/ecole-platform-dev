@@ -45,68 +45,72 @@ class _AttendanceHistoryScreenState
       appBar: AppBar(
         title: Text(t.t('attendance.history')),
       ),
-      body: classesAsync.when(
-        data: (classes) {
-          _selectedClassId ??= classes.isNotEmpty ? classes.first.id : null;
-          final studentsAsync = _selectedClassId == null
-              ? AsyncValue<List<StudentInfo>>.data(const [])
-              : ref.watch(attendanceStudentsProvider(_selectedClassId!));
-          return studentsAsync.when(
-            data: (students) {
-              if (_selectedStudentId == null && students.isNotEmpty) {
-                _selectedStudentId = students.first.id;
-              }
-              final historyAsync = _selectedStudentId == null
-                  ? AsyncValue<List<AttendanceEntry>>.data(const [])
-                  : ref.watch(attendanceHistoryProvider(_selectedStudentId!));
-              return RefreshIndicator(
-                onRefresh: () async {
-                  if (_selectedStudentId != null) {
-                    ref.invalidate(
-                        attendanceHistoryProvider(_selectedStudentId!));
-                  }
-                },
-                child: ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    _HistoryFilters(
-                      classId: _selectedClassId,
-                      studentId: _selectedStudentId,
-                      classes: classes,
-                      students: students,
-                      onClassChanged: (value) {
-                        setState(() {
-                          _selectedClassId = value;
-                          _selectedStudentId = null;
-                        });
-                      },
-                      onStudentChanged: (value) {
-                        setState(() {
-                          _selectedStudentId = value;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    historyAsync.when(
-                      data: (history) => _HistoryContent(records: history),
-                      loading: () => const Padding(
-                        padding: EdgeInsets.only(top: 64),
-                        child: Center(child: CircularProgressIndicator()),
+      body: Semantics(
+        container: true,
+        label: 'Historique des présences',
+        child: classesAsync.when(
+          data: (classes) {
+            _selectedClassId ??= classes.isNotEmpty ? classes.first.id : null;
+            final studentsAsync = _selectedClassId == null
+                ? AsyncValue<List<StudentInfo>>.data(const [])
+                : ref.watch(attendanceStudentsProvider(_selectedClassId!));
+            return studentsAsync.when(
+              data: (students) {
+                if (_selectedStudentId == null && students.isNotEmpty) {
+                  _selectedStudentId = students.first.id;
+                }
+                final historyAsync = _selectedStudentId == null
+                    ? AsyncValue<List<AttendanceEntry>>.data(const [])
+                    : ref.watch(attendanceHistoryProvider(_selectedStudentId!));
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    if (_selectedStudentId != null) {
+                      ref.invalidate(
+                          attendanceHistoryProvider(_selectedStudentId!));
+                    }
+                  },
+                  child: ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      _HistoryFilters(
+                        classId: _selectedClassId,
+                        studentId: _selectedStudentId,
+                        classes: classes,
+                        students: students,
+                        onClassChanged: (value) {
+                          setState(() {
+                            _selectedClassId = value;
+                            _selectedStudentId = null;
+                          });
+                        },
+                        onStudentChanged: (value) {
+                          setState(() {
+                            _selectedStudentId = value;
+                          });
+                        },
                       ),
-                      error: (error, _) => AppErrorWidget(
-                        message: error.toString(),
+                      const SizedBox(height: 16),
+                      historyAsync.when(
+                        data: (history) => _HistoryContent(records: history),
+                        loading: () => const Padding(
+                          padding: EdgeInsets.only(top: 64),
+                          child: Center(child: CircularProgressIndicator()),
+                        ),
+                        error: (error, _) => AppErrorWidget(
+                          message: error.toString(),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              );
-            },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, _) => AppErrorWidget(message: error.toString()),
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => AppErrorWidget(message: error.toString()),
+                    ],
+                  ),
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, _) => AppErrorWidget(message: error.toString()),
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, _) => AppErrorWidget(message: error.toString()),
+        ),
       ),
     );
   }

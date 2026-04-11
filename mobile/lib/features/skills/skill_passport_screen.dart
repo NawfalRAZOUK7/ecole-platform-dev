@@ -39,48 +39,52 @@ class SkillPassportScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: passportAsync.when(
-        data: (passport) => ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      passport.studentName.isEmpty
-                          ? studentId
-                          : passport.studentName,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    AppStatCard(
-                      label: t.t('skills.overallScore'),
-                      value: passport.overallScore.toStringAsFixed(1),
-                      icon: Icons.workspace_premium_outlined,
-                    ),
-                  ],
+      body: Semantics(
+        container: true,
+        label: t.t('skills.passport'),
+        child: passportAsync.when(
+          data: (passport) => ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        passport.studentName.isEmpty
+                            ? studentId
+                            : passport.studentName,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      AppStatCard(
+                        label: t.t('skills.overallScore'),
+                        value: passport.overallScore.toStringAsFixed(1),
+                        icon: Icons.workspace_premium_outlined,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            ...passport.dimensions.map(
-              (item) => Card(
-                margin: const EdgeInsets.only(bottom: 12),
-                child: ListTile(
-                  title: Text(item.label),
-                  trailing: Text(item.score.toStringAsFixed(1)),
+              const SizedBox(height: 16),
+              ...passport.dimensions.map(
+                (item) => Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: ListTile(
+                    title: Text(item.label),
+                    trailing: Text(item.score.toStringAsFixed(1)),
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, _) => AppErrorWidget(message: error.toString()),
         ),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => AppErrorWidget(message: error.toString()),
       ),
     );
   }

@@ -32,34 +32,38 @@ class ComplianceReportScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: reportsAsync.when(
-        data: (reports) {
-          if (reports.isEmpty) {
-            return AppEmptyState(
-              icon: Icons.summarize_outlined,
-              title: t.t('compliance.reportsEmpty'),
-            );
-          }
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: reports
-                .map(
-                  (report) => Card(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    child: ListTile(
-                      title: Text(report.title),
-                      subtitle: Text(report.status),
-                      trailing: report.downloadUrl == null
-                          ? null
-                          : const Icon(Icons.download_outlined),
+      body: Semantics(
+        container: true,
+        label: t.t('compliance.reports'),
+        child: reportsAsync.when(
+          data: (reports) {
+            if (reports.isEmpty) {
+              return AppEmptyState(
+                icon: Icons.summarize_outlined,
+                title: t.t('compliance.reportsEmpty'),
+              );
+            }
+            return ListView(
+              padding: const EdgeInsets.all(16),
+              children: reports
+                  .map(
+                    (report) => Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: ListTile(
+                        title: Text(report.title),
+                        subtitle: Text(report.status),
+                        trailing: report.downloadUrl == null
+                            ? null
+                            : const Icon(Icons.download_outlined),
+                      ),
                     ),
-                  ),
-                )
-                .toList(),
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => AppErrorWidget(message: error.toString()),
+                  )
+                  .toList(),
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, _) => AppErrorWidget(message: error.toString()),
+        ),
       ),
     );
   }

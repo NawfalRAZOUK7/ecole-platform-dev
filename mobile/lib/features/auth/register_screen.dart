@@ -240,92 +240,97 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final stepIndex = steps.indexOf(_step);
 
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Header
-                Icon(Icons.school, size: 64, color: theme.colorScheme.primary),
-                const SizedBox(height: 16),
-                Text(
-                  'École Platform',
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Créer un compte',
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Step indicator
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(steps.length, (i) {
-                    return Container(
-                      width: 40,
-                      height: 4,
-                      margin: const EdgeInsets.symmetric(horizontal: 3),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(2),
-                        color: i <= stepIndex
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.outlineVariant,
-                      ),
-                    );
-                  }),
-                ),
-                const SizedBox(height: 24),
-
-                // Error banner
-                if (_error != null) ...[
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.errorContainer,
-                      borderRadius: BorderRadius.circular(8),
+      body: Semantics(
+        container: true,
+        label: 'Inscription avec invitation',
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Header
+                  Icon(Icons.school,
+                      size: 64, color: theme.colorScheme.primary),
+                  const SizedBox(height: 16),
+                  Text(
+                    'École Platform',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
                     ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.error_outline,
-                            color: theme.colorScheme.error, size: 20),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            _error!,
-                            style: TextStyle(
-                              color: theme.colorScheme.onErrorContainer,
-                              fontSize: 13,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Créer un compte',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Step indicator
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(steps.length, (i) {
+                      return Container(
+                        width: 40,
+                        height: 4,
+                        margin: const EdgeInsets.symmetric(horizontal: 3),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(2),
+                          color: i <= stepIndex
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.outlineVariant,
+                        ),
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Error banner
+                  if (_error != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.errorContainer,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.error_outline,
+                              color: theme.colorScheme.error, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _error!,
+                              style: TextStyle(
+                                color: theme.colorScheme.onErrorContainer,
+                                fontSize: 13,
+                              ),
                             ),
                           ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close, size: 18),
-                          onPressed: () => _setError(null),
-                        ),
-                      ],
+                          IconButton(
+                            icon: const Icon(Icons.close, size: 18),
+                            onPressed: () => _setError(null),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                    const SizedBox(height: 16),
+                  ],
 
-                // Step content
-                if (_step == _Step.code) _buildCodeStep(theme),
-                if (_step == _Step.info) _buildInfoStep(theme),
-                if (_step == _Step.role) _buildRoleStep(theme),
-                if (_step == _Step.otp) _buildOtpStep(theme),
-              ],
+                  // Step content
+                  if (_step == _Step.code) _buildCodeStep(theme),
+                  if (_step == _Step.info) _buildInfoStep(theme),
+                  if (_step == _Step.role) _buildRoleStep(theme),
+                  if (_step == _Step.otp) _buildOtpStep(theme),
+                ],
+              ),
             ),
           ),
         ),

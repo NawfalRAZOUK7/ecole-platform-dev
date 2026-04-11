@@ -111,7 +111,11 @@ class _NotificationPreferencesScreenState
     if (_loading) {
       return Scaffold(
         appBar: AppBar(title: Text(t.t('notifications.settingsTitle'))),
-        body: const Center(child: CircularProgressIndicator()),
+        body: Semantics(
+          container: true,
+          label: 'Chargement des préférences de notification',
+          child: Center(child: CircularProgressIndicator()),
+        ),
       );
     }
 
@@ -134,108 +138,112 @@ class _NotificationPreferencesScreenState
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: _load,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            if (_error != null) ...[
-              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
-              const SizedBox(height: 12),
-            ],
-            Text(
-              t.t('notifications.preferenceMatrixTitle'),
-              style: theme.textTheme.titleMedium,
-            ),
-            const SizedBox(height: 12),
-            ..._categories.map((category) {
-              return Card(
-                margin: const EdgeInsets.only(bottom: 12),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _categoryLabel(category, t),
-                        style: theme.textTheme.titleSmall,
-                      ),
-                      const SizedBox(height: 8),
-                      ...channels.map((channel) {
-                        final preference = _preferences.firstWhere(
-                          (item) =>
-                              item.category == category &&
-                              item.channel == channel,
-                        );
-                        return SwitchListTile(
-                          dense: true,
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(_channelLabel(channel, t)),
-                          value: preference.enabled,
-                          onChanged: (value) =>
-                              _togglePreference(category, channel, value),
-                        );
-                      }),
-                    ],
-                  ),
-                ),
-              );
-            }),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              initialValue: _digestFrequency,
-              decoration: InputDecoration(
-                labelText: t.t('notifications.digestTitle'),
-              ),
-              items: [
-                DropdownMenuItem(
-                  value: 'off',
-                  child: Text(t.t('notifications.digestOff')),
-                ),
-                DropdownMenuItem(
-                  value: 'daily',
-                  child: Text(t.t('notifications.digestDaily')),
-                ),
-                DropdownMenuItem(
-                  value: 'weekly',
-                  child: Text(t.t('notifications.digestWeekly')),
-                ),
+      body: Semantics(
+        container: true,
+        label: t.t('notifications.settingsTitle'),
+        child: RefreshIndicator(
+          onRefresh: _load,
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              if (_error != null) ...[
+                Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+                const SizedBox(height: 12),
               ],
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() => _digestFrequency = value);
-                }
-              },
-            ),
-            const SizedBox(height: 24),
-            Text(
-              t.t('notifications.devicesTitle'),
-              style: theme.textTheme.titleMedium,
-            ),
-            const SizedBox(height: 12),
-            if (_devices.isEmpty)
-              Text(t.t('notifications.noDevices'))
-            else
-              ..._devices.map((device) {
+              Text(
+                t.t('notifications.preferenceMatrixTitle'),
+                style: theme.textTheme.titleMedium,
+              ),
+              const SizedBox(height: 12),
+              ..._categories.map((category) {
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),
-                  child: ListTile(
-                    title: Text(device.deviceName ??
-                        t.t('notifications.unknownDevice')),
-                    subtitle: Text(
-                      '${_platformLabel(device.platform, t)}\n'
-                      '${device.tokenPreview}\n'
-                      '${t.t('notifications.lastSeen')}: ${_formatDate(device.lastActiveAt)}',
-                    ),
-                    isThreeLine: true,
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete_outline),
-                      onPressed: () => _removeDevice(device.id),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _categoryLabel(category, t),
+                          style: theme.textTheme.titleSmall,
+                        ),
+                        const SizedBox(height: 8),
+                        ...channels.map((channel) {
+                          final preference = _preferences.firstWhere(
+                            (item) =>
+                                item.category == category &&
+                                item.channel == channel,
+                          );
+                          return SwitchListTile(
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(_channelLabel(channel, t)),
+                            value: preference.enabled,
+                            onChanged: (value) =>
+                                _togglePreference(category, channel, value),
+                          );
+                        }),
+                      ],
                     ),
                   ),
                 );
               }),
-          ],
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                initialValue: _digestFrequency,
+                decoration: InputDecoration(
+                  labelText: t.t('notifications.digestTitle'),
+                ),
+                items: [
+                  DropdownMenuItem(
+                    value: 'off',
+                    child: Text(t.t('notifications.digestOff')),
+                  ),
+                  DropdownMenuItem(
+                    value: 'daily',
+                    child: Text(t.t('notifications.digestDaily')),
+                  ),
+                  DropdownMenuItem(
+                    value: 'weekly',
+                    child: Text(t.t('notifications.digestWeekly')),
+                  ),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => _digestFrequency = value);
+                  }
+                },
+              ),
+              const SizedBox(height: 24),
+              Text(
+                t.t('notifications.devicesTitle'),
+                style: theme.textTheme.titleMedium,
+              ),
+              const SizedBox(height: 12),
+              if (_devices.isEmpty)
+                Text(t.t('notifications.noDevices'))
+              else
+                ..._devices.map((device) {
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    child: ListTile(
+                      title: Text(device.deviceName ??
+                          t.t('notifications.unknownDevice')),
+                      subtitle: Text(
+                        '${_platformLabel(device.platform, t)}\n'
+                        '${device.tokenPreview}\n'
+                        '${t.t('notifications.lastSeen')}: ${_formatDate(device.lastActiveAt)}',
+                      ),
+                      isThreeLine: true,
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete_outline),
+                        onPressed: () => _removeDevice(device.id),
+                      ),
+                    ),
+                  );
+                }),
+            ],
+          ),
         ),
       ),
     );

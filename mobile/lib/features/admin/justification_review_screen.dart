@@ -134,53 +134,57 @@ class JustificationReviewScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Justifications')),
-      body: Column(
-        children: [
-          // Status filter chips
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                const Icon(Icons.filter_list, size: 20),
-                const SizedBox(width: 8),
-                ...['pending', 'justified', 'rejected'].map((s) {
-                  final selected = state.statusFilter == s;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: FilterChip(
-                      label: Text(_statusLabel(s),
-                          style: const TextStyle(fontSize: 12)),
-                      selected: selected,
-                      onSelected: (v) => ref
-                          .read(_justificationsProvider.notifier)
-                          .setStatusFilter(v ? s : null),
-                      visualDensity: VisualDensity.compact,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                  );
-                }),
-              ],
-            ),
-          ),
-
-          if (state.error != null)
+      body: Semantics(
+        container: true,
+        label: 'Validation des justificatifs',
+        child: Column(
+          children: [
+            // Status filter chips
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.errorContainer,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(state.error!,
-                    style:
-                        TextStyle(color: theme.colorScheme.onErrorContainer)),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  const Icon(Icons.filter_list, size: 20),
+                  const SizedBox(width: 8),
+                  ...['pending', 'justified', 'rejected'].map((s) {
+                    final selected = state.statusFilter == s;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: FilterChip(
+                        label: Text(_statusLabel(s),
+                            style: const TextStyle(fontSize: 12)),
+                        selected: selected,
+                        onSelected: (v) => ref
+                            .read(_justificationsProvider.notifier)
+                            .setStatusFilter(v ? s : null),
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    );
+                  }),
+                ],
               ),
             ),
 
-          Expanded(child: _buildList(context, ref, state, theme)),
-        ],
+            if (state.error != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.errorContainer,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(state.error!,
+                      style:
+                          TextStyle(color: theme.colorScheme.onErrorContainer)),
+                ),
+              ),
+
+            Expanded(child: _buildList(context, ref, state, theme)),
+          ],
+        ),
       ),
     );
   }

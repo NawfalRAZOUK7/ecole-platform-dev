@@ -41,70 +41,74 @@ class _AttendanceAnalyticsScreenState
       appBar: AppBar(
         title: Text(t.t('attendance.analytics')),
       ),
-      body: classesAsync.when(
-        data: (classes) {
-          _selectedClassId ??= classes.isNotEmpty ? classes.first.id : null;
-          if (_selectedClassId == null) {
-            return const AppEmptyState(
-              icon: Icons.class_,
-              title: 'No classes available',
-            );
-          }
-          final analyticsAsync =
-              ref.watch(attendanceAnalyticsProvider(_selectedClassId!));
-          return RefreshIndicator(
-            onRefresh: () async {
-              ref.invalidate(attendanceAnalyticsProvider(_selectedClassId!));
-            },
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: DropdownButtonFormField<String>(
-                      initialValue: _selectedClassId,
-                      decoration: const InputDecoration(
-                        labelText: 'Class',
-                        border: OutlineInputBorder(),
+      body: Semantics(
+        container: true,
+        label: 'Analytique des présences',
+        child: classesAsync.when(
+          data: (classes) {
+            _selectedClassId ??= classes.isNotEmpty ? classes.first.id : null;
+            if (_selectedClassId == null) {
+              return const AppEmptyState(
+                icon: Icons.class_,
+                title: 'No classes available',
+              );
+            }
+            final analyticsAsync =
+                ref.watch(attendanceAnalyticsProvider(_selectedClassId!));
+            return RefreshIndicator(
+              onRefresh: () async {
+                ref.invalidate(attendanceAnalyticsProvider(_selectedClassId!));
+              },
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: DropdownButtonFormField<String>(
+                        initialValue: _selectedClassId,
+                        decoration: const InputDecoration(
+                          labelText: 'Class',
+                          border: OutlineInputBorder(),
+                        ),
+                        items: classes
+                            .map(
+                              (item) => DropdownMenuItem<String>(
+                                value: item.id,
+                                child: Text(item.name),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) {
+                          if (value == null) return;
+                          setState(() {
+                            _selectedClassId = value;
+                          });
+                        },
                       ),
-                      items: classes
-                          .map(
-                            (item) => DropdownMenuItem<String>(
-                              value: item.id,
-                              child: Text(item.name),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) {
-                        if (value == null) return;
-                        setState(() {
-                          _selectedClassId = value;
-                        });
-                      },
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                analyticsAsync.when(
-                  data: (analytics) => _AnalyticsContent(
-                    classId: _selectedClassId!,
-                    analytics: analytics,
+                  const SizedBox(height: 16),
+                  analyticsAsync.when(
+                    data: (analytics) => _AnalyticsContent(
+                      classId: _selectedClassId!,
+                      analytics: analytics,
+                    ),
+                    loading: () => const Padding(
+                      padding: EdgeInsets.only(top: 64),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                    error: (error, _) => AppErrorWidget(
+                      message: error.toString(),
+                    ),
                   ),
-                  loading: () => const Padding(
-                    padding: EdgeInsets.only(top: 64),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                  error: (error, _) => AppErrorWidget(
-                    message: error.toString(),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => AppErrorWidget(message: error.toString()),
+                ],
+              ),
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, _) => AppErrorWidget(message: error.toString()),
+        ),
       ),
     );
   }

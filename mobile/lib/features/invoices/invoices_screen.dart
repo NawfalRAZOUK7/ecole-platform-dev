@@ -37,26 +37,34 @@ class InvoicesScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(t.t('invoices.title')),
         actions: [
-          PopupMenuButton<String>(
-            onSelected: context.push,
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: '/billing/sibling-policy',
-                child: Text(t.t('billing.siblingPolicy')),
-              ),
-              PopupMenuItem(
-                value: '/billing/late-fees',
-                child: Text(t.t('billing.lateFees')),
-              ),
-              PopupMenuItem(
-                value: '/billing/payment-plans',
-                child: Text(t.t('billing.paymentPlans')),
-              ),
-            ],
+          Semantics(
+            button: true,
+            label: 'Ouvrir les options de facturation',
+            child: PopupMenuButton<String>(
+              onSelected: context.push,
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: '/billing/sibling-policy',
+                  child: Text(t.t('billing.siblingPolicy')),
+                ),
+                PopupMenuItem(
+                  value: '/billing/late-fees',
+                  child: Text(t.t('billing.lateFees')),
+                ),
+                PopupMenuItem(
+                  value: '/billing/payment-plans',
+                  child: Text(t.t('billing.paymentPlans')),
+                ),
+              ],
+            ),
           ),
         ],
       ),
-      body: _buildBody(context, ref, state, theme, t),
+      body: Semantics(
+        container: true,
+        label: t.t('invoices.title'),
+        child: _buildBody(context, ref, state, theme, t),
+      ),
     );
   }
 
@@ -105,22 +113,25 @@ class InvoicesScreen extends ConsumerWidget {
       child: Column(
         children: [
           if (overdueCount > 0)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              color: theme.colorScheme.errorContainer,
-              child: Row(
-                children: [
-                  Icon(Icons.warning_amber,
-                      color: theme.colorScheme.error, size: 20),
-                  const SizedBox(width: 8),
-                  Text(
-                    '$overdueCount ${t.t('invoices.overdueLabel')}',
-                    style: TextStyle(
-                        color: theme.colorScheme.error,
-                        fontWeight: FontWeight.w600),
-                  ),
-                ],
+            Semantics(
+              label: '$overdueCount ${t.t('invoices.overdueLabel')}',
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                color: theme.colorScheme.errorContainer,
+                child: Row(
+                  children: [
+                    Icon(Icons.warning_amber,
+                        color: theme.colorScheme.error, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      '$overdueCount ${t.t('invoices.overdueLabel')}',
+                      style: TextStyle(
+                          color: theme.colorScheme.error,
+                          fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
               ),
             ),
           Expanded(
@@ -130,111 +141,122 @@ class InvoicesScreen extends ConsumerWidget {
               itemBuilder: (context, index) {
                 final inv = state.items[index];
                 final overdue = _isOverdue(inv);
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  color: overdue ? theme.colorScheme.errorContainer : null,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(16),
-                    onTap: () => context.push('/invoices/${inv.id}'),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  _statusChip(inv.status, theme),
-                                  if (overdue) ...[
-                                    const SizedBox(width: 8),
-                                    _overdueChip(theme, t),
-                                  ],
-                                ],
-                              ),
-                              AppCurrencyText(
-                                amount: inv.totalAmount,
-                                currency: inv.currency,
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              const Icon(Icons.calendar_today, size: 14),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${t.t('invoices.issued')}: ${_formatDate(inv.issuedDate)}',
-                                style: theme.textTheme.bodySmall,
-                              ),
-                              const SizedBox(width: 16),
-                              const Icon(Icons.event, size: 14),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${t.t('invoices.due')}: ${_formatDate(inv.dueDate)}',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color:
-                                      overdue ? theme.colorScheme.error : null,
-                                  fontWeight: overdue ? FontWeight.w600 : null,
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (inv.items.isNotEmpty) ...[
-                            const SizedBox(height: 12),
-                            const Divider(),
-                            ...inv.items.map((item) => Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 4),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          item.description,
-                                          style: theme.textTheme.bodySmall,
-                                        ),
-                                      ),
-                                      AppCurrencyText(
-                                        amount: item.amount,
-                                        currency: inv.currency,
-                                        style:
-                                            theme.textTheme.bodySmall?.copyWith(
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
+                return Semantics(
+                  button: true,
+                  label:
+                      'Facture ${inv.status}, échéance ${_formatDate(inv.dueDate)}',
+                  child: Card(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    color: overdue ? theme.colorScheme.errorContainer : null,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap: () => context.push('/invoices/${inv.id}'),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    _statusChip(inv.status, theme),
+                                    if (overdue) ...[
+                                      const SizedBox(width: 8),
+                                      _overdueChip(theme, t),
                                     ],
+                                  ],
+                                ),
+                                AppCurrencyText(
+                                  amount: inv.totalAmount,
+                                  currency: inv.currency,
+                                  style: theme.textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                )),
-                          ],
-                          if (overdue || inv.status == 'failed') ...[
-                            const SizedBox(height: 12),
-                            SizedBox(
-                              width: double.infinity,
-                              child: FilledButton.tonal(
-                                onPressed: state.retrying
-                                    ? null
-                                    : () => ref
-                                        .read(invoicesProvider.notifier)
-                                        .retryPayment(inv.id),
-                                child: state.retrying
-                                    ? const SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    : Text(t.t('invoices.retry')),
-                              ),
+                                ),
+                              ],
                             ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                const Icon(Icons.calendar_today, size: 14),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${t.t('invoices.issued')}: ${_formatDate(inv.issuedDate)}',
+                                  style: theme.textTheme.bodySmall,
+                                ),
+                                const SizedBox(width: 16),
+                                const Icon(Icons.event, size: 14),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${t.t('invoices.due')}: ${_formatDate(inv.dueDate)}',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: overdue
+                                        ? theme.colorScheme.error
+                                        : null,
+                                    fontWeight:
+                                        overdue ? FontWeight.w600 : null,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (inv.items.isNotEmpty) ...[
+                              const SizedBox(height: 12),
+                              const Divider(),
+                              ...inv.items.map((item) => Padding(
+                                    padding:
+                                        const EdgeInsets.symmetric(vertical: 4),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            item.description,
+                                            style: theme.textTheme.bodySmall,
+                                          ),
+                                        ),
+                                        AppCurrencyText(
+                                          amount: item.amount,
+                                          currency: inv.currency,
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )),
+                            ],
+                            if (overdue || inv.status == 'failed') ...[
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                width: double.infinity,
+                                child: Semantics(
+                                  button: true,
+                                  label: t.t('invoices.retry'),
+                                  child: FilledButton.tonal(
+                                    onPressed: state.retrying
+                                        ? null
+                                        : () => ref
+                                            .read(invoicesProvider.notifier)
+                                            .retryPayment(inv.id),
+                                    child: state.retrying
+                                        ? const SizedBox(
+                                            width: 16,
+                                            height: 16,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                        : Text(t.t('invoices.retry')),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
                     ),
                   ),

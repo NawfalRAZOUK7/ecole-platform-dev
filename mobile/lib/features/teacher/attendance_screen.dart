@@ -153,247 +153,273 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Présences')),
-      body: _loadingInit
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                // Error
-                if (_error != null) ...[
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.errorContainer,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(_error!,
-                        style: TextStyle(
-                            color: theme.colorScheme.onErrorContainer)),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-
-                // Session setup
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Session de cours',
-                            style: theme.textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 12),
-                        DropdownButtonFormField<String>(
-                          initialValue: _selectedClassId,
-                          decoration: const InputDecoration(
-                            labelText: 'Classe *',
-                            border: OutlineInputBorder(),
-                          ),
-                          items: _classes
-                              .map((c) => DropdownMenuItem(
-                                    value: c.id,
-                                    child: Text(c.name),
-                                  ))
-                              .toList(),
-                          onChanged: (v) {
-                            setState(() => _selectedClassId = v);
-                            if (v != null) _loadStudents(v);
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        DropdownButtonFormField<String>(
-                          initialValue: _selectedPeriodId,
-                          decoration: const InputDecoration(
-                            labelText: 'Période *',
-                            border: OutlineInputBorder(),
-                          ),
-                          items: _periods
-                              .map((p) => DropdownMenuItem(
-                                    value: p.id,
-                                    child: Text(p.name),
-                                  ))
-                              .toList(),
-                          onChanged: (v) =>
-                              setState(() => _selectedPeriodId = v),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: InkWell(
-                                onTap: _pickDate,
-                                child: InputDecorator(
-                                  decoration: const InputDecoration(
-                                    labelText: 'Date',
-                                    border: OutlineInputBorder(),
-                                    suffixIcon: Icon(Icons.calendar_today),
-                                  ),
-                                  child: Text(
-                                    DateFormat.yMMMd('fr').format(_sessionDate),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: DropdownButtonFormField<String>(
-                                initialValue: _selectedSlot,
-                                decoration: const InputDecoration(
-                                  labelText: 'Créneau',
-                                  border: OutlineInputBorder(),
-                                ),
-                                items: _slots
-                                    .map((s) => DropdownMenuItem(
-                                          value: s,
-                                          child: Text(_slotLabels[s] ?? s),
-                                        ))
-                                    .toList(),
-                                onChanged: (v) {
-                                  if (v != null) {
-                                    setState(() => _selectedSlot = v);
-                                  }
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Student list
-                if (_loadingStudents)
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(32),
-                      child: CircularProgressIndicator(),
-                    ),
-                  )
-                else if (_students.isNotEmpty) ...[
-                  Row(
-                    children: [
-                      Text('Élèves (${_students.length})',
-                          style: theme.textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.w600)),
-                      const Spacer(),
-                      // Quick actions
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            for (final r in _records) {
-                              r.status = 'present';
-                              r.absenceReason = null;
-                            }
-                          });
-                        },
-                        child: const Text('Tous présents'),
+      body: Semantics(
+        container: true,
+        label: 'Écran de gestion des présences',
+        child: _loadingInit
+            ? const Center(child: CircularProgressIndicator())
+            : ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  // Error
+                  if (_error != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.errorContainer,
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  ...List.generate(_students.length, (i) {
-                    final student = _students[i];
-                    final record = _records[i];
+                      child: Text(_error!,
+                          style: TextStyle(
+                              color: theme.colorScheme.onErrorContainer)),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
 
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 8),
+                  // Session setup
+                  Semantics(
+                    label: 'Configuration de la session de cours',
+                    child: Card(
                       child: Padding(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Text('Session de cours',
+                                style: theme.textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 12),
+                            DropdownButtonFormField<String>(
+                              initialValue: _selectedClassId,
+                              decoration: const InputDecoration(
+                                labelText: 'Classe *',
+                                border: OutlineInputBorder(),
+                              ),
+                              items: _classes
+                                  .map((c) => DropdownMenuItem(
+                                        value: c.id,
+                                        child: Text(c.name),
+                                      ))
+                                  .toList(),
+                              onChanged: (v) {
+                                setState(() => _selectedClassId = v);
+                                if (v != null) _loadStudents(v);
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            DropdownButtonFormField<String>(
+                              initialValue: _selectedPeriodId,
+                              decoration: const InputDecoration(
+                                labelText: 'Période *',
+                                border: OutlineInputBorder(),
+                              ),
+                              items: _periods
+                                  .map((p) => DropdownMenuItem(
+                                        value: p.id,
+                                        child: Text(p.name),
+                                      ))
+                                  .toList(),
+                              onChanged: (v) =>
+                                  setState(() => _selectedPeriodId = v),
+                            ),
+                            const SizedBox(height: 12),
                             Row(
                               children: [
-                                CircleAvatar(
-                                  radius: 16,
-                                  child: Text(
-                                    student.fullName.isNotEmpty
-                                        ? student.fullName[0].toUpperCase()
-                                        : '?',
-                                    style: const TextStyle(fontSize: 12),
+                                Expanded(
+                                  child: Semantics(
+                                    button: true,
+                                    label: 'Choisir la date de la session',
+                                    child: InkWell(
+                                      onTap: _pickDate,
+                                      child: InputDecorator(
+                                        decoration: const InputDecoration(
+                                          labelText: 'Date',
+                                          border: OutlineInputBorder(),
+                                          suffixIcon:
+                                              Icon(Icons.calendar_today),
+                                        ),
+                                        child: Text(
+                                          DateFormat.yMMMd('fr')
+                                              .format(_sessionDate),
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ),
-                                const SizedBox(width: 10),
+                                const SizedBox(width: 12),
                                 Expanded(
-                                  child: Text(student.fullName,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.w500)),
+                                  child: DropdownButtonFormField<String>(
+                                    initialValue: _selectedSlot,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Créneau',
+                                      border: OutlineInputBorder(),
+                                    ),
+                                    items: _slots
+                                        .map((s) => DropdownMenuItem(
+                                              value: s,
+                                              child: Text(_slotLabels[s] ?? s),
+                                            ))
+                                        .toList(),
+                                    onChanged: (v) {
+                                      if (v != null) {
+                                        setState(() => _selectedSlot = v);
+                                      }
+                                    },
+                                  ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 8),
-                            SegmentedButton<String>(
-                              segments: _statusOptions
-                                  .map((opt) => ButtonSegment<String>(
-                                        value: opt.$1,
-                                        label: Text(opt.$2,
-                                            style:
-                                                const TextStyle(fontSize: 11)),
-                                      ))
-                                  .toList(),
-                              selected: {record.status},
-                              onSelectionChanged: (v) {
-                                setState(() {
-                                  record.status = v.first;
-                                  if (record.status != 'absent') {
-                                    record.absenceReason = null;
-                                  }
-                                });
-                              },
-                              showSelectedIcon: false,
-                              style: ButtonStyle(
-                                visualDensity: VisualDensity.compact,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
-                            ),
-                            if (record.status == 'absent') ...[
-                              const SizedBox(height: 8),
-                              TextField(
-                                decoration: const InputDecoration(
-                                  labelText: 'Motif d\'absence',
-                                  border: OutlineInputBorder(),
-                                  isDense: true,
-                                  contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 8),
-                                ),
-                                onChanged: (v) => record.absenceReason = v,
-                              ),
-                            ],
                           ],
                         ),
                       ),
-                    );
-                  }),
+                    ),
+                  ),
                   const SizedBox(height: 16),
-                  FilledButton.icon(
-                    onPressed: _submitting ? null : _submit,
-                    icon: _submitting
-                        ? SizedBox(
-                            height: 16,
-                            width: 16,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: theme.colorScheme.onPrimary))
-                        : const Icon(Icons.check),
-                    label:
-                        Text(_submitting ? 'Enregistrement...' : 'Enregistrer'),
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      minimumSize: const Size(double.infinity, 0),
+
+                  // Student list
+                  if (_loadingStudents)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(32),
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
+                  else if (_students.isNotEmpty) ...[
+                    Row(
+                      children: [
+                        Text('Élèves (${_students.length})',
+                            style: theme.textTheme.titleSmall
+                                ?.copyWith(fontWeight: FontWeight.w600)),
+                        const Spacer(),
+                        // Quick actions
+                        Semantics(
+                          button: true,
+                          label: 'Marquer tous les élèves présents',
+                          child: TextButton(
+                            onPressed: () {
+                              setState(() {
+                                for (final r in _records) {
+                                  r.status = 'present';
+                                  r.absenceReason = null;
+                                }
+                              });
+                            },
+                            child: const Text('Tous présents'),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ] else if (_selectedClassId != null)
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(32),
-                      child: Text('Aucun élève dans cette classe'),
+                    const SizedBox(height: 8),
+                    ...List.generate(_students.length, (i) {
+                      final student = _students[i];
+                      final record = _records[i];
+
+                      return Semantics(
+                        label:
+                            'Présence de ${student.fullName}, statut ${record.status}',
+                        child: Card(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 16,
+                                      child: Text(
+                                        student.fullName.isNotEmpty
+                                            ? student.fullName[0].toUpperCase()
+                                            : '?',
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Text(student.fullName,
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.w500)),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                SegmentedButton<String>(
+                                  segments: _statusOptions
+                                      .map((opt) => ButtonSegment<String>(
+                                            value: opt.$1,
+                                            label: Text(opt.$2,
+                                                style: const TextStyle(
+                                                    fontSize: 11)),
+                                          ))
+                                      .toList(),
+                                  selected: {record.status},
+                                  onSelectionChanged: (v) {
+                                    setState(() {
+                                      record.status = v.first;
+                                      if (record.status != 'absent') {
+                                        record.absenceReason = null;
+                                      }
+                                    });
+                                  },
+                                  showSelectedIcon: false,
+                                  style: ButtonStyle(
+                                    visualDensity: VisualDensity.compact,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                ),
+                                if (record.status == 'absent') ...[
+                                  const SizedBox(height: 8),
+                                  TextField(
+                                    decoration: const InputDecoration(
+                                      labelText: 'Motif d\'absence',
+                                      border: OutlineInputBorder(),
+                                      isDense: true,
+                                      contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 8),
+                                    ),
+                                    onChanged: (v) => record.absenceReason = v,
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                    const SizedBox(height: 16),
+                    Semantics(
+                      button: true,
+                      label: 'Enregistrer les présences',
+                      child: FilledButton.icon(
+                        onPressed: _submitting ? null : _submit,
+                        icon: _submitting
+                            ? SizedBox(
+                                height: 16,
+                                width: 16,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: theme.colorScheme.onPrimary))
+                            : const Icon(Icons.check),
+                        label: Text(
+                            _submitting ? 'Enregistrement...' : 'Enregistrer'),
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          minimumSize: const Size(double.infinity, 0),
+                        ),
+                      ),
                     ),
-                  ),
-              ],
-            ),
+                  ] else if (_selectedClassId != null)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(32),
+                        child: Text('Aucun élève dans cette classe'),
+                      ),
+                    ),
+                ],
+              ),
+      ),
     );
   }
 }

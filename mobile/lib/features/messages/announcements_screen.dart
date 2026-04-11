@@ -19,7 +19,11 @@ class AnnouncementsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(t.t('announcements.title'))),
-      body: _buildBody(context, ref, state, t),
+      body: Semantics(
+        container: true,
+        label: t.t('announcements.title'),
+        child: _buildBody(context, ref, state, t),
+      ),
     );
   }
 

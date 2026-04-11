@@ -58,154 +58,160 @@ class _BudgetRequestScreenState extends ConsumerState<BudgetRequestScreen> {
 
     return Scaffold(
       appBar: AppBar(title: Text(t.t('budgets.requests'))),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(budgetsProvider);
-          ref.invalidate(budgetRequestsProvider);
-        },
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            budgetsAsync.when(
-              data: (budgets) {
-                if (_selectedBudgetId == null && budgets.isNotEmpty) {
-                  _selectedBudgetId = budgets.first.id;
-                }
-                return Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        children: [
-                          DropdownButtonFormField<String>(
-                            initialValue: _selectedBudgetId,
-                            decoration: InputDecoration(
-                              labelText: t.t('budgets.envelopes'),
-                              border: const OutlineInputBorder(),
+      body: Semantics(
+        container: true,
+        label: 'Demandes budgétaires',
+        child: RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(budgetsProvider);
+            ref.invalidate(budgetRequestsProvider);
+          },
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              budgetsAsync.when(
+                data: (budgets) {
+                  if (_selectedBudgetId == null && budgets.isNotEmpty) {
+                    _selectedBudgetId = budgets.first.id;
+                  }
+                  return Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          children: [
+                            DropdownButtonFormField<String>(
+                              initialValue: _selectedBudgetId,
+                              decoration: InputDecoration(
+                                labelText: t.t('budgets.envelopes'),
+                                border: const OutlineInputBorder(),
+                              ),
+                              items: budgets
+                                  .map(
+                                    (budget) => DropdownMenuItem<String>(
+                                      value: budget.id,
+                                      child: Text(budget.name),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedBudgetId = value;
+                                });
+                              },
                             ),
-                            items: budgets
-                                .map(
-                                  (budget) => DropdownMenuItem<String>(
-                                    value: budget.id,
-                                    child: Text(budget.name),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedBudgetId = value;
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _amountController,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: _amountController,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                decimal: true,
+                              ),
+                              decoration: const InputDecoration(
+                                labelText: 'Amount (MAD)',
+                                border: OutlineInputBorder(),
+                              ),
+                              validator: (value) {
+                                final parsed = double.tryParse(value ?? '');
+                                if (parsed == null || parsed <= 0) {
+                                  return 'Enter a valid amount';
+                                }
+                                return null;
+                              },
                             ),
-                            decoration: const InputDecoration(
-                              labelText: 'Amount (MAD)',
-                              border: OutlineInputBorder(),
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: _descriptionController,
+                              decoration: const InputDecoration(
+                                labelText: 'Description',
+                                border: OutlineInputBorder(),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Description is required';
+                                }
+                                return null;
+                              },
                             ),
-                            validator: (value) {
-                              final parsed = double.tryParse(value ?? '');
-                              if (parsed == null || parsed <= 0) {
-                                return 'Enter a valid amount';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _descriptionController,
-                            decoration: const InputDecoration(
-                              labelText: 'Description',
-                              border: OutlineInputBorder(),
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: _justificationController,
+                              minLines: 3,
+                              maxLines: 5,
+                              decoration: const InputDecoration(
+                                labelText: 'Justification',
+                                border: OutlineInputBorder(),
+                              ),
                             ),
-                            validator: (value) {
-                              if (value == null || value.trim().isEmpty) {
-                                return 'Description is required';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _justificationController,
-                            minLines: 3,
-                            maxLines: 5,
-                            decoration: const InputDecoration(
-                              labelText: 'Justification',
-                              border: OutlineInputBorder(),
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              width: double.infinity,
+                              child: FilledButton.icon(
+                                onPressed:
+                                    actionState.isLoading ? null : _submit,
+                                icon: actionState.isLoading
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Icon(Icons.send_outlined),
+                                label: Text(t.t('budgets.submitRequest')),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            width: double.infinity,
-                            child: FilledButton.icon(
-                              onPressed: actionState.isLoading ? null : _submit,
-                              icon: actionState.isLoading
-                                  ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Icon(Icons.send_outlined),
-                              label: Text(t.t('budgets.submitRequest')),
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => AppErrorWidget(message: error.toString()),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Approval queue',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-            const SizedBox(height: 12),
-            requestsAsync.when(
-              data: (requests) {
-                if (requests.isEmpty) {
-                  return AppEmptyState(
-                    icon: Icons.approval_outlined,
-                    title: t.t('budgets.noRequests'),
                   );
-                }
-                return Column(
-                  children: requests
-                      .map(
-                        (request) => _BudgetRequestCard(
-                          request: request,
-                          onApprove: request.status == 'pending'
-                              ? () => ref
-                                  .read(budgetRequestActionProvider.notifier)
-                                  .approve(request.id)
-                              : null,
-                          onReject: request.status == 'pending'
-                              ? () => ref
-                                  .read(budgetRequestActionProvider.notifier)
-                                  .reject(request.id)
-                              : null,
-                        ),
-                      )
-                      .toList(),
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => AppErrorWidget(message: error.toString()),
-            ),
-          ],
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, _) => AppErrorWidget(message: error.toString()),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Approval queue',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+              const SizedBox(height: 12),
+              requestsAsync.when(
+                data: (requests) {
+                  if (requests.isEmpty) {
+                    return AppEmptyState(
+                      icon: Icons.approval_outlined,
+                      title: t.t('budgets.noRequests'),
+                    );
+                  }
+                  return Column(
+                    children: requests
+                        .map(
+                          (request) => _BudgetRequestCard(
+                            request: request,
+                            onApprove: request.status == 'pending'
+                                ? () => ref
+                                    .read(budgetRequestActionProvider.notifier)
+                                    .approve(request.id)
+                                : null,
+                            onReject: request.status == 'pending'
+                                ? () => ref
+                                    .read(budgetRequestActionProvider.notifier)
+                                    .reject(request.id)
+                                : null,
+                          ),
+                        )
+                        .toList(),
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, _) => AppErrorWidget(message: error.toString()),
+              ),
+            ],
+          ),
         ),
       ),
     );
