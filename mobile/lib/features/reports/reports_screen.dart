@@ -13,6 +13,7 @@ import 'package:ecole_platform/domain/entities/reporting.dart';
 import 'package:ecole_platform/features/auth/auth_provider.dart';
 import 'package:ecole_platform/features/reports/report_schedule_manager.dart';
 import 'package:ecole_platform/l10n/app_localizations.dart';
+import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 
 part 'reports_generator.dart';
 part 'reports_history.dart';
@@ -328,12 +329,16 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                   children: [
                     if (_error != null) ...[
                       Card(
-                        color: Colors.red.shade50,
+                        color: Theme.of(context).colorScheme.errorContainer,
                         child: Padding(
                           padding: const EdgeInsets.all(12),
                           child: Text(
                             _error!,
-                            style: const TextStyle(color: Colors.red),
+                            style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onErrorContainer,
+                            ),
                           ),
                         ),
                       ),

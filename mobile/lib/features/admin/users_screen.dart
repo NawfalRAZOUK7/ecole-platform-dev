@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/admin.dart';
 import 'package:ecole_platform/features/auth/auth_provider.dart';
+import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/widgets/search_filter_bar.dart';
 
 // ── State ──
@@ -261,7 +262,7 @@ class UsersScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
             const SizedBox(height: 16),
             Text(state.error!, textAlign: TextAlign.center),
             const SizedBox(height: 16),
@@ -274,11 +275,12 @@ class UsersScreen extends ConsumerWidget {
       );
     }
     if (state.items.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.people_outline, size: 48, color: Colors.grey),
+            Icon(Icons.people_outline,
+                size: 48, color: theme.colorScheme.outline),
             SizedBox(height: 16),
             Text('Aucun utilisateur trouvé'),
           ],
@@ -354,8 +356,9 @@ class UsersScreen extends ConsumerWidget {
                                 ],
                                 if (user.totpEnabled) ...[
                                   const SizedBox(width: 4),
-                                  const Icon(Icons.lock,
-                                      size: 14, color: Colors.amber),
+                                  Icon(Icons.lock,
+                                      size: 14,
+                                      color: theme.semanticPalette.warning),
                                 ],
                               ],
                             ),
@@ -411,8 +414,9 @@ class UsersScreen extends ConsumerWidget {
                             onPressed: () => ref
                                 .read(_usersProvider.notifier)
                                 .suspendUser(user.id),
-                            child: const Text('Suspendre',
-                                style: TextStyle(color: Colors.red)),
+                            child: Text('Suspendre',
+                                style:
+                                    TextStyle(color: theme.colorScheme.error)),
                           )
                         else
                           TextButton(
@@ -441,19 +445,20 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     Color color;
     String label;
     switch (status) {
       case 'active':
-        color = Colors.green;
+        color = theme.semanticPalette.success;
         label = 'Actif';
         break;
       case 'suspended':
-        color = Colors.red;
+        color = theme.colorScheme.error;
         label = 'Suspendu';
         break;
       default:
-        color = Colors.grey;
+        color = theme.colorScheme.outline;
         label = 'Inactif';
     }
     return Container(

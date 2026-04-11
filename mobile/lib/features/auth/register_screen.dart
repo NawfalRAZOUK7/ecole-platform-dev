@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/data/api/api_client.dart';
+import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 
 part 'register_steps.dart';
 

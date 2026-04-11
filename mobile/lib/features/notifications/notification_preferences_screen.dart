@@ -106,6 +106,7 @@ class _NotificationPreferencesScreenState
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(ref);
+    final theme = Theme.of(context);
 
     if (_loading) {
       return Scaffold(
@@ -139,12 +140,12 @@ class _NotificationPreferencesScreenState
           padding: const EdgeInsets.all(16),
           children: [
             if (_error != null) ...[
-              Text(_error!, style: const TextStyle(color: Colors.red)),
+              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
               const SizedBox(height: 12),
             ],
             Text(
               t.t('notifications.preferenceMatrixTitle'),
-              style: Theme.of(context).textTheme.titleMedium,
+              style: theme.textTheme.titleMedium,
             ),
             const SizedBox(height: 12),
             ..._categories.map((category) {
@@ -157,7 +158,7 @@ class _NotificationPreferencesScreenState
                     children: [
                       Text(
                         _categoryLabel(category, t),
-                        style: Theme.of(context).textTheme.titleSmall,
+                        style: theme.textTheme.titleSmall,
                       ),
                       const SizedBox(height: 8),
                       ...channels.map((channel) {
@@ -209,7 +210,7 @@ class _NotificationPreferencesScreenState
             const SizedBox(height: 24),
             Text(
               t.t('notifications.devicesTitle'),
-              style: Theme.of(context).textTheme.titleMedium,
+              style: theme.textTheme.titleMedium,
             ),
             const SizedBox(height: 12),
             if (_devices.isEmpty)

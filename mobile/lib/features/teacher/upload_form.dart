@@ -236,17 +236,18 @@ class UploadForm extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.green.shade50,
+              color: theme.semanticPalette.successContainer,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               children: [
-                const Icon(Icons.check_circle, color: Colors.green, size: 20),
+                Icon(Icons.check_circle,
+                    color: theme.semanticPalette.success, size: 20),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     success!,
-                    style: const TextStyle(color: Colors.green),
+                    style: TextStyle(color: theme.semanticPalette.success),
                   ),
                 ),
               ],
@@ -381,12 +382,12 @@ class UploadForm extends StatelessWidget {
         FilledButton.icon(
           onPressed: uploading ? null : onSubmit,
           icon: uploading
-              ? const SizedBox(
+              ? SizedBox(
                   height: 16,
                   width: 16,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Colors.white,
+                    color: theme.colorScheme.onPrimary,
                   ),
                 )
               : const Icon(Icons.upload),

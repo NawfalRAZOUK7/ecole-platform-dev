@@ -21,6 +21,7 @@ class _DocumentCard extends StatelessWidget {
     final createdAt = _formatDate(item.createdAt, locale);
     final expiresAt =
         item.expiresAt == null ? null : _formatDate(item.expiresAt!, locale);
+    final theme = Theme.of(context);
 
     return Card(
       child: ListTile(
@@ -47,12 +48,12 @@ class _DocumentCard extends StatelessWidget {
                 if (item.isExpired)
                   _MetaChip(
                     label: t.t('documents.status.expired'),
-                    color: Colors.red,
+                    color: theme.colorScheme.error,
                   ),
                 if (item.isExpiringSoon)
                   _MetaChip(
                     label: t.t('documents.expiring'),
-                    color: Colors.orange,
+                    color: theme.semanticPalette.warning,
                   ),
               ],
             ),
@@ -104,10 +105,11 @@ class _ChecklistCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations(locale);
+    final theme = Theme.of(context);
     final color = switch (item.status) {
-      'uploaded' => Colors.green,
-      'expired' => Colors.red,
-      _ => Colors.orange,
+      'uploaded' => theme.semanticPalette.success,
+      'expired' => theme.colorScheme.error,
+      _ => theme.semanticPalette.warning,
     };
     final expiresLabel =
         item.expiresAt == null ? null : _formatDate(item.expiresAt!, locale);
@@ -233,7 +235,7 @@ class _ResourceCard extends StatelessWidget {
                           ? Icons.star
                           : Icons.star_border,
                       size: 18,
-                      color: Colors.amber,
+                      color: Theme.of(context).semanticPalette.warning,
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -304,20 +306,22 @@ class _DocumentThumb extends StatelessWidget {
           height: 52,
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
-            return _fallback();
+            return _fallback(context);
           },
         ),
       );
     }
-    return _fallback();
+    return _fallback(context);
   }
 
-  Widget _fallback() {
+  Widget _fallback(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Container(
       width: 52,
       height: 52,
       decoration: BoxDecoration(
-        color: Colors.blueGrey.withValues(alpha: 0.12),
+        color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(10),
       ),
       alignment: Alignment.center,
@@ -343,8 +347,11 @@ class _MetaChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final background = (color ?? Colors.blueGrey).withValues(alpha: 0.12);
-    final foreground = color ?? Colors.blueGrey.shade700;
+    final theme = Theme.of(context);
+    final foreground = color ?? theme.colorScheme.onSurfaceVariant;
+    final background = color == null
+        ? theme.colorScheme.surfaceContainerHighest
+        : color!.withValues(alpha: 0.12);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
@@ -406,13 +413,15 @@ class _ErrorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Card(
-      color: Colors.red.shade50,
+      color: theme.colorScheme.errorContainer,
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Text(
           message,
-          style: const TextStyle(color: Colors.red),
+          style: TextStyle(color: theme.colorScheme.onErrorContainer),
         ),
       ),
     );

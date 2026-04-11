@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 
 import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/domain/entities/invoice.dart';
+import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/widgets/app_currency_text.dart';
 
 import 'invoices_provider.dart';
@@ -70,7 +71,7 @@ class InvoicesScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
             const SizedBox(height: 16),
             Text(state.error!, textAlign: TextAlign.center),
             const SizedBox(height: 16),
@@ -88,7 +89,8 @@ class InvoicesScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.receipt_long, size: 48, color: Colors.grey),
+            Icon(Icons.receipt_long,
+                size: 48, color: theme.colorScheme.outline),
             const SizedBox(height: 16),
             Text(t.t('invoices.empty')),
           ],
@@ -106,15 +108,17 @@ class InvoicesScreen extends ConsumerWidget {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(12),
-              color: Colors.red.shade50,
+              color: theme.colorScheme.errorContainer,
               child: Row(
                 children: [
-                  const Icon(Icons.warning_amber, color: Colors.red, size: 20),
+                  Icon(Icons.warning_amber,
+                      color: theme.colorScheme.error, size: 20),
                   const SizedBox(width: 8),
                   Text(
                     '$overdueCount ${t.t('invoices.overdueLabel')}',
-                    style: const TextStyle(
-                        color: Colors.red, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                        color: theme.colorScheme.error,
+                        fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -128,7 +132,7 @@ class InvoicesScreen extends ConsumerWidget {
                 final overdue = _isOverdue(inv);
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),
-                  color: overdue ? Colors.red.shade50 : null,
+                  color: overdue ? theme.colorScheme.errorContainer : null,
                   child: InkWell(
                     borderRadius: BorderRadius.circular(16),
                     onTap: () => context.push('/invoices/${inv.id}'),
@@ -145,7 +149,7 @@ class InvoicesScreen extends ConsumerWidget {
                                   _statusChip(inv.status, theme),
                                   if (overdue) ...[
                                     const SizedBox(width: 8),
-                                    _overdueChip(t),
+                                    _overdueChip(theme, t),
                                   ],
                                 ],
                               ),
@@ -173,7 +177,8 @@ class InvoicesScreen extends ConsumerWidget {
                               Text(
                                 '${t.t('invoices.due')}: ${_formatDate(inv.dueDate)}',
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  color: overdue ? Colors.red : null,
+                                  color:
+                                      overdue ? theme.colorScheme.error : null,
                                   fontWeight: overdue ? FontWeight.w600 : null,
                                 ),
                               ),
@@ -242,29 +247,31 @@ class InvoicesScreen extends ConsumerWidget {
     );
   }
 
-  Widget _overdueChip(AppLocalizations t) {
+  Widget _overdueChip(ThemeData theme, AppLocalizations t) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.red.withAlpha(30),
+        color: theme.colorScheme.error.withAlpha(30),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.red, width: 0.5),
+        border: Border.all(color: theme.colorScheme.error, width: 0.5),
       ),
       child: Text(
         t.t('invoices.overdue'),
-        style: const TextStyle(
-            fontSize: 10, fontWeight: FontWeight.w600, color: Colors.red),
+        style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: theme.colorScheme.error),
       ),
     );
   }
 
   Widget _statusChip(String status, ThemeData theme) {
     final (color, label) = switch (status) {
-      'paid' => (Colors.green, 'Payée'),
-      'pending' => (Colors.orange, 'En attente'),
-      'failed' => (Colors.red, 'Échouée'),
-      'canceled' => (Colors.grey, 'Annulée'),
-      _ => (Colors.grey, status),
+      'paid' => (theme.semanticPalette.success, 'Payée'),
+      'pending' => (theme.semanticPalette.warning, 'En attente'),
+      'failed' => (theme.colorScheme.error, 'Échouée'),
+      'canceled' => (theme.colorScheme.outline, 'Annulée'),
+      _ => (theme.colorScheme.outline, status),
     };
 
     return Container(

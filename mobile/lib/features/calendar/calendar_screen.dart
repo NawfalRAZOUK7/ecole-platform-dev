@@ -9,6 +9,7 @@ import 'package:ecole_platform/domain/entities/calendar_event.dart';
 import 'package:ecole_platform/features/auth/auth_provider.dart';
 import 'package:ecole_platform/features/calendar/event_detail_screen.dart';
 import 'package:ecole_platform/l10n/app_localizations.dart';
+import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 
 const _eventTypes = [
   'holiday',
@@ -148,12 +149,15 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 children: [
                   if (_error != null) ...[
                     Card(
-                      color: Colors.red.shade50,
+                      color: Theme.of(context).colorScheme.errorContainer,
                       child: Padding(
                         padding: const EdgeInsets.all(12),
                         child: Text(
                           _error!,
-                          style: const TextStyle(color: Colors.red),
+                          style: TextStyle(
+                            color:
+                                Theme.of(context).colorScheme.onErrorContainer,
+                          ),
                         ),
                       ),
                     ),
@@ -306,19 +310,20 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   }
 
   Color _eventColor(String type) {
+    final theme = Theme.of(context);
     switch (type) {
       case 'holiday':
-        return Colors.red;
+        return theme.colorScheme.error;
       case 'exam':
-        return Colors.orange;
+        return theme.semanticPalette.warning;
       case 'meeting':
-        return Colors.blue;
+        return theme.colorScheme.primary;
       case 'excursion':
-        return Colors.teal;
+        return theme.semanticPalette.chartPalette[7];
       case 'ceremony':
-        return Colors.pink;
+        return theme.colorScheme.secondary;
       default:
-        return Colors.green;
+        return theme.semanticPalette.success;
     }
   }
 }

@@ -10,6 +10,7 @@ class _AttendanceChart extends StatelessWidget {
     if (series.isEmpty) {
       return const Center(child: Text('—'));
     }
+    final theme = Theme.of(context);
 
     final maxValue = series
         .map((item) => item.value)
@@ -56,12 +57,12 @@ class _AttendanceChart extends StatelessWidget {
                 .map((entry) => FlSpot(entry.key.toDouble(), entry.value.value))
                 .toList(),
             isCurved: true,
-            color: Colors.blue,
+            color: theme.colorScheme.primary,
             barWidth: 3,
             dotData: const FlDotData(show: true),
             belowBarData: BarAreaData(
               show: true,
-              color: Colors.blue.withAlpha(24),
+              color: theme.colorScheme.primary.withAlpha(24),
             ),
           ),
         ],
@@ -157,7 +158,12 @@ class _WaterfallChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = [Colors.indigo, Colors.green, Colors.orange];
+    final theme = Theme.of(context);
+    final palette = [
+      theme.colorScheme.secondary,
+      theme.semanticPalette.success,
+      theme.semanticPalette.warning,
+    ];
     final maxValue = values.fold<double>(0, (a, b) => a > b ? a : b);
 
     return BarChart(
@@ -201,7 +207,7 @@ class _WaterfallChart extends StatelessWidget {
                 barRods: [
                   BarChartRodData(
                     toY: entry.value,
-                    color: colors[entry.key % colors.length],
+                    color: palette[entry.key % palette.length],
                     width: 18,
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(6),
@@ -226,6 +232,7 @@ class _FunnelChartCard extends StatelessWidget {
     if (funnel.isEmpty) {
       return const Center(child: Text('—'));
     }
+    final theme = Theme.of(context);
 
     final maxValue = funnel
         .map((item) => item.value.toDouble())
@@ -272,7 +279,7 @@ class _FunnelChartCard extends StatelessWidget {
                 barRods: [
                   BarChartRodData(
                     toY: entry.value.value.toDouble(),
-                    color: Colors.deepPurple,
+                    color: theme.colorScheme.secondary,
                     width: 18,
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(6),

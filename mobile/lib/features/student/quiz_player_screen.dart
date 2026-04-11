@@ -15,6 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/quiz.dart';
+import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 
 part 'quiz_list_view.dart';
 part 'quiz_play_view.dart';

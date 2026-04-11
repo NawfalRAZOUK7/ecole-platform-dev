@@ -6,12 +6,11 @@ class _BrowseTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(_libraryProvider);
-    final theme = Theme.of(context);
 
     return Column(
       children: [
         _ContentFilters(state: state),
-        Expanded(child: _LibraryGrid(state: state, theme: theme)),
+        Expanded(child: _LibraryGrid(state: state)),
       ],
     );
   }

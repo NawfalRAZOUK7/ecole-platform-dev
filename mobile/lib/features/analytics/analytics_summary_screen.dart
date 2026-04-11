@@ -9,6 +9,7 @@ import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/reporting.dart';
 import 'package:ecole_platform/features/auth/auth_provider.dart';
 import 'package:ecole_platform/l10n/app_localizations.dart';
+import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 
 part 'analytics_cards.dart';
 part 'analytics_charts.dart';
@@ -164,12 +165,16 @@ class _AnalyticsSummaryScreenState
                   children: [
                     if (_error != null) ...[
                       Card(
-                        color: Colors.red.shade50,
+                        color: Theme.of(context).colorScheme.errorContainer,
                         child: Padding(
                           padding: const EdgeInsets.all(12),
                           child: Text(
                             _error!,
-                            style: const TextStyle(color: Colors.red),
+                            style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onErrorContainer,
+                            ),
                           ),
                         ),
                       ),
@@ -275,7 +280,7 @@ class _AnalyticsSummaryScreenState
             title: t.t('analytics.kpis.averageGrade'),
             child: _DistributionChart(
               buckets: _grades?.distribution ?? const [],
-              color: Colors.green,
+              color: Theme.of(context).semanticPalette.success,
             ),
           ),
         ),
@@ -349,7 +354,7 @@ class _AnalyticsSummaryScreenState
       ),
       child: _DistributionChart(
         buckets: _grades?.distribution ?? const [],
-        color: Colors.green,
+        color: Theme.of(context).semanticPalette.success,
       ),
     );
   }

@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/teacher.dart';
+import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 
 const _slots = ['slot_1', 'slot_2', 'slot_3', 'slot_4', 'slot_5', 'slot_6'];
 const _slotLabels = {
@@ -20,10 +21,10 @@ const _slotLabels = {
 };
 
 const _statusOptions = [
-  ('present', 'Présent', Colors.green),
-  ('absent', 'Absent', Colors.red),
-  ('late', 'Retard', Colors.orange),
-  ('excused', 'Excusé', Colors.blue),
+  ('present', 'Présent'),
+  ('absent', 'Absent'),
+  ('late', 'Retard'),
+  ('excused', 'Excusé'),
 ];
 
 class AttendanceScreen extends ConsumerStatefulWidget {
@@ -118,9 +119,9 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text('Présences enregistrées avec succès'),
-            backgroundColor: Colors.green,
+            backgroundColor: Theme.of(context).semanticPalette.success,
           ),
         );
         // Reset student statuses
@@ -370,11 +371,12 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                   FilledButton.icon(
                     onPressed: _submitting ? null : _submit,
                     icon: _submitting
-                        ? const SizedBox(
+                        ? SizedBox(
                             height: 16,
                             width: 16,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white))
+                                strokeWidth: 2,
+                                color: theme.colorScheme.onPrimary))
                         : const Icon(Icons.check),
                     label:
                         Text(_submitting ? 'Enregistrement...' : 'Enregistrer'),

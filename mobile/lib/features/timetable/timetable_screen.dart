@@ -7,24 +7,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/domain/entities/timetable.dart';
+import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'timetable_provider.dart';
 
-const _subjectColors = <String, Color>{
-  'math': Color(0xFFEFF6FF),
-  'french': Color(0xFFFEF3C7),
-  'arabic': Color(0xFFECFDF5),
-  'science': Color(0xFFF0FDF4),
-  'history': Color(0xFFFAF5FF),
-  'geography': Color(0xFFFFF7ED),
-  'english': Color(0xFFFDF2F8),
-  'islamic_studies': Color(0xFFF0F9FF),
-  'art': Color(0xFFFEFCE8),
-  'sport': Color(0xFFF0FDFA),
-};
-
-Color _getSubjectColor(String subject) {
+Color _getSubjectColor(ThemeData theme, String subject) {
   final key = subject.toLowerCase().replaceAll(' ', '_');
-  return _subjectColors[key] ?? const Color(0xFFF3F4F6);
+  return theme.semanticPalette.subjectColors[key] ??
+      theme.semanticPalette.subjectColors['default']!;
 }
 
 class TimetableScreen extends ConsumerWidget {
@@ -59,6 +48,9 @@ class TimetableScreen extends ConsumerWidget {
 
   Widget _buildBody(BuildContext context, WidgetRef ref, TimetableState state,
       AppLocalizations t) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -68,7 +60,7 @@ class TimetableScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            Icon(Icons.error_outline, size: 48, color: colors.error),
             const SizedBox(height: 16),
             Text(state.error!, textAlign: TextAlign.center),
             const SizedBox(height: 16),
@@ -87,7 +79,7 @@ class TimetableScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.calendar_today, size: 48, color: Colors.grey),
+            Icon(Icons.calendar_today, size: 48, color: colors.outline),
             const SizedBox(height: 16),
             Text(t.t('timetable.empty')),
           ],
@@ -203,7 +195,7 @@ class _DayColumn extends StatelessWidget {
               padding: const EdgeInsets.only(top: 40),
               child: Text('—',
                   style: theme.textTheme.headlineMedium
-                      ?.copyWith(color: Colors.grey)),
+                      ?.copyWith(color: theme.colorScheme.outline)),
             ),
           )
         else
@@ -228,8 +220,9 @@ class _SlotCard extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      color:
-          isCanceled ? const Color(0xFFFEE2E2) : _getSubjectColor(slot.subject),
+      color: isCanceled
+          ? theme.colorScheme.errorContainer
+          : _getSubjectColor(theme, slot.subject),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -246,11 +239,14 @@ class _SlotCard extends StatelessWidget {
                 ),
                 const Spacer(),
                 if (isCanceled)
-                  _exceptionChip(t.t('timetable.canceled'), Colors.red),
+                  _exceptionChip(
+                      t.t('timetable.canceled'), theme.colorScheme.error),
                 if (isSubstituted)
-                  _exceptionChip(t.t('timetable.substituted'), Colors.orange),
+                  _exceptionChip(t.t('timetable.substituted'),
+                      theme.semanticPalette.warning),
                 if (isRoomChanged && slot.exception?.newRoom != null)
-                  _exceptionChip('→ ${slot.exception!.newRoom}', Colors.blue),
+                  _exceptionChip('→ ${slot.exception!.newRoom}',
+                      theme.colorScheme.primary),
               ],
             ),
             const SizedBox(height: 4),
@@ -265,7 +261,7 @@ class _SlotCard extends StatelessWidget {
               const SizedBox(height: 2),
               Row(
                 children: [
-                  const Icon(Icons.room, size: 14, color: Colors.grey),
+                  Icon(Icons.room, size: 14, color: theme.colorScheme.outline),
                   const SizedBox(width: 4),
                   Text(slot.room!, style: theme.textTheme.bodySmall),
                 ],

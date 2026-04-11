@@ -25,6 +25,8 @@ class AnnouncementsScreen extends ConsumerWidget {
 
   Widget _buildBody(BuildContext context, WidgetRef ref,
       AnnouncementsState state, AppLocalizations t) {
+    final theme = Theme.of(context);
+
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -33,7 +35,7 @@ class AnnouncementsScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
             const SizedBox(height: 16),
             Text(state.error!),
             const SizedBox(height: 16),
@@ -50,7 +52,8 @@ class AnnouncementsScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.campaign_outlined, size: 48, color: Colors.grey),
+            Icon(Icons.campaign_outlined,
+                size: 48, color: theme.colorScheme.outline),
             const SizedBox(height: 16),
             Text(t.t('announcements.empty')),
           ],

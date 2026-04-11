@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/quiz.dart';
+import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 
 class StudentContentScreen extends ConsumerStatefulWidget {
   const StudentContentScreen({super.key});
@@ -115,7 +116,7 @@ class _StudentContentScreenState extends ConsumerState<StudentContentScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
             const SizedBox(height: 16),
             Text(_error!, textAlign: TextAlign.center),
             const SizedBox(height: 16),
@@ -128,11 +129,12 @@ class _StudentContentScreenState extends ConsumerState<StudentContentScreen> {
       );
     }
     if (_items.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.library_books, size: 48, color: Colors.grey),
+            Icon(Icons.library_books,
+                size: 48, color: theme.colorScheme.outline),
             SizedBox(height: 16),
             Text('Aucun contenu assigné'),
           ],
@@ -193,6 +195,7 @@ class _ContentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final color = _typeColor(theme, item.contentType);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
@@ -205,10 +208,10 @@ class _ContentCard extends StatelessWidget {
             children: [
               // Type icon
               CircleAvatar(
-                backgroundColor: _typeColor(item.contentType).withAlpha(30),
+                backgroundColor: color.withAlpha(30),
                 radius: 24,
-                child: Icon(_typeIcon(item.contentType),
-                    color: _typeColor(item.contentType), size: 24),
+                child:
+                    Icon(_typeIcon(item.contentType), color: color, size: 24),
               ),
               const SizedBox(width: 16),
               // Title + description
@@ -253,18 +256,18 @@ class _ContentCard extends StatelessWidget {
     }
   }
 
-  Color _typeColor(String type) {
+  Color _typeColor(ThemeData theme, String type) {
     switch (type.toUpperCase()) {
       case 'VIDEO':
-        return Colors.red;
+        return theme.colorScheme.error;
       case 'AUDIO':
-        return Colors.purple;
+        return theme.colorScheme.secondary;
       case 'DOCUMENT':
-        return Colors.blue;
+        return theme.colorScheme.primary;
       case 'INTERACTIVE':
-        return Colors.orange;
+        return theme.semanticPalette.warning;
       default:
-        return Colors.grey;
+        return theme.colorScheme.outline;
     }
   }
 }
@@ -275,10 +278,15 @@ class _ProgressBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final (icon, color, label) = switch (progress) {
-      'completed' => (Icons.check_circle, Colors.green, 'Terminé'),
-      'started' => (Icons.play_circle, Colors.blue, 'En cours'),
-      _ => (Icons.circle_outlined, Colors.grey, 'Nouveau'),
+      'completed' => (
+          Icons.check_circle,
+          theme.semanticPalette.success,
+          'Terminé'
+        ),
+      'started' => (Icons.play_circle, theme.colorScheme.primary, 'En cours'),
+      _ => (Icons.circle_outlined, theme.colorScheme.outline, 'Nouveau'),
     };
 
     return Column(
@@ -322,9 +330,9 @@ class _ContentPlayer extends StatelessWidget {
             onPressed: () {
               onProgress('completed');
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Marqué comme terminé'),
-                  backgroundColor: Colors.green,
+                SnackBar(
+                  content: const Text('Marqué comme terminé'),
+                  backgroundColor: theme.semanticPalette.success,
                 ),
               );
             },
@@ -385,6 +393,12 @@ class _ContentPlayer extends StatelessWidget {
 
   Widget _buildPlayer(BuildContext context, String type) {
     final theme = Theme.of(context);
+    final playerBackground = theme.brightness == Brightness.dark
+        ? theme.colorScheme.surfaceContainerHighest
+        : theme.colorScheme.onSurface;
+    final onPlayerBackground = theme.brightness == Brightness.dark
+        ? theme.colorScheme.onSurface
+        : theme.colorScheme.surface;
 
     switch (type) {
       case 'VIDEO':
@@ -398,17 +412,17 @@ class _ContentPlayer extends StatelessWidget {
                 height: 220,
                 margin: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.black87,
+                  color: playerBackground,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.play_circle_fill,
-                        size: 64, color: Colors.white),
+                    Icon(Icons.play_circle_fill,
+                        size: 64, color: onPlayerBackground),
                     const SizedBox(height: 12),
                     Text(item.title,
-                        style: const TextStyle(color: Colors.white),
+                        style: TextStyle(color: onPlayerBackground),
                         textAlign: TextAlign.center),
                     const SizedBox(height: 16),
                     FilledButton.icon(
@@ -434,7 +448,8 @@ class _ContentPlayer extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.audiotrack, size: 80, color: Colors.purple),
+              Icon(Icons.audiotrack,
+                  size: 80, color: theme.colorScheme.secondary),
               const SizedBox(height: 24),
               Text(item.title,
                   style: theme.textTheme.titleMedium,
@@ -464,7 +479,8 @@ class _ContentPlayer extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.picture_as_pdf, size: 80, color: Colors.blue),
+              Icon(Icons.picture_as_pdf,
+                  size: 80, color: theme.colorScheme.primary),
               const SizedBox(height: 24),
               Text(item.title,
                   style: theme.textTheme.titleMedium,
@@ -494,7 +510,8 @@ class _ContentPlayer extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.touch_app, size: 80, color: Colors.orange),
+              Icon(Icons.touch_app,
+                  size: 80, color: theme.semanticPalette.warning),
               const SizedBox(height: 24),
               Text(item.title,
                   style: theme.textTheme.titleMedium,

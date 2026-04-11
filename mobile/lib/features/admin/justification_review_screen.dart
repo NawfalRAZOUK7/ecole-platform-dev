@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/admin.dart';
+import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 
 // ── State ──
 
@@ -186,15 +187,17 @@ class JustificationReviewScreen extends ConsumerWidget {
 
   Widget _buildList(BuildContext context, WidgetRef ref,
       _JustificationsState state, ThemeData theme) {
+    final colors = theme.colorScheme;
+
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
     if (state.items.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.check_circle_outline, size: 48, color: Colors.grey),
+            Icon(Icons.check_circle_outline, size: 48, color: colors.outline),
             SizedBox(height: 16),
             Text('Aucune justification'),
           ],
@@ -222,7 +225,7 @@ class JustificationReviewScreen extends ConsumerWidget {
                     children: [
                       Icon(
                         _statusIcon(j.status),
-                        color: _statusColor(j.status),
+                        color: _statusColor(context, j.status),
                         size: 20,
                       ),
                       const SizedBox(width: 8),
@@ -244,11 +247,11 @@ class JustificationReviewScreen extends ConsumerWidget {
                     const SizedBox(height: 8),
                     Text('Raison du rejet :',
                         style: theme.textTheme.labelSmall
-                            ?.copyWith(color: Colors.red)),
+                            ?.copyWith(color: colors.error)),
                     const SizedBox(height: 4),
                     Text(j.rejectionReason!,
                         style: theme.textTheme.bodySmall
-                            ?.copyWith(color: Colors.red)),
+                            ?.copyWith(color: colors.error)),
                   ],
                   if (j.status == 'pending') ...[
                     const SizedBox(height: 16),
@@ -277,12 +280,12 @@ class JustificationReviewScreen extends ConsumerWidget {
                             child: OutlinedButton.icon(
                               onPressed: () =>
                                   _showRejectDialog(context, ref, j.id),
-                              icon: const Icon(Icons.close,
-                                  size: 18, color: Colors.red),
-                              label: const Text('Rejeter',
-                                  style: TextStyle(color: Colors.red)),
+                              icon: Icon(Icons.close,
+                                  size: 18, color: colors.error),
+                              label: Text('Rejeter',
+                                  style: TextStyle(color: colors.error)),
                               style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: Colors.red),
+                                side: BorderSide(color: colors.error),
                               ),
                             ),
                           ),
@@ -325,7 +328,8 @@ class JustificationReviewScreen extends ConsumerWidget {
                 Navigator.pop(ctx);
               }
             },
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error),
             child: const Text('Rejeter'),
           ),
         ],
@@ -359,16 +363,18 @@ class JustificationReviewScreen extends ConsumerWidget {
     }
   }
 
-  Color _statusColor(String s) {
+  Color _statusColor(BuildContext context, String s) {
+    final theme = Theme.of(context);
+
     switch (s) {
       case 'pending':
-        return Colors.orange;
+        return theme.semanticPalette.warning;
       case 'justified':
-        return Colors.green;
+        return theme.semanticPalette.success;
       case 'rejected':
-        return Colors.red;
+        return theme.colorScheme.error;
       default:
-        return Colors.grey;
+        return theme.colorScheme.outline;
     }
   }
 
@@ -389,23 +395,24 @@ class _JustStatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     Color color;
     String label;
     switch (status) {
       case 'pending':
-        color = Colors.orange;
+        color = theme.semanticPalette.warning;
         label = 'En attente';
         break;
       case 'justified':
-        color = Colors.green;
+        color = theme.semanticPalette.success;
         label = 'Approuvée';
         break;
       case 'rejected':
-        color = Colors.red;
+        color = theme.colorScheme.error;
         label = 'Rejetée';
         break;
       default:
-        color = Colors.grey;
+        color = theme.colorScheme.outline;
         label = status;
     }
     return Container(

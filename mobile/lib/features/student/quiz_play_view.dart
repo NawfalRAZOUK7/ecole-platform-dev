@@ -90,18 +90,18 @@ extension _QuizPlayView on _QuizPlayerScreenState {
                   FilledButton.icon(
                     onPressed: _submitting ? null : _submitAttempt,
                     icon: _submitting
-                        ? const SizedBox(
+                        ? SizedBox(
                             height: 16,
                             width: 16,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Colors.white,
+                              color: theme.colorScheme.onPrimary,
                             ),
                           )
                         : const Icon(Icons.check, size: 18),
                     label: Text(_submitting ? 'Envoi...' : 'Soumettre'),
                     style: FilledButton.styleFrom(
-                      backgroundColor: Colors.green,
+                      backgroundColor: theme.semanticPalette.success,
                     ),
                   ),
               ],
@@ -162,7 +162,9 @@ extension _QuizPlayView on _QuizPlayerScreenState {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
             child: const Text('Quitter'),
           ),
         ],
@@ -181,7 +183,8 @@ class _QuizTimerChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isWarning = secondsLeft < 60;
-    final color = isWarning ? Colors.red : theme.colorScheme.primary;
+    final color =
+        isWarning ? theme.colorScheme.error : theme.colorScheme.primary;
 
     return Semantics(
       label:
@@ -191,7 +194,7 @@ class _QuizTimerChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: isWarning
-              ? Colors.red.withAlpha(25)
+              ? theme.colorScheme.error.withAlpha(25)
               : theme.colorScheme.primaryContainer,
           borderRadius: BorderRadius.circular(20),
         ),
@@ -284,7 +287,7 @@ class _ProgressDots extends StatelessWidget {
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                             color: isCurrent
-                                ? Colors.white
+                                ? theme.colorScheme.onPrimary
                                 : isAnswered
                                     ? theme.colorScheme.primary
                                     : theme.colorScheme.onSurface,

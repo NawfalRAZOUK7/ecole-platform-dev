@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/teacher.dart';
+import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 
 // ── State ──
 
@@ -219,11 +220,11 @@ class SubmissionsScreen extends ConsumerWidget {
       return const Center(child: CircularProgressIndicator());
     }
     if (state.items.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.inbox, size: 48, color: Colors.grey),
+            Icon(Icons.inbox, size: 48, color: theme.colorScheme.outline),
             SizedBox(height: 16),
             Text('Aucune soumission'),
           ],
@@ -262,9 +263,10 @@ class SubmissionsScreen extends ConsumerWidget {
               children: [
                 ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: _statusColor(sub.status).withAlpha(30),
+                    backgroundColor:
+                        _statusColor(theme, sub.status).withAlpha(30),
                     child: Icon(Icons.description,
-                        color: _statusColor(sub.status), size: 20),
+                        color: _statusColor(theme, sub.status), size: 20),
                   ),
                   title: Text(sub.assignmentTitle ?? 'Devoir',
                       style: const TextStyle(fontWeight: FontWeight.w600)),
@@ -332,16 +334,16 @@ class SubmissionsScreen extends ConsumerWidget {
     }
   }
 
-  Color _statusColor(String s) {
+  Color _statusColor(ThemeData theme, String s) {
     switch (s) {
       case 'submitted':
-        return Colors.blue;
+        return theme.colorScheme.primary;
       case 'graded':
-        return Colors.green;
+        return theme.semanticPalette.success;
       case 'draft':
-        return Colors.grey;
+        return theme.colorScheme.outline;
       default:
-        return Colors.grey;
+        return theme.colorScheme.outline;
     }
   }
 
@@ -361,19 +363,20 @@ class _SubStatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     Color color;
     String label;
     switch (status) {
       case 'submitted':
-        color = Colors.blue;
+        color = theme.colorScheme.primary;
         label = 'Soumis';
         break;
       case 'graded':
-        color = Colors.green;
+        color = theme.semanticPalette.success;
         label = 'Noté';
         break;
       default:
-        color = Colors.grey;
+        color = theme.colorScheme.outline;
         label = 'Brouillon';
     }
     return Container(
@@ -506,11 +509,11 @@ class _GradingFormState extends State<_GradingForm> {
                         );
                       },
                 child: widget.isLoading
-                    ? const SizedBox(
+                    ? SizedBox(
                         height: 16,
                         width: 16,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white))
+                            strokeWidth: 2, color: theme.colorScheme.onPrimary))
                     : const Text('Enregistrer'),
               ),
             ],

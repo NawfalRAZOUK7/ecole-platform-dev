@@ -2,15 +2,15 @@ part of 'content_library_screen.dart';
 
 class _LibraryGrid extends ConsumerWidget {
   final _LibraryState state;
-  final ThemeData theme;
 
   const _LibraryGrid({
     required this.state,
-    required this.theme,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -19,7 +19,7 @@ class _LibraryGrid extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
             const SizedBox(height: 16),
             Text(state.error!, textAlign: TextAlign.center),
             const SizedBox(height: 16),
@@ -32,11 +32,12 @@ class _LibraryGrid extends ConsumerWidget {
       );
     }
     if (state.items.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.library_books, size: 48, color: Colors.grey),
+            Icon(Icons.library_books,
+                size: 48, color: theme.colorScheme.outline),
             SizedBox(height: 16),
             Text('Aucun contenu disponible'),
           ],
@@ -68,14 +69,17 @@ class ContentCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final typeColor = _typeColor(theme, item.contentType);
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: _typeColor(item.contentType).withAlpha(30),
+          backgroundColor: typeColor.withAlpha(30),
           child: Icon(
             _typeIcon(item.contentType),
-            color: _typeColor(item.contentType),
+            color: typeColor,
           ),
         ),
         title: Text(
@@ -99,7 +103,9 @@ class ContentCard extends ConsumerWidget {
                 item.origin == 'platform' ? 'Plateforme' : 'École',
                 style: TextStyle(
                   fontSize: 10,
-                  color: item.origin == 'platform' ? Colors.blue : Colors.green,
+                  color: item.origin == 'platform'
+                      ? theme.colorScheme.primary
+                      : theme.semanticPalette.success,
                 ),
               ),
               padding: EdgeInsets.zero,
@@ -141,7 +147,10 @@ Future<void> _showAssignDialog(
   } catch (e) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur: $e'), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text('Erreur: $e'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
       );
     }
     return;
@@ -179,14 +188,17 @@ Future<void> _showAssignDialog(
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Contenu assigné à ${selectedClass.name}'),
-          backgroundColor: Colors.green,
+          backgroundColor: Theme.of(context).semanticPalette.success,
         ),
       );
     }
   } catch (e) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur: $e'), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text('Erreur: $e'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
       );
     }
   }
@@ -201,16 +213,19 @@ Future<void> _submitForReview(
     await ref.read(contentLibraryRepositoryProvider).submitForReview(contentId);
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('Soumis pour révision'),
-          backgroundColor: Colors.green,
+          backgroundColor: Theme.of(context).semanticPalette.success,
         ),
       );
     }
   } catch (e) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur: $e'), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text('Erreur: $e'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
       );
     }
   }
@@ -231,17 +246,17 @@ IconData _typeIcon(String type) {
   }
 }
 
-Color _typeColor(String type) {
+Color _typeColor(ThemeData theme, String type) {
   switch (type.toUpperCase()) {
     case 'VIDEO':
-      return Colors.red;
+      return theme.colorScheme.error;
     case 'AUDIO':
-      return Colors.purple;
+      return theme.colorScheme.secondary;
     case 'DOCUMENT':
-      return Colors.blue;
+      return theme.colorScheme.primary;
     case 'INTERACTIVE':
-      return Colors.orange;
+      return theme.semanticPalette.warning;
     default:
-      return Colors.grey;
+      return theme.colorScheme.outline;
   }
 }

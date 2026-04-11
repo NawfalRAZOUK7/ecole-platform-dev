@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:ecole_platform/l10n/app_localizations.dart';
+import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'progress_provider.dart';
 
 /// Student progress dashboard with 4 tabbed chart views (grades, content,
@@ -69,6 +70,8 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
   }
 
   Widget _buildBody(ProgressState state, AppLocalizations t, ThemeData theme) {
+    final colors = theme.colorScheme;
+
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -77,7 +80,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            Icon(Icons.error_outline, size: 48, color: colors.error),
             const SizedBox(height: 16),
             Text(state.error!, textAlign: TextAlign.center),
             const SizedBox(height: 16),
@@ -234,19 +237,18 @@ class _ContentTab extends StatelessWidget {
       return Center(child: Text(t.t('progress.noData')));
     }
 
-    final colors = [
-      const Color(0xFF10b981),
-      const Color(0xFFf59e0b),
-      const Color(0xFFef4444)
-    ];
+    final palette = theme.semanticPalette.chartPalette.take(3).toList();
     final sections = ds.data.asMap().entries.map((e) {
       return PieChartSectionData(
         value: e.value,
-        color: colors[e.key % colors.length],
+        color: palette[e.key % palette.length],
         title: '${e.value.toInt()}',
         radius: 60,
-        titleStyle: const TextStyle(
-            fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+        titleStyle: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: theme.colorScheme.onPrimary,
+        ),
       );
     }).toList();
 
@@ -284,7 +286,7 @@ class _ContentTab extends StatelessWidget {
                   Container(
                       width: 12,
                       height: 12,
-                      color: colors[e.key % colors.length]),
+                      color: palette[e.key % palette.length]),
                   const SizedBox(width: 4),
                   Text(e.value, style: const TextStyle(fontSize: 12)),
                 ]),
@@ -320,7 +322,7 @@ class _ActivityTab extends StatelessWidget {
       return BarChartGroupData(x: e.key, barRods: [
         BarChartRodData(
           toY: e.value,
-          color: const Color(0xFF8b5cf6),
+          color: theme.semanticPalette.chartPalette[6],
           width: 20,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
         ),
@@ -398,20 +400,23 @@ class _AttendanceTab extends StatelessWidget {
       return Center(child: Text(t.t('progress.noData')));
     }
 
-    final colors = [
-      const Color(0xFF10b981),
-      const Color(0xFFef4444),
-      const Color(0xFF3b82f6),
-      const Color(0xFFf59e0b),
+    final palette = [
+      theme.semanticPalette.success,
+      theme.colorScheme.error,
+      theme.semanticPalette.info,
+      theme.semanticPalette.warning,
     ];
     final sections = ds.data.asMap().entries.map((e) {
       return PieChartSectionData(
         value: e.value,
-        color: colors[e.key % colors.length],
+        color: palette[e.key % palette.length],
         title: '${e.value.toInt()}',
         radius: 55,
-        titleStyle: const TextStyle(
-            fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+        titleStyle: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: theme.colorScheme.onPrimary,
+        ),
       );
     }).toList();
 
@@ -430,7 +435,8 @@ class _AttendanceTab extends StatelessWidget {
           ),
           Text(
             '${progress.attendanceSummary.present}/${progress.attendanceSummary.total}',
-            style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey),
+            style: theme.textTheme.bodyMedium
+                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 16),
           Expanded(
@@ -451,7 +457,7 @@ class _AttendanceTab extends StatelessWidget {
                 Container(
                     width: 12,
                     height: 12,
-                    color: colors[e.key % colors.length]),
+                    color: palette[e.key % palette.length]),
                 const SizedBox(width: 4),
                 Text(e.value, style: const TextStyle(fontSize: 12)),
               ]);

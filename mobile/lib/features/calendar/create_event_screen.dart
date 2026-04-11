@@ -241,10 +241,15 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
         children: [
           if (_error != null) ...[
             Card(
-              color: Colors.red.shade50,
+              color: Theme.of(context).colorScheme.errorContainer,
               child: Padding(
                 padding: const EdgeInsets.all(12),
-                child: Text(_error!, style: const TextStyle(color: Colors.red)),
+                child: Text(
+                  _error!,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onErrorContainer,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 12),

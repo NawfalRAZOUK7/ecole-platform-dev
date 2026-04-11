@@ -33,6 +33,8 @@ class ConversationsScreen extends ConsumerWidget {
 
   Widget _buildBody(BuildContext context, WidgetRef ref,
       ConversationsState state, AppLocalizations t, String userId) {
+    final theme = Theme.of(context);
+
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -41,7 +43,7 @@ class ConversationsScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
             const SizedBox(height: 16),
             Text(state.error!),
             const SizedBox(height: 16),
@@ -58,7 +60,8 @@ class ConversationsScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.chat_bubble_outline, size: 48, color: Colors.grey),
+            Icon(Icons.chat_bubble_outline,
+                size: 48, color: theme.colorScheme.outline),
             const SizedBox(height: 16),
             Text(t.t('messages.empty')),
           ],

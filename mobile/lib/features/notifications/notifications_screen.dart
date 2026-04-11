@@ -109,7 +109,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
             const SizedBox(height: 16),
             Text(state.error!, textAlign: TextAlign.center),
             const SizedBox(height: 16),
@@ -127,7 +127,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.notifications_none, size: 48, color: Colors.grey),
+            Icon(Icons.notifications_none,
+                size: 48, color: theme.colorScheme.outline),
             const SizedBox(height: 16),
             Text(t.t('notifications.empty')),
           ],

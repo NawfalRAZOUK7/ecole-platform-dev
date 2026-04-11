@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ecole_platform/l10n/app_localizations.dart';
+import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'progress_provider.dart';
 
 /// Parent progress overview screen showing a summary card per child.
@@ -40,7 +41,7 @@ class ParentProgressScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
             const SizedBox(height: 16),
             Text(state.error!, textAlign: TextAlign.center),
             const SizedBox(height: 16),
@@ -58,7 +59,8 @@ class ParentProgressScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.school_outlined, size: 48, color: Colors.grey),
+            Icon(Icons.school_outlined,
+                size: 48, color: theme.colorScheme.outline),
             const SizedBox(height: 16),
             Text(t.t('progress.noChildren')),
           ],
@@ -95,11 +97,11 @@ class _ChildProgressCard extends StatelessWidget {
     required this.onTap,
   });
 
-  Color _gradeColor(double v) => v >= 80
-      ? Colors.green
-      : v >= 50
-          ? Colors.orange
-          : Colors.red;
+  Color _gradeColor() => child.gradeAverage >= 80
+      ? theme.semanticPalette.success
+      : child.gradeAverage >= 50
+          ? theme.semanticPalette.warning
+          : theme.colorScheme.error;
 
   @override
   Widget build(BuildContext context) {
@@ -144,21 +146,21 @@ class _ChildProgressCard extends StatelessWidget {
                   _MetricChip(
                     label: t.t('progress.gradeAvg'),
                     value: child.gradeAverage.toStringAsFixed(1),
-                    color: _gradeColor(child.gradeAverage),
+                    color: _gradeColor(),
                   ),
                   const SizedBox(width: 8),
                   _MetricChip(
                     label: t.t('progress.attendanceRate'),
                     value: '${child.attendanceRate.toStringAsFixed(0)}%',
                     color: child.attendanceRate >= 85
-                        ? Colors.green
-                        : Colors.orange,
+                        ? theme.semanticPalette.success
+                        : theme.semanticPalette.warning,
                   ),
                   const SizedBox(width: 8),
                   _MetricChip(
                     label: t.t('progress.contentRate'),
                     value: '${child.contentCompletionRate.toStringAsFixed(0)}%',
-                    color: Colors.blue,
+                    color: theme.colorScheme.primary,
                   ),
                 ],
               ),
@@ -193,7 +195,9 @@ class _MetricChip extends StatelessWidget {
                     fontSize: 18, fontWeight: FontWeight.bold, color: color)),
             const SizedBox(height: 2),
             Text(label,
-                style: const TextStyle(fontSize: 10, color: Colors.grey),
+                style: TextStyle(
+                    fontSize: 10,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant),
                 textAlign: TextAlign.center),
           ],
         ),

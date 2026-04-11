@@ -34,7 +34,7 @@ class MyChildrenScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
             const SizedBox(height: 16),
             Text(state.error!, textAlign: TextAlign.center),
             const SizedBox(height: 16),
@@ -48,11 +48,12 @@ class MyChildrenScreen extends ConsumerWidget {
     }
 
     if (state.items.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.family_restroom, size: 48, color: Colors.grey),
+            Icon(Icons.family_restroom,
+                size: 48, color: theme.colorScheme.outline),
             SizedBox(height: 16),
             Text('Aucun enfant lié à votre compte'),
           ],

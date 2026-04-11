@@ -129,13 +129,15 @@ class _ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
             const SizedBox(height: 16),
             Text(error, textAlign: TextAlign.center),
             const SizedBox(height: 16),
@@ -158,13 +160,15 @@ class _EmptyView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 48, color: Colors.grey),
+          Icon(icon, size: 48, color: theme.colorScheme.outline),
           const SizedBox(height: 16),
-          Text(message, style: Theme.of(context).textTheme.bodyLarge),
+          Text(message, style: theme.textTheme.bodyLarge),
         ],
       ),
     );

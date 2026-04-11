@@ -11,9 +11,13 @@ final ThemeData appLightTheme = ThemeData(
     brightness: Brightness.light,
     primary: AppColors.primary,
     secondary: AppColors.secondary,
+    tertiary: AppColors.info,
     surface: AppColors.surface,
     error: AppColors.error,
   ),
+  extensions: const <ThemeExtension<dynamic>>[
+    AppThemeColors.light,
+  ],
   useMaterial3: true,
   fontFamily: 'Inter',
   scaffoldBackgroundColor: AppColors.background,

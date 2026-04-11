@@ -12,6 +12,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/features/auth/auth_provider.dart';
 import 'package:ecole_platform/l10n/app_localizations.dart';
+import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 
 const _roleLabels = {
   'ADM': 'Administrateur',
@@ -272,16 +273,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.green.shade50,
+                color: theme.semanticPalette.successContainer,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.check_circle, color: Colors.green, size: 20),
+                  Icon(Icons.check_circle,
+                      color: theme.semanticPalette.success, size: 20),
                   const SizedBox(width: 8),
                   Text(_saveSuccess!,
-                      style:
-                          const TextStyle(color: Colors.green, fontSize: 13)),
+                      style: TextStyle(
+                        color: theme.semanticPalette.success,
+                        fontSize: 13,
+                      )),
                 ],
               ),
             ),
@@ -409,11 +413,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           // Logout button
           OutlinedButton.icon(
             onPressed: () => ref.read(authProvider.notifier).logout(),
-            icon: const Icon(Icons.logout, color: Colors.red),
-            label:
-                const Text('Déconnexion', style: TextStyle(color: Colors.red)),
+            icon: Icon(Icons.logout, color: theme.colorScheme.error),
+            label: Text('Déconnexion',
+                style: TextStyle(color: theme.colorScheme.error)),
             style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Colors.red),
+              side: BorderSide(color: theme.colorScheme.error),
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
           ),
@@ -481,11 +485,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   FilledButton(
                     onPressed: _saving ? null : _saveProfile,
                     child: _saving
-                        ? const SizedBox(
+                        ? SizedBox(
                             height: 16,
                             width: 16,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white),
+                              strokeWidth: 2,
+                              color: theme.colorScheme.onPrimary,
+                            ),
                           )
                         : const Text('Enregistrer'),
                   ),
@@ -530,7 +536,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           padding: const EdgeInsets.all(16),
           child: Text(
             'Aucun détail de profil. Cliquez sur Modifier pour ajouter.',
-            style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 13,
+            ),
           ),
         ),
       );
@@ -588,9 +597,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           SizedBox(
             width: 120,
             child: Text(label,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 13,
-                    color: Colors.grey,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.w500)),
           ),
           Expanded(

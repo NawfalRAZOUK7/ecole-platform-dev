@@ -118,6 +118,9 @@ extension _RegisterSteps on _RegisterScreenState {
           const SizedBox(height: 8),
           ..._passwordRules.entries.map((entry) {
             final passed = _checkRule(entry.key, password);
+            final color = passed
+                ? theme.semanticPalette.success
+                : theme.colorScheme.error;
             return Padding(
               padding: const EdgeInsets.only(left: 8, bottom: 2),
               child: Row(
@@ -125,14 +128,14 @@ extension _RegisterSteps on _RegisterScreenState {
                   Icon(
                     passed ? Icons.check_circle : Icons.cancel,
                     size: 14,
-                    color: passed ? Colors.green : Colors.red,
+                    color: color,
                   ),
                   const SizedBox(width: 6),
                   Text(
                     entry.value,
                     style: TextStyle(
                       fontSize: 12,
-                      color: passed ? Colors.green : Colors.red,
+                      color: color,
                     ),
                   ),
                 ],
@@ -153,11 +156,11 @@ extension _RegisterSteps on _RegisterScreenState {
         ),
         if (confirm.isNotEmpty && password != confirm) ...[
           const SizedBox(height: 4),
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(left: 8),
             child: Text(
               'Les mots de passe ne correspondent pas',
-              style: TextStyle(fontSize: 12, color: Colors.red),
+              style: TextStyle(fontSize: 12, color: theme.colorScheme.error),
             ),
           ),
         ],
@@ -296,12 +299,12 @@ extension _RegisterSteps on _RegisterScreenState {
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: _loading
-                    ? const SizedBox(
+                    ? SizedBox(
                         height: 20,
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: theme.colorScheme.onPrimary,
                         ),
                       )
                     : const Text(
@@ -357,12 +360,12 @@ extension _RegisterSteps on _RegisterScreenState {
             padding: const EdgeInsets.symmetric(vertical: 16),
           ),
           child: _loading
-              ? const SizedBox(
+              ? SizedBox(
                   height: 20,
                   width: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Colors.white,
+                    color: theme.colorScheme.onPrimary,
                   ),
                 )
               : const Text('Vérifier', style: TextStyle(fontSize: 16)),
@@ -371,9 +374,9 @@ extension _RegisterSteps on _RegisterScreenState {
         Center(
           child: TextButton(
             onPressed: _navigateToHome,
-            child: const Text(
+            child: Text(
               'Passer pour l\'instant',
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
             ),
           ),
         ),

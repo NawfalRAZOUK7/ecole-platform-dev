@@ -15,6 +15,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/quiz.dart';
 import 'package:ecole_platform/domain/entities/teacher.dart';
+import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/widgets/search_filter_bar.dart';
 
 part 'content_filters.dart';

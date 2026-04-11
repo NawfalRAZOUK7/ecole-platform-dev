@@ -258,11 +258,12 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                         FilledButton(
                           onPressed: _loading ? null : _verifySetup,
                           child: _loading
-                              ? const SizedBox(
+                              ? SizedBox(
                                   height: 16,
                                   width: 16,
                                   child: CircularProgressIndicator(
-                                      strokeWidth: 2, color: Colors.white))
+                                      strokeWidth: 2,
+                                      color: theme.colorScheme.onPrimary))
                               : const Text('Vérifier'),
                         ),
                         const SizedBox(width: 8),
@@ -391,11 +392,12 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                             backgroundColor: theme.colorScheme.error,
                           ),
                           child: _loading
-                              ? const SizedBox(
+                              ? SizedBox(
                                   height: 16,
                                   width: 16,
                                   child: CircularProgressIndicator(
-                                      strokeWidth: 2, color: Colors.white))
+                                      strokeWidth: 2,
+                                      color: theme.colorScheme.onPrimary))
                               : const Text('Désactiver'),
                         ),
                         const SizedBox(width: 8),

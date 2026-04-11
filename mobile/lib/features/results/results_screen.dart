@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/quiz.dart';
+import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'results_provider.dart';
 
 class ResultsScreen extends ConsumerStatefulWidget {
@@ -92,7 +93,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
             const SizedBox(height: 16),
             Text(state.error!, textAlign: TextAlign.center),
             const SizedBox(height: 16),
@@ -106,11 +107,11 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen>
     }
 
     if (state.items.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.assessment, size: 48, color: Colors.grey),
+            Icon(Icons.assessment, size: 48, color: theme.colorScheme.outline),
             SizedBox(height: 16),
             Text('Aucun résultat disponible'),
           ],
@@ -147,18 +148,20 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen>
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 4),
                           decoration: BoxDecoration(
-                            color: _scoreColor(r.score!, r.totalPoints)
+                            color: _scoreColor(theme, r.score!, r.totalPoints)
                                 .withAlpha(20),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: _scoreColor(r.score!, r.totalPoints),
+                              color:
+                                  _scoreColor(theme, r.score!, r.totalPoints),
                             ),
                           ),
                           child: Text(
                             '${r.score!.toStringAsFixed(0)}/${r.totalPoints}',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: _scoreColor(r.score!, r.totalPoints),
+                              color:
+                                  _scoreColor(theme, r.score!, r.totalPoints),
                             ),
                           ),
                         ),
@@ -213,13 +216,13 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen>
     }
 
     if (_quizResults.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.quiz, size: 48, color: Colors.grey),
-            SizedBox(height: 16),
-            Text('Aucun résultat de quiz'),
+            Icon(Icons.quiz, size: 48, color: theme.colorScheme.outline),
+            const SizedBox(height: 16),
+            const Text('Aucun résultat de quiz'),
           ],
         ),
       );
@@ -257,15 +260,15 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen>
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 4),
                         decoration: BoxDecoration(
-                          color: _pctColor(pct).withAlpha(20),
+                          color: _pctColor(theme, pct).withAlpha(20),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: _pctColor(pct)),
+                          border: Border.all(color: _pctColor(theme, pct)),
                         ),
                         child: Text(
                           '${score.toStringAsFixed(0)}/${maxScore.toStringAsFixed(0)}',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: _pctColor(pct),
+                            color: _pctColor(theme, pct),
                           ),
                         ),
                       ),
@@ -286,7 +289,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen>
                         '${(pct * 100).toStringAsFixed(0)}%',
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
-                          color: _pctColor(pct),
+                          color: _pctColor(theme, pct),
                         ),
                       ),
                       const Spacer(),
@@ -306,18 +309,18 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen>
     );
   }
 
-  Color _scoreColor(double score, int total) {
-    if (total == 0) return Colors.grey;
+  Color _scoreColor(ThemeData theme, double score, int total) {
+    if (total == 0) return theme.colorScheme.outline;
     final pct = score / total;
-    if (pct >= 0.8) return Colors.green;
-    if (pct >= 0.5) return Colors.orange;
-    return Colors.red;
+    if (pct >= 0.8) return theme.semanticPalette.success;
+    if (pct >= 0.5) return theme.semanticPalette.warning;
+    return theme.colorScheme.error;
   }
 
-  Color _pctColor(double pct) {
-    if (pct >= 0.8) return Colors.green;
-    if (pct >= 0.5) return Colors.orange;
-    return Colors.red;
+  Color _pctColor(ThemeData theme, double pct) {
+    if (pct >= 0.8) return theme.semanticPalette.success;
+    if (pct >= 0.5) return theme.semanticPalette.warning;
+    return theme.colorScheme.error;
   }
 
   String _formatDate(String dateStr) {

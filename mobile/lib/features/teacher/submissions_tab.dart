@@ -47,7 +47,7 @@ class _SubmissionsTabState extends ConsumerState<_SubmissionsTab> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
             const SizedBox(height: 16),
             Text(_error!),
             const SizedBox(height: 16),
@@ -60,11 +60,11 @@ class _SubmissionsTabState extends ConsumerState<_SubmissionsTab> {
       );
     }
     if (_submissions.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.inbox, size: 48, color: Colors.grey),
+            Icon(Icons.inbox, size: 48, color: theme.colorScheme.outline),
             SizedBox(height: 16),
             Text('Aucune soumission'),
           ],
@@ -123,12 +123,13 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final (color, label) = switch (status.toLowerCase()) {
-      'pending' => (Colors.orange, 'En attente'),
-      'approved' => (Colors.green, 'Approuvé'),
-      'rejected' => (Colors.red, 'Rejeté'),
-      'promoted' => (Colors.blue, 'Promu'),
-      _ => (Colors.grey, status),
+      'pending' => (theme.semanticPalette.warning, 'En attente'),
+      'approved' => (theme.semanticPalette.success, 'Approuvé'),
+      'rejected' => (theme.colorScheme.error, 'Rejeté'),
+      'promoted' => (theme.colorScheme.primary, 'Promu'),
+      _ => (theme.colorScheme.outline, status),
     };
 
     return Container(

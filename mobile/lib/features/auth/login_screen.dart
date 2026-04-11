@@ -169,11 +169,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                     child: authState.isLoading
-                        ? const SizedBox(
+                        ? SizedBox(
                             height: 20,
                             width: 20,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white),
+                                strokeWidth: 2,
+                                color: theme.colorScheme.onPrimary),
                           )
                         : const Text('Vérifier',
                             style: TextStyle(fontSize: 16)),
@@ -333,12 +334,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                     child: authState.isLoading
-                        ? const SizedBox(
+                        ? SizedBox(
                             height: 20,
                             width: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Colors.white,
+                              color: theme.colorScheme.onPrimary,
                             ),
                           )
                         : const Text('Se connecter',

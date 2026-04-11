@@ -328,11 +328,12 @@ class _AssignmentFormScreenState extends ConsumerState<AssignmentFormScreen> {
                       FilledButton(
                         onPressed: state.creating ? null : _submit,
                         child: state.creating
-                            ? const SizedBox(
+                            ? SizedBox(
                                 height: 16,
                                 width: 16,
                                 child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: Colors.white))
+                                    strokeWidth: 2,
+                                    color: theme.colorScheme.onPrimary))
                             : const Text('Créer le devoir'),
                       ),
                     ],
@@ -370,11 +371,12 @@ class _AssignmentFormScreenState extends ConsumerState<AssignmentFormScreen> {
       return const Center(child: CircularProgressIndicator());
     }
     if (state.assignments.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.assignment_outlined, size: 48, color: Colors.grey),
+            Icon(Icons.assignment_outlined,
+                size: 48, color: theme.colorScheme.outline),
             SizedBox(height: 16),
             Text('Aucun devoir'),
           ],

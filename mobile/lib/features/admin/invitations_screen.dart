@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/admin.dart';
+import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 
 // ── State ──
 
@@ -257,11 +258,14 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
                               .read(_invitationsProvider.notifier)
                               .createInvitation(_roleTarget, _expiresInHours),
                       child: state.creating
-                          ? const SizedBox(
+                          ? SizedBox(
                               height: 16,
                               width: 16,
                               child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white))
+                                strokeWidth: 2,
+                                color: theme.colorScheme.onPrimary,
+                              ),
+                            )
                           : const Text('Générer'),
                     ),
                     if (state.createdCode != null) ...[
@@ -335,11 +339,12 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
       return const Center(child: CircularProgressIndicator());
     }
     if (state.items.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.mail_outline, size: 48, color: Colors.grey),
+            Icon(Icons.mail_outline,
+                size: 48, color: theme.colorScheme.outline),
             SizedBox(height: 16),
             Text('Aucune invitation'),
           ],
@@ -360,8 +365,8 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
             margin: const EdgeInsets.only(bottom: 8),
             child: ListTile(
               leading: CircleAvatar(
-                backgroundColor: _statusColor(inv.status).withAlpha(30),
-                child: Icon(Icons.mail, color: _statusColor(inv.status)),
+                backgroundColor: _statusColor(theme, inv.status).withAlpha(30),
+                child: Icon(Icons.mail, color: _statusColor(theme, inv.status)),
               ),
               title: Row(
                 children: [
@@ -382,8 +387,8 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
                           width: 20,
                           child: CircularProgressIndicator(strokeWidth: 2))
                       : IconButton(
-                          icon: const Icon(Icons.cancel_outlined,
-                              color: Colors.red),
+                          icon: Icon(Icons.cancel_outlined,
+                              color: theme.colorScheme.error),
                           onPressed: () => ref
                               .read(_invitationsProvider.notifier)
                               .revoke(inv.id),
@@ -410,16 +415,16 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
     }
   }
 
-  Color _statusColor(String s) {
+  Color _statusColor(ThemeData theme, String s) {
     switch (s) {
       case 'active':
-        return Colors.green;
+        return theme.semanticPalette.success;
       case 'consumed':
-        return Colors.blue;
+        return theme.colorScheme.primary;
       case 'expired':
-        return Colors.grey;
+        return theme.colorScheme.outline;
       default:
-        return Colors.grey;
+        return theme.colorScheme.outline;
     }
   }
 
@@ -440,19 +445,20 @@ class _InvStatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     Color color;
     String label;
     switch (status) {
       case 'active':
-        color = Colors.green;
+        color = theme.semanticPalette.success;
         label = 'Active';
         break;
       case 'consumed':
-        color = Colors.blue;
+        color = theme.colorScheme.primary;
         label = 'Utilisée';
         break;
       default:
-        color = Colors.grey;
+        color = theme.colorScheme.outline;
         label = 'Expirée';
     }
     return Container(

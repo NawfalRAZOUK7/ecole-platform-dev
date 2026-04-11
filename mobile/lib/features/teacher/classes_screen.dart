@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/teacher.dart';
+import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/widgets/search_filter_bar.dart';
 
 // ── State ──
@@ -146,7 +147,7 @@ class ClassesScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
             const SizedBox(height: 16),
             Text(state.error!, textAlign: TextAlign.center),
             const SizedBox(height: 16),
@@ -161,11 +162,12 @@ class ClassesScreen extends ConsumerWidget {
 
     final classes = state.filteredClasses;
     if (classes.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.class_outlined, size: 48, color: Colors.grey),
+            Icon(Icons.class_outlined,
+                size: 48, color: theme.colorScheme.outline),
             SizedBox(height: 16),
             Text('Aucune classe assignée'),
           ],
@@ -239,8 +241,8 @@ class ClassesScreen extends ConsumerWidget {
                             decoration: BoxDecoration(
                               border: Border.all(
                                   color: s.enrollmentStatus == 'active'
-                                      ? Colors.green
-                                      : Colors.grey),
+                                      ? theme.semanticPalette.success
+                                      : theme.colorScheme.outline),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
@@ -250,8 +252,8 @@ class ClassesScreen extends ConsumerWidget {
                               style: TextStyle(
                                 fontSize: 10,
                                 color: s.enrollmentStatus == 'active'
-                                    ? Colors.green
-                                    : Colors.grey,
+                                    ? theme.semanticPalette.success
+                                    : theme.colorScheme.outline,
                               ),
                             ),
                           ),

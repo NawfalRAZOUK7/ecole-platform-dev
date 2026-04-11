@@ -89,8 +89,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     : state.messages.isEmpty
                         ? Center(
                             child: Text(t.t('messages.noMessages'),
-                                style: theme.textTheme.bodyMedium
-                                    ?.copyWith(color: Colors.grey)))
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant)))
                         : ListView.builder(
                             controller: _scrollController,
                             padding: const EdgeInsets.symmetric(
@@ -221,7 +221,7 @@ class _MessageBubble extends StatelessWidget {
                     fontSize: 10,
                     color: isOwn
                         ? theme.colorScheme.onPrimary.withAlpha(180)
-                        : Colors.grey,
+                        : theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
                 if (isOwn) ...[

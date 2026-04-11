@@ -538,7 +538,7 @@ extension _DocumentsActions on _DocumentsScreenState {
                     setDialogState(() => selectedRating = index + 1),
                 icon: Icon(
                   index < selectedRating ? Icons.star : Icons.star_border,
-                  color: Colors.amber,
+                  color: Theme.of(context).semanticPalette.warning,
                 ),
               ),
             ),

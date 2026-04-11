@@ -13,6 +13,7 @@ import 'package:ecole_platform/domain/entities/document_management.dart';
 import 'package:ecole_platform/features/auth/auth_provider.dart';
 import 'package:ecole_platform/features/documents/document_preview_screen.dart';
 import 'package:ecole_platform/l10n/app_localizations.dart';
+import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 
 part 'documents_actions.dart';
 part 'documents_tabs.dart';

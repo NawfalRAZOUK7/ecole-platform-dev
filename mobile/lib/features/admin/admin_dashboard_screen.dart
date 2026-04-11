@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/admin.dart';
+import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 
 final _dashboardProvider =
     FutureProvider.autoDispose<DashboardStats>((ref) async {
@@ -39,7 +40,8 @@ class AdminDashboardScreen extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 48, color: Colors.red),
+              Icon(Icons.error_outline,
+                  size: 48, color: theme.colorScheme.error),
               const SizedBox(height: 16),
               Text(error.toString(), textAlign: TextAlign.center),
               const SizedBox(height: 16),
@@ -61,31 +63,31 @@ class AdminDashboardScreen extends ConsumerWidget {
                   icon: Icons.people,
                   label: 'Utilisateurs',
                   value: stats.totalUsers.toString(),
-                  color: Colors.blue,
+                  color: theme.colorScheme.primary,
                 ),
                 _StatCard(
                   icon: Icons.devices,
                   label: 'Sessions actives',
                   value: stats.activeSessions.toString(),
-                  color: Colors.green,
+                  color: theme.semanticPalette.success,
                 ),
                 _StatCard(
                   icon: Icons.mail_outline,
                   label: 'Invitations actives',
                   value: stats.activeInvitations.toString(),
-                  color: Colors.orange,
+                  color: theme.semanticPalette.warning,
                 ),
                 _StatCard(
                   icon: Icons.history,
                   label: 'Événements (24h)',
                   value: stats.auditEvents24h.toString(),
-                  color: Colors.purple,
+                  color: theme.colorScheme.secondary,
                 ),
                 _StatCard(
                   icon: Icons.pending_actions,
                   label: 'Justifications en attente',
                   value: stats.pendingJustifications.toString(),
-                  color: Colors.red,
+                  color: theme.colorScheme.error,
                 ),
               ]),
               const SizedBox(height: 24),

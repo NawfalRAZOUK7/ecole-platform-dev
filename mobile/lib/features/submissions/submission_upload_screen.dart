@@ -14,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:ecole_platform/app/providers.dart';
+import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 
 /// Represents a file selected for upload.
 class _SelectedFile {
@@ -223,9 +224,9 @@ class _SubmissionUploadScreenState
       // For now show success — on real device this would use url_launcher or open_file
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text('PDF de l\'exercice téléchargé'),
-            backgroundColor: Colors.green,
+            backgroundColor: Theme.of(context).semanticPalette.success,
           ),
         );
       }
@@ -287,9 +288,9 @@ class _SubmissionUploadScreenState
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text('Devoir soumis avec succès'),
-            backgroundColor: Colors.green,
+            backgroundColor: Theme.of(context).semanticPalette.success,
           ),
         );
         Navigator.pop(context, true);
@@ -346,7 +347,7 @@ class _SubmissionUploadScreenState
           // Phase 10C: PDF exercise download section for PRINTABLE_PDF
           if (_isPrintablePdf && widget.hasExercisePdf) ...[
             Card(
-              color: Colors.blue.shade50,
+              color: theme.colorScheme.primaryContainer,
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -354,8 +355,8 @@ class _SubmissionUploadScreenState
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.picture_as_pdf,
-                            color: Colors.blue, size: 24),
+                        Icon(Icons.picture_as_pdf,
+                            color: theme.colorScheme.primary, size: 24),
                         const SizedBox(width: 8),
                         Text('Exercice à imprimer',
                             style: theme.textTheme.titleMedium
@@ -518,11 +519,11 @@ class _SubmissionUploadScreenState
           FilledButton.icon(
             onPressed: _uploading || _files.isEmpty ? null : _upload,
             icon: _uploading
-                ? const SizedBox(
+                ? SizedBox(
                     height: 16,
                     width: 16,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white))
+                        strokeWidth: 2, color: theme.colorScheme.onPrimary))
                 : const Icon(Icons.upload_file),
             label: Text(_uploading ? 'Envoi en cours...' : 'Soumettre'),
             style: FilledButton.styleFrom(

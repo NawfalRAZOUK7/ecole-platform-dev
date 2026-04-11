@@ -16,7 +16,9 @@ extension _QuizResultsView on _QuizPlayerScreenState {
         padding: const EdgeInsets.all(20),
         children: [
           Card(
-            color: passed ? Colors.green.shade50 : Colors.red.shade50,
+            color: passed
+                ? theme.semanticPalette.successContainer
+                : theme.colorScheme.errorContainer,
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -24,20 +26,26 @@ extension _QuizResultsView on _QuizPlayerScreenState {
                   Icon(
                     passed ? Icons.emoji_events : Icons.sentiment_dissatisfied,
                     size: 56,
-                    color: passed ? Colors.green : Colors.red,
+                    color: passed
+                        ? theme.semanticPalette.success
+                        : theme.colorScheme.error,
                   ),
                   const SizedBox(height: 12),
                   Text(
                     '${score.toStringAsFixed(0)}/${maxScore.toStringAsFixed(0)}',
                     style: theme.textTheme.headlineLarge?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: passed ? Colors.green : Colors.red,
+                      color: passed
+                          ? theme.semanticPalette.success
+                          : theme.colorScheme.error,
                     ),
                   ),
                   Text(
                     '${percent.toStringAsFixed(0)}%',
                     style: theme.textTheme.titleMedium?.copyWith(
-                      color: passed ? Colors.green : Colors.red,
+                      color: passed
+                          ? theme.semanticPalette.success
+                          : theme.colorScheme.error,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -74,14 +82,16 @@ extension _QuizResultsView on _QuizPlayerScreenState {
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
                             color: correct
-                                ? Colors.green.withAlpha(25)
-                                : Colors.red.withAlpha(25),
+                                ? theme.semanticPalette.success.withAlpha(25)
+                                : theme.colorScheme.error.withAlpha(25),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
                             correct ? Icons.check : Icons.close,
                             size: 18,
-                            color: correct ? Colors.green : Colors.red,
+                            color: correct
+                                ? theme.semanticPalette.success
+                                : theme.colorScheme.error,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -95,7 +105,9 @@ extension _QuizResultsView on _QuizPlayerScreenState {
                           '${(response.pointsEarned ?? 0).toStringAsFixed(0)}/${response.points}',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: correct ? Colors.green : Colors.red,
+                            color: correct
+                                ? theme.semanticPalette.success
+                                : theme.colorScheme.error,
                           ),
                         ),
                       ],
@@ -112,7 +124,7 @@ extension _QuizResultsView on _QuizPlayerScreenState {
                       Text(
                         'Réponse correcte: ${response.correctAnswer}',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.green,
+                          color: theme.semanticPalette.success,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -128,10 +140,10 @@ extension _QuizResultsView on _QuizPlayerScreenState {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.lightbulb_outline,
                               size: 16,
-                              color: Colors.orange,
+                              color: theme.semanticPalette.warning,
                             ),
                             const SizedBox(width: 6),
                             Expanded(

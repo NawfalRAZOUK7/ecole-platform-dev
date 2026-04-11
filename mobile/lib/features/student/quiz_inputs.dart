@@ -50,7 +50,9 @@ class _McqInput extends StatelessWidget {
                   selected
                       ? Icons.radio_button_checked
                       : Icons.radio_button_off,
-                  color: selected ? theme.colorScheme.primary : Colors.grey,
+                  color: selected
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.outline,
                   size: 22,
                 ),
                 const SizedBox(width: 12),
@@ -98,6 +100,8 @@ class _TrueFalseInput extends StatelessWidget {
   ) {
     final theme = Theme.of(context);
     final selected = answer == value;
+    final selectedColor =
+        value ? theme.semanticPalette.success : theme.colorScheme.error;
 
     return GestureDetector(
       onTap: () => onChanged(value),
@@ -105,13 +109,11 @@ class _TrueFalseInput extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 32),
         decoration: BoxDecoration(
           color: selected
-              ? (value ? Colors.green.withAlpha(25) : Colors.red.withAlpha(25))
+              ? selectedColor.withAlpha(25)
               : theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: selected
-                ? (value ? Colors.green : Colors.red)
-                : theme.colorScheme.outline,
+            color: selected ? selectedColor : theme.colorScheme.outline,
             width: selected ? 2 : 1,
           ),
         ),
@@ -120,8 +122,7 @@ class _TrueFalseInput extends StatelessWidget {
             Icon(
               icon,
               size: 40,
-              color:
-                  selected ? (value ? Colors.green : Colors.red) : Colors.grey,
+              color: selected ? selectedColor : theme.colorScheme.outline,
             ),
             const SizedBox(height: 8),
             Text(
@@ -129,9 +130,7 @@ class _TrueFalseInput extends StatelessWidget {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: selected
-                    ? (value ? Colors.green : Colors.red)
-                    : Colors.grey,
+                color: selected ? selectedColor : theme.colorScheme.outline,
               ),
             ),
           ],
@@ -306,8 +305,7 @@ class _MatchingInput extends StatelessWidget {
                 ),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 8),
-                  child:
-                      Icon(Icons.arrow_forward, size: 18, color: Colors.grey),
+                  child: Icon(Icons.arrow_forward, size: 18),
                 ),
                 Expanded(
                   flex: 3,

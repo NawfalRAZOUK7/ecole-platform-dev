@@ -15,15 +15,16 @@ class _MetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final values = [
       metric.previous ?? metric.current,
       metric.current,
     ];
     final delta = metric.changePercent;
     final deltaColor = switch (metric.trend) {
-      'up' => Colors.green,
-      'down' => Colors.red,
-      _ => Colors.grey,
+      'up' => theme.semanticPalette.success,
+      'down' => theme.colorScheme.error,
+      _ => theme.colorScheme.outline,
     };
 
     return SizedBox(

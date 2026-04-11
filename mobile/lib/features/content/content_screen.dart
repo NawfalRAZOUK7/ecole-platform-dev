@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/widgets/search_filter_bar.dart';
 import 'content_provider.dart';
 
@@ -75,7 +76,7 @@ class ContentScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
             const SizedBox(height: 16),
             Text(state.error!, textAlign: TextAlign.center),
             const SizedBox(height: 16),
@@ -90,11 +91,12 @@ class ContentScreen extends ConsumerWidget {
 
     final items = state.filteredItems;
     if (items.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.library_books, size: 48, color: Colors.grey),
+            Icon(Icons.library_books,
+                size: 48, color: theme.colorScheme.outline),
             SizedBox(height: 16),
             Text('Aucun contenu disponible'),
           ],
@@ -109,13 +111,13 @@ class ContentScreen extends ConsumerWidget {
         itemCount: items.length,
         itemBuilder: (context, index) {
           final item = items[index];
+          final typeColor = _typeColor(theme, item.contentType);
           return Card(
             margin: const EdgeInsets.only(bottom: 12),
             child: ListTile(
               leading: CircleAvatar(
-                backgroundColor: _typeColor(item.contentType).withAlpha(30),
-                child: Icon(_typeIcon(item.contentType),
-                    color: _typeColor(item.contentType)),
+                backgroundColor: typeColor.withAlpha(30),
+                child: Icon(_typeIcon(item.contentType), color: typeColor),
               ),
               title: Text(item.title,
                   style: const TextStyle(fontWeight: FontWeight.w600)),
@@ -161,16 +163,16 @@ class ContentScreen extends ConsumerWidget {
     }
   }
 
-  Color _typeColor(String type) {
+  Color _typeColor(ThemeData theme, String type) {
     switch (type) {
       case 'video':
-        return Colors.red;
+        return theme.colorScheme.error;
       case 'document':
-        return Colors.blue;
+        return theme.colorScheme.primary;
       case 'quiz':
-        return Colors.orange;
+        return theme.semanticPalette.warning;
       default:
-        return Colors.grey;
+        return theme.colorScheme.outline;
     }
   }
 }

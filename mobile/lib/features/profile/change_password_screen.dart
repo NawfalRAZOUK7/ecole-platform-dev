@@ -153,11 +153,12 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                     minimumSize: const Size(double.infinity, 0),
                   ),
                   child: _loading
-                      ? const SizedBox(
+                      ? SizedBox(
                           height: 20,
                           width: 20,
                           child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white))
+                              strokeWidth: 2,
+                              color: Theme.of(context).colorScheme.onPrimary))
                       : const Text('Modifier le mot de passe',
                           style: TextStyle(fontSize: 16)),
                 ),

@@ -131,7 +131,7 @@ extension _ReportsHistorySection on _ReportsScreenState {
               const SizedBox(height: 8),
               Text(
                 job.errorMessage!,
-                style: const TextStyle(color: Colors.red),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ],
             if (job.isReady || fileExists) ...[
@@ -171,11 +171,24 @@ class _StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final (color, background) = switch (status) {
-      'ready' => (Colors.green.shade800, Colors.green.shade50),
-      'failed' => (Colors.red.shade800, Colors.red.shade50),
-      'generating' => (Colors.orange.shade800, Colors.orange.shade50),
-      _ => (Colors.blue.shade800, Colors.blue.shade50),
+      'ready' => (
+          theme.semanticPalette.success,
+          theme.semanticPalette.successContainer,
+        ),
+      'failed' => (
+          theme.colorScheme.error,
+          theme.colorScheme.errorContainer,
+        ),
+      'generating' => (
+          theme.semanticPalette.warning,
+          theme.semanticPalette.warningContainer,
+        ),
+      _ => (
+          theme.colorScheme.primary,
+          theme.colorScheme.primaryContainer,
+        ),
     };
 
     return Container(

@@ -2,6 +2,8 @@ part of 'quiz_player_screen.dart';
 
 extension _QuizListView on _QuizPlayerScreenState {
   Widget _buildListView(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Quiz')),
       body: _loadingList
@@ -11,8 +13,8 @@ extension _QuizListView on _QuizPlayerScreenState {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.error_outline,
-                          size: 48, color: Colors.red),
+                      Icon(Icons.error_outline,
+                          size: 48, color: theme.colorScheme.error),
                       const SizedBox(height: 16),
                       Text(_error!, textAlign: TextAlign.center),
                       const SizedBox(height: 16),
@@ -24,11 +26,12 @@ extension _QuizListView on _QuizPlayerScreenState {
                   ),
                 )
               : _quizzes.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.quiz, size: 48, color: Colors.grey),
+                          Icon(Icons.quiz,
+                              size: 48, color: theme.colorScheme.outline),
                           SizedBox(height: 16),
                           Text('Aucun quiz disponible'),
                         ],
@@ -119,12 +122,12 @@ class _QuizCard extends StatelessWidget {
               child: FilledButton.icon(
                 onPressed: loading ? null : onStart,
                 icon: loading
-                    ? const SizedBox(
+                    ? SizedBox(
                         height: 16,
                         width: 16,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: theme.colorScheme.onPrimary,
                         ),
                       )
                     : const Icon(Icons.play_arrow),
@@ -145,11 +148,12 @@ class _DifficultyBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final (color, label) = switch (difficulty.toLowerCase()) {
-      'easy' => (Colors.green, 'Facile'),
-      'medium' => (Colors.orange, 'Moyen'),
-      'hard' => (Colors.red, 'Difficile'),
-      _ => (Colors.grey, difficulty),
+      'easy' => (theme.semanticPalette.success, 'Facile'),
+      'medium' => (theme.semanticPalette.warning, 'Moyen'),
+      'hard' => (theme.colorScheme.error, 'Difficile'),
+      _ => (theme.colorScheme.outline, difficulty),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -181,14 +185,18 @@ class _InfoChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: Colors.grey),
+        Icon(icon, size: 14, color: theme.colorScheme.outline),
         const SizedBox(width: 4),
         Text(
           label,
-          style: const TextStyle(fontSize: 12, color: Colors.grey),
+          style: TextStyle(
+            fontSize: 12,
+            color: theme.colorScheme.outline,
+          ),
         ),
       ],
     );
