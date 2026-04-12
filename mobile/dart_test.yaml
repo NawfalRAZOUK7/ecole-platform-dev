@@ -1,0 +1,2 @@
+timeout: 30m
+concurrency: 1

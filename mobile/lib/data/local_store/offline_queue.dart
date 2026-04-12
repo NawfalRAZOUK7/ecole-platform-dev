@@ -13,6 +13,20 @@ import 'database.dart';
 
 const _uuid = Uuid();
 
+enum SyncEndpoint {
+  attendanceClass,
+  attendanceHistory,
+  contentItem,
+  contentLibrary,
+  gradebookGrade,
+  invoicePaymentProof,
+  budgetRequest,
+  microSchoolEnrollment,
+  questionBankImport,
+  quizAttempt,
+  timetableGeneration,
+}
+
 /// A queued write command.
 class QueuedCommand {
   final int id;
@@ -56,9 +70,50 @@ class QueuedCommand {
     if (body == null) return null;
     return jsonDecode(body!) as Map<String, dynamic>;
   }
+
+  SyncEndpoint? get syncEndpoint => OfflineQueue.resolveSyncEndpoint(path);
 }
 
 class OfflineQueue {
+  static final List<MapEntry<Pattern, SyncEndpoint>> _syncEndpointMatchers = [
+    MapEntry(RegExp(r'^/attendance/class/'), SyncEndpoint.attendanceClass),
+    MapEntry(RegExp(r'^/attendance/history'), SyncEndpoint.attendanceHistory),
+    MapEntry(RegExp(r'^/content/items'), SyncEndpoint.contentItem),
+    MapEntry(RegExp(r'^/teacher/content-library'), SyncEndpoint.contentLibrary),
+    MapEntry(RegExp(r'^/gradebook/grades'), SyncEndpoint.gradebookGrade),
+    MapEntry(
+      RegExp(r'^/invoices/.*/payment-proof'),
+      SyncEndpoint.invoicePaymentProof,
+    ),
+    MapEntry(RegExp(r'^/budgets/requests'), SyncEndpoint.budgetRequest),
+    MapEntry(
+      RegExp(r'^/micro-schools/.*/enroll'),
+      SyncEndpoint.microSchoolEnrollment,
+    ),
+    MapEntry(
+      RegExp(r'^/question-bank/import'),
+      SyncEndpoint.questionBankImport,
+    ),
+    MapEntry(RegExp(r'^/quiz/attempts'), SyncEndpoint.quizAttempt),
+    MapEntry(
+      RegExp(r'^/timetable/generation'),
+      SyncEndpoint.timetableGeneration,
+    ),
+  ];
+
+  static SyncEndpoint? resolveSyncEndpoint(String path) {
+    for (final matcher in _syncEndpointMatchers) {
+      final pattern = matcher.key;
+      if (pattern is RegExp && pattern.hasMatch(path)) {
+        return matcher.value;
+      }
+      if (pattern is String && path.contains(pattern)) {
+        return matcher.value;
+      }
+    }
+    return null;
+  }
+
   /// Enqueue a write command for later replay.
   Future<int> enqueue({
     required String method,

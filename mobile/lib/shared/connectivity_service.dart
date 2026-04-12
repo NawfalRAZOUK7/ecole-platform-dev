@@ -89,6 +89,7 @@ class ConnectivityService {
         await _syncRepository.pushChanges(_deviceId, {
           'changes': pending
               .map((cmd) => {
+                    'sync_endpoint': cmd.syncEndpoint?.name,
                     'method': cmd.method,
                     'path': cmd.path,
                     'body': cmd.bodyJson,

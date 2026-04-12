@@ -97,6 +97,12 @@ void main() {
 
     await service.initialize();
     connectivityPlatform.emit(const [ConnectivityResult.mobile]);
+    await untilCalled(
+      () => api.post(
+        '/attendance/class/class-1',
+        body: const {'status': 'present'},
+      ),
+    );
     await _flushAsync();
 
     verify(
@@ -176,6 +182,9 @@ void main() {
 
     await service.initialize();
     connectivityPlatform.emit(const [ConnectivityResult.wifi]);
+    await untilCalled(
+      () => syncRepository.pushChanges('mobile-primary', any()),
+    );
     await _flushAsync();
 
     final capturedPayload = verify(
