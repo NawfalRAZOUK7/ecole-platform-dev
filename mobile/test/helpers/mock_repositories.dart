@@ -13,12 +13,16 @@ import 'package:ecole_platform/domain/repositories/document_repository.dart';
 import 'package:ecole_platform/domain/repositories/feed_repository.dart';
 import 'package:ecole_platform/domain/repositories/gradebook_repository.dart';
 import 'package:ecole_platform/domain/repositories/invoice_repository.dart';
+import 'package:ecole_platform/domain/repositories/micro_school_repository.dart';
 import 'package:ecole_platform/domain/repositories/notification_repository.dart';
 import 'package:ecole_platform/domain/repositories/quiz_repository.dart';
 import 'package:ecole_platform/domain/repositories/reporting_repository.dart';
 import 'package:ecole_platform/domain/repositories/result_repository.dart';
 import 'package:ecole_platform/domain/repositories/skills_repository.dart';
 import 'package:ecole_platform/domain/repositories/teacher_repository.dart';
+import 'package:ecole_platform/domain/repositories/compliance_repository.dart';
+import 'package:ecole_platform/domain/repositories/financial_health_repository.dart';
+import 'package:ecole_platform/domain/repositories/question_bank_repository.dart';
 
 class MockAdminRepository extends Mock implements AdminRepository {}
 
@@ -43,6 +47,8 @@ class MockGradebookRepository extends Mock implements GradebookRepository {}
 
 class MockInvoiceRepository extends Mock implements InvoiceRepository {}
 
+class MockMicroSchoolRepository extends Mock implements MicroSchoolRepository {}
+
 class MockNotificationRepository extends Mock
     implements NotificationRepository {}
 
@@ -56,6 +62,14 @@ class MockSkillsRepository extends Mock implements SkillsRepository {}
 
 class MockTeacherRepository extends Mock implements TeacherRepository {}
 
+class MockComplianceRepository extends Mock implements ComplianceRepository {}
+
+class MockFinancialHealthRepository extends Mock
+    implements FinancialHealthRepository {}
+
+class MockQuestionBankRepository extends Mock
+    implements QuestionBankRepository {}
+
 List<Override> buildMockRepositoryOverrides({
   AdminRepository? adminRepository,
   AttendanceRepository? attendanceRepository,
@@ -68,12 +82,16 @@ List<Override> buildMockRepositoryOverrides({
   FeedRepository? feedRepository,
   GradebookRepository? gradebookRepository,
   InvoiceRepository? invoiceRepository,
+  MicroSchoolRepository? microSchoolRepository,
   NotificationRepository? notificationRepository,
   QuizRepository? quizRepository,
   ReportingRepository? reportingRepository,
   ResultRepository? resultRepository,
   SkillsRepository? skillsRepository,
   TeacherRepository? teacherRepository,
+  ComplianceRepository? complianceRepository,
+  FinancialHealthRepository? financialHealthRepository,
+  QuestionBankRepository? questionBankRepository,
 }) {
   final overrides = <Override>[];
 
@@ -123,6 +141,11 @@ List<Override> buildMockRepositoryOverrides({
     overrides
         .add(invoiceRepositoryProvider.overrideWithValue(invoiceRepository));
   }
+  if (microSchoolRepository != null) {
+    overrides.add(
+      microSchoolRepositoryProvider.overrideWithValue(microSchoolRepository),
+    );
+  }
   if (notificationRepository != null) {
     overrides.add(
       notificationRepositoryProvider.overrideWithValue(notificationRepository),
@@ -145,6 +168,22 @@ List<Override> buildMockRepositoryOverrides({
   if (teacherRepository != null) {
     overrides
         .add(teacherRepositoryProvider.overrideWithValue(teacherRepository));
+  }
+  if (complianceRepository != null) {
+    overrides.add(
+      complianceRepositoryProvider.overrideWithValue(complianceRepository),
+    );
+  }
+  if (financialHealthRepository != null) {
+    overrides.add(
+      financialHealthRepositoryProvider
+          .overrideWithValue(financialHealthRepository),
+    );
+  }
+  if (questionBankRepository != null) {
+    overrides.add(
+      questionBankRepositoryProvider.overrideWithValue(questionBankRepository),
+    );
   }
 
   return overrides;

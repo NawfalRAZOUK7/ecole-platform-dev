@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/app/providers.dart';
@@ -253,23 +255,103 @@ class InMemoryCacheStore extends CacheStore {
 }
 
 class InMemoryOfflineQueue extends OfflineQueue {
+  final List<QueuedCommand> _commands = [];
+  int _nextId = 1;
+
+  @override
+  Future<int> enqueue({
+    required String method,
+    required String path,
+    Map<String, dynamic>? body,
+    String? idempotencyKey,
+  }) async {
+    final command = QueuedCommand(
+      id: _nextId++,
+      method: method,
+      path: path,
+      body: body == null ? null : jsonEncode(body),
+      idempotencyKey: idempotencyKey ?? 'test-idempotency-${_nextId - 1}',
+      createdAt: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      status: 'pending',
+      retryCount: 0,
+    );
+    _commands.add(command);
+    return command.id;
+  }
+
   @override
   Future<List<QueuedCommand>> getPending() async {
-    return const [];
+    return _commands.where((command) => command.status == 'pending').toList();
+  }
+
+  @override
+  Future<List<QueuedCommand>> getFailed() async {
+    return _commands
+        .where((command) => command.status == 'failed_command')
+        .toList();
+  }
+
+  @override
+  Future<List<QueuedCommand>> getAll() async {
+    return List<QueuedCommand>.from(_commands);
+  }
+
+  @override
+  Future<void> markCompleted(int id) async {
+    _commands.removeWhere((command) => command.id == id);
+  }
+
+  @override
+  Future<void> markFailed(int id, String error) async {
+    final index = _commands.indexWhere((command) => command.id == id);
+    if (index < 0) return;
+    final current = _commands[index];
+    _commands[index] = QueuedCommand(
+      id: current.id,
+      method: current.method,
+      path: current.path,
+      body: current.body,
+      idempotencyKey: current.idempotencyKey,
+      createdAt: current.createdAt,
+      status: 'failed_command',
+      retryCount: current.retryCount + 1,
+      lastError: error,
+    );
+  }
+
+  @override
+  Future<void> resetToPending(int id) async {
+    final index = _commands.indexWhere((command) => command.id == id);
+    if (index < 0) return;
+    final current = _commands[index];
+    _commands[index] = QueuedCommand(
+      id: current.id,
+      method: current.method,
+      path: current.path,
+      body: current.body,
+      idempotencyKey: current.idempotencyKey,
+      createdAt: current.createdAt,
+      status: 'pending',
+      retryCount: current.retryCount,
+    );
   }
 
   @override
   Future<int> pendingCount() async {
-    return 0;
+    return _commands.where((command) => command.status == 'pending').length;
   }
 
   @override
   Future<int> failedCount() async {
-    return 0;
+    return _commands
+        .where((command) => command.status == 'failed_command')
+        .length;
   }
 
   @override
-  Future<void> clearAll() async {}
+  Future<void> clearAll() async {
+    _commands.clear();
+  }
 }
 
 class FakeBiometricService extends BiometricService {

@@ -56,6 +56,8 @@ Future<void> pumpApp(
   List<Override> overrides = const [],
   GoRouter? router,
   String localeCode = 'fr',
+  ThemeMode themeMode = ThemeMode.light,
+  bool wrapWithScaffold = true,
 }) async {
   final testRouter = router ??
       GoRouter(
@@ -63,7 +65,8 @@ Future<void> pumpApp(
         routes: [
           GoRoute(
             path: '/',
-            builder: (context, state) => Scaffold(body: child),
+            builder: (context, state) =>
+                wrapWithScaffold ? Scaffold(body: child) : child,
           ),
         ],
       );
@@ -90,6 +93,7 @@ Future<void> pumpApp(
         ],
         theme: appLightTheme,
         darkTheme: appDarkTheme,
+        themeMode: themeMode,
         routerConfig: testRouter,
         builder: (context, routedChild) {
           return Directionality(

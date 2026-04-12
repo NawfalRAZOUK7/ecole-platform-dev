@@ -8,6 +8,9 @@ import 'package:ecole_platform/data/local_store/events_store.dart';
 import 'package:ecole_platform/data/local_store/notifications_store.dart';
 import 'package:ecole_platform/data/local_store/reports_store.dart';
 import 'package:ecole_platform/domain/entities/gradebook.dart';
+import 'package:ecole_platform/domain/repositories/sync_repository.dart';
+import 'package:ecole_platform/features/auth/biometric_service.dart';
+import 'package:ecole_platform/shared/secure_storage.dart';
 
 class MockApiClient extends Mock implements ApiClient {}
 
@@ -23,6 +26,12 @@ class MockNotificationsStore extends Mock implements NotificationsStore {}
 
 class MockReportsStore extends Mock implements ReportsStore {}
 
+class MockSyncRepository extends Mock implements SyncRepository {}
+
+class MockSecureTokenStorage extends Mock implements SecureTokenStorage {}
+
+class MockBiometricService extends Mock implements BiometricService {}
+
 bool _fallbacksRegistered = false;
 
 void registerTestFallbacks() {
@@ -32,6 +41,7 @@ void registerTestFallbacks() {
   registerFallbackValue(<String, dynamic>{});
   registerFallbackValue(<Map<String, dynamic>>[]);
   registerFallbackValue(<String>[]);
+  registerFallbackValue(<dynamic>[]);
   registerFallbackValue(
     const BulkGradeUpdate(
       classId: 'class-1',

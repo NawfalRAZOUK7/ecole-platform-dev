@@ -39,6 +39,7 @@ class ConnectivityService {
   Stream<SyncIndicatorState> get indicatorStream => _indicatorController.stream;
   int _pendingCount = 0;
   int _failedCount = 0;
+  bool _disposed = false;
 
   ConnectivityService({
     required ApiClient api,
@@ -53,15 +54,18 @@ class ConnectivityService {
   /// Start monitoring connectivity.
   Future<void> initialize() async {
     final results = await _connectivity.checkConnectivity();
+    if (_disposed) return;
     _isOnline = !results.contains(ConnectivityResult.none);
     await _refreshIndicator();
-    _indicatorController.add(indicator);
+    _emitIndicator();
     await _registerDeviceIfPossible();
+    if (_disposed) return;
 
     _subscription = _connectivity.onConnectivityChanged.listen((results) {
+      if (_disposed) return;
       final wasOffline = !_isOnline;
       _isOnline = !results.contains(ConnectivityResult.none);
-      _indicatorController.add(indicator);
+      _emitIndicator();
 
       if (wasOffline && _isOnline) {
         dev.log('Back online — replaying queue', name: 'Connectivity');
@@ -75,9 +79,10 @@ class ConnectivityService {
 
   /// Replay all pending commands in order.
   Future<void> _replayQueue() async {
+    if (_disposed) return;
     _syncing = true;
     await _refreshIndicator();
-    _indicatorController.add(indicator);
+    _emitIndicator();
     final pending = await _queue.getPending();
     if (_syncRepository != null) {
       try {
@@ -121,10 +126,11 @@ class ConnectivityService {
         dev.log('Sync pull/checkpoint failed: $e', name: 'Connectivity');
       }
     }
+    if (_disposed) return;
     _lastSyncAt = DateTime.now().toIso8601String();
     _syncing = false;
     await _refreshIndicator();
-    _indicatorController.add(indicator);
+    _emitIndicator();
   }
 
   Future<void> _registerDeviceIfPossible() async {
@@ -145,8 +151,15 @@ class ConnectivityService {
     _failedCount = await _queue.failedCount();
   }
 
+  void _emitIndicator() {
+    if (_disposed || _indicatorController.isClosed) return;
+    _indicatorController.add(indicator);
+  }
+
   /// Dispose connectivity listener.
   void dispose() {
+    if (_disposed) return;
+    _disposed = true;
     _subscription?.cancel();
     _indicatorController.close();
   }

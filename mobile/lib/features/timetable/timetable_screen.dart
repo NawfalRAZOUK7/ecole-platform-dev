@@ -126,6 +126,7 @@ class TimetableScreen extends ConsumerWidget {
                         day: day,
                         slots: slots,
                         t: t,
+                        shrinkWrap: false,
                       );
                     },
                   ),
@@ -143,7 +144,12 @@ class TimetableScreen extends ConsumerWidget {
         children: _days.map((day) {
           final slots = byDay[day] ?? [];
           return Expanded(
-            child: _DayColumn(day: day, slots: slots, t: t),
+            child: _DayColumn(
+              day: day,
+              slots: slots,
+              t: t,
+              shrinkWrap: true,
+            ),
           );
         }).toList(),
       ),
@@ -161,8 +167,14 @@ class _DayColumn extends StatelessWidget {
   final int day;
   final List<TimetableSlot> slots;
   final AppLocalizations t;
+  final bool shrinkWrap;
 
-  const _DayColumn({required this.day, required this.slots, required this.t});
+  const _DayColumn({
+    required this.day,
+    required this.slots,
+    required this.t,
+    required this.shrinkWrap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -170,6 +182,8 @@ class _DayColumn extends StatelessWidget {
     final theme = Theme.of(context);
 
     return ListView(
+      shrinkWrap: shrinkWrap,
+      physics: shrinkWrap ? const NeverScrollableScrollPhysics() : null,
       padding: const EdgeInsets.all(16),
       children: [
         Center(
@@ -217,6 +231,20 @@ class _SlotCard extends StatelessWidget {
     final isSubstituted = slot.exception?.exceptionType == 'SUBSTITUTED';
     final isRoomChanged = slot.exception?.exceptionType == 'ROOM_CHANGED';
     final theme = Theme.of(context);
+    final exceptionChips = [
+      if (isCanceled)
+        _exceptionChip(t.t('timetable.canceled'), theme.colorScheme.error),
+      if (isSubstituted)
+        _exceptionChip(
+          t.t('timetable.substituted'),
+          theme.semanticPalette.warning,
+        ),
+      if (isRoomChanged && slot.exception?.newRoom != null)
+        _exceptionChip(
+          '→ ${slot.exception!.newRoom}',
+          theme.colorScheme.primary,
+        ),
+    ];
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -230,23 +258,32 @@ class _SlotCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text(
-                  '${slot.startTime.substring(0, 5)} – ${slot.endTime.substring(0, 5)}',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    decoration: isCanceled ? TextDecoration.lineThrough : null,
+                Expanded(
+                  child: Text(
+                    '${slot.startTime.substring(0, 5)} – ${slot.endTime.substring(0, 5)}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      decoration:
+                          isCanceled ? TextDecoration.lineThrough : null,
+                    ),
                   ),
                 ),
-                const Spacer(),
-                if (isCanceled)
-                  _exceptionChip(
-                      t.t('timetable.canceled'), theme.colorScheme.error),
-                if (isSubstituted)
-                  _exceptionChip(t.t('timetable.substituted'),
-                      theme.semanticPalette.warning),
-                if (isRoomChanged && slot.exception?.newRoom != null)
-                  _exceptionChip('→ ${slot.exception!.newRoom}',
-                      theme.colorScheme.primary),
+                if (exceptionChips.isNotEmpty) ...[
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Wrap(
+                        spacing: 4,
+                        runSpacing: 4,
+                        alignment: WrapAlignment.end,
+                        children: exceptionChips,
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
             const SizedBox(height: 4),
@@ -259,10 +296,15 @@ class _SlotCard extends StatelessWidget {
             ),
             if (slot.room != null) ...[
               const SizedBox(height: 2),
-              Row(
+              Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 4,
                 children: [
-                  Icon(Icons.room, size: 14, color: theme.colorScheme.outline),
-                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.room,
+                    size: 14,
+                    color: theme.colorScheme.outline,
+                  ),
                   Text(slot.room!, style: theme.textTheme.bodySmall),
                 ],
               ),

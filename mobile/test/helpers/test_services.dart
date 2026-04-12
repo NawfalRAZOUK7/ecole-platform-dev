@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:connectivity_plus_platform_interface/connectivity_plus_platform_interface.dart';
 import 'package:local_auth/local_auth.dart';
 
 import 'package:ecole_platform/data/api/ws_client.dart';
@@ -60,6 +63,34 @@ class TestWsClient implements WsClient {
   VoidCallback subscribe(WsListener listener) {
     _listeners.add(listener);
     return () => _listeners.remove(listener);
+  }
+}
+
+class TestConnectivityPlatform extends ConnectivityPlatform {
+  TestConnectivityPlatform({
+    List<ConnectivityResult> initialResults = const [ConnectivityResult.wifi],
+  }) : _currentResults = initialResults;
+
+  final StreamController<List<ConnectivityResult>> _controller =
+      StreamController<List<ConnectivityResult>>.broadcast();
+  List<ConnectivityResult> _currentResults;
+
+  @override
+  Future<List<ConnectivityResult>> checkConnectivity() async {
+    return _currentResults;
+  }
+
+  @override
+  Stream<List<ConnectivityResult>> get onConnectivityChanged =>
+      _controller.stream;
+
+  void emit(List<ConnectivityResult> results) {
+    _currentResults = results;
+    _controller.add(results);
+  }
+
+  Future<void> disposePlatform() async {
+    await _controller.close();
   }
 }
 
