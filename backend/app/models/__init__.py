@@ -172,6 +172,13 @@ from app.models.financial_health import (
     RetentionMetric,
 )
 
+# G5H — Rewards
+from app.models.rewards import (
+    RewardBadge,
+    RewardEvent,
+    StudentReward,
+)
+
 # G6 — Audit
 from app.models.audit import AuditLog
 
@@ -333,6 +340,10 @@ __all__ = [
     "CashflowForecast",
     "CostPerStudent",
     "FinancialSnapshot",
+    # Rewards
+    "StudentReward",
+    "RewardEvent",
+    "RewardBadge",
     # Audit
     "AuditLog",
     # AI

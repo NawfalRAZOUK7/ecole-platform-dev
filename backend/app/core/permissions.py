@@ -266,6 +266,10 @@ PERM_SKILL_PROGRESS_EVALUATE = "PERM-SKILL:progress:evaluate"
 PERM_SKILL_PASSPORT_READ = "PERM-SKILL:passport:read"
 PERM_SKILL_PASSPORT_GENERATE = "PERM-SKILL:passport:generate"
 
+# Rewards
+PERM_REWARDS_AWARD = "PERM-REWARDS:reward:award"
+PERM_REWARDS_VIEW = "PERM-REWARDS:reward:view"
+
 # MEN compliance
 PERM_COMPLY_CURRICULUM_READ = "PERM-COMPLY:curriculum:read"
 PERM_COMPLY_CURRICULUM_MANAGE = "PERM-COMPLY:curriculum:manage"
@@ -337,6 +341,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # Skill framework administration
         PERM_SKILL_DIMENSION_MANAGE,
         PERM_SKILL_MILESTONE_MANAGE,
+        PERM_REWARDS_VIEW,
         # MEN compliance oversight
         PERM_COMPLY_REPORT_READ,
         PERM_COMPLY_REPORT_GENERATE,
@@ -493,6 +498,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_SKILL_PROGRESS_EVALUATE,
         PERM_SKILL_PASSPORT_READ,
         PERM_SKILL_PASSPORT_GENERATE,
+        # Rewards
+        PERM_REWARDS_AWARD,
+        PERM_REWARDS_VIEW,
         # MEN compliance
         PERM_COMPLY_CURRICULUM_READ,
         PERM_COMPLY_OBJECTIVE_READ,
@@ -593,6 +601,8 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # Life-skills passport
         PERM_SKILL_PROGRESS_READ,
         PERM_SKILL_PASSPORT_READ,
+        # Rewards
+        PERM_REWARDS_VIEW,
         # Local-first sync
         PERM_SYNC_PULL,
         PERM_SYNC_STATUS_READ,
@@ -703,6 +713,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_COMPLY_SEED,
         # Feature toggles (Phase 11E)
         PERM_SYS_FEATURE_MANAGE,
+        # Rewards
+        PERM_REWARDS_AWARD,
+        PERM_REWARDS_VIEW,
     },
     CONTENT_MGR: {
         # IAM — login/recovery

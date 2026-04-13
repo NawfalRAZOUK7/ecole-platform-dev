@@ -122,6 +122,10 @@ OPENAPI_TAGS = [
         "name": "system",
         "description": "System — Health check, version, and operational endpoints.",
     },
+    {
+        "name": "Rewards",
+        "description": "Student rewards, stars, XP, badges, leaderboards.",
+    },
 ]
 
 
