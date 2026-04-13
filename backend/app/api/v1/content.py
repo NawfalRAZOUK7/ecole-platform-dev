@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Depends, Query, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Form, Query, Request, UploadFile
 from fastapi.responses import FileResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,8 +12,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.dependencies import (
     AuthContext,
+    get_current_user,
     get_teacher_class_ids,
     requires_permission,
+    requires_role,
     verify_teacher_assignment,
 )
 from app.core.filtering import FilterSpec, SortSpec, parse_filters, parse_sort
@@ -24,13 +26,14 @@ from app.core.permissions import (
     PERM_LMS_CONTENT_ASSET_UPLOAD,
     PERM_LMS_CONTENT_PROGRESS_WRITE,
     PERM_LMS_CONTENT_READ,
+    STD,
 )
 from app.core.request_utils import get_client_ip
 from app.core.response import clamp_page_size, list_response, success_response
 from app.core.search import parse_search
 from app.core.storage import storage
 from app.models.lms import ContentItemAsset
-from app.schemas.lms import ContentProgressRequest
+from app.schemas.lms import ContentCompleteRequest, ContentProgressRequest
 from app.schemas.student_work import StudentWorkListResponse
 from app.services.lms import ContentService
 from app.services.student_work import StudentWorkService
@@ -139,6 +142,55 @@ async def get_content_item(
 
 
 @router.get(
+    "/{content_item_id}/pages",
+    summary="List story pages",
+    response_description="Ordered content item assets for the story reader",
+)
+async def list_story_pages(
+    content_item_id: uuid.UUID,
+    auth: AuthContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    service = ContentService(db)
+    items = await service.list_story_pages(content_item_id=content_item_id, auth=auth)
+    return list_response(items, has_more=False)
+
+
+@router.post(
+    "/{content_item_id}/pages",
+    status_code=201,
+    summary="Upload a story page",
+    response_description="Uploaded story page asset metadata",
+)
+async def upload_story_page(
+    content_item_id: uuid.UUID,
+    request: Request,
+    file: UploadFile = File(...),
+    page_number: int = Form(..., ge=1),
+    narration_text: str | None = Form(None),
+    has_activity: bool = Form(False),
+    asset_type: str = Form(...),
+    auth: AuthContext = Depends(requires_permission(PERM_LMS_CONTENT_ASSET_UPLOAD)),
+    db: AsyncSession = Depends(get_db),
+):
+    service = ContentService(db)
+    return success_response(
+        await service.upload_content_asset(
+            content_item_id=content_item_id,
+            file=file.file,
+            filename=file.filename or "page",
+            mime_type=file.content_type or "application/octet-stream",
+            page_number=page_number,
+            narration_text=narration_text,
+            has_activity=has_activity,
+            asset_type=asset_type,
+            auth=auth,
+            ip_address=get_client_ip(request),
+        )
+    )
+
+
+@router.get(
     "/{content_item_id}/stream",
     summary="Compatibility: stream the first content asset",
     response_description="Binary content stream",
@@ -155,7 +207,11 @@ async def stream_content_item(
     result = await db.execute(
         select(ContentItemAsset)
         .where(ContentItemAsset.content_item_id == content_item_id)
-        .order_by(ContentItemAsset.created_at.asc(), ContentItemAsset.id.asc())
+        .order_by(
+            ContentItemAsset.page_number.asc().nullslast(),
+            ContentItemAsset.created_at.asc(),
+            ContentItemAsset.id.asc(),
+        )
         .limit(1)
     )
     asset = result.scalar_one_or_none()
@@ -188,6 +244,54 @@ async def update_content_progress(
         await service.update_content_progress(
             content_item_id=content_item_id,
             body=body,
+            auth=auth,
+            ip_address=get_client_ip(request),
+        )
+    )
+
+
+@router.post(
+    "/{content_item_id}/complete",
+    summary="Mark a content item completed and award rewards",
+    response_description="Content progress and reward payload",
+)
+async def complete_content_item(
+    content_item_id: uuid.UUID,
+    body: ContentCompleteRequest,
+    request: Request,
+    auth: AuthContext = Depends(requires_role(STD)),
+    db: AsyncSession = Depends(get_db),
+):
+    service = ContentService(db)
+    return success_response(
+        await service.complete_content_item(
+            content_item_id=content_item_id,
+            body=body,
+            auth=auth,
+            ip_address=get_client_ip(request),
+        )
+    )
+
+
+@router.post(
+    "/{content_item_id}/coloring/save",
+    summary="Save a colored page and award rewards",
+    response_description="Created document id and reward payload",
+)
+async def save_coloring_page(
+    content_item_id: uuid.UUID,
+    request: Request,
+    file: UploadFile = File(...),
+    auth: AuthContext = Depends(requires_role(STD)),
+    db: AsyncSession = Depends(get_db),
+):
+    service = ContentService(db)
+    return success_response(
+        await service.save_coloring_page(
+            content_item_id=content_item_id,
+            file=file.file,
+            filename=file.filename or "coloring.png",
+            mime_type=file.content_type or "application/octet-stream",
             auth=auth,
             ip_address=get_client_ip(request),
         )

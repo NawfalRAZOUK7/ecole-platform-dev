@@ -2,28 +2,46 @@
 
 from __future__ import annotations
 
+import os
 import uuid
 from typing import BinaryIO
 
+from app.core.permissions import PLATFORM_ROLES
 from app.core.dependencies import (
     AuthContext,
     verify_school_boundary,
     verify_teacher_assignment,
 )
-from app.core.exceptions import NotFoundError, ValidationError
+from app.core.exceptions import AuthorizationError, NotFoundError, ValidationError
 from app.core.filtering import FilterSpec, SortSpec
 from app.core.response import encode_cursor
 from app.core.storage import storage, validate_mime_type
 from app.core.unit_of_work import UnitOfWork
+from app.models.documents import Document, DocumentCategory
+from app.models.lms import ContentProgressStatus
+from app.repositories.documents import DocumentsRepository
 from app.repositories.lms import LMSRepository
 from app.schemas.cms import ContentAssignRequest, ContentSubmitForReviewRequest
-from app.schemas.lms import ContentProgressRequest
+from app.schemas.lms import ContentCompleteRequest, ContentProgressRequest
 from app.services.audit import AuditService
+from app.services.file_storage import file_storage_service
 from app.services.lms._helpers import LMSServiceBase, _utc_now
+from app.services.rewards_service import RewardsService
 
 
 class ContentService(LMSServiceBase):
     """Handles content items, assets, progress, and library workflows."""
+
+    @staticmethod
+    def _ensure_content_manage_scope(content_item, auth: AuthContext) -> None:
+        if content_item.school_id is None:
+            if auth.role not in PLATFORM_ROLES:
+                raise AuthorizationError(
+                    "Only platform roles can manage platform content assets",
+                    error_code="ERR-LMS-403",
+                )
+            return
+        verify_school_boundary(content_item.school_id, auth)
 
     async def list_content_items(
         self,
@@ -118,14 +136,17 @@ class ContentService(LMSServiceBase):
         file: BinaryIO,
         filename: str,
         mime_type: str,
+        page_number: int | None = None,
+        narration_text: str | None = None,
+        has_activity: bool = False,
+        asset_type: str | None = None,
         auth: AuthContext,
         ip_address: str | None,
     ) -> dict:
         content_item = await self.repo.get_content_item(content_item_id)
         if content_item is None:
             raise NotFoundError("Content item not found", error_code="ERR-LMS-404")
-        if content_item.school_id is not None:
-            verify_school_boundary(content_item.school_id, auth)
+        self._ensure_content_manage_scope(content_item, auth)
 
         validate_mime_type(mime_type)
         relative_path, checksum, file_size = await storage.save(
@@ -142,7 +163,16 @@ class ContentService(LMSServiceBase):
                 checksum=checksum,
                 mime_type=mime_type,
                 file_size=file_size,
+                page_number=page_number,
+                narration_text=narration_text,
+                has_activity=has_activity,
+                asset_type=asset_type,
             )
+            if page_number is not None:
+                current_page_count = content_item.page_count or 0
+                if page_number > current_page_count:
+                    content_item.page_count = page_number
+                    await repo.save_content_item(content_item)
             await audit.log_event(
                 school_id=auth.school_id,
                 actor_id=auth.user_id,
@@ -156,18 +186,204 @@ class ContentService(LMSServiceBase):
                     "mime_type": mime_type,
                     "file_size": file_size,
                     "checksum": checksum,
+                    "page_number": page_number,
+                    "narration_text": narration_text,
+                    "has_activity": has_activity,
+                    "asset_type": asset_type,
+                },
+                ip_address=ip_address,
+            )
+            await uow.commit()
+
+        return self._content_item_asset_to_dict(asset)
+
+    async def list_story_pages(
+        self,
+        *,
+        content_item_id: uuid.UUID,
+        auth: AuthContext,
+    ) -> list[dict]:
+        await self.get_content_item(content_item_id=content_item_id, auth=auth)
+        assets = await self.repo.list_content_assets(
+            content_item_id=content_item_id,
+            page_only=True,
+        )
+        return [self._content_item_asset_to_dict(asset) for asset in assets]
+
+    async def complete_content_item(
+        self,
+        *,
+        content_item_id: uuid.UUID,
+        body: ContentCompleteRequest,
+        auth: AuthContext,
+        ip_address: str | None,
+    ) -> dict:
+        content_item = await self.repo.get_content_item(content_item_id)
+        if content_item is None or content_item.status != "published":
+            raise NotFoundError("Content item not found", error_code="ERR-LMS-404")
+        if content_item.school_id is not None:
+            verify_school_boundary(content_item.school_id, auth)
+
+        async with UnitOfWork(self.db) as uow:
+            repo = LMSRepository(uow.session)
+            audit = AuditService(uow.session)
+            rewards = RewardsService(uow.session)
+            progress = await repo.get_content_progress(
+                student_id=auth.user_id,
+                content_item_id=content_item_id,
+            )
+
+            should_award = (
+                progress is None
+                or progress.status != ContentProgressStatus.COMPLETED.value
+            )
+            if progress is None:
+                progress = await repo.create_content_progress(
+                    student_id=auth.user_id,
+                    content_item_id=content_item_id,
+                    status=ContentProgressStatus.COMPLETED.value,
+                )
+            else:
+                progress.status = ContentProgressStatus.COMPLETED.value
+                await repo.save_content_progress(progress)
+
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="CONTENT_COMPLETED",
+                outcome="success",
+                target_type="content_progress",
+                target_id=progress.id,
+                entity_after={
+                    "content_item_id": str(content_item_id),
+                    "status": progress.status,
+                    "time_spent_seconds": body.time_spent_seconds,
+                },
+                ip_address=ip_address,
+            )
+
+            if should_award:
+                reward_payload = await rewards.award(
+                    student_id=auth.user_id,
+                    event_type="content_completed",
+                    stars=10,
+                    xp=15,
+                    source_type="content",
+                    source_id=content_item_id,
+                    metadata={
+                        "time_spent_seconds": body.time_spent_seconds,
+                        "content_type": content_item.content_type,
+                    },
+                )
+            else:
+                reward_payload = await rewards.get_student_rewards(
+                    student_id=auth.user_id
+                )
+                reward_payload = {
+                    **reward_payload,
+                    "newly_earned_badges": [],
+                }
+
+            await uow.commit()
+
+        return {
+            "progress": {
+                "id": str(progress.id),
+                "student_id": str(progress.student_id),
+                "content_item_id": str(progress.content_item_id),
+                "status": progress.status,
+            },
+            "reward": {
+                key: value
+                for key, value in reward_payload.items()
+                if key != "newly_earned_badges"
+            },
+            "newly_earned_badges": reward_payload.get("newly_earned_badges", []),
+        }
+
+    async def save_coloring_page(
+        self,
+        *,
+        content_item_id: uuid.UUID,
+        file: BinaryIO,
+        filename: str,
+        mime_type: str,
+        auth: AuthContext,
+        ip_address: str | None,
+    ) -> dict:
+        content_item = await self.repo.get_content_item(content_item_id)
+        if content_item is None or content_item.status != "published":
+            raise NotFoundError("Content item not found", error_code="ERR-LMS-404")
+        if content_item.school_id is not None:
+            verify_school_boundary(content_item.school_id, auth)
+
+        content = file.read()
+        if not isinstance(content, bytes):
+            content = bytes(content)
+        sha256 = file_storage_service.compute_sha256(content)
+
+        async with UnitOfWork(self.db) as uow:
+            audit = AuditService(uow.session)
+            documents_repo = DocumentsRepository(uow.session)
+            rewards = RewardsService(uow.session)
+            storage_path, thumbnail_path = await file_storage_service.store_upload(
+                content=content,
+                original_filename=filename or "coloring.png",
+                mime_type=mime_type,
+                sha256=sha256,
+            )
+            document = await documents_repo.create_document(
+                Document(
+                    school_id=auth.school_id,
+                    uploader_id=auth.user_id,
+                    filename=os.path.basename(storage_path),
+                    original_filename=filename or "coloring.png",
+                    mime_type=mime_type,
+                    size_bytes=len(content),
+                    sha256=sha256,
+                    storage_path=storage_path,
+                    thumbnail_path=thumbnail_path or None,
+                    category=DocumentCategory.OTHER.value,
+                    linked_student_id=auth.user_id,
+                )
+            )
+            reward_payload = await rewards.award(
+                student_id=auth.user_id,
+                event_type="coloring_saved",
+                stars=5,
+                xp=8,
+                source_type="coloring",
+                source_id=content_item_id,
+                metadata={
+                    "content_type": content_item.content_type,
+                    "mime_type": mime_type,
+                },
+            )
+            await audit.log_event(
+                school_id=auth.school_id,
+                actor_id=auth.user_id,
+                action_type="COLORING_SAVED",
+                outcome="success",
+                target_type="document",
+                target_id=document.id,
+                entity_after={
+                    "document_id": str(document.id),
+                    "content_item_id": str(content_item_id),
+                    "storage_path": storage_path,
+                    "mime_type": mime_type,
                 },
                 ip_address=ip_address,
             )
             await uow.commit()
 
         return {
-            "id": str(asset.id),
-            "content_item_id": str(asset.content_item_id),
-            "file_path": asset.file_path,
-            "checksum": asset.checksum,
-            "mime_type": asset.mime_type,
-            "file_size": asset.file_size,
+            "document_id": str(document.id),
+            "reward": {
+                key: value
+                for key, value in reward_payload.items()
+                if key != "newly_earned_badges"
+            },
+            "newly_earned_badges": reward_payload.get("newly_earned_badges", []),
         }
 
     async def delete_content_asset(
@@ -188,14 +404,17 @@ class ContentService(LMSServiceBase):
         content_item = await self.repo.get_content_item(content_item_id)
         if content_item is None:
             raise NotFoundError("Content item not found", error_code="ERR-LMS-404")
-        if content_item.school_id is not None:
-            verify_school_boundary(content_item.school_id, auth)
+        self._ensure_content_manage_scope(content_item, auth)
 
         entity_before = {
             "id": str(asset.id),
             "file_path": asset.file_path,
             "mime_type": asset.mime_type,
             "file_size": asset.file_size,
+            "page_number": asset.page_number,
+            "narration_text": asset.narration_text,
+            "has_activity": asset.has_activity,
+            "asset_type": asset.asset_type,
         }
         await storage.delete(asset.file_path)
         async with UnitOfWork(self.db) as uow:

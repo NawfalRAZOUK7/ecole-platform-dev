@@ -547,6 +547,14 @@ class LMSRepository(BaseRepository):
         await self.db.flush()
         return progress
 
+    async def save_content_item(
+        self,
+        content_item: ContentItem,
+    ) -> ContentItem:
+        self.db.add(content_item)
+        await self.db.flush()
+        return content_item
+
     async def get_content_asset(
         self,
         *,
@@ -561,11 +569,38 @@ class LMSRepository(BaseRepository):
         )
         return result.scalar_one_or_none()
 
+    async def list_content_assets(
+        self,
+        *,
+        content_item_id: uuid.UUID,
+        page_only: bool = False,
+    ) -> list[ContentItemAsset]:
+        query = select(ContentItemAsset).where(
+            ContentItemAsset.content_item_id == content_item_id
+        )
+        if page_only:
+            query = query.where(ContentItemAsset.page_number.is_not(None))
+        query = query.order_by(
+            ContentItemAsset.page_number.asc().nullslast(),
+            ContentItemAsset.created_at.asc(),
+            ContentItemAsset.id.asc(),
+        )
+        result = await self.db.execute(query)
+        return list(result.scalars().all())
+
     async def create_content_asset(
         self,
         **kwargs: Any,
     ) -> ContentItemAsset:
         asset = ContentItemAsset(**kwargs)
+        self.db.add(asset)
+        await self.db.flush()
+        return asset
+
+    async def save_content_asset(
+        self,
+        asset: ContentItemAsset,
+    ) -> ContentItemAsset:
         self.db.add(asset)
         await self.db.flush()
         return asset

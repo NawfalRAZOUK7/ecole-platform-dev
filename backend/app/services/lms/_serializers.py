@@ -7,6 +7,7 @@ from app.models.lms import (
     ActivitySession,
     Assessment,
     Assignment,
+    ContentItemAsset,
     ContentItem,
     Course,
     Grade,
@@ -92,6 +93,21 @@ class LMSSerializerMixin:
             "target_age_max": content_item.target_age_max,
             "theme_color": content_item.theme_color,
             "status": content_item.status,
+        }
+
+    @staticmethod
+    def _content_item_asset_to_dict(asset: ContentItemAsset) -> dict:
+        return {
+            "id": str(asset.id),
+            "content_item_id": str(asset.content_item_id),
+            "file_path": asset.file_path,
+            "checksum": asset.checksum,
+            "mime_type": asset.mime_type,
+            "file_size": asset.file_size,
+            "page_number": asset.page_number,
+            "narration_text": asset.narration_text,
+            "has_activity": asset.has_activity,
+            "asset_type": asset.asset_type,
         }
 
     @staticmethod

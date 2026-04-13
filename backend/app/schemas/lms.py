@@ -10,6 +10,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from app.schemas.rewards import BadgeResponse, StudentRewardResponse
+
 
 # ---------------------------------------------------------------------------
 # Course (S-051)
@@ -131,6 +133,19 @@ class ContentItemResponse(BaseModel):
     status: str
 
 
+class ContentItemAssetResponse(BaseModel):
+    id: str
+    content_item_id: str
+    file_path: str
+    checksum: str | None = None
+    mime_type: str | None = None
+    file_size: int | None = None
+    page_number: int | None = None
+    narration_text: str | None = None
+    has_activity: bool
+    asset_type: str | None = None
+
+
 # ---------------------------------------------------------------------------
 # Content Progress (S-057)
 # ---------------------------------------------------------------------------
@@ -143,6 +158,22 @@ class ContentProgressResponse(BaseModel):
     student_id: str
     content_item_id: str
     status: str
+
+
+class ContentCompleteRequest(BaseModel):
+    time_spent_seconds: int | None = Field(default=None, ge=0)
+
+
+class ContentCompleteResponse(BaseModel):
+    progress: ContentProgressResponse
+    reward: StudentRewardResponse
+    newly_earned_badges: list[BadgeResponse] = Field(default_factory=list)
+
+
+class ColoringSaveResponse(BaseModel):
+    document_id: str
+    reward: StudentRewardResponse
+    newly_earned_badges: list[BadgeResponse] = Field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------

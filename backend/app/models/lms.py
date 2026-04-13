@@ -809,6 +809,10 @@ class ContentItemAsset(TimestampMixin, Base):
     checksum: Mapped[str | None] = mapped_column(String(128), nullable=True)
     mime_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
     file_size: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    page_number: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    narration_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    has_activity: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    asset_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
     # Relationships
     content_item: Mapped["ContentItem"] = relationship(back_populates="assets")
