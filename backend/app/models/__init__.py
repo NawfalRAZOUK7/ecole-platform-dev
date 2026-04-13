@@ -179,6 +179,9 @@ from app.models.rewards import (
     StudentReward,
 )
 
+# G5I — Games
+from app.models.games import GameConfig
+
 # G6 — Audit
 from app.models.audit import AuditLog
 
@@ -344,6 +347,8 @@ __all__ = [
     "StudentReward",
     "RewardEvent",
     "RewardBadge",
+    # Games
+    "GameConfig",
     # Audit
     "AuditLog",
     # AI

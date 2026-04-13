@@ -126,6 +126,10 @@ OPENAPI_TAGS = [
         "name": "Rewards",
         "description": "Student rewards, stars, XP, badges, leaderboards.",
     },
+    {
+        "name": "Games",
+        "description": "Mobile game configurations and completion reward flows.",
+    },
 ]
 
 

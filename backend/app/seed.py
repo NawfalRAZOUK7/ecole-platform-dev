@@ -48,6 +48,7 @@ from app.models.erp import (
     TimetableSlot,
 )
 from app.models.feature import FeatureToggle
+from app.models.games import GameConfig
 from app.models.iam import (
     Membership,
     ParentChildLink,
@@ -164,6 +165,7 @@ async def clear_all(session: AsyncSession) -> None:
     existing_tables = await conn.run_sync(_get_table_names)
     tables_in_order = [
         "feature_toggles",
+        "game_configs",
         "reward_events",
         "student_rewards",
         "reward_badges",
@@ -1693,6 +1695,338 @@ async def seed_reward_badges(session: AsyncSession) -> None:
     print(f"  [Rewards] {len(badges)} reward badges")
 
 
+async def seed_game_configs(session: AsyncSession) -> None:
+    """Seed sample mobile game configs."""
+    configs = [
+        GameConfig(
+            id=uuid.uuid5(uuid.NAMESPACE_URL, "game-config-memory-match-letters-easy"),
+            game_type="memory_match",
+            title="Arabic Letters Match - Easy",
+            title_ar="مطابقة الحروف العربية - سهل",
+            title_fr="Association des lettres arabes - facile",
+            subject="arabic_letters",
+            difficulty="easy",
+            target_age_min=4,
+            target_age_max=5,
+            config={
+                "pairs": [
+                    {
+                        "front": "أ",
+                        "back": "أرنب",
+                        "image_url": "https://cdn.ecole-platform.test/games/letters/alif-rabbit.png",
+                    },
+                    {
+                        "front": "ب",
+                        "back": "بطة",
+                        "image_url": "https://cdn.ecole-platform.test/games/letters/ba-duck.png",
+                    },
+                    {
+                        "front": "ت",
+                        "back": "تفاح",
+                        "image_url": "https://cdn.ecole-platform.test/games/letters/ta-apple.png",
+                    },
+                    {
+                        "front": "ث",
+                        "back": "ثعلب",
+                        "image_url": "https://cdn.ecole-platform.test/games/letters/tha-fox.png",
+                    },
+                    {
+                        "front": "ج",
+                        "back": "جمل",
+                        "image_url": "https://cdn.ecole-platform.test/games/letters/jeem-camel.png",
+                    },
+                    {
+                        "front": "ح",
+                        "back": "حصان",
+                        "image_url": "https://cdn.ecole-platform.test/games/letters/ha-horse.png",
+                    },
+                ],
+                "grid_cols": 3,
+                "grid_rows": 4,
+                "time_limit_seconds": 120,
+            },
+            reward_stars=10,
+            reward_xp=15,
+            school_id=None,
+            is_active=True,
+        ),
+        GameConfig(
+            id=uuid.uuid5(
+                uuid.NAMESPACE_URL, "game-config-memory-match-letters-medium"
+            ),
+            game_type="memory_match",
+            title="Arabic Letters Match - Medium",
+            title_ar="مطابقة الحروف العربية - متوسط",
+            title_fr="Association des lettres arabes - moyen",
+            subject="arabic_letters",
+            difficulty="medium",
+            target_age_min=5,
+            target_age_max=6,
+            config={
+                "pairs": [
+                    {
+                        "front": "خ",
+                        "back": "خبز",
+                        "image_url": "https://cdn.ecole-platform.test/games/letters/kha-bread.png",
+                    },
+                    {
+                        "front": "د",
+                        "back": "دجاجة",
+                        "image_url": "https://cdn.ecole-platform.test/games/letters/dal-hen.png",
+                    },
+                    {
+                        "front": "ذ",
+                        "back": "ذرة",
+                        "image_url": "https://cdn.ecole-platform.test/games/letters/dhal-corn.png",
+                    },
+                    {
+                        "front": "ر",
+                        "back": "رمان",
+                        "image_url": "https://cdn.ecole-platform.test/games/letters/ra-pomegranate.png",
+                    },
+                    {
+                        "front": "ز",
+                        "back": "زهرة",
+                        "image_url": "https://cdn.ecole-platform.test/games/letters/zay-flower.png",
+                    },
+                    {
+                        "front": "س",
+                        "back": "سمكة",
+                        "image_url": "https://cdn.ecole-platform.test/games/letters/seen-fish.png",
+                    },
+                    {
+                        "front": "ش",
+                        "back": "شمس",
+                        "image_url": "https://cdn.ecole-platform.test/games/letters/sheen-sun.png",
+                    },
+                    {
+                        "front": "ص",
+                        "back": "صقر",
+                        "image_url": "https://cdn.ecole-platform.test/games/letters/sad-falcon.png",
+                    },
+                ],
+                "grid_cols": 4,
+                "grid_rows": 4,
+                "time_limit_seconds": 135,
+            },
+            reward_stars=14,
+            reward_xp=20,
+            school_id=None,
+            is_active=True,
+        ),
+        GameConfig(
+            id=uuid.uuid5(uuid.NAMESPACE_URL, "game-config-memory-match-letters-hard"),
+            game_type="memory_match",
+            title="Arabic Letters Match - Hard",
+            title_ar="مطابقة الحروف العربية - صعب",
+            title_fr="Association des lettres arabes - difficile",
+            subject="arabic_letters",
+            difficulty="hard",
+            target_age_min=6,
+            target_age_max=7,
+            config={
+                "pairs": [
+                    {
+                        "front": "ض",
+                        "back": "ضفدع",
+                        "image_url": "https://cdn.ecole-platform.test/games/letters/dad-frog.png",
+                    },
+                    {
+                        "front": "ط",
+                        "back": "طائرة",
+                        "image_url": "https://cdn.ecole-platform.test/games/letters/ta-plane.png",
+                    },
+                    {
+                        "front": "ظ",
+                        "back": "ظرف",
+                        "image_url": "https://cdn.ecole-platform.test/games/letters/dha-envelope.png",
+                    },
+                    {
+                        "front": "ع",
+                        "back": "عصفور",
+                        "image_url": "https://cdn.ecole-platform.test/games/letters/ain-bird.png",
+                    },
+                    {
+                        "front": "غ",
+                        "back": "غزال",
+                        "image_url": "https://cdn.ecole-platform.test/games/letters/ghain-gazelle.png",
+                    },
+                    {
+                        "front": "ف",
+                        "back": "فيل",
+                        "image_url": "https://cdn.ecole-platform.test/games/letters/fa-elephant.png",
+                    },
+                    {
+                        "front": "ق",
+                        "back": "قمر",
+                        "image_url": "https://cdn.ecole-platform.test/games/letters/qaf-moon.png",
+                    },
+                    {
+                        "front": "ك",
+                        "back": "كتاب",
+                        "image_url": "https://cdn.ecole-platform.test/games/letters/kaf-book.png",
+                    },
+                    {
+                        "front": "ل",
+                        "back": "ليمون",
+                        "image_url": "https://cdn.ecole-platform.test/games/letters/lam-lemon.png",
+                    },
+                    {
+                        "front": "م",
+                        "back": "موز",
+                        "image_url": "https://cdn.ecole-platform.test/games/letters/meem-banana.png",
+                    },
+                ],
+                "grid_cols": 4,
+                "grid_rows": 5,
+                "time_limit_seconds": 150,
+            },
+            reward_stars=18,
+            reward_xp=28,
+            school_id=None,
+            is_active=True,
+        ),
+        GameConfig(
+            id=uuid.uuid5(uuid.NAMESPACE_URL, "game-config-sorting-letter-types"),
+            game_type="sorting",
+            title="Sort Letters by Type",
+            title_ar="فرز الحروف حسب النوع",
+            title_fr="Classer les lettres par type",
+            subject="arabic_letters",
+            difficulty="easy",
+            target_age_min=5,
+            target_age_max=7,
+            config={
+                "categories": [
+                    {
+                        "name": "حروف شمسية",
+                        "items": ["ت", "ث", "د", "ذ", "ر", "ز", "س", "ش"],
+                    },
+                    {
+                        "name": "حروف قمرية",
+                        "items": ["أ", "ب", "ج", "ح", "خ", "ع", "غ", "ف"],
+                    },
+                ]
+            },
+            reward_stars=12,
+            reward_xp=18,
+            school_id=None,
+            is_active=True,
+        ),
+        GameConfig(
+            id=uuid.uuid5(uuid.NAMESPACE_URL, "game-config-sorting-word-categories"),
+            game_type="sorting",
+            title="Sort Words by Category",
+            title_ar="فرز الكلمات حسب الفئة",
+            title_fr="Classer les mots par catégorie",
+            subject="vocabulary",
+            difficulty="medium",
+            target_age_min=5,
+            target_age_max=7,
+            config={
+                "categories": [
+                    {"name": "حيوانات", "items": ["أرنب", "أسد", "فيل", "قطة"]},
+                    {"name": "فواكه", "items": ["تفاح", "موز", "عنب", "برتقال"]},
+                    {"name": "ألوان", "items": ["أحمر", "أزرق", "أصفر", "أخضر"]},
+                ]
+            },
+            reward_stars=15,
+            reward_xp=22,
+            school_id=None,
+            is_active=True,
+        ),
+        GameConfig(
+            id=uuid.uuid5(uuid.NAMESPACE_URL, "game-config-vocabulary-animals"),
+            game_type="vocabulary_cards",
+            title="Animal Vocabulary Cards",
+            title_ar="بطاقات مفردات الحيوانات",
+            title_fr="Cartes de vocabulaire - animaux",
+            subject="vocabulary",
+            difficulty="easy",
+            target_age_min=4,
+            target_age_max=6,
+            config={
+                "cards": [
+                    {
+                        "word_ar": "أرنب",
+                        "word_fr": "Lapin",
+                        "image_url": "https://cdn.ecole-platform.test/games/vocabulary/rabbit.png",
+                        "audio_url": "https://cdn.ecole-platform.test/games/vocabulary/rabbit.mp3",
+                    },
+                    {
+                        "word_ar": "أسد",
+                        "word_fr": "Lion",
+                        "image_url": "https://cdn.ecole-platform.test/games/vocabulary/lion.png",
+                        "audio_url": "https://cdn.ecole-platform.test/games/vocabulary/lion.mp3",
+                    },
+                    {
+                        "word_ar": "فيل",
+                        "word_fr": "Elephant",
+                        "image_url": "https://cdn.ecole-platform.test/games/vocabulary/elephant.png",
+                        "audio_url": "https://cdn.ecole-platform.test/games/vocabulary/elephant.mp3",
+                    },
+                    {
+                        "word_ar": "قطة",
+                        "word_fr": "Chat",
+                        "image_url": "https://cdn.ecole-platform.test/games/vocabulary/cat.png",
+                        "audio_url": "https://cdn.ecole-platform.test/games/vocabulary/cat.mp3",
+                    },
+                ]
+            },
+            reward_stars=10,
+            reward_xp=15,
+            school_id=None,
+            is_active=True,
+        ),
+        GameConfig(
+            id=uuid.uuid5(uuid.NAMESPACE_URL, "game-config-vocabulary-colors"),
+            game_type="vocabulary_cards",
+            title="Color Vocabulary Cards",
+            title_ar="بطاقات مفردات الألوان",
+            title_fr="Cartes de vocabulaire - couleurs",
+            subject="vocabulary",
+            difficulty="easy",
+            target_age_min=4,
+            target_age_max=6,
+            config={
+                "cards": [
+                    {
+                        "word_ar": "أحمر",
+                        "word_fr": "Rouge",
+                        "image_url": "https://cdn.ecole-platform.test/games/vocabulary/red.png",
+                        "audio_url": "https://cdn.ecole-platform.test/games/vocabulary/red.mp3",
+                    },
+                    {
+                        "word_ar": "أزرق",
+                        "word_fr": "Bleu",
+                        "image_url": "https://cdn.ecole-platform.test/games/vocabulary/blue.png",
+                        "audio_url": "https://cdn.ecole-platform.test/games/vocabulary/blue.mp3",
+                    },
+                    {
+                        "word_ar": "أصفر",
+                        "word_fr": "Jaune",
+                        "image_url": "https://cdn.ecole-platform.test/games/vocabulary/yellow.png",
+                        "audio_url": "https://cdn.ecole-platform.test/games/vocabulary/yellow.mp3",
+                    },
+                    {
+                        "word_ar": "أخضر",
+                        "word_fr": "Vert",
+                        "image_url": "https://cdn.ecole-platform.test/games/vocabulary/green.png",
+                        "audio_url": "https://cdn.ecole-platform.test/games/vocabulary/green.mp3",
+                    },
+                ]
+            },
+            reward_stars=10,
+            reward_xp=15,
+            school_id=None,
+            is_active=True,
+        ),
+    ]
+    session.add_all(configs)
+    await session.flush()
+    print(f"  [Games] {len(configs)} game configs")
+
+
 async def seed_men_compliance(session: AsyncSession) -> None:
     """Seed MEN curriculum reference data and objectives."""
     result = await seed_men_reference_data(session)
@@ -1826,6 +2160,7 @@ async def main() -> None:
         await seed_fees(session)
         await seed_feature_toggles(session)
         await seed_reward_badges(session)
+        await seed_game_configs(session)
         await seed_men_compliance(session)
 
         await session.commit()
