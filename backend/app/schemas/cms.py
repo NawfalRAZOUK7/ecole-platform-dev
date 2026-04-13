@@ -20,6 +20,11 @@ class CmsContentCreateRequest(BaseModel):
     language: str | None = Field(None, max_length=10)
     subject: str | None = Field(None, max_length=50)
     description: str | None = None
+    page_count: int | None = None
+    letter: str | None = None
+    target_age_min: int | None = None
+    target_age_max: int | None = None
+    theme_color: str | None = None
     status: str = Field(default="draft", pattern="^(draft|published|archived)$")
 
 
@@ -30,6 +35,11 @@ class CmsContentUpdateRequest(BaseModel):
     language: str | None = Field(None, max_length=10)
     subject: str | None = Field(None, max_length=50)
     description: str | None = None
+    page_count: int | None = None
+    letter: str | None = None
+    target_age_min: int | None = None
+    target_age_max: int | None = None
+    theme_color: str | None = None
     status: str | None = Field(None, pattern="^(draft|published|archived)$")
 
 
@@ -41,6 +51,11 @@ class CmsContentResponse(BaseModel):
     language: str | None = None
     subject: str | None = None
     description: str | None = None
+    page_count: int | None = None
+    letter: str | None = None
+    target_age_min: int | None = None
+    target_age_max: int | None = None
+    theme_color: str | None = None
     thumbnail_path: str | None = None
     origin: str
     status: str
@@ -117,5 +132,10 @@ class ClassContentResponse(BaseModel):
     language: str | None = None
     subject: str | None = None
     description: str | None = None
+    page_count: int | None = None
+    letter: str | None = None
+    target_age_min: int | None = None
+    target_age_max: int | None = None
+    theme_color: str | None = None
     assigned_at: str
     teacher_notes: str | None = None

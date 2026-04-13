@@ -478,6 +478,8 @@ class LMSRepository(BaseRepository):
         content_type: str | None,
         level_band: str | None,
         language: str | None,
+        letter: str | None,
+        target_age: int | None,
         filters: FilterSpec,
         sort: SortSpec,
         search: str | None,
@@ -495,6 +497,13 @@ class LMSRepository(BaseRepository):
             query = query.where(ContentItem.level_band == level_band)
         if language:
             query = query.where(ContentItem.language == language)
+        if letter:
+            query = query.where(ContentItem.letter == letter)
+        if target_age is not None:
+            query = query.where(
+                ContentItem.target_age_min <= target_age,
+                ContentItem.target_age_max >= target_age,
+            )
 
         query = apply_filters(query, ContentItem, filters)
         if search:
@@ -577,6 +586,8 @@ class LMSRepository(BaseRepository):
         subject: str | None,
         language: str | None,
         origin: str | None,
+        letter: str | None,
+        target_age: int | None,
         cursor: str | None,
         limit: int,
     ) -> tuple[list[ContentItem], bool]:
@@ -595,6 +606,13 @@ class LMSRepository(BaseRepository):
             query = query.where(ContentItem.language == language)
         if origin:
             query = query.where(ContentItem.origin == origin)
+        if letter:
+            query = query.where(ContentItem.letter == letter)
+        if target_age is not None:
+            query = query.where(
+                ContentItem.target_age_min <= target_age,
+                ContentItem.target_age_max >= target_age,
+            )
 
         query = query.order_by(ContentItem.id)
 

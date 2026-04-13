@@ -19,6 +19,7 @@ from sqlalchemy import (
     Index,
     Integer,
     Numeric,
+    SmallInteger,
     String,
     Text,
     UniqueConstraint,
@@ -764,6 +765,11 @@ class ContentItem(TimestampMixin, NullableSchoolScopedMixin, Base):
     original_content_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("content_items.id", ondelete="SET NULL"), nullable=True
     )
+    page_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    letter: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    target_age_min: Mapped[int | None] = mapped_column(SmallInteger, nullable=True)
+    target_age_max: Mapped[int | None] = mapped_column(SmallInteger, nullable=True)
+    theme_color: Mapped[str | None] = mapped_column(String(7), nullable=True)
 
     # Relationships
     assets: Mapped[list["ContentItemAsset"]] = relationship(
