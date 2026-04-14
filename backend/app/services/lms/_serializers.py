@@ -87,6 +87,7 @@ class LMSSerializerMixin:
             "content_type": content_item.content_type,
             "level_band": content_item.level_band,
             "language": content_item.language,
+            "subject": content_item.subject,
             "page_count": content_item.page_count,
             "letter": content_item.letter,
             "target_age_min": content_item.target_age_min,

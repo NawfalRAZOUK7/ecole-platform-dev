@@ -125,6 +125,7 @@ class ContentItemResponse(BaseModel):
     content_type: str
     level_band: str | None = None
     language: str | None = None
+    subject: str | None = None
     page_count: int | None = None
     letter: str | None = None
     target_age_min: int | None = None

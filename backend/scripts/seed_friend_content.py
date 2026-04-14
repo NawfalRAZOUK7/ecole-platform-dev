@@ -1,7 +1,7 @@
 """Import extracted friend educational content into the LMS content library.
 
 Run with:
-    cd backend && python -m scripts.seed_friend_content
+    cd backend && python scripts/seed_friend_content.py
 """
 
 from __future__ import annotations
@@ -54,7 +54,7 @@ if not UPLOAD_ROOT.is_absolute():
 UUID_NAMESPACE = uuid.uuid5(uuid.NAMESPACE_URL, "ecole-platform/friend-content")
 STATUS_PUBLISHED = "published"
 ORIGIN_PLATFORM = "PLATFORM"
-SUBJECT_ARABIC = "arabic_letters"
+SUBJECT_ARABIC = "arabic"
 SUBJECT_ART = "art"
 LANGUAGE_AR = "ar"
 
@@ -826,28 +826,28 @@ async def _import_mascot_assets(
         _warn(stats, "No mascot images found")
         return
 
-    thumbnail_path = f"content/mascot/{_safe_name(sources[0].name)}"
-    thumbnail_path, _, _ = _copy_to_uploads(sources[0], thumbnail_path)
-    content_item, created = await _upsert_content_item(
-        session,
-        content_id=_content_uuid("mascot-assets"),
-        title="أصول شخصية سامي",
-        content_type="mascot_asset",
-        subject="branding",
-        language=LANGUAGE_AR,
-        description="مجموعة صور لشخصية سامي والمواد البصرية المرتبطة بها.",
-        created_by=creator_user_id,
-        page_count=len(sources),
-        theme_color="#00ACC1",
-        thumbnail_path=thumbnail_path,
-    )
-
     for source in sources:
         relative_path = f"content/mascot/{_safe_name(source.name)}"
         relative_path, size_bytes, checksum = _copy_to_uploads(source, relative_path)
+        mascot_stem = source.stem.replace("_", " ").strip()
+        title = f"أصل سامي - {mascot_stem}"
+        description = f"صورة أصلية لشخصية سامي ({source.name})."
+        content_item, created = await _upsert_content_item(
+            session,
+            content_id=_content_uuid("mascot-asset", source.name),
+            title=title,
+            content_type="mascot_asset",
+            subject="branding",
+            language=LANGUAGE_AR,
+            description=description,
+            created_by=creator_user_id,
+            page_count=1,
+            thumbnail_path=relative_path,
+            theme_color="#00ACC1",
+        )
         await _upsert_asset(
             session,
-            asset_id=_content_uuid("mascot-image", relative_path),
+            asset_id=_content_uuid("mascot-image", source.name),
             content_item_id=content_item.id,
             file_path=relative_path,
             checksum=checksum,
@@ -858,9 +858,8 @@ async def _import_mascot_assets(
             asset_type="mascot_image",
         )
         stats.mascot_images += 1
-
-    action = "Created" if created else "Existing"
-    print(f"{action} mascot asset bundle: أصول شخصية سامي ({len(sources)} images)")
+        action = "Created" if created else "Existing"
+        print(f"{action} mascot asset: {title}")
 
 
 async def _import_pdfs(
