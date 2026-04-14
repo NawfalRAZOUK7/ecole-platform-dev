@@ -22,12 +22,12 @@ class TestPermissionHierarchy:
     @pytest.mark.parametrize(
         ("role", "direct_count", "inherited_count", "effective_count"),
         [
-            (perms.SYS, 6, 170, 176),
-            (perms.SUP, 9, 164, 173),
-            (perms.ADM, 25, 139, 164),
-            (perms.DIR, 66, 75, 141),
-            (perms.TCH, 81, 0, 81),
-            (perms.PAR, 50, 0, 50),
+            (perms.SYS, 8, 170, 178),
+            (perms.SUP, 9, 166, 175),
+            (perms.ADM, 26, 140, 166),
+            (perms.DIR, 66, 77, 143),
+            (perms.TCH, 83, 0, 83),
+            (perms.PAR, 51, 0, 51),
             (perms.STD, 42, 0, 42),
             (perms.CONTENT_MGR, 32, 0, 32),
         ],

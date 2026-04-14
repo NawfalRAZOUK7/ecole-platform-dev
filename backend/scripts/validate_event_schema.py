@@ -45,12 +45,12 @@ from app.services.analytics import (
 # P0 Required Events (G2.3 — must be registered)
 # ---------------------------------------------------------------------------
 P0_REQUIRED_EVENTS = {
-    "auth_login_success",       # EVT-002
-    "auth_login_failure",       # EVT-003
-    "feed_item_open",           # EVT-008
-    "content_progress_updated", # P0 KPI
-    "notification_delivered",   # P0 KPI
-    "payment_completed",        # P0 KPI
+    "auth_login_success",  # EVT-002
+    "auth_login_failure",  # EVT-003
+    "feed_item_open",  # EVT-008
+    "content_progress_updated",  # P0 KPI
+    "notification_delivered",  # P0 KPI
+    "payment_completed",  # P0 KPI
 }
 
 
@@ -81,9 +81,19 @@ def validate_no_pii_in_whitelists() -> list[str]:
 def validate_event_model_fields() -> list[str]:
     """Check that the AnalyticsEvent model has all required G2.2 fields."""
     required_fields = {
-        "event_name", "event_version", "schema_version", "occurred_at",
-        "env", "actor_type", "actor_id", "correlation_id", "client_platform",
-        "client_version", "properties", "pii_flags", "redaction_applied",
+        "event_name",
+        "event_version",
+        "schema_version",
+        "occurred_at",
+        "env",
+        "actor_type",
+        "actor_id",
+        "correlation_id",
+        "client_platform",
+        "client_version",
+        "properties",
+        "pii_flags",
+        "redaction_applied",
     }
     model_fields = set(AnalyticsEvent.model_fields.keys())
     missing = required_fields - model_fields
@@ -117,12 +127,14 @@ def export_schema() -> dict:
     """Export the current event schema as a JSON-serializable dict."""
     events = []
     for event_name, properties in sorted(_EVENT_PROPERTY_WHITELIST.items()):
-        events.append({
-            "event_name": event_name,
-            "schema_version": SCHEMA_VERSION,
-            "properties": sorted(properties),
-            "property_count": len(properties),
-        })
+        events.append(
+            {
+                "event_name": event_name,
+                "schema_version": SCHEMA_VERSION,
+                "properties": sorted(properties),
+                "property_count": len(properties),
+            }
+        )
 
     return {
         "schema_version": SCHEMA_VERSION,
@@ -167,7 +179,9 @@ def diff_from_baseline() -> list[str]:
         changes.append(f"REMOVED event: {event}")
 
     # Check for property changes in existing events
-    baseline_map = {e["event_name"]: set(e["properties"]) for e in baseline.get("events", [])}
+    baseline_map = {
+        e["event_name"]: set(e["properties"]) for e in baseline.get("events", [])
+    }
     current_map = {e["event_name"]: set(e["properties"]) for e in current["events"]}
 
     for event in current_events & baseline_events:
@@ -176,7 +190,9 @@ def diff_from_baseline() -> list[str]:
         if added_props:
             changes.append(f"  {event}: added properties {sorted(added_props)}")
         if removed_props:
-            changes.append(f"  {event}: REMOVED properties {sorted(removed_props)} (BREAKING)")
+            changes.append(
+                f"  {event}: REMOVED properties {sorted(removed_props)} (BREAKING)"
+            )
 
     return changes
 
