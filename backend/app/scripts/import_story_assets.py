@@ -69,7 +69,10 @@ SUPPORTED_MIME = {
 # Auth helpers
 # ---------------------------------------------------------------------------
 
-async def login(client: httpx.AsyncClient, base_url: str, email: str, password: str) -> str:
+
+async def login(
+    client: httpx.AsyncClient, base_url: str, email: str, password: str
+) -> str:
     """Authenticate and return a Bearer token."""
     resp = await client.post(
         f"{base_url}{DEFAULT_API_PREFIX}{LOGIN_ENDPOINT}",
@@ -78,18 +81,18 @@ async def login(client: httpx.AsyncClient, base_url: str, email: str, password: 
     resp.raise_for_status()
     data = resp.json()
     # Support both {"access_token": ...} and {"data": {"access_token": ...}}
-    token = (
-        data.get("access_token")
-        or (data.get("data") or {}).get("access_token")
-    )
+    token = data.get("access_token") or (data.get("data") or {}).get("access_token")
     if not token:
-        raise RuntimeError(f"Could not extract access_token from login response: {data}")
+        raise RuntimeError(
+            f"Could not extract access_token from login response: {data}"
+        )
     return token
 
 
 # ---------------------------------------------------------------------------
 # Content creation
 # ---------------------------------------------------------------------------
+
 
 async def create_content_item(
     client: httpx.AsyncClient,
@@ -120,10 +123,7 @@ async def create_content_item(
     )
     resp.raise_for_status()
     data = resp.json()
-    content_id = (
-        data.get("id")
-        or (data.get("data") or {}).get("id")
-    )
+    content_id = data.get("id") or (data.get("data") or {}).get("id")
     if not content_id:
         raise RuntimeError(f"Could not extract id from create response: {data}")
     return content_id
@@ -141,8 +141,12 @@ async def upload_page(
 ) -> dict:
     """Upload a single story page asset."""
     suffix = page_path.suffix.lower()
-    mime_type = SUPPORTED_MIME.get(suffix) or (mimetypes.guess_type(str(page_path))[0] or "application/octet-stream")
-    endpoint = f"{base_url}{DEFAULT_API_PREFIX}" + PAGES_ENDPOINT_TPL.format(content_id=content_id)
+    mime_type = SUPPORTED_MIME.get(suffix) or (
+        mimetypes.guess_type(str(page_path))[0] or "application/octet-stream"
+    )
+    endpoint = f"{base_url}{DEFAULT_API_PREFIX}" + PAGES_ENDPOINT_TPL.format(
+        content_id=content_id
+    )
 
     with page_path.open("rb") as fh:
         files = {"file": (page_path.name, fh, mime_type)}
@@ -162,6 +166,7 @@ async def upload_page(
 # ---------------------------------------------------------------------------
 # Manifest loading
 # ---------------------------------------------------------------------------
+
 
 def load_manifest(manifest_path: Path) -> list[dict]:
     with manifest_path.open(encoding="utf-8") as fh:
@@ -193,10 +198,15 @@ def discover_from_dir(stories_dir: Path) -> list[dict]:
             meta = json.load(fh)
 
         pages_dir = story_dir / "pages"
-        page_files = sorted(
-            p for p in pages_dir.iterdir()
-            if p.is_file() and p.suffix.lower() in SUPPORTED_MIME
-        ) if pages_dir.exists() else []
+        page_files = (
+            sorted(
+                p
+                for p in pages_dir.iterdir()
+                if p.is_file() and p.suffix.lower() in SUPPORTED_MIME
+            )
+            if pages_dir.exists()
+            else []
+        )
 
         meta["pages"] = [
             {
@@ -215,6 +225,7 @@ def discover_from_dir(stories_dir: Path) -> list[dict]:
 # ---------------------------------------------------------------------------
 # Main import loop
 # ---------------------------------------------------------------------------
+
 
 async def import_stories(
     stories: list[dict],
@@ -237,7 +248,9 @@ async def import_stories(
             print(f"[{idx}/{total_stories}] {title!r} ({len(pages)} pages)")
 
             if dry_run:
-                print(f"  [DRY RUN] Would create ContentItem and upload {len(pages)} pages")
+                print(
+                    f"  [DRY RUN] Would create ContentItem and upload {len(pages)} pages"
+                )
                 continue
 
             try:
@@ -246,12 +259,18 @@ async def import_stories(
 
                 # Auto-set page_count if not in metadata
                 if not story.get("page_count") and pages:
-                    print(f"  (page_count not set in metadata; {len(pages)} pages will be uploaded)")
+                    print(
+                        f"  (page_count not set in metadata; {len(pages)} pages will be uploaded)"
+                    )
 
                 for page in pages:
                     file_val = page.get("file", "")
-                    page_path = Path(file_val) if Path(file_val).is_absolute() else (
-                        (assets_root / file_val) if assets_root else Path(file_val)
+                    page_path = (
+                        Path(file_val)
+                        if Path(file_val).is_absolute()
+                        else (
+                            (assets_root / file_val) if assets_root else Path(file_val)
+                        )
                     )
                     if not page_path.exists():
                         print(f"  [WARN] Page file not found, skipping: {page_path}")
@@ -267,11 +286,15 @@ async def import_stories(
                         has_activity=bool(page.get("has_activity", False)),
                         asset_type=page.get("asset_type", "illustration"),
                     )
-                    asset_id = (result.get("id") or (result.get("data") or {}).get("id", "?"))
+                    asset_id = result.get("id") or (result.get("data") or {}).get(
+                        "id", "?"
+                    )
                     print(f"    Page {page.get('page_number')}: asset {asset_id}")
 
             except httpx.HTTPStatusError as exc:
-                print(f"  [ERROR] HTTP {exc.response.status_code}: {exc.response.text[:200]}")
+                print(
+                    f"  [ERROR] HTTP {exc.response.status_code}: {exc.response.text[:200]}"
+                )
             except Exception as exc:  # noqa: BLE001
                 print(f"  [ERROR] {exc}")
 
@@ -282,6 +305,7 @@ async def import_stories(
 # CLI entrypoint
 # ---------------------------------------------------------------------------
 
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Import story content assets into the Ecole Platform via the CMS API.",
@@ -290,13 +314,34 @@ def parse_args() -> argparse.Namespace:
     )
     source = parser.add_mutually_exclusive_group(required=True)
     source.add_argument("--manifest", type=Path, help="Path to JSON manifest file")
-    source.add_argument("--dir", type=Path, dest="stories_dir", help="Directory with story sub-folders")
+    source.add_argument(
+        "--dir", type=Path, dest="stories_dir", help="Directory with story sub-folders"
+    )
 
-    parser.add_argument("--base-url", default=DEFAULT_BASE_URL, help=f"API base URL (default: {DEFAULT_BASE_URL})")
-    parser.add_argument("--email", default="admin@ecole.dz", help="Admin account email for authentication")
-    parser.add_argument("--password", default="Admin1234!", help="Admin account password")
-    parser.add_argument("--assets-root", type=Path, default=None, help="Root dir for resolving relative file paths in manifest")
-    parser.add_argument("--dry-run", action="store_true", help="Validate manifest without making API calls")
+    parser.add_argument(
+        "--base-url",
+        default=DEFAULT_BASE_URL,
+        help=f"API base URL (default: {DEFAULT_BASE_URL})",
+    )
+    parser.add_argument(
+        "--email",
+        default="admin@ecole.dz",
+        help="Admin account email for authentication",
+    )
+    parser.add_argument(
+        "--password", default="Admin1234!", help="Admin account password"
+    )
+    parser.add_argument(
+        "--assets-root",
+        type=Path,
+        default=None,
+        help="Root dir for resolving relative file paths in manifest",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Validate manifest without making API calls",
+    )
     return parser.parse_args()
 
 
