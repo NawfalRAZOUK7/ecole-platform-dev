@@ -16,6 +16,9 @@ import 'package:ecole_platform/features/auth/login_screen.dart';
 import 'package:ecole_platform/features/auth/register_screen.dart';
 import 'package:ecole_platform/features/auth/reset_password_screen.dart';
 import 'package:ecole_platform/features/feed/feed_screen.dart';
+import 'package:ecole_platform/features/games/screens/memory_match_screen.dart';
+import 'package:ecole_platform/features/games/screens/sorting_game_screen.dart';
+import 'package:ecole_platform/features/games/screens/vocabulary_cards_screen.dart';
 import 'package:ecole_platform/features/notifications/notifications_screen.dart';
 import 'package:ecole_platform/features/notifications/notification_preferences_screen.dart';
 import 'package:ecole_platform/features/calendar/calendar_screen.dart';
@@ -289,6 +292,18 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/student/quizzes',
             builder: (context, state) => const QuizPlayerScreen(),
+          ),
+          GoRoute(
+            path: '/games/memory',
+            builder: (context, state) => const MemoryMatchScreen(),
+          ),
+          GoRoute(
+            path: '/games/sorting',
+            builder: (context, state) => const SortingGameScreen(),
+          ),
+          GoRoute(
+            path: '/games/vocabulary',
+            builder: (context, state) => const VocabularyCardsScreen(),
           ),
           GoRoute(
             path: '/rewards',

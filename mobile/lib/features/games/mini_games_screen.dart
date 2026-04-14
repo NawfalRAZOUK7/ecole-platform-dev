@@ -7,11 +7,9 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:ecole_platform/domain/entities/rewards.dart';
-import 'package:ecole_platform/features/games/memory_match_game.dart';
-import 'package:ecole_platform/features/games/sorting_game.dart';
-import 'package:ecole_platform/features/games/vocabulary_game.dart';
 import 'package:ecole_platform/features/rewards/rewards_provider.dart';
 import 'package:ecole_platform/features/rewards/rewards_widgets.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
@@ -51,45 +49,21 @@ class MiniGamesScreen extends ConsumerWidget {
                     label: 'Memory\nMatch',
                     color: KidsContentColors.gameBlue,
                     description: 'Retrouve les paires !',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => MemoryMatchGame(
-                          onComplete: (score) => ref
-                              .read(rewardsProvider.notifier)
-                              .awardMiniGameComplete('memory_match'),
-                        ),
-                      ),
-                    ),
+                    onTap: () => context.push('/games/memory'),
                   ),
                   _GameCard(
                     icon: Icons.sort,
                     label: 'Trier\nles objets',
                     color: KidsContentColors.gameGreen,
                     description: 'Classe dans la bonne case !',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => SortingGame(
-                          onComplete: (score) => ref
-                              .read(rewardsProvider.notifier)
-                              .awardMiniGameComplete('sorting_game'),
-                        ),
-                      ),
-                    ),
+                    onTap: () => context.push('/games/sorting'),
                   ),
                   _GameCard(
                     icon: Icons.translate,
                     label: 'Vocabulaire',
                     color: KidsContentColors.gamePurple,
                     description: 'Apprends des nouveaux mots !',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => VocabularyGame(
-                          onComplete: (score) => ref
-                              .read(rewardsProvider.notifier)
-                              .awardMiniGameComplete('vocabulary_game'),
-                        ),
-                      ),
-                    ),
+                    onTap: () => context.push('/games/vocabulary'),
                   ),
                   // Placeholder for a future game slot
                   _GameCard(
