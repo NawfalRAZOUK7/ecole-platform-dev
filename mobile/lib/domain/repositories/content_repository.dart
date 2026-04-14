@@ -9,4 +9,13 @@ abstract class ContentRepository {
     String? contentType,
     String? levelBand,
   });
+
+  /// Fetch one content item by ID.
+  Future<ContentItem> getContentItem(String contentItemId);
+
+  /// Fetch ordered story pages for a content item.
+  Future<List<ContentItemAsset>> getStoryPages(String contentItemId);
+
+  /// Update progress for a content item.
+  Future<void> updateProgress(String contentItemId, String status);
 }

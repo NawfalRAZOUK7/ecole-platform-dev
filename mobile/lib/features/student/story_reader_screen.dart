@@ -1,60 +1,25 @@
-/// Immersive story reader — page-turn UI for STORY content items.
-///
-/// Loads ordered pages from GET /content-items/{id}/pages, renders each page
-/// as a full-screen image, and auto-narrates using TTS. Integrates with the
-/// existing content progress system and exposes an [onComplete] callback.
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:ecole_platform/app/providers.dart';
+import 'package:ecole_platform/domain/entities/content_item.dart';
+import 'package:ecole_platform/features/rewards/rewards_widgets.dart';
+import 'package:ecole_platform/features/student/story_reader_provider.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
-
-// ---------------------------------------------------------------------------
-// Data model
-// ---------------------------------------------------------------------------
-
-class _StoryPage {
-  final String assetId;
-  final String? fileUrl;   // resolved from GET /content-items/{id}/assets/{assetId}
-  final int pageNumber;
-  final String? narrationText;
-  final bool hasActivity;
-
-  const _StoryPage({
-    required this.assetId,
-    required this.pageNumber,
-    this.fileUrl,
-    this.narrationText,
-    this.hasActivity = false,
-  });
-
-  factory _StoryPage.fromJson(Map<String, dynamic> json) => _StoryPage(
-        assetId: json['id'] as String,
-        pageNumber: (json['page_number'] as num?)?.toInt() ?? 1,
-        fileUrl: json['file_url'] as String?,
-        narrationText: json['narration_text'] as String?,
-        hasActivity: (json['has_activity'] as bool?) ?? false,
-      );
-}
-
-// ---------------------------------------------------------------------------
-// Screen
-// ---------------------------------------------------------------------------
+import 'package:ecole_platform/shared/ui/widgets/drawing_overlay.dart';
 
 class StoryReaderScreen extends ConsumerStatefulWidget {
   final String contentItemId;
-  final String title;
-  final String? themeColor;
-  final VoidCallback? onComplete;
+  final String? initialProgressStatus;
 
   const StoryReaderScreen({
     super.key,
     required this.contentItemId,
-    required this.title,
-    this.themeColor,
-    this.onComplete,
+    this.initialProgressStatus,
   });
 
   @override
@@ -63,169 +28,364 @@ class StoryReaderScreen extends ConsumerStatefulWidget {
 
 class _StoryReaderScreenState extends ConsumerState<StoryReaderScreen> {
   final PageController _pageController = PageController();
-  List<_StoryPage> _pages = [];
-  bool _loading = true;
-  String? _error;
-  int _currentPage = 0;
-  bool _showUi = true; // auto-hide chrome after a moment
+  final Map<String, List<DrawingPath>> _drawingsByPage =
+      <String, List<DrawingPath>>{};
 
-  // Parsed theme color from hex string
-  Color get _accentColor {
-    final hex = widget.themeColor;
-    if (hex == null) return KidsContentColors.storyPageTurn;
+  bool _showCelebration = false;
+  bool _hasShownCelebration = false;
+  int _lastNarratedPageIndex = -1;
+  int _audioRequestId = 0;
+
+  StoryReaderRequest get _request => StoryReaderRequest(
+        contentItemId: widget.contentItemId,
+        initialProgressStatus: widget.initialProgressStatus,
+      );
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    unawaited(ref.read(ttsServiceProvider).stop());
+    super.dispose();
+  }
+
+  Map<String, String> get _imageHeaders {
+    final token = ref.read(apiClientProvider).accessToken;
+    if (token == null || token.isEmpty) {
+      return const <String, String>{};
+    }
+    return <String, String>{'Authorization': 'Bearer $token'};
+  }
+
+  Future<void> _handlePageChanged(int index) async {
+    await _stopNarration();
+    await ref
+        .read(storyReaderProvider(_request).notifier)
+        .setCurrentPageIndex(index);
+  }
+
+  Future<void> _toggleNarration(StoryReaderState storyState) async {
+    if (storyState.isAudioPlaying) {
+      await _stopNarration();
+      return;
+    }
+
+    final page = storyState.currentPage;
+    final narrationText = page?.narrationText?.trim();
+    if (narrationText == null || narrationText.isEmpty) {
+      return;
+    }
+
+    final requestId = ++_audioRequestId;
+    final notifier = ref.read(storyReaderProvider(_request).notifier);
+    notifier.setAudioPlaying(true);
+
     try {
-      return Color(int.parse('FF${hex.replaceAll('#', '')}', radix: 16));
+      await ref.read(ttsServiceProvider).speakInstruction(narrationText);
+    } finally {
+      if (!mounted || requestId != _audioRequestId) {
+        return;
+      }
+      notifier.setAudioPlaying(false);
+    }
+  }
+
+  Future<void> _stopNarration() async {
+    _audioRequestId++;
+    await ref.read(ttsServiceProvider).stop();
+    if (!mounted) {
+      return;
+    }
+    ref.read(storyReaderProvider(_request).notifier).setAudioPlaying(false);
+  }
+
+  Future<void> _finishStory() async {
+    await _stopNarration();
+    await ref.read(storyReaderProvider(_request).notifier).completeStory();
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _showCelebration = true;
+      _hasShownCelebration = true;
+    });
+  }
+
+  Future<void> _closeReader() async {
+    await _stopNarration();
+    if (!mounted) {
+      return;
+    }
+    context.pop();
+  }
+
+  void _scheduleNarration(StoryReaderState storyState) {
+    if (storyState.pages.isEmpty ||
+        _lastNarratedPageIndex == storyState.currentPageIndex) {
+      return;
+    }
+
+    _lastNarratedPageIndex = storyState.currentPageIndex;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      unawaited(_toggleNarration(storyState));
+    });
+  }
+
+  Color _accentColor(String? hex) {
+    if (hex == null || hex.isEmpty) {
+      return KidsContentColors.storyPageTurn;
+    }
+
+    try {
+      final normalized = hex.replaceAll('#', '');
+      return Color(int.parse('FF$normalized', radix: 16));
     } catch (_) {
       return KidsContentColors.storyPageTurn;
     }
   }
 
   @override
-  void initState() {
-    super.initState();
-    _loadPages();
-  }
+  Widget build(BuildContext context) {
+    final storyAsync = ref.watch(storyReaderProvider(_request));
 
-  @override
-  void dispose() {
-    _pageController.dispose();
-    ref.read(ttsServiceProvider).stop();
-    super.dispose();
-  }
+    return storyAsync.when(
+      loading: () => const Scaffold(
+        backgroundColor: KidsContentColors.storyBackground,
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, _) => Scaffold(
+        backgroundColor: KidsContentColors.storyBackground,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                const Icon(Icons.error_outline, size: 56),
+                const SizedBox(height: AppSpacing.base),
+                Text(
+                  '$error',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.base),
+                FilledButton(
+                  onPressed: () => ref
+                      .read(storyReaderProvider(_request).notifier)
+                      .refresh(),
+                  child: const Text('Réessayer'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      data: (storyState) {
+        if (storyState.pages.isNotEmpty && !_showCelebration) {
+          _scheduleNarration(storyState);
+        }
 
-  Future<void> _loadPages() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      final api = ref.read(apiClientProvider);
-      final resp = await api.list('/content-items/${widget.contentItemId}/pages');
-      _pages = (resp.data as List)
-          .map((json) => _StoryPage.fromJson(json as Map<String, dynamic>))
-          .toList()
-        ..sort((a, b) => a.pageNumber.compareTo(b.pageNumber));
-      setState(() => _loading = false);
-      // Auto-narrate first page
-      _narratePage(0);
-    } catch (e) {
-      setState(() {
-        _loading = false;
-        _error = e.toString();
-      });
-    }
-  }
+        final accentColor = _accentColor(storyState.contentItem.themeColor);
+        final currentPage = storyState.currentPage;
 
-  void _narratePage(int index) {
-    if (index >= _pages.length) return;
-    final text = _pages[index].narrationText;
-    if (text != null && text.isNotEmpty) {
-      ref.read(ttsServiceProvider).speakInstruction(text);
-    }
+        return Scaffold(
+          backgroundColor: KidsContentColors.storyBackground,
+          body: Column(
+            children: <Widget>[
+              _StoryTopBar(
+                title: storyState.contentItem.title,
+                accentColor: accentColor,
+                currentPage: storyState.pages.isEmpty
+                    ? 0
+                    : storyState.currentPageIndex + 1,
+                totalPages: storyState.totalPages,
+                isDrawingMode: storyState.isDrawingMode,
+                isAudioPlaying: storyState.isAudioPlaying,
+                canReplayNarration:
+                    ((currentPage?.narrationText ?? '').trim().isNotEmpty),
+                onClose: _closeReader,
+                onToggleDrawing: () => ref
+                    .read(storyReaderProvider(_request).notifier)
+                    .toggleDrawingMode(),
+                onToggleNarration: () => _toggleNarration(storyState),
+              ),
+              Expanded(
+                child: storyState.pages.isEmpty
+                    ? const _EmptyStoryState()
+                    : Stack(
+                        fit: StackFit.expand,
+                        children: <Widget>[
+                          PageView.builder(
+                            controller: _pageController,
+                            itemCount: storyState.totalPages,
+                            onPageChanged: (index) {
+                              unawaited(_handlePageChanged(index));
+                            },
+                            itemBuilder: (context, index) {
+                              final page = storyState.pages[index];
+                              return _StoryPageCanvas(
+                                page: page,
+                                imageHeaders: _imageHeaders,
+                                isDrawingMode: storyState.isDrawingMode,
+                                savedPaths:
+                                    _drawingsByPage[page.id] ?? const [],
+                                onDrawingChanged: (paths) {
+                                  _drawingsByPage[page.id] = paths;
+                                },
+                              );
+                            },
+                          ),
+                          if (_showCelebration)
+                            CongratsOverlay(
+                              starsEarned: 3,
+                              xpEarned: 50,
+                              onDismiss: () {
+                                setState(() => _showCelebration = false);
+                              },
+                            ),
+                        ],
+                      ),
+              ),
+              if (storyState.pages.isNotEmpty)
+                _StoryBottomBar(
+                  accentColor: accentColor,
+                  progress: storyState.progress,
+                  currentPage: storyState.currentPageIndex + 1,
+                  totalPages: storyState.totalPages,
+                  canGoBack: storyState.currentPageIndex > 0,
+                  canGoForward: !storyState.isLastPage,
+                  showFinishAction: !_showCelebration &&
+                      storyState.isLastPage &&
+                      !_hasShownCelebration &&
+                      !storyState.isCompleted,
+                  showQuizLink: !_showCelebration &&
+                      storyState.isLastPage &&
+                      storyState.hasAssociatedQuiz,
+                  onBack: storyState.currentPageIndex > 0
+                      ? () {
+                          _pageController.previousPage(
+                            duration: const Duration(milliseconds: 260),
+                            curve: Curves.easeInOut,
+                          );
+                        }
+                      : null,
+                  onForward: !storyState.isLastPage
+                      ? () {
+                          _pageController.nextPage(
+                            duration: const Duration(milliseconds: 260),
+                            curve: Curves.easeInOut,
+                          );
+                        }
+                      : null,
+                  onFinish: _finishStory,
+                  onOpenQuiz: storyState.hasAssociatedQuiz
+                      ? () => context.push('/student/quizzes')
+                      : null,
+                ),
+            ],
+          ),
+        );
+      },
+    );
   }
+}
 
-  void _onPageChanged(int index) {
-    setState(() => _currentPage = index);
-    _narratePage(index);
-    // Mark completed when reaching the last page
-    if (index == _pages.length - 1) {
-      widget.onComplete?.call();
-    }
-  }
+class _StoryTopBar extends StatelessWidget {
+  final String title;
+  final Color accentColor;
+  final int currentPage;
+  final int totalPages;
+  final bool isDrawingMode;
+  final bool isAudioPlaying;
+  final bool canReplayNarration;
+  final VoidCallback onClose;
+  final VoidCallback onToggleDrawing;
+  final VoidCallback onToggleNarration;
 
-  void _toggleUi() => setState(() => _showUi = !_showUi);
+  const _StoryTopBar({
+    required this.title,
+    required this.accentColor,
+    required this.currentPage,
+    required this.totalPages,
+    required this.isDrawingMode,
+    required this.isAudioPlaying,
+    required this.canReplayNarration,
+    required this.onClose,
+    required this.onToggleDrawing,
+    required this.onToggleNarration,
+  });
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) {
-      return Scaffold(
-        backgroundColor: KidsContentColors.storyBackground,
-        body: const Center(child: CircularProgressIndicator()),
-      );
-    }
-    if (_error != null) {
-      return Scaffold(
-        appBar: AppBar(title: Text(widget.title)),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 48),
-              const SizedBox(height: 16),
-              Text(_error!, textAlign: TextAlign.center),
-              const SizedBox(height: 16),
-              FilledButton(onPressed: _loadPages, child: const Text('Réessayer')),
-            ],
-          ),
+    return SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.sm,
+          AppSpacing.sm,
+          AppSpacing.sm,
+          AppSpacing.base,
         ),
-      );
-    }
-    if (_pages.isEmpty) {
-      return Scaffold(
-        appBar: AppBar(title: Text(widget.title)),
-        body: const Center(child: Text('Aucune page disponible')),
-      );
-    }
-
-    return Scaffold(
-      backgroundColor: KidsContentColors.storyBackground,
-      body: GestureDetector(
-        onTap: _toggleUi,
-        child: Stack(
-          children: [
-            // Page viewer
-            PageView.builder(
-              controller: _pageController,
-              onPageChanged: _onPageChanged,
-              itemCount: _pages.length,
-              itemBuilder: (context, index) {
-                return _StoryPageView(page: _pages[index]);
-              },
+        child: Row(
+          children: <Widget>[
+            IconButton.filledTonal(
+              onPressed: onClose,
+              icon: const Icon(Icons.close),
             ),
-
-            // Top chrome — back + title
-            AnimatedSlide(
-              offset: _showUi ? Offset.zero : const Offset(0, -1),
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeInOut,
-              child: _TopBar(
-                title: widget.title,
-                accentColor: _accentColor,
-                currentPage: _currentPage,
-                totalPages: _pages.length,
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.xs,
+                    ),
+                    decoration: BoxDecoration(
+                      color: accentColor.withAlpha(32),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      '$currentPage/$totalPages',
+                      style: TextStyle(
+                        color: accentColor,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-
-            // Bottom chrome — TTS + page indicator + prev/next
-            AnimatedSlide(
-              offset: _showUi ? Offset.zero : const Offset(0, 1),
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeInOut,
-              child: Align(
-                alignment: Alignment.bottomCenter,
-                child: _BottomControls(
-                  currentPage: _currentPage,
-                  totalPages: _pages.length,
-                  accentColor: _accentColor,
-                  narrationText: _pages[_currentPage].narrationText,
-                  hasActivity: _pages[_currentPage].hasActivity,
-                  onPrev: _currentPage > 0
-                      ? () {
-                          _pageController.previousPage(
-                            duration: const Duration(milliseconds: 350),
-                            curve: Curves.easeInOut,
-                          );
-                        }
-                      : null,
-                  onNext: _currentPage < _pages.length - 1
-                      ? () {
-                          _pageController.nextPage(
-                            duration: const Duration(milliseconds: 350),
-                            curve: Curves.easeInOut,
-                          );
-                        }
-                      : null,
-                ),
+            const SizedBox(width: AppSpacing.sm),
+            IconButton.filledTonal(
+              onPressed: canReplayNarration ? onToggleNarration : null,
+              icon: Icon(
+                isAudioPlaying
+                    ? Icons.stop_circle_outlined
+                    : Icons.volume_up_outlined,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            IconButton.filledTonal(
+              onPressed: onToggleDrawing,
+              style: IconButton.styleFrom(
+                backgroundColor:
+                    isDrawingMode ? accentColor.withAlpha(38) : null,
+              ),
+              icon: Icon(
+                isDrawingMode ? Icons.brush : Icons.brush_outlined,
+                color: isDrawingMode ? accentColor : null,
               ),
             ),
           ],
@@ -235,30 +395,168 @@ class _StoryReaderScreenState extends ConsumerState<StoryReaderScreen> {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Page view widget
-// ---------------------------------------------------------------------------
+class _StoryPageCanvas extends StatelessWidget {
+  final ContentItemAsset page;
+  final Map<String, String> imageHeaders;
+  final bool isDrawingMode;
+  final List<DrawingPath> savedPaths;
+  final ValueChanged<List<DrawingPath>> onDrawingChanged;
 
-class _StoryPageView extends StatelessWidget {
-  final _StoryPage page;
-  const _StoryPageView({required this.page});
+  const _StoryPageCanvas({
+    required this.page,
+    required this.imageHeaders,
+    required this.isDrawingMode,
+    required this.savedPaths,
+    required this.onDrawingChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final url = page.fileUrl;
     return Container(
       color: KidsContentColors.storyBackground,
-      child: url != null
-          ? Image.network(
-              url,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
+      child: Stack(
+        fit: StackFit.expand,
+        children: <Widget>[
+          Center(
+            child: Image.network(
+              page.downloadUrl,
+              headers: imageHeaders,
               fit: BoxFit.contain,
               errorBuilder: (_, __, ___) => const _PagePlaceholder(),
-              loadingBuilder: (_, child, progress) {
-                if (progress == null) return child;
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) {
+                  return child;
+                }
                 return const Center(child: CircularProgressIndicator());
               },
-            )
-          : const _PagePlaceholder(),
+            ),
+          ),
+          Positioned.fill(
+            child: IgnorePointer(
+              ignoring: !isDrawingMode,
+              child: DrawingOverlay(
+                key: ValueKey<String>('drawing-${page.id}'),
+                initialPaths: savedPaths,
+                showControls: isDrawingMode,
+                backgroundColor: KidsContentColors.storyBackground,
+                onDrawingChanged: onDrawingChanged,
+                child: const SizedBox.expand(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StoryBottomBar extends StatelessWidget {
+  final Color accentColor;
+  final double progress;
+  final int currentPage;
+  final int totalPages;
+  final bool canGoBack;
+  final bool canGoForward;
+  final bool showFinishAction;
+  final bool showQuizLink;
+  final VoidCallback? onBack;
+  final VoidCallback? onForward;
+  final VoidCallback onFinish;
+  final VoidCallback? onOpenQuiz;
+
+  const _StoryBottomBar({
+    required this.accentColor,
+    required this.progress,
+    required this.currentPage,
+    required this.totalPages,
+    required this.canGoBack,
+    required this.canGoForward,
+    required this.showFinishAction,
+    required this.showQuizLink,
+    this.onBack,
+    this.onForward,
+    required this.onFinish,
+    this.onOpenQuiz,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.base,
+          AppSpacing.md,
+          AppSpacing.base,
+          AppSpacing.base,
+        ),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          boxShadow: <BoxShadow>[
+            BoxShadow(
+              color: Colors.black.withAlpha(20),
+              blurRadius: 18,
+              offset: const Offset(0, -8),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 8,
+                    color: accentColor,
+                    backgroundColor: accentColor.withAlpha(30),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  '$currentPage/$totalPages',
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.base),
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: canGoBack ? onBack : null,
+                    icon: const Icon(Icons.chevron_left),
+                    label: const Text('Précédent'),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: showFinishAction ? onFinish : onForward,
+                    icon: Icon(
+                      showFinishAction
+                          ? Icons.celebration_outlined
+                          : Icons.chevron_right,
+                    ),
+                    label: Text(showFinishAction ? 'Terminer' : 'Suivant'),
+                  ),
+                ),
+              ],
+            ),
+            if (showQuizLink && onOpenQuiz != null) ...<Widget>[
+              const SizedBox(height: AppSpacing.sm),
+              TextButton.icon(
+                onPressed: onOpenQuiz,
+                icon: const Icon(Icons.quiz_outlined),
+                label: const Text('Passer au quiz'),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }
@@ -270,212 +568,28 @@ class _PagePlaceholder extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.auto_stories,
-              size: 80, color: KidsContentColors.storyPageTurn.withAlpha(80)),
-          const SizedBox(height: 16),
-          const Text('Image non disponible'),
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(
+            Icons.auto_stories_outlined,
+            size: 72,
+            color: KidsContentColors.storyPageTurn.withAlpha(90),
+          ),
+          const SizedBox(height: AppSpacing.base),
+          const Text('Page indisponible'),
         ],
       ),
     );
   }
 }
 
-// ---------------------------------------------------------------------------
-// Top bar
-// ---------------------------------------------------------------------------
-
-class _TopBar extends StatelessWidget {
-  final String title;
-  final Color accentColor;
-  final int currentPage;
-  final int totalPages;
-
-  const _TopBar({
-    required this.title,
-    required this.accentColor,
-    required this.currentPage,
-    required this.totalPages,
-  });
+class _EmptyStoryState extends StatelessWidget {
+  const _EmptyStoryState();
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.xs,
-        ),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.black54, Colors.transparent],
-          ),
-        ),
-        child: Row(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: accentColor.withAlpha(200),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                '${currentPage + 1} / $totalPages',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Bottom controls
-// ---------------------------------------------------------------------------
-
-class _BottomControls extends ConsumerWidget {
-  final int currentPage;
-  final int totalPages;
-  final Color accentColor;
-  final String? narrationText;
-  final bool hasActivity;
-  final VoidCallback? onPrev;
-  final VoidCallback? onNext;
-
-  const _BottomControls({
-    required this.currentPage,
-    required this.totalPages,
-    required this.accentColor,
-    required this.narrationText,
-    required this.hasActivity,
-    this.onPrev,
-    this.onNext,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final tts = ref.read(ttsServiceProvider);
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(
-          AppSpacing.sm, AppSpacing.sm, AppSpacing.sm, AppSpacing.lg),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.bottomCenter,
-          end: Alignment.topCenter,
-          colors: [Colors.black54, Colors.transparent],
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Page dots
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(
-              totalPages,
-              (i) => AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                margin: const EdgeInsets.symmetric(horizontal: 3),
-                width: i == currentPage ? 20 : 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: i == currentPage ? accentColor : Colors.white54,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-
-          // Controls row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Prev
-              IconButton(
-                icon: const Icon(Icons.chevron_left, size: 36, color: Colors.white),
-                onPressed: onPrev,
-                tooltip: 'Page précédente',
-              ),
-
-              // TTS toggle
-              if (narrationText != null)
-                GestureDetector(
-                  onTap: () => tts.speakInstruction(narrationText!),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-                    decoration: BoxDecoration(
-                      color: accentColor,
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.volume_up,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 6),
-                        const Text(
-                          'Écouter',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              else
-                const SizedBox.shrink(),
-
-              // Next / Finish
-              onNext != null
-                  ? IconButton(
-                      icon: const Icon(Icons.chevron_right,
-                          size: 36, color: Colors.white),
-                      onPressed: onNext,
-                      tooltip: 'Page suivante',
-                    )
-                  : IconButton(
-                      icon:
-                          Icon(Icons.check_circle, size: 36, color: accentColor),
-                      onPressed: () => Navigator.of(context).pop(),
-                      tooltip: 'Terminer',
-                    ),
-            ],
-          ),
-        ],
-      ),
+    return const Center(
+      child: Text('Aucune page disponible pour cette histoire.'),
     );
   }
 }

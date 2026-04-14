@@ -100,6 +100,21 @@ class ApiClient {
   void setAccessToken(String? token) => _accessToken = token;
   String? get accessToken => _accessToken;
 
+  String resolveUrl(String path) {
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+
+    final normalizedPath =
+        path.startsWith(_apiBase) ? path.substring(_apiBase.length) : path;
+    final baseUrl = _dio.options.baseUrl.endsWith('/')
+        ? _dio.options.baseUrl.substring(0, _dio.options.baseUrl.length - 1)
+        : _dio.options.baseUrl;
+    final absolutePath =
+        normalizedPath.startsWith('/') ? normalizedPath : '/$normalizedPath';
+    return '$baseUrl$absolutePath';
+  }
+
   /// Build mandatory headers per E2 Chapter 6.
   Map<String, String> _headers({bool skipAuth = false}) {
     final headers = <String, String>{

@@ -48,4 +48,58 @@ class ContentRepositoryImpl implements ContentRepository {
       hasMore: resp.hasMore,
     );
   }
+
+  @override
+  Future<ContentItem> getContentItem(String contentItemId) async {
+    final cacheKey = 'content:item:$contentItemId';
+    final cached = await _cache.get(cacheKey);
+    if (cached != null && cached.isNotEmpty) {
+      return contentItemFromJson(cached.first);
+    }
+
+    final resp = await _api.get('/content-items/$contentItemId');
+    await _cache.put(
+        cacheKey, <Map<String, dynamic>>[resp.data], CacheTtl.contentItems);
+    return contentItemFromJson(resp.data);
+  }
+
+  @override
+  Future<List<ContentItemAsset>> getStoryPages(String contentItemId) async {
+    final cacheKey = 'content:story_pages:$contentItemId';
+    final cached = await _cache.get(cacheKey);
+    if (cached != null) {
+      final items = (cached as List).cast<Map<String, dynamic>>();
+      return items
+          .map(
+            (json) => contentItemAssetFromJson(
+              json,
+              downloadUrl: _api.resolveUrl(
+                '/content-items/$contentItemId/assets/${json['id']}',
+              ),
+            ),
+          )
+          .toList();
+    }
+
+    final resp = await _api.list('/content-items/$contentItemId/pages');
+    await _cache.put(cacheKey, resp.data, CacheTtl.contentItems);
+    return resp.data
+        .map(
+          (json) => contentItemAssetFromJson(
+            json,
+            downloadUrl: _api.resolveUrl(
+              '/content-items/$contentItemId/assets/${json['id']}',
+            ),
+          ),
+        )
+        .toList();
+  }
+
+  @override
+  Future<void> updateProgress(String contentItemId, String status) async {
+    await _api.post(
+      '/content-items/$contentItemId/progress',
+      body: <String, dynamic>{'status': status},
+    );
+  }
 }

@@ -155,7 +155,7 @@ class ContentLibraryRepositoryImpl implements ContentLibraryRepository {
   @override
   Future<void> updateProgress(String contentItemId, String progress) async {
     await _api.post('/content-items/$contentItemId/progress', body: {
-      'progress': progress,
+      'status': progress,
     });
   }
 

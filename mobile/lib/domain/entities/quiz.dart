@@ -160,7 +160,7 @@ class AssignedContent {
   final String contentType;
   final String? subject;
   final String? description;
-  final String? progress; // not_started, started, completed
+  final String? progress; // not_started, in_progress, completed
   final String? streamUrl;
   final String? themeColor; // hex color for STORY content (e.g. "#FF6B35")
 

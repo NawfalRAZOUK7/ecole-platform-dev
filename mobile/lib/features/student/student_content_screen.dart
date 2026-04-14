@@ -6,10 +6,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/quiz.dart';
-import 'package:ecole_platform/features/student/story_reader_screen.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 
 class StudentContentScreen extends ConsumerStatefulWidget {
@@ -175,24 +175,24 @@ class _StudentContentScreenState extends ConsumerState<StudentContentScreen> {
               ),
               ...entry.value.map((item) => _ContentCard(
                     item: item,
-                    onTap: () {
+                    onTap: () async {
                       if (item.progress == null ||
                           item.progress == 'not_started') {
-                        _updateProgress(item.contentItemId, 'started');
+                        await _updateProgress(
+                            item.contentItemId, 'in_progress');
                       }
                       // STORY content gets its own immersive reader
                       if (item.contentType.toUpperCase() == 'STORY') {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => StoryReaderScreen(
-                              contentItemId: item.contentItemId,
-                              title: item.title,
-                              themeColor: item.themeColor,
-                              onComplete: () =>
-                                  _updateProgress(item.contentItemId, 'completed'),
-                            ),
-                          ),
-                        );
+                        final storyRoute = Uri(
+                          path: '/student/content/${item.contentItemId}/read',
+                          queryParameters: item.progress == null
+                              ? null
+                              : <String, String>{'progress': item.progress!},
+                        ).toString();
+                        await context.push(storyRoute);
+                        if (mounted) {
+                          await _fetchContent();
+                        }
                         return;
                       }
                       setState(() => _selectedItem = item);
@@ -317,6 +317,11 @@ class _ProgressBadge extends StatelessWidget {
           Icons.check_circle,
           theme.semanticPalette.success,
           'Terminé'
+        ),
+      'in_progress' => (
+          Icons.play_circle,
+          theme.colorScheme.primary,
+          'En cours'
         ),
       'started' => (Icons.play_circle, theme.colorScheme.primary, 'En cours'),
       _ => (Icons.circle_outlined, theme.colorScheme.outline, 'Nouveau'),
@@ -464,7 +469,7 @@ class _ContentPlayer extends StatelessWidget {
                         if (url != null) {
                           _showExternalLink(context, url);
                         }
-                        onProgress('started');
+                        onProgress('in_progress');
                       },
                       icon: const Icon(Icons.play_arrow),
                       label: const Text('Lire la vidéo'),
@@ -494,7 +499,7 @@ class _ContentPlayer extends StatelessWidget {
                   if (url != null) {
                     _showExternalLink(context, url);
                   }
-                  onProgress('started');
+                  onProgress('in_progress');
                 },
                 icon: const Icon(Icons.play_arrow),
                 label: const Text('Écouter'),
@@ -525,7 +530,7 @@ class _ContentPlayer extends StatelessWidget {
                   if (url != null) {
                     _showExternalLink(context, url);
                   }
-                  onProgress('started');
+                  onProgress('in_progress');
                 },
                 icon: const Icon(Icons.open_in_new),
                 label: const Text('Ouvrir le document'),
@@ -556,7 +561,7 @@ class _ContentPlayer extends StatelessWidget {
                   if (url != null) {
                     _showExternalLink(context, url);
                   }
-                  onProgress('started');
+                  onProgress('in_progress');
                 },
                 icon: const Icon(Icons.launch),
                 label: const Text('Ouvrir'),

@@ -432,12 +432,31 @@ ContentItem contentItemFromJson(Map<String, dynamic> json) {
     contentType: json['content_type'] as String,
     levelBand: json['level_band'] as String?,
     language: json['language'] as String?,
-    pageCount: json['page_count'] as int?,
+    pageCount: (json['page_count'] as num?)?.toInt(),
     letter: json['letter'] as String?,
-    targetAgeMin: json['target_age_min'] as int?,
-    targetAgeMax: json['target_age_max'] as int?,
+    targetAgeMin: (json['target_age_min'] as num?)?.toInt(),
+    targetAgeMax: (json['target_age_max'] as num?)?.toInt(),
     themeColor: json['theme_color'] as String?,
     status: json['status'] as String,
+  );
+}
+
+ContentItemAsset contentItemAssetFromJson(
+  Map<String, dynamic> json, {
+  required String downloadUrl,
+}) {
+  return ContentItemAsset(
+    id: json['id'] as String,
+    contentItemId: json['content_item_id'] as String,
+    filePath: json['file_path'] as String? ?? '',
+    downloadUrl: downloadUrl,
+    checksum: json['checksum'] as String?,
+    mimeType: json['mime_type'] as String?,
+    fileSize: (json['file_size'] as num?)?.toInt(),
+    pageNumber: (json['page_number'] as num?)?.toInt(),
+    narrationText: json['narration_text'] as String?,
+    hasActivity: json['has_activity'] as bool? ?? false,
+    assetType: json['asset_type'] as String?,
   );
 }
 
