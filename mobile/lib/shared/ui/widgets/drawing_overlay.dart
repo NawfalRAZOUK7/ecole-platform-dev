@@ -77,6 +77,8 @@ class DrawingOverlay extends StatefulWidget {
     this.backgroundColor = KidsContentColors.canvasBackground,
     this.showControls = true,
     this.initialPaths = const <DrawingPath>[],
+    this.colorPalette = kidFriendlyColorPalette,
+    this.initialColor,
   });
 
   final Widget child;
@@ -84,6 +86,8 @@ class DrawingOverlay extends StatefulWidget {
   final Color backgroundColor;
   final bool showControls;
   final List<DrawingPath> initialPaths;
+  final List<Color> colorPalette;
+  final Color? initialColor;
 
   @override
   DrawingOverlayState createState() => DrawingOverlayState();
@@ -94,7 +98,7 @@ class DrawingOverlayState extends State<DrawingOverlay> {
   late List<DrawingPath> _paths;
   final List<DrawingPath> _redoStack = <DrawingPath>[];
 
-  Color _selectedColor = kidFriendlyColorPalette.first;
+  late Color _selectedColor;
   double _strokeWidth = drawingStrokeMedium;
   bool _isEraserMode = false;
 
@@ -109,6 +113,10 @@ class DrawingOverlayState extends State<DrawingOverlay> {
   void initState() {
     super.initState();
     _paths = List<DrawingPath>.of(widget.initialPaths);
+    _selectedColor = widget.initialColor ??
+        (widget.colorPalette.isNotEmpty
+            ? widget.colorPalette.first
+            : kidFriendlyColorPalette.first);
   }
 
   @override
@@ -116,6 +124,10 @@ class DrawingOverlayState extends State<DrawingOverlay> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.initialPaths != widget.initialPaths && _paths.isEmpty) {
       _paths = List<DrawingPath>.of(widget.initialPaths);
+    }
+    if (!widget.colorPalette.contains(_selectedColor) &&
+        widget.colorPalette.isNotEmpty) {
+      _selectedColor = widget.colorPalette.first;
     }
   }
 
@@ -192,7 +204,7 @@ class DrawingOverlayState extends State<DrawingOverlay> {
   void _startStroke(Offset position) {
     final stroke = DrawingPath(
       points: <Offset>[position],
-      color: _isEraserMode ? widget.backgroundColor : _selectedColor,
+      color: _isEraserMode ? Colors.transparent : _selectedColor,
       strokeWidth: _strokeWidth,
       isEraser: _isEraserMode,
     );
@@ -263,6 +275,7 @@ class DrawingOverlayState extends State<DrawingOverlay> {
                 isEraserMode: _isEraserMode,
                 canUndo: canUndo,
                 canRedo: canRedo,
+                colorPalette: widget.colorPalette,
                 onColorSelected: setSelectedColor,
                 onStrokeWidthSelected: setStrokeWidth,
                 onEraserToggled: toggleEraser,
@@ -296,6 +309,10 @@ class _DrawingPainter extends CustomPainter {
         ..strokeJoin = StrokeJoin.round
         ..style = PaintingStyle.stroke;
 
+      if (drawingPath.isEraser) {
+        paint.blendMode = BlendMode.clear;
+      }
+
       if (drawingPath.points.length == 1) {
         canvas.drawCircle(
           drawingPath.points.first,
@@ -322,6 +339,7 @@ class _DrawingControls extends StatelessWidget {
     required this.isEraserMode,
     required this.canUndo,
     required this.canRedo,
+    required this.colorPalette,
     required this.onColorSelected,
     required this.onStrokeWidthSelected,
     required this.onEraserToggled,
@@ -335,6 +353,7 @@ class _DrawingControls extends StatelessWidget {
   final bool isEraserMode;
   final bool canUndo;
   final bool canRedo;
+  final List<Color> colorPalette;
   final ValueChanged<Color> onColorSelected;
   final ValueChanged<double> onStrokeWidthSelected;
   final VoidCallback onEraserToggled;
@@ -372,6 +391,7 @@ class _DrawingControls extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             ColorPickerPalette(
+              colors: colorPalette,
               selectedColor: selectedColor,
               onColorSelected: onColorSelected,
             ),

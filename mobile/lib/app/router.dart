@@ -15,6 +15,8 @@ import 'package:ecole_platform/features/auth/forgot_password_screen.dart';
 import 'package:ecole_platform/features/auth/login_screen.dart';
 import 'package:ecole_platform/features/auth/register_screen.dart';
 import 'package:ecole_platform/features/auth/reset_password_screen.dart';
+import 'package:ecole_platform/features/coloring/coloring_list_screen.dart';
+import 'package:ecole_platform/features/coloring/coloring_screen.dart';
 import 'package:ecole_platform/features/feed/feed_screen.dart';
 import 'package:ecole_platform/features/games/screens/memory_match_screen.dart';
 import 'package:ecole_platform/features/games/screens/sorting_game_screen.dart';
@@ -308,6 +310,16 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/rewards',
             builder: (context, state) => const RewardsScreen(),
+          ),
+          GoRoute(
+            path: '/coloring',
+            builder: (context, state) => const ColoringListScreen(),
+          ),
+          GoRoute(
+            path: '/coloring/:id',
+            builder: (context, state) => ColoringScreen(
+              pageId: state.pathParameters['id']!,
+            ),
           ),
 
           // ── Phase 12B routes ──
