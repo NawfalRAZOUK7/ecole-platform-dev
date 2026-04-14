@@ -38,6 +38,8 @@ dependencies:
   device_calendar: ^4.3.3
   pdf_render:
     path: third_party/pdf_render
+  google_fonts: ^6.2.1
+  flutter_tts: ^4.2.0
 
 dev_dependencies:
   flutter_test:

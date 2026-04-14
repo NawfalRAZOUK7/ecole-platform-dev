@@ -162,6 +162,7 @@ class AssignedContent {
   final String? description;
   final String? progress; // not_started, started, completed
   final String? streamUrl;
+  final String? themeColor; // hex color for STORY content (e.g. "#FF6B35")
 
   const AssignedContent({
     required this.id,
@@ -172,6 +173,7 @@ class AssignedContent {
     this.description,
     this.progress,
     this.streamUrl,
+    this.themeColor,
   });
 }
 

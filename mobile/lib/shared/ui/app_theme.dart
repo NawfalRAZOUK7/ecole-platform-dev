@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/ui/tokens/radii.dart';
@@ -19,7 +20,7 @@ final ThemeData appLightTheme = ThemeData(
     AppThemeColors.light,
   ],
   useMaterial3: true,
-  fontFamily: 'Inter',
+  fontFamily: GoogleFonts.cairo().fontFamily,
   scaffoldBackgroundColor: AppColors.background,
   appBarTheme: const AppBarTheme(
     centerTitle: true,
@@ -27,11 +28,10 @@ final ThemeData appLightTheme = ThemeData(
     backgroundColor: AppColors.background,
     foregroundColor: AppColors.text,
     surfaceTintColor: Colors.transparent,
-    titleTextStyle: TextStyle(
+    titleTextStyle: GoogleFonts.cairo(
       color: AppColors.text,
       fontSize: 20,
       fontWeight: FontWeight.w600,
-      fontFamily: 'Inter',
     ),
   ),
   cardTheme: CardThemeData(

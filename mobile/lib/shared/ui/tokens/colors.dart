@@ -175,6 +175,44 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
   }
 }
 
+/// Kid-facing content colors — used in story reader, mini-games, coloring, mascot.
+class KidsContentColors {
+  const KidsContentColors._();
+
+  // Story reader palette
+  static const storyBackground = Color(0xFFFFF8ED);
+  static const storyPageTurn = Color(0xFFFF6B35);
+  static const storyText = Color(0xFF2D1B00);
+  static const storyHighlight = Color(0xFFFFD93D);
+
+  // Stars / XP reward system
+  static const starGold = Color(0xFFFFD700);
+  static const starSilver = Color(0xFFC0C0C0);
+  static const starBronze = Color(0xFFCD7F32);
+  static const xpBar = Color(0xFF4CAF50);
+  static const xpBarBackground = Color(0xFFE8F5E9);
+  static const levelBadge = Color(0xFF7C3AED);
+  static const streakOrange = Color(0xFFFF6B35);
+
+  // Mini-game palette
+  static const gameBlue = Color(0xFF4FC3F7);
+  static const gameGreen = Color(0xFF81C784);
+  static const gamePurple = Color(0xFFCE93D8);
+  static const gameYellow = Color(0xFFFFF176);
+  static const gameRed = Color(0xFFEF9A9A);
+  static const gameCardBack = Color(0xFF1565C0);
+
+  // Coloring canvas
+  static const canvasBackground = Color(0xFFFFFFFF);
+  static const colorPickerBorder = Color(0xFFBBBBBB);
+
+  // Mascot / Sami
+  static const samiPrimary = Color(0xFF4CAF50);
+  static const samiSecondary = Color(0xFFFFEB3B);
+  static const samiBubble = Color(0xFFF0FDF4);
+  static const samiBubbleBorder = Color(0xFF86EFAC);
+}
+
 extension AppThemeDataColors on ThemeData {
   AppThemeColors get semanticPalette =>
       extension<AppThemeColors>() ??

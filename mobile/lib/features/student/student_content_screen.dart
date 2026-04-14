@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/quiz.dart';
+import 'package:ecole_platform/features/student/story_reader_screen.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 
 class StudentContentScreen extends ConsumerStatefulWidget {
@@ -52,6 +53,7 @@ class _StudentContentScreenState extends ConsumerState<StudentContentScreen> {
                 description: json['description'] as String?,
                 progress: json['progress'] as String?,
                 streamUrl: json['stream_url'] as String?,
+                themeColor: json['theme_color'] as String?,
               ))
           .toList();
       setState(() => _loading = false);
@@ -80,6 +82,7 @@ class _StudentContentScreenState extends ConsumerState<StudentContentScreen> {
               description: item.description,
               progress: progress,
               streamUrl: item.streamUrl,
+              themeColor: item.themeColor,
             );
           }
           return item;
@@ -173,10 +176,24 @@ class _StudentContentScreenState extends ConsumerState<StudentContentScreen> {
               ...entry.value.map((item) => _ContentCard(
                     item: item,
                     onTap: () {
-                      // Mark as started if not yet
                       if (item.progress == null ||
                           item.progress == 'not_started') {
                         _updateProgress(item.contentItemId, 'started');
+                      }
+                      // STORY content gets its own immersive reader
+                      if (item.contentType.toUpperCase() == 'STORY') {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => StoryReaderScreen(
+                              contentItemId: item.contentItemId,
+                              title: item.title,
+                              themeColor: item.themeColor,
+                              onComplete: () =>
+                                  _updateProgress(item.contentItemId, 'completed'),
+                            ),
+                          ),
+                        );
+                        return;
                       }
                       setState(() => _selectedItem = item);
                     },
@@ -263,6 +280,8 @@ class _ContentCard extends StatelessWidget {
         return Icons.picture_as_pdf;
       case 'INTERACTIVE':
         return Icons.touch_app;
+      case 'STORY':
+        return Icons.auto_stories;
       default:
         return Icons.article;
     }
@@ -278,6 +297,8 @@ class _ContentCard extends StatelessWidget {
         return theme.colorScheme.primary;
       case 'INTERACTIVE':
         return theme.semanticPalette.warning;
+      case 'STORY':
+        return KidsContentColors.storyPageTurn;
       default:
         return theme.colorScheme.outline;
     }
