@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/app/providers.dart';
-import 'package:ecole_platform/shared/services/tts_service.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
 
@@ -90,7 +89,7 @@ class _StoryReaderScreenState extends ConsumerState<StoryReaderScreen> {
   @override
   void dispose() {
     _pageController.dispose();
-    ref.read(ttsServiceProvider.notifier).stop();
+    ref.read(ttsServiceProvider).stop();
     super.dispose();
   }
 
@@ -121,7 +120,7 @@ class _StoryReaderScreenState extends ConsumerState<StoryReaderScreen> {
     if (index >= _pages.length) return;
     final text = _pages[index].narrationText;
     if (text != null && text.isNotEmpty) {
-      ref.read(ttsServiceProvider.notifier).speak(text);
+      ref.read(ttsServiceProvider).speakInstruction(text);
     }
   }
 
@@ -379,8 +378,7 @@ class _BottomControls extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final ttsState = ref.watch(ttsServiceProvider);
-    final tts = ref.read(ttsServiceProvider.notifier);
+    final tts = ref.read(ttsServiceProvider);
 
     return Container(
       padding: const EdgeInsets.fromLTRB(
@@ -428,31 +426,27 @@ class _BottomControls extends ConsumerWidget {
               // TTS toggle
               if (narrationText != null)
                 GestureDetector(
-                  onTap: () => tts.toggle(narrationText!),
+                  onTap: () => tts.speakInstruction(narrationText!),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.md, vertical: AppSpacing.sm),
                     decoration: BoxDecoration(
-                      color: ttsState == TtsState.playing
-                          ? accentColor
-                          : Colors.white24,
+                      color: accentColor,
                       borderRadius: BorderRadius.circular(24),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          ttsState == TtsState.playing
-                              ? Icons.pause
-                              : Icons.volume_up,
+                        const Icon(
+                          Icons.volume_up,
                           color: Colors.white,
                           size: 20,
                         ),
                         const SizedBox(width: 6),
-                        Text(
-                          ttsState == TtsState.playing ? 'Pause' : 'Écouter',
-                          style: const TextStyle(
+                        const Text(
+                          'Écouter',
+                          style: TextStyle(
                             color: Colors.white,
                             fontSize: 13,
                           ),

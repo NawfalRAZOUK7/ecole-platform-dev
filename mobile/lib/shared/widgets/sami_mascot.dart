@@ -5,7 +5,7 @@
 /// SamiMascot(
 ///   state: SamiState.happy,
 ///   message: 'Bravo ! Tu as terminé la lecture !',
-///   onTap: () => ref.read(ttsServiceProvider.notifier).speak(message),
+///   onTap: () => ref.read(ttsServiceProvider).speakText(message),
 /// )
 /// ```
 ///

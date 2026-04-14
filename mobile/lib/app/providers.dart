@@ -6,6 +6,8 @@
 /// Phase 5B: Added admin + teacher repository providers.
 /// Phase 10C: Added content library + quiz repository providers.
 
+import 'dart:async';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -70,6 +72,7 @@ import 'package:ecole_platform/features/auth/biometric_service.dart';
 import 'package:ecole_platform/shared/secure_storage.dart';
 import 'package:ecole_platform/shared/connectivity_service.dart';
 import 'package:ecole_platform/shared/push_notifications.dart';
+import 'package:ecole_platform/shared/services/tts_service.dart';
 
 // ── Infrastructure providers ──
 
@@ -137,6 +140,15 @@ final connectivityServiceProvider = Provider<ConnectivityService>((ref) {
 
 final biometricServiceProvider = Provider<BiometricService>((ref) {
   return BiometricService();
+});
+
+final ttsServiceProvider = Provider<TtsService>((ref) {
+  final service = TtsService();
+  unawaited(service.init());
+  ref.onDispose(() {
+    unawaited(service.dispose());
+  });
+  return service;
 });
 
 final wsClientProvider = Provider<WsClient>((ref) {

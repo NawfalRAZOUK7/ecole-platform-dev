@@ -6,11 +6,11 @@ library;
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:ecole_platform/shared/services/tts_service.dart';
+import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // ---------------------------------------------------------------------------
 // Data
@@ -99,7 +99,7 @@ class _VocabularyGameState extends ConsumerState<VocabularyGame> {
 
   void _speak() {
     final word = _round[_index].source;
-    ref.read(ttsServiceProvider.notifier).speak(word);
+    ref.read(ttsServiceProvider).speakText(word);
   }
 
   void _onChoice(int idx) {
