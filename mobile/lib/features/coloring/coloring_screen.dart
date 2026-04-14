@@ -1,17 +1,16 @@
 /// Coloring screen — student draws on top of a story page / outline image.
 ///
-/// Uses the shared [DrawingOverlay] + [DrawingToolbar] widgets and can save
-/// the completed coloring via POST /content-items/{id}/coloring-page.
+/// Uses the shared [DrawingOverlay] widget and can save the completed
+/// coloring via POST /content-items/{id}/coloring-page.
 library;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
-import 'package:ecole_platform/shared/widgets/drawing_overlay.dart';
+import 'package:ecole_platform/shared/ui/widgets/drawing_overlay.dart';
 
-class ColoringScreen extends ConsumerStatefulWidget {
+class ColoringScreen extends StatefulWidget {
   /// The content item ID whose first page asset is used as the coloring template.
   final String contentItemId;
   final String title;
@@ -25,10 +24,13 @@ class ColoringScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ColoringScreen> createState() => _ColoringScreenState();
+  State<ColoringScreen> createState() => _ColoringScreenState();
 }
 
-class _ColoringScreenState extends ConsumerState<ColoringScreen> {
+class _ColoringScreenState extends State<ColoringScreen> {
+  final GlobalKey<DrawingOverlayState> _drawingOverlayKey =
+      GlobalKey<DrawingOverlayState>();
+
   bool _saving = false;
   bool _saved = false;
 
@@ -44,7 +46,7 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen> {
       //
       // For now: reset local drawing state as a "submitted" signal.
       await Future.delayed(const Duration(milliseconds: 500)); // simulate
-      ref.read(drawingProvider.notifier).clear();
+      _drawingOverlayKey.currentState?.clearAll();
       setState(() {
         _saved = true;
         _saving = false;
@@ -95,6 +97,7 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen> {
             child: Container(
               color: KidsContentColors.canvasBackground,
               child: DrawingOverlay(
+                key: _drawingOverlayKey,
                 child: widget.templateUrl != null
                     ? Image.network(
                         widget.templateUrl!,
@@ -107,11 +110,6 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen> {
                     : const _TemplateUnavailable(),
               ),
             ),
-          ),
-          // Toolbar
-          const SafeArea(
-            top: false,
-            child: DrawingToolbar(),
           ),
         ],
       ),
@@ -129,8 +127,7 @@ class _TemplateUnavailable extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.brush,
-              size: 64,
-              color: KidsContentColors.storyPageTurn.withAlpha(80)),
+              size: 64, color: KidsContentColors.storyPageTurn.withAlpha(80)),
           const SizedBox(height: AppSpacing.md),
           const Text(
             'Coloriage libre',
