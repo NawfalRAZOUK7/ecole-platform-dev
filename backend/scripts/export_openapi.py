@@ -45,7 +45,9 @@ def check_drift() -> bool:
     generated = json.dumps(spec, indent=2, ensure_ascii=False) + "\n"
 
     if not SPEC_PATH.exists():
-        print(f"ERROR: {SPEC_PATH} does not exist. Run 'python scripts/export_openapi.py' first.")
+        print(
+            f"ERROR: {SPEC_PATH} does not exist. Run 'python scripts/export_openapi.py' first."
+        )
         return False
 
     committed = SPEC_PATH.read_text(encoding="utf-8")
