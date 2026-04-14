@@ -20,7 +20,7 @@ final ThemeData appDarkTheme = ThemeData(
     AppThemeColors.dark,
   ],
   useMaterial3: true,
-  fontFamily: 'Inter',
+  fontFamily: 'Cairo',
   scaffoldBackgroundColor: AppColors.darkBackground,
   appBarTheme: const AppBarTheme(
     centerTitle: true,
@@ -32,7 +32,7 @@ final ThemeData appDarkTheme = ThemeData(
       color: AppColors.darkText,
       fontSize: 20,
       fontWeight: FontWeight.w600,
-      fontFamily: 'Inter',
+      fontFamily: 'Cairo',
     ),
   ),
   cardTheme: CardThemeData(

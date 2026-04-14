@@ -211,6 +211,16 @@ class KidsContentColors {
   static const samiSecondary = Color(0xFFFFEB3B);
   static const samiBubble = Color(0xFFF0FDF4);
   static const samiBubbleBorder = Color(0xFF86EFAC);
+
+  // Story letter themes
+  static const storyIntro = Color(0xFF7B1FA2);
+  static const storyAlif = Color(0xFF43A047);
+  static const storyBae = Color(0xFFEF6C00);
+  static const storyZay = Color(0xFF1565C0);
+
+  // Gamification
+  static const rewardGold = Color(0xFFFFB525);
+  static const mascotPrimary = Color(0xFF6A1B9A);
 }
 
 extension AppThemeDataColors on ThemeData {

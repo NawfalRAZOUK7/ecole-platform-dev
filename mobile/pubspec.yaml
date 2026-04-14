@@ -38,7 +38,6 @@ dependencies:
   device_calendar: ^4.3.3
   pdf_render:
     path: third_party/pdf_render
-  google_fonts: ^6.2.1
   flutter_tts: ^4.2.0
 
 dev_dependencies:
@@ -52,3 +51,15 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  fonts:
+    - family: Cairo
+      fonts:
+        - asset: assets/fonts/cairo/Cairo-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/cairo/Cairo-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/cairo/Cairo-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/cairo/Cairo-Bold.ttf
+          weight: 700
