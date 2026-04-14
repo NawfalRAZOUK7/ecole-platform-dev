@@ -1,3 +1,11 @@
 # ninja log v5
 0	170	1775848931310785643	CMakeFiles/bbhelper.dir/c++/directBufferAndroid.cpp.o	51105ef2d157a91d
 171	338	1775848931477061354	/Users/nawfalrazouk/Ecole-Platform/ecole-platform-dev/mobile/build/pdf_render/intermediates/cxx/Debug/2p6m343k/obj/armeabi-v7a/libbbhelper.so	ca9723621136ee2c
+1	164	1776181742116968100	/Users/nawfalrazouk/Ecole-Platform/ecole-platform-dev/mobile/build/pdf_render/intermediates/cxx/Debug/2p6m343k/obj/armeabi-v7a/libbbhelper.so	ca9723621136ee2c
+0	102	1776182204277686468	/Users/nawfalrazouk/Ecole-Platform/ecole-platform-dev/mobile/build/pdf_render/intermediates/cxx/Debug/2p6m343k/obj/armeabi-v7a/libbbhelper.so	ca9723621136ee2c
+3	191	1776182368010786598	/Users/nawfalrazouk/Ecole-Platform/ecole-platform-dev/mobile/build/pdf_render/intermediates/cxx/Debug/2p6m343k/obj/armeabi-v7a/libbbhelper.so	ca9723621136ee2c
+1	177	1776183814506905052	/Users/nawfalrazouk/Ecole-Platform/ecole-platform-dev/mobile/build/pdf_render/intermediates/cxx/Debug/2p6m343k/obj/armeabi-v7a/libbbhelper.so	ca9723621136ee2c
+0	111	1776184128536131246	/Users/nawfalrazouk/Ecole-Platform/ecole-platform-dev/mobile/build/pdf_render/intermediates/cxx/Debug/2p6m343k/obj/armeabi-v7a/libbbhelper.so	ca9723621136ee2c
+0	9	0	clean	61db95eaf95d440a
+0	126	1776184588001581991	CMakeFiles/bbhelper.dir/c++/directBufferAndroid.cpp.o	51105ef2d157a91d
+126	247	1776184588124656043	/Users/nawfalrazouk/Ecole-Platform/ecole-platform-dev/mobile/build/pdf_render/intermediates/cxx/Debug/2p6m343k/obj/armeabi-v7a/libbbhelper.so	ca9723621136ee2c
