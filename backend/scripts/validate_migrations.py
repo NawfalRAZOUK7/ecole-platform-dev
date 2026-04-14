@@ -39,9 +39,7 @@ VERSIONS_DIR = os.path.join(os.path.dirname(__file__), "..", "alembic", "version
 #   9f7257bc8dd1_g1_g6_initial_schema_iam_erp_lms_com_.py
 #   a2f8b3c4d5e6_g7_ai_writing_attempts_preferences.py
 #   b3c4d5e6f7a8_g8_parent_child_links_views_kpi.py
-FILENAME_PATTERN = re.compile(
-    r"^[0-9a-f]{12}_[a-z0-9][a-z0-9_]+\.py$"
-)
+FILENAME_PATTERN = re.compile(r"^[0-9a-f]{12}_[a-z0-9][a-z0-9_]+\.py$")
 
 # Known migration groups
 VALID_GROUPS = {"g1", "g2", "g3", "g4", "g5", "g6", "g7", "g8", "g9", "g10"}
@@ -55,7 +53,8 @@ def get_migration_files() -> list[str]:
     if not os.path.isdir(VERSIONS_DIR):
         return []
     return sorted(
-        f for f in os.listdir(VERSIONS_DIR)
+        f
+        for f in os.listdir(VERSIONS_DIR)
         if f.endswith(".py") and not f.startswith("__")
     )
 
@@ -110,9 +109,9 @@ def validate_revision_chain(files: list[str]) -> list[str]:
 
         # Extract revision and down_revision
         rev_match = re.search(r'revision:\s*str\s*=\s*["\']([^"\']+)["\']', source)
-        down_match = re.search(r'down_revision:\s*str\s*=\s*["\']([^"\']+)["\']', source)
-        down_none_match = re.search(r'down_revision:\s*.*=\s*None', source)
-
+        down_match = re.search(
+            r'down_revision:\s*str\s*=\s*["\']([^"\']+)["\']', source
+        )
         if not rev_match:
             errors.append(f"Cannot find 'revision' in '{filename}'")
             continue
@@ -236,7 +235,9 @@ def main() -> int:
             with open(filepath, "r") as f:
                 source = f.read()
             rev_match = re.search(r'revision:\s*str\s*=\s*["\']([^"\']+)["\']', source)
-            down_match = re.search(r'down_revision:\s*str\s*=\s*["\']([^"\']+)["\']', source)
+            down_match = re.search(
+                r'down_revision:\s*str\s*=\s*["\']([^"\']+)["\']', source
+            )
             rev = rev_match.group(1) if rev_match else "?"
             down = down_match.group(1) if down_match else "None"
             print(f"  {down} -> {rev}  ({filename})")

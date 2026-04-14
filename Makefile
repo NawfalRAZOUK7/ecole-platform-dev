@@ -1,4 +1,4 @@
-.PHONY: up down restart logs migrate seed test lint shell build clean status health \
+.PHONY: up down restart logs migrate seed seed-friend-content test lint shell build clean status health \
        staging-up staging-down prod-up prod-down monitoring-up monitoring-down \
        shell-db redis-cli backup restore backup-status docker-prune version \
        migrate-new migrate-down migrate-status test-cov lint-fix format web-install web-lint \
@@ -12,8 +12,9 @@ COMPOSE_FILE = infra/docker-compose.dev.yml
 COMPOSE_STAGING = infra/docker-compose.staging.yml
 COMPOSE_PROD = infra/docker-compose.prod.yml
 COMPOSE_MONITORING = infra/docker-compose.monitoring.yml
+COMPOSE_ENV_FILE = .env
 
-DC = docker compose -f $(COMPOSE_FILE)
+DC = docker compose --env-file $(COMPOSE_ENV_FILE) -f $(COMPOSE_FILE)
 DC_STAGING = docker compose -f $(COMPOSE_STAGING)
 DC_PROD = docker compose -f $(COMPOSE_PROD)
 DC_MONITORING = docker compose -f $(COMPOSE_MONITORING)
@@ -100,6 +101,11 @@ migrate-validate:
 
 seed:
 	$(DC) exec backend python -m app.seed
+
+seed-friend-content:
+	$(DC) exec backend mkdir -p /ecole-platform-reference/extraction/assets
+	docker cp ../ecole-platform-reference/extraction/assets/. ecole-backend:/ecole-platform-reference/extraction/assets
+	$(DC) exec backend python -m scripts.seed_friend_content
 
 seed-demo:
 	$(DC) run --rm backend python -m app.scripts.seed_demo
@@ -230,13 +236,13 @@ deploy-status:
 dev-init:
 	@echo "=== Ecole Platform — Dev Setup ==="
 	@test -f .env || (cp .env.example .env && echo "  .env created")
-	@docker compose -f infra/docker-compose.dev.yml build
-	@docker compose -f infra/docker-compose.dev.yml up -d postgres redis
+	@$(DC) build
+	@$(DC) up -d postgres redis
 	@echo "  Waiting for PostgreSQL..."
 	@sleep 5
-	@docker compose -f infra/docker-compose.dev.yml run --rm backend alembic upgrade head
-	@docker compose -f infra/docker-compose.dev.yml run --rm backend python -m app.scripts.seed_demo
-	@docker compose -f infra/docker-compose.dev.yml up -d
+	@$(DC) run --rm backend alembic upgrade head
+	@$(DC) run --rm backend python -m app.scripts.seed_demo
+	@$(DC) up -d
 	@echo ""
 	@echo "  API:  http://localhost:8000/docs"
 	@echo "  Web:  http://localhost:5173"
@@ -245,7 +251,7 @@ dev-init:
 	@echo "=== Setup complete ==="
 
 dev-reset:
-	@docker compose -f infra/docker-compose.dev.yml down -v --remove-orphans
+	@$(DC) down -v --remove-orphans
 	@rm -f .env
 	@echo "Environment cleared. Run 'make dev-init' to start fresh."
 

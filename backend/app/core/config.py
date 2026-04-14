@@ -9,6 +9,15 @@ from pathlib import Path
 from pydantic_settings import BaseSettings
 
 
+BACKEND_ROOT = Path(__file__).resolve().parents[2]
+PROJECT_ROOT = BACKEND_ROOT.parent
+DEFAULT_ENV_FILES = (
+    str(PROJECT_ROOT / ".env"),
+    str(BACKEND_ROOT / ".env"),
+    ".env",
+)
+
+
 def _read_secret_file(env_name: str) -> str | None:
     """Load an optional Docker secret from ENV_NAME_FILE if present."""
     file_path = os.getenv(f"{env_name}_FILE")
@@ -156,7 +165,7 @@ class Settings(BaseSettings):
                 object.__setattr__(self, field_name, value)
 
     model_config = {
-        "env_file": ".env",
+        "env_file": DEFAULT_ENV_FILES,
         "env_file_encoding": "utf-8",
         # Local dev/test .env files include compatibility keys that this
         # settings model does not currently expose.

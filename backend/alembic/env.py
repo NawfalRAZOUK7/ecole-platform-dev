@@ -5,7 +5,6 @@ Migration groups ordered: G1-IAM → G2-ERP → G3-LMS → G4-COM → G5-Billing
 """
 
 import asyncio
-import os
 import sys
 from logging.config import fileConfig
 from pathlib import Path
@@ -18,6 +17,7 @@ from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 # Import all models so Alembic can detect them
+from app.core.config import settings
 from app.core.database import Base
 import app.models  # noqa: F401
 
@@ -28,11 +28,9 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
-# Override sqlalchemy.url from environment variable
-database_url = os.getenv(
-    "DATABASE_URL",
-    "postgresql+asyncpg://ecole:ecole@localhost:5432/ecole_platform",
-)
+# Reuse the application settings loader so local host commands and Docker use
+# the same env resolution rules.
+database_url = settings.database_url
 config.set_main_option("sqlalchemy.url", database_url)
 
 
