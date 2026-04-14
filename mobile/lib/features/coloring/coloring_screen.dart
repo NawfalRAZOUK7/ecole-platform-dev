@@ -11,6 +11,7 @@ import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/features/auth/auth_provider.dart';
 import 'package:ecole_platform/features/coloring/coloring_provider.dart';
 import 'package:ecole_platform/features/rewards/rewards_provider.dart';
+import 'package:ecole_platform/shared/ui/widgets/animated_guide.dart';
 import 'package:ecole_platform/shared/ui/widgets/color_picker_palette.dart';
 import 'package:ecole_platform/shared/ui/widgets/drawing_overlay.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
@@ -122,6 +123,13 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen> {
               );
             }
 
+            final guideState = _lastSavedDocumentId == null
+                ? AnimatedGuideState.happy
+                : AnimatedGuideState.celebrating;
+            final guideMessage =
+                _lastSavedDocumentId == null ? 'لون كما تحب!' : 'لوحة جميلة!';
+            final guideImageUrl = ref.watch(samiGuideImageProvider(guideState));
+
             return Column(
               children: <Widget>[
                 if (_saving)
@@ -136,6 +144,20 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen> {
                   padding: const EdgeInsets.fromLTRB(
                     AppSpacing.base,
                     AppSpacing.base,
+                    AppSpacing.base,
+                    0,
+                  ),
+                  child: AnimatedGuide(
+                    message: guideMessage,
+                    state: guideState,
+                    imageUrl: guideImageUrl,
+                    size: 72,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.base,
+                    AppSpacing.sm,
                     AppSpacing.base,
                     AppSpacing.sm,
                   ),

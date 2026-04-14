@@ -11,6 +11,8 @@ import 'package:go_router/go_router.dart';
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/quiz.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
+import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
+import 'package:ecole_platform/shared/ui/widgets/animated_guide.dart';
 
 class StudentContentScreen extends ConsumerStatefulWidget {
   const StudentContentScreen({super.key});
@@ -123,6 +125,9 @@ class _StudentContentScreenState extends ConsumerState<StudentContentScreen> {
 
   Widget _buildBody(BuildContext context) {
     final theme = Theme.of(context);
+    final guideImageUrl = ref.watch(
+      samiGuideImageProvider(AnimatedGuideState.happy),
+    );
 
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
@@ -170,47 +175,56 @@ class _StudentContentScreenState extends ConsumerState<StudentContentScreen> {
       onRefresh: _fetchContent,
       child: ListView(
         padding: const EdgeInsets.all(16),
-        children: grouped.entries.map((entry) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(
-                  entry.key,
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold),
+        children: [
+          AnimatedGuide(
+            message: 'مرحبًا! هيا نتعلم معًا!',
+            state: AnimatedGuideState.happy,
+            imageUrl: guideImageUrl,
+            size: 74,
+          ),
+          const SizedBox(height: AppSpacing.base),
+          ...grouped.entries.map((entry) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    entry.key,
+                    style: theme.textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.bold),
+                  ),
                 ),
-              ),
-              ...entry.value.map((item) => _ContentCard(
-                    item: item,
-                    onTap: () async {
-                      if (item.progress == null ||
-                          item.progress == 'not_started') {
-                        await _updateProgress(
-                            item.contentItemId, 'in_progress');
-                      }
-                      // STORY content gets its own immersive reader
-                      if (item.contentType.toUpperCase() == 'STORY') {
-                        final storyRoute = Uri(
-                          path: '/student/content/${item.contentItemId}/read',
-                          queryParameters: item.progress == null
-                              ? null
-                              : <String, String>{'progress': item.progress!},
-                        ).toString();
-                        await context.push(storyRoute);
-                        if (mounted) {
-                          await _fetchContent();
+                ...entry.value.map((item) => _ContentCard(
+                      item: item,
+                      onTap: () async {
+                        if (item.progress == null ||
+                            item.progress == 'not_started') {
+                          await _updateProgress(
+                              item.contentItemId, 'in_progress');
                         }
-                        return;
-                      }
-                      setState(() => _selectedItem = item);
-                    },
-                  )),
-              const SizedBox(height: 8),
-            ],
-          );
-        }).toList(),
+                        // STORY content gets its own immersive reader
+                        if (item.contentType.toUpperCase() == 'STORY') {
+                          final storyRoute = Uri(
+                            path: '/student/content/${item.contentItemId}/read',
+                            queryParameters: item.progress == null
+                                ? null
+                                : <String, String>{'progress': item.progress!},
+                          ).toString();
+                          await context.push(storyRoute);
+                          if (mounted) {
+                            await _fetchContent();
+                          }
+                          return;
+                        }
+                        setState(() => _selectedItem = item);
+                      },
+                    )),
+                const SizedBox(height: 8),
+              ],
+            );
+          }),
+        ],
       ),
     );
   }

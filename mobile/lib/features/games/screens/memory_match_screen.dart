@@ -11,6 +11,7 @@ import 'package:ecole_platform/features/rewards/rewards_provider.dart';
 import 'package:ecole_platform/features/rewards/rewards_widgets.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
+import 'package:ecole_platform/shared/ui/widgets/animated_guide.dart';
 import 'package:ecole_platform/shared/widgets/app_error_widget.dart';
 
 class MemoryMatchScreen extends ConsumerStatefulWidget {
@@ -53,10 +54,30 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
         data: (session) {
           final crossAxisCount =
               session.visibleMemoryCards.length <= 12 ? 3 : 4;
+          final guideState = session.isCompleted
+              ? AnimatedGuideState.celebrating
+              : AnimatedGuideState.thinking;
+          final guideMessage =
+              session.isCompleted ? 'أحسنت!' : 'ابحث عن الأزواج!';
+          final guideImageUrl = ref.watch(samiGuideImageProvider(guideState));
           return Stack(
             children: <Widget>[
               Column(
                 children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.base,
+                      AppSpacing.base,
+                      AppSpacing.base,
+                      0,
+                    ),
+                    child: AnimatedGuide(
+                      message: guideMessage,
+                      state: guideState,
+                      imageUrl: guideImageUrl,
+                      size: 72,
+                    ),
+                  ),
                   Padding(
                     padding: const EdgeInsets.all(AppSpacing.base),
                     child: _GameStatsRow(
@@ -127,7 +148,6 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
     if (mounted) {
       setState(() => _showCelebration = true);
     }
-    unawaited(ref.read(ttsServiceProvider).speakPraise());
     await ref.read(rewardsProvider.notifier).awardEvent(
           eventType: 'game_completed',
           starsEarned: session.config.rewardStars,

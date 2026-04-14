@@ -10,6 +10,7 @@ import 'package:ecole_platform/features/rewards/rewards_widgets.dart';
 import 'package:ecole_platform/features/student/story_reader_provider.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
+import 'package:ecole_platform/shared/ui/widgets/animated_guide.dart';
 import 'package:ecole_platform/shared/ui/widgets/drawing_overlay.dart';
 
 class StoryReaderScreen extends ConsumerStatefulWidget {
@@ -188,6 +189,10 @@ class _StoryReaderScreenState extends ConsumerState<StoryReaderScreen> {
 
         final accentColor = _accentColor(storyState.contentItem.themeColor);
         final currentPage = storyState.currentPage;
+        final guideState = storyState.isAudioPlaying
+            ? AnimatedGuideState.thinking
+            : AnimatedGuideState.happy;
+        final guideImageUrl = ref.watch(samiGuideImageProvider(guideState));
 
         return Scaffold(
           backgroundColor: KidsContentColors.storyBackground,
@@ -209,6 +214,20 @@ class _StoryReaderScreenState extends ConsumerState<StoryReaderScreen> {
                     .read(storyReaderProvider(_request).notifier)
                     .toggleDrawingMode(),
                 onToggleNarration: () => _toggleNarration(storyState),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.base,
+                  0,
+                  AppSpacing.base,
+                  AppSpacing.sm,
+                ),
+                child: AnimatedGuide(
+                  message: 'هيا نقرأ معًا!',
+                  state: guideState,
+                  imageUrl: guideImageUrl,
+                  size: 68,
+                ),
               ),
               Expanded(
                 child: storyState.pages.isEmpty
