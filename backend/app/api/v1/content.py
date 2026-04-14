@@ -49,11 +49,23 @@ student_work_router = APIRouter(prefix="/student-work", tags=["student-work"])
     response_description="Paginated list of learning materials",
 )
 async def list_content_items(
-    content_type: str | None = Query(None),
+    content_type: str | None = Query(
+        None,
+        description="Exact-match content type filter, including values like story and coloring_book.",
+    ),
     level_band: str | None = Query(None),
     language: str | None = Query(None),
-    letter: str | None = Query(None),
-    target_age: int | None = Query(None),
+    letter: str | None = Query(
+        None,
+        min_length=1,
+        max_length=10,
+        description="Exact-match letter filter.",
+    ),
+    target_age: int | None = Query(
+        None,
+        ge=0,
+        description="Matches items where target_age_min <= target_age <= target_age_max.",
+    ),
     cursor: str | None = Query(None),
     limit: int | None = Query(None),
     filters: FilterSpec = Depends(parse_filters),
@@ -88,11 +100,23 @@ async def list_content_items(
 
 @legacy_router.get("", include_in_schema=False, summary="Legacy content list alias")
 async def legacy_list_content_items(
-    content_type: str | None = Query(None),
+    content_type: str | None = Query(
+        None,
+        description="Exact-match content type filter, including values like story and coloring_book.",
+    ),
     level_band: str | None = Query(None),
     language: str | None = Query(None),
-    letter: str | None = Query(None),
-    target_age: int | None = Query(None),
+    letter: str | None = Query(
+        None,
+        min_length=1,
+        max_length=10,
+        description="Exact-match letter filter.",
+    ),
+    target_age: int | None = Query(
+        None,
+        ge=0,
+        description="Matches items where target_age_min <= target_age <= target_age_max.",
+    ),
     cursor: str | None = Query(None),
     limit: int | None = Query(None),
     filters: FilterSpec = Depends(parse_filters),

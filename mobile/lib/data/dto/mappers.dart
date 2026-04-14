@@ -432,6 +432,11 @@ ContentItem contentItemFromJson(Map<String, dynamic> json) {
     contentType: json['content_type'] as String,
     levelBand: json['level_band'] as String?,
     language: json['language'] as String?,
+    pageCount: json['page_count'] as int?,
+    letter: json['letter'] as String?,
+    targetAgeMin: json['target_age_min'] as int?,
+    targetAgeMax: json['target_age_max'] as int?,
+    themeColor: json['theme_color'] as String?,
     status: json['status'] as String,
   );
 }
