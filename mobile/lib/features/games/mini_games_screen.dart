@@ -8,6 +8,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:ecole_platform/domain/entities/rewards.dart';
 import 'package:ecole_platform/features/games/memory_match_game.dart';
 import 'package:ecole_platform/features/games/sorting_game.dart';
 import 'package:ecole_platform/features/games/vocabulary_game.dart';
@@ -22,6 +23,7 @@ class MiniGamesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final rewards = ref.watch(rewardsProvider).valueOrNull ?? StudentRewards.empty;
 
     return Scaffold(
       appBar: AppBar(
@@ -33,7 +35,7 @@ class MiniGamesScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const XpBar(),
+            LevelBadge(rewards: rewards, compact: true),
             const SizedBox(height: AppSpacing.lg),
             Text('Choisis un jeu', style: theme.textTheme.titleMedium),
             const SizedBox(height: AppSpacing.md),

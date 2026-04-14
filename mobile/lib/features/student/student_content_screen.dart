@@ -103,7 +103,16 @@ class _StudentContentScreenState extends ConsumerState<StudentContentScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mon contenu')),
+      appBar: AppBar(
+        title: const Text('Mon contenu'),
+        actions: [
+          IconButton(
+            onPressed: () => context.push('/rewards'),
+            icon: const Icon(Icons.auto_awesome_rounded),
+            tooltip: 'Recompenses',
+          ),
+        ],
+      ),
       body: Semantics(
         container: true,
         label: 'Contenu pédagogique de l’élève',

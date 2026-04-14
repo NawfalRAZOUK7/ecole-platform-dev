@@ -1,4 +1,4 @@
-"""Repository helpers for rewards and gamification workflows."""
+"""Repository helpers for the kid-facing rewards system."""
 
 from __future__ import annotations
 
@@ -9,21 +9,18 @@ from sqlalchemy import desc, distinct, func, select
 
 from app.models.erp import Class, Enrollment, TeacherAssignment
 from app.models.iam import ParentChildLink, User
-from app.models.rewards import RewardBadge, RewardEvent, StudentReward
+from app.models.rewards import RewardEvent, StudentReward
 from app.repositories.base import BaseRepository
 
 
 class RewardsRepository(BaseRepository):
-    """Data access for rewards, badges, events, and leaderboard queries."""
+    """Data access for rewards aggregates, events, and leaderboards."""
 
     async def get_user(self, user_id: uuid.UUID) -> User | None:
         result = await self.db.execute(select(User).where(User.id == user_id))
         return result.scalar_one_or_none()
 
-    async def get_student_reward(
-        self,
-        student_id: uuid.UUID,
-    ) -> StudentReward | None:
+    async def get_student_reward(self, student_id: uuid.UUID) -> StudentReward | None:
         result = await self.db.execute(
             select(StudentReward).where(StudentReward.student_id == student_id)
         )
@@ -45,52 +42,6 @@ class RewardsRepository(BaseRepository):
         self.db.add(event)
         await self.db.flush()
         return event
-
-    async def list_reward_events(
-        self,
-        *,
-        student_id: uuid.UUID,
-        limit: int,
-    ) -> list[RewardEvent]:
-        result = await self.db.execute(
-            select(RewardEvent)
-            .where(RewardEvent.student_id == student_id)
-            .order_by(RewardEvent.created_at.desc(), RewardEvent.id.desc())
-            .limit(limit)
-        )
-        return list(result.scalars().all())
-
-    async def list_reward_events_for_badges(
-        self,
-        *,
-        student_id: uuid.UUID,
-    ) -> list[RewardEvent]:
-        result = await self.db.execute(
-            select(RewardEvent)
-            .where(RewardEvent.student_id == student_id)
-            .order_by(RewardEvent.created_at.asc(), RewardEvent.id.asc())
-        )
-        return list(result.scalars().all())
-
-    async def get_badge_by_code(self, code: str) -> RewardBadge | None:
-        result = await self.db.execute(
-            select(RewardBadge).where(RewardBadge.code == code)
-        )
-        return result.scalar_one_or_none()
-
-    async def list_badges(self, *, active_only: bool = False) -> list[RewardBadge]:
-        query = select(RewardBadge)
-        if active_only:
-            query = query.where(RewardBadge.is_active.is_(True))
-        query = query.order_by(RewardBadge.display_order.asc(), RewardBadge.code.asc())
-        result = await self.db.execute(query)
-        return list(result.scalars().all())
-
-    async def create_badge(self, **kwargs: Any) -> RewardBadge:
-        badge = RewardBadge(**kwargs)
-        self.db.add(badge)
-        await self.db.flush()
-        return badge
 
     async def get_class_school_id(self, class_id: uuid.UUID) -> uuid.UUID | None:
         result = await self.db.execute(

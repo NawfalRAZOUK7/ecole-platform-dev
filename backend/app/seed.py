@@ -7,10 +7,8 @@ Reference: Pack C4 (Data Model), Sprint 1 acceptance criteria.
 """
 
 import asyncio
-import json
 import uuid
 from datetime import date, datetime, timedelta, timezone
-from pathlib import Path
 
 import bcrypt
 from sqlalchemy import inspect, text
@@ -75,7 +73,6 @@ from app.models.lms import (
     Submission,
 )
 from app.models.men_compliance import MenCurriculum, MenObjective
-from app.models.rewards import RewardBadge
 from app.models.school import School
 from app.services.compliance_service import seed_men_reference_data
 
@@ -168,7 +165,6 @@ async def clear_all(session: AsyncSession) -> None:
         "game_configs",
         "reward_events",
         "student_rewards",
-        "reward_badges",
         "compliance_reports",
         "curriculum_mappings",
         "men_objectives",
@@ -1667,34 +1663,6 @@ async def seed_feature_toggles(session: AsyncSession) -> None:
     print("  [Features] 6 feature toggles (messaging + announcements globally enabled)")
 
 
-async def seed_reward_badges(session: AsyncSession) -> None:
-    """Seed default student reward badges."""
-    badges_path = Path(__file__).resolve().parent / "data" / "reward_badges.json"
-    payload = json.loads(badges_path.read_text(encoding="utf-8"))
-
-    badges = [
-        RewardBadge(
-            id=uuid.uuid5(uuid.NAMESPACE_URL, f"reward-badge-{item['code']}"),
-            code=item["code"],
-            title_fr=item["title_fr"],
-            title_ar=item["title_ar"],
-            title_en=item["title_en"],
-            description_fr=item.get("description_fr"),
-            description_ar=item.get("description_ar"),
-            description_en=item.get("description_en"),
-            icon=item.get("icon"),
-            criteria_type=item["criteria_type"],
-            criteria_value=item["criteria_value"],
-            display_order=item.get("display_order", 0),
-            is_active=item.get("is_active", True),
-        )
-        for item in payload
-    ]
-    session.add_all(badges)
-    await session.flush()
-    print(f"  [Rewards] {len(badges)} reward badges")
-
-
 async def seed_game_configs(session: AsyncSession) -> None:
     """Seed sample mobile game configs."""
     configs = [
@@ -2159,7 +2127,6 @@ async def main() -> None:
         await seed_timetable(session)
         await seed_fees(session)
         await seed_feature_toggles(session)
-        await seed_reward_badges(session)
         await seed_game_configs(session)
         await seed_men_compliance(session)
 

@@ -83,6 +83,7 @@ import 'package:ecole_platform/features/profile/gdpr_screen.dart';
 import 'package:ecole_platform/features/question-bank/generate_quiz_screen.dart';
 import 'package:ecole_platform/features/question-bank/question_bank_import_screen.dart';
 import 'package:ecole_platform/features/question-bank/question_bank_screen.dart';
+import 'package:ecole_platform/features/rewards/rewards_screen.dart';
 import 'package:ecole_platform/features/rubrics/rubric_editor_screen.dart';
 import 'package:ecole_platform/features/rubrics/rubric_grading_screen.dart';
 import 'package:ecole_platform/features/rubrics/rubrics_list_screen.dart';
@@ -288,6 +289,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/student/quizzes',
             builder: (context, state) => const QuizPlayerScreen(),
+          ),
+          GoRoute(
+            path: '/rewards',
+            builder: (context, state) => const RewardsScreen(),
           ),
 
           // ── Phase 12B routes ──

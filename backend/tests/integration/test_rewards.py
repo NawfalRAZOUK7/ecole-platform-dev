@@ -37,11 +37,10 @@ async def test_award_stars_creates_event_and_updates_total(
         json={
             "student_id": str(api_context["student"]["user"].id),
             "event_type": "content_completed",
-            "stars_earned": 15,
-            "xp_earned": 40,
+            "stars": 15,
+            "xp": 40,
             "source_type": "content",
             "source_id": str(uuid.uuid4()),
-            "metadata": {"time_spent_seconds": 90},
         },
     )
 
@@ -90,8 +89,8 @@ async def test_level_up_on_xp_threshold(client, api_context):
         json={
             "student_id": str(api_context["student"]["user"].id),
             "event_type": "game_won",
-            "stars_earned": 0,
-            "xp_earned": 100,
+            "stars": 0,
+            "xp": 100,
             "source_type": "game",
             "source_id": str(uuid.uuid4()),
         },
@@ -120,9 +119,9 @@ async def test_streak_increments_on_consecutive_days(
         json={
             "student_id": str(api_context["student"]["user"].id),
             "event_type": "daily_login",
-            "stars_earned": 1,
-            "xp_earned": 1,
-            "source_type": "system",
+            "stars": 1,
+            "xp": 1,
+            "source_type": "login",
         },
     )
     assert first.status_code == 200, first.text
@@ -135,16 +134,14 @@ async def test_streak_increments_on_consecutive_days(
         json={
             "student_id": str(api_context["student"]["user"].id),
             "event_type": "daily_login",
-            "stars_earned": 1,
-            "xp_earned": 1,
-            "source_type": "system",
+            "stars": 1,
+            "xp": 1,
+            "source_type": "login",
         },
     )
 
     assert second.status_code == 200, second.text
-    payload = second.json()["data"]
-    assert payload["streak_days"] == 2
-    assert payload["longest_streak"] == 2
+    assert second.json()["data"]["streak_days"] == 2
 
 
 @pytest.mark.asyncio
@@ -165,9 +162,9 @@ async def test_streak_resets_after_gap(
             json={
                 "student_id": str(api_context["student"]["user"].id),
                 "event_type": "daily_login",
-                "stars_earned": 1,
-                "xp_earned": 1,
-                "source_type": "system",
+                "stars": 1,
+                "xp": 1,
+                "source_type": "login",
             },
         )
         assert response.status_code == 200, response.text
@@ -179,57 +176,14 @@ async def test_streak_resets_after_gap(
         json={
             "student_id": str(api_context["student"]["user"].id),
             "event_type": "daily_login",
-            "stars_earned": 1,
-            "xp_earned": 1,
-            "source_type": "system",
+            "stars": 1,
+            "xp": 1,
+            "source_type": "login",
         },
     )
 
     assert response.status_code == 200, response.text
-    payload = response.json()["data"]
-    assert payload["streak_days"] == 1
-    assert payload["longest_streak"] == 2
-
-
-@pytest.mark.asyncio
-async def test_badge_earned_on_criteria_met(client, api_context):
-    badge_response = await client.post(
-        "/rewards/badges",
-        headers=auth_header(api_context["admin"]["token"]),
-        json={
-            "code": f"stars_{uuid.uuid4().hex[:6]}",
-            "title_fr": "Collectionneur d'etoiles",
-            "title_ar": "جامع النجوم",
-            "title_en": "Star Collector",
-            "description_fr": "Atteindre 20 etoiles",
-            "description_ar": "الوصول إلى 20 نجمة",
-            "description_en": "Reach 20 stars",
-            "icon": "star",
-            "criteria_type": "stars_total",
-            "criteria_value": 20,
-        },
-    )
-
-    assert badge_response.status_code == 201, badge_response.text
-    badge_code = badge_response.json()["data"]["code"]
-
-    award_response = await client.post(
-        "/rewards/award",
-        headers=auth_header(api_context["admin"]["token"]),
-        json={
-            "student_id": str(api_context["student"]["user"].id),
-            "event_type": "content_completed",
-            "stars_earned": 25,
-            "xp_earned": 10,
-            "source_type": "content",
-            "source_id": str(uuid.uuid4()),
-        },
-    )
-
-    assert award_response.status_code == 200, award_response.text
-    payload = award_response.json()["data"]
-    assert badge_code in payload["badges"]
-    assert [item["code"] for item in payload["newly_earned_badges"]] == [badge_code]
+    assert response.json()["data"]["streak_days"] == 1
 
 
 @pytest.mark.asyncio
@@ -292,18 +246,38 @@ async def test_leaderboard_returns_ordered_by_stars(
 
 
 @pytest.mark.asyncio
-async def test_award_requires_permission(client, api_context):
+async def test_student_can_award_self(client, api_context):
     response = await client.post(
         "/rewards/award",
         headers=auth_header(api_context["student"]["token"]),
         json={
             "student_id": str(api_context["student"]["user"].id),
+            "event_type": "daily_login",
+            "stars": 2,
+            "xp": 5,
+            "source_type": "login",
+        },
+    )
+
+    assert response.status_code == 200, response.text
+    payload = response.json()["data"]
+    assert payload["stars"] == 2
+    assert payload["xp"] == 5
+
+
+@pytest.mark.asyncio
+async def test_student_cannot_award_other_student(client, api_context):
+    response = await client.post(
+        "/rewards/award",
+        headers=auth_header(api_context["student"]["token"]),
+        json={
+            "student_id": str(api_context["peer_student"]["user"].id),
             "event_type": "content_completed",
-            "stars_earned": 10,
-            "xp_earned": 15,
+            "stars": 10,
+            "xp": 15,
             "source_type": "content",
             "source_id": str(uuid.uuid4()),
         },
     )
 
-    assert response.status_code == 403, response.text
+    assert response.status_code == 404, response.text

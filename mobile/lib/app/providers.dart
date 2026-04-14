@@ -38,6 +38,7 @@ import 'package:ecole_platform/data/repositories_impl/result_repository_impl.dar
 import 'package:ecole_platform/data/repositories_impl/invoice_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/admin_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/reporting_repository_impl.dart';
+import 'package:ecole_platform/data/repositories_impl/rewards_repository.dart';
 import 'package:ecole_platform/data/repositories_impl/teacher_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/content_library_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/quiz_repository_impl.dart';
@@ -68,6 +69,7 @@ import 'package:ecole_platform/domain/repositories/quiz_repository.dart';
 import 'package:ecole_platform/domain/repositories/gradebook_repository.dart';
 import 'package:ecole_platform/domain/repositories/question_bank_repository.dart';
 import 'package:ecole_platform/domain/repositories/rubric_repository.dart';
+import 'package:ecole_platform/domain/repositories/rewards_repository.dart';
 import 'package:ecole_platform/features/auth/biometric_service.dart';
 import 'package:ecole_platform/shared/secure_storage.dart';
 import 'package:ecole_platform/shared/connectivity_service.dart';
@@ -295,6 +297,12 @@ final questionBankRepositoryProvider = Provider<QuestionBankRepository>((ref) {
 
 final rubricRepositoryProvider = Provider<RubricRepository>((ref) {
   return RubricRepositoryImpl(
+    api: ref.watch(apiClientProvider),
+  );
+});
+
+final rewardsRepositoryProvider = Provider<RewardsRepository>((ref) {
+  return RewardsRepositoryImpl(
     api: ref.watch(apiClientProvider),
   );
 });

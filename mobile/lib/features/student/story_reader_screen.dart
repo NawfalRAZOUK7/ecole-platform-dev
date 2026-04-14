@@ -237,7 +237,7 @@ class _StoryReaderScreenState extends ConsumerState<StoryReaderScreen> {
                             },
                           ),
                           if (_showCelebration)
-                            CongratsOverlay(
+                            ConfettiOverlay(
                               starsEarned: 3,
                               xpEarned: 50,
                               onDismiss: () {

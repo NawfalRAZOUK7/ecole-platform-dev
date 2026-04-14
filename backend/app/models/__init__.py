@@ -174,7 +174,6 @@ from app.models.financial_health import (
 
 # G5H — Rewards
 from app.models.rewards import (
-    RewardBadge,
     RewardEvent,
     StudentReward,
 )
@@ -346,7 +345,6 @@ __all__ = [
     # Rewards
     "StudentReward",
     "RewardEvent",
-    "RewardBadge",
     # Games
     "GameConfig",
     # Audit
