@@ -1,7 +1,10 @@
 import { api } from '@/services/api/client';
 
-export type GameType = 'memory_match' | 'sorting' | 'vocabulary_cards';
-export type Difficulty = 'easy' | 'medium' | 'hard';
+export const GAME_TYPES = ['memory_match', 'sorting', 'vocabulary_cards'] as const;
+export const GAME_DIFFICULTIES = ['easy', 'medium', 'hard'] as const;
+
+export type GameType = (typeof GAME_TYPES)[number];
+export type Difficulty = (typeof GAME_DIFFICULTIES)[number];
 
 export interface GameConfig {
   id: string;
@@ -62,9 +65,6 @@ interface RawGameConfig {
   updatedAt?: string | null;
 }
 
-const GAME_TYPES: readonly GameType[] = ['memory_match', 'sorting', 'vocabulary_cards'];
-const DIFFICULTIES: readonly Difficulty[] = ['easy', 'medium', 'hard'];
-
 function normalizeGameType(value: string | undefined): GameType {
   if (value && GAME_TYPES.includes(value as GameType)) {
     return value as GameType;
@@ -74,7 +74,7 @@ function normalizeGameType(value: string | undefined): GameType {
 }
 
 function normalizeDifficulty(value: string | undefined): Difficulty {
-  if (value && DIFFICULTIES.includes(value as Difficulty)) {
+  if (value && GAME_DIFFICULTIES.includes(value as Difficulty)) {
     return value as Difficulty;
   }
 

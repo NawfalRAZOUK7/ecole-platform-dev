@@ -343,10 +343,16 @@
     "title": "Configurations de jeux",
     "subtitle": "Gerez les jeux reutilisables, les recompenses et leur activation pour la classe.",
     "newConfig": "Nouvelle config",
+    "createGame": "Creer un jeu",
     "listTitle": "Configurations disponibles",
     "createTitle": "Creer une config",
     "editTitle": "Modifier la config",
-    "formSubtitle": "Utilisez un JSON de configuration adapte au type de jeu selectionne.",
+    "detailTitle": "Details de la configuration",
+    "detailSubtitle": "Verifiez la configuration actuelle puis mettez-la a jour ci-dessous.",
+    "backToList": "Retour aux jeux",
+    "previewTitle": "Apercu de la configuration",
+    "notFound": "Configuration de jeu introuvable.",
+    "formSubtitle": "Configurez les champs communs et le contenu specifique au type de jeu selectionne.",
     "createConfig": "Creer la config",
     "saveChanges": "Enregistrer les modifications",
     "created": "Configuration de jeu creee.",
@@ -359,7 +365,8 @@
       "allDifficulties": "Toutes les difficultes",
       "status": "Statut",
       "allStatuses": "Tous les statuts",
-      "subjectPlaceholder": "Filtrer par matiere"
+      "subjectPlaceholder": "Filtrer par matiere",
+      "targetAgePlaceholder": "Age cible"
     },
     "status": {
       "active": "Active",
@@ -372,6 +379,12 @@
       "subject": "Matiere",
       "reward": "Recompense",
       "updated": "Mis a jour"
+    },
+    "cards": {
+      "ageTitle": "Tranche d'age",
+      "ageRange": "Age {{value}}",
+      "noAgeRange": "Tous les ages",
+      "reward": "{{stars}} etoiles • {{xp}} XP"
     },
     "types": {
       "memory_match": "Memory match",
@@ -397,6 +410,28 @@
       "rewardXp": "XP offert",
       "isActive": "Configuration active"
     },
+    "editor": {
+      "memoryMatchTitle": "Configuration du memory match",
+      "sortingTitle": "Configuration du tri",
+      "vocabularyTitle": "Configuration des cartes de vocabulaire",
+      "gridCols": "Colonnes de la grille",
+      "gridRows": "Lignes de la grille",
+      "timeLimit": "Limite de temps (secondes)",
+      "front": "Texte avant",
+      "back": "Texte arriere",
+      "imageUrl": "URL de l'image",
+      "audioUrl": "URL de l'audio",
+      "pairLabel": "Paire {{index}}",
+      "categoryLabel": "Categorie {{index}}",
+      "cardLabel": "Carte {{index}}",
+      "categoryName": "Nom de la categorie",
+      "categoryItems": "Elements",
+      "wordAr": "Mot arabe",
+      "wordFr": "Mot francais",
+      "addPair": "Ajouter une paire",
+      "addCategory": "Ajouter une categorie",
+      "addCard": "Ajouter une carte"
+    },
     "validation": {
       "gameType": "Selectionnez un type de jeu pris en charge.",
       "title": "Le titre est obligatoire.",
@@ -404,9 +439,19 @@
       "subject": "La matiere doit rester sous 50 caracteres.",
       "difficulty": "Selectionnez une difficulte prise en charge.",
       "age": "L'age doit etre compris entre 0 et 18.",
-      "config": "Entrez un objet JSON valide.",
       "reward": "Les recompenses doivent etre positives ou nulles.",
-      "ageRange": "L'age maximum doit etre superieur ou egal a l'age minimum."
+      "ageRange": "L'age maximum doit etre superieur ou egal a l'age minimum.",
+      "grid": "Les valeurs de grille doivent etre comprises entre 1 et 12.",
+      "timeLimit": "La limite de temps doit etre positive ou nulle.",
+      "pairsRequired": "Ajoutez au moins une paire.",
+      "pairText": "Le texte avant et arriere est obligatoire.",
+      "categoriesRequired": "Ajoutez au moins une categorie.",
+      "categoryName": "Le nom de categorie est obligatoire.",
+      "categoryItems": "Ajoutez au moins un element par categorie.",
+      "cardsRequired": "Ajoutez au moins une carte de vocabulaire.",
+      "wordAr": "Le mot arabe est obligatoire.",
+      "wordFr": "Le mot francais est obligatoire.",
+      "url": "Les URL doivent rester sous 500 caracteres."
     }
   },
   "notifications": {

@@ -65,7 +65,9 @@ import {
   AnnouncementsPage,
   FeedPage,
   RewardsPage,
-  GameConfigsPage,
+  GamesListPage,
+  GameConfigDetailPage,
+  GameConfigEditor,
   NotificationsPage,
   NotificationSettingsPage,
   CalendarPage,
@@ -608,11 +610,28 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route path="/games" element={<Navigate to="/teacher/games" replace />} />
               <Route
-                path="/games"
+                path="/teacher/games"
                 element={
-                  <ProtectedRoute roles={['TCH', 'ADM', 'DIR', 'SUP', 'SYS']}>
-                    <GameConfigsPage />
+                  <ProtectedRoute roles={['TCH', 'ADM']}>
+                    <GamesListPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/teacher/games/new"
+                element={
+                  <ProtectedRoute roles={['TCH', 'ADM']}>
+                    <GameConfigEditor />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/teacher/games/:id"
+                element={
+                  <ProtectedRoute roles={['TCH', 'ADM']}>
+                    <GameConfigDetailPage />
                   </ProtectedRoute>
                 }
               />

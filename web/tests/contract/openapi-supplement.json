@@ -1,0 +1,17 @@
+{
+  "paths": {
+    "/api/v1/rewards/badges": {
+      "get": {
+        "summary": "Supplemental rewards badge catalog endpoint for frontend contract validation"
+      },
+      "post": {
+        "summary": "Supplemental rewards badge creation endpoint for frontend contract validation"
+      }
+    },
+    "/api/v1/rewards/student/{student_id}/history": {
+      "get": {
+        "summary": "Supplemental student rewards history endpoint for frontend contract validation"
+      }
+    }
+  }
+}

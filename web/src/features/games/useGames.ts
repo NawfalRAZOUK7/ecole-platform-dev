@@ -1,15 +1,20 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { STALE_DEFAULT } from '@/shared/hooks/useQueryDefaults';
-import { gamesService, type GameConfigFilters, type GameConfigPayload } from './games.service';
+import { gamesService, type GameConfig, type ListGameConfigsFilters } from './games.service';
+
+export type GameConfigInput = Omit<GameConfig, 'id' | 'createdAt' | 'updatedAt'>;
 
 export const gamesQueryKeys = {
   all: ['games'] as const,
-  configs: (filters: Omit<GameConfigFilters, 'cursor'>) =>
+  configs: (filters: Omit<ListGameConfigsFilters, 'cursor' | 'limit'>) =>
     [...gamesQueryKeys.all, 'configs', filters] as const,
   config: (gameId: string | null) => [...gamesQueryKeys.all, 'config', gameId] as const,
 };
 
-export function useGameConfigs(filters: Omit<GameConfigFilters, 'cursor'>) {
+export function useGameConfigs(
+  filters: Omit<ListGameConfigsFilters, 'cursor' | 'limit'>,
+  pageSize = 12,
+) {
   return useInfiniteQuery({
     queryKey: gamesQueryKeys.configs(filters),
     initialPageParam: undefined as string | undefined,
@@ -17,18 +22,17 @@ export function useGameConfigs(filters: Omit<GameConfigFilters, 'cursor'>) {
       gamesService.listConfigs({
         ...filters,
         cursor: pageParam,
-        limit: 20,
+        limit: pageSize,
       }),
-    getNextPageParam: (lastPage) =>
-      lastPage.meta.has_more ? (lastPage.meta.next_cursor ?? undefined) : undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     staleTime: STALE_DEFAULT,
   });
 }
 
-export function useGameConfig(gameId: string | null | undefined, enabled: boolean) {
+export function useGameConfig(gameId: string | null | undefined, enabled = Boolean(gameId)) {
   return useQuery({
     queryKey: gamesQueryKeys.config(gameId || null),
-    queryFn: async () => (await gamesService.getConfig(gameId!)).data,
+    queryFn: async () => gamesService.getConfig(gameId!),
     enabled,
     staleTime: STALE_DEFAULT,
   });
@@ -38,8 +42,7 @@ export function useCreateGameConfig() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (payload: GameConfigPayload) =>
-      (await gamesService.createConfig(payload)).data,
+    mutationFn: async (payload: GameConfigInput) => gamesService.createConfig(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: gamesQueryKeys.all });
     },
@@ -50,13 +53,8 @@ export function useUpdateGameConfig() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      gameId,
-      payload,
-    }: {
-      gameId: string;
-      payload: Partial<GameConfigPayload>;
-    }) => (await gamesService.updateConfig(gameId, payload)).data,
+    mutationFn: async ({ gameId, payload }: { gameId: string; payload: Partial<GameConfig> }) =>
+      gamesService.updateConfig(gameId, payload),
     onSuccess: async (_data, variables) => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: gamesQueryKeys.all }),

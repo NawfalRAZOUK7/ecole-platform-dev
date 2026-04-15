@@ -203,10 +203,16 @@
     "title": "Game Configurations",
     "subtitle": "Manage reusable game setups, rewards, and activation state for classroom play.",
     "newConfig": "New config",
+    "createGame": "Create Game",
     "listTitle": "Available configs",
     "createTitle": "Create config",
     "editTitle": "Edit config",
-    "formSubtitle": "Use a JSON config payload that matches the selected game type.",
+    "detailTitle": "Game config details",
+    "detailSubtitle": "Review the current setup, then update the configuration below.",
+    "backToList": "Back to games",
+    "previewTitle": "Configuration preview",
+    "notFound": "Game config not found.",
+    "formSubtitle": "Configure common settings and the game-specific content for the selected mode.",
     "createConfig": "Create config",
     "saveChanges": "Save changes",
     "created": "Game config created.",
@@ -219,7 +225,8 @@
       "allDifficulties": "All difficulties",
       "status": "Status",
       "allStatuses": "All statuses",
-      "subjectPlaceholder": "Filter by subject"
+      "subjectPlaceholder": "Filter by subject",
+      "targetAgePlaceholder": "Target age"
     },
     "status": {
       "active": "Active",
@@ -232,6 +239,12 @@
       "subject": "Subject",
       "reward": "Reward",
       "updated": "Updated"
+    },
+    "cards": {
+      "ageTitle": "Age range",
+      "ageRange": "Age {{value}}",
+      "noAgeRange": "All ages",
+      "reward": "{{stars}} stars • {{xp}} XP"
     },
     "types": {
       "memory_match": "Memory match",
@@ -257,6 +270,28 @@
       "rewardXp": "Reward XP",
       "isActive": "Active config"
     },
+    "editor": {
+      "memoryMatchTitle": "Memory match setup",
+      "sortingTitle": "Sorting setup",
+      "vocabularyTitle": "Vocabulary cards setup",
+      "gridCols": "Grid columns",
+      "gridRows": "Grid rows",
+      "timeLimit": "Time limit (seconds)",
+      "front": "Front text",
+      "back": "Back text",
+      "imageUrl": "Image URL",
+      "audioUrl": "Audio URL",
+      "pairLabel": "Pair {{index}}",
+      "categoryLabel": "Category {{index}}",
+      "cardLabel": "Card {{index}}",
+      "categoryName": "Category name",
+      "categoryItems": "Items",
+      "wordAr": "Arabic word",
+      "wordFr": "French word",
+      "addPair": "Add pair",
+      "addCategory": "Add category",
+      "addCard": "Add card"
+    },
     "validation": {
       "gameType": "Select a supported game type.",
       "title": "Title is required.",
@@ -264,9 +299,19 @@
       "subject": "Subject must stay within 50 characters.",
       "difficulty": "Select a supported difficulty.",
       "age": "Age must be between 0 and 18.",
-      "config": "Enter a valid JSON object.",
       "reward": "Reward values must be zero or greater.",
-      "ageRange": "Maximum age must be greater than or equal to minimum age."
+      "ageRange": "Maximum age must be greater than or equal to minimum age.",
+      "grid": "Grid values must be between 1 and 12.",
+      "timeLimit": "Time limit must be zero or greater.",
+      "pairsRequired": "Add at least one pair.",
+      "pairText": "Front and back text are required.",
+      "categoriesRequired": "Add at least one category.",
+      "categoryName": "Category name is required.",
+      "categoryItems": "Add at least one item per category.",
+      "cardsRequired": "Add at least one vocabulary card.",
+      "wordAr": "Arabic word is required.",
+      "wordFr": "French word is required.",
+      "url": "URLs must stay within 500 characters."
     }
   },
   "notifications": {

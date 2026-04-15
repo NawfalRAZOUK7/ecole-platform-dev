@@ -85,6 +85,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: '📚',
     roles: ['TCH'],
   },
+  { to: '/teacher/games', labelKey: 'nav.games', icon: '🎮', roles: ['TCH', 'ADM'] },
   { to: '/teacher/quizzes', labelKey: 'nav.teacherQuizzes', icon: '❓', roles: ['TCH'] },
   { to: '/rubrics', labelKey: 'nav.rubrics', icon: '📊', roles: ['TCH'] },
   { to: '/question-bank', labelKey: 'nav.questionBank', icon: '🗃️', roles: ['TCH', 'CONTENT_MGR'] },
@@ -102,12 +103,6 @@ const NAV_ITEMS: NavItem[] = [
     labelKey: 'nav.rewards',
     icon: '⭐',
     roles: ['STD', 'PAR', 'TCH', 'ADM', 'DIR', 'SUP', 'SYS'],
-  },
-  {
-    to: '/games',
-    labelKey: 'nav.games',
-    icon: '🎮',
-    roles: ['TCH', 'ADM', 'DIR', 'SUP', 'SYS'],
   },
   {
     to: '/timetable',

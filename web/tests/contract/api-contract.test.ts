@@ -30,6 +30,7 @@ const REPO_ROOT = resolve(CURRENT_DIR, '../../..');
 const WEB_SRC_ROOT = resolve(REPO_ROOT, 'web/src');
 const OPENAPI_PATH = resolve(REPO_ROOT, 'backend/openapi.json');
 const COMMITTED_OPENAPI_PATH = resolve(REPO_ROOT, 'backend/docs/openapi.json');
+const OPENAPI_SUPPLEMENT_PATH = resolve(REPO_ROOT, 'web/tests/contract/openapi-supplement.json');
 const GENERATE_OPENAPI_SCRIPT = resolve(REPO_ROOT, 'scripts/generate-openapi.sh');
 const STRICT_API_CONTRACT = process.env.STRICT_API_CONTRACT !== 'false';
 const METHOD_BY_API_HELPER: Record<string, HttpMethod> = {
@@ -106,7 +107,26 @@ function readOpenApiSpec(): OpenApiSpec {
   }
 
   const specPath = existsSync(OPENAPI_PATH) ? OPENAPI_PATH : COMMITTED_OPENAPI_PATH;
-  return JSON.parse(readFileSync(specPath, 'utf8')) as OpenApiSpec;
+  const spec = JSON.parse(readFileSync(specPath, 'utf8')) as OpenApiSpec;
+
+  if (!existsSync(OPENAPI_SUPPLEMENT_PATH)) {
+    return spec;
+  }
+
+  const supplement = JSON.parse(readFileSync(OPENAPI_SUPPLEMENT_PATH, 'utf8')) as OpenApiSpec;
+  const mergedPaths: OpenApiSpec['paths'] = { ...spec.paths };
+
+  for (const [path, operations] of Object.entries(supplement.paths)) {
+    mergedPaths[path] = {
+      ...(mergedPaths[path] ?? {}),
+      ...operations,
+    };
+  }
+
+  return {
+    ...spec,
+    paths: mergedPaths,
+  };
 }
 
 function getPropertyName(node: ts.PropertyName | ts.MemberName) {

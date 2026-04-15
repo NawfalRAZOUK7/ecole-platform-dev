@@ -202,9 +202,19 @@ export const RewardsPage = lazy(() =>
 );
 
 // Games
-export const GameConfigsPage = lazy(() =>
-  import('@/features/games/GameConfigsPage').then((m) => ({
-    default: m.GameConfigsPage,
+export const GamesListPage = lazy(() =>
+  import('@/features/games/GamesListPage').then((m) => ({
+    default: m.GamesListPage,
+  })),
+);
+export const GameConfigDetailPage = lazy(() =>
+  import('@/features/games/GameConfigDetailPage').then((m) => ({
+    default: m.GameConfigDetailPage,
+  })),
+);
+export const GameConfigEditor = lazy(() =>
+  import('@/features/games/GameConfigEditor').then((m) => ({
+    default: m.GameConfigEditor,
   })),
 );
 
