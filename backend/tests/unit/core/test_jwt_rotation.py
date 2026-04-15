@@ -30,15 +30,20 @@ def test_token_decodes_with_previous_key_during_rotation():
     """Token signed with the old key still decodes during the rotation window."""
     old_key = "change-me-in-production-use-a-strong-random-secret"
     user_id = uuid.uuid4()
-    token = create_access_token(
-        user_id=user_id,
-        role="TCH",
-        school_id=uuid.uuid4(),
-        session_id=uuid.uuid4(),
-    )
 
     with patch("app.core.security.settings") as mock_settings:
         mock_settings.jwt_algorithm = "HS256"
+        mock_settings.access_token_expire_minutes = 30
+        mock_settings.jwt_secret_key = old_key
+        mock_settings.jwt_previous_key = ""
+
+        token = create_access_token(
+            user_id=user_id,
+            role="TCH",
+            school_id=uuid.uuid4(),
+            session_id=uuid.uuid4(),
+        )
+
         mock_settings.jwt_secret_key = "brand-new-secret-after-rotation"
         mock_settings.jwt_previous_key = old_key
 

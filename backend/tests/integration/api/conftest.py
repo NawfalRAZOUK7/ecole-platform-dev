@@ -1,0 +1,307 @@
+"""Legacy API integration fixtures for isolated endpoint tests.
+
+These older tests authenticate via ``/auth/login`` using fixed seed credentials.
+Populate the disposable test database with the matching baseline rows before the
+shared API client is used.
+"""
+
+from __future__ import annotations
+
+import uuid
+from datetime import date
+
+import httpx
+import pytest_asyncio
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
+import app.models  # noqa: F401
+from app.core.database import Base, get_db
+from app.core.security import hash_password
+from app.main import app
+from app.models.erp import (
+    AcademicYear,
+    AttendanceRecord,
+    AttendanceSession,
+    Class,
+    Enrollment,
+    Period,
+    TeacherAssignment,
+)
+from app.models.iam import ParentChildLink, RoleCode, User
+from app.models.school import School
+from tests.factories.erp import (
+    AcademicYearFactory,
+    AttendanceRecordFactory,
+    AttendanceSessionFactory,
+    ClassFactory,
+    EnrollmentFactory,
+    PeriodFactory,
+)
+from tests.factories.iam import MembershipFactory, ParentChildLinkFactory, UserFactory
+from tests.factories.school import SchoolFactory
+
+SCHOOL_ID = uuid.UUID("00000000-0000-4000-8000-000000000001")
+YEAR_ID = uuid.UUID("20000000-0000-4000-8000-000000000001")
+PERIOD_ID = uuid.UUID("20000000-0000-4000-8000-000000000003")
+CLASS_ID = uuid.UUID("20000000-0000-4000-8000-000000000004")
+PARENT_CHILD_LINK_ID = uuid.UUID("71000000-0000-4000-8000-000000000001")
+ENROLLMENT_ID = uuid.UUID("72000000-0000-4000-8000-000000000001")
+TEACHER_ASSIGNMENT_ID = uuid.UUID("73000000-0000-4000-8000-000000000001")
+ATTENDANCE_SESSION_ID = uuid.UUID("74000000-0000-4000-8000-000000000001")
+ATTENDANCE_RECORD_ID = uuid.UUID("75000000-0000-4000-8000-000000000001")
+
+ADMIN_ID = uuid.UUID("10000000-0000-4000-8000-000000000001")
+TEACHER_ID = uuid.UUID("10000000-0000-4000-8000-000000000003")
+PARENT_ID = uuid.UUID("10000000-0000-4000-8000-000000000005")
+STUDENT_ID = uuid.UUID("10000000-0000-4000-8000-000000000007")
+SUPERADMIN_ID = uuid.UUID("10000000-0000-4000-8000-00000000000a")
+
+ADMIN_EMAIL = "admin@ecole-benani.ma"
+ADMIN_PASSWORD = "admin123"
+TEACHER_EMAIL = "prof.math@ecole-benani.ma"
+TEACHER_PASSWORD = "teacher123"
+PARENT_EMAIL = "parent.alaoui@gmail.com"
+PARENT_PASSWORD = "parent123"
+STUDENT_EMAIL = "yassine.alaoui@ecole-benani.ma"
+STUDENT_PASSWORD = "student123"
+SUPERADMIN_EMAIL = "superadmin@ecole-platform.ma"
+SUPERADMIN_PASSWORD = "superadmin123"
+
+TRUNCATE_ALL_TABLES_SQL = text(
+    "TRUNCATE TABLE "
+    + ", ".join(f'"{table.name}"' for table in Base.metadata.sorted_tables)
+    + " RESTART IDENTITY CASCADE"
+)
+
+
+async def _create_actor(
+    session: AsyncSession,
+    *,
+    school,
+    user_id: uuid.UUID,
+    email: str,
+    password: str,
+    full_name: str,
+    role_code: str,
+):
+    user = await UserFactory.create(
+        session=session,
+        school=school,
+        id=user_id,
+        email=email,
+        full_name=full_name,
+        password_hash=hash_password(password),
+    )
+    await MembershipFactory.create(
+        session=session,
+        user=user,
+        school_id=school.id,
+        role_code=role_code,
+    )
+    return user
+
+
+@pytest_asyncio.fixture(loop_scope="function")
+async def session_factory(engine):
+    return async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
+
+@pytest_asyncio.fixture(loop_scope="function")
+async def isolated_legacy_api_db(session_factory):
+    async with session_factory() as session:
+        await session.execute(TRUNCATE_ALL_TABLES_SQL)
+        await session.commit()
+    try:
+        yield
+    finally:
+        async with session_factory() as session:
+            await session.execute(TRUNCATE_ALL_TABLES_SQL)
+            await session.commit()
+
+
+@pytest_asyncio.fixture(loop_scope="function")
+async def legacy_api_seed(isolated_legacy_api_db, session_factory):
+    _ = isolated_legacy_api_db
+
+    async with session_factory() as session:
+        school = await session.get(School, SCHOOL_ID)
+        if school is None:
+            school = await SchoolFactory.create(
+                session=session,
+                id=SCHOOL_ID,
+                code="ecole-benani",
+                name="Ecole Benani",
+                city="Casablanca",
+                email="contact@ecole-benani.ma",
+            )
+        academic_year = await session.get(AcademicYear, YEAR_ID)
+        if academic_year is None:
+            academic_year = await AcademicYearFactory.create(
+                session=session,
+                id=YEAR_ID,
+                school=school,
+                label="2025-2026",
+            )
+        period = await session.get(Period, PERIOD_ID)
+        if period is None:
+            period = await PeriodFactory.create(
+                session=session,
+                id=PERIOD_ID,
+                school=school,
+                academic_year=academic_year,
+                label="Trimester 2",
+            )
+        school_class = await session.get(Class, CLASS_ID)
+        if school_class is None:
+            school_class = await ClassFactory.create(
+                session=session,
+                id=CLASS_ID,
+                school=school,
+                academic_year=academic_year,
+                code="6eme-A",
+                name="6eme A",
+            )
+
+        admin = await session.get(User, ADMIN_ID)
+        if admin is None:
+            admin = await _create_actor(
+                session,
+                school=school,
+                user_id=ADMIN_ID,
+                email=ADMIN_EMAIL,
+                password=ADMIN_PASSWORD,
+                full_name="Admin Benani",
+                role_code=RoleCode.ADM.value,
+            )
+        teacher = await session.get(User, TEACHER_ID)
+        if teacher is None:
+            teacher = await _create_actor(
+                session,
+                school=school,
+                user_id=TEACHER_ID,
+                email=TEACHER_EMAIL,
+                password=TEACHER_PASSWORD,
+                full_name="Prof Math",
+                role_code=RoleCode.TCH.value,
+            )
+        parent = await session.get(User, PARENT_ID)
+        if parent is None:
+            parent = await _create_actor(
+                session,
+                school=school,
+                user_id=PARENT_ID,
+                email=PARENT_EMAIL,
+                password=PARENT_PASSWORD,
+                full_name="Parent Alaoui",
+                role_code=RoleCode.PAR.value,
+            )
+        student = await session.get(User, STUDENT_ID)
+        if student is None:
+            student = await _create_actor(
+                session,
+                school=school,
+                user_id=STUDENT_ID,
+                email=STUDENT_EMAIL,
+                password=STUDENT_PASSWORD,
+                full_name="Yassine Alaoui",
+                role_code=RoleCode.STD.value,
+            )
+        if await session.get(User, SUPERADMIN_ID) is None:
+            await _create_actor(
+                session,
+                school=school,
+                user_id=SUPERADMIN_ID,
+                email=SUPERADMIN_EMAIL,
+                password=SUPERADMIN_PASSWORD,
+                full_name="Platform Superadmin",
+                role_code=RoleCode.SUP.value,
+            )
+
+        if await session.get(ParentChildLink, PARENT_CHILD_LINK_ID) is None:
+            await ParentChildLinkFactory.create(
+                session=session,
+                id=PARENT_CHILD_LINK_ID,
+                school=school,
+                parent=parent,
+                child=student,
+                linked_by=admin.id,
+            )
+        if await session.get(Enrollment, ENROLLMENT_ID) is None:
+            await EnrollmentFactory.create(
+                session=session,
+                id=ENROLLMENT_ID,
+                school=school,
+                academic_year=academic_year,
+                class_obj=school_class,
+                period=period,
+                student=student,
+            )
+        if await session.get(TeacherAssignment, TEACHER_ASSIGNMENT_ID) is None:
+            session.add(
+                TeacherAssignment(
+                    id=TEACHER_ASSIGNMENT_ID,
+                    school_id=school.id,
+                    teacher_id=teacher.id,
+                    class_id=school_class.id,
+                    period_id=period.id,
+                )
+            )
+        attendance_session = await session.get(AttendanceSession, ATTENDANCE_SESSION_ID)
+        if attendance_session is None:
+            attendance_session = await AttendanceSessionFactory.create(
+                session=session,
+                id=ATTENDANCE_SESSION_ID,
+                school=school,
+                academic_year=academic_year,
+                class_obj=school_class,
+                period=period,
+                teacher=teacher,
+                session_date=date(2026, 1, 15),
+                slot="morning",
+            )
+        if await session.get(AttendanceRecord, ATTENDANCE_RECORD_ID) is None:
+            await AttendanceRecordFactory.create(
+                session=session,
+                id=ATTENDANCE_RECORD_ID,
+                attendance_session=attendance_session,
+                student=student,
+                status="absent",
+            )
+        await session.commit()
+
+    return {
+        "school": school,
+        "academic_year": academic_year,
+        "period": period,
+        "class": school_class,
+        "admin": admin,
+        "teacher": teacher,
+        "parent": parent,
+        "student": student,
+    }
+
+
+@pytest_asyncio.fixture(loop_scope="function")
+async def client(legacy_api_seed, session_factory):
+    _ = legacy_api_seed
+
+    async def override_get_db():
+        async with session_factory() as session:
+            try:
+                yield session
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise
+            finally:
+                await session.close()
+
+    app.dependency_overrides[get_db] = override_get_db
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(
+        transport=transport,
+        base_url="http://testserver/api/v1",
+    ) as api_client:
+        yield api_client
+    app.dependency_overrides.clear()
