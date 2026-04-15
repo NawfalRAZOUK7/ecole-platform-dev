@@ -65,6 +65,8 @@ import {
   AnnouncementsPage,
   FeedPage,
   RewardsPage,
+  StudentRewardsPage,
+  LeaderboardPage,
   GamesListPage,
   GameConfigDetailPage,
   GameConfigEditor,
@@ -607,6 +609,22 @@ function App() {
                 element={
                   <ProtectedRoute roles={['STD', 'PAR', 'TCH', 'ADM', 'DIR', 'SUP', 'SYS']}>
                     <RewardsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/students/:id/rewards"
+                element={
+                  <ProtectedRoute roles={['PAR', 'TCH', 'ADM', 'DIR', 'SUP', 'SYS']}>
+                    <StudentRewardsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/classes/:classId/leaderboard"
+                element={
+                  <ProtectedRoute roles={['STD', 'PAR', 'TCH', 'ADM', 'DIR', 'SUP', 'SYS']}>
+                    <LeaderboardPage />
                   </ProtectedRoute>
                 }
               />

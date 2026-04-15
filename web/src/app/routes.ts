@@ -58,6 +58,8 @@ export const ROUTES = {
   STUDENT_QUIZZES: '/student/quizzes',
   FEED: '/feed',
   REWARDS: '/rewards',
+  STUDENT_REWARDS: '/students/:id/rewards',
+  CLASS_LEADERBOARD: '/classes/:classId/leaderboard',
   GAMES: '/teacher/games',
   GAMES_LEGACY: '/games',
   GAMES_NEW: '/teacher/games/new',

@@ -65,6 +65,7 @@
     "progress": "My Progress",
     "parentProgress": "Children's Progress",
     "rewards": "Rewards",
+    "myRewards": "My Rewards",
     "games": "Games"
   },
   "login": {
@@ -117,12 +118,27 @@
   "rewards": {
     "title": "Rewards Center",
     "subtitle": "Track stars, XP, class rankings, and badge activity from one view.",
+    "studentTitle": "Student Rewards",
+    "studentSubtitle": "Follow progress, badges, and the latest reward activity.",
+    "parentTitle": "Family Rewards",
+    "parentSubtitle": "Open a child profile to review stars, streaks, badges, and recent activity.",
+    "parentCardSubtitle": "Open this student reward profile.",
+    "directoryTitle": "Rewards Directory",
+    "directorySubtitle": "Browse classes, open student reward profiles, and jump into each class leaderboard.",
+    "directoryEmpty": "No classes available for rewards review.",
+    "noChildren": "No linked children found.",
+    "studentNotFound": "Student rewards could not be loaded.",
+    "viewRewards": "View Rewards",
+    "viewStudents": "View Students",
+    "viewLeaderboard": "View Leaderboard",
     "awardTitle": "Award rewards",
     "awardSubtitle": "Grant stars and XP for content, quizzes, games, and streak events.",
     "awardSuccess": "Reward awarded. {{count}} new badge(s) unlocked.",
     "badgeCreateSuccess": "Badge created successfully.",
     "badgesEarned": "Earned badges",
+    "badgesSubtitle": "Unlocked milestones and special achievements collected so far.",
     "badgesEmpty": "No badges earned yet.",
+    "badgesNoDescription": "No description available yet.",
     "catalogTitle": "Badge catalog",
     "catalogSubtitle": "Review the shared badge set and create new badges when needed.",
     "catalogEmpty": "No badges configured yet.",
@@ -141,6 +157,16 @@
       "title": "Level progress",
       "subtitle": "Current level completion based on accumulated XP."
     },
+    "level": {
+      "progress": "Progress to the next level",
+      "xpSummary": "{{xp}} XP collected"
+    },
+    "streak": {
+      "title": "Streak Tracker",
+      "subtitle": "Consistency matters. Keep the momentum going.",
+      "current": "Current streak",
+      "longest": "Longest streak"
+    },
     "filters": {
       "class": "Class",
       "classPlaceholder": "Enter class ID",
@@ -150,6 +176,7 @@
     },
     "history": {
       "title": "Reward history",
+      "subtitle": "Most recent stars, XP, and milestone events.",
       "date": "Date",
       "event": "Event",
       "source": "Source",
@@ -158,8 +185,12 @@
     },
     "leaderboard": {
       "title": "Leaderboard",
+      "subtitle": "Top students in this class ranked by stars earned.",
       "rank": "Rank",
       "student": "Student",
+      "podium": "Top 3",
+      "fullTable": "Full rankings",
+      "you": "You",
       "empty": "No leaderboard data available.",
       "prompt": "Select a class to load the rewards leaderboard."
     },
@@ -1242,7 +1273,10 @@
       "hideRoster": "Hide Roster",
       "noStudents": "No students enrolled",
       "studentName": "Name",
-      "studentEmail": "Email"
+      "studentEmail": "Email",
+      "actions": "Actions",
+      "viewRewards": "View Rewards",
+      "classLeaderboard": "Class Leaderboard"
     },
     "courses": {
       "title": "My Courses",

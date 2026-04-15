@@ -1,18 +1,15 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { STALE_DEFAULT, STALE_RESULTS } from '@/shared/hooks/useQueryDefaults';
 import { progressService } from '@/features/progress/progress.service';
 import { teacherService } from '@/features/teacher/teacher.service';
-import {
-  rewardsService,
-  type AwardRewardPayload,
-  type CreateRewardBadgePayload,
-} from './rewards.service';
+import { rewardsService } from './rewards.service';
 
 export const rewardsQueryKeys = {
   all: ['rewards'] as const,
   mine: () => [...rewardsQueryKeys.all, 'mine'] as const,
   student: (studentId: string | null) => [...rewardsQueryKeys.all, 'student', studentId] as const,
-  history: (studentId: string | null) => [...rewardsQueryKeys.all, 'history', studentId] as const,
+  history: (studentId: string | null, limit: number) =>
+    [...rewardsQueryKeys.all, 'history', studentId, limit] as const,
   leaderboard: (classId: string | null, limit: number) =>
     [...rewardsQueryKeys.all, 'leaderboard', classId, limit] as const,
   badges: () => [...rewardsQueryKeys.all, 'badges'] as const,
@@ -22,28 +19,35 @@ export const rewardsQueryKeys = {
   children: () => [...rewardsQueryKeys.all, 'children'] as const,
 };
 
-export function useMyRewards(enabled: boolean) {
+export function useMyRewards(enabled = true) {
   return useQuery({
     queryKey: rewardsQueryKeys.mine(),
-    queryFn: async () => (await rewardsService.getMyRewards()).data,
+    queryFn: async () => rewardsService.getMyRewards(),
     enabled,
     staleTime: STALE_RESULTS,
   });
 }
 
-export function useStudentRewards(studentId: string | null | undefined, enabled: boolean) {
+export function useStudentRewards(
+  studentId: string | null | undefined,
+  enabled = Boolean(studentId),
+) {
   return useQuery({
     queryKey: rewardsQueryKeys.student(studentId || null),
-    queryFn: async () => (await rewardsService.getStudentRewards(studentId!)).data,
+    queryFn: async () => rewardsService.getStudentRewards(studentId!),
     enabled,
     staleTime: STALE_RESULTS,
   });
 }
 
-export function useRewardHistory(studentId: string | null | undefined, enabled: boolean) {
+export function useStudentRewardHistory(
+  studentId: string | null | undefined,
+  limit = 10,
+  enabled = Boolean(studentId),
+) {
   return useQuery({
-    queryKey: rewardsQueryKeys.history(studentId || null),
-    queryFn: async () => (await rewardsService.getStudentHistory(studentId!)).data,
+    queryKey: rewardsQueryKeys.history(studentId || null, limit),
+    queryFn: async () => rewardsService.getStudentHistory(studentId!, limit),
     enabled,
     staleTime: STALE_RESULTS,
   });
@@ -51,39 +55,21 @@ export function useRewardHistory(studentId: string | null | undefined, enabled: 
 
 export function useRewardLeaderboard(
   classId: string | null | undefined,
-  limit: number,
-  enabled: boolean,
+  limit = 10,
+  enabled = Boolean(classId),
 ) {
   return useQuery({
     queryKey: rewardsQueryKeys.leaderboard(classId || null, limit),
-    queryFn: async () => (await rewardsService.getLeaderboard(classId!, limit)).data,
+    queryFn: async () => rewardsService.getLeaderboard(classId!, limit),
     enabled,
     staleTime: STALE_DEFAULT,
   });
 }
 
-export function useRewardBadges(enabled: boolean) {
+export function useRewardBadges(enabled = true) {
   return useQuery({
     queryKey: rewardsQueryKeys.badges(),
-    queryFn: async () => (await rewardsService.listBadges()).data,
-    enabled,
-    staleTime: STALE_DEFAULT,
-  });
-}
-
-export function useRewardClasses(enabled: boolean) {
-  return useQuery({
-    queryKey: rewardsQueryKeys.classes(),
-    queryFn: async () => (await teacherService.listTeacherClasses()).data,
-    enabled,
-    staleTime: STALE_DEFAULT,
-  });
-}
-
-export function useRewardClassStudents(classId: string | null | undefined, enabled: boolean) {
-  return useQuery({
-    queryKey: rewardsQueryKeys.classStudents(classId || null),
-    queryFn: async () => (await teacherService.listClassStudents(classId!)).data,
+    queryFn: async () => rewardsService.getBadges(),
     enabled,
     staleTime: STALE_DEFAULT,
   });
@@ -98,34 +84,23 @@ export function useRewardChildren(enabled: boolean) {
   });
 }
 
-export function useCreateRewardBadge() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (payload: CreateRewardBadgePayload) =>
-      (await rewardsService.createBadge(payload)).data,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: rewardsQueryKeys.badges() });
-    },
+export function useRewardClasses(enabled: boolean) {
+  return useQuery({
+    queryKey: rewardsQueryKeys.classes(),
+    queryFn: async () => (await teacherService.listTeacherClasses()).data,
+    enabled,
+    staleTime: STALE_DEFAULT,
   });
 }
 
-export function useAwardReward() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (payload: AwardRewardPayload) =>
-      (await rewardsService.awardReward(payload)).data,
-    onSuccess: async (_response, variables) => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: rewardsQueryKeys.all }),
-        queryClient.invalidateQueries({
-          queryKey: rewardsQueryKeys.student(variables.student_id),
-        }),
-        queryClient.invalidateQueries({
-          queryKey: rewardsQueryKeys.history(variables.student_id),
-        }),
-      ]);
-    },
+export function useRewardClassStudents(
+  classId: string | null | undefined,
+  enabled = Boolean(classId),
+) {
+  return useQuery({
+    queryKey: rewardsQueryKeys.classStudents(classId || null),
+    queryFn: async () => (await teacherService.listClassStudents(classId!)).data,
+    enabled,
+    staleTime: STALE_DEFAULT,
   });
 }

@@ -200,6 +200,16 @@ export const FeedPage = lazy(() =>
 export const RewardsPage = lazy(() =>
   import('@/features/rewards/RewardsPage').then((m) => ({ default: m.RewardsPage })),
 );
+export const StudentRewardsPage = lazy(() =>
+  import('@/features/rewards/StudentRewardsPage').then((m) => ({
+    default: m.StudentRewardsPage,
+  })),
+);
+export const LeaderboardPage = lazy(() =>
+  import('@/features/rewards/LeaderboardPage').then((m) => ({
+    default: m.LeaderboardPage,
+  })),
+);
 
 // Games
 export const GamesListPage = lazy(() =>

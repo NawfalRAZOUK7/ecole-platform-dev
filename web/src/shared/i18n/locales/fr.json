@@ -72,6 +72,7 @@
     "progress": "Mon progrès",
     "parentProgress": "Progrès des enfants",
     "rewards": "Recompenses",
+    "myRewards": "Mes recompenses",
     "games": "Jeux",
     "loginHistory": "Historique de connexion",
     "questionBank": "Banque de questions",
@@ -257,12 +258,27 @@
   "rewards": {
     "title": "Centre des recompenses",
     "subtitle": "Suivez les etoiles, l'XP, le classement et les badges depuis un seul ecran.",
+    "studentTitle": "Recompenses de l'eleve",
+    "studentSubtitle": "Suivez la progression, les badges et les activites recentes.",
+    "parentTitle": "Recompenses de la famille",
+    "parentSubtitle": "Ouvrez le profil d'un enfant pour voir ses etoiles, ses series et ses badges.",
+    "parentCardSubtitle": "Ouvrir ce profil de recompenses.",
+    "directoryTitle": "Annuaire des recompenses",
+    "directorySubtitle": "Parcourez les classes, ouvrez les profils eleves et accedez au classement.",
+    "directoryEmpty": "Aucune classe disponible pour consulter les recompenses.",
+    "noChildren": "Aucun enfant lie trouve.",
+    "studentNotFound": "Impossible de charger les recompenses de l'eleve.",
+    "viewRewards": "Voir les recompenses",
+    "viewStudents": "Voir les eleves",
+    "viewLeaderboard": "Voir le classement",
     "awardTitle": "Attribuer des recompenses",
     "awardSubtitle": "Accordez des etoiles et de l'XP pour les contenus, quiz, jeux et series.",
     "awardSuccess": "Recompense attribuee. {{count}} nouveau(x) badge(s) debloque(s).",
     "badgeCreateSuccess": "Badge cree avec succes.",
     "badgesEarned": "Badges obtenus",
+    "badgesSubtitle": "Les objectifs debloques et les distinctions deja gagnees.",
     "badgesEmpty": "Aucun badge obtenu pour le moment.",
+    "badgesNoDescription": "Aucune description disponible.",
     "catalogTitle": "Catalogue des badges",
     "catalogSubtitle": "Consultez les badges disponibles et ajoutez-en si necessaire.",
     "catalogEmpty": "Aucun badge configure.",
@@ -281,6 +297,16 @@
       "title": "Progression de niveau",
       "subtitle": "Avancement du niveau actuel selon l'XP accumulee."
     },
+    "level": {
+      "progress": "Progression vers le niveau suivant",
+      "xpSummary": "{{xp}} XP cumules"
+    },
+    "streak": {
+      "title": "Suivi de la serie",
+      "subtitle": "La regularite compte. Continuez sur cette lancee.",
+      "current": "Serie actuelle",
+      "longest": "Serie maximale"
+    },
     "filters": {
       "class": "Classe",
       "classPlaceholder": "Saisir l'identifiant de classe",
@@ -290,6 +316,7 @@
     },
     "history": {
       "title": "Historique des recompenses",
+      "subtitle": "Les etoiles, l'XP et les evenements recents.",
       "date": "Date",
       "event": "Evenement",
       "source": "Source",
@@ -298,8 +325,12 @@
     },
     "leaderboard": {
       "title": "Classement",
+      "subtitle": "Les meilleurs eleves de la classe selon les etoiles gagnees.",
       "rank": "Rang",
       "student": "Eleve",
+      "podium": "Top 3",
+      "fullTable": "Classement complet",
+      "you": "Vous",
       "empty": "Aucune donnee de classement.",
       "prompt": "Selectionnez une classe pour charger le classement."
     },
@@ -1405,7 +1436,10 @@
       "hideRoster": "Masquer la liste",
       "noStudents": "Aucun eleve inscrit",
       "studentName": "Nom",
-      "studentEmail": "Email"
+      "studentEmail": "Email",
+      "actions": "Actions",
+      "viewRewards": "Voir les recompenses",
+      "classLeaderboard": "Classement de la classe"
     },
     "courses": {
       "title": "Mes cours",

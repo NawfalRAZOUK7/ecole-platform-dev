@@ -1,0 +1,101 @@
+import { useTranslation } from 'react-i18next';
+import { EmptyState } from '@/shared/ui';
+import type { Badge } from './rewards.service';
+
+interface BadgeShelfProps {
+  earnedCodes: string[];
+  badges: Badge[];
+}
+
+function getLocalizedTitle(badge: Badge, language: string) {
+  if (language.startsWith('ar')) {
+    return badge.titleAr || badge.titleEn || badge.titleFr || badge.code;
+  }
+
+  if (language.startsWith('fr')) {
+    return badge.titleFr || badge.titleEn || badge.titleAr || badge.code;
+  }
+
+  return badge.titleEn || badge.titleFr || badge.titleAr || badge.code;
+}
+
+function getLocalizedDescription(badge: Badge, language: string) {
+  if (language.startsWith('ar')) {
+    return badge.descriptionAr || badge.descriptionEn || badge.descriptionFr || null;
+  }
+
+  if (language.startsWith('fr')) {
+    return badge.descriptionFr || badge.descriptionEn || badge.descriptionAr || null;
+  }
+
+  return badge.descriptionEn || badge.descriptionFr || badge.descriptionAr || null;
+}
+
+export function BadgeShelf({ earnedCodes, badges }: BadgeShelfProps) {
+  const { t, i18n } = useTranslation();
+
+  if (earnedCodes.length === 0) {
+    return <EmptyState message={t('rewards.badgesEmpty')} icon="🏅" />;
+  }
+
+  const earnedBadges = earnedCodes.map((code) => {
+    const match = badges.find((badge) => badge.code === code);
+    return (
+      match ?? {
+        id: code,
+        code,
+        titleEn: code,
+        titleFr: code,
+        titleAr: code,
+        descriptionEn: null,
+        descriptionFr: null,
+        descriptionAr: null,
+        icon: null,
+        criteriaType: 'manual',
+        criteriaValue: 0,
+        displayOrder: 0,
+        isActive: true,
+      }
+    );
+  });
+
+  return (
+    <section className="card" style={{ padding: 20 }}>
+      <div style={{ marginBottom: 16 }}>
+        <h2 style={{ margin: 0 }}>{t('rewards.badgesEarned')}</h2>
+        <p style={{ margin: '6px 0 0', color: 'var(--color-text-secondary)' }}>
+          {t('rewards.badgesSubtitle')}
+        </p>
+      </div>
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+          gap: 16,
+        }}
+      >
+        {earnedBadges.map((badge) => (
+          <article
+            key={badge.id}
+            className="card"
+            style={{
+              padding: 16,
+              display: 'grid',
+              gap: 8,
+              background:
+                'linear-gradient(180deg, rgba(246,211,101,0.18) 0%, rgba(255,255,255,0) 100%)',
+            }}
+          >
+            <div style={{ fontSize: 28 }}>{badge.icon || '🏅'}</div>
+            <strong>{getLocalizedTitle(badge, i18n.language)}</strong>
+            <span style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>{badge.code}</span>
+            <span style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
+              {getLocalizedDescription(badge, i18n.language) || t('rewards.badgesNoDescription')}
+            </span>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
