@@ -1912,6 +1912,17 @@
       "story": "Histoire",
       "coloring_book": "Livre de coloriage"
     },
+    "contentType": {
+      "story": "Histoire",
+      "coloring_book": "Livre de coloriage"
+    },
+    "fields": {
+      "pageCount": "Nombre de pages",
+      "letter": "Lettre",
+      "targetAgeMin": "Age cible min",
+      "targetAgeMax": "Age cible max",
+      "themeColor": "Couleur du theme"
+    },
     "subjects": {
       "math": "Mathematiques",
       "french": "Francais",
@@ -1960,7 +1971,8 @@
       "bulkStart": "Demarrer l'envoi",
       "bulkResults": "Resultats de l'envoi",
       "bulkOk": "Succes",
-      "largeFileWarning": "Attention : fichier video volumineux (>100 Mo). L'envoi peut prendre du temps."
+      "largeFileWarning": "Attention : fichier video volumineux (>100 Mo). L'envoi peut prendre du temps.",
+      "letterPlaceholder": "Lettre optionnelle, 3 caracteres max"
     },
     "edit": {
       "title": "Modifier le contenu",
@@ -1969,6 +1981,59 @@
       "replaceFile": "Remplacer le fichier",
       "archive": "Archiver",
       "promotedNote": "Ce contenu a ete promu a partir d'une soumission d'enseignant."
+    },
+    "storyPages": {
+      "title": "Pages de l'histoire",
+      "subtitle": "Gerez l'ordre des pages, la narration et les assets pour les contenus de type {{contentType}}.",
+      "empty": "Aucune page telechargee pour le moment.",
+      "upload": "Telecharger la page",
+      "reorder": "Enregistrer l'ordre",
+      "delete": "Supprimer la page",
+      "deleteConfirmTitle": "Supprimer la page",
+      "deleteConfirmMessage": "Cette action supprime definitivement l'asset de page selectionne.",
+      "hasActivity": "Avec activite",
+      "noActivity": "Sans activite",
+      "fields": {
+        "pageNumber": "Numero de page",
+        "narrationText": "Texte de narration",
+        "hasActivity": "Inclut une activite",
+        "assetType": "Type d'asset",
+        "file": "Fichier de page"
+      },
+      "table": {
+        "pageNumber": "Page",
+        "assetType": "Type d'asset",
+        "narration": "Narration",
+        "activity": "Activite",
+        "file": "Fichier",
+        "actions": "Actions"
+      },
+      "assetTypes": {
+        "page_image": "Image de page",
+        "illustration": "Illustration",
+        "coloring_page": "Page de coloriage",
+        "audio_narration": "Narration audio",
+        "cover": "Couverture"
+      },
+      "validation": {
+        "file": "Selectionnez un fichier a telecharger.",
+        "pageNumber": "Entrez un numero de page superieur ou egal a 1.",
+        "narration": "La narration doit rester sous 2000 caracteres.",
+        "assetType": "Entrez un type d'asset pris en charge."
+      }
+    },
+    "validation": {
+      "title": "Le titre est obligatoire et doit rester sous 300 caracteres.",
+      "description": "La description doit rester sous 2000 caracteres.",
+      "contentType": "Selectionnez un type de contenu pris en charge.",
+      "language": "Selectionnez une langue prise en charge.",
+      "pageCount": "Le nombre de pages doit etre superieur ou egal a 1.",
+      "pageCountRequired": "Le nombre de pages est obligatoire pour les histoires et livres de coloriage.",
+      "letter": "La lettre doit contenir entre 1 et 3 caracteres si elle est renseignee.",
+      "targetAge": "L'age cible doit etre compris entre 2 et 18 ans.",
+      "targetAgeRequired": "L'age cible est obligatoire pour les histoires et livres de coloriage.",
+      "targetAgeRange": "L'age maximum doit etre superieur ou egal a l'age minimum.",
+      "themeColor": "La couleur du theme doit etre une couleur hexadecimale valide."
     },
     "review": {
       "title": "File de revision",

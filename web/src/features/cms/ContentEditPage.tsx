@@ -1,8 +1,22 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { FormProvider, useForm, type Resolver } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
-import { LoadingState } from '@/shared/ui/LoadingState';
+import { FormField, FormSelect, FormTextarea, LoadingState } from '@/shared/ui';
+import { StoryPagesEditor } from './StoryPagesEditor';
+import {
+  ACCEPT_MAP,
+  CONTENT_TYPES,
+  LEVELS,
+  SUBJECTS,
+  buildCmsContentFormDefaults,
+  cmsContentFormSchema,
+  isStoryContentType,
+  type CmsContentFormValues,
+  type CmsContentType,
+} from './content-upload.types';
 import {
   useCmsContentItem,
   useDeleteCmsContent,
@@ -10,34 +24,17 @@ import {
   useUploadCmsContentAsset,
 } from './useCms';
 
-const CONTENT_TYPES = ['video', 'pdf', 'audio', 'interactive', 'story', 'coloring_book'];
-const LEVELS = [
-  'maternelle',
-  'cp',
-  'ce1',
-  'ce2',
-  'cm1',
-  'cm2',
-  '6eme',
-  '5eme',
-  '4eme',
-  '3eme',
-  '2nde',
-  '1ere',
-  'terminale',
+const languageOptions = [
+  { value: 'fr', label: 'Francais' },
+  { value: 'ar', label: 'Arabe' },
+  { value: 'en', label: 'English' },
 ];
-const SUBJECTS = [
-  'math',
-  'french',
-  'arabic',
-  'science',
-  'history',
-  'geography',
-  'english',
-  'islamic_studies',
-  'art',
-  'sport',
-];
+
+const statusOptions = [
+  { value: 'draft', label: 'cms.statuses.draft' },
+  { value: 'published', label: 'cms.statuses.published' },
+  { value: 'archived', label: 'cms.statuses.archived' },
+] as const;
 
 export function CmsContentEditPage() {
   const { contentId } = useParams<{ contentId: string }>();
@@ -48,28 +45,68 @@ export function CmsContentEditPage() {
   const deleteContentMutation = useDeleteCmsContent();
   const uploadContentAssetMutation = useUploadCmsContentAsset();
 
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [contentType, setContentType] = useState('');
-  const [levelBand, setLevelBand] = useState('');
-  const [subject, setSubject] = useState('');
-  const [language, setLanguage] = useState('');
-  const [status, setStatus] = useState('');
+  const methods = useForm<CmsContentFormValues>({
+    resolver: zodResolver(cmsContentFormSchema) as Resolver<CmsContentFormValues>,
+    defaultValues: buildCmsContentFormDefaults(),
+  });
+
   const [newFile, setNewFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
+  const saving =
+    updateContentMutation.isPending ||
+    deleteContentMutation.isPending ||
+    uploadContentAssetMutation.isPending;
+
+  const contentTypeOptions = useMemo(
+    () =>
+      CONTENT_TYPES.map((contentType) => ({
+        value: contentType,
+        label: `cms.contentTypes.${contentType}`,
+      })),
+    [],
+  );
+  const levelOptions = useMemo(() => LEVELS.map((level) => ({ value: level, label: level })), []);
+  const subjectOptions = useMemo(
+    () =>
+      SUBJECTS.map((subject) => ({
+        value: subject,
+        label: `cms.subjects.${subject}`,
+      })),
+    [],
+  );
+
   useEffect(() => {
-    if (!contentQuery.data) return;
-    setTitle(contentQuery.data.title);
-    setDescription(contentQuery.data.description || '');
-    setContentType(contentQuery.data.content_type);
-    setLevelBand(contentQuery.data.level_band || '');
-    setSubject(contentQuery.data.subject || '');
-    setLanguage(contentQuery.data.language || '');
-    setStatus(contentQuery.data.status);
-  }, [contentQuery.data]);
+    if (!contentQuery.data) {
+      return;
+    }
+
+    methods.reset(
+      buildCmsContentFormDefaults({
+        title: contentQuery.data.title,
+        description: contentQuery.data.description ?? '',
+        content_type: contentQuery.data.content_type as CmsContentType,
+        level_band: contentQuery.data.level_band ?? '',
+        subject: contentQuery.data.subject ?? '',
+        language: contentQuery.data.language ?? 'fr',
+        page_count: contentQuery.data.page_count ?? null,
+        letter: contentQuery.data.letter ?? '',
+        target_age_min: contentQuery.data.target_age_min ?? null,
+        target_age_max: contentQuery.data.target_age_max ?? null,
+        theme_color: contentQuery.data.theme_color ?? '#4F46E5',
+        status:
+          contentQuery.data.status === 'published' || contentQuery.data.status === 'archived'
+            ? contentQuery.data.status
+            : 'draft',
+      }),
+    );
+  }, [contentQuery.data, methods]);
+
+  const watchedContentType = methods.watch('content_type');
+  const watchedStatus = methods.watch('status');
+  const isStoryLike = isStoryContentType(watchedContentType);
 
   if (contentQuery.isLoading) {
     return <LoadingState />;
@@ -93,13 +130,7 @@ export function CmsContentEditPage() {
     );
   }
 
-  const saving =
-    updateContentMutation.isPending ||
-    deleteContentMutation.isPending ||
-    uploadContentAssetMutation.isPending;
-
-  async function handleSave(event: FormEvent) {
-    event.preventDefault();
+  async function handleSave(values: CmsContentFormValues) {
     setError(null);
     setSaved(false);
 
@@ -107,13 +138,18 @@ export function CmsContentEditPage() {
       await updateContentMutation.mutateAsync({
         contentId: contentId!,
         payload: {
-          title,
-          content_type: contentType,
-          level_band: levelBand || null,
-          language: language || null,
-          subject: subject || null,
-          description: description || null,
-          status,
+          title: values.title.trim(),
+          content_type: values.content_type,
+          level_band: values.level_band || null,
+          language: values.language || null,
+          subject: values.subject || null,
+          description: values.description.trim() || null,
+          page_count: isStoryContentType(values.content_type) ? values.page_count : null,
+          letter: isStoryContentType(values.content_type) ? values.letter.trim() || null : null,
+          target_age_min: isStoryContentType(values.content_type) ? values.target_age_min : null,
+          target_age_max: isStoryContentType(values.content_type) ? values.target_age_max : null,
+          theme_color: isStoryContentType(values.content_type) ? values.theme_color : null,
+          status: values.status,
         },
       });
 
@@ -172,117 +208,155 @@ export function CmsContentEditPage() {
         </div>
       ) : null}
 
-      <form onSubmit={handleSave} className="card" style={{ padding: 24 }}>
-        <div className="form-field">
-          <label>{t('cms.upload.titleLabel')}</label>
-          <input
-            type="text"
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            required
-          />
-        </div>
-
-        <div className="form-field">
-          <label>{t('cms.upload.description')}</label>
-          <textarea
-            value={description}
-            onChange={(event) => setDescription(event.target.value)}
-            rows={4}
-          />
-        </div>
-
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-            gap: 12,
-          }}
+      <FormProvider {...methods}>
+        <form
+          onSubmit={methods.handleSubmit((values) => void handleSave(values))}
+          className="card"
+          style={{ padding: 24 }}
         >
-          <div className="form-field">
-            <label>{t('cms.upload.contentType')}</label>
-            <select value={contentType} onChange={(event) => setContentType(event.target.value)}>
-              {CONTENT_TYPES.map((currentType) => (
-                <option key={currentType} value={currentType}>
-                  {t(`cms.contentTypes.${currentType}`, currentType)}
-                </option>
-              ))}
-            </select>
+          <FormField<CmsContentFormValues>
+            name="title"
+            label="cms.upload.titleLabel"
+            disabled={saving}
+          />
+
+          <FormTextarea<CmsContentFormValues>
+            name="description"
+            label="cms.upload.description"
+            rows={4}
+            disabled={saving}
+          />
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+              gap: 12,
+            }}
+          >
+            <FormSelect<CmsContentFormValues>
+              name="content_type"
+              label="cms.upload.contentType"
+              options={contentTypeOptions}
+              disabled={saving}
+            />
+
+            <FormSelect<CmsContentFormValues>
+              name="level_band"
+              label="cms.upload.level"
+              options={levelOptions}
+              placeholder="cms.content.allLevels"
+              disabled={saving}
+            />
+
+            <FormSelect<CmsContentFormValues>
+              name="subject"
+              label="cms.upload.subject"
+              options={subjectOptions}
+              placeholder="cms.content.allSubjects"
+              disabled={saving}
+            />
+
+            <FormSelect<CmsContentFormValues>
+              name="language"
+              label="cms.upload.language"
+              options={languageOptions}
+              disabled={saving}
+            />
           </div>
 
-          <div className="form-field">
-            <label>{t('cms.upload.level')}</label>
-            <select value={levelBand} onChange={(event) => setLevelBand(event.target.value)}>
-              <option value="">{t('cms.content.allLevels')}</option>
-              {LEVELS.map((level) => (
-                <option key={level} value={level}>
-                  {level}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-field">
-            <label>{t('cms.upload.subject')}</label>
-            <select value={subject} onChange={(event) => setSubject(event.target.value)}>
-              <option value="">{t('cms.content.allSubjects')}</option>
-              {SUBJECTS.map((currentSubject) => (
-                <option key={currentSubject} value={currentSubject}>
-                  {t(`cms.subjects.${currentSubject}`, currentSubject)}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-field">
-            <label>{t('cms.upload.language')}</label>
-            <select value={language} onChange={(event) => setLanguage(event.target.value)}>
-              <option value="fr">Francais</option>
-              <option value="ar">Arabe</option>
-              <option value="en">English</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="form-field">
-          <label>{t('cms.edit.status')}</label>
-          <select value={status} onChange={(event) => setStatus(event.target.value)}>
-            <option value="draft">{t('cms.statuses.draft')}</option>
-            <option value="published">{t('cms.statuses.published')}</option>
-            <option value="archived">{t('cms.statuses.archived')}</option>
-          </select>
-        </div>
-
-        <div className="form-field">
-          <label>{t('cms.edit.replaceFile')}</label>
-          <input type="file" onChange={(event) => setNewFile(event.target.files?.[0] || null)} />
-        </div>
-
-        {saving && newFile ? (
-          <div style={{ marginBottom: 12 }}>
-            <div className="progress-bar">
-              <div className="progress-bar-fill" style={{ width: `${uploadProgress}%` }} />
+          {isStoryLike ? (
+            <div
+              className="card"
+              style={{
+                margin: '16px 0',
+                padding: 16,
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                gap: 16,
+              }}
+            >
+              <FormField<CmsContentFormValues>
+                name="page_count"
+                label="cms.fields.pageCount"
+                type="number"
+                disabled={saving}
+              />
+              <FormField<CmsContentFormValues>
+                name="letter"
+                label="cms.fields.letter"
+                placeholder="cms.upload.letterPlaceholder"
+                disabled={saving}
+              />
+              <FormField<CmsContentFormValues>
+                name="target_age_min"
+                label="cms.fields.targetAgeMin"
+                type="number"
+                disabled={saving}
+              />
+              <FormField<CmsContentFormValues>
+                name="target_age_max"
+                label="cms.fields.targetAgeMax"
+                type="number"
+                disabled={saving}
+              />
+              <FormField<CmsContentFormValues>
+                name="theme_color"
+                label="cms.fields.themeColor"
+                type="color"
+                disabled={saving}
+              />
             </div>
-          </div>
-        ) : null}
-
-        {contentQuery.data.origin === 'PROMOTED' ? (
-          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 12 }}>
-            {t('cms.edit.promotedNote')}
-          </p>
-        ) : null}
-
-        <div style={{ display: 'flex', gap: 12 }}>
-          <button type="submit" className="btn btn-primary" disabled={saving}>
-            {saving ? t('app.loading') : t('app.save')}
-          </button>
-          {status !== 'archived' ? (
-            <button type="button" className="btn btn-danger" onClick={() => void handleArchive()}>
-              {t('cms.edit.archive')}
-            </button>
           ) : null}
-        </div>
-      </form>
+
+          <FormSelect<CmsContentFormValues>
+            name="status"
+            label="cms.edit.status"
+            options={[...statusOptions]}
+            disabled={saving}
+          />
+
+          <div className="form-field">
+            <label>{t('cms.edit.replaceFile')}</label>
+            <input
+              type="file"
+              accept={ACCEPT_MAP[watchedContentType] || '*'}
+              disabled={saving}
+              onChange={(event) => setNewFile(event.target.files?.[0] || null)}
+            />
+            {newFile ? <p style={{ fontSize: 12, marginTop: 4 }}>{newFile.name}</p> : null}
+          </div>
+
+          {saving && newFile ? (
+            <div style={{ marginBottom: 12 }}>
+              <div className="progress-bar">
+                <div className="progress-bar-fill" style={{ width: `${uploadProgress}%` }} />
+              </div>
+            </div>
+          ) : null}
+
+          {contentQuery.data.origin === 'PROMOTED' ? (
+            <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 12 }}>
+              {t('cms.edit.promotedNote')}
+            </p>
+          ) : null}
+
+          <div style={{ display: 'flex', gap: 12 }}>
+            <button type="submit" className="btn btn-primary" disabled={saving}>
+              {saving ? t('app.loading') : t('app.save')}
+            </button>
+            {watchedStatus !== 'archived' ? (
+              <button type="button" className="btn btn-danger" onClick={() => void handleArchive()}>
+                {t('cms.edit.archive')}
+              </button>
+            ) : null}
+          </div>
+        </form>
+      </FormProvider>
+
+      {contentId && isStoryLike ? (
+        <StoryPagesEditor contentId={contentId} contentType={watchedContentType} />
+      ) : null}
     </div>
   );
 }

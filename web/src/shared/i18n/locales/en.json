@@ -1726,6 +1726,17 @@
       "story": "Story",
       "coloring_book": "Coloring Book"
     },
+    "contentType": {
+      "story": "Story",
+      "coloring_book": "Coloring Book"
+    },
+    "fields": {
+      "pageCount": "Page Count",
+      "letter": "Letter",
+      "targetAgeMin": "Target Age Min",
+      "targetAgeMax": "Target Age Max",
+      "themeColor": "Theme Color"
+    },
     "subjects": {
       "math": "Mathematics",
       "french": "French",
@@ -1774,7 +1785,8 @@
       "bulkStart": "Start Upload",
       "bulkResults": "Upload Results",
       "bulkOk": "Success",
-      "largeFileWarning": "Warning: large video file (>100 MB). Upload may take a while."
+      "largeFileWarning": "Warning: large video file (>100 MB). Upload may take a while.",
+      "letterPlaceholder": "Optional letter, up to 3 characters"
     },
     "edit": {
       "title": "Edit Content",
@@ -1783,6 +1795,59 @@
       "replaceFile": "Replace File",
       "archive": "Archive",
       "promotedNote": "This content was promoted from a teacher submission."
+    },
+    "storyPages": {
+      "title": "Story Pages",
+      "subtitle": "Manage ordered pages, narration, and page assets for {{contentType}} items.",
+      "empty": "No pages uploaded yet.",
+      "upload": "Upload Page",
+      "reorder": "Save Order",
+      "delete": "Delete Page",
+      "deleteConfirmTitle": "Delete Page",
+      "deleteConfirmMessage": "This removes the selected page asset permanently.",
+      "hasActivity": "Has activity",
+      "noActivity": "No activity",
+      "fields": {
+        "pageNumber": "Page Number",
+        "narrationText": "Narration Text",
+        "hasActivity": "Includes activity",
+        "assetType": "Asset Type",
+        "file": "Page File"
+      },
+      "table": {
+        "pageNumber": "Page",
+        "assetType": "Asset Type",
+        "narration": "Narration",
+        "activity": "Activity",
+        "file": "File",
+        "actions": "Actions"
+      },
+      "assetTypes": {
+        "page_image": "Page Image",
+        "illustration": "Illustration",
+        "coloring_page": "Coloring Page",
+        "audio_narration": "Audio Narration",
+        "cover": "Cover"
+      },
+      "validation": {
+        "file": "Select a file to upload.",
+        "pageNumber": "Enter a page number greater than or equal to 1.",
+        "narration": "Narration must stay within 2000 characters.",
+        "assetType": "Enter a supported asset type."
+      }
+    },
+    "validation": {
+      "title": "Title is required and must stay within 300 characters.",
+      "description": "Description must stay within 2000 characters.",
+      "contentType": "Select a supported content type.",
+      "language": "Select a supported language.",
+      "pageCount": "Page count must be at least 1.",
+      "pageCountRequired": "Page count is required for stories and coloring books.",
+      "letter": "Letter must be between 1 and 3 characters when provided.",
+      "targetAge": "Target age must be between 2 and 18.",
+      "targetAgeRequired": "Target age is required for stories and coloring books.",
+      "targetAgeRange": "Maximum age must be greater than or equal to minimum age.",
+      "themeColor": "Theme color must be a valid hex color."
     },
     "review": {
       "title": "Review Queue",

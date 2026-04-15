@@ -1746,6 +1746,17 @@
       "story": "قصة",
       "coloring_book": "كتاب تلوين"
     },
+    "contentType": {
+      "story": "قصة",
+      "coloring_book": "كتاب تلوين"
+    },
+    "fields": {
+      "pageCount": "عدد الصفحات",
+      "letter": "الحرف",
+      "targetAgeMin": "العمر المستهدف الأدنى",
+      "targetAgeMax": "العمر المستهدف الأقصى",
+      "themeColor": "لون السمة"
+    },
     "subjects": {
       "math": "الرياضيات",
       "french": "الفرنسية",
@@ -1794,7 +1805,8 @@
       "bulkStart": "بدء الرفع",
       "bulkResults": "نتائج الرفع",
       "bulkOk": "نجاح",
-      "largeFileWarning": "تحذير: ملف فيديو كبير (>100 ميجابايت). قد يستغرق الرفع وقتاً."
+      "largeFileWarning": "تحذير: ملف فيديو كبير (>100 ميجابايت). قد يستغرق الرفع وقتاً.",
+      "letterPlaceholder": "حرف اختياري، حتى 3 أحرف"
     },
     "edit": {
       "title": "تعديل المحتوى",
@@ -1803,6 +1815,59 @@
       "replaceFile": "استبدال الملف",
       "archive": "أرشفة",
       "promotedNote": "هذا المحتوى تمت ترقيته من تقديم أستاذ."
+    },
+    "storyPages": {
+      "title": "صفحات القصة",
+      "subtitle": "أدر ترتيب الصفحات والسرد والملفات الخاصة بعناصر {{contentType}}.",
+      "empty": "لا توجد صفحات مرفوعة بعد.",
+      "upload": "رفع الصفحة",
+      "reorder": "حفظ الترتيب",
+      "delete": "حذف الصفحة",
+      "deleteConfirmTitle": "حذف الصفحة",
+      "deleteConfirmMessage": "سيؤدي هذا إلى حذف ملف الصفحة المحدد نهائياً.",
+      "hasActivity": "تحتوي على نشاط",
+      "noActivity": "بدون نشاط",
+      "fields": {
+        "pageNumber": "رقم الصفحة",
+        "narrationText": "نص السرد",
+        "hasActivity": "تتضمن نشاطاً",
+        "assetType": "نوع الأصل",
+        "file": "ملف الصفحة"
+      },
+      "table": {
+        "pageNumber": "الصفحة",
+        "assetType": "نوع الأصل",
+        "narration": "السرد",
+        "activity": "النشاط",
+        "file": "الملف",
+        "actions": "الإجراءات"
+      },
+      "assetTypes": {
+        "page_image": "صورة صفحة",
+        "illustration": "رسم توضيحي",
+        "coloring_page": "صفحة تلوين",
+        "audio_narration": "سرد صوتي",
+        "cover": "غلاف"
+      },
+      "validation": {
+        "file": "اختر ملفاً لرفعه.",
+        "pageNumber": "أدخل رقم صفحة أكبر من أو يساوي 1.",
+        "narration": "يجب ألا يتجاوز نص السرد 2000 حرف.",
+        "assetType": "أدخل نوع أصل مدعوم."
+      }
+    },
+    "validation": {
+      "title": "العنوان مطلوب ويجب ألا يتجاوز 300 حرف.",
+      "description": "يجب ألا يتجاوز الوصف 2000 حرف.",
+      "contentType": "اختر نوع محتوى مدعوماً.",
+      "language": "اختر لغة مدعومة.",
+      "pageCount": "يجب أن يكون عدد الصفحات 1 أو أكثر.",
+      "pageCountRequired": "عدد الصفحات مطلوب للقصص وكتب التلوين.",
+      "letter": "يجب أن يتراوح الحرف بين 1 و3 أحرف عند إدخاله.",
+      "targetAge": "يجب أن يكون العمر المستهدف بين 2 و18.",
+      "targetAgeRequired": "العمر المستهدف مطلوب للقصص وكتب التلوين.",
+      "targetAgeRange": "يجب أن يكون العمر الأقصى أكبر من أو يساوي العمر الأدنى.",
+      "themeColor": "يجب أن يكون لون السمة قيمة hex صالحة."
     },
     "review": {
       "title": "قائمة المراجعة",

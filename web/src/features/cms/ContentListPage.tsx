@@ -5,9 +5,8 @@ import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
 import { Tabs } from '@/shared/ui/Tabs';
 import { CmsLibraryBrowseTab } from './CmsLibraryBrowseTab';
+import { CONTENT_TYPES } from './content-upload.types';
 import { useCmsContent } from './useCms';
-
-const CONTENT_TYPES = ['video', 'pdf', 'audio', 'interactive', 'story', 'coloring_book'];
 const LEVELS = [
   'maternelle',
   'cp',

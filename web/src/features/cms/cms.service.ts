@@ -1,5 +1,6 @@
 import { getAccessToken, api } from '@/services/api/client';
 import { quizzesService, type QuizPayload } from '@/features/quizzes/quizzes.service';
+import type { CmsStoryPage, StoryPageUploadValues } from './content-upload.types';
 
 export type QuestionType = 'MCQ' | 'TRUE_FALSE' | 'FILL_IN' | 'DRAG_DROP' | 'MATCHING';
 
@@ -36,6 +37,11 @@ export interface CmsContentItem {
   language: string | null;
   subject: string | null;
   description: string | null;
+  page_count: number | null;
+  letter: string | null;
+  target_age_min: number | null;
+  target_age_max: number | null;
+  theme_color: string | null;
   thumbnail_path: string | null;
   origin: string;
   status: string;
@@ -52,6 +58,11 @@ export interface CmsLibraryItem {
   language: string | null;
   subject: string | null;
   description: string | null;
+  page_count: number | null;
+  letter: string | null;
+  target_age_min: number | null;
+  target_age_max: number | null;
+  theme_color: string | null;
   origin: string;
   status: string;
 }
@@ -118,6 +129,11 @@ export interface CmsClassContentItem {
   language: string | null;
   subject: string | null;
   description: string | null;
+  page_count: number | null;
+  letter: string | null;
+  target_age_min: number | null;
+  target_age_max: number | null;
+  theme_color: string | null;
   assigned_at: string | null;
   teacher_notes: string | null;
 }
@@ -176,6 +192,20 @@ function uploadAsset(contentId: string, file: File, onProgress?: (progress: numb
   });
 }
 
+async function fetchAssetBlob(contentId: string, assetId: string): Promise<Blob> {
+  const token = getAccessToken();
+  const response = await fetch(`/api/v1/content-items/${contentId}/assets/${assetId}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    throw new Error('Asset download failed');
+  }
+
+  return response.blob();
+}
+
 export const cmsService = {
   listQuizzes(params: Record<string, string | number | undefined> = {}) {
     return quizzesService.listQuizzes(params);
@@ -226,7 +256,11 @@ export const cmsService = {
     return api.list<CmsLibraryItem>('/content/library', params);
   },
 
-  assignLibraryContent(payload: { content_item_id: string; class_id: string; notes: string | null }) {
+  assignLibraryContent(payload: {
+    content_item_id: string;
+    class_id: string;
+    notes: string | null;
+  }) {
     return api.post<void>('/content/assign', payload);
   },
 
@@ -248,6 +282,48 @@ export const cmsService = {
 
   uploadContentAsset(contentId: string, file: File, onProgress?: (progress: number) => void) {
     return uploadAsset(contentId, file, onProgress);
+  },
+
+  listStoryPages(contentId: string) {
+    return api.list<CmsStoryPage>(`/content-items/${contentId}/pages`);
+  },
+
+  uploadStoryPage(contentId: string, file: File, payload: StoryPageUploadValues) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('page_number', String(payload.page_number));
+    formData.append('narration_text', payload.narration_text);
+    formData.append('has_activity', String(payload.has_activity));
+    formData.append('asset_type', payload.asset_type);
+    return api.post<CmsStoryPage>(`/content-items/${contentId}/pages`, formData);
+  },
+
+  deleteContentAsset(contentId: string, assetId: string) {
+    return api.delete<{ deleted: boolean; id: string }>(
+      `/content-items/${contentId}/assets/${assetId}`,
+    );
+  },
+
+  async reorderStoryPage(
+    contentId: string,
+    page: CmsStoryPage,
+    nextPageNumber: number,
+  ): Promise<CmsStoryPage> {
+    const blob = await fetchAssetBlob(contentId, page.id);
+    const filename = page.file_path.split('/').pop() || `page-${nextPageNumber}`;
+    const file = new File([blob], filename, {
+      type: page.mime_type || blob.type || 'application/octet-stream',
+    });
+
+    const created = await this.uploadStoryPage(contentId, file, {
+      page_number: nextPageNumber,
+      narration_text: page.narration_text ?? '',
+      has_activity: page.has_activity,
+      asset_type: page.asset_type ?? 'page_image',
+    });
+
+    await this.deleteContentAsset(contentId, page.id);
+    return created.data;
   },
 
   listSubmissions(params: CmsSubmissionFilters) {
@@ -293,8 +369,10 @@ export const cmsService = {
     for (const item of contentResponse.data) {
       contentStats.by_status[item.status] = (contentStats.by_status[item.status] || 0) + 1;
       contentStats.by_type[item.content_type] = (contentStats.by_type[item.content_type] || 0) + 1;
-      if (item.subject) contentStats.by_subject[item.subject] = (contentStats.by_subject[item.subject] || 0) + 1;
-      if (item.level_band) contentStats.by_level[item.level_band] = (contentStats.by_level[item.level_band] || 0) + 1;
+      if (item.subject)
+        contentStats.by_subject[item.subject] = (contentStats.by_subject[item.subject] || 0) + 1;
+      if (item.level_band)
+        contentStats.by_level[item.level_band] = (contentStats.by_level[item.level_band] || 0) + 1;
       contentStats.by_origin[item.origin] = (contentStats.by_origin[item.origin] || 0) + 1;
     }
 
@@ -331,7 +409,8 @@ export const cmsService = {
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
     if (reviewCount > 0) {
-      submissionStats.avg_review_time_hours = Math.round((totalReviewMs / reviewCount / 3600000) * 10) / 10;
+      submissionStats.avg_review_time_hours =
+        Math.round((totalReviewMs / reviewCount / 3600000) * 10) / 10;
     }
 
     const quizStats: CmsQuizStats = {

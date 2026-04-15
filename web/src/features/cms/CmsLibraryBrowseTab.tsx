@@ -1,5 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { ContentItem } from '@/features/teacher/teacher.service';
 import { useTeacherClasses } from '@/features/teacher/useTeacher';
 import { AssignContentModal } from '@/features/teacher/AssignContentModal';
 import { ContentCard } from '@/features/teacher/ContentCard';
@@ -22,7 +23,7 @@ export function CmsLibraryBrowseTab() {
   const [filterLevel, setFilterLevel] = useState('');
   const [filterOrigin, setFilterOrigin] = useState('');
   const [submissionStatus, setSubmissionStatus] = useState('');
-  const [assignItem, setAssignItem] = useState<CmsLibraryItem | null>(null);
+  const [assignItem, setAssignItem] = useState<ContentItem | null>(null);
   const [assignClassId, setAssignClassId] = useState('');
   const [assignNotes, setAssignNotes] = useState('');
 
@@ -41,11 +42,11 @@ export function CmsLibraryBrowseTab() {
 
   const items: CmsLibraryItem[] = useMemo(
     () => libraryQuery.data?.pages.flatMap((page) => page.data) ?? [],
-    [libraryQuery.data]
+    [libraryQuery.data],
   );
   const submissions: CmsLibrarySubmission[] = useMemo(
     () => submissionsQuery.data?.pages.flatMap((page) => page.data) ?? [],
-    [submissionsQuery.data]
+    [submissionsQuery.data],
   );
   const classes = classesQuery.data ?? [];
   const error =
@@ -55,7 +56,11 @@ export function CmsLibraryBrowseTab() {
     assignMutation.error ??
     reviewMutation.error;
 
-  if ((libraryQuery.isLoading && !libraryQuery.data) || classesQuery.isLoading || (submissionsQuery.isLoading && !submissionsQuery.data)) {
+  if (
+    (libraryQuery.isLoading && !libraryQuery.data) ||
+    classesQuery.isLoading ||
+    (submissionsQuery.isLoading && !submissionsQuery.data)
+  ) {
     return <LoadingState />;
   }
 
@@ -79,7 +84,16 @@ export function CmsLibraryBrowseTab() {
     <div style={{ display: 'grid', gap: 20 }}>
       <ErrorBanner
         error={error instanceof Error ? error.message : null}
-        onRetry={error ? () => void Promise.all([libraryQuery.refetch(), submissionsQuery.refetch(), classesQuery.refetch()]) : undefined}
+        onRetry={
+          error
+            ? () =>
+                void Promise.all([
+                  libraryQuery.refetch(),
+                  submissionsQuery.refetch(),
+                  classesQuery.refetch(),
+                ])
+            : undefined
+        }
       />
 
       <div>
@@ -97,7 +111,13 @@ export function CmsLibraryBrowseTab() {
         {items.length === 0 ? (
           <EmptyState message={t('cms.library.empty')} />
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+              gap: 16,
+            }}
+          >
             {items.map((item) => (
               <ContentCard
                 key={item.id}
@@ -134,7 +154,11 @@ export function CmsLibraryBrowseTab() {
           <p>{t('cms.library.submissionsSubtitle')}</p>
         </div>
         <div className="filters-bar" style={{ marginBottom: 16 }}>
-          <select className="filter-select" value={submissionStatus} onChange={(event) => setSubmissionStatus(event.target.value)}>
+          <select
+            className="filter-select"
+            value={submissionStatus}
+            onChange={(event) => setSubmissionStatus(event.target.value)}
+          >
             <option value="">{t('teacherContent.allStatuses')}</option>
             {REVIEW_STATUSES.map((status) => (
               <option key={status} value={status}>
@@ -162,7 +186,11 @@ export function CmsLibraryBrowseTab() {
                   <tr key={submission.id}>
                     <td>{submission.content_title}</td>
                     <td>{t(`cms.reviewStatuses.${submission.status}`, submission.status)}</td>
-                    <td>{submission.submitted_at ? new Date(submission.submitted_at).toLocaleDateString() : '—'}</td>
+                    <td>
+                      {submission.submitted_at
+                        ? new Date(submission.submitted_at).toLocaleDateString()
+                        : '—'}
+                    </td>
                     <td>{submission.review_notes || '—'}</td>
                   </tr>
                 ))}
