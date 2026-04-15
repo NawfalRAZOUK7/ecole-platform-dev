@@ -29,6 +29,7 @@
     "adminDashboard": "لوحة التحكم",
     "adminUsers": "المستخدمون",
     "adminInvitations": "الدعوات",
+    "adminBadges": "الباجات",
     "adminAudit": "سجل المراجعة",
     "adminJustifications": "المبررات",
     "adminSettings": "الإعدادات",
@@ -1159,7 +1160,72 @@
       "invitations": "الدعوات النشطة",
       "auditEvents": "أحداث المراجعة (24 ساعة)",
       "pendingJustifications": "المبررات المعلقة",
-      "usersByRole": "المستخدمون حسب الدور"
+      "usersByRole": "المستخدمون حسب الدور",
+      "gamificationTitle": "ملخص المكافآت",
+      "gamificationSubtitle": "ستظهر تحليلات الباجات ولوحات الصدارة هنا عند ربط نقطة نهاية التحليلات في الخلفية.",
+      "starsAwardedWeek": "النجوم الممنوحة هذا الأسبوع",
+      "starsAwardedMonth": "النجوم الممنوحة هذا الشهر",
+      "mostActiveClass": "الفصل الأكثر نشاطاً",
+      "recentBadgeUnlocks": "عدد فتح الباجات مؤخراً",
+      "gamificationUnavailable": "هذه النسخة من الخلفية لا توفر /api/v1/rewards/analytics بعد، لذلك هذه المؤشرات غير متاحة."
+    },
+    "badges": {
+      "title": "إدارة الباجات",
+      "subtitle": "أنشئ الباجات وأعد ترتيبها وحافظ على ظهورها عبر المنصة.",
+      "create": "إنشاء باج",
+      "createTitle": "إنشاء باج",
+      "editTitle": "تعديل الباج",
+      "empty": "لا توجد باجات حالياً",
+      "toggle": "تبديل",
+      "saveOrder": "حفظ الترتيب",
+      "removeIcon": "إزالة الأيقونة",
+      "currentIcon": "الأيقونة الحالية",
+      "previewAlt": "معاينة أيقونة الباج",
+      "uploadFailed": "تعذر قراءة ملف الأيقونة المحدد",
+      "columns": {
+        "icon": "الأيقونة",
+        "code": "الرمز",
+        "title": "العنوان",
+        "criteria": "المعيار",
+        "displayOrder": "ترتيب العرض",
+        "active": "الحالة"
+      },
+      "status": {
+        "active": "نشط",
+        "inactive": "غير نشط"
+      },
+      "form": {
+        "code": "الرمز",
+        "titleFr": "العنوان بالفرنسية",
+        "titleAr": "العنوان بالعربية",
+        "titleEn": "العنوان بالإنجليزية",
+        "descriptionFr": "الوصف بالفرنسية",
+        "descriptionAr": "الوصف بالعربية",
+        "descriptionEn": "الوصف بالإنجليزية",
+        "icon": "رابط الأيقونة أو صورة مرفوعة",
+        "iconPlaceholder": "https://example.com/badge.png أو إيموجي",
+        "iconHint": "ألصق رابطاً أو استخدم إيموجي أو ارفع صورة ليتم حفظها كرابط بيانات.",
+        "criteriaType": "نوع المعيار",
+        "criteriaValue": "قيمة المعيار",
+        "displayOrder": "ترتيب العرض",
+        "isActive": "الباج نشط"
+      },
+      "criteriaTypes": {
+        "manual": "يدوي",
+        "stars_total": "إجمالي النجوم",
+        "xp_total": "إجمالي XP",
+        "level_reached": "المستوى الذي تم بلوغه",
+        "streak_days": "أيام السلسلة",
+        "event_count": "عدد الأحداث"
+      },
+      "validation": {
+        "code": "أدخل رمز باج صالحاً",
+        "title": "أدخل عنوان الباج المترجم",
+        "description": "الوصف طويل جداً",
+        "criteriaType": "اختر نوع المعيار",
+        "criteriaValue": "أدخل قيمة معيار صالحة",
+        "displayOrder": "أدخل ترتيب عرض صالحاً"
+      }
     },
     "users": {
       "title": "إدارة المستخدمين",

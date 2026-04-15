@@ -29,6 +29,7 @@
     "adminDashboard": "Dashboard",
     "adminUsers": "Users",
     "adminInvitations": "Invitations",
+    "adminBadges": "Badges",
     "adminAudit": "Audit Log",
     "adminJustifications": "Justifications",
     "adminSettings": "Settings",
@@ -1159,7 +1160,72 @@
       "invitations": "Active Invitations",
       "auditEvents": "Audit Events (24h)",
       "pendingJustifications": "Pending Justifications",
-      "usersByRole": "Users by Role"
+      "usersByRole": "Users by Role",
+      "gamificationTitle": "Rewards Summary",
+      "gamificationSubtitle": "Badge and leaderboard analytics will appear here once backend analytics is connected.",
+      "starsAwardedWeek": "Stars Awarded This Week",
+      "starsAwardedMonth": "Stars Awarded This Month",
+      "mostActiveClass": "Most Active Class",
+      "recentBadgeUnlocks": "Recent Badge Unlocks",
+      "gamificationUnavailable": "The current backend build does not expose /api/v1/rewards/analytics yet, so these metrics are unavailable."
+    },
+    "badges": {
+      "title": "Badge Management",
+      "subtitle": "Create, reorder, and maintain the reward badges shown across the platform.",
+      "create": "Create Badge",
+      "createTitle": "Create Badge",
+      "editTitle": "Edit Badge",
+      "empty": "No badges available yet",
+      "toggle": "Toggle",
+      "saveOrder": "Save order",
+      "removeIcon": "Remove icon",
+      "currentIcon": "Current icon",
+      "previewAlt": "Badge icon preview",
+      "uploadFailed": "Unable to read the selected icon file",
+      "columns": {
+        "icon": "Icon",
+        "code": "Code",
+        "title": "Title",
+        "criteria": "Criteria",
+        "displayOrder": "Display Order",
+        "active": "Status"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "form": {
+        "code": "Code",
+        "titleFr": "Title (French)",
+        "titleAr": "Title (Arabic)",
+        "titleEn": "Title (English)",
+        "descriptionFr": "Description (French)",
+        "descriptionAr": "Description (Arabic)",
+        "descriptionEn": "Description (English)",
+        "icon": "Icon URL or uploaded image",
+        "iconPlaceholder": "https://example.com/badge.png or emoji",
+        "iconHint": "Paste an icon URL, keep an emoji, or upload an image to store as a data URL.",
+        "criteriaType": "Criteria Type",
+        "criteriaValue": "Criteria Value",
+        "displayOrder": "Display Order",
+        "isActive": "Badge is active"
+      },
+      "criteriaTypes": {
+        "manual": "Manual",
+        "stars_total": "Total Stars",
+        "xp_total": "Total XP",
+        "level_reached": "Level Reached",
+        "streak_days": "Streak Days",
+        "event_count": "Event Count"
+      },
+      "validation": {
+        "code": "Enter a valid badge code",
+        "title": "Enter the localized badge title",
+        "description": "Description is too long",
+        "criteriaType": "Select a criteria type",
+        "criteriaValue": "Enter a valid criteria value",
+        "displayOrder": "Enter a valid display order"
+      }
     },
     "users": {
       "title": "User Management",

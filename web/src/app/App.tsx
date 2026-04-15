@@ -32,6 +32,7 @@ import {
   JustificationReviewPage,
   BatchRegisterPage,
   ParentChildLinksPage,
+  BadgesPage,
   AnalyticsDashboardPage,
   TeacherClassesPage,
   TeacherCoursesPage,
@@ -259,6 +260,14 @@ function App() {
                 element={
                   <ProtectedRoute roles={['ADM']}>
                     <ParentChildLinksPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/badges"
+                element={
+                  <ProtectedRoute roles={['ADM']}>
+                    <BadgesPage />
                   </ProtectedRoute>
                 }
               />

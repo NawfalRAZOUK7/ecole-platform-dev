@@ -43,6 +43,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/admin', labelKey: 'nav.adminDashboard', icon: '⚙️', roles: ['ADM', 'DIR'] },
   { to: '/admin/users', labelKey: 'nav.adminUsers', icon: '👥', roles: ['ADM', 'DIR'] },
   { to: '/admin/invitations', labelKey: 'nav.adminInvitations', icon: '🎟️', roles: ['ADM'] },
+  { to: '/admin/badges', labelKey: 'nav.adminBadges', icon: '🏅', roles: ['ADM'] },
   { to: '/admin/audit', labelKey: 'nav.adminAudit', icon: '📋', roles: ['ADM', 'DIR'] },
   { to: '/admin/justifications', labelKey: 'nav.adminJustifications', icon: '📝', roles: ['ADM'] },
   { to: '/analytics', labelKey: 'nav.adminAnalytics', icon: '📈', roles: ['ADM', 'DIR'] },

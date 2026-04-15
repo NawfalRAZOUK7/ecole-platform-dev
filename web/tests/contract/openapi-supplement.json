@@ -8,6 +8,11 @@
         "summary": "Supplemental rewards badge creation endpoint for frontend contract validation"
       }
     },
+    "/api/v1/rewards/badges/{badge_id}": {
+      "put": {
+        "summary": "Supplemental rewards badge update endpoint for frontend contract validation"
+      }
+    },
     "/api/v1/rewards/student/{student_id}/history": {
       "get": {
         "summary": "Supplemental student rewards history endpoint for frontend contract validation"

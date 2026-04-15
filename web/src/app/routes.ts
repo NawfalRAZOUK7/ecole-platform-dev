@@ -9,6 +9,7 @@ export const ROUTES = {
   ADMIN_INVITATIONS: '/admin/invitations',
   ADMIN_AUDIT: '/admin/audit',
   ADMIN_SETTINGS: '/admin/settings',
+  ADMIN_BADGES: '/admin/badges',
   ADMIN_JUSTIFICATIONS: '/admin/justifications',
   ADMIN_ANALYTICS: '/admin/analytics',
   ADMIN_BATCH_REGISTER: '/admin/batch-register',

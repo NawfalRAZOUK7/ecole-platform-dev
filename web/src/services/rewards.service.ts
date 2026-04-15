@@ -271,6 +271,11 @@ export const rewardsService = {
     return normalizeBadge(response.data);
   },
 
+  async updateBadge(badgeId: string, data: Partial<Badge>): Promise<Badge> {
+    const response = await api.put<RawBadge>(`/rewards/badges/${badgeId}`, serializeBadge(data));
+    return normalizeBadge(response.data);
+  },
+
   async awardReward(data: AwardRewardPayload): Promise<AwardRewardResult> {
     const response = await api.post<RawAwardRewardResponse>('/rewards/award', data);
     return normalizeAwardRewardResponse(response.data);

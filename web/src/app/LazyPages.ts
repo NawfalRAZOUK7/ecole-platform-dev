@@ -43,6 +43,9 @@ export const ParentChildLinksPage = lazy(() =>
     default: m.ParentChildLinksPage,
   })),
 );
+export const BadgesPage = lazy(() =>
+  import('@/features/admin/BadgesPage').then((m) => ({ default: m.BadgesPage })),
+);
 
 // Analytics
 export const AnalyticsDashboardPage = lazy(() =>

@@ -32,6 +32,7 @@
     "adminDashboard": "Tableau de bord",
     "adminUsers": "Utilisateurs",
     "adminInvitations": "Invitations",
+    "adminBadges": "Badges",
     "adminAudit": "Journal d'audit",
     "adminJustifications": "Justificatifs",
     "adminSettings": "Parametres",
@@ -1322,7 +1323,72 @@
       "invitations": "Invitations actives",
       "auditEvents": "Evenements d'audit (24h)",
       "pendingJustifications": "Justificatifs en attente",
-      "usersByRole": "Utilisateurs par role"
+      "usersByRole": "Utilisateurs par role",
+      "gamificationTitle": "Resume des recompenses",
+      "gamificationSubtitle": "Les analyses des badges et classements apparaitront ici quand l'endpoint backend sera branche.",
+      "starsAwardedWeek": "Etoiles attribuees cette semaine",
+      "starsAwardedMonth": "Etoiles attribuees ce mois-ci",
+      "mostActiveClass": "Classe la plus active",
+      "recentBadgeUnlocks": "Deblocages de badges recents",
+      "gamificationUnavailable": "Cette version du backend n'expose pas encore /api/v1/rewards/analytics, donc ces indicateurs sont indisponibles."
+    },
+    "badges": {
+      "title": "Gestion des badges",
+      "subtitle": "Creez, reordonnez et maintenez les badges de recompense visibles dans la plateforme.",
+      "create": "Creer un badge",
+      "createTitle": "Creer un badge",
+      "editTitle": "Modifier le badge",
+      "empty": "Aucun badge disponible",
+      "toggle": "Basculer",
+      "saveOrder": "Enregistrer l'ordre",
+      "removeIcon": "Retirer l'icone",
+      "currentIcon": "Icone actuelle",
+      "previewAlt": "Apercu de l'icone du badge",
+      "uploadFailed": "Impossible de lire le fichier d'icone selectionne",
+      "columns": {
+        "icon": "Icone",
+        "code": "Code",
+        "title": "Titre",
+        "criteria": "Critere",
+        "displayOrder": "Ordre d'affichage",
+        "active": "Statut"
+      },
+      "status": {
+        "active": "Actif",
+        "inactive": "Inactif"
+      },
+      "form": {
+        "code": "Code",
+        "titleFr": "Titre (francais)",
+        "titleAr": "Titre (arabe)",
+        "titleEn": "Titre (anglais)",
+        "descriptionFr": "Description (francais)",
+        "descriptionAr": "Description (arabe)",
+        "descriptionEn": "Description (anglais)",
+        "icon": "URL de l'icone ou image importee",
+        "iconPlaceholder": "https://example.com/badge.png ou emoji",
+        "iconHint": "Collez une URL, gardez un emoji ou importez une image qui sera stockee en data URL.",
+        "criteriaType": "Type de critere",
+        "criteriaValue": "Valeur du critere",
+        "displayOrder": "Ordre d'affichage",
+        "isActive": "Badge actif"
+      },
+      "criteriaTypes": {
+        "manual": "Manuel",
+        "stars_total": "Etoiles totales",
+        "xp_total": "XP total",
+        "level_reached": "Niveau atteint",
+        "streak_days": "Jours de serie",
+        "event_count": "Nombre d'evenements"
+      },
+      "validation": {
+        "code": "Saisissez un code de badge valide",
+        "title": "Saisissez le titre localise du badge",
+        "description": "La description est trop longue",
+        "criteriaType": "Selectionnez un type de critere",
+        "criteriaValue": "Saisissez une valeur valide",
+        "displayOrder": "Saisissez un ordre valide"
+      }
     },
     "users": {
       "title": "Gestion des utilisateurs",

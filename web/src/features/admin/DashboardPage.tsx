@@ -18,7 +18,7 @@ export function DashboardPage() {
   const dashboardQuery = useAdminDashboard();
   const bannerError = useMemo(
     () => toBannerError(dashboardQuery.error, t('app.error')),
-    [dashboardQuery.error, t]
+    [dashboardQuery.error, t],
   );
   const dismissibleError = useDismissibleError(bannerError);
   const data = dashboardQuery.data;
@@ -77,6 +77,40 @@ export function DashboardPage() {
               </div>
             </div>
           )}
+
+          <div className="card" style={{ marginTop: 24 }}>
+            <div style={{ marginBottom: 16 }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>
+                {t('admin.dashboard.gamificationTitle')}
+              </h3>
+              <p style={{ margin: '6px 0 0', color: 'var(--color-text-secondary)' }}>
+                {t('admin.dashboard.gamificationSubtitle')}
+              </p>
+            </div>
+
+            <div className="stats-grid">
+              <div className="stat-card">
+                <div className="stat-value">N/A</div>
+                <div className="stat-label">{t('admin.dashboard.starsAwardedWeek')}</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">N/A</div>
+                <div className="stat-label">{t('admin.dashboard.starsAwardedMonth')}</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">N/A</div>
+                <div className="stat-label">{t('admin.dashboard.mostActiveClass')}</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">N/A</div>
+                <div className="stat-label">{t('admin.dashboard.recentBadgeUnlocks')}</div>
+              </div>
+            </div>
+
+            <p style={{ margin: '16px 0 0', color: 'var(--color-text-secondary)' }}>
+              {t('admin.dashboard.gamificationUnavailable')}
+            </p>
+          </div>
         </>
       )}
     </div>
