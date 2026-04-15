@@ -13,6 +13,7 @@ import { EmptyState } from '@/shared/ui/EmptyState';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
 import { toBannerError } from '@/shared/ui/errorUtils';
+import { getContentTypeIcon } from '@/features/content/content-types';
 import { studentService, type ClassContentItem, type StudentClassOption } from './student.service';
 import { useStudentClassContent, useStudentClasses, useUpdateContentProgress } from './useStudent';
 
@@ -28,9 +29,13 @@ export function ContentViewPage() {
   const contentItems: ClassContentItem[] = contentQuery.data ?? [];
   const dismissibleError = useDismissibleError(
     useMemo(
-      () => toBannerError(classesQuery.error ?? contentQuery.error ?? updateProgressMutation.error, t('app.error')),
-      [classesQuery.error, contentQuery.error, t, updateProgressMutation.error]
-    )
+      () =>
+        toBannerError(
+          classesQuery.error ?? contentQuery.error ?? updateProgressMutation.error,
+          t('app.error'),
+        ),
+      [classesQuery.error, contentQuery.error, t, updateProgressMutation.error],
+    ),
   );
 
   useEffect(() => {
@@ -51,25 +56,27 @@ export function ContentViewPage() {
     return <LoadingState />;
   }
 
-  const typeIcon: Record<string, string> = {
-    video: '🎬',
-    audio: '🎵',
-    pdf: '📄',
-    interactive: '🎮',
-  };
-
   return (
     <div className="page">
       <h1 className="page-title">{t('studentContent.title')}</h1>
       <ErrorBanner
         error={dismissibleError.error}
         onDismiss={dismissibleError.dismiss}
-        onRetry={() => void Promise.all([classesQuery.refetch(), selectedClassId ? contentQuery.refetch() : Promise.resolve()])}
+        onRetry={() =>
+          void Promise.all([
+            classesQuery.refetch(),
+            selectedClassId ? contentQuery.refetch() : Promise.resolve(),
+          ])
+        }
       />
 
       {classes.length > 1 && (
         <div className="filters-bar" style={{ marginBottom: 16 }}>
-          <select className="filter-select" value={selectedClassId} onChange={(event) => setSelectedClassId(event.target.value)}>
+          <select
+            className="filter-select"
+            value={selectedClassId}
+            onChange={(event) => setSelectedClassId(event.target.value)}
+          >
             {classes.map((classItem) => (
               <option key={classItem.class_id} value={classItem.class_id}>
                 {classItem.class_name}
@@ -83,13 +90,21 @@ export function ContentViewPage() {
         <ContentPlayer
           item={viewingItem}
           onBack={() => setViewingItem(null)}
-          onProgressUpdate={(status) => void handleUpdateProgress(viewingItem.content_item_id, status)}
+          onProgressUpdate={(status) =>
+            void handleUpdateProgress(viewingItem.content_item_id, status)
+          }
           progress={progressMap[viewingItem.content_item_id]}
         />
       ) : contentItems.length === 0 ? (
         <EmptyState message={t('studentContent.empty')} />
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+            gap: 16,
+          }}
+        >
           {contentItems.map((item) => {
             const progress = progressMap[item.content_item_id];
             return (
@@ -105,13 +120,24 @@ export function ContentViewPage() {
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span style={{ fontSize: 20 }}>{typeIcon[item.content_type] || '📚'}</span>
-                  <span className="badge" style={{ fontSize: 11 }}>{item.content_type}</span>
+                  <span style={{ fontSize: 20 }}>{getContentTypeIcon(item.content_type)}</span>
+                  <span className="badge" style={{ fontSize: 11 }}>
+                    {item.content_type}
+                  </span>
                 </div>
                 <h4 style={{ margin: '0 0 4px', fontSize: 14 }}>{item.title}</h4>
                 {item.description && (
-                  <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', margin: '0 0 8px', lineHeight: 1.4 }}>
-                    {item.description.length > 80 ? `${item.description.slice(0, 80)}...` : item.description}
+                  <p
+                    style={{
+                      fontSize: 12,
+                      color: 'var(--color-text-secondary)',
+                      margin: '0 0 8px',
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    {item.description.length > 80
+                      ? `${item.description.slice(0, 80)}...`
+                      : item.description}
                   </p>
                 )}
                 {item.subject && (
@@ -120,7 +146,14 @@ export function ContentViewPage() {
                   </div>
                 )}
                 {item.teacher_notes && (
-                  <div style={{ fontSize: 11, color: 'var(--color-primary)', marginTop: 4, fontStyle: 'italic' }}>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: 'var(--color-primary)',
+                      marginTop: 4,
+                      fontStyle: 'italic',
+                    }}
+                  >
                     {item.teacher_notes}
                   </div>
                 )}
@@ -131,8 +164,14 @@ export function ContentViewPage() {
                         fontSize: 11,
                         padding: '2px 6px',
                         borderRadius: 4,
-                        background: progress === 'completed' ? 'var(--color-surface-success)' : 'var(--color-surface-warning)',
-                        color: progress === 'completed' ? 'var(--color-success)' : 'var(--color-warning)',
+                        background:
+                          progress === 'completed'
+                            ? 'var(--color-surface-success)'
+                            : 'var(--color-surface-warning)',
+                        color:
+                          progress === 'completed'
+                            ? 'var(--color-success)'
+                            : 'var(--color-warning)',
                       }}
                     >
                       {t(`content.progress.${progress}`, progress)}
@@ -171,7 +210,9 @@ function ContentPlayer({
       <div className="card" style={{ padding: 20 }}>
         <h2 style={{ margin: '0 0 8px', fontSize: 18 }}>{item.title}</h2>
         {item.description && (
-          <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 16 }}>{item.description}</p>
+          <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 16 }}>
+            {item.description}
+          </p>
         )}
 
         <div
@@ -187,7 +228,11 @@ function ContentPlayer({
           }}
         >
           {item.content_type === 'video' && (
-            <video controls style={{ width: '100%', maxHeight: 500 }} onEnded={() => onProgressUpdate('completed')}>
+            <video
+              controls
+              style={{ width: '100%', maxHeight: 500 }}
+              onEnded={() => onProgressUpdate('completed')}
+            >
               <source src={streamUrl} />
               {t('studentContent.videoUnsupported')}
             </video>
@@ -195,7 +240,11 @@ function ContentPlayer({
 
           {item.content_type === 'audio' && (
             <div style={{ padding: 40, width: '100%' }}>
-              <audio controls style={{ width: '100%' }} onEnded={() => onProgressUpdate('completed')}>
+              <audio
+                controls
+                style={{ width: '100%' }}
+                onEnded={() => onProgressUpdate('completed')}
+              >
                 <source src={streamUrl} />
                 {t('studentContent.audioUnsupported')}
               </audio>
@@ -203,34 +252,65 @@ function ContentPlayer({
           )}
 
           {item.content_type === 'pdf' && (
-            <iframe src={streamUrl} style={{ width: '100%', height: 600, border: 'none' }} title={item.title} />
+            <iframe
+              src={streamUrl}
+              style={{ width: '100%', height: 600, border: 'none' }}
+              title={item.title}
+            />
           )}
 
           {item.content_type === 'interactive' && (
             <div style={{ color: 'var(--color-inverse-text)', padding: 40, textAlign: 'center' }}>
               <p>{t('studentContent.interactiveHint')}</p>
-              <a href={streamUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
+              <a
+                href={streamUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-primary"
+              >
                 {t('studentContent.openInteractive')}
               </a>
             </div>
           )}
+
+          {(item.content_type === 'story' || item.content_type === 'coloring_book') && (
+            <iframe
+              src={streamUrl}
+              style={{ width: '100%', height: 600, border: 'none' }}
+              title={item.title}
+            />
+          )}
         </div>
 
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{t('studentContent.progress')}:</span>
+          <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
+            {t('studentContent.progress')}:
+          </span>
           {progress === 'completed' ? (
             <span style={{ fontSize: 13, color: 'var(--color-success)', fontWeight: 600 }}>
               {t('content.progress.completed')}
             </span>
           ) : (
-            <button className="btn btn-primary" style={{ fontSize: 12, padding: '4px 12px' }} onClick={() => onProgressUpdate('completed')}>
+            <button
+              className="btn btn-primary"
+              style={{ fontSize: 12, padding: '4px 12px' }}
+              onClick={() => onProgressUpdate('completed')}
+            >
               {t('studentContent.markComplete')}
             </button>
           )}
         </div>
 
         {item.teacher_notes && (
-          <div style={{ marginTop: 16, padding: 12, background: 'var(--color-bg)', borderRadius: 'var(--radius)', fontSize: 13 }}>
+          <div
+            style={{
+              marginTop: 16,
+              padding: 12,
+              background: 'var(--color-bg)',
+              borderRadius: 'var(--radius)',
+              fontSize: 13,
+            }}
+          >
             <strong>{t('studentContent.teacherNotes')}:</strong> {item.teacher_notes}
           </div>
         )}

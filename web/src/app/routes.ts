@@ -57,6 +57,8 @@ export const ROUTES = {
   STUDENT_CONTENT: '/student/content',
   STUDENT_QUIZZES: '/student/quizzes',
   FEED: '/feed',
+  REWARDS: '/rewards',
+  GAMES: '/games',
   TIMETABLE: '/timetable',
   CALENDAR: '/calendar',
   EVENT_DETAIL: '/events/:id',

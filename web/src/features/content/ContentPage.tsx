@@ -2,15 +2,9 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
-import {
-  Badge,
-  EmptyState,
-  ErrorBanner,
-  LoadingState,
-  SearchInput,
-  Tabs,
-} from '@/shared/ui';
+import { Badge, EmptyState, ErrorBanner, LoadingState, SearchInput, Tabs } from '@/shared/ui';
 import { toBannerError } from '@/shared/ui/errorUtils';
+import { normalizeContentType } from './content-types';
 import type { ContentItem } from './content.service';
 import { useContentItems } from './useContent';
 
@@ -19,27 +13,10 @@ const CONTENT_TYPE_TABS = [
   { id: 'video', label: 'content.types.video' },
   { id: 'document', label: 'content.types.document' },
   { id: 'quiz', label: 'content.types.quiz' },
+  { id: 'story', label: 'content.types.story' },
+  { id: 'coloring_book', label: 'content.types.coloring_book' },
   { id: 'link', label: 'content.types.link' },
 ] as const;
-
-function normalizeContentType(contentType: string | null | undefined) {
-  const value = (contentType || '').toLowerCase();
-
-  if (value === 'video') {
-    return 'video';
-  }
-  if (['document', 'pdf', 'audio'].includes(value)) {
-    return 'document';
-  }
-  if (value === 'quiz') {
-    return 'quiz';
-  }
-  if (['interactive', 'link', 'external'].includes(value)) {
-    return 'link';
-  }
-
-  return 'link';
-}
 
 function getLevel(item: ContentItem) {
   return item.level_band || item.level_tag || null;
@@ -56,7 +33,7 @@ export function ContentPage() {
   });
   const items = useMemo(
     () => contentQuery.data?.pages.flatMap((page) => page.data) ?? [],
-    [contentQuery.data]
+    [contentQuery.data],
   );
   const dismissibleError = useDismissibleError(toBannerError(contentQuery.error, t('app.error')));
 
@@ -112,47 +89,48 @@ export function ContentPage() {
               return {
                 id: tab.id,
                 label: tab.label,
-                content: filteredItems.length === 0 ? (
-                  <EmptyState message={t('content.emptyFiltered')} icon="🔎" />
-                ) : (
-                  <div className="card-list">
-                    {filteredItems.map((item) => (
-                      <article key={item.id} className="card content-card">
-                        <div className="content-header">
-                          <Badge variant="info">
-                            {t(`content.types.${normalizeContentType(item.content_type)}`)}
-                          </Badge>
-                          {item.status ? (
-                            <Badge variant={item.status === 'published' ? 'success' : 'warning'}>
-                              {t(`content.status.${item.status}`, { defaultValue: item.status })}
+                content:
+                  filteredItems.length === 0 ? (
+                    <EmptyState message={t('content.emptyFiltered')} icon="🔎" />
+                  ) : (
+                    <div className="card-list">
+                      {filteredItems.map((item) => (
+                        <article key={item.id} className="card content-card">
+                          <div className="content-header">
+                            <Badge variant="info">
+                              {t(`content.types.${normalizeContentType(item.content_type)}`)}
                             </Badge>
-                          ) : null}
-                        </div>
-                        <h3 className="content-title">{item.title}</h3>
-                        <div className="content-meta">
-                          {item.language ? <span>{item.language}</span> : null}
-                          {getLevel(item) ? <span>{getLevel(item)}</span> : null}
-                        </div>
-                        <div className="page-actions">
-                          <button
-                            type="button"
-                            className="btn btn-secondary"
-                            onClick={() => navigate(`/content/${item.id}`)}
-                          >
-                            {t('content.viewDetails')}
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-primary"
-                            onClick={() => navigate(`/content/${item.id}/play`)}
-                          >
-                            {t('content.openPlayer')}
-                          </button>
-                        </div>
-                      </article>
-                    ))}
-                  </div>
-                ),
+                            {item.status ? (
+                              <Badge variant={item.status === 'published' ? 'success' : 'warning'}>
+                                {t(`content.status.${item.status}`, { defaultValue: item.status })}
+                              </Badge>
+                            ) : null}
+                          </div>
+                          <h3 className="content-title">{item.title}</h3>
+                          <div className="content-meta">
+                            {item.language ? <span>{item.language}</span> : null}
+                            {getLevel(item) ? <span>{getLevel(item)}</span> : null}
+                          </div>
+                          <div className="page-actions">
+                            <button
+                              type="button"
+                              className="btn btn-secondary"
+                              onClick={() => navigate(`/content/${item.id}`)}
+                            >
+                              {t('content.viewDetails')}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-primary"
+                              onClick={() => navigate(`/content/${item.id}/play`)}
+                            >
+                              {t('content.openPlayer')}
+                            </button>
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  ),
               };
             })}
           />

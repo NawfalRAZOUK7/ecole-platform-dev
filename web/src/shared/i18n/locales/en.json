@@ -63,7 +63,9 @@
     "microSchools": "Micro-Schools",
     "teacherClassProgress": "Class Progress",
     "progress": "My Progress",
-    "parentProgress": "Children's Progress"
+    "parentProgress": "Children's Progress",
+    "rewards": "Rewards",
+    "games": "Games"
   },
   "login": {
     "title": "Sign In",
@@ -110,6 +112,161 @@
       "feed_new": "Feed update",
       "grade_published": "Grade update",
       "payment": "Payment update"
+    }
+  },
+  "rewards": {
+    "title": "Rewards Center",
+    "subtitle": "Track stars, XP, class rankings, and badge activity from one view.",
+    "awardTitle": "Award rewards",
+    "awardSubtitle": "Grant stars and XP for content, quizzes, games, and streak events.",
+    "awardSuccess": "Reward awarded. {{count}} new badge(s) unlocked.",
+    "badgeCreateSuccess": "Badge created successfully.",
+    "badgesEarned": "Earned badges",
+    "badgesEmpty": "No badges earned yet.",
+    "catalogTitle": "Badge catalog",
+    "catalogSubtitle": "Review the shared badge set and create new badges when needed.",
+    "catalogEmpty": "No badges configured yet.",
+    "createBadge": "Create badge",
+    "submitAward": "Award reward",
+    "noStudentSelected": "Select a student profile to view rewards data.",
+    "stats": {
+      "stars": "Stars",
+      "xp": "XP",
+      "level": "Level",
+      "streak": "Streak",
+      "nextLevel": "XP to next level",
+      "lastActivity": "Last activity"
+    },
+    "progress": {
+      "title": "Level progress",
+      "subtitle": "Current level completion based on accumulated XP."
+    },
+    "filters": {
+      "class": "Class",
+      "classPlaceholder": "Enter class ID",
+      "student": "Student",
+      "studentPlaceholder": "Enter student ID",
+      "limit": "Leaderboard limit"
+    },
+    "history": {
+      "title": "Reward history",
+      "date": "Date",
+      "event": "Event",
+      "source": "Source",
+      "none": "None",
+      "empty": "No reward events yet."
+    },
+    "leaderboard": {
+      "title": "Leaderboard",
+      "rank": "Rank",
+      "student": "Student",
+      "empty": "No leaderboard data available.",
+      "prompt": "Select a class to load the rewards leaderboard."
+    },
+    "forms": {
+      "eventType": "Event type",
+      "stars": "Stars",
+      "xp": "XP",
+      "sourceType": "Source type",
+      "sourceId": "Source ID",
+      "noneOption": "No source",
+      "badgeCode": "Badge code",
+      "badgeTitle": "Badge title",
+      "badgeIcon": "Badge icon"
+    },
+    "events": {
+      "content_completed": "Content completed",
+      "quiz_passed": "Quiz passed",
+      "game_won": "Game won",
+      "game_completed": "Game completed",
+      "login_bonus": "Login bonus"
+    },
+    "sources": {
+      "content": "Content",
+      "quiz": "Quiz",
+      "game": "Game",
+      "coloring": "Coloring",
+      "login": "Login"
+    },
+    "validation": {
+      "studentId": "Enter a valid student ID.",
+      "eventType": "Event type is required.",
+      "nonNegative": "Value must be zero or greater.",
+      "sourceId": "Enter a valid source ID.",
+      "rewardAmount": "Award at least one star or XP point.",
+      "badgeCode": "Badge code must be between 2 and 50 characters.",
+      "badgeTitle": "Badge title must stay within 120 characters.",
+      "badgeIcon": "Badge icon must stay within 12 characters."
+    }
+  },
+  "games": {
+    "title": "Game Configurations",
+    "subtitle": "Manage reusable game setups, rewards, and activation state for classroom play.",
+    "newConfig": "New config",
+    "listTitle": "Available configs",
+    "createTitle": "Create config",
+    "editTitle": "Edit config",
+    "formSubtitle": "Use a JSON config payload that matches the selected game type.",
+    "createConfig": "Create config",
+    "saveChanges": "Save changes",
+    "created": "Game config created.",
+    "updated": "Game config updated.",
+    "empty": "No game configs found.",
+    "filters": {
+      "type": "Game type",
+      "allTypes": "All game types",
+      "difficulty": "Difficulty",
+      "allDifficulties": "All difficulties",
+      "status": "Status",
+      "allStatuses": "All statuses",
+      "subjectPlaceholder": "Filter by subject"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "table": {
+      "title": "Title",
+      "type": "Type",
+      "difficulty": "Difficulty",
+      "subject": "Subject",
+      "reward": "Reward",
+      "updated": "Updated"
+    },
+    "types": {
+      "memory_match": "Memory match",
+      "sorting": "Sorting",
+      "vocabulary_cards": "Vocabulary cards"
+    },
+    "difficulties": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard"
+    },
+    "form": {
+      "gameType": "Game type",
+      "title": "Title",
+      "titleAr": "Arabic title",
+      "titleFr": "French title",
+      "subject": "Subject",
+      "difficulty": "Difficulty",
+      "targetAgeMin": "Min age",
+      "targetAgeMax": "Max age",
+      "config": "Config JSON",
+      "rewardStars": "Reward stars",
+      "rewardXp": "Reward XP",
+      "isActive": "Active config"
+    },
+    "validation": {
+      "gameType": "Select a supported game type.",
+      "title": "Title is required.",
+      "localizedTitle": "Localized titles must stay within 300 characters.",
+      "subject": "Subject must stay within 50 characters.",
+      "difficulty": "Select a supported difficulty.",
+      "age": "Age must be between 0 and 18.",
+      "config": "Enter a valid JSON object.",
+      "reward": "Reward values must be zero or greater.",
+      "ageRange": "Maximum age must be greater than or equal to minimum age."
     }
   },
   "notifications": {
@@ -306,6 +463,8 @@
       "video": "Video",
       "document": "Document",
       "quiz": "Quiz",
+      "story": "Story",
+      "coloring_book": "Coloring Book",
       "link": "Link"
     },
     "status": {
@@ -1563,7 +1722,9 @@
       "video": "Video",
       "pdf": "PDF",
       "audio": "Audio",
-      "interactive": "Interactive"
+      "interactive": "Interactive",
+      "story": "Story",
+      "coloring_book": "Coloring Book"
     },
     "subjects": {
       "math": "Mathematics",

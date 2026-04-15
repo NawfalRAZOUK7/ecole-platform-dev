@@ -63,7 +63,9 @@
     "microSchools": "المدارس المصغرة",
     "teacherClassProgress": "تقدم الفصل",
     "progress": "تقدمي",
-    "parentProgress": "تقدم الأبناء"
+    "parentProgress": "تقدم الأبناء",
+    "rewards": "المكافآت",
+    "games": "الألعاب"
   },
   "login": {
     "title": "تسجيل الدخول",
@@ -110,6 +112,161 @@
       "feed_new": "تحديث جديد",
       "grade_published": "تحديث درجة",
       "payment": "تحديث دفعة"
+    }
+  },
+  "rewards": {
+    "title": "مركز المكافآت",
+    "subtitle": "تابع النجوم وXP ولوحة الصدارة والباجات من شاشة واحدة.",
+    "awardTitle": "منح مكافآت",
+    "awardSubtitle": "امنح النجوم وXP للمحتوى والاختبارات والألعاب وسلاسل النشاط.",
+    "awardSuccess": "تم منح المكافأة. تم فتح {{count}} شارة جديدة.",
+    "badgeCreateSuccess": "تم إنشاء الشارة بنجاح.",
+    "badgesEarned": "الشارات المكتسبة",
+    "badgesEmpty": "لا توجد شارات مكتسبة بعد.",
+    "catalogTitle": "كتالوج الشارات",
+    "catalogSubtitle": "راجع مجموعة الشارات وأنشئ شارات جديدة عند الحاجة.",
+    "catalogEmpty": "لا توجد شارات مُعدّة بعد.",
+    "createBadge": "إنشاء شارة",
+    "submitAward": "منح المكافأة",
+    "noStudentSelected": "اختر ملف طالب لعرض بيانات المكافآت.",
+    "stats": {
+      "stars": "النجوم",
+      "xp": "XP",
+      "level": "المستوى",
+      "streak": "السلسلة",
+      "nextLevel": "XP حتى المستوى التالي",
+      "lastActivity": "آخر نشاط"
+    },
+    "progress": {
+      "title": "تقدم المستوى",
+      "subtitle": "نسبة التقدم في المستوى الحالي حسب XP المتراكم."
+    },
+    "filters": {
+      "class": "الفصل",
+      "classPlaceholder": "أدخل معرف الفصل",
+      "student": "الطالب",
+      "studentPlaceholder": "أدخل معرف الطالب",
+      "limit": "حد لوحة الصدارة"
+    },
+    "history": {
+      "title": "سجل المكافآت",
+      "date": "التاريخ",
+      "event": "الحدث",
+      "source": "المصدر",
+      "none": "لا يوجد",
+      "empty": "لا توجد أحداث مكافآت بعد."
+    },
+    "leaderboard": {
+      "title": "لوحة الصدارة",
+      "rank": "الترتيب",
+      "student": "الطالب",
+      "empty": "لا توجد بيانات للوحة الصدارة.",
+      "prompt": "اختر فصلاً لتحميل لوحة الصدارة."
+    },
+    "forms": {
+      "eventType": "نوع الحدث",
+      "stars": "النجوم",
+      "xp": "XP",
+      "sourceType": "نوع المصدر",
+      "sourceId": "معرف المصدر",
+      "noneOption": "بدون مصدر",
+      "badgeCode": "رمز الشارة",
+      "badgeTitle": "عنوان الشارة",
+      "badgeIcon": "أيقونة الشارة"
+    },
+    "events": {
+      "content_completed": "إكمال المحتوى",
+      "quiz_passed": "نجاح في الاختبار",
+      "game_won": "فوز في اللعبة",
+      "game_completed": "إكمال اللعبة",
+      "login_bonus": "مكافأة تسجيل الدخول"
+    },
+    "sources": {
+      "content": "المحتوى",
+      "quiz": "الاختبار",
+      "game": "اللعبة",
+      "coloring": "التلوين",
+      "login": "تسجيل الدخول"
+    },
+    "validation": {
+      "studentId": "أدخل معرف طالب صالحاً.",
+      "eventType": "نوع الحدث مطلوب.",
+      "nonNegative": "يجب أن تكون القيمة صفراً أو أكبر.",
+      "sourceId": "أدخل معرف مصدر صالحاً.",
+      "rewardAmount": "امنح نجمة واحدة أو نقطة XP واحدة على الأقل.",
+      "badgeCode": "يجب أن يكون رمز الشارة بين حرفين و50 حرفاً.",
+      "badgeTitle": "يجب ألا يتجاوز عنوان الشارة 120 حرفاً.",
+      "badgeIcon": "يجب ألا تتجاوز أيقونة الشارة 12 حرفاً."
+    }
+  },
+  "games": {
+    "title": "إعدادات الألعاب",
+    "subtitle": "أدر إعدادات الألعاب القابلة لإعادة الاستخدام والمكافآت وحالة التفعيل للفصل.",
+    "newConfig": "إعداد جديد",
+    "listTitle": "الإعدادات المتاحة",
+    "createTitle": "إنشاء إعداد",
+    "editTitle": "تعديل الإعداد",
+    "formSubtitle": "استخدم حمولة JSON مطابقة لنوع اللعبة المحدد.",
+    "createConfig": "إنشاء الإعداد",
+    "saveChanges": "حفظ التعديلات",
+    "created": "تم إنشاء إعداد اللعبة.",
+    "updated": "تم تحديث إعداد اللعبة.",
+    "empty": "لا توجد إعدادات ألعاب.",
+    "filters": {
+      "type": "نوع اللعبة",
+      "allTypes": "كل أنواع الألعاب",
+      "difficulty": "الصعوبة",
+      "allDifficulties": "كل درجات الصعوبة",
+      "status": "الحالة",
+      "allStatuses": "كل الحالات",
+      "subjectPlaceholder": "التصفية حسب المادة"
+    },
+    "status": {
+      "active": "نشط",
+      "inactive": "غير نشط"
+    },
+    "table": {
+      "title": "العنوان",
+      "type": "النوع",
+      "difficulty": "الصعوبة",
+      "subject": "المادة",
+      "reward": "المكافأة",
+      "updated": "آخر تحديث"
+    },
+    "types": {
+      "memory_match": "مطابقة الذاكرة",
+      "sorting": "الفرز",
+      "vocabulary_cards": "بطاقات المفردات"
+    },
+    "difficulties": {
+      "easy": "سهل",
+      "medium": "متوسط",
+      "hard": "صعب"
+    },
+    "form": {
+      "gameType": "نوع اللعبة",
+      "title": "العنوان",
+      "titleAr": "العنوان بالعربية",
+      "titleFr": "العنوان بالفرنسية",
+      "subject": "المادة",
+      "difficulty": "الصعوبة",
+      "targetAgeMin": "العمر الأدنى",
+      "targetAgeMax": "العمر الأقصى",
+      "config": "JSON الإعداد",
+      "rewardStars": "نجوم المكافأة",
+      "rewardXp": "XP المكافأة",
+      "isActive": "إعداد نشط"
+    },
+    "validation": {
+      "gameType": "اختر نوع لعبة مدعوماً.",
+      "title": "العنوان مطلوب.",
+      "localizedTitle": "يجب ألا تتجاوز العناوين المترجمة 300 حرف.",
+      "subject": "يجب ألا تتجاوز المادة 50 حرفاً.",
+      "difficulty": "اختر مستوى صعوبة مدعوماً.",
+      "age": "يجب أن يكون العمر بين 0 و18.",
+      "config": "أدخل كائن JSON صالحاً.",
+      "reward": "يجب أن تكون قيم المكافآت صفراً أو أكبر.",
+      "ageRange": "يجب أن يكون العمر الأقصى أكبر من أو يساوي العمر الأدنى."
     }
   },
   "notifications": {
@@ -306,6 +463,8 @@
       "video": "فيديو",
       "document": "مستند",
       "quiz": "اختبار",
+      "story": "قصة",
+      "coloring_book": "كتاب تلوين",
       "link": "رابط"
     },
     "status": {
@@ -1583,7 +1742,9 @@
       "video": "فيديو",
       "pdf": "PDF",
       "audio": "صوت",
-      "interactive": "تفاعلي"
+      "interactive": "تفاعلي",
+      "story": "قصة",
+      "coloring_book": "كتاب تلوين"
     },
     "subjects": {
       "math": "الرياضيات",

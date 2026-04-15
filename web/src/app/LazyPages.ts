@@ -196,6 +196,18 @@ export const FeedPage = lazy(() =>
   import('@/features/feed/FeedPage').then((m) => ({ default: m.FeedPage })),
 );
 
+// Rewards
+export const RewardsPage = lazy(() =>
+  import('@/features/rewards/RewardsPage').then((m) => ({ default: m.RewardsPage })),
+);
+
+// Games
+export const GameConfigsPage = lazy(() =>
+  import('@/features/games/GameConfigsPage').then((m) => ({
+    default: m.GameConfigsPage,
+  })),
+);
+
 // Notifications
 export const NotificationsPage = lazy(() =>
   import('@/features/notifications/NotificationsPage').then((m) => ({

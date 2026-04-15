@@ -71,6 +71,8 @@
     "teacherClassProgress": "Progrès de la classe",
     "progress": "Mon progrès",
     "parentProgress": "Progrès des enfants",
+    "rewards": "Recompenses",
+    "games": "Jeux",
     "loginHistory": "Historique de connexion",
     "questionBank": "Banque de questions",
     "rubrics": "Grilles d'evaluation",
@@ -250,6 +252,161 @@
       "feed_new": "Mise a jour du fil",
       "grade_published": "Mise a jour de note",
       "payment": "Mise a jour de paiement"
+    }
+  },
+  "rewards": {
+    "title": "Centre des recompenses",
+    "subtitle": "Suivez les etoiles, l'XP, le classement et les badges depuis un seul ecran.",
+    "awardTitle": "Attribuer des recompenses",
+    "awardSubtitle": "Accordez des etoiles et de l'XP pour les contenus, quiz, jeux et series.",
+    "awardSuccess": "Recompense attribuee. {{count}} nouveau(x) badge(s) debloque(s).",
+    "badgeCreateSuccess": "Badge cree avec succes.",
+    "badgesEarned": "Badges obtenus",
+    "badgesEmpty": "Aucun badge obtenu pour le moment.",
+    "catalogTitle": "Catalogue des badges",
+    "catalogSubtitle": "Consultez les badges disponibles et ajoutez-en si necessaire.",
+    "catalogEmpty": "Aucun badge configure.",
+    "createBadge": "Creer un badge",
+    "submitAward": "Attribuer la recompense",
+    "noStudentSelected": "Selectionnez un eleve pour afficher les recompenses.",
+    "stats": {
+      "stars": "Etoiles",
+      "xp": "XP",
+      "level": "Niveau",
+      "streak": "Serie",
+      "nextLevel": "XP jusqu'au niveau suivant",
+      "lastActivity": "Derniere activite"
+    },
+    "progress": {
+      "title": "Progression de niveau",
+      "subtitle": "Avancement du niveau actuel selon l'XP accumulee."
+    },
+    "filters": {
+      "class": "Classe",
+      "classPlaceholder": "Saisir l'identifiant de classe",
+      "student": "Eleve",
+      "studentPlaceholder": "Saisir l'identifiant eleve",
+      "limit": "Limite du classement"
+    },
+    "history": {
+      "title": "Historique des recompenses",
+      "date": "Date",
+      "event": "Evenement",
+      "source": "Source",
+      "none": "Aucune",
+      "empty": "Aucun evenement de recompense."
+    },
+    "leaderboard": {
+      "title": "Classement",
+      "rank": "Rang",
+      "student": "Eleve",
+      "empty": "Aucune donnee de classement.",
+      "prompt": "Selectionnez une classe pour charger le classement."
+    },
+    "forms": {
+      "eventType": "Type d'evenement",
+      "stars": "Etoiles",
+      "xp": "XP",
+      "sourceType": "Type de source",
+      "sourceId": "Identifiant source",
+      "noneOption": "Aucune source",
+      "badgeCode": "Code du badge",
+      "badgeTitle": "Titre du badge",
+      "badgeIcon": "Icone du badge"
+    },
+    "events": {
+      "content_completed": "Contenu termine",
+      "quiz_passed": "Quiz reussi",
+      "game_won": "Jeu gagne",
+      "game_completed": "Jeu termine",
+      "login_bonus": "Bonus de connexion"
+    },
+    "sources": {
+      "content": "Contenu",
+      "quiz": "Quiz",
+      "game": "Jeu",
+      "coloring": "Coloriage",
+      "login": "Connexion"
+    },
+    "validation": {
+      "studentId": "Entrez un identifiant eleve valide.",
+      "eventType": "Le type d'evenement est obligatoire.",
+      "nonNegative": "La valeur doit etre positive ou nulle.",
+      "sourceId": "Entrez un identifiant source valide.",
+      "rewardAmount": "Attribuez au moins une etoile ou un point XP.",
+      "badgeCode": "Le code du badge doit contenir entre 2 et 50 caracteres.",
+      "badgeTitle": "Le titre du badge doit rester sous 120 caracteres.",
+      "badgeIcon": "L'icone du badge doit rester sous 12 caracteres."
+    }
+  },
+  "games": {
+    "title": "Configurations de jeux",
+    "subtitle": "Gerez les jeux reutilisables, les recompenses et leur activation pour la classe.",
+    "newConfig": "Nouvelle config",
+    "listTitle": "Configurations disponibles",
+    "createTitle": "Creer une config",
+    "editTitle": "Modifier la config",
+    "formSubtitle": "Utilisez un JSON de configuration adapte au type de jeu selectionne.",
+    "createConfig": "Creer la config",
+    "saveChanges": "Enregistrer les modifications",
+    "created": "Configuration de jeu creee.",
+    "updated": "Configuration de jeu mise a jour.",
+    "empty": "Aucune configuration de jeu.",
+    "filters": {
+      "type": "Type de jeu",
+      "allTypes": "Tous les types de jeu",
+      "difficulty": "Difficulte",
+      "allDifficulties": "Toutes les difficultes",
+      "status": "Statut",
+      "allStatuses": "Tous les statuts",
+      "subjectPlaceholder": "Filtrer par matiere"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "table": {
+      "title": "Titre",
+      "type": "Type",
+      "difficulty": "Difficulte",
+      "subject": "Matiere",
+      "reward": "Recompense",
+      "updated": "Mis a jour"
+    },
+    "types": {
+      "memory_match": "Memory match",
+      "sorting": "Tri",
+      "vocabulary_cards": "Cartes de vocabulaire"
+    },
+    "difficulties": {
+      "easy": "Facile",
+      "medium": "Moyenne",
+      "hard": "Difficile"
+    },
+    "form": {
+      "gameType": "Type de jeu",
+      "title": "Titre",
+      "titleAr": "Titre arabe",
+      "titleFr": "Titre francais",
+      "subject": "Matiere",
+      "difficulty": "Difficulte",
+      "targetAgeMin": "Age min",
+      "targetAgeMax": "Age max",
+      "config": "JSON de config",
+      "rewardStars": "Etoiles offertes",
+      "rewardXp": "XP offert",
+      "isActive": "Configuration active"
+    },
+    "validation": {
+      "gameType": "Selectionnez un type de jeu pris en charge.",
+      "title": "Le titre est obligatoire.",
+      "localizedTitle": "Les titres localises doivent rester sous 300 caracteres.",
+      "subject": "La matiere doit rester sous 50 caracteres.",
+      "difficulty": "Selectionnez une difficulte prise en charge.",
+      "age": "L'age doit etre compris entre 0 et 18.",
+      "config": "Entrez un objet JSON valide.",
+      "reward": "Les recompenses doivent etre positives ou nulles.",
+      "ageRange": "L'age maximum doit etre superieur ou egal a l'age minimum."
     }
   },
   "notifications": {
@@ -469,6 +626,8 @@
       "video": "Video",
       "document": "Document",
       "quiz": "Quiz",
+      "story": "Histoire",
+      "coloring_book": "Livre de coloriage",
       "link": "Lien"
     },
     "status": {
@@ -1749,7 +1908,9 @@
       "video": "Video",
       "pdf": "PDF",
       "audio": "Audio",
-      "interactive": "Interactif"
+      "interactive": "Interactif",
+      "story": "Histoire",
+      "coloring_book": "Livre de coloriage"
     },
     "subjects": {
       "math": "Mathematiques",

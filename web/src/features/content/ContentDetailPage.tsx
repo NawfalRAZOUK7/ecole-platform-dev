@@ -3,19 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { ColumnDef } from '@/shared/ui/DataTable';
 import { useAuth } from '@/services/auth/AuthContext';
-import {
-  Badge,
-  DataTable,
-  ErrorBanner,
-  LoadingState,
-  StatCard,
-  Tabs,
-} from '@/shared/ui';
+import { Badge, DataTable, ErrorBanner, LoadingState, StatCard, Tabs } from '@/shared/ui';
 import { toBannerError } from '@/shared/ui/errorUtils';
-import type {
-  ContentAsset,
-  ContentProgressStatus,
-} from './content.service';
+import type { ContentAsset, ContentProgressStatus } from './content.service';
+import { normalizeContentType } from './content-types';
 import {
   useContentDetail,
   useToggleContentPublish,
@@ -25,19 +16,6 @@ import {
 
 type AssetRow = ContentAsset & Record<string, unknown>;
 type AnalyticsRow = { metric: string; value: string } & Record<string, unknown>;
-
-function normalizeContentType(contentType: string | null | undefined) {
-  const value = (contentType || '').toLowerCase();
-
-  if (['document', 'pdf', 'audio'].includes(value)) {
-    return 'document';
-  }
-  if (['interactive', 'external'].includes(value)) {
-    return 'link';
-  }
-
-  return value || 'document';
-}
 
 function getProgressPercent(status: ContentProgressStatus | undefined) {
   if (status === 'completed') {
@@ -60,7 +38,8 @@ export function ContentDetailPage() {
   const togglePublishMutation = useToggleContentPublish();
   const updateOrderingMutation = useUpdateContentOrdering();
   const [sortOrder, setSortOrder] = useState('0');
-  const progressStatus = (detailQuery.data?.progress?.status || 'not_started') as ContentProgressStatus;
+  const progressStatus = (detailQuery.data?.progress?.status ||
+    'not_started') as ContentProgressStatus;
   const progressPercent = getProgressPercent(progressStatus);
   const isManager = ['TCH', 'ADM', 'DIR', 'CONTENT_MGR'].includes(user?.role || '');
 
@@ -89,7 +68,9 @@ export function ContentDetailPage() {
             <button
               type="button"
               className="btn btn-secondary btn-sm"
-              onClick={() => window.open(String(row.download_url || row.url), '_blank', 'noopener,noreferrer')}
+              onClick={() =>
+                window.open(String(row.download_url || row.url), '_blank', 'noopener,noreferrer')
+              }
             >
               {t('content.openAsset')}
             </button>
@@ -98,7 +79,7 @@ export function ContentDetailPage() {
           ),
       },
     ],
-    [t]
+    [t],
   );
 
   const analyticsRows = useMemo<AnalyticsRow[]>(() => {
@@ -135,7 +116,7 @@ export function ContentDetailPage() {
       { key: 'metric', header: 'content.metric' },
       { key: 'value', header: 'content.value' },
     ],
-    []
+    [],
   );
 
   async function handleProgressChange(status: ContentProgressStatus) {
@@ -190,10 +171,16 @@ export function ContentDetailPage() {
           </Badge>
           {detailQuery.data?.status ? (
             <Badge variant={detailQuery.data.status === 'published' ? 'success' : 'warning'}>
-              {t(`content.status.${detailQuery.data.status}`, { defaultValue: detailQuery.data.status })}
+              {t(`content.status.${detailQuery.data.status}`, {
+                defaultValue: detailQuery.data.status,
+              })}
             </Badge>
           ) : null}
-          <button type="button" className="btn btn-primary" onClick={() => navigate(`/content/${id}/play`)}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => navigate(`/content/${id}/play`)}
+          >
             {t('content.openPlayer')}
           </button>
         </div>
@@ -205,7 +192,7 @@ export function ContentDetailPage() {
             updateProgressMutation.error ??
             togglePublishMutation.error ??
             updateOrderingMutation.error,
-          t('app.error')
+          t('app.error'),
         )}
         onRetry={() => void detailQuery.refetch()}
       />
@@ -214,19 +201,26 @@ export function ContentDetailPage() {
         <StatCard label="content.progressLabel" value={`${progressPercent}%`} icon="📈" />
         <StatCard
           label="content.analytics.started"
-          value={detailQuery.data?.student_analytics?.students_started ?? (progressPercent > 0 ? 1 : 0)}
+          value={
+            detailQuery.data?.student_analytics?.students_started ?? (progressPercent > 0 ? 1 : 0)
+          }
           icon="▶"
         />
         <StatCard
           label="content.analytics.completed"
-          value={detailQuery.data?.student_analytics?.students_completed ?? (progressStatus === 'completed' ? 1 : 0)}
+          value={
+            detailQuery.data?.student_analytics?.students_completed ??
+            (progressStatus === 'completed' ? 1 : 0)
+          }
           icon="✅"
         />
         <StatCard label="content.sortOrder" value={detailQuery.data?.sort_order ?? 0} icon="↕" />
       </div>
 
       <div className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+        <div
+          style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}
+        >
           <div style={{ flex: '1 1 320px' }}>
             <h2>{t('content.progressLabel')}</h2>
             <div

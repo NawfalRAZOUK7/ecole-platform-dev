@@ -10,9 +10,34 @@ import {
   useUploadCmsContentAsset,
 } from './useCms';
 
-const CONTENT_TYPES = ['video', 'pdf', 'audio', 'interactive'];
-const LEVELS = ['maternelle', 'cp', 'ce1', 'ce2', 'cm1', 'cm2', '6eme', '5eme', '4eme', '3eme', '2nde', '1ere', 'terminale'];
-const SUBJECTS = ['math', 'french', 'arabic', 'science', 'history', 'geography', 'english', 'islamic_studies', 'art', 'sport'];
+const CONTENT_TYPES = ['video', 'pdf', 'audio', 'interactive', 'story', 'coloring_book'];
+const LEVELS = [
+  'maternelle',
+  'cp',
+  'ce1',
+  'ce2',
+  'cm1',
+  'cm2',
+  '6eme',
+  '5eme',
+  '4eme',
+  '3eme',
+  '2nde',
+  '1ere',
+  'terminale',
+];
+const SUBJECTS = [
+  'math',
+  'french',
+  'arabic',
+  'science',
+  'history',
+  'geography',
+  'english',
+  'islamic_studies',
+  'art',
+  'sport',
+];
 
 export function CmsContentEditPage() {
   const { contentId } = useParams<{ contentId: string }>();
@@ -53,8 +78,17 @@ export function CmsContentEditPage() {
   if (!contentQuery.data) {
     return (
       <div className="page">
-        <ErrorBanner error={error || (contentQuery.error instanceof Error ? contentQuery.error.message : t('errors.not_found'))} />
-        <button className="btn" onClick={() => navigate('/cms')}>{t('app.back')}</button>
+        <ErrorBanner
+          error={
+            error ||
+            (contentQuery.error instanceof Error
+              ? contentQuery.error.message
+              : t('errors.not_found'))
+          }
+        />
+        <button className="btn" onClick={() => navigate('/cms')}>
+          {t('app.back')}
+        </button>
       </div>
     );
   }
@@ -111,34 +145,67 @@ export function CmsContentEditPage() {
 
   return (
     <div className="page">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 16,
+        }}
+      >
         <h1 className="page-title">{t('cms.edit.title')}</h1>
-        <button className="btn" onClick={() => navigate('/cms')}>{t('app.back')}</button>
+        <button className="btn" onClick={() => navigate('/cms')}>
+          {t('app.back')}
+        </button>
       </div>
 
       <ErrorBanner
         error={error || (contentQuery.error instanceof Error ? contentQuery.error.message : null)}
         onDismiss={() => setError(null)}
       />
-      {saved ? <div className="alert alert-success" style={{ marginBottom: 16, padding: 12, borderRadius: 8 }}>{t('app.saved')}</div> : null}
+      {saved ? (
+        <div
+          className="alert alert-success"
+          style={{ marginBottom: 16, padding: 12, borderRadius: 8 }}
+        >
+          {t('app.saved')}
+        </div>
+      ) : null}
 
       <form onSubmit={handleSave} className="card" style={{ padding: 24 }}>
         <div className="form-field">
           <label>{t('cms.upload.titleLabel')}</label>
-          <input type="text" value={title} onChange={(event) => setTitle(event.target.value)} required />
+          <input
+            type="text"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            required
+          />
         </div>
 
         <div className="form-field">
           <label>{t('cms.upload.description')}</label>
-          <textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={4} />
+          <textarea
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+            rows={4}
+          />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+            gap: 12,
+          }}
+        >
           <div className="form-field">
             <label>{t('cms.upload.contentType')}</label>
             <select value={contentType} onChange={(event) => setContentType(event.target.value)}>
               {CONTENT_TYPES.map((currentType) => (
-                <option key={currentType} value={currentType}>{t(`cms.contentTypes.${currentType}`, currentType)}</option>
+                <option key={currentType} value={currentType}>
+                  {t(`cms.contentTypes.${currentType}`, currentType)}
+                </option>
               ))}
             </select>
           </div>
@@ -147,7 +214,11 @@ export function CmsContentEditPage() {
             <label>{t('cms.upload.level')}</label>
             <select value={levelBand} onChange={(event) => setLevelBand(event.target.value)}>
               <option value="">{t('cms.content.allLevels')}</option>
-              {LEVELS.map((level) => <option key={level} value={level}>{level}</option>)}
+              {LEVELS.map((level) => (
+                <option key={level} value={level}>
+                  {level}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -156,7 +227,9 @@ export function CmsContentEditPage() {
             <select value={subject} onChange={(event) => setSubject(event.target.value)}>
               <option value="">{t('cms.content.allSubjects')}</option>
               {SUBJECTS.map((currentSubject) => (
-                <option key={currentSubject} value={currentSubject}>{t(`cms.subjects.${currentSubject}`, currentSubject)}</option>
+                <option key={currentSubject} value={currentSubject}>
+                  {t(`cms.subjects.${currentSubject}`, currentSubject)}
+                </option>
               ))}
             </select>
           </div>

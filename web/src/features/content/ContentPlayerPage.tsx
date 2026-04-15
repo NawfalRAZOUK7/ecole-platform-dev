@@ -4,29 +4,15 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { EmptyState, ErrorBanner, LoadingState } from '@/shared/ui';
 import { toBannerError } from '@/shared/ui/errorUtils';
 import type { ContentProgressStatus } from './content.service';
+import { normalizeContentType } from './content-types';
 import { useContentDetail, useUpdateContentProgress } from './useContent';
-
-function normalizeContentType(contentType: string | null | undefined) {
-  const value = (contentType || '').toLowerCase();
-
-  if (value === 'video') {
-    return 'video';
-  }
-  if (['document', 'pdf', 'audio'].includes(value)) {
-    return 'document';
-  }
-  if (value === 'quiz') {
-    return 'quiz';
-  }
-
-  return 'link';
-}
 
 function resolveContentUrl(content: {
   body_url?: string | null;
   embed_url?: string | null;
   external_url?: string | null;
   assets?: Array<{ download_url?: string | null; url?: string | null }> | null;
+  id?: string | null;
 }) {
   return (
     content.embed_url ||
@@ -34,6 +20,7 @@ function resolveContentUrl(content: {
     content.external_url ||
     content.assets?.[0]?.download_url ||
     content.assets?.[0]?.url ||
+    (content.id ? `/api/v1/content-items/${content.id}/stream` : null) ||
     null
   );
 }
@@ -59,12 +46,15 @@ export function ContentPlayerPage() {
       return;
     }
 
-    void updateProgressMutation.mutateAsync({
-      contentId: id,
-      status: 'in_progress',
-    }).then(() => {
-      setAutoMarkedStarted(true);
-    }).catch(() => null);
+    void updateProgressMutation
+      .mutateAsync({
+        contentId: id,
+        status: 'in_progress',
+      })
+      .then(() => {
+        setAutoMarkedStarted(true);
+      })
+      .catch(() => null);
   }, [autoMarkedStarted, detailQuery.data, id, updateProgressMutation]);
 
   async function handleProgressChange(status: ContentProgressStatus) {
@@ -86,17 +76,29 @@ export function ContentPlayerPage() {
     <div className="page">
       <div className="page-header page-header--split">
         <div>
-          <button type="button" className="btn btn-secondary" onClick={() => navigate(`/content/${id}`)}>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => navigate(`/content/${id}`)}
+          >
             {t('content.backToDetail')}
           </button>
           <h1 className="page-title">{detailQuery.data?.title ?? t('content.openPlayer')}</h1>
           <p className="page-subtitle">{t('content.playerSubtitle')}</p>
         </div>
         <div className="page-actions">
-          <button type="button" className="btn btn-secondary" onClick={() => void handleProgressChange('in_progress')}>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => void handleProgressChange('in_progress')}
+          >
             {t('content.markInProgress')}
           </button>
-          <button type="button" className="btn btn-primary" onClick={() => void handleProgressChange('completed')}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => void handleProgressChange('completed')}
+          >
             {t('content.markCompleted')}
           </button>
         </div>
@@ -126,10 +128,22 @@ export function ContentPlayerPage() {
           />
         ) : null}
 
+        {(contentType === 'story' || contentType === 'coloring_book') && contentUrl ? (
+          <iframe
+            title={detailQuery.data?.title || 'content-preview'}
+            src={contentUrl}
+            style={{ width: '100%', minHeight: 640, border: 'none', borderRadius: 12 }}
+          />
+        ) : null}
+
         {contentType === 'quiz' ? (
           <div style={{ textAlign: 'center', padding: '48px 24px' }}>
             <p>{t('content.quizLaunchHint')}</p>
-            <button type="button" className="btn btn-primary" onClick={() => navigate('/student/quizzes')}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => navigate('/student/quizzes')}
+            >
               {t('content.launchQuiz')}
             </button>
           </div>
@@ -138,7 +152,12 @@ export function ContentPlayerPage() {
         {contentType === 'link' && contentUrl ? (
           <div style={{ textAlign: 'center', padding: '48px 24px' }}>
             <p>{t('content.externalLinkHint')}</p>
-            <a href={contentUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
+            <a
+              href={contentUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-primary"
+            >
               {t('content.openExternal')}
             </a>
           </div>
