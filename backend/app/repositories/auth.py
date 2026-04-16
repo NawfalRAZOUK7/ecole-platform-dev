@@ -20,6 +20,7 @@ from app.models.iam import (
     TeacherProfile,
     User,
 )
+from app.models.school import School
 from app.repositories.base import BaseRepository
 
 
@@ -42,6 +43,13 @@ class AuthRepository(BaseRepository):
         user_id: uuid.UUID,
     ) -> User | None:
         result = await self.db.execute(select(User).where(User.id == user_id))
+        return result.scalar_one_or_none()
+
+    async def get_school_by_id(
+        self,
+        school_id: uuid.UUID,
+    ) -> School | None:
+        result = await self.db.execute(select(School).where(School.id == school_id))
         return result.scalar_one_or_none()
 
     async def get_user_in_school(

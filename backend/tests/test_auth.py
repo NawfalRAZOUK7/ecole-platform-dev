@@ -136,6 +136,20 @@ class TestLogin:
         assert response.status_code == 401
 
     @pytest.mark.asyncio
+    async def test_login_invalid_school_id_returns_401(self, client: httpx.AsyncClient):
+        """Unknown school IDs must not turn a login denial into a server error."""
+        response = await client.post(
+            "/auth/login",
+            json={
+                "email": ADMIN_EMAIL,
+                "password": ADMIN_PASSWORD,
+                "school_id": "11111111-1111-4111-8111-111111111111",
+            },
+        )
+        assert response.status_code == 401
+        assert response.json()["error"]["code"] == "ERR-IAM-401"
+
+    @pytest.mark.asyncio
     async def test_login_validation_error(self, client: httpx.AsyncClient):
         """Missing fields return 422 with ErrorResponse format."""
         response = await client.post(

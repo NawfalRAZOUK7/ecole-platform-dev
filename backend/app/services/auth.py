@@ -256,6 +256,40 @@ class AuthService:
         except Exception:
             logger.exception("Failed to dispatch %s", type(event).__name__)
 
+    async def _audit_login_denial(
+        self,
+        *,
+        school_id: uuid.UUID,
+        actor_id: uuid.UUID | None,
+        action_type: str,
+        error_code: str,
+        ip_address: str | None,
+    ) -> None:
+        """Best-effort audit for denied login attempts.
+
+        Failed logins can legitimately target a school UUID that does not exist.
+        In that case we still return a normal auth error and skip the audit row,
+        rather than turning the denial into a 500 due to the FK on audit_logs.
+        """
+        if actor_id is None:
+            school = await self.repo.get_school_by_id(school_id)
+            if school is None:
+                logger.warning(
+                    "Skipping denied login audit for unknown school_id=%s action=%s",
+                    school_id,
+                    action_type,
+                )
+                return
+
+        await self.audit.log_event(
+            school_id=school_id,
+            actor_id=actor_id,
+            action_type=action_type,
+            outcome="denied",
+            error_code=error_code,
+            ip_address=ip_address,
+        )
+
     # ------------------------------------------------------------------
     # Login (S-030, Phase 2A: device info)
     # ------------------------------------------------------------------
@@ -291,11 +325,10 @@ class AuthService:
                 success=False,
                 failure_reason="rate_limited",
             )
-            await self.audit.log_event(
+            await self._audit_login_denial(
                 school_id=school_id,
                 actor_id=user.id if user else None,
                 action_type="AUTH_LOGIN_RATE_LIMITED",
-                outcome="denied",
                 error_code="ERR-RATE-429",
                 ip_address=ip_address,
             )
@@ -321,11 +354,10 @@ class AuthService:
                 success=False,
                 failure_reason="wrong_password",
             )
-            await self.audit.log_event(
+            await self._audit_login_denial(
                 school_id=school_id,
                 actor_id=user.id if user else None,
                 action_type="AUTH_LOGIN_FAILED",
-                outcome="denied",
                 error_code="ERR-IAM-401",
                 ip_address=ip_address,
             )

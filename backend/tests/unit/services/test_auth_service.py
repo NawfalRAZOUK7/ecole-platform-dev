@@ -192,6 +192,25 @@ class TestLogin:
         service.audit.log_event.assert_awaited_once()
 
     @pytest.mark.asyncio
+    async def test_invalid_school_id_skips_audit_and_returns_401(self):
+        service, redis = setup_service()
+        school_id = uuid.uuid4()
+        email = "admin@example.test"
+        service.repo.get_user_by_email.return_value = None
+        service.repo.get_school_by_id.return_value = None
+        service._record_login_history = AsyncMock()
+
+        with pytest.raises(AuthenticationError, match="Invalid email or password"):
+            await service.login(
+                email=email,
+                password="bad-password",
+                school_id=school_id,
+            )
+
+        assert redis.store[f"login_attempts:{email}:{school_id}"] == 1
+        service.audit.log_event.assert_not_awaited()
+
+    @pytest.mark.asyncio
     async def test_rejects_inactive_user(self, monkeypatch: pytest.MonkeyPatch):
         service, _redis = setup_service()
         school_id = uuid.uuid4()
