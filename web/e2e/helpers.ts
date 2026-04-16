@@ -9,16 +9,14 @@ export const credentials = {
   teacher: { email: 'prof.math@ecole-benani.ma', password: 'teacher123' },
   parent: { email: 'parent.alaoui@gmail.com', password: 'parent123' },
   student: { email: 'yassine.alaoui@ecole-benani.ma', password: 'student123' },
+  content_manager: { email: 'cms.manager@ecole-benani.ma', password: 'cms123' },
 } as const;
 
 /**
  * Log in as a given role via the login form.
  * Waits until the post-login redirect completes.
  */
-export async function login(
-  page: Page,
-  role: keyof typeof credentials,
-): Promise<void> {
+export async function login(page: Page, role: keyof typeof credentials): Promise<void> {
   const cred = credentials[role];
 
   await page.goto('/login');
@@ -49,10 +47,7 @@ export async function logout(page: Page): Promise<void> {
 /**
  * Assert the page title (h1.page-title) contains the given text.
  */
-export async function expectPageTitle(
-  page: Page,
-  text: string | RegExp,
-): Promise<void> {
+export async function expectPageTitle(page: Page, text: string | RegExp): Promise<void> {
   await expect(page.locator('.page-title').first()).toContainText(text, {
     timeout: 5_000,
   });

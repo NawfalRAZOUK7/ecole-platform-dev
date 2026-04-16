@@ -1,7 +1,7 @@
 import type { Page, Route } from '@playwright/test';
 import { SCHOOL_ID } from './helpers';
 
-export type MockRole = 'admin' | 'teacher' | 'parent' | 'student' | 'director';
+export type MockRole = 'admin' | 'teacher' | 'parent' | 'student' | 'director' | 'content_manager';
 
 export interface MockUser {
   id: string;
@@ -71,10 +71,19 @@ const USERS: Record<MockRole, MockUser> = {
     permissions: ['budgets.review'],
     memberships: [{ school_id: SCHOOL_ID, role: 'DIR', status: 'active' }],
   },
+  content_manager: {
+    id: 'content-manager-1',
+    email: 'cms.manager@ecole-benani.ma',
+    full_name: 'Gestionnaire CMS',
+    role: 'CONTENT_MGR',
+    school_id: SCHOOL_ID,
+    permissions: ['cms.content.write', 'cms.content.review'],
+    memberships: [{ school_id: SCHOOL_ID, role: 'CONTENT_MGR', status: 'active' }],
+  },
 };
 
 const ROLE_BY_EMAIL: Record<string, MockRole> = Object.fromEntries(
-  Object.entries(USERS).map(([role, user]) => [user.email, role as MockRole])
+  Object.entries(USERS).map(([role, user]) => [user.email, role as MockRole]),
 );
 
 export function apiResponse<T>(data: T) {
@@ -101,7 +110,7 @@ async function fulfillJson(
   options: {
     status?: number;
     headers?: Record<string, string>;
-  } = {}
+  } = {},
 ) {
   await route.fulfill({
     status: options.status ?? 200,
@@ -115,10 +124,7 @@ function getRoleFromLoginEmail(email: string | undefined, fallbackRole: MockRole
   return ROLE_BY_EMAIL[email ?? ''] ?? fallbackRole;
 }
 
-export async function installMockSession(
-  page: Page,
-  initialRole: MockRole = 'parent'
-) {
+export async function installMockSession(page: Page, initialRole: MockRole = 'parent') {
   let currentRole = initialRole;
 
   await page.route(/\/api\/v1\/auth\/login$/, async (route) => {
@@ -138,7 +144,7 @@ export async function installMockSession(
         headers: {
           'set-cookie': SESSION_COOKIE,
         },
-      }
+      },
     );
   });
 
@@ -158,7 +164,7 @@ export async function installMockSession(
         headers: {
           'set-cookie': SESSION_COOKIE,
         },
-      }
+      },
     );
   });
 
@@ -179,7 +185,10 @@ export async function installMockSession(
   });
 
   await page.route(/\/api\/v1\/sync\/devices(?:\?.*)?$/, async (route) => {
-    await fulfillJson(route, apiListResponse([{ id: 'device-1', name: 'Browser', is_active: true }]));
+    await fulfillJson(
+      route,
+      apiListResponse([{ id: 'device-1', name: 'Browser', is_active: true }]),
+    );
   });
 
   await page.route(/\/api\/v1\/sync\/status(?:\?.*)?$/, async (route) => {
@@ -191,7 +200,7 @@ export async function installMockSession(
         last_pull_at: '2026-04-06T09:05:00.000Z',
         pending_push_count: 0,
         pending_pull_count: 0,
-      })
+      }),
     );
   });
 
@@ -203,7 +212,7 @@ export async function installMockSession(
         is_healthy: true,
         last_success_at: '2026-04-06T09:05:00.000Z',
         error_count: 0,
-      })
+      }),
     );
   });
 
