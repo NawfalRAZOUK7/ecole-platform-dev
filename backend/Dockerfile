@@ -21,18 +21,18 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 
 FROM base AS test
 
-COPY requirements-dev.txt .
+COPY requirements-dev.txt requirements-test.txt ./
 RUN --mount=type=cache,target=/root/.cache/pip \
-    PIP_NO_CACHE_DIR=0 pip install --no-compile -r requirements-dev.txt
+    PIP_NO_CACHE_DIR=0 pip install --no-compile -r requirements-test.txt
 
 COPY . .
 RUN ruff check app/ tests/ && ruff format --check app/ tests/
 
 FROM base AS development
 
-COPY requirements-dev.txt .
+COPY requirements-dev.txt requirements-test.txt ./
 RUN --mount=type=cache,target=/root/.cache/pip \
-    PIP_NO_CACHE_DIR=0 pip install --no-compile -r requirements-dev.txt
+    PIP_NO_CACHE_DIR=0 pip install --no-compile -r requirements-test.txt
 
 COPY . .
 
