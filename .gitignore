@@ -63,11 +63,15 @@ docker-compose.override.yml
 # ==================== IDE ====================
 .vscode/
 .idea/
+.claude/
 *.swp
 *.swo
 *~
 .DS_Store
 Thumbs.db
+
+# ==================== Build Tool Caches ====================
+**/.gradle/
 
 # ==================== OS ====================
 .DS_Store
