@@ -38,12 +38,55 @@ export interface ContentItem {
   level_tag?: string | null;
   level_band?: string | null;
   language?: string | null;
+  subject?: string | null;
   status?: string | null;
   sort_order?: number | null;
+  page_count?: number | null;
+  letter?: string | null;
+  target_age_min?: number | null;
+  target_age_max?: number | null;
+  theme_color?: string | null;
   created_at?: string | null;
   progress?: ContentProgressRecord | null;
   student_analytics?: ContentStudentAnalytics | null;
   assets?: ContentAsset[] | null;
+}
+
+export interface ContentStoryPage {
+  id: string;
+  content_item_id: string;
+  file_path: string;
+  checksum?: string | null;
+  mime_type?: string | null;
+  file_size?: number | null;
+  page_number: number | null;
+  narration_text: string | null;
+  has_activity: boolean;
+  asset_type: string | null;
+}
+
+export interface ContentBadgeUnlock {
+  code: string;
+  title?: string | null;
+  icon?: string | null;
+}
+
+export interface ContentRewardSnapshot {
+  id: string;
+  student_id?: string;
+  stars: number;
+  xp: number;
+  level: number;
+  streak_days?: number;
+  badges?: string[];
+  last_activity_at?: string | null;
+  level_progress?: number;
+}
+
+export interface ContentCompleteResult {
+  progress: ContentProgressRecord;
+  reward: ContentRewardSnapshot;
+  newly_earned_badges: ContentBadgeUnlock[];
 }
 
 export interface ContentFilters extends Record<string, string | number | undefined> {
@@ -62,8 +105,18 @@ export const contentService = {
     return api.get<ContentItem>(`/content-items/${contentId}`);
   },
 
+  listStoryPages(contentId: string) {
+    return api.list<ContentStoryPage>(`/content-items/${contentId}/pages`);
+  },
+
   updateProgress(contentId: string, status: ContentProgressStatus) {
     return api.post<ContentProgressRecord>(`/content-items/${contentId}/progress`, { status });
+  },
+
+  completeContentItem(contentId: string, timeSpentSeconds?: number) {
+    return api.post<ContentCompleteResult>(`/content-items/${contentId}/complete`, {
+      time_spent_seconds: timeSpentSeconds,
+    });
   },
 
   togglePublish(contentId: string, status: 'draft' | 'published') {

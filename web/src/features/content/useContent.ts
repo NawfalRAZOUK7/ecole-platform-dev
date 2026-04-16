@@ -1,12 +1,18 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { STALE_CONTENT } from '@/shared/hooks/useQueryDefaults';
-import { contentService, type ContentFilters, type ContentProgressStatus } from './content.service';
+import {
+  contentService,
+  type ContentCompleteResult,
+  type ContentFilters,
+  type ContentProgressStatus,
+} from './content.service';
 
 export const contentQueryKeys = {
   all: ['content'] as const,
   items: (filters: Omit<ContentFilters, 'cursor'>) =>
     [...contentQueryKeys.all, 'items', filters] as const,
   detail: (contentId: string) => [...contentQueryKeys.all, 'detail', contentId] as const,
+  storyPages: (contentId: string) => [...contentQueryKeys.all, 'story-pages', contentId] as const,
 };
 
 export function useContentItems(filters: Omit<ContentFilters, 'cursor'>) {
@@ -33,6 +39,15 @@ export function useContentDetail(contentId: string) {
   });
 }
 
+export function useContentStoryPages(contentId: string) {
+  return useQuery({
+    queryKey: contentQueryKeys.storyPages(contentId),
+    queryFn: async () => (await contentService.listStoryPages(contentId)).data,
+    enabled: Boolean(contentId),
+    staleTime: STALE_CONTENT,
+  });
+}
+
 export function useUpdateContentProgress() {
   const queryClient = useQueryClient();
 
@@ -47,6 +62,30 @@ export function useUpdateContentProgress() {
     onSuccess: async (_data, variables) => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: contentQueryKeys.detail(variables.contentId) }),
+        queryClient.invalidateQueries({ queryKey: contentQueryKeys.all }),
+      ]);
+    },
+  });
+}
+
+export function useCompleteContentItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      contentId,
+      timeSpentSeconds,
+    }: {
+      contentId: string;
+      timeSpentSeconds?: number;
+    }): Promise<ContentCompleteResult> =>
+      (await contentService.completeContentItem(contentId, timeSpentSeconds)).data,
+    onSuccess: async (_data, variables) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: contentQueryKeys.detail(variables.contentId) }),
+        queryClient.invalidateQueries({
+          queryKey: contentQueryKeys.storyPages(variables.contentId),
+        }),
         queryClient.invalidateQueries({ queryKey: contentQueryKeys.all }),
       ]);
     },

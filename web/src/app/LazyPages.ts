@@ -84,8 +84,23 @@ export const ClassProgressPage = lazy(() =>
 );
 
 // Student
+export const StudentContentPage = lazy(() =>
+  import('@/features/student/StudentContentPage').then((m) => ({
+    default: m.StudentContentPage,
+  })),
+);
 export const ContentViewPage = lazy(() =>
   import('@/features/student/ContentViewPage').then((m) => ({ default: m.ContentViewPage })),
+);
+export const StoryViewerPage = lazy(() =>
+  import('@/features/student/StoryViewerPage').then((m) => ({
+    default: m.StoryViewerPage,
+  })),
+);
+export const ColoringViewerPage = lazy(() =>
+  import('@/features/student/ColoringViewerPage').then((m) => ({
+    default: m.ColoringViewerPage,
+  })),
 );
 export const QuizPlayerPage = lazy(() =>
   import('@/features/student/QuizPlayerPage').then((m) => ({ default: m.QuizPlayerPage })),

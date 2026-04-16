@@ -43,7 +43,9 @@ import {
   ContentLibraryPage,
   QuizManagerPage,
   ClassProgressPage,
-  ContentViewPage,
+  StudentContentPage,
+  StoryViewerPage,
+  ColoringViewerPage,
   QuizPlayerPage,
   AttendanceModulePage,
   AttendanceHistoryPage,
@@ -407,7 +409,23 @@ function App() {
                 path="/student/content"
                 element={
                   <ProtectedRoute roles={['STD']}>
-                    <ContentViewPage />
+                    <StudentContentPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/student/content/:id/read"
+                element={
+                  <ProtectedRoute roles={['STD']}>
+                    <StoryViewerPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/student/content/:id/color"
+                element={
+                  <ProtectedRoute roles={['STD']}>
+                    <ColoringViewerPage />
                   </ProtectedRoute>
                 }
               />
