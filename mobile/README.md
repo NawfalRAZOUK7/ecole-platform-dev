@@ -21,6 +21,39 @@ flutter pub get
 flutter run
 ```
 
+## Kid-Facing Content & Gamification
+
+The mobile app is the primary interactive experience for early-learning content, games, and rewards.
+
+### UI foundations
+
+- **Cairo font** is the default display and body typeface for the kid-facing experience.
+- **`KidsContentColors`** defines the shared palette for stories, rewards, coloring, mini-games, and the Sami mascot.
+- **Animated guide widget** is implemented through `AnimatedGuide` and the `SamiMascot` family of widgets for story, coloring, and game coaching.
+
+### Arabic TTS
+
+- **`TtsService`** wraps `flutter_tts` with Arabic defaults (`ar-SA`), letter examples, praise phrases, and instruction playback.
+- Used in story reading, vocabulary cards, memory prompts, and the animated guide's speech bubble interactions.
+
+### Routes
+
+- Story reader: `/student/content/:id/read`
+- Rewards hub: `/rewards`
+- Games:
+  - `/games/memory`
+  - `/games/sorting`
+  - `/games/vocabulary`
+- Coloring list: `/coloring`
+- Coloring page: `/coloring/:id`
+
+### Feature summary
+
+- **Story reader** supports ordered page assets, narration, Arabic letter themes, and reward completion.
+- **Rewards** exposes stars, XP, levels, streaks, badges, and celebration/confetti widgets.
+- **Games** includes memory match, sorting, and vocabulary cards backed by configurable game payloads.
+- **Coloring** provides interactive drawing, save/export, and reward submission flows.
+
 ## Key Dependencies
 
 - **State Management:** flutter_riverpod
@@ -29,3 +62,4 @@ flutter run
 - **Offline Cache:** sqflite (TTL policies per E2)
 - **Secure Storage:** flutter_secure_storage (token storage)
 - **Push Notifications:** firebase_messaging + firebase_core
+- **Text-to-Speech:** flutter_tts

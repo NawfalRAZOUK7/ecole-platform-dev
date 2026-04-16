@@ -2748,8 +2748,10 @@
                   "type": "null"
                 }
               ],
+              "description": "Exact-match content type filter, including values like story and coloring_book.",
               "title": "Content Type"
-            }
+            },
+            "description": "Exact-match content type filter, including values like story and coloring_book."
           },
           {
             "name": "level_band",
@@ -2782,6 +2784,45 @@
               ],
               "title": "Language"
             }
+          },
+          {
+            "name": "letter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 10
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exact-match letter filter.",
+              "title": "Letter"
+            },
+            "description": "Exact-match letter filter."
+          },
+          {
+            "name": "target_age",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Matches items where target_age_min <= target_age <= target_age_max.",
+              "title": "Target Age"
+            },
+            "description": "Matches items where target_age_min <= target_age <= target_age_max."
           },
           {
             "name": "cursor",
@@ -2920,6 +2961,106 @@
         }
       }
     },
+    "/api/v1/content-items/{content_item_id}/pages": {
+      "get": {
+        "tags": [
+          "lms-content"
+        ],
+        "summary": "List story pages",
+        "operationId": "list_story_pages_api_v1_content_items__content_item_id__pages_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "content_item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Content Item Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ordered content item assets for the story reader",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "lms-content"
+        ],
+        "summary": "Upload a story page",
+        "operationId": "upload_story_page_api_v1_content_items__content_item_id__pages_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "content_item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Content Item Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_story_page_api_v1_content_items__content_item_id__pages_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Uploaded story page asset metadata",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/content-items/{content_item_id}/stream": {
       "get": {
         "tags": [
@@ -3004,6 +3145,118 @@
         "responses": {
           "200": {
             "description": "Updated progress record",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/content-items/{content_item_id}/complete": {
+      "post": {
+        "tags": [
+          "lms-content"
+        ],
+        "summary": "Mark a content item completed and award rewards",
+        "operationId": "complete_content_item_api_v1_content_items__content_item_id__complete_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "content_item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Content Item Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentCompleteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Content progress and reward payload",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/content-items/{content_item_id}/coloring/save": {
+      "post": {
+        "tags": [
+          "lms-content"
+        ],
+        "summary": "Save a colored page and award rewards",
+        "operationId": "save_coloring_page_api_v1_content_items__content_item_id__coloring_save_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "content_item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Content Item Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_save_coloring_page_api_v1_content_items__content_item_id__coloring_save_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Created document id and reward payload",
             "content": {
               "application/json": {
                 "schema": {}
@@ -8231,6 +8484,38 @@
             }
           },
           {
+            "name": "letter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Letter"
+            }
+          },
+          {
+            "name": "target_age",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Target Age"
+            }
+          },
+          {
             "name": "cursor",
             "in": "query",
             "required": false,
@@ -13392,6 +13677,525 @@
                 "schema": {
                   "title": "Response Get Skill Leaderboard Api V1 Skills Leaderboard  Class Id  Get"
                 }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rewards/award": {
+      "post": {
+        "tags": [
+          "Rewards"
+        ],
+        "summary": "Award stars and XP to a student",
+        "operationId": "award_reward_api_v1_rewards_award_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AwardRewardRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/rewards/me": {
+      "get": {
+        "tags": [
+          "Rewards"
+        ],
+        "summary": "Get my rewards profile",
+        "operationId": "get_my_rewards_api_v1_rewards_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/rewards/student/{student_id}": {
+      "get": {
+        "tags": [
+          "Rewards"
+        ],
+        "summary": "Get rewards for one student",
+        "operationId": "get_student_rewards_api_v1_rewards_student__student_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "student_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Student Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rewards/leaderboard/{class_id}": {
+      "get": {
+        "tags": [
+          "Rewards"
+        ],
+        "summary": "Get class rewards leaderboard",
+        "operationId": "get_rewards_leaderboard_api_v1_rewards_leaderboard__class_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "class_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Class Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/games/configs": {
+      "get": {
+        "tags": [
+          "Games"
+        ],
+        "summary": "List game configs",
+        "operationId": "list_game_configs_api_v1_games_configs_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "game_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Game Type"
+            }
+          },
+          {
+            "name": "difficulty",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Difficulty"
+            }
+          },
+          {
+            "name": "subject",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subject"
+            }
+          },
+          {
+            "name": "target_age",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Target Age"
+            }
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Is Active"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Games"
+        ],
+        "summary": "Create game config",
+        "operationId": "create_game_config_api_v1_games_configs_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GameConfigCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/games/configs/{game_id}": {
+      "get": {
+        "tags": [
+          "Games"
+        ],
+        "summary": "Get one game config",
+        "operationId": "get_game_config_api_v1_games_configs__game_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "game_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Game Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Games"
+        ],
+        "summary": "Update game config",
+        "operationId": "update_game_config_api_v1_games_configs__game_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "game_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Game Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GameConfigUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/games/configs/{game_id}/complete": {
+      "post": {
+        "tags": [
+          "Games"
+        ],
+        "summary": "Complete a game config",
+        "operationId": "complete_game_config_api_v1_games_configs__game_id__complete_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "game_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Game Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GameCompletionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           },
@@ -20170,6 +20974,63 @@
         ],
         "title": "AttendanceThresholdCheckRequest"
       },
+      "AwardRewardRequest": {
+        "properties": {
+          "student_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Student Id"
+          },
+          "event_type": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Event Type"
+          },
+          "stars": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Stars",
+            "default": 0
+          },
+          "xp": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Xp",
+            "default": 0
+          },
+          "source_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Type"
+          },
+          "source_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "student_id",
+          "event_type"
+        ],
+        "title": "AwardRewardRequest"
+      },
       "BatchRegisterItem": {
         "properties": {
           "email": {
@@ -20337,6 +21198,20 @@
         ],
         "title": "Body_create_resource_api_v1_resources_post"
       },
+      "Body_save_coloring_page_api_v1_content_items__content_item_id__coloring_save_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_save_coloring_page_api_v1_content_items__content_item_id__coloring_save_post"
+      },
       "Body_upload_content_asset_api_v1_content_items__content_item_id__assets_post": {
         "properties": {
           "file": {
@@ -20427,6 +21302,47 @@
           "file"
         ],
         "title": "Body_upload_payment_proof_api_v1_payments__payment_id__proof_post"
+      },
+      "Body_upload_story_page_api_v1_content_items__content_item_id__pages_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File"
+          },
+          "page_number": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page Number"
+          },
+          "narration_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Narration Text"
+          },
+          "has_activity": {
+            "type": "boolean",
+            "title": "Has Activity",
+            "default": false
+          },
+          "asset_type": {
+            "type": "string",
+            "title": "Asset Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file",
+          "page_number",
+          "asset_type"
+        ],
+        "title": "Body_upload_story_page_api_v1_content_items__content_item_id__pages_post"
       },
       "Body_upload_submission_file_api_v1_submissions__submission_id__files_post": {
         "properties": {
@@ -20841,6 +21757,61 @@
             ],
             "title": "Description"
           },
+          "page_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page Count"
+          },
+          "letter": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Letter"
+          },
+          "target_age_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Age Min"
+          },
+          "target_age_max": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Age Max"
+          },
+          "theme_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Theme Color"
+          },
           "status": {
             "type": "string",
             "pattern": "^(draft|published|archived)$",
@@ -20929,6 +21900,61 @@
             ],
             "title": "Description"
           },
+          "page_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page Count"
+          },
+          "letter": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Letter"
+          },
+          "target_age_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Age Min"
+          },
+          "target_age_max": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Age Max"
+          },
+          "theme_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Theme Color"
+          },
           "status": {
             "anyOf": [
               {
@@ -21010,6 +22036,24 @@
           "content_item_id"
         ],
         "title": "ContentAssignRequest"
+      },
+      "ContentCompleteRequest": {
+        "properties": {
+          "time_spent_seconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Spent Seconds"
+          }
+        },
+        "type": "object",
+        "title": "ContentCompleteRequest"
       },
       "ContentProgressRequest": {
         "properties": {
@@ -22253,6 +23297,290 @@
         "type": "object",
         "title": "FinancialSnapshotComputeRequest",
         "description": "Payload for computing a financial snapshot."
+      },
+      "GameCompletionRequest": {
+        "properties": {
+          "score": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Score"
+          },
+          "time_seconds": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Time Seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "score",
+          "time_seconds"
+        ],
+        "title": "GameCompletionRequest"
+      },
+      "GameConfigCreateRequest": {
+        "properties": {
+          "game_type": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Game Type"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "title_ar": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title Ar"
+          },
+          "title_fr": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title Fr"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          },
+          "difficulty": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Difficulty",
+            "default": "easy"
+          },
+          "target_age_min": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Age Min"
+          },
+          "target_age_max": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Age Max"
+          },
+          "config": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Config"
+          },
+          "reward_stars": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Reward Stars",
+            "default": 10
+          },
+          "reward_xp": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Reward Xp",
+            "default": 15
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "game_type",
+          "title",
+          "config"
+        ],
+        "title": "GameConfigCreateRequest"
+      },
+      "GameConfigUpdateRequest": {
+        "properties": {
+          "game_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Game Type"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "title_ar": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title Ar"
+          },
+          "title_fr": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title Fr"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          },
+          "difficulty": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Difficulty"
+          },
+          "target_age_min": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Age Min"
+          },
+          "target_age_max": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Age Max"
+          },
+          "config": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Config"
+          },
+          "reward_stars": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reward Stars"
+          },
+          "reward_xp": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reward Xp"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "GameConfigUpdateRequest"
       },
       "GenerateQuizFromBankRequest": {
         "properties": {
@@ -26752,6 +28080,14 @@
     {
       "name": "system",
       "description": "System — Health check, version, and operational endpoints."
+    },
+    {
+      "name": "Rewards",
+      "description": "Student rewards, stars, XP, badges, leaderboards."
+    },
+    {
+      "name": "Games",
+      "description": "Mobile game configurations and completion reward flows."
     }
   ]
 }

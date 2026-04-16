@@ -87,6 +87,17 @@ The backend follows a **modular monolith** pattern with 6 domain modules:
 
 Each module follows the **Router → Service → Repository** layer pattern. Cross-module communication uses domain events and ports/adapters.
 
+## Educational Content & Gamification
+
+The platform now includes a kid-facing content and rewards loop across web and mobile:
+
+- **Story reader for Arabic letters** — Story and coloring-book content types support `page_count`, `letter`, target-age bands, narration text, and themed page presentation for early Arabic literacy.
+- **Coloring books** — Coloring book assets can be managed in CMS, viewed on web, and completed interactively in the mobile app with saved colored output.
+- **Mini-games** — Configurable memory match, sorting, and vocabulary card games can be authored by teachers/admins and delivered to students.
+- **Rewards system** — Students accumulate **stars**, **XP**, **levels**, **badges**, and **streaks** from stories, coloring, and games, with leaderboards for class visibility.
+- **Animated mascot guide (Sami)** — A kid-friendly animated owl guide appears in mobile reading, coloring, and game flows to give prompts and encouragement.
+- **Skill Passport + Stars/XP** — The existing Skill Passport remains the competency view, while the new rewards layer adds a motivational progression system on top of academic content.
+
 ## Documentation
 
 Full project documentation (9 packs, 40+ documents) is available in the `ecole-platform-report/` repository:

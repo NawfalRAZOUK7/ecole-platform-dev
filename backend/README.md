@@ -78,6 +78,71 @@ pytest tests/ -v
 python scripts/export_openapi.py
 ```
 
+## Educational Content & Gamification APIs
+
+Recent backend additions cover story content, coloring workflows, rewards, and configurable mini-games.
+
+### Rewards endpoints
+
+- `POST /api/v1/rewards/award`
+  Awards stars and XP to a student and records the reward event.
+- `GET /api/v1/rewards/me`
+  Returns the authenticated student's rewards profile.
+- `GET /api/v1/rewards/student/{student_id}`
+  Returns rewards for a specific student, with access checks for parent/teacher/admin views.
+- `GET /api/v1/rewards/leaderboard/{class_id}`
+  Returns the class leaderboard ordered by stars and level.
+
+### Games endpoints
+
+- `GET /api/v1/games/configs`
+  Lists game configurations with filters such as type, difficulty, subject, target age, and active state.
+- `GET /api/v1/games/configs/{game_id}`
+  Returns one game configuration.
+- `POST /api/v1/games/configs`
+  Creates a game configuration for memory, sorting, or vocabulary game modes.
+- `PUT /api/v1/games/configs/{game_id}`
+  Updates a game configuration.
+- `POST /api/v1/games/configs/{game_id}/complete`
+  Marks a game run complete and applies reward logic for the student.
+
+### Content item endpoints
+
+- `GET /api/v1/content-items/{content_item_id}/pages`
+  Lists ordered story or coloring page assets for the reader/viewer experience.
+- `POST /api/v1/content-items/{content_item_id}/pages`
+  Uploads a story page asset with `page_number`, `narration_text`, `has_activity`, and `asset_type`.
+- `POST /api/v1/content-items/{content_item_id}/complete`
+  Marks a content item complete and awards rewards.
+- `POST /api/v1/content-items/{content_item_id}/coloring/save`
+  Stores a colored page submission and awards rewards for the coloring flow.
+
+## Migrations G41-G44
+
+The gamification and story-content schema landed through the following Alembic revisions:
+
+- `G41` [`a81c9e4f2b7d_g41_story_content_fields.py`](./alembic/versions/a81c9e4f2b7d_g41_story_content_fields.py)
+  Adds story/coloring metadata to `content_items`: `page_count`, `letter`, `target_age_min`, `target_age_max`, and `theme_color`.
+- `G42` [`6d3f2a91b4c8_g42_student_rewards.py`](./alembic/versions/6d3f2a91b4c8_g42_student_rewards.py)
+  Creates `student_rewards` and `reward_events` for stars, XP, levels, streaks, and reward history.
+- `G43` [`b71f4d2c8e9a_g43_game_config.py`](./alembic/versions/b71f4d2c8e9a_g43_game_config.py)
+  Creates `game_configs` for reusable mini-game definitions and reward settings.
+- `G44` [`d4c8f1a7e2b3_g44_story_page_fields.py`](./alembic/versions/d4c8f1a7e2b3_g44_story_page_fields.py)
+  Adds `page_number`, `narration_text`, `has_activity`, and `asset_type` to `content_item_assets`.
+
+## OpenAPI Export
+
+The generated API spec is committed in:
+
+- [`backend/docs/openapi.json`](./docs/openapi.json)
+- [`backend/openapi.json`](./openapi.json)
+
+Regenerate it after endpoint changes with:
+
+```bash
+python scripts/export_openapi.py
+```
+
 ## Security Features
 
 - **Authentication:** JWT + optional 2FA (TOTP)
