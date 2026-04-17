@@ -22,6 +22,10 @@ class CacheTtl {
   static const int invoices = 10 * 60; // 10 minutes
   static const int gradebook = 10 * 60; // 10 minutes
   static const int attendance = 10 * 60; // 10 minutes
+
+  // Offline content TTLs
+  static const int offlineContent = 7 * 24 * 60 * 60; // 7 days
+  static const int offlineAssets = 30 * 24 * 60 * 60; // 30 days
 }
 
 class CacheStore {

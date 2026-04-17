@@ -44,6 +44,9 @@ void main() {
     );
 
     await tester.pump();
+    // Advance past the 2-second splash minimum-display timer.
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pump();
     expect(find.byType(MaterialApp), findsOneWidget);
   });
 }

@@ -75,6 +75,7 @@ import 'package:ecole_platform/shared/secure_storage.dart';
 import 'package:ecole_platform/shared/connectivity_service.dart';
 import 'package:ecole_platform/shared/push_notifications.dart';
 import 'package:ecole_platform/shared/services/tts_service.dart';
+import 'package:ecole_platform/shared/services/offline_content_manager.dart';
 
 // ── Infrastructure providers ──
 
@@ -88,6 +89,14 @@ final apiClientProvider = Provider<ApiClient>((ref) {
     tokenStorage: storage,
     baseUrl: 'http://localhost:8000',
   );
+});
+
+final offlineContentManagerProvider = Provider<OfflineContentManager>((ref) {
+  final api = ref.watch(apiClientProvider);
+  final cache = ref.watch(cacheStoreProvider);
+  final manager = OfflineContentManager(api: api, cache: cache);
+  ref.onDispose(manager.dispose);
+  return manager;
 });
 
 final cacheStoreProvider = Provider<CacheStore>((ref) {

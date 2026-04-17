@@ -12,6 +12,7 @@ import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
 import 'package:ecole_platform/shared/ui/widgets/animated_guide.dart';
 import 'package:ecole_platform/shared/ui/widgets/drawing_overlay.dart';
+import 'package:ecole_platform/shared/widgets/app_empty_state.dart';
 
 class StoryReaderScreen extends ConsumerStatefulWidget {
   final String contentItemId;
@@ -36,6 +37,21 @@ class _StoryReaderScreenState extends ConsumerState<StoryReaderScreen> {
   bool _hasShownCelebration = false;
   int _lastNarratedPageIndex = -1;
   int _audioRequestId = 0;
+
+  /// null = check in progress, true/false = result.
+  bool? _isOfflineAvailable;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkOfflineAvailability();
+  }
+
+  Future<void> _checkOfflineAvailability() async {
+    final manager = ref.read(offlineContentManagerProvider);
+    final available = await manager.isAvailableOffline(widget.contentItemId);
+    if (mounted) setState(() => _isOfflineAvailable = available);
+  }
 
   StoryReaderRequest get _request => StoryReaderRequest(
         contentItemId: widget.contentItemId,
@@ -151,6 +167,31 @@ class _StoryReaderScreenState extends ConsumerState<StoryReaderScreen> {
   Widget build(BuildContext context) {
     final storyAsync = ref.watch(storyReaderProvider(_request));
 
+    // Reactive offline state via sync indicator stream.
+    final syncState = ref.watch(syncIndicatorProvider);
+    final isOffline = syncState.whenOrNull(data: (s) => !s.online) ?? false;
+
+    // If offline and we've confirmed content is NOT cached → block early.
+    if (isOffline && _isOfflineAvailable == false) {
+      return Scaffold(
+        backgroundColor: KidsContentColors.storyBackground,
+        appBar: AppBar(
+          backgroundColor: KidsContentColors.storyBackground,
+          leading: IconButton(
+            onPressed: () => context.pop(),
+            icon: const Icon(Icons.close),
+          ),
+        ),
+        body: const Center(
+          child: AppEmptyState(
+            icon: Icons.wifi_off_rounded,
+            title: 'غير متاح بدون إنترنت',
+            subtitle: 'حمّل هذه القصة أولاً لتتمكن من قراءتها بدون اتصال',
+          ),
+        ),
+      );
+    }
+
     return storyAsync.when(
       loading: () => const Scaffold(
         backgroundColor: KidsContentColors.storyBackground,
@@ -209,6 +250,7 @@ class _StoryReaderScreenState extends ConsumerState<StoryReaderScreen> {
                 isAudioPlaying: storyState.isAudioPlaying,
                 canReplayNarration:
                     ((currentPage?.narrationText ?? '').trim().isNotEmpty),
+                isOffline: isOffline,
                 onClose: _closeReader,
                 onToggleDrawing: () => ref
                     .read(storyReaderProvider(_request).notifier)
@@ -318,6 +360,7 @@ class _StoryTopBar extends StatelessWidget {
   final bool isDrawingMode;
   final bool isAudioPlaying;
   final bool canReplayNarration;
+  final bool isOffline;
   final VoidCallback onClose;
   final VoidCallback onToggleDrawing;
   final VoidCallback onToggleNarration;
@@ -330,6 +373,7 @@ class _StoryTopBar extends StatelessWidget {
     required this.isDrawingMode,
     required this.isAudioPlaying,
     required this.canReplayNarration,
+    required this.isOffline,
     required this.onClose,
     required this.onToggleDrawing,
     required this.onToggleNarration,
@@ -366,22 +410,58 @@ class _StoryTopBar extends StatelessWidget {
                         ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                      vertical: AppSpacing.xs,
-                    ),
-                    decoration: BoxDecoration(
-                      color: accentColor.withAlpha(32),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      '$currentPage/$totalPages',
-                      style: TextStyle(
-                        color: accentColor,
-                        fontWeight: FontWeight.w700,
+                  Row(
+                    children: <Widget>[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                          vertical: AppSpacing.xs,
+                        ),
+                        decoration: BoxDecoration(
+                          color: accentColor.withAlpha(32),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          '$currentPage/$totalPages',
+                          style: TextStyle(
+                            color: accentColor,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
-                    ),
+                      if (isOffline) ...<Widget>[
+                        const SizedBox(width: AppSpacing.xs),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.xs,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withAlpha(32),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              Icon(
+                                Icons.wifi_off_rounded,
+                                size: 12,
+                                color: Colors.orange,
+                              ),
+                              SizedBox(width: 3),
+                              Text(
+                                'غير متصل',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.orange,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),

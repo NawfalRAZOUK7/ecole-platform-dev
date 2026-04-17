@@ -4,6 +4,8 @@
 /// Phase 10C: Mirrors web ContentViewPage.tsx (Phase 10B).
 /// API: GET /classes/{classId}/content, POST /content-items/{id}/progress
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -15,6 +17,7 @@ import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
 import 'package:ecole_platform/shared/ui/widgets/animated_guide.dart';
 import 'package:ecole_platform/shared/ui/widgets/kids_skeleton_layouts.dart';
 import 'package:ecole_platform/shared/widgets/app_empty_state.dart';
+import 'package:ecole_platform/shared/services/offline_content_manager.dart';
 
 class StudentContentScreen extends ConsumerStatefulWidget {
   const StudentContentScreen({super.key});
@@ -226,16 +229,17 @@ class _StudentContentScreenState extends ConsumerState<StudentContentScreen> {
   }
 }
 
-class _ContentCard extends StatelessWidget {
+class _ContentCard extends ConsumerWidget {
   final AssignedContent item;
   final VoidCallback onTap;
 
   const _ContentCard({required this.item, required this.onTap});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final color = _typeColor(theme, item.contentType);
+    final offlineManager = ref.watch(offlineContentManagerProvider);
 
     return Semantics(
       button: true,
@@ -281,6 +285,12 @@ class _ContentCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 // Progress indicator
                 _ProgressBadge(progress: item.progress),
+                const SizedBox(width: 4),
+                // Offline download button
+                _DownloadButton(
+                  contentItemId: item.contentItemId,
+                  offlineManager: offlineManager,
+                ),
               ],
             ),
           ),
@@ -353,6 +363,94 @@ class _ProgressBadge extends StatelessWidget {
         Text(label, style: TextStyle(fontSize: 10, color: color)),
       ],
     );
+  }
+}
+
+// ── Download Button ──
+
+class _DownloadButton extends StatefulWidget {
+  final String contentItemId;
+  final OfflineContentManager offlineManager;
+
+  const _DownloadButton({
+    required this.contentItemId,
+    required this.offlineManager,
+  });
+
+  @override
+  State<_DownloadButton> createState() => _DownloadButtonState();
+}
+
+class _DownloadButtonState extends State<_DownloadButton> {
+  late final StreamSubscription<Map<String, DownloadState>> _sub;
+  DownloadState _state = const DownloadState();
+
+  @override
+  void initState() {
+    super.initState();
+    _sub = widget.offlineManager.downloadStatesStream.listen((states) {
+      if (mounted) {
+        setState(() {
+          _state = states[widget.contentItemId] ?? const DownloadState();
+        });
+      }
+    });
+    // Check initial state from manifest
+    widget.offlineManager
+        .isAvailableOffline(widget.contentItemId)
+        .then((available) {
+      if (mounted && available && _state.status == DownloadStatus.idle) {
+        setState(() {
+          _state =
+              const DownloadState(status: DownloadStatus.done, progress: 1);
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _sub.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return switch (_state.status) {
+      DownloadStatus.downloading => SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(
+            value: _state.progress > 0 ? _state.progress : null,
+            strokeWidth: 2.5,
+          ),
+        ),
+      DownloadStatus.done => Icon(
+          Icons.check_circle_rounded,
+          size: 24,
+          color: theme.semanticPalette.success,
+        ),
+      DownloadStatus.error => IconButton(
+          icon: const Icon(Icons.error_outline, size: 20),
+          color: theme.colorScheme.error,
+          tooltip: 'Erreur de téléchargement — réessayer',
+          onPressed: () =>
+              widget.offlineManager.downloadForOffline(widget.contentItemId),
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+        ),
+      DownloadStatus.idle => IconButton(
+          icon: const Icon(Icons.download_outlined, size: 20),
+          color: theme.colorScheme.outline,
+          tooltip: 'Télécharger pour utilisation hors ligne',
+          onPressed: () =>
+              widget.offlineManager.downloadForOffline(widget.contentItemId),
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+        ),
+    };
   }
 }
 
