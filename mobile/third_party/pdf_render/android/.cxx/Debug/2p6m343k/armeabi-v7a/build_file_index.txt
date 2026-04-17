@@ -1,1 +1,0 @@
-/Users/nawfalrazouk/Ecole-Platform/ecole-platform-dev/mobile/third_party/pdf_render/android/CMakeLists.txt

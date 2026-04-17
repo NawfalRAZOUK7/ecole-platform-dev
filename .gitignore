@@ -72,6 +72,16 @@ Thumbs.db
 
 # ==================== Build Tool Caches ====================
 **/.gradle/
+**/.cxx/
+
+# ==================== Android / iOS Generated ====================
+**/android/local.properties
+**/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Flutter/ephemeral/
+**/ios/Runner/GeneratedPluginRegistrant.h
+**/ios/Runner/GeneratedPluginRegistrant.m
 
 # ==================== OS ====================
 .DS_Store
