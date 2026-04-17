@@ -84,7 +84,7 @@ export function BadgeShelf({ earnedCodes, badges }: BadgeShelfProps) {
               display: 'grid',
               gap: 8,
               background:
-                'linear-gradient(180deg, rgba(246,211,101,0.18) 0%, rgba(255,255,255,0) 100%)',
+                'linear-gradient(180deg, color-mix(in srgb, var(--kids-star-gold) 18%, transparent) 0%, transparent 100%)',
             }}
           >
             <div style={{ fontSize: 28 }}>{badge.icon || '🏅'}</div>

@@ -45,10 +45,12 @@ export function StarCounter({ value }: StarCounterProps) {
 
   return (
     <section className="card" style={{ padding: 20, display: 'grid', gap: 8 }}>
-      <span style={{ fontSize: 28 }} aria-hidden="true">
+      <span style={{ fontSize: 28, color: 'var(--kids-star-gold)' }} aria-hidden="true">
         ⭐
       </span>
-      <strong style={{ fontSize: 32, lineHeight: 1 }}>{displayValue.toLocaleString()}</strong>
+      <strong style={{ fontSize: 32, lineHeight: 1, color: 'var(--kids-star-gold)' }}>
+        {displayValue.toLocaleString()}
+      </strong>
       <span style={{ color: 'var(--color-text-secondary)' }}>{t('rewards.stats.stars')}</span>
     </section>
   );

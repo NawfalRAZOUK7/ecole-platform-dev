@@ -22,7 +22,8 @@ export function LevelBadge({ level, xp, progress }: LevelBadgeProps) {
             borderRadius: '50%',
             display: 'grid',
             placeItems: 'center',
-            background: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)',
+            background:
+              'linear-gradient(135deg, var(--kids-star-gold) 0%, var(--kids-streak-orange) 100%)',
             color: '#2f1b0c',
             fontWeight: 800,
             fontSize: 22,
@@ -70,7 +71,8 @@ export function LevelBadge({ level, xp, progress }: LevelBadgeProps) {
               width: `${clampedProgress}%`,
               height: '100%',
               borderRadius: 999,
-              background: 'linear-gradient(90deg, #f6d365 0%, #fda085 100%)',
+              background:
+                'linear-gradient(90deg, var(--kids-star-gold) 0%, var(--kids-streak-orange) 100%)',
             }}
           />
         </div>

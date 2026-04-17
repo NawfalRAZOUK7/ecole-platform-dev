@@ -121,7 +121,8 @@ export function ColoringViewerPage() {
                 style={{
                   borderRadius: 12,
                   overflow: 'hidden',
-                  background: 'var(--color-bg-secondary)',
+                  background: 'var(--kids-canvas-bg)',
+                  border: '1px solid var(--kids-color-picker-border)',
                 }}
               >
                 <img

@@ -189,7 +189,14 @@ export function StoryViewerPage() {
       {!currentSlide ? (
         <EmptyState message={t('studentContent.noPages')} icon="📖" />
       ) : (
-        <div className="card" style={{ padding: 20 }}>
+        <div
+          className="card"
+          style={{
+            padding: 20,
+            background: 'var(--kids-story-bg)',
+            color: 'var(--kids-story-text)',
+          }}
+        >
           <div
             style={{
               display: 'flex',
@@ -256,9 +263,21 @@ export function StoryViewerPage() {
           ) : null}
 
           {currentSlide.narrationText ? (
-            <div className="card" style={{ padding: 16, marginBottom: 16 }}>
-              <strong>{t('studentContent.narration')}</strong>
-              <p style={{ margin: '8px 0 0', lineHeight: 1.6 }}>{currentSlide.narrationText}</p>
+            <div
+              className="card"
+              style={{
+                padding: 16,
+                marginBottom: 16,
+                borderLeft: '4px solid var(--kids-story-highlight)',
+                background: 'var(--kids-story-bg)',
+              }}
+            >
+              <strong style={{ color: 'var(--kids-story-text)' }}>
+                {t('studentContent.narration')}
+              </strong>
+              <p style={{ margin: '8px 0 0', lineHeight: 1.6, color: 'var(--kids-story-text)' }}>
+                {currentSlide.narrationText}
+              </p>
             </div>
           ) : null}
 
@@ -274,6 +293,7 @@ export function StoryViewerPage() {
             <button
               type="button"
               className="btn btn-secondary"
+              style={{ background: 'var(--kids-story-page-turn)', color: '#fff', border: 'none' }}
               onClick={() => setCurrentPageIndex((current) => Math.max(0, current - 1))}
               disabled={currentPageIndex === 0}
             >
@@ -291,6 +311,7 @@ export function StoryViewerPage() {
               <button
                 type="button"
                 className="btn btn-primary"
+                style={{ background: 'var(--kids-story-page-turn)', border: 'none' }}
                 onClick={() =>
                   setCurrentPageIndex((current) => Math.min(slides.length - 1, current + 1))
                 }

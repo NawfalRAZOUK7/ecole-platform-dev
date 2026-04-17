@@ -7,6 +7,16 @@ interface GameConfigCardProps {
   onClick: () => void;
 }
 
+const GAME_TYPE_COLOR: Record<string, string> = {
+  memory: 'var(--kids-game-blue)',
+  sorting: 'var(--kids-game-green)',
+  vocabulary: 'var(--kids-game-purple)',
+};
+
+function getGameTypeColor(gameType: string): string {
+  return GAME_TYPE_COLOR[gameType] ?? 'var(--kids-game-card-back)';
+}
+
 function getAgeRangeLabel(config: GameConfig, fallback: string) {
   if (config.targetAgeMin === null && config.targetAgeMax === null) {
     return fallback;
@@ -34,6 +44,7 @@ export function GameConfigCard({ config, onClick }: GameConfigCardProps) {
         cursor: 'pointer',
         display: 'grid',
         gap: 12,
+        borderLeft: `4px solid ${getGameTypeColor(config.gameType)}`,
       }}
     >
       <div

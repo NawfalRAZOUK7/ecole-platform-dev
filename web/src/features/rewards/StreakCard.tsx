@@ -13,7 +13,7 @@ export function StreakCard({ currentStreak, longestStreak, lastActivityAt }: Str
   return (
     <section className="card" style={{ padding: 20, display: 'grid', gap: 12 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <span style={{ fontSize: 28 }} aria-hidden="true">
+        <span style={{ fontSize: 28, color: 'var(--kids-streak-orange)' }} aria-hidden="true">
           🔥
         </span>
         <div>

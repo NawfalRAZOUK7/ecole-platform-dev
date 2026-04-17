@@ -63,6 +63,40 @@
   line-height: 1.6;
   color: var(--color-text);
   background: var(--color-bg);
+
+  /* Kid-facing content colors — matches mobile KidsContentColors */
+
+  /* Story reader */
+  --kids-story-bg: #fff8ed;
+  --kids-story-page-turn: #ff6b35;
+  --kids-story-text: #3d2c1e;
+  --kids-story-highlight: #ffd93d;
+
+  /* Rewards / Stars */
+  --kids-star-gold: #ffd700;
+  --kids-star-silver: #c0c0c0;
+  --kids-star-bronze: #cd7f32;
+  --kids-xp-bar: #4caf50;
+  --kids-level-badge: #7c4dff;
+  --kids-streak-orange: #ff9800;
+
+  /* Mini-games */
+  --kids-game-blue: #4fc3f7;
+  --kids-game-green: #81c784;
+  --kids-game-purple: #ce93d8;
+  --kids-game-yellow: #fff176;
+  --kids-game-red: #ef9a9a;
+  --kids-game-card-back: #b39ddb;
+
+  /* Coloring */
+  --kids-canvas-bg: #fafafa;
+  --kids-color-picker-border: #e0e0e0;
+
+  /* Mascot Sami */
+  --kids-sami-primary: #4caf50;
+  --kids-sami-secondary: #ffeb3b;
+  --kids-sami-bubble: #f0fdf4;
+  --kids-sami-bubble-border: #bbf7d0;
 }
 
 [data-theme='dark'] {
