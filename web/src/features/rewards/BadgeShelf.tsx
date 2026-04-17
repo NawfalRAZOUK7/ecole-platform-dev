@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { EmptyState } from '@/shared/ui';
+import { EmptyState, space } from '@/shared/ui';
 import type { Badge } from './rewards.service';
 
 interface BadgeShelfProps {
@@ -61,7 +61,7 @@ export function BadgeShelf({ earnedCodes, badges }: BadgeShelfProps) {
 
   return (
     <section className="card" style={{ padding: 20 }}>
-      <div style={{ marginBottom: 16 }}>
+      <div style={{ marginBottom: space.base }}>
         <h2 style={{ margin: 0 }}>{t('rewards.badgesEarned')}</h2>
         <p style={{ margin: '6px 0 0', color: 'var(--color-text-secondary)' }}>
           {t('rewards.badgesSubtitle')}
@@ -72,7 +72,7 @@ export function BadgeShelf({ earnedCodes, badges }: BadgeShelfProps) {
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-          gap: 16,
+          gap: space.base,
         }}
       >
         {earnedBadges.map((badge) => (
@@ -80,9 +80,9 @@ export function BadgeShelf({ earnedCodes, badges }: BadgeShelfProps) {
             key={badge.id}
             className="card"
             style={{
-              padding: 16,
+              padding: space.base,
               display: 'grid',
-              gap: 8,
+              gap: space.sm,
               background:
                 'linear-gradient(180deg, color-mix(in srgb, var(--kids-star-gold) 18%, transparent) 0%, transparent 100%)',
             }}

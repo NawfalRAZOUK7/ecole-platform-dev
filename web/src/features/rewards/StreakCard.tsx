@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { formatDate } from '@/shared/i18n';
+import { space } from '@/shared/ui/tokens';
 
 interface StreakCardProps {
   currentStreak: number;
@@ -11,8 +12,8 @@ export function StreakCard({ currentStreak, longestStreak, lastActivityAt }: Str
   const { t, i18n } = useTranslation();
 
   return (
-    <section className="card" style={{ padding: 20, display: 'grid', gap: 12 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+    <section className="card" style={{ padding: 20, display: 'grid', gap: space.md }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: space.md }}>
         <span style={{ fontSize: 28, color: 'var(--kids-streak-orange)' }} aria-hidden="true">
           🔥
         </span>
@@ -22,7 +23,9 @@ export function StreakCard({ currentStreak, longestStreak, lastActivityAt }: Str
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+      <div
+        style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: space.md }}
+      >
         <div>
           <div style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
             {t('rewards.streak.current')}

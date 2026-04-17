@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/shared/ui/Badge';
+import { space } from '@/shared/ui/tokens';
 import type { GameConfig } from './types';
 
 interface GameConfigCardProps {
@@ -40,15 +41,20 @@ export function GameConfigCard({ config, onClick }: GameConfigCardProps) {
       style={{
         width: '100%',
         textAlign: 'left',
-        padding: 16,
+        padding: space.base,
         cursor: 'pointer',
         display: 'grid',
-        gap: 12,
+        gap: space.md,
         borderLeft: `4px solid ${getGameTypeColor(config.gameType)}`,
       }}
     >
       <div
-        style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'start' }}
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          gap: space.md,
+          alignItems: 'start',
+        }}
       >
         <div>
           <h3 style={{ margin: 0, fontSize: 16 }}>{config.title}</h3>
@@ -61,7 +67,7 @@ export function GameConfigCard({ config, onClick }: GameConfigCardProps) {
         </Badge>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: space.sm, flexWrap: 'wrap' }}>
         <Badge variant="info">
           {t(`games.difficulties.${config.difficulty}`, { defaultValue: config.difficulty })}
         </Badge>

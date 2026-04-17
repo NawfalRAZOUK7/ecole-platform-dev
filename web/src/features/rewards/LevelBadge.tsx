@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { xpThresholdForLevel } from './rewards.service';
+import { space } from '@/shared/ui/tokens';
 
 interface LevelBadgeProps {
   level: number;
@@ -13,8 +14,8 @@ export function LevelBadge({ level, xp, progress }: LevelBadgeProps) {
   const xpToNextLevel = Math.max(0, xpThresholdForLevel(level + 1) - xp);
 
   return (
-    <section className="card" style={{ padding: 20, display: 'grid', gap: 16 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+    <section className="card" style={{ padding: 20, display: 'grid', gap: space.base }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: space.base }}>
         <div
           style={{
             width: 72,

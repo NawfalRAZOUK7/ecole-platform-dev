@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { space } from '@/shared/ui/tokens';
 
 interface StarCounterProps {
   value: number;
@@ -44,7 +45,7 @@ export function StarCounter({ value }: StarCounterProps) {
   }, [value]);
 
   return (
-    <section className="card" style={{ padding: 20, display: 'grid', gap: 8 }}>
+    <section className="card" style={{ padding: 20, display: 'grid', gap: space.sm }}>
       <span style={{ fontSize: 28, color: 'var(--kids-star-gold)' }} aria-hidden="true">
         ⭐
       </span>

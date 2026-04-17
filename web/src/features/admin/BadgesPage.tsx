@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { rewardsQueryKeys } from '@/features/rewards/useRewards';
 import { rewardsService, type Badge as RewardBadge } from '@/services/rewards.service';
-import { Badge, EmptyState, ErrorBanner, LoadingState } from '@/shared/ui';
+import { Badge, EmptyState, ErrorBanner, LoadingState, space } from '@/shared/ui';
 import { BadgeEditor } from './BadgeEditor';
 
 function getLocalizedBadgeTitle(badge: RewardBadge, language: string) {
@@ -178,7 +178,12 @@ export function BadgesPage() {
                     </td>
                     <td className="data-table__cell">
                       <div
-                        style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}
+                        style={{
+                          display: 'flex',
+                          gap: space.sm,
+                          alignItems: 'center',
+                          flexWrap: 'wrap',
+                        }}
                       >
                         <input
                           type="number"
@@ -213,7 +218,12 @@ export function BadgesPage() {
                     </td>
                     <td className="data-table__cell">
                       <div
-                        style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}
+                        style={{
+                          display: 'flex',
+                          gap: space.sm,
+                          alignItems: 'center',
+                          flexWrap: 'wrap',
+                        }}
                       >
                         <Badge variant={badge.isActive ? 'success' : 'neutral'}>
                           {t(
