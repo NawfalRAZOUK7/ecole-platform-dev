@@ -95,8 +95,6 @@ def downgrade() -> None:
         type_=sa.String(length=10),
         existing_nullable=False,
     )
-    _create_vw_user_permissions()
-    _create_vw_active_sessions()
     op.alter_column(
         "memberships",
         "role_code",
@@ -104,3 +102,5 @@ def downgrade() -> None:
         type_=sa.String(length=10),
         existing_nullable=False,
     )
+    _create_vw_user_permissions()
+    _create_vw_active_sessions()
