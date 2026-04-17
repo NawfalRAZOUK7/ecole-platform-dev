@@ -97,3 +97,7 @@ ehthumbs.db
 .env.local
 .env.*.local
 secrets/
+
+# ==================== Local Media Artifacts ====================
+backend/uploads/content/videos/intro_video.mp4
+backend/uploads/content/videos/zay_video.mp4
