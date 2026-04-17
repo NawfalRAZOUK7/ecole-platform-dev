@@ -25,10 +25,22 @@ import 'package:ecole_platform/features/notifications/notifications_provider.dar
 import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/shared/ui/app_theme.dart';
 import 'package:ecole_platform/shared/ui/app_theme_dark.dart';
+import 'package:ecole_platform/shared/ui/widgets/app_splash_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Run heavy init work in parallel with the splash screen.
+  final initFuture = _runStartupInit();
+
+  runApp(
+    ProviderScope(
+      child: EcolePlatformApp(initFuture: initFuture),
+    ),
+  );
+}
+
+Future<void> _runStartupInit() async {
   try {
     await Firebase.initializeApp();
   } catch (e) {
@@ -41,16 +53,12 @@ Future<void> main() async {
   } catch (e) {
     dev.log('Cache prune on startup failed: $e', name: 'Main');
   }
-
-  runApp(
-    const ProviderScope(
-      child: EcolePlatformApp(),
-    ),
-  );
 }
 
 class EcolePlatformApp extends ConsumerStatefulWidget {
-  const EcolePlatformApp({super.key});
+  final Future<void> initFuture;
+
+  const EcolePlatformApp({super.key, required this.initFuture});
 
   @override
   ConsumerState<EcolePlatformApp> createState() => _EcolePlatformAppState();
@@ -62,6 +70,7 @@ class _EcolePlatformAppState extends ConsumerState<EcolePlatformApp>
       GlobalKey<ScaffoldMessengerState>();
   bool _biometricLocked = false;
   String? _connectedAccessToken;
+  bool _splashDone = false;
 
   @override
   void initState() {
@@ -152,6 +161,17 @@ class _EcolePlatformAppState extends ConsumerState<EcolePlatformApp>
 
   @override
   Widget build(BuildContext context) {
+    if (!_splashDone) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: appLightTheme,
+        home: AppSplashScreen(
+          initFuture: widget.initFuture,
+          onComplete: () => setState(() => _splashDone = true),
+        ),
+      );
+    }
+
     final router = ref.watch(routerProvider);
     final authState = ref.watch(authProvider);
     final themeMode = ref.watch(themeModeProvider);

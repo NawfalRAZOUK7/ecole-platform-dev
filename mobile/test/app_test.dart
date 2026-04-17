@@ -39,7 +39,7 @@ void main() {
             wsClient as WsClient,
           ),
         ],
-        child: EcolePlatformApp(),
+        child: EcolePlatformApp(initFuture: Future.value()),
       ),
     );
 
