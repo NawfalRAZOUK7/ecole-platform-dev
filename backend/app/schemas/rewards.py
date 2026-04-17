@@ -41,6 +41,7 @@ class StudentRewardResponse(BaseModel):
     xp: int
     level: int
     streak_days: int
+    longest_streak: int
     badges: list[str] = Field(default_factory=list)
     last_activity_at: str | None = None
     level_progress: float

@@ -94,6 +94,7 @@ class RewardsService:
             xp=reward.xp,
             level=reward.level,
             streak_days=reward.streak_days,
+            longest_streak=reward.longest_streak,
             badges=list(reward.badges or []),
             last_activity_at=_iso(reward.last_activity_at),
             level_progress=_level_progress(reward.xp),
@@ -243,6 +244,7 @@ class RewardsService:
             xp=0,
             level=1,
             streak_days=0,
+            longest_streak=0,
             badges=[],
         )
 
@@ -252,15 +254,18 @@ class RewardsService:
         )
         if last_activity is None:
             reward.streak_days = 1
-            return
+        else:
+            today = now.date()
+            if last_activity.date() == today:
+                pass  # Same day — no change to streak
+            elif last_activity.date() == today - timedelta(days=1):
+                reward.streak_days += 1
+            else:
+                reward.streak_days = 1
 
-        today = now.date()
-        if last_activity.date() == today:
-            return
-        if last_activity.date() == today - timedelta(days=1):
-            reward.streak_days += 1
-            return
-        reward.streak_days = 1
+        # Keep longest_streak as the all-time high
+        if reward.streak_days > reward.longest_streak:
+            reward.longest_streak = reward.streak_days
 
     async def award(
         self,

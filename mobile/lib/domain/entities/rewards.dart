@@ -5,6 +5,7 @@ class StudentRewards {
   final int xp;
   final int level;
   final int streakDays;
+  final int longestStreak;
   final List<String> badges;
   final DateTime? lastActivityAt;
   final double? _levelProgressPercent;
@@ -16,6 +17,7 @@ class StudentRewards {
     required this.xp,
     required this.level,
     required this.streakDays,
+    required this.longestStreak,
     required this.badges,
     this.lastActivityAt,
     double? levelProgressPercent,
@@ -28,6 +30,7 @@ class StudentRewards {
         xp: (json['xp'] as num?)?.toInt() ?? 0,
         level: (json['level'] as num?)?.toInt() ?? 1,
         streakDays: (json['streak_days'] as num?)?.toInt() ?? 0,
+        longestStreak: (json['longest_streak'] as num?)?.toInt() ?? 0,
         badges: List<String>.from(json['badges'] as List? ?? const []),
         lastActivityAt: json['last_activity_at'] is String
             ? DateTime.tryParse(json['last_activity_at'] as String)
@@ -42,6 +45,7 @@ class StudentRewards {
     xp: 0,
     level: 1,
     streakDays: 0,
+    longestStreak: 0,
     badges: <String>[],
   );
 
@@ -76,6 +80,7 @@ class StudentRewards {
     int? xp,
     int? level,
     int? streakDays,
+    int? longestStreak,
     List<String>? badges,
     DateTime? lastActivityAt,
     bool clearLastActivityAt = false,
@@ -88,6 +93,7 @@ class StudentRewards {
       xp: xp ?? this.xp,
       level: level ?? this.level,
       streakDays: streakDays ?? this.streakDays,
+      longestStreak: longestStreak ?? this.longestStreak,
       badges: badges ?? this.badges,
       lastActivityAt: clearLastActivityAt
           ? null

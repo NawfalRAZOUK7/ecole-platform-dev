@@ -150,8 +150,7 @@ function normalizeStudentRewards(raw: RawStudentRewards): StudentRewards {
     xp: raw.xp,
     level: raw.level,
     streakDays: raw.streakDays ?? raw.streak_days ?? 0,
-    longestStreak:
-      raw.longestStreak ?? raw.longest_streak ?? raw.streakDays ?? raw.streak_days ?? 0,
+    longestStreak: raw.longestStreak ?? raw.longest_streak ?? 0,
     badges: raw.badges ?? [],
     lastActivityAt: raw.lastActivityAt ?? raw.last_activity_at ?? null,
     levelProgress: raw.levelProgress ?? raw.level_progress ?? 0,

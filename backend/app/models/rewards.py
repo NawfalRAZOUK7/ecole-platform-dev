@@ -31,6 +31,7 @@ class StudentReward(TimestampMixin, Base):
     xp: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     level: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     streak_days: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    longest_streak: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     last_activity_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
@@ -54,6 +55,10 @@ class StudentReward(TimestampMixin, Base):
         CheckConstraint(
             "streak_days >= 0",
             name="ck_student_rewards_streak_days_non_negative",
+        ),
+        CheckConstraint(
+            "longest_streak >= 0",
+            name="ck_student_rewards_longest_streak_non_negative",
         ),
     )
 
