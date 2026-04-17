@@ -8,6 +8,7 @@ import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
 import 'package:ecole_platform/shared/widgets/app_error_widget.dart';
 import 'package:ecole_platform/shared/ui/widgets/kids_skeleton_layouts.dart';
+import 'package:ecole_platform/shared/widgets/app_empty_state.dart';
 
 class ColoringListScreen extends ConsumerWidget {
   const ColoringListScreen({super.key});
@@ -32,8 +33,12 @@ class ColoringListScreen extends ConsumerWidget {
               onRefresh: () => ref.read(coloringProvider.notifier).refresh(),
               child: ListView(
                 children: const <Widget>[
-                  SizedBox(height: 160),
-                  _EmptyColoringState(),
+                  SizedBox(height: 40),
+                  AppEmptyState(
+                    icon: Icons.palette_outlined,
+                    title: 'لا توجد صفحات تلوين',
+                    subtitle: 'سيضيف معلمك صفحات تلوين قريباً',
+                  ),
                 ],
               ),
             );
@@ -188,40 +193,6 @@ class _ThumbnailFallback extends StatelessWidget {
           size: 52,
           color: KidsContentColors.storyPageTurn,
         ),
-      ),
-    );
-  }
-}
-
-class _EmptyColoringState extends StatelessWidget {
-  const _EmptyColoringState();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      child: Column(
-        children: <Widget>[
-          Icon(
-            Icons.auto_awesome_outlined,
-            size: 56,
-            color: KidsContentColors.storyPageTurn.withAlpha(140),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            'No coloring pages available yet.',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            'Pull to refresh after new coloring books are published.',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-        ],
       ),
     );
   }

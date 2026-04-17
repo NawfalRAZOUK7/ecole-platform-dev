@@ -130,7 +130,7 @@ export function GamesListPage() {
       </div>
 
       {items.length === 0 ? (
-        <EmptyState message={t('games.empty')} icon="🎮" />
+        <EmptyState message={t('games.emptyKids')} icon="🎮" />
       ) : (
         <>
           <div

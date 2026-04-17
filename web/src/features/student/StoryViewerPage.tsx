@@ -187,7 +187,7 @@ export function StoryViewerPage() {
       ) : null}
 
       {!currentSlide ? (
-        <EmptyState message={t('studentContent.noPages')} icon="📖" />
+        <EmptyState message={t('studentContent.noStoryPages')} icon="📖" />
       ) : (
         <div
           className="card"

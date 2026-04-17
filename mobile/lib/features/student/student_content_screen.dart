@@ -14,6 +14,7 @@ import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
 import 'package:ecole_platform/shared/ui/widgets/animated_guide.dart';
 import 'package:ecole_platform/shared/ui/widgets/kids_skeleton_layouts.dart';
+import 'package:ecole_platform/shared/widgets/app_empty_state.dart';
 
 class StudentContentScreen extends ConsumerStatefulWidget {
   const StudentContentScreen({super.key});
@@ -151,16 +152,10 @@ class _StudentContentScreenState extends ConsumerState<StudentContentScreen> {
       );
     }
     if (_items.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.library_books,
-                size: 48, color: theme.colorScheme.outline),
-            SizedBox(height: 16),
-            Text('Aucun contenu assigné'),
-          ],
-        ),
+      return AppEmptyState(
+        icon: Icons.menu_book_outlined,
+        title: 'لا توجد دروس بعد',
+        subtitle: 'سيضيف معلمك محتوى قريباً',
       );
     }
 

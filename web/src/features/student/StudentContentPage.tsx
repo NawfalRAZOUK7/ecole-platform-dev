@@ -127,7 +127,7 @@ export function StudentContentPage() {
           progress={progressMap[viewingItem.content_item_id]}
         />
       ) : contentItems.length === 0 ? (
-        <EmptyState message={t('studentContent.empty')} />
+        <EmptyState message={t('studentContent.emptyKids')} icon="📚" />
       ) : (
         <div
           style={{

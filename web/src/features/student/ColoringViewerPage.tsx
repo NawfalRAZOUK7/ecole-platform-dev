@@ -101,7 +101,7 @@ export function ColoringViewerPage() {
       </div>
 
       {pages.length === 0 ? (
-        <EmptyState message={t('studentContent.noPages')} icon="🎨" />
+        <EmptyState message={t('studentContent.noColoringPages')} icon="🎨" />
       ) : (
         <div
           style={{

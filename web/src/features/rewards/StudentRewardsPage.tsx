@@ -42,7 +42,7 @@ export function StudentRewardsPage() {
             ]);
           }}
         />
-        <EmptyState message={t('rewards.studentNotFound')} icon="🔎" />
+        <EmptyState message={t('rewards.noRewardsYet')} icon="⭐" />
       </div>
     );
   }
