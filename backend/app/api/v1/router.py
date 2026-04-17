@@ -152,6 +152,9 @@ from app.api.v1.events import router as events_router
 
 # Phase 16 — Documents
 from app.api.v1.documents import router as documents_router
+
+# G46 — Level-age mappings
+from app.api.v1.levels import router as levels_router
 from app.core.database import get_db
 from app.core.redis import get_redis
 
@@ -338,3 +341,6 @@ router.include_router(events_router)
 
 # Mount sub-routers — Phase 16 Documents
 router.include_router(documents_router)
+
+# Mount sub-routers — G46 Level-age mappings
+router.include_router(levels_router)

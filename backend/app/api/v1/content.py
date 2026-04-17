@@ -18,6 +18,7 @@ from app.core.dependencies import (
     requires_role,
     verify_teacher_assignment,
 )
+from app.services.student_service import get_student_age
 from app.core.filtering import FilterSpec, SortSpec, parse_filters, parse_sort
 from app.core.exceptions import NotFoundError
 from app.core.permissions import (
@@ -74,6 +75,10 @@ async def list_content_items(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_CONTENT_READ)),
     db: AsyncSession = Depends(get_db),
 ):
+    # Auto-inject target_age for students based on their date_of_birth
+    if target_age is None and auth.role == STD:
+        target_age = await get_student_age(db, auth.user_id)
+
     service = ContentService(db)
     items, next_cursor, has_more = await service.list_content_items(
         content_type=content_type,
@@ -125,6 +130,10 @@ async def legacy_list_content_items(
     auth: AuthContext = Depends(requires_permission(PERM_LMS_CONTENT_READ)),
     db: AsyncSession = Depends(get_db),
 ):
+    # Auto-inject target_age for students based on their date_of_birth
+    if target_age is None and auth.role == STD:
+        target_age = await get_student_age(db, auth.user_id)
+
     service = ContentService(db)
     items, next_cursor, has_more = await service.list_content_items(
         content_type=content_type,

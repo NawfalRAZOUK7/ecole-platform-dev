@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import exists, func, select
+from sqlalchemy import exists, func, or_, select
 
 from app.core.filtering import FilterSpec, SortSpec, apply_filters, apply_sort
 from app.core.response import decode_cursor
@@ -500,9 +500,15 @@ class LMSRepository(BaseRepository):
         if letter:
             query = query.where(ContentItem.letter == letter)
         if target_age is not None:
+            # Include items whose age range covers target_age OR have no age restriction
             query = query.where(
-                ContentItem.target_age_min <= target_age,
-                ContentItem.target_age_max >= target_age,
+                or_(
+                    ContentItem.target_age_min.is_(None),
+                    (
+                        (ContentItem.target_age_min <= target_age)
+                        & (ContentItem.target_age_max >= target_age)
+                    ),
+                )
             )
 
         query = apply_filters(query, ContentItem, filters)
@@ -644,9 +650,15 @@ class LMSRepository(BaseRepository):
         if letter:
             query = query.where(ContentItem.letter == letter)
         if target_age is not None:
+            # Include items whose age range covers target_age OR have no age restriction
             query = query.where(
-                ContentItem.target_age_min <= target_age,
-                ContentItem.target_age_max >= target_age,
+                or_(
+                    ContentItem.target_age_min.is_(None),
+                    (
+                        (ContentItem.target_age_min <= target_age)
+                        & (ContentItem.target_age_max >= target_age)
+                    ),
+                )
             )
 
         query = query.order_by(ContentItem.id)

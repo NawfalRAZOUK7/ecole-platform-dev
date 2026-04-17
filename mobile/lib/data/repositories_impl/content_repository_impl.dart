@@ -22,9 +22,10 @@ class ContentRepositoryImpl implements ContentRepository {
     String? cursor,
     String? contentType,
     String? levelBand,
+    int? targetAge,
   }) async {
     final cacheKey =
-        'content:${cursor ?? 'first'}:${contentType ?? ''}:${levelBand ?? ''}';
+        'content:${cursor ?? 'first'}:${contentType ?? ''}:${levelBand ?? ''}:${targetAge ?? ''}';
 
     final cached = await _cache.get(cacheKey);
     if (cached != null) {
@@ -38,6 +39,7 @@ class ContentRepositoryImpl implements ContentRepository {
     if (cursor != null) params['cursor'] = cursor;
     if (contentType != null) params['content_type'] = contentType;
     if (levelBand != null) params['level_band'] = levelBand;
+    if (targetAge != null) params['target_age'] = targetAge;
 
     final resp = await _api.list('/content-items', params: params);
     await _cache.put(cacheKey, resp.data, CacheTtl.contentItems);

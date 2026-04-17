@@ -8,6 +8,7 @@ from pathlib import Path
 import httpx
 import pytest
 import pytest_asyncio
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 import app.models  # noqa: F401
@@ -31,6 +32,23 @@ from tests.factories.iam import (
     UserFactory,
 )
 from tests.factories.school import SchoolFactory
+
+# Default level-age mappings — mirrors the G46 migration seed data
+_DEFAULT_LEVEL_MAPPINGS = [
+    ("maternelle", "Maternelle", "ما قبل المدرسة", "Preschool", 3, 5, 0),
+    ("cp", "Cours Préparatoire", "السنة الأولى ابتدائي", "1st Grade", 5, 6, 1),
+    ("ce1", "Cours Élémentaire 1", "السنة الثانية ابتدائي", "2nd Grade", 6, 7, 2),
+    ("ce2", "Cours Élémentaire 2", "السنة الثالثة ابتدائي", "3rd Grade", 7, 8, 3),
+    ("cm1", "Cours Moyen 1", "السنة الرابعة ابتدائي", "4th Grade", 8, 9, 4),
+    ("cm2", "Cours Moyen 2", "السنة الخامسة ابتدائي", "5th Grade", 9, 10, 5),
+    ("6eme", "6ème", "السادسة إعدادي", "6th Grade", 10, 11, 6),
+    ("5eme", "5ème", "الخامسة إعدادي", "7th Grade", 11, 12, 7),
+    ("4eme", "4ème", "الرابعة إعدادي", "8th Grade", 12, 13, 8),
+    ("3eme", "3ème", "الثالثة إعدادي", "9th Grade", 13, 14, 9),
+    ("2nde", "Seconde", "الثانية ثانوي", "10th Grade", 14, 15, 10),
+    ("1ere", "Première", "الأولى ثانوي", "11th Grade", 15, 16, 11),
+    ("terminale", "Terminale", "الجذع المشترك", "12th Grade", 16, 17, 12),
+]
 
 
 async def _create_actor(
@@ -84,6 +102,47 @@ def isolated_storage(tmp_path: Path):
 @pytest_asyncio.fixture(loop_scope="function")
 async def session_factory(engine):
     return async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
+
+@pytest_asyncio.fixture(loop_scope="function", autouse=True)
+async def seed_level_mappings(session_factory):
+    """Seed the default level-age mappings for every test.
+
+    The integration test DB is created via Base.metadata.create_all (not Alembic),
+    so the migration-level seed INSERT is not run automatically.
+    """
+    async with session_factory() as session:
+        # Check if already seeded to avoid duplicates across test functions
+        result = await session.execute(
+            text("SELECT COUNT(*) FROM level_age_mappings WHERE school_id IS NULL")
+        )
+        count = result.scalar_one()
+        if count >= len(_DEFAULT_LEVEL_MAPPINGS):
+            return
+
+        for level_code, label_fr, label_ar, label_en, age_min, age_max, order in _DEFAULT_LEVEL_MAPPINGS:
+            await session.execute(
+                text(
+                    """
+                    INSERT INTO level_age_mappings
+                      (id, level_code, label_fr, label_ar, label_en,
+                       default_age_min, default_age_max, display_order, created_at)
+                    VALUES
+                      (gen_random_uuid(), :level_code, :label_fr, :label_ar, :label_en,
+                       :age_min, :age_max, :order, now())
+                    """
+                ),
+                {
+                    "level_code": level_code,
+                    "label_fr": label_fr,
+                    "label_ar": label_ar,
+                    "label_en": label_en,
+                    "age_min": age_min,
+                    "age_max": age_max,
+                    "order": order,
+                },
+            )
+        await session.commit()
 
 
 @pytest_asyncio.fixture(loop_scope="function")

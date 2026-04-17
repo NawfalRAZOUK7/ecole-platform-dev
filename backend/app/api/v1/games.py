@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, get_current_user, requires_role
 from app.core.permissions import ADM, DIR, STD, SUP, SYS, TCH
+from app.services.student_service import get_student_age
 from app.core.response import clamp_page_size, list_response, success_response
 from app.schemas.games import (
     GameCompletionRequest,
@@ -33,6 +34,10 @@ async def list_game_configs(
     auth: AuthContext = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    # Auto-inject target_age for students based on their date_of_birth
+    if target_age is None and auth.role == STD:
+        target_age = await get_student_age(db, auth.user_id)
+
     service = GameService(db)
     items, next_cursor, has_more = await service.list_configs(
         auth=auth,

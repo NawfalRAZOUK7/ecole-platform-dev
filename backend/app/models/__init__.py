@@ -178,6 +178,9 @@ from app.models.rewards import (
     StudentReward,
 )
 
+# G46 — Level-age mappings
+from app.models.levels import LevelAgeMapping
+
 # G5I — Games
 from app.models.games import GameConfig
 
@@ -345,6 +348,8 @@ __all__ = [
     # Rewards
     "StudentReward",
     "RewardEvent",
+    # Level-age mappings
+    "LevelAgeMapping",
     # Games
     "GameConfig",
     # Audit

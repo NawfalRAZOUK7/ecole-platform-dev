@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FormProvider, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
@@ -19,6 +19,11 @@ import {
   type CmsContentFormValues,
 } from './content-upload.types';
 import { useCreateCmsContent, useUploadCmsContentAsset } from './useCms';
+import {
+  fetchLevelMappings,
+  buildLevelMap,
+  type LevelAgeMapping,
+} from '@/services/levels.service';
 
 const languageOptions = [
   { value: 'fr', label: 'Francais' },
@@ -53,7 +58,31 @@ export function CmsContentUploadPage() {
 
   const watchedContentType = methods.watch('content_type');
   const watchedTitle = methods.watch('title');
+  const watchedLevelBand = methods.watch('level_band');
   const isStoryLike = isStoryContentType(watchedContentType);
+  const [levelMap, setLevelMap] = useState<Record<string, LevelAgeMapping>>({});
+
+  useEffect(() => {
+    fetchLevelMappings()
+      .then((mappings) => setLevelMap(buildLevelMap(mappings)))
+      .catch(() => {
+        // Non-critical — suggestions simply won't show
+      });
+  }, []);
+
+  // Auto-suggest target_age fields when level_band changes (only if fields are empty)
+  useEffect(() => {
+    if (!watchedLevelBand || !levelMap[watchedLevelBand]) return;
+    const mapping = levelMap[watchedLevelBand];
+    const current = methods.getValues();
+    if (!current.target_age_min) {
+      methods.setValue('target_age_min', mapping.default_age_min);
+    }
+    if (!current.target_age_max) {
+      methods.setValue('target_age_max', mapping.default_age_max);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchedLevelBand, levelMap]);
 
   const contentTypeOptions = useMemo(
     () =>
@@ -245,13 +274,28 @@ export function CmsContentUploadPage() {
                 disabled={uploading}
               />
 
-              <FormSelect<CmsContentFormValues>
-                name="level_band"
-                label="cms.upload.level"
-                options={levelOptions}
-                placeholder="cms.content.allLevels"
-                disabled={uploading}
-              />
+              <div>
+                <FormSelect<CmsContentFormValues>
+                  name="level_band"
+                  label="cms.upload.level"
+                  options={levelOptions}
+                  placeholder="cms.content.allLevels"
+                  disabled={uploading}
+                />
+                {watchedLevelBand && levelMap[watchedLevelBand] ? (
+                  <span
+                    style={{
+                      display: 'block',
+                      fontSize: 11,
+                      color: 'var(--color-text-secondary)',
+                      marginTop: 2,
+                    }}
+                  >
+                    {watchedLevelBand.toUpperCase()} → {levelMap[watchedLevelBand].default_age_min}
+                    -{levelMap[watchedLevelBand].default_age_max} ans
+                  </span>
+                ) : null}
+              </div>
 
               <FormSelect<CmsContentFormValues>
                 name="subject"

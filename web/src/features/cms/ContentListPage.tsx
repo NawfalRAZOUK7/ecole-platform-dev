@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
@@ -7,6 +7,11 @@ import { Tabs } from '@/shared/ui/Tabs';
 import { CmsLibraryBrowseTab } from './CmsLibraryBrowseTab';
 import { CONTENT_TYPES } from './content-upload.types';
 import { useCmsContent } from './useCms';
+import {
+  fetchLevelMappings,
+  buildLevelMap,
+  type LevelAgeMapping,
+} from '@/services/levels.service';
 const LEVELS = [
   'maternelle',
   'cp',
@@ -48,6 +53,15 @@ export function CmsContentListPage() {
   const [status, setStatus] = useState('');
   const [origin, setOrigin] = useState('');
   const [search, setSearch] = useState('');
+  const [levelMap, setLevelMap] = useState<Record<string, LevelAgeMapping>>({});
+
+  useEffect(() => {
+    fetchLevelMappings()
+      .then((mappings) => setLevelMap(buildLevelMap(mappings)))
+      .catch(() => {
+        // Non-critical — hints simply won't show
+      });
+  }, []);
   const contentQuery = useCmsContent({
     content_type: contentType || undefined,
     level_band: level || undefined,
@@ -123,18 +137,33 @@ export function CmsContentListPage() {
                       </option>
                     ))}
                   </select>
-                  <select
-                    className="filter-select"
-                    value={level}
-                    onChange={(event) => setLevel(event.target.value)}
-                  >
-                    <option value="">{t('cms.content.allLevels')}</option>
-                    {LEVELS.map((currentLevel) => (
-                      <option key={currentLevel} value={currentLevel}>
-                        {currentLevel}
-                      </option>
-                    ))}
-                  </select>
+                  <div>
+                    <select
+                      className="filter-select"
+                      value={level}
+                      onChange={(event) => setLevel(event.target.value)}
+                    >
+                      <option value="">{t('cms.content.allLevels')}</option>
+                      {LEVELS.map((currentLevel) => (
+                        <option key={currentLevel} value={currentLevel}>
+                          {currentLevel}
+                        </option>
+                      ))}
+                    </select>
+                    {level && levelMap[level] ? (
+                      <span
+                        style={{
+                          display: 'block',
+                          fontSize: 11,
+                          color: 'var(--color-text-secondary)',
+                          marginTop: 2,
+                        }}
+                      >
+                        {level.toUpperCase()} → {levelMap[level].default_age_min}-
+                        {levelMap[level].default_age_max} {t('cms.content.ageHintSuffix', 'ans')}
+                      </span>
+                    ) : null}
+                  </div>
                   <select
                     className="filter-select"
                     value={subject}
