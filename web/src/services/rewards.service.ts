@@ -50,8 +50,8 @@ export interface Badge {
 export interface AwardRewardPayload {
   student_id: string;
   event_type: string;
-  stars_earned: number;
-  xp_earned: number;
+  stars: number;
+  xp: number;
   source_type?: string;
   source_id?: string;
 }
