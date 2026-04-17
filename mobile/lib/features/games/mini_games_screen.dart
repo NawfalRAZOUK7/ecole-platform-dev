@@ -14,6 +14,7 @@ import 'package:ecole_platform/features/rewards/rewards_provider.dart';
 import 'package:ecole_platform/features/rewards/rewards_widgets.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
+import 'package:ecole_platform/shared/ui/widgets/kids_skeleton_layouts.dart';
 
 class MiniGamesScreen extends ConsumerWidget {
   const MiniGamesScreen({super.key});
@@ -21,7 +22,14 @@ class MiniGamesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final rewards = ref.watch(rewardsProvider).valueOrNull ?? StudentRewards.empty;
+    final rewardsAsync = ref.watch(rewardsProvider);
+    if (rewardsAsync.isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Jeux éducatifs')),
+        body: const GamesGridSkeleton(),
+      );
+    }
+    final rewards = rewardsAsync.valueOrNull ?? StudentRewards.empty;
 
     return Scaffold(
       appBar: AppBar(

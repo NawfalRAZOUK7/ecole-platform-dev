@@ -11,6 +11,7 @@ import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
 import 'package:ecole_platform/shared/widgets/app_empty_state.dart';
 import 'package:ecole_platform/shared/widgets/app_error_widget.dart';
+import 'package:ecole_platform/shared/ui/widgets/kids_skeleton_layouts.dart';
 
 class RewardsScreen extends ConsumerWidget {
   const RewardsScreen({super.key});
@@ -42,7 +43,7 @@ class RewardsScreen extends ConsumerWidget {
         ],
       ),
       body: rewardsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const RewardsSkeleton(),
         error: (error, _) => AppErrorWidget(
           message: '$error',
           onRetry: () => ref.read(rewardsProvider.notifier).refresh(),

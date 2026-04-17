@@ -7,6 +7,7 @@ import 'package:ecole_platform/features/coloring/coloring_provider.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
 import 'package:ecole_platform/shared/widgets/app_error_widget.dart';
+import 'package:ecole_platform/shared/ui/widgets/kids_skeleton_layouts.dart';
 
 class ColoringListScreen extends ConsumerWidget {
   const ColoringListScreen({super.key});
@@ -20,7 +21,7 @@ class ColoringListScreen extends ConsumerWidget {
         title: const Text('Coloring Pages'),
       ),
       body: coloringAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const ColoringGridSkeleton(),
         error: (error, _) => AppErrorWidget(
           message: '$error',
           onRetry: () => ref.read(coloringProvider.notifier).refresh(),

@@ -13,6 +13,7 @@ import 'package:ecole_platform/domain/entities/quiz.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
 import 'package:ecole_platform/shared/ui/widgets/animated_guide.dart';
+import 'package:ecole_platform/shared/ui/widgets/kids_skeleton_layouts.dart';
 
 class StudentContentScreen extends ConsumerStatefulWidget {
   const StudentContentScreen({super.key});
@@ -130,7 +131,7 @@ class _StudentContentScreenState extends ConsumerState<StudentContentScreen> {
     );
 
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const ContentListSkeleton();
     }
     if (_error != null) {
       return Center(
