@@ -1,4 +1,4 @@
-import { api } from '@/services/api/client';
+import { api, type ApiResponse } from '@/services/api/client';
 
 // ─── Generation types ───────────────────────────────────────────────────────
 
@@ -19,6 +19,229 @@ export interface TimetableConstraints {
   max_consecutive_classes: number;
   teacher_availability: TeacherAvailability[];
   room_constraints: RoomConstraint[];
+}
+
+interface BackendTimetableConstraint {
+  id: string;
+  school_id: string;
+  academic_year_id: string;
+  constraint_type:
+    | 'teacher_unavailable'
+    | 'room_capacity'
+    | 'max_hours_per_day'
+    | 'subject_hours_per_week'
+    | 'no_consecutive_same_subject';
+  entity_id: string | null;
+  params: Record<string, unknown>;
+  created_at: string;
+  updated_at: string | null;
+}
+
+interface BackendTimetableConstraintPayload {
+  constraint_type: BackendTimetableConstraint['constraint_type'];
+  entity_id: string | null;
+  params: Record<string, unknown>;
+}
+
+const DEFAULT_MAX_CONSECUTIVE_CLASSES = 3;
+const SCHOOL_DAY_START = '08:00';
+const SCHOOL_DAY_END = '17:00';
+
+function toMinutes(value: string): number {
+  const [hours, minutes] = value.split(':').map(Number);
+  return hours * 60 + minutes;
+}
+
+function toTimeString(totalMinutes: number): string {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+}
+
+function toBackendDayOfWeek(dayOfWeek: number): number {
+  return Math.min(6, Math.max(0, dayOfWeek - 1));
+}
+
+function toFrontendDayOfWeek(dayOfWeek: number): number {
+  return dayOfWeek >= 0 && dayOfWeek <= 5 ? dayOfWeek + 1 : dayOfWeek;
+}
+
+function normalizeTeacherAvailability(
+  constraints: BackendTimetableConstraint[],
+): TeacherAvailability[] {
+  const grouped = new Map<
+    string,
+    {
+      teacher_id: string;
+      day_of_week: number;
+      unavailable: Array<{ start: number; end: number }>;
+    }
+  >();
+
+  for (const constraint of constraints) {
+    if (constraint.constraint_type !== 'teacher_unavailable') continue;
+
+    const teacherId = constraint.entity_id ?? String(constraint.params.teacher_id ?? '').trim();
+    const rawDay = Number(constraint.params.day);
+    const start = String(constraint.params.start ?? '');
+    const end = String(constraint.params.end ?? '');
+
+    if (!teacherId || Number.isNaN(rawDay) || !start || !end) continue;
+
+    const key = `${teacherId}:${rawDay}`;
+    const entry = grouped.get(key) ?? {
+      teacher_id: teacherId,
+      day_of_week: toFrontendDayOfWeek(rawDay),
+      unavailable: [],
+    };
+    entry.unavailable.push({ start: toMinutes(start), end: toMinutes(end) });
+    grouped.set(key, entry);
+  }
+
+  const schoolStart = toMinutes(SCHOOL_DAY_START);
+  const schoolEnd = toMinutes(SCHOOL_DAY_END);
+  const availability: TeacherAvailability[] = [];
+
+  for (const entry of grouped.values()) {
+    const blocked = [...entry.unavailable]
+      .filter((window) => window.end > window.start)
+      .sort((left, right) => left.start - right.start);
+
+    let cursor = schoolStart;
+
+    for (const window of blocked) {
+      const start = Math.max(schoolStart, window.start);
+      const end = Math.min(schoolEnd, window.end);
+      if (start > cursor) {
+        availability.push({
+          teacher_id: entry.teacher_id,
+          day_of_week: entry.day_of_week,
+          available_from: toTimeString(cursor),
+          available_until: toTimeString(start),
+        });
+      }
+      cursor = Math.max(cursor, end);
+    }
+
+    if (cursor < schoolEnd) {
+      availability.push({
+        teacher_id: entry.teacher_id,
+        day_of_week: entry.day_of_week,
+        available_from: toTimeString(cursor),
+        available_until: toTimeString(schoolEnd),
+      });
+    }
+  }
+
+  return availability.sort((left, right) => {
+    if (left.teacher_id !== right.teacher_id) {
+      return left.teacher_id.localeCompare(right.teacher_id);
+    }
+    if (left.day_of_week !== right.day_of_week) {
+      return left.day_of_week - right.day_of_week;
+    }
+    return left.available_from.localeCompare(right.available_from);
+  });
+}
+
+function normalizeRoomConstraints(constraints: BackendTimetableConstraint[]): RoomConstraint[] {
+  return constraints
+    .filter((constraint) => constraint.constraint_type === 'room_capacity')
+    .map((constraint) => ({
+      room_name: String(constraint.params.room ?? '').trim(),
+      capacity: Number(constraint.params.max_students ?? 0),
+    }))
+    .filter((constraint) => constraint.room_name && constraint.capacity > 0);
+}
+
+function normalizeConstraints(
+  constraints: BackendTimetableConstraint[],
+  academicYearId: string,
+): TimetableConstraints {
+  return {
+    academic_year_id: academicYearId,
+    // The backend currently has no global max_consecutive constraint type.
+    max_consecutive_classes: DEFAULT_MAX_CONSECUTIVE_CLASSES,
+    teacher_availability: normalizeTeacherAvailability(constraints),
+    room_constraints: normalizeRoomConstraints(constraints),
+  };
+}
+
+function serializeTeacherAvailability(
+  availability: TeacherAvailability[],
+): BackendTimetableConstraintPayload[] {
+  const schoolStart = toMinutes(SCHOOL_DAY_START);
+  const schoolEnd = toMinutes(SCHOOL_DAY_END);
+  const constraints: BackendTimetableConstraintPayload[] = [];
+
+  for (const item of availability) {
+    const teacherId = item.teacher_id.trim();
+    const availableFrom = toMinutes(item.available_from);
+    const availableUntil = toMinutes(item.available_until);
+
+    if (!teacherId || availableUntil <= availableFrom) continue;
+
+    if (availableFrom > schoolStart) {
+      constraints.push({
+        constraint_type: 'teacher_unavailable',
+        entity_id: teacherId,
+        params: {
+          day: toBackendDayOfWeek(item.day_of_week),
+          start: SCHOOL_DAY_START,
+          end: item.available_from,
+        },
+      });
+    }
+
+    if (availableUntil < schoolEnd) {
+      constraints.push({
+        constraint_type: 'teacher_unavailable',
+        entity_id: teacherId,
+        params: {
+          day: toBackendDayOfWeek(item.day_of_week),
+          start: item.available_until,
+          end: SCHOOL_DAY_END,
+        },
+      });
+    }
+  }
+
+  return constraints;
+}
+
+function serializeRoomConstraints(rooms: RoomConstraint[]): BackendTimetableConstraintPayload[] {
+  return rooms
+    .map((room) => ({
+      constraint_type: 'room_capacity' as const,
+      entity_id: null,
+      params: {
+        room: room.room_name.trim(),
+        max_students: room.capacity,
+      },
+    }))
+    .filter((room) => String(room.params.room).trim() && Number(room.params.max_students) > 0);
+}
+
+function serializeConstraints(payload: TimetableConstraints): BackendTimetableConstraintPayload[] {
+  return [
+    ...serializeTeacherAvailability(payload.teacher_availability),
+    ...serializeRoomConstraints(payload.room_constraints),
+  ];
+}
+
+function normalizeConstraintEnvelope(
+  academicYearId: string,
+  constraints: BackendTimetableConstraint[],
+  timestamp: string,
+  version: string,
+): ApiResponse<TimetableConstraints> {
+  return {
+    data: normalizeConstraints(constraints, academicYearId),
+    meta: {
+      timestamp,
+      version,
+    },
+  };
 }
 
 export type GenerationJobStatus = 'pending' | 'running' | 'completed' | 'failed';
@@ -213,12 +436,31 @@ export const timetableService = {
 
   // ── Generation endpoints ────────────────────────────────────────────────
 
-  getConstraints() {
-    return api.get<TimetableConstraints>('/timetable/constraints');
+  async getConstraints(academicYearId: string) {
+    const response = await api.list<BackendTimetableConstraint>('/timetable/constraints', {
+      academic_year_id: academicYearId,
+    });
+
+    return normalizeConstraintEnvelope(
+      academicYearId,
+      response.data,
+      response.meta.timestamp,
+      response.meta.version,
+    );
   },
 
-  saveConstraints(payload: TimetableConstraints) {
-    return api.post<TimetableConstraints>('/timetable/constraints', payload);
+  async saveConstraints(payload: TimetableConstraints) {
+    const response = await api.post<BackendTimetableConstraint[]>('/timetable/constraints', {
+      academic_year_id: payload.academic_year_id,
+      constraints: serializeConstraints(payload),
+    });
+
+    return normalizeConstraintEnvelope(
+      payload.academic_year_id,
+      response.data,
+      response.meta.timestamp,
+      response.meta.version,
+    );
   },
 
   triggerGeneration(payload: { academic_year_id: string }) {

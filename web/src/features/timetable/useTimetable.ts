@@ -23,7 +23,8 @@ export const timetableQueryKeys = {
   slots: (filters: TimetableSlotFilters) => [...timetableQueryKeys.all, 'slots', filters] as const,
   exceptions: (filters: TimetableExceptionFilters) =>
     [...timetableQueryKeys.all, 'exceptions', filters] as const,
-  constraints: () => [...timetableQueryKeys.all, 'constraints'] as const,
+  constraints: (academicYearId: string) =>
+    [...timetableQueryKeys.all, 'constraints', academicYearId] as const,
   generationJob: (jobId: string) => [...timetableQueryKeys.all, 'job', jobId] as const,
   generationPreview: (jobId: string) => [...timetableQueryKeys.all, 'preview', jobId] as const,
 };
@@ -123,10 +124,11 @@ export function useCreateTimetableException() {
   });
 }
 
-export function useTimetableConstraints() {
+export function useTimetableConstraints(academicYearId: string) {
   return useQuery({
-    queryKey: timetableQueryKeys.constraints(),
-    queryFn: async () => (await timetableService.getConstraints()).data,
+    queryKey: timetableQueryKeys.constraints(academicYearId),
+    queryFn: async () => (await timetableService.getConstraints(academicYearId)).data,
+    enabled: Boolean(academicYearId),
     staleTime: STALE_DEFAULT,
   });
 }
@@ -137,8 +139,11 @@ export function useSaveConstraints() {
   return useMutation({
     mutationFn: async (payload: TimetableConstraints) =>
       (await timetableService.saveConstraints(payload)).data,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: timetableQueryKeys.constraints() });
+    onSuccess: async (data) => {
+      queryClient.setQueryData(timetableQueryKeys.constraints(data.academic_year_id), data);
+      await queryClient.invalidateQueries({
+        queryKey: timetableQueryKeys.constraints(data.academic_year_id),
+      });
     },
   });
 }
