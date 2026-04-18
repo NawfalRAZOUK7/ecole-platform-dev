@@ -1,5 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '@/services/auth/AuthContext';
 import type { ContentItem } from '@/features/teacher/teacher.service';
 import { useTeacherClasses } from '@/features/teacher/useTeacher';
 import { AssignContentModal } from '@/features/teacher/AssignContentModal';
@@ -18,6 +19,8 @@ const REVIEW_STATUSES = ['PENDING', 'UNDER_REVIEW', 'APPROVED', 'REJECTED'] as c
 
 export function CmsLibraryBrowseTab() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const canAssign = user?.role !== 'CONTENT_MGR';
   const [filterType, setFilterType] = useState('');
   const [filterSubject, setFilterSubject] = useState('');
   const [filterLevel, setFilterLevel] = useState('');
@@ -36,7 +39,7 @@ export function CmsLibraryBrowseTab() {
   const submissionsQuery = useCmsLibrarySubmissions({
     status: submissionStatus || undefined,
   });
-  const classesQuery = useTeacherClasses();
+  const classesQuery = useTeacherClasses(canAssign);
   const assignMutation = useCmsAssignLibraryContent();
   const reviewMutation = useCmsSubmitLibraryContentForReview();
 
@@ -52,13 +55,13 @@ export function CmsLibraryBrowseTab() {
   const error =
     libraryQuery.error ??
     submissionsQuery.error ??
-    classesQuery.error ??
+    (canAssign ? classesQuery.error : null) ??
     assignMutation.error ??
     reviewMutation.error;
 
   if (
     (libraryQuery.isLoading && !libraryQuery.data) ||
-    classesQuery.isLoading ||
+    (canAssign && classesQuery.isLoading) ||
     (submissionsQuery.isLoading && !submissionsQuery.data)
   ) {
     return <LoadingState />;
@@ -90,7 +93,7 @@ export function CmsLibraryBrowseTab() {
                 void Promise.all([
                   libraryQuery.refetch(),
                   submissionsQuery.refetch(),
-                  classesQuery.refetch(),
+                  ...(canAssign ? [classesQuery.refetch()] : []),
                 ])
             : undefined
         }
@@ -123,11 +126,15 @@ export function CmsLibraryBrowseTab() {
                 key={item.id}
                 item={item}
                 reviewPending={reviewMutation.isPending}
-                onAssign={(content) => {
-                  setAssignItem(content);
-                  setAssignClassId('');
-                  setAssignNotes('');
-                }}
+                onAssign={
+                  canAssign
+                    ? (content) => {
+                        setAssignItem(content);
+                        setAssignClassId('');
+                        setAssignNotes('');
+                      }
+                    : undefined
+                }
                 onSubmitForReview={(contentId) => void reviewMutation.mutateAsync(contentId)}
               />
             ))}
@@ -200,17 +207,19 @@ export function CmsLibraryBrowseTab() {
         )}
       </section>
 
-      <AssignContentModal
-        assignClassId={assignClassId}
-        assignItem={assignItem}
-        assignNotes={assignNotes}
-        classes={classes}
-        isPending={assignMutation.isPending}
-        onChangeClassId={setAssignClassId}
-        onChangeNotes={setAssignNotes}
-        onClose={() => setAssignItem(null)}
-        onSubmit={(event) => void handleAssign(event)}
-      />
+      {canAssign && (
+        <AssignContentModal
+          assignClassId={assignClassId}
+          assignItem={assignItem}
+          assignNotes={assignNotes}
+          classes={classes}
+          isPending={assignMutation.isPending}
+          onChangeClassId={setAssignClassId}
+          onChangeNotes={setAssignNotes}
+          onClose={() => setAssignItem(null)}
+          onSubmit={(event) => void handleAssign(event)}
+        />
+      )}
     </div>
   );
 }

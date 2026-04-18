@@ -3,7 +3,15 @@ import type { ClassOption, ContentItem } from './teacher.service';
 
 export type ContentLibraryTab = 'browse' | 'upload' | 'submissions';
 
-export const SUBJECT_OPTIONS = ['math', 'french', 'arabic', 'science', 'history', 'geography', 'english'] as const;
+export const SUBJECT_OPTIONS = [
+  'math',
+  'french',
+  'arabic',
+  'science',
+  'history',
+  'geography',
+  'english',
+] as const;
 export const LEVEL_OPTIONS = ['primaire', 'college', 'lycee'] as const;
 export const REVIEW_STATUS_OPTIONS = ['PENDING', 'UNDER_REVIEW', 'APPROVED', 'REJECTED'] as const;
 
@@ -21,7 +29,7 @@ export interface ContentFiltersProps {
 export interface ContentCardProps {
   item: ContentItem;
   reviewPending: boolean;
-  onAssign: (item: ContentItem) => void;
+  onAssign?: (item: ContentItem) => void;
   onSubmitForReview: (contentId: string) => void;
 }
 

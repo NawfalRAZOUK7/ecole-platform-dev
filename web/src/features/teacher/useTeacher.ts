@@ -37,11 +37,12 @@ export const teacherQueryKeys = {
   classDetail: (classId: string) => [...teacherQueryKeys.all, 'class-detail', classId] as const,
 };
 
-export function useTeacherClasses() {
+export function useTeacherClasses(enabled = true) {
   return useQuery({
     queryKey: teacherQueryKeys.classes(),
     queryFn: async () => (await teacherService.listTeacherClasses()).data,
     staleTime: STALE_DEFAULT,
+    enabled,
   });
 }
 
