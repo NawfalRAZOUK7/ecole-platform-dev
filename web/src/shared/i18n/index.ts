@@ -94,17 +94,41 @@ export function applyDirection(lang: string) {
 
 /** Format a date for display using Africa/Casablanca timezone */
 export function formatDate(
-  dateStr: string | null | undefined,
+  dateStr: string | Date | null | undefined,
   lang?: string,
   options?: Intl.DateTimeFormatOptions,
 ): string {
   if (!dateStr) return '-';
-  const locale = lang || i18next.language || 'fr';
-  return new Intl.DateTimeFormat(locale, {
-    timeZone: 'Africa/Casablanca',
-    dateStyle: 'medium',
-    ...options,
-  }).format(new Date(dateStr));
+  try {
+    const date = typeof dateStr === 'string' ? new Date(dateStr) : dateStr;
+    const locale = lang || i18next.language || 'fr';
+    const granularKeys = [
+      'year',
+      'month',
+      'day',
+      'hour',
+      'minute',
+      'second',
+      'weekday',
+      'era',
+      'fractionalSecondDigits',
+    ];
+    const hasGranularOptions = Boolean(
+      options && granularKeys.some((key) => key in (options as Record<string, unknown>)),
+    );
+
+    const defaults: Intl.DateTimeFormatOptions = {
+      timeZone: 'Africa/Casablanca',
+    };
+
+    if (!hasGranularOptions && !options?.dateStyle && !options?.timeStyle) {
+      defaults.dateStyle = 'medium';
+    }
+
+    return new Intl.DateTimeFormat(locale, { ...defaults, ...options }).format(date);
+  } catch {
+    return String(dateStr);
+  }
 }
 
 /** Format currency for display */
