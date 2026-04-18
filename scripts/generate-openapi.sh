@@ -10,10 +10,7 @@ cd "$(dirname "$0")/../backend"
 if [ -x ".venv/bin/python" ]; then
   PYTHON_BIN=".venv/bin/python"
 fi
-"$PYTHON_BIN" -c "
-from app.main import app
-import json
-spec = app.openapi()
-with open('openapi.json', 'w') as f:
-    json.dump(spec, f, indent=2)
-"
+
+# Keep the web contract snapshot aligned with the backend CI exporter.
+"$PYTHON_BIN" scripts/export_openapi.py
+cp docs/openapi.json openapi.json

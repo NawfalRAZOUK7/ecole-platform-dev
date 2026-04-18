@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "\u00c9cole Platform API",
-    "description": "EdTech SaaS platform API for K-12 schools in Morocco.\n\n## Domains\n- **IAM** \u2014 Authentication, authorization, invitations, recovery, 2FA\n- **ERP** \u2014 Classes, enrollments, teacher assignments, attendance\n- **LMS** \u2014 Courses, assignments, submissions, results, content, activities, assessments\n- **Billing** \u2014 Invoices and payments\n- **COM** \u2014 Notifications, consents, parent feed\n- **AI** \u2014 Writing assistance, recommendations, KPIs\n\n## Authentication\nAll protected endpoints require a `Bearer` access token in the `Authorization` header.\nTokens are obtained via `POST /auth/login`.",
+    "title": "École Platform API",
+    "description": "EdTech SaaS platform API for K-12 schools in Morocco.\n\n## Domains\n- **IAM** — Authentication, authorization, invitations, recovery, 2FA\n- **ERP** — Classes, enrollments, teacher assignments, attendance\n- **LMS** — Courses, assignments, submissions, results, content, activities, assessments\n- **Billing** — Invoices and payments\n- **COM** — Notifications, consents, parent feed\n- **AI** — Writing assistance, recommendations, KPIs\n\n## Authentication\nAll protected endpoints require a `Bearer` access token in the `Authorization` header.\nTokens are obtained via `POST /auth/login`.",
     "version": "0.1.0"
   },
   "paths": {
@@ -434,7 +434,7 @@
           "auth"
         ],
         "summary": "Start 2FA setup",
-        "description": "Generate a new TOTP secret and QR code provisioning URI.\n\nReturns the secret and URI for the authenticator app.\n2FA is not yet active \u2014 call /auth/2fa/verify-setup with a valid code to activate.",
+        "description": "Generate a new TOTP secret and QR code provisioning URI.\n\nReturns the secret and URI for the authenticator app.\n2FA is not yet active — call /auth/2fa/verify-setup with a valid code to activate.",
         "operationId": "two_factor_setup_api_v1_auth_2fa_setup_post",
         "responses": {
           "200": {
@@ -1153,7 +1153,7 @@
           "erp-classes"
         ],
         "summary": "Get class details",
-        "description": "Get class details by ID.\n\nFull security pipeline:\n1. AuthN \u2014 verified by get_current_user (via requires_permission)\n2. RBAC \u2014 requires PERM-ERP:class:read\n3. ABAC \u2014 school boundary (404 for other school's classes)\n4. ABAC \u2014 teacher assignment (TCH only sees assigned classes)",
+        "description": "Get class details by ID.\n\nFull security pipeline:\n1. AuthN — verified by get_current_user (via requires_permission)\n2. RBAC — requires PERM-ERP:class:read\n3. ABAC — school boundary (404 for other school's classes)\n4. ABAC — teacher assignment (TCH only sees assigned classes)",
         "operationId": "get_class_api_v1_classes__class_id__get",
         "security": [
           {
@@ -20665,7 +20665,7 @@
           "opt_out"
         ],
         "title": "AIOptOutRequest",
-        "description": "POST /ai/preferences/opt-out \u2014 parent opts out of AI personalization."
+        "description": "POST /ai/preferences/opt-out — parent opts out of AI personalization."
       },
       "ActivitySessionCompleteRequest": {
         "properties": {
@@ -20736,7 +20736,7 @@
               }
             ],
             "title": "Target Class Ids",
-            "description": "Target class UUIDs \u2014 NULL means all classes"
+            "description": "Target class UUIDs — NULL means all classes"
           }
         },
         "type": "object",
@@ -28170,7 +28170,7 @@
           "text"
         ],
         "title": "WritingAttemptRequest",
-        "description": "POST /writing-attempts \u2014 student writing assistance request."
+        "description": "POST /writing-attempts — student writing assistance request."
       }
     },
     "securitySchemes": {
@@ -28183,99 +28183,99 @@
   "tags": [
     {
       "name": "auth",
-      "description": "Authentication \u2014 login, refresh, logout, profile, 2FA, email verification."
+      "description": "Authentication — login, refresh, logout, profile, 2FA, email verification."
     },
     {
       "name": "invitations",
-      "description": "Invitation codes \u2014 create, consume, and revoke codes for user onboarding."
+      "description": "Invitation codes — create, consume, and revoke codes for user onboarding."
     },
     {
       "name": "recovery",
-      "description": "Account recovery \u2014 request OTP, verify, and reset password."
+      "description": "Account recovery — request OTP, verify, and reset password."
     },
     {
       "name": "erp-classes",
-      "description": "ERP \u2014 School classes: read class details, capacity, academic year."
+      "description": "ERP — School classes: read class details, capacity, academic year."
     },
     {
       "name": "erp-enrollments",
-      "description": "ERP \u2014 Student enrollments: assign students to classes."
+      "description": "ERP — Student enrollments: assign students to classes."
     },
     {
       "name": "erp-class-assignments",
-      "description": "ERP \u2014 Teacher assignments: assign teachers to classes."
+      "description": "ERP — Teacher assignments: assign teachers to classes."
     },
     {
       "name": "erp-attendance",
-      "description": "ERP \u2014 Attendance: mark sessions, absence justifications, reviews."
+      "description": "ERP — Attendance: mark sessions, absence justifications, reviews."
     },
     {
       "name": "lms-courses",
-      "description": "LMS \u2014 Courses: create and list courses (teacher/admin)."
+      "description": "LMS — Courses: create and list courses (teacher/admin)."
     },
     {
       "name": "lms-assignments",
-      "description": "LMS \u2014 Assignments: create and list homework assignments."
+      "description": "LMS — Assignments: create and list homework assignments."
     },
     {
       "name": "lms-submissions",
-      "description": "LMS \u2014 Submissions: student work submissions and teacher grading."
+      "description": "LMS — Submissions: student work submissions and teacher grading."
     },
     {
       "name": "lms-results",
-      "description": "LMS \u2014 Results: student grades and academic results."
+      "description": "LMS — Results: student grades and academic results."
     },
     {
       "name": "lms-content",
-      "description": "LMS \u2014 Content: learning materials, assets, and progress tracking."
+      "description": "LMS — Content: learning materials, assets, and progress tracking."
     },
     {
       "name": "lms-activities",
-      "description": "LMS \u2014 Activities: interactive learning sessions and completion."
+      "description": "LMS — Activities: interactive learning sessions and completion."
     },
     {
       "name": "lms-assessments",
-      "description": "LMS \u2014 Assessments: exams, quizzes, publishing, and result submission."
+      "description": "LMS — Assessments: exams, quizzes, publishing, and result submission."
     },
     {
       "name": "billing-invoices",
-      "description": "Billing \u2014 Invoices: list and view school fee invoices."
+      "description": "Billing — Invoices: list and view school fee invoices."
     },
     {
       "name": "billing-payments",
-      "description": "Billing \u2014 Payments: initiate payments, status, provider webhooks."
+      "description": "Billing — Payments: initiate payments, status, provider webhooks."
     },
     {
       "name": "com-notifications",
-      "description": "COM \u2014 Notifications: in-app notification feed."
+      "description": "COM — Notifications: in-app notification feed."
     },
     {
       "name": "com-consents",
-      "description": "COM \u2014 Consents: manage communication and data-sharing preferences."
+      "description": "COM — Consents: manage communication and data-sharing preferences."
     },
     {
       "name": "com-feed",
-      "description": "COM \u2014 Parent feed: aggregated activity feed for parents."
+      "description": "COM — Parent feed: aggregated activity feed for parents."
     },
     {
       "name": "ai",
-      "description": "AI & Data \u2014 Writing assistance, recommendations, KPIs, event schema."
+      "description": "AI & Data — Writing assistance, recommendations, KPIs, event schema."
     },
     {
       "name": "admin",
-      "description": "Admin \u2014 Dashboard, user management, audit logs, settings (ADM/DIR only)."
+      "description": "Admin — Dashboard, user management, audit logs, settings (ADM/DIR only)."
     },
     {
       "name": "teacher",
-      "description": "Teacher \u2014 Classes, students, submissions, periods (TCH only)."
+      "description": "Teacher — Classes, students, submissions, periods (TCH only)."
     },
     {
       "name": "websocket",
-      "description": "WebSocket \u2014 Real-time event delivery for connected clients."
+      "description": "WebSocket — Real-time event delivery for connected clients."
     },
     {
       "name": "system",
-      "description": "System \u2014 Health check, version, and operational endpoints."
+      "description": "System — Health check, version, and operational endpoints."
     },
     {
       "name": "Rewards",
