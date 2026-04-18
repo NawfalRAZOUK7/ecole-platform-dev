@@ -95,6 +95,7 @@ PERM_ERP_TIMETABLE_EXCEPTION_READ = "PERM-ERP:timetable-exception:read"
 PERM_LMS_COURSE_READ = "PERM-LMS:course:read"
 PERM_LMS_COURSE_PUBLISH = "PERM-LMS:course:publish"
 PERM_LMS_ASSIGNMENT_CREATE = "PERM-LMS:assignment:create"
+PERM_LMS_ASSIGNMENT_READ = "PERM-LMS:assignment:read"
 PERM_LMS_SUBMISSION_CREATE = "PERM-LMS:submission:create"
 PERM_LMS_SUBMISSION_GRADE = "PERM-LMS:submission:grade"
 PERM_LMS_SUBMISSION_FILE_UPLOAD = "PERM-LMS:submission-file:upload"
@@ -652,6 +653,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_ERP_TIMETABLE_READ,
         PERM_ERP_TIMETABLE_EXCEPTION_READ,
         # LMS — submit + read progress + files
+        PERM_LMS_ASSIGNMENT_READ,
         PERM_LMS_SUBMISSION_CREATE,
         PERM_LMS_SUBMISSION_FILE_UPLOAD,
         PERM_LMS_SUBMISSION_FILE_READ,

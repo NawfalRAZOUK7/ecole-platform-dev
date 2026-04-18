@@ -9,9 +9,9 @@ from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import AuthContext, requires_permission
+from app.core.dependencies import AuthContext, requires_any_permission, requires_permission
 from app.core.filtering import FilterSpec, SortSpec, parse_filters, parse_sort
-from app.core.permissions import PERM_LMS_ASSIGNMENT_CREATE
+from app.core.permissions import PERM_LMS_ASSIGNMENT_CREATE, PERM_LMS_ASSIGNMENT_READ
 from app.core.request_utils import get_client_ip
 from app.core.response import clamp_page_size, list_response, success_response
 from app.core.search import parse_search
@@ -55,7 +55,7 @@ async def list_assignments(
     filters: FilterSpec = Depends(parse_filters),
     sort: SortSpec = Depends(parse_sort),
     search: str | None = Depends(parse_search),
-    auth: AuthContext = Depends(requires_permission(PERM_LMS_ASSIGNMENT_CREATE)),
+    auth: AuthContext = Depends(requires_any_permission(PERM_LMS_ASSIGNMENT_READ, PERM_LMS_ASSIGNMENT_CREATE)),
     db: AsyncSession = Depends(get_db),
 ):
     service = AssignmentService(db)
