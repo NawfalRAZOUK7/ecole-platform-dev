@@ -78,7 +78,14 @@ export function useRewardBadges(enabled = true) {
 export function useRewardChildren(enabled: boolean) {
   return useQuery({
     queryKey: rewardsQueryKeys.children(),
-    queryFn: async () => (await progressService.getChildrenOverview()).data.data.children,
+    queryFn: async () => {
+      try {
+        const r = await progressService.getChildrenOverview();
+        return r?.data?.data?.children ?? [];
+      } catch {
+        return [];
+      }
+    },
     enabled,
     staleTime: STALE_RESULTS,
   });
