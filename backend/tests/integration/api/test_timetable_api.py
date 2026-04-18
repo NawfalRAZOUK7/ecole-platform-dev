@@ -12,6 +12,10 @@ def constraints_payload() -> dict:
         "academic_year_id": YEAR_ID,
         "constraints": [
             {
+                "constraint_type": "max_consecutive_classes",
+                "params": {"max": 3},
+            },
+            {
                 "constraint_type": "room_capacity",
                 "params": {"room": "Lab A", "max_students": 30},
             }
@@ -38,6 +42,11 @@ class TestTimetableApi:
 
         assert list_response.status_code == 200
         assert isinstance(list_response.json()["data"], list)
+        assert any(
+            item["constraint_type"] == "max_consecutive_classes"
+            and item["params"]["max"] == 3
+            for item in list_response.json()["data"]
+        )
 
     @pytest.mark.asyncio
     async def test_admin_can_generate_and_preview_timetable_job(

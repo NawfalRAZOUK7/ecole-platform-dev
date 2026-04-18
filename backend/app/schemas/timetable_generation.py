@@ -11,7 +11,7 @@ class TimetableConstraintInput(BaseModel):
     constraint_type: str = Field(
         ...,
         pattern=(
-            "^(teacher_unavailable|room_capacity|max_hours_per_day|"
+            "^(teacher_unavailable|room_capacity|max_consecutive_classes|max_hours_per_day|"
             "subject_hours_per_week|no_consecutive_same_subject)$"
         ),
     )

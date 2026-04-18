@@ -28,6 +28,7 @@ interface BackendTimetableConstraint {
   constraint_type:
     | 'teacher_unavailable'
     | 'room_capacity'
+    | 'max_consecutive_classes'
     | 'max_hours_per_day'
     | 'subject_hours_per_week'
     | 'no_consecutive_same_subject';
@@ -154,17 +155,42 @@ function normalizeRoomConstraints(constraints: BackendTimetableConstraint[]): Ro
     .filter((constraint) => constraint.room_name && constraint.capacity > 0);
 }
 
+function normalizeMaxConsecutiveClasses(constraints: BackendTimetableConstraint[]): number {
+  const maxConstraint = constraints.find(
+    (constraint) => constraint.constraint_type === 'max_consecutive_classes',
+  );
+  const max = Number(maxConstraint?.params.max ?? 0);
+  return Number.isFinite(max) && max > 0 ? max : DEFAULT_MAX_CONSECUTIVE_CLASSES;
+}
+
 function normalizeConstraints(
   constraints: BackendTimetableConstraint[],
   academicYearId: string,
 ): TimetableConstraints {
   return {
     academic_year_id: academicYearId,
-    // The backend currently has no global max_consecutive constraint type.
-    max_consecutive_classes: DEFAULT_MAX_CONSECUTIVE_CLASSES,
+    max_consecutive_classes: normalizeMaxConsecutiveClasses(constraints),
     teacher_availability: normalizeTeacherAvailability(constraints),
     room_constraints: normalizeRoomConstraints(constraints),
   };
+}
+
+function serializeMaxConsecutiveClasses(
+  maxConsecutiveClasses: number,
+): BackendTimetableConstraintPayload[] {
+  if (!Number.isFinite(maxConsecutiveClasses) || maxConsecutiveClasses <= 0) {
+    return [];
+  }
+
+  return [
+    {
+      constraint_type: 'max_consecutive_classes',
+      entity_id: null,
+      params: {
+        max: maxConsecutiveClasses,
+      },
+    },
+  ];
 }
 
 function serializeTeacherAvailability(
@@ -224,6 +250,7 @@ function serializeRoomConstraints(rooms: RoomConstraint[]): BackendTimetableCons
 
 function serializeConstraints(payload: TimetableConstraints): BackendTimetableConstraintPayload[] {
   return [
+    ...serializeMaxConsecutiveClasses(payload.max_consecutive_classes),
     ...serializeTeacherAvailability(payload.teacher_availability),
     ...serializeRoomConstraints(payload.room_constraints),
   ];

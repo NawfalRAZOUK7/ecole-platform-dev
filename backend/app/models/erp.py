@@ -535,6 +535,7 @@ class TimetableConstraint(TimestampMixin, SchoolScopedMixin, Base):
             "constraint_type IN ("
             "'teacher_unavailable',"
             "'room_capacity',"
+            "'max_consecutive_classes',"
             "'max_hours_per_day',"
             "'subject_hours_per_week',"
             "'no_consecutive_same_subject'"

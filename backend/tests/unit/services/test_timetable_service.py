@@ -129,6 +129,50 @@ class TestTimetableConstraints:
                 )
             )
 
+    def test_validate_constraint_input_rejects_non_positive_max_consecutive_classes(
+        self,
+    ):
+        service = TimetableGeneratorService(AsyncMock())
+
+        with pytest.raises(
+            ValidationError, match="max_consecutive_classes requires positive max"
+        ):
+            service._validate_constraint_input(
+                TimetableConstraintInput(
+                    constraint_type="max_consecutive_classes",
+                    params={"max": 0},
+                )
+            )
+
+    def test_would_exceed_max_consecutive_classes_detects_long_run(self):
+        service = TimetableGeneratorService(AsyncMock())
+        class_id = uuid.uuid4()
+        class_busy = {
+            (class_id, 0, 0): SimpleNamespace(),
+            (class_id, 0, 1): SimpleNamespace(),
+        }
+
+        assert (
+            service._would_exceed_max_consecutive_classes(
+                class_id=class_id,
+                day_of_week=0,
+                slot_index=2,
+                max_consecutive_classes=2,
+                class_busy=class_busy,
+            )
+            is True
+        )
+        assert (
+            service._would_exceed_max_consecutive_classes(
+                class_id=class_id,
+                day_of_week=0,
+                slot_index=2,
+                max_consecutive_classes=3,
+                class_busy=class_busy,
+            )
+            is False
+        )
+
     @pytest.mark.asyncio
     async def test_set_constraints_replaces_existing_constraints(
         self,

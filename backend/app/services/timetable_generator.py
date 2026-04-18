@@ -33,6 +33,7 @@ from app.services.audit import AuditService
 _ALLOWED_CONSTRAINT_TYPES = {
     "teacher_unavailable",
     "room_capacity",
+    "max_consecutive_classes",
     "max_hours_per_day",
     "subject_hours_per_week",
     "no_consecutive_same_subject",
@@ -56,6 +57,7 @@ class _RequirementUnit:
     teacher_ids: tuple[uuid.UUID, ...]
     preferred_room: str | None
     class_size: int
+    max_consecutive_classes: int | None
     max_hours_per_day: int | None
     no_consecutive_same_subject: bool
 
@@ -198,6 +200,14 @@ class TimetableGeneratorService:
                     error_code="ERR-ERP-422",
                 )
             return
+        if constraint.constraint_type == "max_consecutive_classes":
+            max_consecutive = int(params.get("max") or 0)
+            if max_consecutive <= 0:
+                raise ValidationError(
+                    "max_consecutive_classes requires positive max",
+                    error_code="ERR-ERP-422",
+                )
+            return
         if constraint.constraint_type == "max_hours_per_day":
             class_id = constraint.entity_id or self._parse_uuid(params.get("class_id"))
             max_hours = int(params.get("max_hours") or 0)
@@ -273,11 +283,13 @@ class TimetableGeneratorService:
     ) -> tuple[
         set[tuple[uuid.UUID, int, int]],
         dict[str, int],
+        int | None,
         dict[uuid.UUID, int],
         set[uuid.UUID],
     ]:
         teacher_unavailable: set[tuple[uuid.UUID, int, int]] = set()
         room_capacities: dict[str, int] = {}
+        max_consecutive_classes: int | None = None
         max_hours_per_day: dict[uuid.UUID, int] = {}
         no_consecutive_same_subject: set[uuid.UUID] = set()
 
@@ -301,6 +313,8 @@ class TimetableGeneratorService:
             elif constraint.constraint_type == "room_capacity":
                 room = str(params["room"]).strip()
                 room_capacities[room] = int(params["max_students"])
+            elif constraint.constraint_type == "max_consecutive_classes":
+                max_consecutive_classes = int(params["max"])
             elif constraint.constraint_type == "max_hours_per_day":
                 class_id = constraint.entity_id or self._parse_uuid(
                     params.get("class_id")
@@ -315,6 +329,7 @@ class TimetableGeneratorService:
         return (
             teacher_unavailable,
             room_capacities,
+            max_consecutive_classes,
             max_hours_per_day,
             no_consecutive_same_subject,
         )
@@ -328,6 +343,7 @@ class TimetableGeneratorService:
         class_sizes: dict[uuid.UUID, int],
         class_teachers: dict[uuid.UUID, list[uuid.UUID]],
         subject_teacher_map: dict[tuple[uuid.UUID, str], list[uuid.UUID]],
+        max_consecutive_classes: int | None,
         max_hours_per_day: dict[uuid.UUID, int],
         no_consecutive_same_subject: set[uuid.UUID],
         conflicts: list[dict],
@@ -371,6 +387,7 @@ class TimetableGeneratorService:
                         teacher_ids=tuple(teacher_ids),
                         preferred_room=preferred_room,
                         class_size=class_sizes.get(class_id, 0),
+                        max_consecutive_classes=max_consecutive_classes,
                         max_hours_per_day=max_hours_per_day.get(class_id),
                         no_consecutive_same_subject=class_id
                         in no_consecutive_same_subject,
@@ -429,6 +446,31 @@ class TimetableGeneratorService:
             "teacher_id": placement.teacher_id,
             "room": placement.room,
         }
+
+    def _would_exceed_max_consecutive_classes(
+        self,
+        *,
+        class_id: uuid.UUID,
+        day_of_week: int,
+        slot_index: int,
+        max_consecutive_classes: int | None,
+        class_busy: dict[tuple[uuid.UUID, int, int], _PlacedUnit],
+    ) -> bool:
+        if max_consecutive_classes is None or max_consecutive_classes <= 0:
+            return False
+
+        run_length = 1
+        previous_index = slot_index - 1
+        while (class_id, day_of_week, previous_index) in class_busy:
+            run_length += 1
+            previous_index -= 1
+
+        next_index = slot_index + 1
+        while (class_id, day_of_week, next_index) in class_busy:
+            run_length += 1
+            next_index += 1
+
+        return run_length > max_consecutive_classes
 
     def _place(
         self,
@@ -572,6 +614,14 @@ class TimetableGeneratorService:
                     >= unit.max_hours_per_day
                 ):
                     continue
+                if self._would_exceed_max_consecutive_classes(
+                    class_id=unit.class_id,
+                    day_of_week=slot.day_of_week,
+                    slot_index=slot.slot_index,
+                    max_consecutive_classes=unit.max_consecutive_classes,
+                    class_busy=class_busy,
+                ):
+                    continue
                 if unit.no_consecutive_same_subject:
                     previous = class_busy.get(
                         (unit.class_id, slot.day_of_week, slot.slot_index - 1)
@@ -629,6 +679,7 @@ class TimetableGeneratorService:
         (
             teacher_unavailable,
             room_capacities,
+            max_consecutive_classes,
             max_hours_per_day,
             no_consecutive_same_subject,
         ) = self._parse_solver_settings(
@@ -644,6 +695,7 @@ class TimetableGeneratorService:
             class_sizes=class_sizes,
             class_teachers=class_teachers,
             subject_teacher_map=subject_teacher_map,
+            max_consecutive_classes=max_consecutive_classes,
             max_hours_per_day=max_hours_per_day,
             no_consecutive_same_subject=no_consecutive_same_subject,
             conflicts=conflicts,
