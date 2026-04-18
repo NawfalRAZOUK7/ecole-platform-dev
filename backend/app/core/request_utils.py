@@ -20,19 +20,12 @@ from app.models.iam import Session
 _bearer_scheme = HTTPBearer(auto_error=False)
 
 
-def _extract_access_token(
-    request: Request,
+def _extract_bearer_token(
     credentials: HTTPAuthorizationCredentials | None,
 ) -> str | None:
-    if credentials is not None:
-        return credentials.credentials
-
-    token = request.query_params.get("token")
-    if not token:
+    if credentials is None:
         return None
-    if token.lower().startswith("bearer "):
-        return token.split(" ", 1)[1].strip()
-    return token
+    return credentials.credentials
 
 
 def get_client_ip(request: Request) -> str | None:
@@ -107,12 +100,12 @@ def serialize_device(device: Any) -> dict[str, Any]:
 
 
 async def optional_current_user(
-    request: Request,
+    _request: Request,
     credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
     db: AsyncSession = Depends(get_db),
 ) -> AuthContext | None:
-    """Resolve the current user when a bearer token is optional."""
-    token = _extract_access_token(request, credentials)
+    """Resolve the current user when a bearer Authorization header is optional."""
+    token = _extract_bearer_token(credentials)
     if token is None:
         return None
 

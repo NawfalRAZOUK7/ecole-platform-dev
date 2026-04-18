@@ -118,6 +118,16 @@ class TestReportsAndAnalyticsIntegration:
             job["id"],
         )
         assert ready_job["download_url"]
+        token_download_response = await client.get(
+            ready_job["download_url"]
+            .replace("http://localhost:8000/api/v1", "")
+            .removeprefix("/api/v1")
+        )
+        assert token_download_response.status_code == 200
+        assert token_download_response.headers["content-type"].startswith(
+            "application/pdf"
+        )
+        assert token_download_response.content.startswith(b"%PDF")
 
         download_response = await client.get(
             f"/reports/{job['id']}/download",

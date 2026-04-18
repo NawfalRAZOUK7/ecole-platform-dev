@@ -283,6 +283,13 @@ class TestDocumentManagementIntegration:
         )
 
         try:
+            token_download = await client.get(
+                resource["download_url"].replace("http://localhost:8000/api/v1", "")
+            )
+            assert token_download.status_code == 200
+            assert token_download.headers["content-type"].startswith("application/pdf")
+            assert token_download.content.startswith(b"%PDF")
+
             search_response = await client.get(
                 "/resources",
                 headers=_auth_headers(teacher_token),
