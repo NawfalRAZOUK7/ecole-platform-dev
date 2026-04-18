@@ -536,6 +536,7 @@
     "value": "Value",
     "emptyAnalytics": "No analytics are available yet.",
     "playerUnavailable": "No playable source is available for this content item yet.",
+    "notAvailable": "This content is not available yet.",
     "quizLaunchHint": "This content points to a quiz experience. Launch the quiz player to continue.",
     "launchQuiz": "Launch quiz",
     "externalLinkHint": "This content opens an external learning resource.",

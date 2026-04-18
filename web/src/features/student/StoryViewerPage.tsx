@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { EmptyState, ErrorBanner, LoadingState } from '@/shared/ui';
 import { toBannerError } from '@/shared/ui/errorUtils';
+import { ApiClientError } from '@/services/api/client';
 import type { ContentStoryPage } from '@/features/content/content.service';
 import {
   useCompleteContentItem,
@@ -143,6 +144,13 @@ export function StoryViewerPage() {
 
   if (detailQuery.isLoading || pagesQuery.isLoading) {
     return <LoadingState />;
+  }
+
+  if (
+    (detailQuery.error instanceof ApiClientError && detailQuery.error.status === 404) ||
+    (pagesQuery.error instanceof ApiClientError && pagesQuery.error.status === 404)
+  ) {
+    return <EmptyState message={t('content.notAvailable')} icon="📭" />;
   }
 
   return (

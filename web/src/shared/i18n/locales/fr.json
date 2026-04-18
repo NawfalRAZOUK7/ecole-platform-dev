@@ -699,6 +699,7 @@
     "value": "Valeur",
     "emptyAnalytics": "Aucune analyse n'est encore disponible.",
     "playerUnavailable": "Aucune source lisible n'est encore disponible pour ce contenu.",
+    "notAvailable": "Ce contenu n'est pas encore disponible.",
     "quizLaunchHint": "Ce contenu renvoie vers un quiz. Lancez le lecteur de quiz pour continuer.",
     "launchQuiz": "Lancer le quiz",
     "externalLinkHint": "Ce contenu ouvre une ressource pedagogique externe.",

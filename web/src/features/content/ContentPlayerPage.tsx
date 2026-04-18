@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getAccessToken } from '@/services/api/client';
+import { ApiClientError, getAccessToken } from '@/services/api/client';
 import { EmptyState, ErrorBanner, LoadingState } from '@/shared/ui';
 import { toBannerError } from '@/shared/ui/errorUtils';
 import type { ContentProgressStatus } from './content.service';
@@ -85,6 +85,10 @@ export function ContentPlayerPage() {
 
   if (detailQuery.isLoading) {
     return <LoadingState />;
+  }
+
+  if (detailQuery.error instanceof ApiClientError && detailQuery.error.status === 404) {
+    return <EmptyState message={t('content.notAvailable')} icon="📭" />;
   }
 
   return (
