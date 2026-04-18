@@ -1,12 +1,25 @@
 name: Web CI
 
 on:
+  workflow_dispatch:
   push:
     branches: [main, develop]
-    paths: ['web/**']
+    paths:
+      - 'web/**'
+      - 'backend/docs/openapi.json'
+      - 'backend/openapi.json'
+      - 'backend/scripts/export_openapi.py'
+      - 'scripts/generate-openapi.sh'
+      - '.github/workflows/web-ci.yml'
   pull_request:
     branches: [main]
-    paths: ['web/**']
+    paths:
+      - 'web/**'
+      - 'backend/docs/openapi.json'
+      - 'backend/openapi.json'
+      - 'backend/scripts/export_openapi.py'
+      - 'scripts/generate-openapi.sh'
+      - '.github/workflows/web-ci.yml'
 
 jobs:
   lint-and-typecheck:
