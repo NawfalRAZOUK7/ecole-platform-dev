@@ -242,9 +242,15 @@ export function Layout() {
           staleTime: 5 * 60 * 1000,
         });
       } else if (to === '/invoices') {
-        void queryClient.prefetchQuery({
+        void queryClient.prefetchInfiniteQuery({
           queryKey: invoicesQueryKeys.list({}),
-          queryFn: () => invoicesService.listInvoices({}).then((r) => r.data),
+          queryFn: ({ pageParam }) =>
+            invoicesService.listInvoices({
+              cursor: pageParam,
+            }),
+          initialPageParam: undefined as string | undefined,
+          getNextPageParam: (lastPage: Awaited<ReturnType<typeof invoicesService.listInvoices>>) =>
+            lastPage.meta.has_more ? (lastPage.meta.next_cursor ?? undefined) : undefined,
           staleTime: 5 * 60 * 1000,
         });
       } else if (to === '/notifications') {
