@@ -22,13 +22,13 @@ class TestPermissionHierarchy:
     @pytest.mark.parametrize(
         ("role", "direct_count", "inherited_count", "effective_count"),
         [
-            (perms.SYS, 8, 170, 178),
-            (perms.SUP, 9, 166, 175),
-            (perms.ADM, 26, 140, 166),
-            (perms.DIR, 66, 77, 143),
-            (perms.TCH, 83, 0, 83),
+            (perms.SYS, 8, 171, 179),
+            (perms.SUP, 9, 167, 176),
+            (perms.ADM, 26, 141, 167),
+            (perms.DIR, 67, 77, 144),
+            (perms.TCH, 84, 0, 84),
             (perms.PAR, 51, 0, 51),
-            (perms.STD, 42, 0, 42),
+            (perms.STD, 43, 0, 43),
             (perms.CONTENT_MGR, 32, 0, 32),
         ],
     )
@@ -76,6 +76,13 @@ class TestPermissionHierarchy:
         )
         assert not perms.role_has_permission(perms.STD, perms.PERM_ERP_CLASS_READ)
         assert not perms.role_has_permission(perms.STD, perms.PERM_ADM_SCHOOL_MANAGE)
+
+    def test_activity_read_permission_matches_expected_roles(self):
+        assert perms.role_has_permission(perms.STD, perms.PERM_LMS_ACTIVITY_READ)
+        assert perms.role_has_permission(perms.TCH, perms.PERM_LMS_ACTIVITY_READ)
+        assert perms.role_has_permission(perms.DIR, perms.PERM_LMS_ACTIVITY_READ)
+        assert perms.role_has_permission(perms.ADM, perms.PERM_LMS_ACTIVITY_READ)
+        assert not perms.role_has_permission(perms.PAR, perms.PERM_LMS_ACTIVITY_READ)
 
     @pytest.mark.parametrize(
         ("role", "permission", "expected"),

@@ -27,6 +27,7 @@ from app.core.response import (
 )
 from app.core.search import parse_search
 from app.core.permissions import (
+    PERM_LMS_ACTIVITY_READ,
     PERM_LMS_ACTIVITY_SESSION_COMPLETE,
     PERM_LMS_ACTIVITY_SESSION_CREATE,
 )
@@ -38,7 +39,7 @@ router = APIRouter(prefix="/activities", tags=["lms-activities"])
 
 
 # ---------------------------------------------------------------------------
-# S-058: GET /activities — List activities (STD)
+# S-058: GET /activities — List activities
 # ---------------------------------------------------------------------------
 @router.get(
     "", summary="List activities", response_description="Paginated list of activities"
@@ -51,7 +52,7 @@ async def list_activities(
     filters: FilterSpec = Depends(parse_filters),
     sort: SortSpec = Depends(parse_sort),
     search: str | None = Depends(parse_search),
-    auth: AuthContext = Depends(requires_permission(PERM_LMS_ACTIVITY_SESSION_CREATE)),
+    auth: AuthContext = Depends(requires_permission(PERM_LMS_ACTIVITY_READ)),
     db: AsyncSession = Depends(get_db),
 ):
     """List available activities with filtering, sorting, and full-text search.

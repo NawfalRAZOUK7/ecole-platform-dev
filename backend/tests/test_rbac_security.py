@@ -443,7 +443,35 @@ class TestContentItemsRBAC:
 
 
 # ======================================================================
-# 12. LMS — Activities (PERM-LMS:activity-session:create)
+# 12. LMS — Activities list (PERM-LMS:activity:read)
+# ======================================================================
+class TestActivityListRBAC:
+    """GET /activities — allowed: STD, TCH, ADM; denied: PAR."""
+
+    @pytest.mark.asyncio
+    async def test_student_can_list_activities(self, client, student_token):
+        resp = await client.get("/activities", headers=auth(student_token))
+        assert resp.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_teacher_can_list_activities(self, client, teacher_token):
+        resp = await client.get("/activities", headers=auth(teacher_token))
+        assert resp.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_admin_can_list_activities(self, client, admin_token):
+        """ADM inherits PERM-LMS:activity:read through the school hierarchy."""
+        resp = await client.get("/activities", headers=auth(admin_token))
+        assert resp.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_parent_cannot_list_activities(self, client, parent_token):
+        resp = await client.get("/activities", headers=auth(parent_token))
+        assert resp.status_code == 403
+
+
+# ======================================================================
+# 13. LMS — Activity sessions (PERM-LMS:activity-session:create)
 # ======================================================================
 class TestActivityRBAC:
     """POST /activities/sessions — allowed: STD; denied: PAR."""
@@ -468,7 +496,7 @@ class TestActivityRBAC:
 
 
 # ======================================================================
-# 13. LMS — Assessments (PERM-LMS:assessment:create)
+# 14. LMS — Assessments (PERM-LMS:assessment:create)
 # ======================================================================
 class TestAssessmentRBAC:
     """POST /assessments — allowed: TCH, ADM; denied: STD, PAR."""
