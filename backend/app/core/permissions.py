@@ -603,6 +603,8 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_MICRO_PAYMENT_READ,
         PERM_MICRO_PROGRESS_READ,
         # Life-skills passport
+        PERM_SKILL_DIMENSION_READ,
+        PERM_SKILL_MILESTONE_READ,
         PERM_SKILL_PROGRESS_READ,
         PERM_SKILL_PASSPORT_READ,
         # Rewards
@@ -671,6 +673,8 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_QUIZ_ATTEMPT,
         PERM_QUIZ_READ,
         # Life-skills passport
+        PERM_SKILL_DIMENSION_READ,
+        PERM_SKILL_MILESTONE_READ,
         PERM_SKILL_PROGRESS_READ,
         PERM_SKILL_PASSPORT_READ,
         # Progress (Phase 11D)

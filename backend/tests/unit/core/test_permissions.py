@@ -27,8 +27,8 @@ class TestPermissionHierarchy:
             (perms.ADM, 26, 141, 167),
             (perms.DIR, 67, 77, 144),
             (perms.TCH, 84, 0, 84),
-            (perms.PAR, 51, 0, 51),
-            (perms.STD, 44, 0, 44),
+            (perms.PAR, 53, 0, 53),
+            (perms.STD, 46, 0, 46),
             (perms.CONTENT_MGR, 32, 0, 32),
         ],
     )
