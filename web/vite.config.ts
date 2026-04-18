@@ -25,10 +25,7 @@ export default defineConfig({
           if (id.includes('node_modules/i18next') || id.includes('node_modules/react-i18next'))
             return 'i18n';
           if (id.includes('node_modules/d3-')) return 'd3-libs';
-          if (id.includes('node_modules/recharts/') && id.includes('/cartesian'))
-            return 'charts-cartesian';
-          if (id.includes('node_modules/recharts/') && id.includes('/polar')) return 'charts-polar';
-          if (id.includes('node_modules/recharts')) return 'charts-core';
+          if (id.includes('node_modules/recharts')) return 'charts';
           if (id.includes('node_modules/zod')) return 'schemas';
         },
       },

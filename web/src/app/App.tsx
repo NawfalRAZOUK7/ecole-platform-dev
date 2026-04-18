@@ -12,7 +12,7 @@ import { useAuth } from '@/services/auth/AuthContext';
 import { ErrorBoundary } from '@/shared/ui/ErrorBoundary';
 import { Layout } from '@/shared/ui/Layout';
 import { OfflineIndicator } from '@/shared/ui/OfflineIndicator';
-import { ROLE_REDIRECT } from '@/features/auth/LoginPage';
+import { ROLE_REDIRECT } from '@/features/auth/roleRedirects';
 import { ProtectedRoute } from '@/features/auth/ProtectedRoute';
 import { FeatureTogglesPage } from '@/features/admin/FeatureTogglesPage';
 import { CmsLayout } from '@/features/cms/CmsLayout';

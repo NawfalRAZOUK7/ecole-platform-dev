@@ -16,17 +16,6 @@ import { LanguageSwitcher } from '@/shared/ui/LanguageSwitcher';
 /** Default school ID from seed data */
 const DEFAULT_SCHOOL_ID = 'bd9a703c-aca8-5fb2-81d7-58e902aa2472';
 
-/** Redirect map based on user role */
-const ROLE_REDIRECT: Record<string, string> = {
-  PAR: '/feed',
-  STD: '/content',
-  TCH: '/teacher',
-  ADM: '/admin',
-  DIR: '/admin',
-  SUP: '/notifications',
-  CONTENT_MGR: '/cms',
-};
-
 export function LoginPage() {
   const { t } = useTranslation();
   const { login, verify2fa, cancel2fa, isLoading, error, clearError, twoFactorPending } = useAuth();
@@ -252,5 +241,3 @@ export function LoginPage() {
     </div>
   );
 }
-
-export { ROLE_REDIRECT };
