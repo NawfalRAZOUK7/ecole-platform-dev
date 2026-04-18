@@ -9,6 +9,15 @@ markers = [
   "unit: fast unit tests with mocked dependencies",
   "integration: tests requiring real database",
 ]
+filterwarnings = [
+  "ignore:'asyncio\\.iscoroutinefunction' is deprecated and slated for removal in Python 3\\.16; use inspect\\.iscoroutinefunction\\(\\) instead:DeprecationWarning:pytest_asyncio\\.plugin",
+  "ignore:'asyncio\\.iscoroutinefunction' is deprecated and slated for removal in Python 3\\.16; use inspect\\.iscoroutinefunction\\(\\) instead:DeprecationWarning:fastapi\\.routing",
+  "ignore:'asyncio\\.iscoroutinefunction' is deprecated and slated for removal in Python 3\\.16; use inspect\\.iscoroutinefunction\\(\\) instead:DeprecationWarning:arq\\.cron",
+  "ignore:'asyncio\\.get_event_loop_policy' is deprecated and slated for removal in Python 3\\.16:DeprecationWarning:pytest_asyncio\\.plugin",
+  "ignore:'asyncio\\.set_event_loop_policy' is deprecated and slated for removal in Python 3\\.16:DeprecationWarning:pytest_asyncio\\.plugin",
+  "ignore:datetime\\.datetime\\.utcnow\\(\\) is deprecated and scheduled for removal in a future version\\..*:DeprecationWarning:jose\\.jwt",
+  "ignore:transaction already deassociated from connection:sqlalchemy.exc.SAWarning",
+]
 addopts = ["--strict-markers", "--tb=short", "-q"]
 
 [tool.coverage.run]

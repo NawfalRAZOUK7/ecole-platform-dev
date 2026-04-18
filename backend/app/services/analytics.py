@@ -27,7 +27,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.config import settings
 from app.core.middleware import get_correlation_id
@@ -154,6 +154,12 @@ _DEFAULT_WHITELIST = frozenset({"endpoint", "http_status", "error_code", "status
 class AnalyticsEvent(BaseModel):
     """Canonical analytics event per G2.2 schema."""
 
+    model_config = ConfigDict(
+        json_encoders={
+            datetime: lambda v: v.isoformat(),
+        }
+    )
+
     event_name: str
     event_version: int = 1
     schema_version: int = SCHEMA_VERSION
@@ -168,11 +174,6 @@ class AnalyticsEvent(BaseModel):
     properties: dict[str, Any] = Field(default_factory=dict)
     pii_flags: list[str] = Field(default_factory=list)
     redaction_applied: bool = False
-
-    class Config:
-        json_encoders = {
-            datetime: lambda v: v.isoformat(),
-        }
 
 
 # ---------------------------------------------------------------------------
