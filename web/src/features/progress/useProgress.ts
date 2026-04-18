@@ -12,7 +12,10 @@ export const progressQueryKeys = {
 export function useProgressDashboard(studentId: string | null) {
   return useQuery({
     queryKey: progressQueryKeys.dashboard(studentId),
-    queryFn: async () => (await progressService.getProgress(studentId)).data.data,
+    queryFn: async () => {
+      const r = await progressService.getProgress(studentId);
+      return r?.data?.data ?? null;
+    },
     staleTime: STALE_RESULTS,
   });
 }
@@ -20,7 +23,10 @@ export function useProgressDashboard(studentId: string | null) {
 export function useChildrenProgressOverview() {
   return useQuery({
     queryKey: progressQueryKeys.children(),
-    queryFn: async () => (await progressService.getChildrenOverview()).data.data,
+    queryFn: async () => {
+      const r = await progressService.getChildrenOverview();
+      return r?.data?.data ?? null;
+    },
     staleTime: STALE_RESULTS,
   });
 }
@@ -28,7 +34,10 @@ export function useChildrenProgressOverview() {
 export function useStudentProgress(studentId: string) {
   return useQuery({
     queryKey: progressQueryKeys.dashboard(studentId),
-    queryFn: async () => (await progressService.getStudentProgress(studentId)).data.data,
+    queryFn: async () => {
+      const r = await progressService.getStudentProgress(studentId);
+      return r?.data?.data ?? null;
+    },
     enabled: Boolean(studentId),
     staleTime: STALE_RESULTS,
   });
@@ -37,7 +46,10 @@ export function useStudentProgress(studentId: string) {
 export function useMyProgress() {
   return useQuery({
     queryKey: progressQueryKeys.dashboard(null),
-    queryFn: async () => (await progressService.getMyProgress()).data.data,
+    queryFn: async () => {
+      const r = await progressService.getMyProgress();
+      return r?.data?.data ?? null;
+    },
     staleTime: STALE_RESULTS,
   });
 }
