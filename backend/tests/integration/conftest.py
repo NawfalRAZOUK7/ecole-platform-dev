@@ -120,7 +120,15 @@ async def seed_level_mappings(session_factory):
         if count >= len(_DEFAULT_LEVEL_MAPPINGS):
             return
 
-        for level_code, label_fr, label_ar, label_en, age_min, age_max, order in _DEFAULT_LEVEL_MAPPINGS:
+        for (
+            level_code,
+            label_fr,
+            label_ar,
+            label_en,
+            age_min,
+            age_max,
+            order,
+        ) in _DEFAULT_LEVEL_MAPPINGS:
             await session.execute(
                 text(
                     """

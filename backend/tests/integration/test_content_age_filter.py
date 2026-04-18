@@ -50,7 +50,10 @@ async def _create_content(
 
 
 async def _set_student_dob(
-    session_factory, user_id: uuid.UUID, dob: date | None, school_id: uuid.UUID | None = None
+    session_factory,
+    user_id: uuid.UUID,
+    dob: date | None,
+    school_id: uuid.UUID | None = None,
 ) -> None:
     """Upsert the student's date_of_birth on their StudentProfile record."""
     async with session_factory() as session:
@@ -127,9 +130,7 @@ async def test_student_without_dob_sees_all_content(
 
 
 @pytest.mark.asyncio
-async def test_student_with_dob_gets_age_filtered(
-    client, api_context, session_factory
-):
+async def test_student_with_dob_gets_age_filtered(client, api_context, session_factory):
     """Student with date_of_birth=today-6years sees content for age 6, not content for age 10-15."""
     cm_token = api_context["content_manager"]["token"]
 
@@ -241,9 +242,7 @@ async def test_teacher_without_filter_sees_all(client, api_context):
 
 
 @pytest.mark.asyncio
-async def test_content_without_age_always_visible(
-    client, api_context, session_factory
-):
+async def test_content_without_age_always_visible(client, api_context, session_factory):
     """Content with no target_age_min/max is always visible regardless of student age."""
     cm_token = api_context["content_manager"]["token"]
     suffix = uuid.uuid4().hex[:6]

@@ -13,9 +13,7 @@ from app.models.iam import StudentProfile
 
 async def get_student_age(db: AsyncSession, user_id: uuid.UUID) -> int | None:
     """Return the student's age in whole years, or None if DOB is not set."""
-    stmt = select(StudentProfile.date_of_birth).where(
-        StudentProfile.user_id == user_id
-    )
+    stmt = select(StudentProfile.date_of_birth).where(StudentProfile.user_id == user_id)
     result = await db.execute(stmt)
     dob = result.scalar_one_or_none()
     if dob is None:

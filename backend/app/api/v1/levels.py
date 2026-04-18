@@ -65,9 +65,7 @@ async def list_level_age_mappings(
         return success_response(items)
 
     # Fetch school overrides
-    stmt_school = select(LevelAgeMapping).where(
-        LevelAgeMapping.school_id == school_id
-    )
+    stmt_school = select(LevelAgeMapping).where(LevelAgeMapping.school_id == school_id)
     result_school = await db.execute(stmt_school)
     school_rows = {row.level_code: row for row in result_school.scalars().all()}
 
@@ -118,7 +116,9 @@ async def update_level_age_mapping(
 
     if mapping is None:
         if school_id is None:
-            raise HTTPException(status_code=404, detail=f"Level '{level_code}' not found.")
+            raise HTTPException(
+                status_code=404, detail=f"Level '{level_code}' not found."
+            )
         # Create a school override by copying the platform default first
         default_stmt = select(LevelAgeMapping).where(
             LevelAgeMapping.level_code == level_code,
@@ -127,7 +127,9 @@ async def update_level_age_mapping(
         default_result = await db.execute(default_stmt)
         default = default_result.scalar_one_or_none()
         if default is None:
-            raise HTTPException(status_code=404, detail=f"Level '{level_code}' not found.")
+            raise HTTPException(
+                status_code=404, detail=f"Level '{level_code}' not found."
+            )
         mapping = LevelAgeMapping(
             level_code=level_code,
             label_fr=default.label_fr,
