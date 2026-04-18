@@ -31,6 +31,7 @@ export function LoginPage() {
   const { t } = useTranslation();
   const { login, verify2fa, cancel2fa, isLoading, error, clearError, twoFactorPending } = useAuth();
   const navigate = useNavigate();
+  const translatedError = error ? t(error) : null;
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -103,7 +104,7 @@ export function LoginPage() {
               : t('login.twoFactor.instructions')}
           </p>
 
-          <ErrorBanner error={error} onDismiss={clearError} />
+          <ErrorBanner error={translatedError} onDismiss={clearError} />
 
           <form onSubmit={handleVerify2fa} className="login-form">
             <div className="form-field">
@@ -184,7 +185,7 @@ export function LoginPage() {
 
         <h2 className="login-subtitle">{t('login.title')}</h2>
 
-        <ErrorBanner error={error} onDismiss={clearError} />
+        <ErrorBanner error={translatedError} onDismiss={clearError} />
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-field">

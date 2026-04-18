@@ -18,7 +18,7 @@ import {
   type ReactNode,
 } from 'react';
 
-import { api, setAccessToken, ApiClientError } from '@/services/api/client';
+import { api, setAccessToken, ApiClientError, type ApiError } from '@/services/api/client';
 
 export interface UserProfile {
   id: string;
@@ -68,6 +68,26 @@ export function useAuth(): AuthContextValue {
 
 interface AuthProviderProps {
   children: ReactNode;
+}
+
+function mapLoginErrorToTranslationKey(error?: Pick<ApiError, 'code' | 'message'> | null): string {
+  const backendMsg = typeof error?.message === 'string' ? error.message : '';
+  const errCode = typeof error?.code === 'string' ? error.code : '';
+  const normalizedMessage = backendMsg.toLowerCase();
+
+  if (errCode === 'ERR-IAM-401' || normalizedMessage.includes('invalid')) {
+    return 'login.error.invalid';
+  }
+
+  if (
+    errCode === 'ERR-IAM-403' ||
+    normalizedMessage.includes('locked') ||
+    normalizedMessage.includes('disabled')
+  ) {
+    return 'login.error.locked';
+  }
+
+  return 'login.error.generic';
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
@@ -144,7 +164,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     tryRestore();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const login = useCallback(async (email: string, password: string, schoolId: string) => {
@@ -161,8 +183,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const loginBody = await loginResp.json();
 
       if (!loginResp.ok) {
-        const errMsg = loginBody?.error?.message || 'Login failed';
-        setState((s) => ({ ...s, isLoading: false, error: errMsg }));
+        const errorKey = mapLoginErrorToTranslationKey(loginBody?.error);
+        setState((s) => ({ ...s, isLoading: false, error: errorKey }));
         return;
       }
 
@@ -181,7 +203,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       const token = loginBody.data?.access_token;
       if (!token) {
-        setState((s) => ({ ...s, isLoading: false, error: 'No access token received' }));
+        setState((s) => ({ ...s, isLoading: false, error: 'login.error.generic' }));
         return;
       }
 
@@ -197,59 +219,61 @@ export function AuthProvider({ children }: AuthProviderProps) {
         twoFactorPending: null,
       });
     } catch (err) {
-      const msg = err instanceof ApiClientError
-        ? err.apiError.message
-        : 'Login failed';
-      setState((s) => ({ ...s, isLoading: false, error: msg }));
+      const errorKey =
+        err instanceof ApiClientError
+          ? mapLoginErrorToTranslationKey(err.apiError)
+          : 'login.error.generic';
+      setState((s) => ({ ...s, isLoading: false, error: errorKey }));
     }
   }, []);
 
-  const verify2fa = useCallback(async (code: string) => {
-    if (!state.twoFactorPending) return;
-    setState((s) => ({ ...s, isLoading: true, error: null }));
+  const verify2fa = useCallback(
+    async (code: string) => {
+      if (!state.twoFactorPending) return;
+      setState((s) => ({ ...s, isLoading: true, error: null }));
 
-    try {
-      const resp = await fetch('/api/v1/auth/2fa/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          temp_token: state.twoFactorPending.tempToken,
-          code,
-        }),
-      });
+      try {
+        const resp = await fetch('/api/v1/auth/2fa/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            temp_token: state.twoFactorPending.tempToken,
+            code,
+          }),
+        });
 
-      const body = await resp.json();
+        const body = await resp.json();
 
-      if (!resp.ok) {
-        const errMsg = body?.error?.message || 'Verification failed';
-        setState((s) => ({ ...s, isLoading: false, error: errMsg }));
-        return;
+        if (!resp.ok) {
+          const errMsg = body?.error?.message || 'Verification failed';
+          setState((s) => ({ ...s, isLoading: false, error: errMsg }));
+          return;
+        }
+
+        const token = body.data?.access_token;
+        if (!token) {
+          setState((s) => ({ ...s, isLoading: false, error: 'No access token received' }));
+          return;
+        }
+
+        setAccessToken(token);
+
+        const profileResp = await api.get<UserProfile>('/auth/me');
+        setState({
+          user: profileResp.data,
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+          twoFactorPending: null,
+        });
+      } catch (err) {
+        const msg = err instanceof ApiClientError ? err.apiError.message : 'Verification failed';
+        setState((s) => ({ ...s, isLoading: false, error: msg }));
       }
-
-      const token = body.data?.access_token;
-      if (!token) {
-        setState((s) => ({ ...s, isLoading: false, error: 'No access token received' }));
-        return;
-      }
-
-      setAccessToken(token);
-
-      const profileResp = await api.get<UserProfile>('/auth/me');
-      setState({
-        user: profileResp.data,
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-        twoFactorPending: null,
-      });
-    } catch (err) {
-      const msg = err instanceof ApiClientError
-        ? err.apiError.message
-        : 'Verification failed';
-      setState((s) => ({ ...s, isLoading: false, error: msg }));
-    }
-  }, [state.twoFactorPending]);
+    },
+    [state.twoFactorPending],
+  );
 
   const cancel2fa = useCallback(() => {
     setState((s) => ({ ...s, twoFactorPending: null, error: null }));
@@ -285,7 +309,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       logout,
       clearError,
     }),
-    [state, login, verify2fa, cancel2fa, logout, clearError]
+    [state, login, verify2fa, cancel2fa, logout, clearError],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

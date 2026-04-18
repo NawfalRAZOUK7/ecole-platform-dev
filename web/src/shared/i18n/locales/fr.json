@@ -89,9 +89,9 @@
     "submit": "Se connecter",
     "loading": "Connexion en cours...",
     "error": {
-      "invalid": "Email ou mot de passe incorrect",
-      "locked": "Compte verrouille. Reessayez plus tard.",
-      "generic": "Erreur de connexion"
+      "invalid": "Email ou mot de passe invalide",
+      "locked": "Compte verrouillé",
+      "generic": "Échec de connexion"
     },
     "twoFactor": {
       "title": "Authentification a deux facteurs",

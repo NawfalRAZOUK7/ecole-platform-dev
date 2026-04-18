@@ -78,8 +78,8 @@
     "loading": "Signing in...",
     "error": {
       "invalid": "Invalid email or password",
-      "locked": "Account locked. Try again later.",
-      "generic": "Login error"
+      "locked": "Account locked",
+      "generic": "Login failed"
     },
     "twoFactor": {
       "title": "Two-Factor Authentication",
