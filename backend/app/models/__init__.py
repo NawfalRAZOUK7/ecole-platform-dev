@@ -174,6 +174,7 @@ from app.models.financial_health import (
 
 # G5H — Rewards
 from app.models.rewards import (
+    RewardBadge,
     RewardEvent,
     StudentReward,
 )
@@ -346,6 +347,7 @@ __all__ = [
     "CostPerStudent",
     "FinancialSnapshot",
     # Rewards
+    "RewardBadge",
     "StudentReward",
     "RewardEvent",
     # Level-age mappings

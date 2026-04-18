@@ -28,6 +28,52 @@ class AwardRewardRequest(BaseModel):
         return payload
 
 
+class RewardBadgeResponse(BaseModel):
+    id: str
+    code: str
+    title_en: str | None = None
+    title_fr: str | None = None
+    title_ar: str | None = None
+    description_en: str | None = None
+    description_fr: str | None = None
+    description_ar: str | None = None
+    icon: str | None = None
+    criteria_type: str | None = None
+    criteria_value: int | None = None
+    display_order: int = 0
+    is_active: bool = True
+
+
+class RewardBadgeCreateRequest(BaseModel):
+    code: str = Field(..., min_length=1, max_length=50)
+    title_en: str | None = None
+    title_fr: str | None = None
+    title_ar: str | None = None
+    description_en: str | None = None
+    description_fr: str | None = None
+    description_ar: str | None = None
+    icon: str | None = None
+    criteria_type: str | None = None
+    criteria_value: int | None = Field(None, ge=0)
+    display_order: int = Field(0, ge=0)
+    is_active: bool = True
+
+
+class RewardBadgeUpdateRequest(BaseModel):
+    code: str | None = Field(None, min_length=1, max_length=50)
+    title_en: str | None = None
+    title_fr: str | None = None
+    title_ar: str | None = None
+    description_en: str | None = None
+    description_fr: str | None = None
+    description_ar: str | None = None
+    icon: str | None = None
+    criteria_type: str | None = None
+    criteria_value: int | None = Field(None, ge=0)
+    display_order: int | None = Field(None, ge=0)
+    is_active: bool | None = None
+
+
 class BadgeResponse(BaseModel):
     code: str
     title: str | None = None

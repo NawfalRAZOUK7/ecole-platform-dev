@@ -5,7 +5,18 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, Integer, String
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    SmallInteger,
+    String,
+    Text,
+    func,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
@@ -16,6 +27,70 @@ ALLOWED_SOURCE_TYPES = {"content", "quiz", "game", "coloring", "login"}
 
 def _short_id(value: object | None) -> str:
     return str(value)[:8] if value is not None else "None"
+
+
+class RewardBadge(Base):
+    """Badge definition available to the rewards UI and award logic."""
+
+    __tablename__ = "reward_badges"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    code: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
+    title_en: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    title_fr: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    title_ar: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    description_en: Mapped[str | None] = mapped_column(Text, nullable=True)
+    description_fr: Mapped[str | None] = mapped_column(Text, nullable=True)
+    description_ar: Mapped[str | None] = mapped_column(Text, nullable=True)
+    icon: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    criteria_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    criteria_value: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    display_order: Mapped[int] = mapped_column(
+        SmallInteger,
+        nullable=False,
+        default=0,
+    )
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "criteria_value IS NULL OR criteria_value >= 0",
+            name="ck_reward_badges_criteria_value_non_negative",
+        ),
+        CheckConstraint(
+            "display_order >= 0",
+            name="ck_reward_badges_display_order_non_negative",
+        ),
+        Index("idx_reward_badges_display_order", "display_order"),
+    )
+
+    @validates("code")
+    def validate_code(self, key: str, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Reward badge code is required")
+        return cleaned
+
+    @validates("criteria_type")
+    def validate_criteria_type(self, key: str, value: str | None) -> str | None:
+        if value is None:
+            return value
+        cleaned = value.strip()
+        return cleaned or None
+
+    def __repr__(self) -> str:
+        return f"<RewardBadge id={_short_id(self.id)} code={self.code}>"
 
 
 class StudentReward(TimestampMixin, Base):

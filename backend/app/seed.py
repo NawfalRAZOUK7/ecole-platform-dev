@@ -73,6 +73,7 @@ from app.models.lms import (
     Submission,
 )
 from app.models.men_compliance import MenCurriculum, MenObjective
+from app.models.rewards import RewardBadge
 from app.models.school import School
 from app.services.compliance_service import seed_men_reference_data
 
@@ -163,6 +164,7 @@ async def clear_all(session: AsyncSession) -> None:
     tables_in_order = [
         "feature_toggles",
         "game_configs",
+        "reward_badges",
         "reward_events",
         "student_rewards",
         "compliance_reports",
@@ -1663,6 +1665,60 @@ async def seed_feature_toggles(session: AsyncSession) -> None:
     print("  [Features] 6 feature toggles (messaging + announcements globally enabled)")
 
 
+async def seed_reward_badges(session: AsyncSession) -> None:
+    """Seed default reward badge definitions for the rewards UI."""
+    badges = [
+        RewardBadge(
+            id=uuid.uuid5(uuid.NAMESPACE_URL, "reward-badge-first-login"),
+            code="first_login",
+            title_en="First Login",
+            title_fr="Première connexion",
+            title_ar="أول تسجيل دخول",
+            description_en="Awarded after the first successful login.",
+            description_fr="Attribué après la première connexion réussie.",
+            description_ar="يُمنح بعد أول تسجيل دخول ناجح.",
+            icon="🎉",
+            criteria_type="login_count",
+            criteria_value=1,
+            display_order=1,
+            is_active=True,
+        ),
+        RewardBadge(
+            id=uuid.uuid5(uuid.NAMESPACE_URL, "reward-badge-streak-7"),
+            code="streak_7",
+            title_en="Seven-Day Streak",
+            title_fr="Série de sept jours",
+            title_ar="سلسلة سبعة أيام",
+            description_en="Awarded for seven consecutive days of activity.",
+            description_fr="Attribué après sept jours d'activité consécutifs.",
+            description_ar="يُمنح بعد سبعة أيام متتالية من النشاط.",
+            icon="🔥",
+            criteria_type="streak_days",
+            criteria_value=7,
+            display_order=2,
+            is_active=True,
+        ),
+        RewardBadge(
+            id=uuid.uuid5(uuid.NAMESPACE_URL, "reward-badge-xp-250"),
+            code="xp_250",
+            title_en="250 XP Club",
+            title_fr="Club des 250 XP",
+            title_ar="نادي 250 نقطة خبرة",
+            description_en="Awarded after earning 250 XP.",
+            description_fr="Attribué après avoir obtenu 250 XP.",
+            description_ar="يُمنح بعد الحصول على 250 نقطة خبرة.",
+            icon="⭐",
+            criteria_type="xp_total",
+            criteria_value=250,
+            display_order=3,
+            is_active=True,
+        ),
+    ]
+    session.add_all(badges)
+    await session.flush()
+    print(f"  [Rewards] {len(badges)} reward badges")
+
+
 async def seed_game_configs(session: AsyncSession) -> None:
     """Seed sample mobile game configs."""
     configs = [
@@ -2127,6 +2183,7 @@ async def main() -> None:
         await seed_timetable(session)
         await seed_fees(session)
         await seed_feature_toggles(session)
+        await seed_reward_badges(session)
         await seed_game_configs(session)
         await seed_men_compliance(session)
 

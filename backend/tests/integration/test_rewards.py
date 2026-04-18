@@ -9,7 +9,7 @@ import pytest
 from sqlalchemy import select
 
 import app.services.rewards_service as rewards_service_module
-from app.models.rewards import RewardEvent, StudentReward
+from app.models.rewards import RewardBadge, RewardEvent, StudentReward
 from tests.factories.rewards import StudentRewardFactory
 from tests.integration.api.helpers import auth_header
 
@@ -198,6 +198,123 @@ async def test_get_my_rewards_returns_student_data(client, api_context):
     assert payload["student_id"] == str(api_context["student"]["user"].id)
     assert payload["stars"] == 0
     assert payload["level"] == 1
+
+
+@pytest.mark.asyncio
+async def test_get_badges_returns_definitions_for_authenticated_user(
+    client,
+    api_context,
+    session_factory,
+):
+    async with session_factory() as session:
+        session.add_all(
+            [
+                RewardBadge(
+                    code="streak_7",
+                    title_en="Seven-Day Streak",
+                    display_order=2,
+                    is_active=True,
+                ),
+                RewardBadge(
+                    code="first_login",
+                    title_en="First Login",
+                    display_order=1,
+                    is_active=True,
+                ),
+            ]
+        )
+        await session.commit()
+
+    response = await client.get(
+        "/rewards/badges",
+        headers=auth_header(api_context["student"]["token"]),
+    )
+
+    assert response.status_code == 200, response.text
+    payload = response.json()["data"]
+    assert [item["code"] for item in payload] == ["first_login", "streak_7"]
+
+
+@pytest.mark.asyncio
+async def test_admin_can_create_badge(client, api_context, session_factory):
+    response = await client.post(
+        "/rewards/badges",
+        headers=auth_header(api_context["admin"]["token"]),
+        json={
+            "code": "xp_500",
+            "title_en": "500 XP Club",
+            "title_fr": "Club des 500 XP",
+            "title_ar": "نادي 500 نقطة خبرة",
+            "description_en": "Awarded after earning 500 XP.",
+            "icon": "🏅",
+            "criteria_type": "xp_total",
+            "criteria_value": 500,
+            "display_order": 4,
+            "is_active": True,
+        },
+    )
+
+    assert response.status_code == 201, response.text
+    payload = response.json()["data"]
+    assert payload["code"] == "xp_500"
+    assert payload["criteria_type"] == "xp_total"
+    assert payload["criteria_value"] == 500
+
+    async with session_factory() as session:
+        badge = (
+            (
+                await session.execute(
+                    select(RewardBadge).where(RewardBadge.code == "xp_500")
+                )
+            )
+            .scalars()
+            .one()
+        )
+
+    assert badge.title_en == "500 XP Club"
+    assert badge.display_order == 4
+
+
+@pytest.mark.asyncio
+async def test_admin_can_update_badge(client, api_context, session_factory):
+    async with session_factory() as session:
+        badge = RewardBadge(
+            code="streak_30",
+            title_en="Thirty-Day Streak",
+            criteria_type="streak_days",
+            criteria_value=30,
+            display_order=5,
+            is_active=True,
+        )
+        session.add(badge)
+        await session.commit()
+        await session.refresh(badge)
+        badge_id = str(badge.id)
+
+    response = await client.put(
+        f"/rewards/badges/{badge_id}",
+        headers=auth_header(api_context["admin"]["token"]),
+        json={
+            "title_en": "Thirty Day Streak",
+            "description_en": "Awarded after 30 consecutive active days.",
+            "display_order": 6,
+            "is_active": False,
+        },
+    )
+
+    assert response.status_code == 200, response.text
+    payload = response.json()["data"]
+    assert payload["title_en"] == "Thirty Day Streak"
+    assert payload["display_order"] == 6
+    assert payload["is_active"] is False
+
+    async with session_factory() as session:
+        updated = await session.get(RewardBadge, uuid.UUID(badge_id))
+
+    assert updated is not None
+    assert updated.description_en == "Awarded after 30 consecutive active days."
+    assert updated.display_order == 6
+    assert updated.is_active is False
 
 
 @pytest.mark.asyncio
