@@ -18,7 +18,7 @@ def constraints_payload() -> dict:
             {
                 "constraint_type": "room_capacity",
                 "params": {"room": "Lab A", "max_students": 30},
-            }
+            },
         ],
     }
 
