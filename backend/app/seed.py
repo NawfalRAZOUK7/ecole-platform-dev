@@ -69,11 +69,12 @@ from app.models.lms import (
     Course,
     Grade,
     Quiz,
+    QuizAttempt,
     QuizQuestion,
     Submission,
 )
 from app.models.men_compliance import MenCurriculum, MenObjective
-from app.models.rewards import RewardBadge
+from app.models.rewards import RewardBadge, RewardEvent, StudentReward
 from app.models.school import School
 from app.services.compliance_service import seed_men_reference_data
 
@@ -2158,6 +2159,68 @@ async def seed_men_compliance(session: AsyncSession) -> None:
     )
 
 
+async def seed_demo_student_data(session: AsyncSession) -> None:
+    """Seed realistic demo data for student/parent role testing."""
+    now = _now()
+
+    # ContentProgress — 2 completed platform items, 1 in_progress
+    for content_id, status in [
+        (PLATFORM_CONTENT_1_ID, "completed"),
+        (PLATFORM_CONTENT_2_ID, "completed"),
+        (PLATFORM_CONTENT_3_ID, "in_progress"),
+    ]:
+        session.add(ContentProgress(
+            student_id=STUDENT_1_ID,
+            content_item_id=content_id,
+            status=status,
+        ))
+    await session.flush()
+
+    # StudentReward aggregate
+    session.add(StudentReward(
+        student_id=STUDENT_1_ID,
+        stars=25,
+        xp=350,
+        level=3,
+        streak_days=5,
+        longest_streak=7,
+        last_activity_at=now,
+        badges=["first_login", "streak_7", "xp_250"],
+    ))
+    await session.flush()
+
+    # RewardEvent history
+    for event_type, stars, xp, delta_days in [
+        ("story_complete", 5, 50, 5),
+        ("quiz_pass", 3, 30, 3),
+        ("game_complete", 2, 20, 2),
+        ("login_streak", 1, 10, 1),
+    ]:
+        session.add(RewardEvent(
+            student_id=STUDENT_1_ID,
+            event_type=event_type,
+            stars_earned=stars,
+            xp_earned=xp,
+            created_at=now - timedelta(days=delta_days),
+        ))
+    await session.flush()
+
+    # QuizAttempt — one completed attempt at the math quiz
+    session.add(QuizAttempt(
+        quiz_id=QUIZ_MATH_ID,
+        student_id=STUDENT_1_ID,
+        attempt_no=1,
+        started_at=now - timedelta(hours=2),
+        completed_at=now - timedelta(hours=1),
+        score=16.0,
+        max_score=20,
+        status="COMPLETED",
+    ))
+    await session.flush()
+
+    print("  [Demo] Student demo data: 3 content progress, rewards, 4 events, 1 quiz attempt")
+
+
 async def main() -> None:
     print("=" * 60)
     print("Ecole Platform — Seeding development database")
@@ -2186,6 +2249,7 @@ async def main() -> None:
         await seed_reward_badges(session)
         await seed_game_configs(session)
         await seed_men_compliance(session)
+        await seed_demo_student_data(session)
 
         await session.commit()
 
