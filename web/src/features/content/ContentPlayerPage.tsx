@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
+import { getAccessToken } from '@/services/api/client';
 import { EmptyState, ErrorBanner, LoadingState } from '@/shared/ui';
 import { toBannerError } from '@/shared/ui/errorUtils';
 import type { ContentProgressStatus } from './content.service';
@@ -13,16 +14,30 @@ function resolveContentUrl(content: {
   external_url?: string | null;
   assets?: Array<{ download_url?: string | null; url?: string | null }> | null;
   id?: string | null;
-}) {
-  return (
-    content.embed_url ||
+}): string | null {
+  if (content.embed_url) return content.embed_url;
+  if (content.external_url) return content.external_url;
+
+  const token = getAccessToken();
+  const apiUrl =
     content.body_url ||
-    content.external_url ||
     content.assets?.[0]?.download_url ||
     content.assets?.[0]?.url ||
-    (content.id ? `/api/v1/content-items/${content.id}/stream` : null) ||
-    null
-  );
+    (content.id ? `/api/v1/content-items/${content.id}/stream` : null);
+
+  if (!apiUrl) {
+    return null;
+  }
+
+  if (token) {
+    const url = new URL(apiUrl, window.location.origin);
+    if (apiUrl.startsWith('/') || url.origin === window.location.origin) {
+      url.searchParams.set('token', token);
+      return url.toString();
+    }
+  }
+
+  return apiUrl;
 }
 
 export function ContentPlayerPage() {

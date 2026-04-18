@@ -84,6 +84,15 @@ class TestJWT:
         error = response.json()["error"]
         assert error["code"] == "ERR-IAM-401"
 
+    @pytest.mark.asyncio
+    async def test_query_token_returns_200(
+        self, client: httpx.AsyncClient, admin_token: str
+    ):
+        """Access token in query params is accepted for stream-style requests."""
+        response = await client.get("/auth/me", params={"token": admin_token})
+        assert response.status_code == 200
+        assert response.json()["data"]["email"] == ADMIN_EMAIL
+
 
 # ---------------------------------------------------------------------------
 # S-030: POST /auth/login

@@ -20,6 +20,21 @@ from app.models.iam import Session
 _bearer_scheme = HTTPBearer(auto_error=False)
 
 
+def _extract_access_token(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials | None,
+) -> str | None:
+    if credentials is not None:
+        return credentials.credentials
+
+    token = request.query_params.get("token")
+    if not token:
+        return None
+    if token.lower().startswith("bearer "):
+        return token.split(" ", 1)[1].strip()
+    return token
+
+
 def get_client_ip(request: Request) -> str | None:
     """Extract the client IP from forwarded headers or the socket."""
     forwarded = request.headers.get("X-Forwarded-For")
@@ -92,14 +107,16 @@ def serialize_device(device: Any) -> dict[str, Any]:
 
 
 async def optional_current_user(
+    request: Request,
     credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
     db: AsyncSession = Depends(get_db),
 ) -> AuthContext | None:
     """Resolve the current user when a bearer token is optional."""
-    if credentials is None:
+    token = _extract_access_token(request, credentials)
+    if token is None:
         return None
 
-    payload = decode_access_token(credentials.credentials)
+    payload = decode_access_token(token)
     session_id = uuid.UUID(payload["session_id"])
     result = await db.execute(
         select(Session).where(Session.id == session_id, Session.revoke_at.is_(None))

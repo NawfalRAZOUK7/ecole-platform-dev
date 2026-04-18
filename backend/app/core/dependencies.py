@@ -25,6 +25,21 @@ from app.models.iam import Session, User
 _bearer_scheme = HTTPBearer(auto_error=False)
 
 
+def _extract_access_token(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials | None,
+) -> str | None:
+    if credentials is not None:
+        return credentials.credentials
+
+    token = request.query_params.get("token")
+    if not token:
+        return None
+    if token.lower().startswith("bearer "):
+        return token.split(" ", 1)[1].strip()
+    return token
+
+
 # ---------------------------------------------------------------------------
 # Authenticated user context
 # ---------------------------------------------------------------------------
@@ -55,14 +70,15 @@ async def get_current_user(
     Pipeline position: step 1 (AuthN).
     Deny ordering: returns 401 for any auth failure.
     """
-    if credentials is None:
+    token = _extract_access_token(request, credentials)
+    if token is None:
         raise AuthenticationError(
             "Missing Authorization header",
             error_code="ERR-IAM-401",
         )
 
     # Decode and validate the JWT
-    payload = decode_access_token(credentials.credentials)
+    payload = decode_access_token(token)
 
     user_id = uuid.UUID(payload["sub"])
     session_id = uuid.UUID(payload["session_id"])
