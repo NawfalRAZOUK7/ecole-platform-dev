@@ -162,7 +162,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: '⚡',
     roles: ['PAR', 'TCH', 'ADM', 'DIR', 'STD'],
   },
-  { to: '/content', labelKey: 'nav.content', icon: '📚', roles: ['STD', 'PAR', 'TCH', 'ADM'] },
+  { to: '/content', labelKey: 'nav.content', icon: '📚', roles: ['PAR', 'TCH', 'ADM'] },
   { to: '/submissions', labelKey: 'nav.submissions', icon: '📤', roles: ['STD'] },
   { to: '/results', labelKey: 'nav.results', icon: '📊', roles: ['STD', 'PAR'] },
   { to: '/progress', labelKey: 'nav.progress', icon: '📈', roles: ['STD'] },
