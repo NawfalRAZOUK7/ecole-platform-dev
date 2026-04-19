@@ -129,13 +129,7 @@ export function StudentContentPage() {
       ) : contentItems.length === 0 ? (
         <EmptyState message={t('studentContent.emptyKids')} icon="📚" />
       ) : (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-            gap: 16,
-          }}
-        >
+        <div className="kids-content-grid">
           {contentItems.map((item) => {
             const progress = progressMap[item.content_item_id];
             const normalizedType = normalizeContentType(item.content_type);
@@ -144,13 +138,14 @@ export function StudentContentPage() {
                 ? t('studentContent.readStory')
                 : normalizedType === 'coloring_book'
                   ? t('studentContent.viewColoringBook')
-                  : null;
+                  : t('studentContent.open', 'Open');
+            const progressPercent =
+              progress === 'completed' ? 100 : progress === 'in_progress' ? 50 : 0;
 
             return (
               <div
                 key={item.id}
-                className="card"
-                style={{ padding: 16, cursor: 'pointer' }}
+                className="kids-content-card"
                 onClick={() => handleOpenItem(item)}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === ' ') {
@@ -160,80 +155,54 @@ export function StudentContentPage() {
                 }}
                 role="button"
                 tabIndex={0}
+                aria-label={item.title}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span style={{ fontSize: 20 }}>{getContentTypeIcon(item.content_type)}</span>
-                  <span className="badge" style={{ fontSize: 11 }}>
+                <div className="kids-content-card__header">
+                  <span className="kids-content-card__type-icon">
+                    {getContentTypeIcon(item.content_type)}
+                  </span>
+                  <span
+                    className={`kids-content-card__type-badge kids-content-card__type-badge--${normalizedType}`}
+                  >
                     {item.content_type}
                   </span>
                 </div>
-                <h4 style={{ margin: '0 0 4px', fontSize: 14 }}>{item.title}</h4>
-                {item.description && (
-                  <p
-                    style={{
-                      fontSize: 12,
-                      color: 'var(--color-text-secondary)',
-                      margin: '0 0 8px',
-                      lineHeight: 1.4,
+                <div className="kids-content-card__body">
+                  <h4 className="kids-content-card__title">{item.title}</h4>
+                  {item.description && (
+                    <p className="kids-content-card__desc">
+                      {item.description.length > 80
+                        ? `${item.description.slice(0, 80)}…`
+                        : item.description}
+                    </p>
+                  )}
+                  {progressPercent > 0 && (
+                    <>
+                      <div className="kids-content-card__progress-bar">
+                        <div
+                          className={`kids-content-card__progress-fill${progress === 'completed' ? ' kids-content-card__progress-fill--completed' : ''}`}
+                          style={{ width: `${progressPercent}%` }}
+                        />
+                      </div>
+                      <span
+                        className={`kids-content-card__status kids-content-card__status--${progress}`}
+                      >
+                        {t(`content.progress.${progress}`, progress)}
+                        {progress === 'completed' && ' ✓'}
+                      </span>
+                    </>
+                  )}
+                  <button
+                    type="button"
+                    className="kids-content-card__action"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleOpenItem(item);
                     }}
                   >
-                    {item.description.length > 80
-                      ? `${item.description.slice(0, 80)}...`
-                      : item.description}
-                  </p>
-                )}
-                {item.subject && (
-                  <div style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
-                    {t(`cms.subjects.${item.subject}`, item.subject)}
-                  </div>
-                )}
-                {item.teacher_notes && (
-                  <div
-                    style={{
-                      fontSize: 11,
-                      color: 'var(--color-primary)',
-                      marginTop: 4,
-                      fontStyle: 'italic',
-                    }}
-                  >
-                    {item.teacher_notes}
-                  </div>
-                )}
-                {progress && (
-                  <div style={{ marginTop: 8 }}>
-                    <span
-                      style={{
-                        fontSize: 11,
-                        padding: '2px 6px',
-                        borderRadius: 4,
-                        background:
-                          progress === 'completed'
-                            ? 'var(--color-surface-success)'
-                            : 'var(--color-surface-warning)',
-                        color:
-                          progress === 'completed'
-                            ? 'var(--color-success)'
-                            : 'var(--color-warning)',
-                      }}
-                    >
-                      {t(`content.progress.${progress}`, progress)}
-                    </span>
-                  </div>
-                )}
-                {actionLabel ? (
-                  <div style={{ marginTop: 12 }}>
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        handleOpenItem(item);
-                      }}
-                    >
-                      {actionLabel}
-                    </button>
-                  </div>
-                ) : null}
+                    {actionLabel}
+                  </button>
+                </div>
               </div>
             );
           })}

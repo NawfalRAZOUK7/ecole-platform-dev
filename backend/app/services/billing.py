@@ -1160,7 +1160,10 @@ class BillingService:
                             uow.session,
                         )
                     except Exception:
-                        pass
+                        logger.exception(
+                            "Failed to schedule webhook retry for payment attempt %s",
+                            body.payment_attempt_id,
+                        )
                     collection_status = "failed"
                 elif body.status == "canceled":
                     payment_attempt.status = "canceled"

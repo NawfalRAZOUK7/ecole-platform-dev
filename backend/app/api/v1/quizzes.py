@@ -17,9 +17,11 @@ from app.core.permissions import (
     PERM_QUIZ_PUBLISH,
     PERM_QUIZ_READ,
 )
+from app.core.permissions import STD
 from app.core.request_utils import get_client_ip
 from app.core.response import clamp_page_size, list_response, success_response
 from app.schemas.quiz import QuizCreateRequest, QuizRespondRequest, QuizUpdateRequest
+from app.services.difficulty_adapter import DifficultyAdapter
 from app.services.lms import QuizService
 
 router = APIRouter(tags=["quiz-engine"])
@@ -40,6 +42,21 @@ async def create_quiz(
             ip_address=get_client_ip(request),
         )
     )
+
+
+@router.get("/quizzes/recommended-difficulty", summary="Get recommended difficulty for a student")
+async def get_recommended_difficulty(
+    subject: str = Query(...),
+    auth: AuthContext = Depends(requires_permission(PERM_QUIZ_READ)),
+    db: AsyncSession = Depends(get_db),
+):
+    """Returns the recommended quiz difficulty level based on recent student performance."""
+    adapter = DifficultyAdapter(db)
+    difficulty = await adapter.get_recommended_difficulty(
+        student_id=auth.user_id,
+        subject=subject,
+    )
+    return success_response({"recommended_difficulty": difficulty})
 
 
 @router.get("/quizzes", summary="List quizzes")
@@ -63,7 +80,23 @@ async def list_quizzes(
         limit=clamp_page_size(limit),
         auth=auth,
     )
-    return list_response(items, next_cursor=next_cursor, has_more=has_more)
+
+    recommended_difficulty: str | None = None
+    if auth.role == STD and subject:
+        adapter = DifficultyAdapter(db)
+        recommended_difficulty = await adapter.get_recommended_difficulty(
+            student_id=auth.user_id,
+            subject=subject,
+        )
+        for item in items:
+            item["recommended"] = (
+                (item.get("difficulty") or "").upper() == recommended_difficulty
+            )
+
+    response = list_response(items, next_cursor=next_cursor, has_more=has_more)
+    if recommended_difficulty:
+        response["recommended_difficulty"] = recommended_difficulty
+    return response
 
 
 @router.get("/quizzes/{quiz_id}", summary="Get quiz details with questions")

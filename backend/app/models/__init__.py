@@ -205,6 +205,7 @@ from app.models.reporting import (
 )
 
 # G10 — Document management
+from app.models.difficulty_adaptation import DifficultyAdaptation
 from app.models.documents import (
     Document,
     DocumentVersion,
@@ -366,6 +367,7 @@ __all__ = [
     "DataExport",
     "ReportSchedule",
     # Documents
+    "DifficultyAdaptation",
     "Document",
     "DocumentVersion",
     "Resource",

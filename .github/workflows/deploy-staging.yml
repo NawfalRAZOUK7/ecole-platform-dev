@@ -1,0 +1,45 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [develop]
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and start staging stack
+        working-directory: infra
+        run: |
+          docker compose -f docker-compose.staging.yml up -d --build --wait
+        env:
+          POSTGRES_USER: ecole_staging
+          POSTGRES_PASSWORD: ${{ secrets.STAGING_DB_PASSWORD }}
+          POSTGRES_DB: ecole_platform_staging
+          JWT_SECRET_KEY: ${{ secrets.STAGING_JWT_SECRET }}
+          CORS_ORIGINS: ${{ vars.STAGING_CORS_ORIGINS }}
+
+      - name: Wait for backend health
+        run: |
+          for i in $(seq 1 12); do
+            if curl -sf http://localhost:8000/health; then
+              echo "Backend is healthy"
+              break
+            fi
+            echo "Waiting for backend... ($i/12)"
+            sleep 5
+          done
+
+      - name: Verify seed data loaded
+        run: |
+          curl -sf -X POST http://localhost:8000/api/v1/auth/login \
+            -H "Content-Type: application/json" \
+            -d '{"email":"admin@ecole-benani.ma","password":"admin123"}' \
+            | python3 -c "import sys,json; d=json.load(sys.stdin); sys.exit(0 if d.get('data',{}).get('access_token') else 1)"

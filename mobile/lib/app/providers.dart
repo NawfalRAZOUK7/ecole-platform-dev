@@ -8,6 +8,7 @@
 
 import 'dart:async';
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -87,7 +88,7 @@ final apiClientProvider = Provider<ApiClient>((ref) {
   final storage = ref.watch(secureStorageProvider);
   return ApiClient(
     tokenStorage: storage,
-    baseUrl: 'http://localhost:8000',
+    baseUrl: dotenv.env['API_BASE_URL'] ?? 'http://localhost:8000',
   );
 });
 
@@ -164,7 +165,7 @@ final ttsServiceProvider = Provider<TtsService>((ref) {
 
 final wsClientProvider = Provider<WsClient>((ref) {
   return WsClient(
-    baseUrl: 'http://localhost:8000',
+    baseUrl: dotenv.env['API_BASE_URL'] ?? 'http://localhost:8000',
     localNotifications: ref.watch(localNotificationsProvider),
   );
 });

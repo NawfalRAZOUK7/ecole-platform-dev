@@ -39,6 +39,9 @@ export interface LoginResponse {
   school_id: string;
   role: string;
   requires_2fa?: boolean;
+  // 2FA fields — present when requires_2fa is true
+  temp_token?: string;
+  message?: string;
 }
 
 export interface LoginHistoryEntry {

@@ -30,6 +30,7 @@ export interface QuizSummary {
   status: string;
   total_points: number;
   question_count: number;
+  recommended?: boolean;
 }
 
 export interface QuizDetail extends QuizSummary {
@@ -151,7 +152,7 @@ export const quizzesService = {
   respondToQuestion(attemptId: string, payload: QuizRespondPayload) {
     return api.post<{ id: string; attempt_id: string; question_id: string; answered_at: string }>(
       `/attempts/${attemptId}/respond`,
-      payload
+      payload,
     );
   },
 

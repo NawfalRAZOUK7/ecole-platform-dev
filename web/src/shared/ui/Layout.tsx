@@ -20,6 +20,8 @@ import { useFocusManagement } from '@/shared/hooks/useFocusManagement';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { LanguageSwitcher } from '@/shared/ui/LanguageSwitcher';
 import { formatDate } from '@/shared/i18n';
+import { useMyRewards } from '@/features/rewards/useRewards';
+import '@/shared/ui/kids-theme.css';
 import { wsClient, type WsEvent } from '@/services/ws/WebSocketClient';
 
 interface NavItem {
@@ -28,6 +30,20 @@ interface NavItem {
   icon: string;
   roles: string[];
 }
+
+const KIDS_NAV_ITEMS: NavItem[] = [
+  { to: '/student/home', labelKey: 'nav.studentHome', icon: '🏠', roles: ['STD'] },
+  { to: '/student/content', labelKey: 'nav.studentContent', icon: '📚', roles: ['STD'] },
+  { to: '/student/quizzes', labelKey: 'nav.studentQuizzes', icon: '📝', roles: ['STD'] },
+  { to: '/progress', labelKey: 'nav.progress', icon: '📊', roles: ['STD'] },
+  { to: '/rewards', labelKey: 'nav.myRewards', icon: '🏆', roles: ['STD'] },
+  { to: '/submissions', labelKey: 'nav.submissions', icon: '📋', roles: ['STD'] },
+  { to: '/skills', labelKey: 'nav.skills', icon: '🎯', roles: ['STD'] },
+  { to: '/calendar', labelKey: 'nav.calendar', icon: '🗓️', roles: ['STD'] },
+  { to: '/announcements', labelKey: 'nav.announcements', icon: '📢', roles: ['STD'] },
+  { to: '/notifications', labelKey: 'nav.notifications', icon: '🔔', roles: ['STD'] },
+  { to: '/profile', labelKey: 'nav.profile', icon: '👤', roles: ['STD'] },
+];
 
 interface NotificationPreview {
   id: string;
@@ -232,6 +248,20 @@ export function Layout() {
   const syncHealthQuery = useSyncHealth(primarySyncDeviceId, syncEnabled);
 
   const queryClient = useQueryClient();
+  const isStudent = userRole === 'STD';
+  const rewardsQuery = useMyRewards(isStudent);
+  const rewards = rewardsQuery.data;
+
+  useEffect(() => {
+    if (isStudent) {
+      document.documentElement.setAttribute('data-theme', 'kids');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+    return () => {
+      document.documentElement.removeAttribute('data-theme');
+    };
+  }, [isStudent]);
 
   const handleNavPrefetch = useCallback(
     (to: string) => {
@@ -274,8 +304,8 @@ export function Layout() {
 
   useFocusManagement();
   const visibleItems = useMemo(
-    () => NAV_ITEMS.filter((item) => item.roles.includes(userRole)),
-    [userRole],
+    () => (isStudent ? KIDS_NAV_ITEMS : NAV_ITEMS.filter((item) => item.roles.includes(userRole))),
+    [isStudent, userRole],
   );
 
   const addToast = useCallback((message: string) => {
@@ -390,8 +420,15 @@ export function Layout() {
     links[nextIndex]?.focus();
   }
 
+  const isStaging = import.meta.env.VITE_APP_ENV === 'staging';
+
   return (
     <div className="app-layout">
+      {isStaging && (
+        <div className="staging-banner" role="banner">
+          ⚠️ Environnement de staging — Ne pas utiliser avec de vraies données
+        </div>
+      )}
       <a href="#main-content" className="skip-link">
         {t('a11y.skipToContent', { defaultValue: 'Skip to content' })}
       </a>
@@ -400,24 +437,43 @@ export function Layout() {
           <h2 className="sidebar-title">{t('app.name')}</h2>
           <div className="sidebar-header__controls">
             <LanguageSwitcher />
-            <button
-              type="button"
-              className="theme-toggle"
-              onClick={toggleTheme}
-              aria-label={t('theme.toggle', { defaultValue: 'Toggle dark mode' })}
-            >
-              {theme === 'dark' ? (
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M12 4a1 1 0 0 1 1 1v1.2a1 1 0 0 1-2 0V5a1 1 0 0 1 1-1Zm0 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7-5a1 1 0 0 1 0 2h-1.2a1 1 0 0 1 0-2H19ZM7.2 12a1 1 0 0 1-1 1H5a1 1 0 1 1 0-2h1.2a1 1 0 0 1 1 1Zm8.94 5.54a1 1 0 0 1 1.41 0l.85.85a1 1 0 0 1-1.41 1.41l-.85-.85a1 1 0 0 1 0-1.41ZM6.46 7.86a1 1 0 0 1 1.41 0l.85.85a1 1 0 1 1-1.41 1.41l-.85-.85a1 1 0 0 1 0-1.41Zm10.68 0a1 1 0 0 1 0 1.41l-.85.85a1 1 0 0 1-1.41-1.41l.85-.85a1 1 0 0 1 1.41 0ZM7.87 16.13a1 1 0 0 1 0 1.41l-.85.85a1 1 0 0 1-1.41-1.41l.85-.85a1 1 0 0 1 1.41 0ZM12 17.8a1 1 0 0 1 1 1V20a1 1 0 0 1-2 0v-1.2a1 1 0 0 1 1-1Z" />
-                </svg>
-              ) : (
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M14.94 3.78a1 1 0 0 1 .65 1.57 8 8 0 1 0 3.06 11.4 1 1 0 0 1 1.77.92A10 10 0 1 1 14.3 3.9a1 1 0 0 1 .64-.12Z" />
-                </svg>
-              )}
-            </button>
+            {!isStudent && (
+              <button
+                type="button"
+                className="theme-toggle"
+                onClick={toggleTheme}
+                aria-label={t('theme.toggle', { defaultValue: 'Toggle dark mode' })}
+              >
+                {theme === 'dark' ? (
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 4a1 1 0 0 1 1 1v1.2a1 1 0 0 1-2 0V5a1 1 0 0 1 1-1Zm0 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7-5a1 1 0 0 1 0 2h-1.2a1 1 0 0 1 0-2H19ZM7.2 12a1 1 0 0 1-1 1H5a1 1 0 1 1 0-2h1.2a1 1 0 0 1 1 1Zm8.94 5.54a1 1 0 0 1 1.41 0l.85.85a1 1 0 0 1-1.41 1.41l-.85-.85a1 1 0 0 1 0-1.41ZM6.46 7.86a1 1 0 0 1 1.41 0l.85.85a1 1 0 1 1-1.41 1.41l-.85-.85a1 1 0 0 1 0-1.41Zm10.68 0a1 1 0 0 1 0 1.41l-.85.85a1 1 0 0 1-1.41-1.41l.85-.85a1 1 0 0 1 1.41 0ZM7.87 16.13a1 1 0 0 1 0 1.41l-.85.85a1 1 0 0 1-1.41-1.41l.85-.85a1 1 0 0 1 1.41 0ZM12 17.8a1 1 0 0 1 1 1V20a1 1 0 0 1-2 0v-1.2a1 1 0 0 1 1-1Z" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M14.94 3.78a1 1 0 0 1 .65 1.57 8 8 0 1 0 3.06 11.4 1 1 0 0 1 1.77.92A10 10 0 1 1 14.3 3.9a1 1 0 0 1 .64-.12Z" />
+                  </svg>
+                )}
+              </button>
+            )}
           </div>
         </div>
+
+        {isStudent && rewards && (
+          <div className="kids-reward-stats">
+            <div className="kids-reward-stat">
+              <span className="kids-reward-stat__icon">⭐</span>
+              <span>{rewards.stars}</span>
+            </div>
+            <div className="kids-reward-stat">
+              <span className="kids-reward-stat__icon">✨</span>
+              <span>{rewards.xp} XP</span>
+            </div>
+            <div className="kids-reward-stat">
+              <span className="kids-reward-stat__icon">🔥</span>
+              <span>{rewards.streakDays}d</span>
+            </div>
+          </div>
+        )}
 
         <nav
           ref={navRef}

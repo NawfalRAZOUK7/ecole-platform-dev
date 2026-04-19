@@ -55,6 +55,7 @@ export const ROUTES = {
   TEACHER_CONTENT_LIBRARY: '/teacher/content-library',
   TEACHER_QUIZZES: '/teacher/quizzes',
   TEACHER_CLASS_PROGRESS: '/teacher/class-progress',
+  STUDENT_HOME: '/student/home',
   STUDENT_CONTENT: '/student/content',
   STUDENT_CONTENT_READ: '/student/content/:id/read',
   STUDENT_CONTENT_COLOR: '/student/content/:id/color',

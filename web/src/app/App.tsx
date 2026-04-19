@@ -43,6 +43,7 @@ import {
   ContentLibraryPage,
   QuizManagerPage,
   ClassProgressPage,
+  StudentHomePage,
   StudentContentPage,
   StoryViewerPage,
   ColoringViewerPage,
@@ -405,6 +406,14 @@ function App() {
               />
 
               {/* Student routes */}
+              <Route
+                path="/student/home"
+                element={
+                  <ProtectedRoute roles={['STD']}>
+                    <StudentHomePage />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/student/content"
                 element={

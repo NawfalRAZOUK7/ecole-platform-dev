@@ -136,10 +136,19 @@ OPENAPI_TAGS = [
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan — startup and shutdown hooks."""
-    # Startup: initialize WebSocket manager with Redis Pub/Sub
     await ws_manager.startup()
+
+    if settings.seed_on_startup:
+        import logging
+        logger = logging.getLogger(__name__)
+        try:
+            from app.seed import main as seed_main
+            await seed_main()
+            logger.info("Staging seed data loaded")
+        except Exception as exc:
+            logger.warning("Seed failed (non-fatal): %s", exc)
+
     yield
-    # Shutdown: close ARQ pool and all WebSocket connections
     await close_arq_pool()
     await ws_manager.shutdown()
 

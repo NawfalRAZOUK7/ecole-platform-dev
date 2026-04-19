@@ -144,12 +144,23 @@ class Settings(BaseSettings):
     enable_tracing: bool = False
     otel_exporter_endpoint: str = "http://tempo:4317"
 
+    # Staging / seeding
+    seed_on_startup: bool = False
+
     # CORS
     cors_origins: str = "http://localhost:5173,http://localhost:3000"
 
     @property
     def cors_origins_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",")]
+
+    @property
+    def is_staging(self) -> bool:
+        return self.app_env == "staging"
+
+    @property
+    def is_production(self) -> bool:
+        return self.app_env == "production"
 
     def model_post_init(self, __context: object) -> None:
         secret_overrides = {

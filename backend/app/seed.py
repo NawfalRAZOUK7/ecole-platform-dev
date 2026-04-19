@@ -76,6 +76,8 @@ from app.models.lms import (
 from app.models.men_compliance import MenCurriculum, MenObjective
 from app.models.rewards import RewardBadge, RewardEvent, StudentReward
 from app.models.school import School
+from app.models.skill_passport import SkillDimension, SkillMilestone, SkillProgress
+from app.models.difficulty_adaptation import DifficultyAdaptation
 from app.services.compliance_service import seed_men_reference_data
 
 # ── Fixed UUIDs for deterministic seeding ──────────────────────────────────
@@ -145,6 +147,34 @@ ANN_2_ID = uuid.UUID("70000000-0000-4000-8000-000000000011")
 # Billing
 INVOICE_1_ID = uuid.UUID("40000000-0000-4000-8000-000000000001")
 
+# Phase G8 — Additional students (different levels for age-banded content testing)
+STUDENT_CP_ID = uuid.UUID("10000000-0000-4000-8000-00000000000c")
+STUDENT_CE2_ID = uuid.UUID("10000000-0000-4000-8000-00000000000d")
+STUDENT_CM2_ID = uuid.UUID("10000000-0000-4000-8000-00000000000e")
+STUDENT_3EME_ID = uuid.UUID("10000000-0000-4000-8000-00000000000f")
+STUDENT_TERM_ID = uuid.UUID("10000000-0000-4000-8000-000000000010")
+
+PARENT_TAZI_ID = uuid.UUID("10000000-0000-4000-8000-000000000011")
+PARENT_FASSI_ID = uuid.UUID("10000000-0000-4000-8000-000000000012")
+
+CLASS_CP_ID = uuid.UUID("20000000-0000-4000-8000-000000000010")
+CLASS_CE2_ID = uuid.UUID("20000000-0000-4000-8000-000000000011")
+CLASS_CM2_ID = uuid.UUID("20000000-0000-4000-8000-000000000012")
+CLASS_3EME_ID = uuid.UUID("20000000-0000-4000-8000-000000000013")
+CLASS_TERM_ID = uuid.UUID("20000000-0000-4000-8000-000000000014")
+
+# Skill system
+DIM_MATH_ID = uuid.UUID("80000000-0000-4000-8000-000000000001")
+DIM_LECTURE_ID = uuid.UUID("80000000-0000-4000-8000-000000000002")
+DIM_SCIENCES_ID = uuid.UUID("80000000-0000-4000-8000-000000000003")
+DIM_CREATIVITE_ID = uuid.UUID("80000000-0000-4000-8000-000000000004")
+DIM_COMM_ID = uuid.UUID("80000000-0000-4000-8000-000000000005")
+
+# Extra announcements / billing for admin demo
+ANN_3_ID = uuid.UUID("70000000-0000-4000-8000-000000000012")
+ANN_4_ID = uuid.UUID("70000000-0000-4000-8000-000000000013")
+ANN_5_ID = uuid.UUID("70000000-0000-4000-8000-000000000014")
+
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
@@ -163,6 +193,11 @@ async def clear_all(session: AsyncSession) -> None:
 
     existing_tables = await conn.run_sync(_get_table_names)
     tables_in_order = [
+        "difficulty_adaptations",
+        "skill_progress",
+        "skill_milestones",
+        "skill_dimensions",
+        "skill_passports",
         "feature_toggles",
         "game_configs",
         "reward_badges",
@@ -2221,6 +2256,719 @@ async def seed_demo_student_data(session: AsyncSession) -> None:
     print("  [Demo] Student demo data: 3 content progress, rewards, 4 events, 1 quiz attempt")
 
 
+async def seed_additional_students(session: AsyncSession) -> None:
+    """Seed 5 students at different levels for age-banded content testing (Phase G8)."""
+    new_classes = [
+        Class(id=CLASS_CP_ID, school_id=SCHOOL_ID, code="CP-A", academic_year_id=YEAR_ID, name="CP A"),
+        Class(id=CLASS_CE2_ID, school_id=SCHOOL_ID, code="CE2-A", academic_year_id=YEAR_ID, name="CE2 A"),
+        Class(id=CLASS_CM2_ID, school_id=SCHOOL_ID, code="CM2-A", academic_year_id=YEAR_ID, name="CM2 A"),
+        Class(id=CLASS_3EME_ID, school_id=SCHOOL_ID, code="3eme-A", academic_year_id=YEAR_ID, name="3ème A"),
+        Class(id=CLASS_TERM_ID, school_id=SCHOOL_ID, code="Term-A", academic_year_id=YEAR_ID, name="Terminale A"),
+    ]
+    session.add_all(new_classes)
+    await session.flush()
+
+    student_data = [
+        (STUDENT_CP_ID, "amina.cp@ecole-benani.ma", "Amina Tazi", date(2020, 3, 10), "CP", "STD-2025-010"),
+        (STUDENT_CE2_ID, "karim.ce2@ecole-benani.ma", "Karim Fassi", date(2018, 7, 20), "CE2", "STD-2025-011"),
+        (STUDENT_CM2_ID, "leila.cm2@ecole-benani.ma", "Leila Mansouri", date(2016, 11, 5), "CM2", "STD-2025-012"),
+        (STUDENT_3EME_ID, "mehdi.3eme@ecole-benani.ma", "Mehdi Berrada", date(2012, 1, 25), "3eme", "STD-2025-013"),
+        (STUDENT_TERM_ID, "sara.terminale@ecole-benani.ma", "Sara Chraibi", date(2008, 9, 14), "Terminale", "STD-2025-014"),
+    ]
+    class_map = {
+        STUDENT_CP_ID: CLASS_CP_ID,
+        STUDENT_CE2_ID: CLASS_CE2_ID,
+        STUDENT_CM2_ID: CLASS_CM2_ID,
+        STUDENT_3EME_ID: CLASS_3EME_ID,
+        STUDENT_TERM_ID: CLASS_TERM_ID,
+    }
+
+    for uid, email, full_name, dob, level, student_no in student_data:
+        session.add(User(
+            id=uid,
+            email=email,
+            full_name=full_name,
+            password_hash=_hash("student123"),
+            status="active",
+            school_id=SCHOOL_ID,
+        ))
+    await session.flush()
+
+    for uid, email, full_name, dob, level, student_no in student_data:
+        session.add(Membership(user_id=uid, school_id=SCHOOL_ID, role_code="STD", status="active"))
+        session.add(StudentProfile(
+            user_id=uid,
+            school_id=SCHOOL_ID,
+            student_number=student_no,
+            date_of_birth=dob,
+            class_level=level,
+            nationality="Marocaine",
+        ))
+        session.add(Enrollment(
+            student_id=uid,
+            class_id=class_map[uid],
+            period_id=PERIOD_2_ID,
+            school_id=SCHOOL_ID,
+            status="active",
+        ))
+    await session.flush()
+    print("  [G8] 5 additional students + 5 level classes")
+
+
+async def seed_additional_parents(session: AsyncSession) -> None:
+    """Seed 2 additional parents for the new CP and CE2 students (Phase G8)."""
+    new_parents = [
+        User(id=PARENT_TAZI_ID, email="parent.tazi@gmail.com", full_name="Fatima Tazi",
+             phone="+212611111111", password_hash=_hash("parent123"), status="active", school_id=SCHOOL_ID),
+        User(id=PARENT_FASSI_ID, email="parent.fassi@gmail.com", full_name="Omar Fassi",
+             phone="+212622222222", password_hash=_hash("parent123"), status="active", school_id=SCHOOL_ID),
+    ]
+    session.add_all(new_parents)
+    await session.flush()
+
+    session.add_all([
+        Membership(user_id=PARENT_TAZI_ID, school_id=SCHOOL_ID, role_code="PAR", status="active"),
+        Membership(user_id=PARENT_FASSI_ID, school_id=SCHOOL_ID, role_code="PAR", status="active"),
+    ])
+    session.add_all([
+        ParentProfile(user_id=PARENT_TAZI_ID, school_id=SCHOOL_ID, relationship_type="mother",
+                      cin_number="EF112233", address="22 Rue Hassan II, Casablanca",
+                      profession="Enseignante", emergency_phone="+212611111111"),
+        ParentProfile(user_id=PARENT_FASSI_ID, school_id=SCHOOL_ID, relationship_type="father",
+                      cin_number="GH445566", address="8 Boulevard Zerktouni, Casablanca",
+                      profession="Comptable", emergency_phone="+212622222222"),
+    ])
+    session.add_all([
+        ParentChildLink(parent_user_id=PARENT_TAZI_ID, child_user_id=STUDENT_CP_ID,
+                        school_id=SCHOOL_ID, status="active", linked_at=_now(), linked_by=ADMIN_ID),
+        ParentChildLink(parent_user_id=PARENT_FASSI_ID, child_user_id=STUDENT_CE2_ID,
+                        school_id=SCHOOL_ID, status="active", linked_at=_now(), linked_by=ADMIN_ID),
+    ])
+    await session.flush()
+    print("  [G8] 2 additional parents (parent.tazi + parent.fassi)")
+
+
+async def seed_level_content(session: AsyncSession) -> None:
+    """Seed 2 platform ContentItems per school level (Phase G8)."""
+    level_specs = [
+        ("maternelle", "Maternelle", 4, 5, [
+            ("Les couleurs - Vidéo éducative", "video", "science", "fr"),
+            ("Coloriage - Les animaux", "pdf", "art", "fr"),
+        ]),
+        ("CP", "CP", 6, 6, [
+            ("Apprendre à lire - Leçon 1", "video", "french", "fr"),
+            ("Exercices d'écriture CP", "pdf", "french", "fr"),
+        ]),
+        ("CE1", "CE1", 7, 7, [
+            ("Les additions - Cours", "video", "math", "fr"),
+            ("Dictée CE1 - Semaine 1", "audio", "french", "fr"),
+        ]),
+        ("CE2", "CE2", 8, 8, [
+            ("La multiplication - Introduction", "video", "math", "fr"),
+            ("Sciences - Le corps humain", "pdf", "science", "fr"),
+        ]),
+        ("CM1", "CM1", 9, 9, [
+            ("Fractions - Introduction", "video", "math", "fr"),
+            ("Géographie du Maroc", "pdf", "geography", "fr"),
+        ]),
+        ("CM2", "CM2", 10, 10, [
+            ("Préparation 6ème - Mathématiques", "video", "math", "fr"),
+            ("Rédaction - Le conte", "pdf", "french", "fr"),
+        ]),
+        ("5eme", "5ème", 11, 11, [
+            ("L'histoire du Maroc médiéval", "video", "history", "fr"),
+            ("Anglais - Unit 1 - Greetings", "pdf", "english", "fr"),
+        ]),
+        ("4eme", "4ème", 12, 12, [
+            ("Algèbre - Équations du premier degré", "video", "math", "fr"),
+            ("Physique - Les forces", "pdf", "science", "fr"),
+        ]),
+        ("3eme", "3ème", 13, 14, [
+            ("Brevet blanc - Mathématiques", "pdf", "math", "fr"),
+            ("SVT - La cellule et son rôle", "video", "science", "fr"),
+        ]),
+        ("2nde", "2nde", 15, 15, [
+            ("Fonctions - Introduction au lycée", "video", "math", "fr"),
+            ("Philosophie - Introduction à la pensée critique", "pdf", "philosophy", "fr"),
+        ]),
+        ("1ere", "1ère", 16, 16, [
+            ("BAC Français - Méthode du commentaire", "pdf", "french", "fr"),
+            ("Chimie organique - Les alcanes", "video", "science", "fr"),
+        ]),
+        ("Terminale", "Terminale", 17, 18, [
+            ("BAC Maths - Révisions intégrales", "video", "math", "fr"),
+            ("BAC SVT - Génétique et hérédité", "pdf", "science", "fr"),
+        ]),
+    ]
+
+    count = 0
+    for level_band, level_label, age_min, age_max, items in level_specs:
+        for title, content_type, subject, language in items:
+            session.add(ContentItem(
+                school_id=None,
+                title=title,
+                content_type=content_type,
+                level_band=level_band,
+                language=language,
+                subject=subject,
+                description=f"Contenu pédagogique pour le niveau {level_label}.",
+                status="published",
+                origin="PLATFORM",
+                created_by=CONTENT_MGR_ID,
+                target_age_min=age_min,
+                target_age_max=age_max,
+            ))
+            count += 1
+    await session.flush()
+    print(f"  [G8] {count} level-banded platform content items (maternelle → Terminale)")
+
+
+async def seed_class_content_assignments(session: AsyncSession) -> None:
+    """Assign level-appropriate content to the new classes (Phase G8)."""
+    from sqlalchemy import select
+
+    # Find all platform content for 6ème math to assign to class 6A
+    math_6eme = await session.execute(
+        select(ContentItem).where(
+            ContentItem.level_band == "6eme",
+            ContentItem.subject == "math",
+            ContentItem.school_id.is_(None),
+            ContentItem.id != PLATFORM_CONTENT_1_ID,  # already assigned in seed_cms
+        )
+    )
+    for item in math_6eme.scalars():
+        session.add(ClassContentAssignment(
+            teacher_id=TEACHER_1_ID,
+            class_id=CLASS_6A_ID,
+            content_item_id=item.id,
+            school_id=SCHOOL_ID,
+            assigned_at=_now(),
+        ))
+
+    # Assign level content to each new class
+    level_class_map = [
+        ("CP", CLASS_CP_ID),
+        ("CE2", CLASS_CE2_ID),
+        ("CM2", CLASS_CM2_ID),
+        ("3eme", CLASS_3EME_ID),
+        ("Terminale", CLASS_TERM_ID),
+    ]
+    for level_band, class_id in level_class_map:
+        level_items = await session.execute(
+            select(ContentItem).where(
+                ContentItem.level_band == level_band,
+                ContentItem.school_id.is_(None),
+            )
+        )
+        for item in level_items.scalars():
+            session.add(ClassContentAssignment(
+                teacher_id=TEACHER_1_ID,
+                class_id=class_id,
+                content_item_id=item.id,
+                school_id=SCHOOL_ID,
+                assigned_at=_now(),
+            ))
+
+    await session.flush()
+    print("  [G8] Class content assignments for 6A + 5 new level classes")
+
+
+async def seed_skill_system(session: AsyncSession) -> None:
+    """Seed SkillDimension, SkillMilestone, and SkillProgress for demo users (Phase G8)."""
+    dims = [
+        SkillDimension(id=DIM_MATH_ID, code="mathematiques", name_fr="Mathématiques",
+                       name_ar="الرياضيات", name_en="Mathematics", display_order=1),
+        SkillDimension(id=DIM_LECTURE_ID, code="lecture", name_fr="Lecture",
+                       name_ar="القراءة", name_en="Reading", display_order=2),
+        SkillDimension(id=DIM_SCIENCES_ID, code="sciences", name_fr="Sciences",
+                       name_ar="العلوم", name_en="Sciences", display_order=3),
+        SkillDimension(id=DIM_CREATIVITE_ID, code="creativite", name_fr="Créativité",
+                       name_ar="الإبداع", name_en="Creativity", display_order=4),
+        SkillDimension(id=DIM_COMM_ID, code="communication", name_fr="Communication",
+                       name_ar="التواصل", name_en="Communication", display_order=5),
+    ]
+    session.add_all(dims)
+    await session.flush()
+
+    milestone_labels = [
+        (1, "debutant", "Débutant", "مبتدئ"),
+        (2, "intermediaire", "Intermédiaire", "متوسط"),
+        (3, "avance", "Avancé", "متقدم"),
+    ]
+    milestones: list[SkillMilestone] = []
+    for dim in dims:
+        for level, code_suffix, name_fr, name_ar in milestone_labels:
+            milestones.append(SkillMilestone(
+                dimension_id=dim.id,
+                code=f"{dim.code}_{code_suffix}",
+                name_fr=f"{dim.name_fr} — {name_fr}",
+                name_ar=name_ar,
+                level=level,
+                rule_config={"type": "quiz_score", "threshold": level * 30},
+                badge_icon=["🌱", "⭐", "🏆"][level - 1],
+            ))
+    session.add_all(milestones)
+    await session.flush()
+
+    # SkillProgress for existing students (milestones[0..2] = math dim milestones)
+    # milestone indices: math=0,1,2 | lecture=3,4,5 | sciences=6,7,8 | creativite=9,10,11 | comm=12,13,14
+    progress_entries = [
+        # Yassine: math (unlocked lvl1+2, in_progress lvl3), lecture (unlocked lvl1), sciences (in_progress lvl1)
+        SkillProgress(student_id=STUDENT_1_ID, milestone_id=milestones[0].id,
+                      school_id=SCHOOL_ID, academic_year_id=YEAR_ID,
+                      status="unlocked", current_value=100, unlocked_at=_now() - timedelta(days=30)),
+        SkillProgress(student_id=STUDENT_1_ID, milestone_id=milestones[1].id,
+                      school_id=SCHOOL_ID, academic_year_id=YEAR_ID,
+                      status="unlocked", current_value=100, unlocked_at=_now() - timedelta(days=15)),
+        SkillProgress(student_id=STUDENT_1_ID, milestone_id=milestones[2].id,
+                      school_id=SCHOOL_ID, academic_year_id=YEAR_ID,
+                      status="in_progress", current_value=60),
+        SkillProgress(student_id=STUDENT_1_ID, milestone_id=milestones[3].id,
+                      school_id=SCHOOL_ID, academic_year_id=YEAR_ID,
+                      status="unlocked", current_value=100, unlocked_at=_now() - timedelta(days=20)),
+        SkillProgress(student_id=STUDENT_1_ID, milestone_id=milestones[6].id,
+                      school_id=SCHOOL_ID, academic_year_id=YEAR_ID,
+                      status="in_progress", current_value=40),
+        # Salma: lecture (unlocked lvl1+2)
+        SkillProgress(student_id=STUDENT_2_ID, milestone_id=milestones[3].id,
+                      school_id=SCHOOL_ID, academic_year_id=YEAR_ID,
+                      status="unlocked", current_value=100, unlocked_at=_now() - timedelta(days=10)),
+        SkillProgress(student_id=STUDENT_2_ID, milestone_id=milestones[4].id,
+                      school_id=SCHOOL_ID, academic_year_id=YEAR_ID,
+                      status="unlocked", current_value=100, unlocked_at=_now() - timedelta(days=5)),
+        # Omar: math (in_progress lvl1)
+        SkillProgress(student_id=STUDENT_3_ID, milestone_id=milestones[0].id,
+                      school_id=SCHOOL_ID, academic_year_id=YEAR_ID,
+                      status="in_progress", current_value=50),
+    ]
+    session.add_all(progress_entries)
+    await session.flush()
+    print(f"  [G8] Skill system: 5 dimensions, {len(milestones)} milestones, {len(progress_entries)} progress entries")
+
+
+async def seed_all_roles_data(session: AsyncSession) -> None:
+    """Seed additional role-specific demo data visible in each dashboard (Phase G8)."""
+    now = _now()
+
+    # ── Admin: 3 more announcements (lifecycle demo) ──
+    session.add_all([
+        Announcement(
+            id=ANN_3_ID,
+            school_id=SCHOOL_ID,
+            author_id=ADMIN_ID,
+            title="Résultats du 2ème semestre — Publication imminente",
+            body="Les résultats du deuxième semestre seront publiés la semaine prochaine. Préparez-vous à les consulter sur la plateforme.",
+            target_roles=["PAR", "STD"],
+            status="DRAFT",
+        ),
+        Announcement(
+            id=ANN_4_ID,
+            school_id=SCHOOL_ID,
+            author_id=DIRECTOR_ID,
+            title="Réunion des parents d'élèves — 28 avril 2026",
+            body="Une réunion des parents d'élèves est organisée le 28 avril 2026 à 18h00 dans la salle des fêtes de l'école. Votre présence est vivement souhaitée.",
+            target_roles=["PAR"],
+            published_at=now - timedelta(days=2),
+            status="PUBLISHED",
+        ),
+        Announcement(
+            id=ANN_5_ID,
+            school_id=SCHOOL_ID,
+            author_id=ADMIN_ID,
+            title="Fête de l'école 2025 — Programme",
+            body="Retrouvez ci-joint le programme de la fête de l'école 2025. Merci à tous les participants.",
+            target_roles=["PAR", "STD", "TCH"],
+            published_at=now - timedelta(days=60),
+            status="PUBLISHED",
+        ),
+    ])
+
+    # ── Admin: 2 more fee structures ──
+    session.add_all([
+        FeeStructure(
+            school_id=SCHOOL_ID,
+            academic_year_id=YEAR_ID,
+            name="Frais d'inscription",
+            amount=500.00,
+            currency="MAD",
+            frequency="ANNUAL",
+            due_day=1,
+            applies_to_level=None,
+            status="ACTIVE",
+        ),
+        FeeStructure(
+            school_id=SCHOOL_ID,
+            academic_year_id=YEAR_ID,
+            name="Frais parascolaires",
+            amount=300.00,
+            currency="MAD",
+            frequency="ANNUAL",
+            due_day=15,
+            applies_to_level=None,
+            status="ACTIVE",
+        ),
+    ])
+    await session.flush()
+
+    # ── Admin: 5 more invoices in different states ──
+    invoice_specs = [
+        ("draft", date(2026, 3, 1), date(2026, 3, 31), 2000.00),
+        ("sent", date(2026, 3, 1), date(2026, 4, 30), 3500.00),
+        ("paid", date(2026, 2, 1), date(2026, 2, 28), 3500.00),
+        ("overdue", date(2026, 1, 1), date(2026, 1, 31), 3500.00),
+        ("cancelled", date(2025, 12, 1), date(2025, 12, 31), 1200.00),
+    ]
+    for status, issued, due, amount in invoice_specs:
+        inv = Invoice(
+            school_id=SCHOOL_ID,
+            parent_id=PARENT_2_ID,
+            period_id=PERIOD_2_ID,
+            status=status,
+            total_amount=amount,
+            currency="MAD",
+            issued_date=issued,
+            due_date=due,
+        )
+        session.add(inv)
+    await session.flush()
+
+    # ── Director: 5 days of attendance sessions (6A and 6B) ──
+    school_days = [date(2026, 4, 14), date(2026, 4, 15), date(2026, 4, 16),
+                   date(2026, 4, 17), date(2026, 4, 18)]
+    statuses_6a = [("present", "present", "late"), ("present", "absent", "present"),
+                   ("present", "present", "present"), ("late", "present", "absent"),
+                   ("present", "present", "present")]
+    for i, day in enumerate(school_days):
+        for class_id, students in [
+            (CLASS_6A_ID, [STUDENT_1_ID, STUDENT_2_ID]),
+            (CLASS_6B_ID, [STUDENT_3_ID]),
+        ]:
+            att = AttendanceSession(
+                class_id=class_id,
+                period_id=PERIOD_2_ID,
+                teacher_id=TEACHER_1_ID,
+                school_id=SCHOOL_ID,
+                session_date=day,
+                slot="08:00-09:00",
+            )
+            session.add(att)
+            await session.flush()
+            for j, student_id in enumerate(students):
+                idx = i * 2 + j if class_id == CLASS_6A_ID else i
+                st = statuses_6a[i][min(j, 2)]
+                session.add(AttendanceRecord(
+                    attendance_session_id=att.id,
+                    student_id=student_id,
+                    school_id=SCHOOL_ID,
+                    status=st,
+                    absence_reason="Maladie" if st == "absent" else None,
+                ))
+    await session.flush()
+
+    # ── Teacher: 2 more submissions for different workflow states ──
+    submitted_sub = Submission(
+        assignment_id=ASSIGN_1_ID,
+        student_id=STUDENT_2_ID,
+        status="submitted",
+        submitted_at=now - timedelta(hours=12),
+    )
+    session.add(submitted_sub)
+    await session.flush()
+
+    graded_sub = Submission(
+        assignment_id=ASSIGN_1_ID,
+        student_id=STUDENT_3_ID,
+        status="graded",
+        submitted_at=now - timedelta(days=2),
+    )
+    session.add(graded_sub)
+    await session.flush()
+
+    session.add(Grade(
+        submission_id=graded_sub.id,
+        teacher_id=TEACHER_1_ID,
+        score=14.0,
+        feedback_text="Bon effort, quelques erreurs de calcul à revoir.",
+        published_at=now - timedelta(hours=6),
+    ))
+
+    # ── Teacher: quiz attempts for 6A students ──
+    for student_id, score in [(STUDENT_2_ID, 12.0), (STUDENT_3_ID, 10.0)]:
+        session.add(QuizAttempt(
+            quiz_id=QUIZ_MATH_ID,
+            student_id=student_id,
+            attempt_no=1,
+            started_at=now - timedelta(hours=4),
+            completed_at=now - timedelta(hours=3),
+            score=score,
+            max_score=20,
+            status="COMPLETED",
+        ))
+
+    # ── Student: reward events for leaderboard (Salma + Omar) ──
+    session.add(StudentReward(
+        student_id=STUDENT_2_ID,
+        stars=15,
+        xp=180,
+        level=2,
+        streak_days=3,
+        longest_streak=5,
+        last_activity_at=now,
+        badges=["first_login"],
+    ))
+    session.add(StudentReward(
+        student_id=STUDENT_3_ID,
+        stars=8,
+        xp=90,
+        level=1,
+        streak_days=1,
+        longest_streak=3,
+        last_activity_at=now - timedelta(days=1),
+        badges=["first_login"],
+    ))
+    for student_id, delta in [(STUDENT_2_ID, 4), (STUDENT_3_ID, 6)]:
+        session.add(RewardEvent(
+            student_id=student_id,
+            event_type="quiz_pass",
+            stars_earned=3,
+            xp_earned=30,
+            created_at=now - timedelta(days=delta),
+        ))
+
+    # ── Parent: 2 more feed items for parent.alaoui ──
+    session.add_all([
+        ParentFeedItem(
+            school_id=SCHOOL_ID,
+            parent_id=PARENT_1_ID,
+            student_id=STUDENT_3_ID,
+            source_type="grade",
+            source_ref=str(graded_sub.id),
+            title="Note publiée pour Omar",
+            body="Omar a obtenu 14/20 en Exercices - Fractions.",
+        ),
+        ParentFeedItem(
+            school_id=SCHOOL_ID,
+            parent_id=PARENT_1_ID,
+            student_id=STUDENT_1_ID,
+            source_type="attendance",
+            source_ref="attendance:absent:2026-04-15",
+            title="Absence signalée — Yassine",
+            body="Yassine a été signalé absent le 15 avril 2026.",
+        ),
+    ])
+
+    # ── CMS: 2 draft content items for publish workflow demo ──
+    session.add_all([
+        ContentItem(
+            school_id=None,
+            title="Initiation à la robotique - Brouillon",
+            content_type="video",
+            level_band="6eme",
+            language="fr",
+            subject="technology",
+            description="Présentation de la robotique éducative pour les collégiens.",
+            status="draft",
+            origin="PLATFORM",
+            created_by=CONTENT_MGR_ID,
+        ),
+        ContentItem(
+            school_id=None,
+            title="Histoire des sciences au Maroc - Brouillon",
+            content_type="pdf",
+            level_band="CM2",
+            language="fr",
+            subject="history",
+            description="Dossier sur les grandes découvertes scientifiques au Maroc.",
+            status="draft",
+            origin="PLATFORM",
+            created_by=CONTENT_MGR_ID,
+        ),
+    ])
+
+    await session.flush()
+    print("  [G8] Role-specific data: +3 announcements, +2 fee structures, +5 invoices, +10 attendance sessions, +2 submissions, +quiz attempts, +feed items, +2 draft CMS items")
+
+
+async def seed_difficulty_adaptations(session: AsyncSession) -> None:
+    """Seed difficulty adaptation history and extra quiz attempts for adaptive demo (Phase H2).
+
+    Creates:
+    - Extra quiz attempts for Yassine (2 consecutive high scores → promotion pattern)
+    - Extra quiz attempts for Omar (2 consecutive low scores → demotion pattern)
+    - DifficultyAdaptation audit log entries showing the adaptation trail
+    """
+    now = _now()
+
+    # ── Yassine: 2 more high-score attempts on EASY quiz → triggers promotion to MEDIUM ──
+    session.add(QuizAttempt(
+        quiz_id=QUIZ_FR_ID,  # EASY difficulty quiz
+        student_id=STUDENT_1_ID,
+        attempt_no=1,
+        started_at=now - timedelta(days=5),
+        completed_at=now - timedelta(days=5, hours=-1),
+        score=18.0,
+        max_score=20,
+        status="COMPLETED",
+    ))
+    session.add(QuizAttempt(
+        quiz_id=QUIZ_FR_ID,
+        student_id=STUDENT_1_ID,
+        attempt_no=2,
+        started_at=now - timedelta(days=3),
+        completed_at=now - timedelta(days=3, hours=-1),
+        score=17.0,
+        max_score=20,
+        status="COMPLETED",
+    ))
+    await session.flush()
+
+    # ── Omar: 2 low-score attempts on MEDIUM quiz → triggers demotion to EASY ──
+    session.add(QuizAttempt(
+        quiz_id=QUIZ_MATH_ID,  # MEDIUM difficulty quiz
+        student_id=STUDENT_3_ID,
+        attempt_no=2,
+        started_at=now - timedelta(days=4),
+        completed_at=now - timedelta(days=4, hours=-1),
+        score=3.0,
+        max_score=20,
+        status="COMPLETED",
+    ))
+    session.add(QuizAttempt(
+        quiz_id=QUIZ_MATH_ID,
+        student_id=STUDENT_3_ID,
+        attempt_no=3,
+        started_at=now - timedelta(days=2),
+        completed_at=now - timedelta(days=2, hours=-1),
+        score=4.0,
+        max_score=20,
+        status="COMPLETED",
+    ))
+    await session.flush()
+
+    # ── DifficultyAdaptation audit trail ──
+    adaptations = [
+        # Yassine promoted EASY → MEDIUM in french (2 scores ≥ 80%)
+        DifficultyAdaptation(
+            student_id=STUDENT_1_ID,
+            subject="french",
+            previous_difficulty="EASY",
+            new_difficulty="MEDIUM",
+            reason="promoted_high_scores",
+        ),
+        # Yassine promoted EASY → MEDIUM in math earlier
+        DifficultyAdaptation(
+            student_id=STUDENT_1_ID,
+            subject="math",
+            previous_difficulty="EASY",
+            new_difficulty="MEDIUM",
+            reason="promoted_high_scores",
+        ),
+        # Yassine promoted MEDIUM → HARD in math (latest)
+        DifficultyAdaptation(
+            student_id=STUDENT_1_ID,
+            subject="math",
+            previous_difficulty="MEDIUM",
+            new_difficulty="HARD",
+            reason="promoted_high_scores",
+        ),
+        # Omar demoted MEDIUM → EASY in math (2 scores ≤ 40%)
+        DifficultyAdaptation(
+            student_id=STUDENT_3_ID,
+            subject="math",
+            previous_difficulty="MEDIUM",
+            new_difficulty="EASY",
+            reason="demoted_low_scores",
+        ),
+    ]
+    session.add_all(adaptations)
+    await session.flush()
+    print(f"  [H2] Difficulty adaptations: 4 extra quiz attempts, {len(adaptations)} adaptation records")
+
+
+async def seed_new_student_rewards(session: AsyncSession) -> None:
+    """Seed basic rewards for Phase G8 students so their rewards pages are not empty."""
+    now = _now()
+
+    new_student_rewards = [
+        # Amina (CP, age 6) — beginner, just started
+        StudentReward(
+            student_id=STUDENT_CP_ID,
+            stars=5,
+            xp=40,
+            level=1,
+            streak_days=2,
+            longest_streak=2,
+            last_activity_at=now - timedelta(hours=3),
+            badges=["first_login"],
+        ),
+        # Karim (CE2, age 8) — moderate progress
+        StudentReward(
+            student_id=STUDENT_CE2_ID,
+            stars=12,
+            xp=150,
+            level=2,
+            streak_days=4,
+            longest_streak=6,
+            last_activity_at=now - timedelta(hours=5),
+            badges=["first_login", "streak_7"],
+        ),
+        # Leila (CM2, age 10) — good progress
+        StudentReward(
+            student_id=STUDENT_CM2_ID,
+            stars=20,
+            xp=280,
+            level=3,
+            streak_days=6,
+            longest_streak=10,
+            last_activity_at=now - timedelta(hours=1),
+            badges=["first_login", "streak_7", "xp_250"],
+        ),
+        # Mehdi (3ème, age 14) — active teenager
+        StudentReward(
+            student_id=STUDENT_3EME_ID,
+            stars=18,
+            xp=220,
+            level=2,
+            streak_days=3,
+            longest_streak=8,
+            last_activity_at=now - timedelta(hours=8),
+            badges=["first_login", "streak_7"],
+        ),
+        # Sara (Terminale, age 17) — focused on BAC prep
+        StudentReward(
+            student_id=STUDENT_TERM_ID,
+            stars=30,
+            xp=400,
+            level=4,
+            streak_days=7,
+            longest_streak=14,
+            last_activity_at=now - timedelta(minutes=30),
+            badges=["first_login", "streak_7", "xp_250"],
+        ),
+    ]
+    session.add_all(new_student_rewards)
+
+    # A few reward events for activity history
+    for student_id, events in [
+        (STUDENT_CP_ID, [("story_complete", 2, 15, 2), ("login_streak", 1, 5, 1)]),
+        (STUDENT_CE2_ID, [("quiz_pass", 3, 30, 3), ("game_complete", 2, 20, 1)]),
+        (STUDENT_CM2_ID, [("quiz_pass", 4, 40, 4), ("story_complete", 3, 25, 2), ("game_complete", 3, 25, 1)]),
+        (STUDENT_3EME_ID, [("quiz_pass", 3, 35, 3), ("story_complete", 2, 20, 1)]),
+        (STUDENT_TERM_ID, [("quiz_pass", 5, 50, 5), ("story_complete", 4, 40, 3), ("login_streak", 2, 15, 1)]),
+    ]:
+        for event_type, stars, xp, delta_days in events:
+            session.add(RewardEvent(
+                student_id=student_id,
+                event_type=event_type,
+                stars_earned=stars,
+                xp_earned=xp,
+                created_at=now - timedelta(days=delta_days),
+            ))
+
+    await session.flush()
+    print("  [H2] 5 new student rewards + 12 reward events for G8 students")
+
+
 async def main() -> None:
     print("=" * 60)
     print("Ecole Platform — Seeding development database")
@@ -2250,6 +2998,14 @@ async def main() -> None:
         await seed_game_configs(session)
         await seed_men_compliance(session)
         await seed_demo_student_data(session)
+        await seed_additional_students(session)
+        await seed_additional_parents(session)
+        await seed_level_content(session)
+        await seed_class_content_assignments(session)
+        await seed_skill_system(session)
+        await seed_all_roles_data(session)
+        await seed_difficulty_adaptations(session)
+        await seed_new_student_rewards(session)
 
         await session.commit()
 
@@ -2264,6 +3020,13 @@ async def main() -> None:
     print("  Student:    yassine.alaoui@ecole-benani.ma / student123")
     print("  Superadmin: superadmin@ecole-platform.ma / superadmin123")
     print("  CMS:        cms@ecole-platform.ma / content123")
+    print("  Student CP:    amina.cp@ecole-benani.ma / student123")
+    print("  Student CE2:   karim.ce2@ecole-benani.ma / student123")
+    print("  Student CM2:   leila.cm2@ecole-benani.ma / student123")
+    print("  Student 3eme:  mehdi.3eme@ecole-benani.ma / student123")
+    print("  Student Term:  sara.terminale@ecole-benani.ma / student123")
+    print("  Parent CP:     parent.tazi@gmail.com / parent123")
+    print("  Parent CE2:    parent.fassi@gmail.com / parent123")
 
 
 if __name__ == "__main__":

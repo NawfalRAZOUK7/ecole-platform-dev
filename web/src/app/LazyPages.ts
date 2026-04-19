@@ -84,6 +84,9 @@ export const ClassProgressPage = lazy(() =>
 );
 
 // Student
+export const StudentHomePage = lazy(() =>
+  import('@/features/student/StudentHomePage').then((m) => ({ default: m.StudentHomePage })),
+);
 export const StudentContentPage = lazy(() =>
   import('@/features/student/StudentContentPage').then((m) => ({
     default: m.StudentContentPage,

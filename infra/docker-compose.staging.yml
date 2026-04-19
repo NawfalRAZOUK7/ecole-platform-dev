@@ -116,9 +116,11 @@ services:
       REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-2}
       APP_ENV: staging
       LOG_LEVEL: INFO
-      CORS_ORIGINS: ${CORS_ORIGINS:-https://staging.ecole-platform.example}
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://staging.ecole-platform.example,http://localhost:5273}
       ENABLE_TRACING: "true"
-      ENABLE_STRICT_RATE_LIMIT: "true"
+      ENABLE_STRICT_RATE_LIMIT: "false"
+      SEED_ON_STARTUP: ${SEED_ON_STARTUP:-true}
+      AI_PROVIDER: ${AI_PROVIDER:-mock}
     ports:
       - "8000:8000"
     depends_on:

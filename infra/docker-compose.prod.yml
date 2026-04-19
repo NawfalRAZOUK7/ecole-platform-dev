@@ -28,6 +28,9 @@
 # URLs (per F1):
 #   API: https://api.ecole-platform.example/api/v1
 #   Web: https://ecole-platform.example
+#
+# SECURITY: All secrets use :? syntax to fail fast if not configured.
+# See .env.example for required variables.
 
 services:
   # ==================== FastAPI Backend (Production) ====================
@@ -113,9 +116,9 @@ services:
     image: postgres:16-alpine
     container_name: ecole-prod-postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-ecole}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER must be set}
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
-      POSTGRES_DB: ${POSTGRES_DB:-ecole_platform}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB must be set}
       APP_DB_PASSWORD_FILE: /run/secrets/app_db_password
       APP_READONLY_PASSWORD_FILE: /run/secrets/app_readonly_password
     volumes:
@@ -155,7 +158,7 @@ services:
       - app_db_password
       - app_readonly_password
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ecole} -d ${POSTGRES_DB:-ecole_platform}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:?POSTGRES_USER must be set} -d ${POSTGRES_DB:?POSTGRES_DB must be set}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -180,7 +183,7 @@ services:
     image: edoburu/pgbouncer:1.22.0
     container_name: ecole-prod-pgbouncer
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-ecole}:${PGBOUNCER_DB_PASSWORD:-ecole}@postgres:5432/${POSTGRES_DB:-ecole_platform}
+      DATABASE_URL: postgres://${POSTGRES_USER:?POSTGRES_USER must be set}:${PGBOUNCER_DB_PASSWORD:?PGBOUNCER_DB_PASSWORD must be set}@postgres:5432/${POSTGRES_DB:?POSTGRES_DB must be set}
       POOL_MODE: transaction
       DEFAULT_POOL_SIZE: 50
       MAX_CLIENT_CONN: 200
@@ -224,7 +227,7 @@ services:
     container_name: ecole-prod-postgres-replica
     environment:
       PGUSER: replicator
-      PGPASSWORD: ${REPLICATOR_PASSWORD:-change-me-replicator}
+      PGPASSWORD: ${REPLICATOR_PASSWORD:?REPLICATOR_PASSWORD must be set}
     volumes:
       - prod_postgres_replica_data:/var/lib/postgresql/data
     command:
@@ -438,6 +441,52 @@ services:
     profiles:
       - certbot
 
+  # ==================== Prometheus ====================
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: ecole-prod-prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
+      - prod_prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=30d"
+      - "--web.enable-lifecycle"
+    networks:
+      - ecole-prod-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # ==================== Grafana ====================
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: ecole-prod-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD_FILE: /run/secrets/grafana_admin_password
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-http://localhost:3000}
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - prod_grafana_data:/var/lib/grafana
+    secrets:
+      - grafana_admin_password
+    depends_on:
+      - prometheus
+    networks:
+      - ecole-prod-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
 # ==================== Docker Secrets ====================
 # In Docker Swarm: use `docker secret create`
 # In Compose: secrets read from local files (create before first deploy)
@@ -458,9 +507,13 @@ secrets:
     file: ./secrets/redis_url.txt
   smtp_password:
     file: ./secrets/smtp_password.txt
+  grafana_admin_password:
+    file: ./secrets/grafana_admin_password.txt
 
 # ==================== Volumes ====================
 volumes:
+  prod_prometheus_data:
+  prod_grafana_data:
   prod_postgres_data:
   prod_postgres_replica_data:
   prod_redis_data:

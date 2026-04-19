@@ -1,0 +1,590 @@
+/**
+ * Kids Theme — applied when data-theme="kids" (student role)
+ * Warm, playful colors with larger radii and generous spacing.
+ */
+
+:root[data-theme='kids'] {
+  --color-primary: #7c3aed;
+  --color-primary-light: #a78bfa;
+  --color-primary-dark: #5b21b6;
+  --color-primary-hover: #5b21b6;
+
+  --color-bg: #fff7ed;
+  --color-bg-secondary: #fef3c7;
+  --color-surface: #ffffff;
+
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+
+  --color-text: #1f1035;
+  --color-text-secondary: #6d5a8a;
+  --color-border: #e9d5ff;
+
+  --color-surface-primary: color-mix(in srgb, #7c3aed 12%, #ffffff);
+  --color-surface-success: color-mix(in srgb, #10b981 14%, #ffffff);
+  --color-surface-warning: color-mix(in srgb, #f59e0b 16%, #ffffff);
+  --color-surface-error: color-mix(in srgb, #ef4444 14%, #ffffff);
+
+  /* Kids-specific accent tokens */
+  --kids-theme-stars: #f59e0b;
+  --kids-theme-xp: #3b82f6;
+  --kids-theme-streak: #f97316;
+  --kids-theme-sidebar-bg: #5b21b6;
+  --kids-theme-sidebar-text: #ffffff;
+  --kids-theme-sidebar-active: rgba(255, 255, 255, 0.2);
+  --kids-theme-sidebar-hover: rgba(255, 255, 255, 0.12);
+
+  /* Larger radii for playful feel */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius: 12px;
+
+  --shadow-sm: 0 2px 8px rgba(124, 58, 237, 0.08);
+  --shadow-md: 0 6px 20px rgba(124, 58, 237, 0.12);
+
+  --sidebar-width: 280px;
+}
+
+/* ── Kids Sidebar ── */
+:root[data-theme='kids'] .app-sidebar {
+  background: var(--kids-theme-sidebar-bg);
+  border-inline-end: none;
+  box-shadow: 4px 0 24px rgba(91, 33, 182, 0.25);
+}
+
+:root[data-theme='kids'] .sidebar-title {
+  color: #ffffff;
+  font-size: 1.2rem;
+}
+
+:root[data-theme='kids'] .sidebar-header {
+  background: rgba(0, 0, 0, 0.15);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme='kids'] .theme-toggle {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+:root[data-theme='kids'] .theme-toggle svg {
+  fill: #ffffff;
+}
+
+:root[data-theme='kids'] .nav-link {
+  color: rgba(255, 255, 255, 0.85);
+  border-radius: 12px;
+  margin: 2px 8px;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition:
+    background 0.15s ease,
+    transform 0.1s ease;
+}
+
+:root[data-theme='kids'] .nav-link:hover {
+  background: var(--kids-theme-sidebar-hover);
+  color: #ffffff;
+  transform: translateX(2px);
+}
+
+:root[data-theme='kids'] [dir='rtl'] .nav-link:hover {
+  transform: translateX(-2px);
+}
+
+:root[data-theme='kids'] .nav-link--active {
+  background: var(--kids-theme-sidebar-active);
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+:root[data-theme='kids'] .nav-icon {
+  font-size: 1.3rem;
+  min-width: 28px;
+}
+
+:root[data-theme='kids'] .nav-label {
+  font-size: 0.95rem;
+}
+
+:root[data-theme='kids'] .sidebar-footer {
+  background: rgba(0, 0, 0, 0.15);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme='kids'] .user-name {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+:root[data-theme='kids'] .user-role {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+:root[data-theme='kids'] .logout-btn {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  padding: 6px 16px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+:root[data-theme='kids'] .logout-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* ── Kids Reward Stats (sidebar header) ── */
+.kids-reward-stats {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px 10px;
+  flex-wrap: wrap;
+}
+
+.kids-reward-stat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  color: #ffffff;
+  font-weight: 600;
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.kids-reward-stat__icon {
+  font-size: 0.9rem;
+}
+
+/* ── Kids Main Area ── */
+:root[data-theme='kids'] .app-main {
+  background: var(--color-bg);
+}
+
+:root[data-theme='kids'] .page-title {
+  font-size: 1.8rem;
+  color: var(--color-primary);
+}
+
+/* ── Kids Cards ── */
+:root[data-theme='kids'] .card {
+  border-radius: var(--radius-xl);
+  border: 2px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+:root[data-theme='kids'] .card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ── Kids Buttons ── */
+:root[data-theme='kids'] .btn-primary {
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 10px 22px;
+}
+
+/* ── Kids Home Page ── */
+.kids-home {
+  padding: 8px 0;
+}
+
+.kids-home__greeting {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--color-primary);
+  margin-bottom: 20px;
+}
+
+.kids-stat-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.kids-stat-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 18px 14px;
+  text-align: center;
+  border: 2px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.15s ease;
+}
+
+.kids-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.kids-stat-card__icon {
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.kids-stat-card__value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1;
+  display: block;
+}
+
+.kids-stat-card__label {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+  display: block;
+}
+
+.kids-stat-card--xp .kids-stat-card__value {
+  color: #3b82f6;
+}
+
+.kids-stat-card--stars .kids-stat-card__value {
+  color: #f59e0b;
+}
+
+.kids-stat-card--streak .kids-stat-card__value {
+  color: #f97316;
+}
+
+.kids-stat-card--level .kids-stat-card__value {
+  color: #7c3aed;
+}
+
+.kids-section-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kids-cta-row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+
+.kids-cta-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 24px;
+  border-radius: 18px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+  flex: 1 1 180px;
+  justify-content: center;
+}
+
+.kids-cta-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.kids-cta-btn--primary {
+  background: linear-gradient(135deg, #7c3aed, #a78bfa);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3);
+}
+
+.kids-cta-btn--secondary {
+  background: linear-gradient(135deg, #f59e0b, #fcd34d);
+  color: #7c2d12;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+}
+
+.kids-cta-btn__icon {
+  font-size: 1.5rem;
+}
+
+/* ── Kids XP Progress Bar ── */
+.kids-xp-bar-wrap {
+  background: #e9d5ff;
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.kids-xp-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #7c3aed, #a78bfa);
+  transition: width 0.5s ease;
+}
+
+/* ── Kids Content Cards ── */
+.kids-content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 18px;
+}
+
+.kids-content-card {
+  background: #ffffff;
+  border-radius: 20px;
+  border: 2px solid var(--color-border);
+  overflow: hidden;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.kids-content-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.15);
+}
+
+.kids-content-card:focus {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.kids-content-card__header {
+  padding: 16px 16px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.kids-content-card__type-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.kids-content-card__type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.kids-content-card__type-badge--video {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.kids-content-card__type-badge--audio {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.kids-content-card__type-badge--pdf {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.kids-content-card__type-badge--story {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.kids-content-card__type-badge--coloring_book {
+  background: #fce7f3;
+  color: #9d174d;
+}
+
+.kids-content-card__type-badge--interactive {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+.kids-content-card__body {
+  padding: 0 16px 16px;
+}
+
+.kids-content-card__title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: var(--color-text);
+}
+
+.kids-content-card__desc {
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.kids-content-card__progress-bar {
+  background: #e9d5ff;
+  border-radius: 999px;
+  height: 6px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.kids-content-card__progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #7c3aed, #a78bfa);
+}
+
+.kids-content-card__progress-fill--completed {
+  background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+.kids-content-card__status {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.kids-content-card__status--completed {
+  color: #10b981;
+}
+
+.kids-content-card__status--in_progress {
+  color: #f59e0b;
+}
+
+.kids-content-card__action {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px 14px;
+  background: linear-gradient(135deg, #7c3aed, #a78bfa);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.kids-content-card__action:hover {
+  opacity: 0.9;
+}
+
+/* ── Celebration Overlay ── */
+.celebration-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.celebration-overlay__content {
+  text-align: center;
+  animation: celebration-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.celebration-overlay__emoji {
+  font-size: 5rem;
+  display: block;
+  margin-bottom: 12px;
+  animation: celebration-bounce 0.6s ease infinite alternate;
+}
+
+.celebration-overlay__message {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--color-primary, #7c3aed);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes celebration-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes celebration-bounce {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-12px);
+  }
+}
+
+.celebration-confetti {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  overflow: hidden;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -20px;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  animation: confetti-fall linear forwards;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+/* ── Staging Banner ── */
+.staging-banner {
+  position: fixed;
+  top: 0;
+  inset-inline-start: 0;
+  inset-inline-end: 0;
+  background: #fef9c3;
+  border-bottom: 2px solid #f59e0b;
+  color: #78350f;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 4px 8px;
+  z-index: 9999;
+}

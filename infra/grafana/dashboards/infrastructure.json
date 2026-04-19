@@ -1,0 +1,158 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [],
+  "panels": [
+    {
+      "title": "DB Pool Size",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "db_pool_size",
+          "legendFormat": "Pool Size",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" } }
+    },
+    {
+      "title": "DB Pool Checked Out",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "targets": [
+        {
+          "expr": "db_pool_checked_out",
+          "legendFormat": "Checked Out",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "percentage",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 70 },
+              { "color": "red", "value": 90 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "Redis Commands (5m rate)",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(redis_commands_total[5m]))",
+          "legendFormat": "Commands/s",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "reqps" } }
+    },
+    {
+      "title": "Redis Hit Rate (%)",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(redis_hits_total[5m])) / (sum(rate(redis_hits_total[5m])) + sum(rate(redis_misses_total[5m]))) * 100",
+          "legendFormat": "Hit Rate",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 80 },
+              { "color": "green", "value": 90 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "DB Pool Usage Over Time",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "targets": [
+        {
+          "expr": "db_pool_size",
+          "legendFormat": "Pool Size",
+          "refId": "A"
+        },
+        {
+          "expr": "db_pool_checked_out",
+          "legendFormat": "In Use",
+          "refId": "B"
+        },
+        {
+          "expr": "db_pool_overflow",
+          "legendFormat": "Overflow",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" } }
+    },
+    {
+      "title": "Redis Cache Hits vs Misses",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "targets": [
+        {
+          "expr": "sum(rate(redis_hits_total[5m]))",
+          "legendFormat": "Hits/s",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(redis_misses_total[5m]))",
+          "legendFormat": "Misses/s",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "reqps" } }
+    },
+    {
+      "title": "Document Storage Used (bytes)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "targets": [
+        {
+          "expr": "documents_storage_bytes_total",
+          "legendFormat": "Storage",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "bytes" } }
+    },
+    {
+      "title": "Backup Status",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "targets": [
+        {
+          "expr": "backup_last_success_timestamp_seconds",
+          "legendFormat": "Last Backup",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "dateTimeAsIso" } }
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["ecole", "infrastructure"],
+  "templating": { "list": [] },
+  "time": { "from": "now-6h", "to": "now" },
+  "title": "Infrastructure",
+  "uid": "ecole-infrastructure"
+}

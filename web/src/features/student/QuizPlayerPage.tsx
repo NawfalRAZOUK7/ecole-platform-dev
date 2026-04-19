@@ -67,7 +67,7 @@ export function QuizPlayerPage() {
             startAttemptMutation.error ??
             respondMutation.error ??
             submitAttemptMutation.error,
-          t('app.error')
+          t('app.error'),
         ),
       [
         quizDetailQuery.error,
@@ -76,8 +76,8 @@ export function QuizPlayerPage() {
         startAttemptMutation.error,
         submitAttemptMutation.error,
         t,
-      ]
-    )
+      ],
+    ),
   );
 
   async function handleStartQuiz(quiz: QuizListItem) {
@@ -95,11 +95,13 @@ export function QuizPlayerPage() {
       return;
     }
     setAnswers((current) => ({ ...current, [questionId]: answer }));
-    void respondMutation.mutateAsync({
-      attemptId: attempt.id,
-      questionId,
-      studentAnswer: answer,
-    }).catch(() => null);
+    void respondMutation
+      .mutateAsync({
+        attemptId: attempt.id,
+        questionId,
+        studentAnswer: answer,
+      })
+      .catch(() => null);
   }
 
   const handleSubmitAttempt = useCallback(async () => {
@@ -111,7 +113,10 @@ export function QuizPlayerPage() {
     navigate(`/quizzes/attempts/${attempt.id}/results`, { replace: true });
   }, [attempt, navigate, submitAttemptMutation]);
 
-  if ((view === 'list' && quizzesQuery.isLoading) || (view === 'playing' && quizDetailQuery.isLoading)) {
+  if (
+    (view === 'list' && quizzesQuery.isLoading) ||
+    (view === 'playing' && quizDetailQuery.isLoading)
+  ) {
     return <LoadingState />;
   }
 
@@ -121,10 +126,17 @@ export function QuizPlayerPage() {
       <ErrorBanner
         error={dismissibleError.error}
         onDismiss={dismissibleError.dismiss}
-        onRetry={() => void Promise.all([quizzesQuery.refetch(), selectedQuizId ? quizDetailQuery.refetch() : Promise.resolve()])}
+        onRetry={() =>
+          void Promise.all([
+            quizzesQuery.refetch(),
+            selectedQuizId ? quizDetailQuery.refetch() : Promise.resolve(),
+          ])
+        }
       />
 
-      {view === 'list' && <QuizList quizzes={quizzes} onStart={(quiz) => void handleStartQuiz(quiz)} />}
+      {view === 'list' && (
+        <QuizList quizzes={quizzes} onStart={(quiz) => void handleStartQuiz(quiz)} />
+      )}
 
       {view === 'playing' && attempt && currentQuiz && (
         <QuizPlay
@@ -143,28 +155,79 @@ export function QuizPlayerPage() {
   );
 }
 
-function QuizList({ quizzes, onStart }: { quizzes: QuizListItem[]; onStart: (quiz: QuizListItem) => void }) {
+function QuizList({
+  quizzes,
+  onStart,
+}: {
+  quizzes: QuizListItem[];
+  onStart: (quiz: QuizListItem) => void;
+}) {
   const { t } = useTranslation();
 
   if (quizzes.length === 0) {
     return <EmptyState message={t('studentQuiz.empty')} />;
   }
 
+  const recommended = quizzes.filter((q) => q.recommended);
+  const others = quizzes.filter((q) => !q.recommended);
+  const sorted = [...recommended, ...others];
+
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
-      {quizzes.map((quiz) => (
-        <div key={quiz.id} className="card" style={{ padding: 16 }}>
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+        gap: 16,
+      }}
+    >
+      {sorted.map((quiz) => (
+        <div
+          key={quiz.id}
+          className="card"
+          style={{
+            padding: 16,
+            border: quiz.recommended ? '2px solid var(--color-primary)' : undefined,
+          }}
+        >
+          {quiz.recommended && (
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                background: 'var(--color-surface-primary)',
+                color: 'var(--color-primary)',
+                fontSize: 11,
+                fontWeight: 700,
+                padding: '3px 8px',
+                borderRadius: 999,
+                marginBottom: 8,
+              }}
+            >
+              ⭐ {t('studentQuiz.recommended', 'Recommandé pour toi')}
+            </div>
+          )}
           <h4 style={{ margin: '0 0 6px', fontSize: 15 }}>{quiz.title}</h4>
           {quiz.description && (
             <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', margin: '0 0 8px' }}>
-              {quiz.description.length > 100 ? `${quiz.description.slice(0, 100)}...` : quiz.description}
+              {quiz.description.length > 100
+                ? `${quiz.description.slice(0, 100)}...`
+                : quiz.description}
             </p>
           )}
           <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 12 }}>
-            {quiz.subject && <span style={{ marginRight: 8 }}>{t(`cms.subjects.${quiz.subject}`, quiz.subject)}</span>}
+            {quiz.subject && (
+              <span style={{ marginRight: 8 }}>
+                {t(`cms.subjects.${quiz.subject}`, quiz.subject)}
+              </span>
+            )}
             <span style={{ marginRight: 8 }}>{quiz.difficulty}</span>
-            <span>{quiz.question_count} {t('studentQuiz.questions')}</span>
-            {quiz.time_limit_minutes && <span style={{ marginLeft: 8 }}>{quiz.time_limit_minutes} min</span>}
+            <span>
+              {quiz.question_count} {t('studentQuiz.questions')}
+            </span>
+            {quiz.time_limit_minutes && (
+              <span style={{ marginLeft: 8 }}>{quiz.time_limit_minutes} min</span>
+            )}
           </div>
           <button className="btn btn-primary" onClick={() => onStart(quiz)}>
             {t('studentQuiz.startQuiz')}
@@ -234,7 +297,16 @@ function QuizPlay({
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 16,
+          flexWrap: 'wrap',
+          gap: 8,
+        }}
+      >
         <h3 style={{ margin: 0 }}>{quiz.title}</h3>
         {timeLeft !== null && (
           <span
@@ -265,7 +337,8 @@ function QuizPlay({
 
       <div className="card" style={{ padding: 20, marginBottom: 16 }}>
         <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 8 }}>
-          {t('studentQuiz.question')} {currentIdx + 1}/{questions.length} — {question.points} {t('studentQuiz.pts')}
+          {t('studentQuiz.question')} {currentIdx + 1}/{questions.length} — {question.points}{' '}
+          {t('studentQuiz.pts')}
         </div>
         <h4 style={{ margin: '0 0 16px', fontSize: 16 }}>{question.question_text}</h4>
 
@@ -293,7 +366,9 @@ function QuizPlay({
 
         {question.question_type === 'DRAG_DROP' && (
           <DragDropInput
-            options={typeof question.options === 'object' ? (question.options as DragDropOptions) : null}
+            options={
+              typeof question.options === 'object' ? (question.options as DragDropOptions) : null
+            }
             value={answers[question.id] as Record<string, string> | undefined}
             onChange={(value) => onAnswer(question.id, value)}
           />
@@ -301,7 +376,9 @@ function QuizPlay({
 
         {question.question_type === 'MATCHING' && (
           <MatchingInput
-            options={typeof question.options === 'object' ? (question.options as MatchingOptions) : null}
+            options={
+              typeof question.options === 'object' ? (question.options as MatchingOptions) : null
+            }
             value={answers[question.id] as Record<string, string> | undefined}
             onChange={(value) => onAnswer(question.id, value)}
           />
@@ -309,7 +386,11 @@ function QuizPlay({
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <button className="btn btn-secondary" disabled={currentIdx === 0} onClick={() => onNavigate(currentIdx - 1)}>
+        <button
+          className="btn btn-secondary"
+          disabled={currentIdx === 0}
+          onClick={() => onNavigate(currentIdx - 1)}
+        >
           {t('studentQuiz.prev')}
         </button>
 
@@ -318,7 +399,12 @@ function QuizPlay({
             {t('studentQuiz.next')}
           </button>
         ) : (
-          <button className="btn btn-primary" onClick={() => void onSubmit()} disabled={submitting} style={{ background: 'var(--color-success)' }}>
+          <button
+            className="btn btn-primary"
+            onClick={() => void onSubmit()}
+            disabled={submitting}
+            style={{ background: 'var(--color-success)' }}
+          >
             {submitting ? t('app.loading') : t('studentQuiz.submit')}
           </button>
         )}
@@ -342,7 +428,7 @@ function McqInput({
     onChange(
       selected.includes(optionId)
         ? selected.filter((item) => item !== optionId)
-        : [...selected, optionId]
+        : [...selected, optionId],
     );
   }
 
@@ -357,7 +443,9 @@ function McqInput({
             gap: 10,
             padding: '10px 12px',
             borderRadius: 'var(--radius)',
-            background: selected.includes(option.id) ? 'var(--color-surface-primary)' : 'var(--color-bg)',
+            background: selected.includes(option.id)
+              ? 'var(--color-surface-primary)'
+              : 'var(--color-bg)',
             border: `1px solid ${selected.includes(option.id) ? 'var(--color-primary)' : 'var(--color-border)'}`,
             cursor: 'pointer',
             transition: 'all 0.2s',
@@ -376,7 +464,13 @@ function McqInput({
   );
 }
 
-function TrueFalseInput({ value, onChange }: { value?: boolean; onChange: (value: boolean) => void }) {
+function TrueFalseInput({
+  value,
+  onChange,
+}: {
+  value?: boolean;
+  onChange: (value: boolean) => void;
+}) {
   const { t } = useTranslation();
   return (
     <div style={{ display: 'flex', gap: 16 }}>
@@ -399,7 +493,12 @@ function TrueFalseInput({ value, onChange }: { value?: boolean; onChange: (value
             transition: 'all 0.2s',
           }}
         >
-          <input type="radio" checked={value === item} onChange={() => onChange(item)} style={{ display: 'none' }} />
+          <input
+            type="radio"
+            checked={value === item}
+            onChange={() => onChange(item)}
+            style={{ display: 'none' }}
+          />
           {item ? t('studentQuiz.true') : t('studentQuiz.false')}
         </label>
       ))}
@@ -436,10 +535,17 @@ function DragDropInput({
 
   return (
     <div>
-      <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 8 }}>{t('studentQuiz.dragDropHint')}</p>
+      <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 8 }}>
+        {t('studentQuiz.dragDropHint')}
+      </p>
       {items.map((item) => (
-        <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-          <span style={{ fontSize: 13, fontWeight: 600, minWidth: 100 }}>{item.text || item.id}</span>
+        <div
+          key={item.id}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}
+        >
+          <span style={{ fontSize: 13, fontWeight: 600, minWidth: 100 }}>
+            {item.text || item.id}
+          </span>
           <select
             className="filter-select"
             value={current[item.id] || ''}
@@ -448,7 +554,9 @@ function DragDropInput({
           >
             <option value="">— {t('studentQuiz.selectZone')} —</option>
             {zones.map((zone) => (
-              <option key={zone.id} value={zone.id}>{zone.text || zone.id}</option>
+              <option key={zone.id} value={zone.id}>
+                {zone.text || zone.id}
+              </option>
             ))}
           </select>
         </div>
@@ -473,10 +581,17 @@ function MatchingInput({
 
   return (
     <div>
-      <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 8 }}>{t('studentQuiz.matchHint')}</p>
+      <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 8 }}>
+        {t('studentQuiz.matchHint')}
+      </p>
       {left.map((item) => (
-        <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-          <span style={{ fontSize: 13, fontWeight: 600, minWidth: 120 }}>{item.text || item.id}</span>
+        <div
+          key={item.id}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}
+        >
+          <span style={{ fontSize: 13, fontWeight: 600, minWidth: 120 }}>
+            {item.text || item.id}
+          </span>
           <select
             className="filter-select"
             value={current[item.id] || ''}
@@ -485,7 +600,9 @@ function MatchingInput({
           >
             <option value="">— {t('studentQuiz.selectMatch')} —</option>
             {right.map((option) => (
-              <option key={option.id} value={option.id}>{option.text || option.id}</option>
+              <option key={option.id} value={option.id}>
+                {option.text || option.id}
+              </option>
             ))}
           </select>
         </div>
