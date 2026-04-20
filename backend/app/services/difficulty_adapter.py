@@ -75,7 +75,7 @@ class DifficultyAdapter:
             .join(QuizAttempt.quiz)
             .where(
                 QuizAttempt.student_id == student_id,
-                QuizAttempt.status == QuizAttemptStatus.GRADED.value,
+                QuizAttempt.status == QuizAttemptStatus.COMPLETED.value,
                 Quiz.subject == subject,
                 QuizAttempt.max_score > 0,
             )
