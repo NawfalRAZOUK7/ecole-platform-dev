@@ -163,4 +163,18 @@ export const gamesService = {
     );
     return normalizeGameConfig(response.data);
   },
+
+  async completeConfig(
+    id: string,
+    payload: { score: number; timeSeconds: number },
+  ): Promise<{ reward: unknown; newlyEarnedBadges: unknown[] }> {
+    const response = await api.post<{ reward: unknown; newly_earned_badges?: unknown[] }>(
+      `/games/configs/${id}/complete`,
+      { score: payload.score, time_seconds: payload.timeSeconds },
+    );
+    return {
+      reward: response.data.reward,
+      newlyEarnedBadges: response.data.newly_earned_badges ?? [],
+    };
+  },
 };

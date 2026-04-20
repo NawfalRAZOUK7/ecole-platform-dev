@@ -65,3 +65,22 @@ export function useUpdateGameConfig() {
     },
   });
 }
+
+export function useCompleteGameConfig() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      gameId,
+      score,
+      timeSeconds,
+    }: {
+      gameId: string;
+      score: number;
+      timeSeconds: number;
+    }) => gamesService.completeConfig(gameId, { score, timeSeconds }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['rewards'] });
+    },
+  });
+}

@@ -248,6 +248,16 @@ export const GameConfigEditor = lazy(() =>
     default: m.GameConfigEditor,
   })),
 );
+export const StudentGamesPage = lazy(() =>
+  import('@/features/games/StudentGamesPage').then((m) => ({
+    default: m.StudentGamesPage,
+  })),
+);
+export const GamePlayerPage = lazy(() =>
+  import('@/features/games/GamePlayerPage').then((m) => ({
+    default: m.GamePlayerPage,
+  })),
+);
 
 // Notifications
 export const NotificationsPage = lazy(() =>

@@ -35,6 +35,7 @@ const KIDS_NAV_ITEMS: NavItem[] = [
   { to: '/student/home', labelKey: 'nav.studentHome', icon: '🏠', roles: ['STD'] },
   { to: '/student/content', labelKey: 'nav.studentContent', icon: '📚', roles: ['STD'] },
   { to: '/student/quizzes', labelKey: 'nav.studentQuizzes', icon: '📝', roles: ['STD'] },
+  { to: '/student/games', labelKey: 'nav.studentGames', icon: '🎮', roles: ['STD'] },
   { to: '/progress', labelKey: 'nav.progress', icon: '📊', roles: ['STD'] },
   { to: '/rewards', labelKey: 'nav.myRewards', icon: '🏆', roles: ['STD'] },
   { to: '/submissions', labelKey: 'nav.submissions', icon: '📋', roles: ['STD'] },

@@ -74,6 +74,8 @@ import {
   GamesListPage,
   GameConfigDetailPage,
   GameConfigEditor,
+  StudentGamesPage,
+  GamePlayerPage,
   NotificationsPage,
   NotificationSettingsPage,
   CalendarPage,
@@ -443,6 +445,22 @@ function App() {
                 element={
                   <ProtectedRoute roles={['STD']}>
                     <QuizPlayerPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/student/games"
+                element={
+                  <ProtectedRoute roles={['STD']}>
+                    <StudentGamesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/student/games/:id/play"
+                element={
+                  <ProtectedRoute roles={['STD']}>
+                    <GamePlayerPage />
                   </ProtectedRoute>
                 }
               />
