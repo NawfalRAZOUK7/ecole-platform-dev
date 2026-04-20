@@ -88,6 +88,7 @@ import 'package:ecole_platform/features/profile/gdpr_screen.dart';
 import 'package:ecole_platform/features/question-bank/generate_quiz_screen.dart';
 import 'package:ecole_platform/features/question-bank/question_bank_import_screen.dart';
 import 'package:ecole_platform/features/question-bank/question_bank_screen.dart';
+import 'package:ecole_platform/features/rewards/leaderboard_screen.dart';
 import 'package:ecole_platform/features/rewards/rewards_screen.dart';
 import 'package:ecole_platform/features/rubrics/rubric_editor_screen.dart';
 import 'package:ecole_platform/features/rubrics/rubric_grading_screen.dart';
@@ -310,6 +311,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/rewards',
             builder: (context, state) => const RewardsScreen(),
+          ),
+          GoRoute(
+            path: '/leaderboard',
+            builder: (context, state) => const LeaderboardScreen(),
           ),
           GoRoute(
             path: '/coloring',

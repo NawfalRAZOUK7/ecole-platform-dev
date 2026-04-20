@@ -88,6 +88,11 @@ const _allNavItems = [
       icon: Icons.quiz,
       labelKey: 'shell.quiz',
       roles: ['STD']),
+  _NavItem(
+      route: '/leaderboard',
+      icon: Icons.emoji_events,
+      labelKey: 'shell.leaderboard',
+      roles: ['STD']),
   // Phase 12B tabs
   _NavItem(
       route: '/timetable',
