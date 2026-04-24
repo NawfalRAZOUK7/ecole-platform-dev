@@ -86,6 +86,11 @@ const _allNavItems = [
       icon: Icons.menu_book_outlined,
       labelKey: 'shell.questionBank',
       roles: ['TCH']),
+  _NavItem(
+      route: '/teacher/class-progress',
+      icon: Icons.analytics_outlined,
+      labelKey: 'shell.classProgress',
+      roles: ['TCH']),
   // Parent tabs
   _NavItem(
       route: '/family',
