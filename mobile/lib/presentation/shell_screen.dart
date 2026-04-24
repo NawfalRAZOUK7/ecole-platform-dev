@@ -76,6 +76,11 @@ const _allNavItems = [
       icon: Icons.quiz,
       labelKey: 'shell.teacherQuizzes',
       roles: ['TCH']),
+  _NavItem(
+      route: '/rubrics',
+      icon: Icons.fact_check_outlined,
+      labelKey: 'shell.rubrics',
+      roles: ['TCH']),
   // Parent tabs
   _NavItem(
       route: '/family',
