@@ -81,6 +81,11 @@ const _allNavItems = [
       icon: Icons.fact_check_outlined,
       labelKey: 'shell.rubrics',
       roles: ['TCH']),
+  _NavItem(
+      route: '/question-bank',
+      icon: Icons.menu_book_outlined,
+      labelKey: 'shell.questionBank',
+      roles: ['TCH']),
   // Parent tabs
   _NavItem(
       route: '/family',
