@@ -6,11 +6,13 @@ import 'package:open_filex/open_filex.dart';
 import 'package:pdf_render/pdf_render_widgets.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/document_management.dart';
 import 'package:ecole_platform/l10n/app_localizations.dart';
 
-const _documentPreviewBackendBaseUrl = 'http://localhost:8000';
+final _documentPreviewBackendBaseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:8000';
 
 class DocumentPreviewScreen extends ConsumerStatefulWidget {
   final ManagedDocument? document;

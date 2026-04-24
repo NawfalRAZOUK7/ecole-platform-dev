@@ -58,7 +58,7 @@ export function SkillEvaluationPage() {
       { key: 'metric', header: 'skills.metric' },
       { key: 'value', header: 'skills.value' },
     ],
-    []
+    [],
   );
 
   const metricRows = useMemo<MetricRow[]>(
@@ -67,7 +67,7 @@ export function SkillEvaluationPage() {
         metric,
         value: String(value),
       })),
-    [evaluateMutation.data?.data.metrics]
+    [evaluateMutation.data?.data.metrics],
   );
 
   async function handleEvaluate() {
@@ -151,10 +151,26 @@ export function SkillEvaluationPage() {
       {evaluateMutation.data?.data ? (
         <div className="card">
           <div className="stats-grid">
-            <StatCard label="skills.overallScore" value={`${evaluateMutation.data.data.overall_score}%`} icon="🏅" />
-            <StatCard label="skills.unlocked" value={evaluateMutation.data.data.unlocked_milestones} icon="✨" />
-            <StatCard label="skills.totalMilestones" value={evaluateMutation.data.data.total_milestones} icon="🏁" />
-            <StatCard label="skills.progressEntries" value={evaluateMutation.data.data.progress_items.length} icon="📘" />
+            <StatCard
+              label="skills.overallScore"
+              value={`${evaluateMutation.data?.data?.overall_score ?? 0}%`}
+              icon="🏅"
+            />
+            <StatCard
+              label="skills.unlocked"
+              value={evaluateMutation.data?.data?.unlocked_milestones ?? 0}
+              icon="✨"
+            />
+            <StatCard
+              label="skills.totalMilestones"
+              value={evaluateMutation.data?.data?.total_milestones ?? 0}
+              icon="🏁"
+            />
+            <StatCard
+              label="skills.progressEntries"
+              value={evaluateMutation.data?.data?.progress_items?.length ?? 0}
+              icon="📘"
+            />
           </div>
 
           <DataTable

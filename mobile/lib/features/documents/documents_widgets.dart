@@ -301,7 +301,7 @@ class _DocumentThumb extends StatelessWidget {
       return ClipRRect(
         borderRadius: BorderRadius.circular(10),
         child: Image.network(
-          'http://localhost:8000${item.thumbnailUrl!}',
+          '${dotenv.env['API_BASE_URL'] ?? 'http://localhost:8000'}${item.thumbnailUrl!}',
           width: 52,
           height: 52,
           fit: BoxFit.cover,
