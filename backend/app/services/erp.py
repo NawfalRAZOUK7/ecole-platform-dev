@@ -127,6 +127,9 @@ class ERPService:
     def _justification_to_response(
         self,
         justification: AbsenceJustification,
+        *,
+        attendance_record: AttendanceRecord | None = None,
+        session: AttendanceSession | None = None,
     ) -> dict:
         return JustificationResponse(
             id=str(justification.id),
@@ -136,6 +139,18 @@ class ERPService:
             status=justification.status,
             reason=justification.reason,
             rejection_reason=justification.rejection_reason,
+            attachment_url=justification.attachment_url,
+            created_at=(
+                justification.created_at.isoformat()
+                if getattr(justification, "created_at", None) is not None
+                else None
+            ),
+            student_id=(
+                str(attendance_record.student_id) if attendance_record else None
+            ),
+            session_date=(
+                session.session_date.isoformat() if session else None
+            ),
         ).model_dump()
 
     def _review_to_response(self, review: JustificationReview) -> dict:
@@ -500,6 +515,7 @@ class ERPService:
         body: JustificationCreateRequest,
         auth: AuthContext,
         ip_address: str | None,
+        attachment_url: str | None = None,
     ) -> dict:
         record = await self.repo.get_attendance_record(body.attendance_record_id)
         if record is None:
@@ -518,11 +534,17 @@ class ERPService:
         )
         verify_parent_child_ownership(record.student_id, child_ids)
 
+        session = await self.repo.get_attendance_session(
+            record.attendance_session_id
+        )
+
         existing = await self.repo.get_absence_justification_by_record(
             body.attendance_record_id
         )
         if existing is not None:
-            return self._justification_to_response(existing)
+            return self._justification_to_response(
+                existing, attendance_record=record, session=session
+            )
 
         justification = await self.repo.create_absence_justification(
             attendance_record_id=body.attendance_record_id,
@@ -530,6 +552,7 @@ class ERPService:
             school_id=auth.school_id,
             status="pending",
             reason=body.reason,
+            attachment_url=attachment_url,
         )
 
         await self.audit.log_event(
@@ -542,10 +565,65 @@ class ERPService:
             entity_after={
                 "attendance_record_id": str(body.attendance_record_id),
                 "reason": body.reason,
+                "has_attachment": attachment_url is not None,
             },
             ip_address=ip_address,
         )
-        return self._justification_to_response(justification)
+        return self._justification_to_response(
+            justification, attendance_record=record, session=session
+        )
+
+    async def list_my_justifications(
+        self,
+        *,
+        auth: AuthContext,
+    ) -> list[dict]:
+        rows = await self.repo.list_parent_justifications(
+            parent_id=auth.user_id,
+            school_id=auth.school_id,
+        )
+        return [
+            self._justification_to_response(j, attendance_record=r, session=s)
+            for j, r, s in rows
+        ]
+
+    async def list_student_absences(
+        self,
+        *,
+        student_id: uuid.UUID,
+        status: str | None,
+        auth: AuthContext,
+    ) -> list[dict]:
+        child_ids = await self.repo.list_parent_child_ids(
+            parent_id=auth.user_id,
+            school_id=auth.school_id,
+        )
+        verify_parent_child_ownership(student_id, child_ids)
+
+        rows = await self.repo.list_student_absences(
+            student_id=student_id,
+            school_id=auth.school_id,
+            status=status,
+        )
+        justifications = {}
+        for record, _session in rows:
+            existing = await self.repo.get_absence_justification_by_record(record.id)
+            if existing is not None:
+                justifications[record.id] = existing.status
+
+        return [
+            {
+                "id": str(record.id),
+                "student_id": str(record.student_id),
+                "status": record.status,
+                "absence_reason": record.absence_reason,
+                "session_date": session.session_date.isoformat(),
+                "slot": session.slot,
+                "class_id": str(session.class_id),
+                "justification_status": justifications.get(record.id),
+            }
+            for record, session in rows
+        ]
 
     async def review_justification(
         self,

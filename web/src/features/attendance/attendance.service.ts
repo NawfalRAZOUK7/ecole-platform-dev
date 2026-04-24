@@ -24,10 +24,13 @@ export const attendanceService = {
   },
 
   submitJustification(recordId: string, justification: string, file?: File) {
-    return api.post<void>('/attendance/justifications', {
-      attendance_record_id: recordId,
-      reason: file ? `${justification}\n\nAttachment: ${file.name}` : justification,
-    });
+    const form = new FormData();
+    form.append('attendance_record_id', recordId);
+    form.append('reason', justification);
+    if (file) {
+      form.append('attachment', file);
+    }
+    return api.post<Justification>('/attendance/justifications', form);
   },
 
   getAttendanceTrends(classId: string, from: string, to: string) {
@@ -91,7 +94,12 @@ export const attendanceService = {
   },
 
   submitJustificationDirect(payload: JustificationPayload) {
-    return api.post<Justification>('/attendance/justifications', payload);
+    const form = new FormData();
+    form.append('student_id', payload.student_id);
+    form.append('class_id', payload.class_id);
+    form.append('date', payload.date);
+    form.append('reason', payload.reason);
+    return api.post<Justification>('/attendance/justifications', form);
   },
 
   reviewJustification(justificationId: string, payload: JustificationReviewPayload) {

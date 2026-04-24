@@ -77,6 +77,11 @@ const _allNavItems = [
       icon: Icons.family_restroom,
       labelKey: 'shell.children',
       roles: ['PAR']),
+  _NavItem(
+      route: '/justification',
+      icon: Icons.assignment_late,
+      labelKey: 'shell.justification',
+      roles: ['PAR']),
   // Student tabs (Phase 10C)
   _NavItem(
       route: '/student/content',

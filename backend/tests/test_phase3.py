@@ -185,12 +185,12 @@ class TestJustification:
         resp = await client.post(
             "/attendance/justifications",
             headers=auth_header(parent_token),
-            json={
+            data={
                 "attendance_record_id": record_id,
                 "reason": "Rendez-vous medical",
             },
         )
-        assert resp.status_code == 201
+        assert resp.status_code == 201, resp.text
         just_id = resp.json()["data"]["id"]
         assert resp.json()["data"]["status"] == "pending"
 

@@ -119,7 +119,7 @@ async def test_parent_attendance_justification_access(
     response = await client.post(
         "/attendance/justifications",
         headers=auth_header(token),
-        json={
+        data={
             "attendance_record_id": str(absence_record_id),
             "reason": "Absence justifiee par un parent de test",
         },

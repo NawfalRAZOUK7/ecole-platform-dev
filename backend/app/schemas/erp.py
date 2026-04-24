@@ -93,6 +93,10 @@ class JustificationResponse(BaseModel):
     status: str
     reason: str | None = None
     rejection_reason: str | None = None
+    attachment_url: str | None = None
+    created_at: str | None = None
+    student_id: str | None = None
+    session_date: str | None = None
 
 
 # ---------------------------------------------------------------------------

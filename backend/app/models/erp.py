@@ -402,6 +402,7 @@ class AbsenceJustification(TimestampMixin, SchoolScopedMixin, Base):
     )
     reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     rejection_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    attachment_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # Relationships
     attendance_record: Mapped["AttendanceRecord"] = relationship(

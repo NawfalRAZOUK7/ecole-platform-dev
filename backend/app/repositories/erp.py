@@ -191,6 +191,15 @@ class ERPRepository(BaseRepository):
         )
         return result.scalar_one_or_none()
 
+    async def get_attendance_session(
+        self,
+        session_id: uuid.UUID,
+    ) -> AttendanceSession | None:
+        result = await self.db.execute(
+            select(AttendanceSession).where(AttendanceSession.id == session_id)
+        )
+        return result.scalar_one_or_none()
+
     async def create_attendance_session(self, **kwargs: Any) -> AttendanceSession:
         session = AttendanceSession(**kwargs)
         self.db.add(session)
@@ -271,6 +280,54 @@ class ERPRepository(BaseRepository):
         self.db.add(review)
         await self.db.flush()
         return review
+
+    async def list_parent_justifications(
+        self,
+        *,
+        parent_id: uuid.UUID,
+        school_id: uuid.UUID,
+    ) -> list[tuple[AbsenceJustification, AttendanceRecord, AttendanceSession]]:
+        result = await self.db.execute(
+            select(AbsenceJustification, AttendanceRecord, AttendanceSession)
+            .join(
+                AttendanceRecord,
+                AttendanceRecord.id == AbsenceJustification.attendance_record_id,
+            )
+            .join(
+                AttendanceSession,
+                AttendanceSession.id == AttendanceRecord.attendance_session_id,
+            )
+            .where(
+                AbsenceJustification.parent_id == parent_id,
+                AbsenceJustification.school_id == school_id,
+            )
+            .order_by(AbsenceJustification.created_at.desc())
+        )
+        return [(j, r, s) for j, r, s in result.all()]
+
+    async def list_student_absences(
+        self,
+        *,
+        student_id: uuid.UUID,
+        school_id: uuid.UUID,
+        status: str | None = None,
+    ) -> list[tuple[AttendanceRecord, AttendanceSession]]:
+        query = (
+            select(AttendanceRecord, AttendanceSession)
+            .join(
+                AttendanceSession,
+                AttendanceSession.id == AttendanceRecord.attendance_session_id,
+            )
+            .where(
+                AttendanceRecord.student_id == student_id,
+                AttendanceRecord.school_id == school_id,
+            )
+        )
+        if status:
+            query = query.where(AttendanceRecord.status == status)
+        query = query.order_by(AttendanceSession.session_date.desc())
+        result = await self.db.execute(query)
+        return [(r, s) for r, s in result.all()]
 
     async def get_timetable_slot(
         self,

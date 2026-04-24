@@ -4,6 +4,7 @@ Reference:
   S-048 — POST /attendance/sessions (TCH) — Take attendance for a class
   S-049 — POST /attendance/justifications (PAR) — Submit absence justification
   S-050 — POST /attendance/justifications/{id}/review (ADM) — Review justification
+  I4 — multipart attachment, /justifications/mine, /records/student/{id}
 """
 
 from __future__ import annotations
@@ -11,7 +12,7 @@ from __future__ import annotations
 import uuid
 from datetime import date as date_type
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, File, Form, Query, Request, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -25,6 +26,7 @@ from app.schemas.erp import (
     JustificationReviewRequest,
 )
 from app.services.erp import ERPService
+from app.services.file_storage import file_storage_service
 
 router = APIRouter(prefix="/attendance", tags=["erp-attendance"])
 
@@ -113,7 +115,31 @@ async def mark_class_attendance_legacy(
 
 
 # ---------------------------------------------------------------------------
+# I4: GET /attendance/records/student/{student_id} — Parent's child absences
+# ---------------------------------------------------------------------------
+@router.get(
+    "/records/student/{student_id}",
+    summary="List a student's attendance records (parent)",
+    response_description="Attendance records filtered by status",
+)
+async def list_student_attendance_records(
+    student_id: uuid.UUID,
+    status: str | None = Query(None, description="Filter by status, e.g. absent"),
+    auth: AuthContext = Depends(requires_permission("PERM-ERP:absence:justify")),
+    db: AsyncSession = Depends(get_db),
+):
+    service = ERPService(db)
+    result = await service.list_student_absences(
+        student_id=student_id,
+        status=status,
+        auth=auth,
+    )
+    return success_response(result)
+
+
+# ---------------------------------------------------------------------------
 # S-049: POST /attendance/justifications — Submit justification (PAR)
+# I4 — now accepts multipart/form-data with optional attachment
 # ---------------------------------------------------------------------------
 @router.post(
     "/justifications",
@@ -122,25 +148,59 @@ async def mark_class_attendance_legacy(
     response_description="Justification record",
 )
 async def create_justification(
-    body: JustificationCreateRequest,
     request: Request,
+    attendance_record_id: uuid.UUID = Form(...),
+    reason: str = Form(..., min_length=1, max_length=2000),
+    attachment: UploadFile | None = File(None),
     auth: AuthContext = Depends(requires_permission("PERM-ERP:absence:justify")),
     db: AsyncSession = Depends(get_db),
 ):
     """Submit an absence justification for a student.
 
-    Validates:
-    1. Attendance record exists and is in the same school
-    2. Student is absent/late (only those can be justified)
-    3. Parent-child ownership (ABAC)
-    4. No duplicate justification for same record (idempotent)
+    Accepts multipart/form-data:
+      - attendance_record_id (UUID, required)
+      - reason (str, required)
+      - attachment (file, optional)
     """
+    attachment_url: str | None = None
+    if attachment is not None and attachment.filename:
+        content = await attachment.read()
+        if content:
+            storage_path, _thumb = await file_storage_service.store_upload(
+                content=content,
+                original_filename=attachment.filename,
+                mime_type=attachment.content_type or "application/octet-stream",
+            )
+            attachment_url = storage_path
+
     service = ERPService(db)
+    body = JustificationCreateRequest(
+        attendance_record_id=attendance_record_id,
+        reason=reason,
+    )
     result = await service.create_justification(
         body=body,
         auth=auth,
         ip_address=get_client_ip(request),
+        attachment_url=attachment_url,
     )
+    return success_response(result)
+
+
+# ---------------------------------------------------------------------------
+# I4: GET /attendance/justifications/mine — Parent's submitted justifications
+# ---------------------------------------------------------------------------
+@router.get(
+    "/justifications/mine",
+    summary="List my submitted justifications",
+    response_description="Justifications submitted by the current parent",
+)
+async def list_my_justifications(
+    auth: AuthContext = Depends(requires_permission("PERM-ERP:absence:justify")),
+    db: AsyncSession = Depends(get_db),
+):
+    service = ERPService(db)
+    result = await service.list_my_justifications(auth=auth)
     return success_response(result)
 
 
