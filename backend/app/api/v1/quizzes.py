@@ -227,3 +227,26 @@ async def quiz_analytics(
             auth=auth,
         )
     )
+
+
+@router.get("/quizzes/{quiz_id}/attempts", summary="List attempts for a quiz")
+async def list_quiz_attempts(
+    quiz_id: uuid.UUID,
+    cursor: str | None = Query(None),
+    limit: int | None = Query(None),
+    auth: AuthContext = Depends(requires_permission(PERM_QUIZ_ANALYTICS)),
+    db: AsyncSession = Depends(get_db),
+):
+    """Paginated list of attempts for a quiz, with student names and scores.
+
+    Scoped via :meth:`QuizService.list_quiz_attempts` (teachers only see
+    their own or school-scoped quizzes).
+    """
+    service = QuizService(db)
+    items, next_cursor, has_more = await service.list_quiz_attempts(
+        quiz_id=quiz_id,
+        auth=auth,
+        cursor=cursor,
+        limit=clamp_page_size(limit),
+    )
+    return list_response(items, next_cursor=next_cursor, has_more=has_more)

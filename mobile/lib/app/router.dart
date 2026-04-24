@@ -89,6 +89,7 @@ import 'package:ecole_platform/features/question-bank/generate_quiz_screen.dart'
 import 'package:ecole_platform/features/question-bank/question_bank_import_screen.dart';
 import 'package:ecole_platform/features/question-bank/question_bank_screen.dart';
 import 'package:ecole_platform/features/attendance/parent_justification_screen.dart';
+import 'package:ecole_platform/features/quizzes/quiz_analytics_screen.dart';
 import 'package:ecole_platform/features/rewards/leaderboard_screen.dart';
 import 'package:ecole_platform/features/rewards/rewards_screen.dart';
 import 'package:ecole_platform/features/rubrics/rubric_editor_screen.dart';
@@ -320,6 +321,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/justification',
             builder: (context, state) => const ParentJustificationScreen(),
+          ),
+          GoRoute(
+            path: '/quizzes/:id/analytics',
+            builder: (context, state) => QuizAnalyticsScreen(
+              quizId: state.pathParameters['id']!,
+            ),
           ),
           GoRoute(
             path: '/coloring',

@@ -8,7 +8,7 @@ from typing import Any
 
 from sqlalchemy import func, select
 
-from app.core.response import decode_cursor
+from app.core.response import decode_cursor, encode_cursor
 from app.models.erp import Enrollment
 from app.models.lms import (
     Assignment,
@@ -305,6 +305,48 @@ class QuizRepository(BaseRepository):
             .order_by(QuizQuestion.order)
         )
         return list(result.all())
+
+    async def list_quiz_attempts(
+        self,
+        quiz_id: uuid.UUID,
+        *,
+        cursor: str | None = None,
+        limit: int = 50,
+    ) -> tuple[list[tuple[QuizAttempt, str]], str | None, bool]:
+        """List attempts for a quiz with the student's full name.
+
+        Ordered by started_at desc, id desc. Supports cursor pagination on id.
+        """
+        from app.models.iam import User
+
+        query = (
+            select(QuizAttempt, User.full_name)
+            .join(User, User.id == QuizAttempt.student_id)
+            .where(QuizAttempt.quiz_id == quiz_id)
+            .order_by(
+                QuizAttempt.started_at.desc(),
+                QuizAttempt.id.desc(),
+            )
+        )
+
+        if cursor:
+            try:
+                cursor_id, _ = decode_cursor(cursor)
+                query = query.where(QuizAttempt.id < cursor_id)
+            except ValueError:
+                pass
+
+        result = await self.db.execute(query.limit(limit + 1))
+        rows = list(result.all())
+        has_more = len(rows) > limit
+        if has_more:
+            rows = rows[:limit]
+
+        items = [(attempt, full_name) for attempt, full_name in rows]
+        next_cursor = (
+            encode_cursor(items[-1][0].id) if items and has_more else None
+        )
+        return items, next_cursor, has_more
 
     async def get_attempt_stats(
         self,

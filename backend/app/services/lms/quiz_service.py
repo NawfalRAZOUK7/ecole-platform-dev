@@ -492,3 +492,46 @@ class QuizService(LMSServiceBase):
             "average_percentage": avg_pct,
             "question_stats": question_stats,
         }
+
+    async def list_quiz_attempts(
+        self,
+        *,
+        quiz_id: uuid.UUID,
+        auth: AuthContext,
+        cursor: str | None,
+        limit: int,
+    ) -> tuple[list[dict], str | None, bool]:
+        """List attempts for a quiz (teacher/admin view).
+
+        Includes the student's display name for UI rendering. RBAC mirrors
+        :meth:`get_quiz_analytics` — teachers only see quizzes they created
+        or quizzes within their school.
+        """
+        quiz = await self.quiz_repo.get_quiz(quiz_id)
+        if quiz is None:
+            raise NotFoundError("Quiz not found", error_code="ERR-QUIZ-404")
+
+        if auth.role == TCH and quiz.created_by != auth.user_id:
+            if quiz.school_id is not None and quiz.school_id != auth.school_id:
+                raise NotFoundError("Quiz not found", error_code="ERR-QUIZ-404")
+
+        rows, next_cursor, has_more = await self.quiz_repo.list_quiz_attempts(
+            quiz_id,
+            cursor=cursor,
+            limit=limit,
+        )
+
+        items: list[dict] = []
+        for attempt, full_name in rows:
+            payload = self._attempt_to_dict(attempt)
+            payload["student_name"] = full_name
+            max_score = payload.get("max_score") or 0
+            score = payload.get("score")
+            payload["percentage"] = (
+                round(score / max_score * 100, 1)
+                if score is not None and max_score > 0
+                else None
+            )
+            items.append(payload)
+
+        return items, next_cursor, has_more
