@@ -66,6 +66,7 @@ import {
   ChatPage,
   ProgressDashboardPage,
   ParentProgressPage,
+  MyChildrenPage,
   AnnouncementsPage,
   FeedPage,
   RewardsPage,
@@ -627,6 +628,14 @@ function App() {
                 element={
                   <ProtectedRoute roles={['PAR']}>
                     <ParentProgressPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/family"
+                element={
+                  <ProtectedRoute roles={['PAR']}>
+                    <MyChildrenPage />
                   </ProtectedRoute>
                 }
               />

@@ -66,6 +66,7 @@
     "teacherClassProgress": "Class Progress",
     "progress": "My Progress",
     "parentProgress": "Children's Progress",
+    "myChildren": "My Children",
     "rewards": "Rewards",
     "myRewards": "My Rewards",
     "games": "Games"
@@ -2334,6 +2335,16 @@
     "formBody": "Content",
     "bodyPlaceholder": "Write the announcement content...",
     "targetRoles": "Target Roles"
+  },
+  "family": {
+    "title": "My Children",
+    "subtitle": "{{count}} child(ren) linked to your account",
+    "empty": "No children are linked to your account. Contact your school administrator.",
+    "actions": {
+      "viewProgress": "View progress",
+      "viewGrades": "Grades",
+      "viewTimetable": "Timetable"
+    }
   },
   "progress": {
     "title": "Progress Dashboard",

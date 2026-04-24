@@ -193,6 +193,13 @@ export const ChatPage = lazy(() =>
   import('@/features/messages/ChatPage').then((m) => ({ default: m.ChatPage })),
 );
 
+// Family (parent overview)
+export const MyChildrenPage = lazy(() =>
+  import('@/features/family/MyChildrenPage').then((m) => ({
+    default: m.MyChildrenPage,
+  })),
+);
+
 // Progress
 export const ProgressDashboardPage = lazy(() =>
   import('@/features/progress/ProgressDashboardPage').then((m) => ({

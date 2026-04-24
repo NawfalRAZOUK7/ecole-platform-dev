@@ -73,6 +73,7 @@
     "teacherClassProgress": "Progrès de la classe",
     "progress": "Mon progrès",
     "parentProgress": "Progrès des enfants",
+    "myChildren": "Mes enfants",
     "rewards": "Recompenses",
     "myRewards": "Mes recompenses",
     "games": "Jeux",
@@ -2619,6 +2620,16 @@
     "formBody": "Contenu",
     "bodyPlaceholder": "Redigez le contenu de l'annonce...",
     "targetRoles": "Roles cibles"
+  },
+  "family": {
+    "title": "Mes enfants",
+    "subtitle": "{{count}} enfant(s) lié(s) à votre compte",
+    "empty": "Aucun enfant lié à votre compte. Contactez l'administration de l'école.",
+    "actions": {
+      "viewProgress": "Voir progrès",
+      "viewGrades": "Notes",
+      "viewTimetable": "Emploi du temps"
+    }
   },
   "progress": {
     "title": "Tableau de bord",

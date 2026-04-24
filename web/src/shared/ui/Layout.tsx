@@ -116,6 +116,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/student/content', labelKey: 'nav.studentContent', icon: '📚', roles: ['STD'] },
   { to: '/student/quizzes', labelKey: 'nav.studentQuizzes', icon: '❓', roles: ['STD'] },
   { to: '/rewards', labelKey: 'nav.myRewards', icon: '⭐', roles: ['STD'] },
+  { to: '/family', labelKey: 'nav.myChildren', icon: '👨‍👩‍👧', roles: ['PAR'] },
   { to: '/feed', labelKey: 'nav.feed', icon: '📰', roles: ['PAR'] },
   {
     to: '/rewards',

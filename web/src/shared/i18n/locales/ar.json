@@ -66,6 +66,7 @@
     "teacherClassProgress": "تقدم الفصل",
     "progress": "تقدمي",
     "parentProgress": "تقدم الأبناء",
+    "myChildren": "أبنائي",
     "rewards": "المكافآت",
     "myRewards": "مكافآتي",
     "games": "الألعاب"
@@ -2354,6 +2355,16 @@
     "formBody": "المحتوى",
     "bodyPlaceholder": "اكتب محتوى الإعلان...",
     "targetRoles": "الأدوار المستهدفة"
+  },
+  "family": {
+    "title": "أبنائي",
+    "subtitle": "{{count}} طفل/أطفال مرتبطون بحسابك",
+    "empty": "لا يوجد أطفال مرتبطون بحسابك. يرجى التواصل مع إدارة المدرسة.",
+    "actions": {
+      "viewProgress": "عرض التقدم",
+      "viewGrades": "الدرجات",
+      "viewTimetable": "الجدول الزمني"
+    }
   },
   "progress": {
     "title": "لوحة التقدم",

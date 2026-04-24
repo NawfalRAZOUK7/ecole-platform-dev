@@ -2675,6 +2675,21 @@ textarea.filter-input {
   font-weight: 600;
 }
 
+.child-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.child-card-actions .btn {
+  flex: 1 1 auto;
+  min-width: 100px;
+  padding: 8px 10px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
 /* Class progress */
 .class-selector {
   display: flex;
