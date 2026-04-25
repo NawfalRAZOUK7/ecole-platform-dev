@@ -91,6 +91,7 @@ from app.models.com import (
     NotificationDelivery,
     NotificationPreference,
     ParentFeedItem,
+    SharedReviewComment,
 )
 
 # G5 — Billing
@@ -284,6 +285,7 @@ __all__ = [
     "NotificationPreference",
     "DeviceToken",
     "ParentFeedItem",
+    "SharedReviewComment",
     "Conversation",
     "ConversationParticipant",
     "Message",

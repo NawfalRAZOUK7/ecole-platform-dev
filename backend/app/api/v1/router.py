@@ -153,6 +153,9 @@ from app.api.v1.events import router as events_router
 # Phase 16 — Documents
 from app.api.v1.documents import router as documents_router
 
+# Phase B1 — Shared Review (parent-child)
+from app.api.v1.shared_review import router as shared_review_router
+
 # G46 — Level-age mappings
 from app.api.v1.levels import router as levels_router
 from app.core.database import get_db
@@ -341,6 +344,9 @@ router.include_router(events_router)
 
 # Mount sub-routers — Phase 16 Documents
 router.include_router(documents_router)
+
+# Mount sub-routers — Phase B1 Shared Review
+router.include_router(shared_review_router)
 
 # Mount sub-routers — G46 Level-age mappings
 router.include_router(levels_router)

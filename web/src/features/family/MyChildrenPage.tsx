@@ -91,6 +91,13 @@ function ChildCard({ child, onNavigate, t }: ChildCardProps) {
         >
           {t('family.actions.viewTimetable')}
         </button>
+        <button
+          type="button"
+          className="btn"
+          onClick={() => onNavigate(`/family/review/${child.student_id}`)}
+        >
+          {t('family.actions.reviewSessions', 'Review sessions')}
+        </button>
       </div>
     </div>
   );

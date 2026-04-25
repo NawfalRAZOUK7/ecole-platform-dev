@@ -56,6 +56,7 @@ import 'package:ecole_platform/features/student/quiz_player_screen.dart';
 import 'package:ecole_platform/features/student/story_reader_screen.dart';
 import 'package:ecole_platform/features/student/writing_workspace_screen.dart';
 import 'package:ecole_platform/features/family/my_children_screen.dart';
+import 'package:ecole_platform/features/family/shared_review_screen.dart';
 import 'package:ecole_platform/features/timetable/timetable_screen.dart';
 import 'package:ecole_platform/features/messages/conversations_screen.dart';
 import 'package:ecole_platform/features/messages/chat_screen.dart';
@@ -290,6 +291,19 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/family',
             builder: (context, state) => const MyChildrenScreen(),
+          ),
+          GoRoute(
+            path: '/family/review/:childId',
+            builder: (context, state) => SharedReviewScreen(
+              childId: state.pathParameters['childId']!,
+            ),
+          ),
+          GoRoute(
+            path: '/family/review/:childId/sessions/:sessionId',
+            builder: (context, state) => SharedReviewDetailScreen(
+              childId: state.pathParameters['childId']!,
+              sessionId: state.pathParameters['sessionId']!,
+            ),
           ),
 
           // ── Student routes (Phase 10C) ──

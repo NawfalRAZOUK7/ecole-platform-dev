@@ -138,6 +138,8 @@ import {
   TimetableConstraintsPage,
   TimetableGeneratePage,
   WritingWorkspacePage,
+  SharedReviewPage,
+  ReviewDetailPage,
 } from './LazyPages';
 
 /** Redirect based on user role */
@@ -645,6 +647,22 @@ function App() {
                 element={
                   <ProtectedRoute roles={['PAR']}>
                     <MyChildrenPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/family/review/:childId"
+                element={
+                  <ProtectedRoute roles={['PAR']}>
+                    <SharedReviewPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/family/review/:childId/sessions/:sessionId"
+                element={
+                  <ProtectedRoute roles={['PAR']}>
+                    <ReviewDetailPage />
                   </ProtectedRoute>
                 }
               />

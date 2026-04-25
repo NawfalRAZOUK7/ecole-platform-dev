@@ -646,3 +646,33 @@ class Announcement(TimestampMixin, SchoolScopedMixin, Base):
             f"<Announcement id={_short_id(self.id)} title={self.title} "
             f"status={self.status}>"
         )
+
+
+# ---------------------------------------------------------------------------
+# Phase B1: Shared Review Comments — parent encouragement on child sessions
+# ---------------------------------------------------------------------------
+
+class SharedReviewComment(TimestampMixin, SchoolScopedMixin, Base):
+    """Parent comment/encouragement on a child's learning session.
+
+    Phase B1: Links to any session type (quiz attempt, content progress,
+    writing attempt, activity session) via a generic session_id UUID.
+    """
+
+    __tablename__ = "shared_review_comments"
+
+    session_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
+    child_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    author_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    emoji: Mapped[str | None] = mapped_column(String(10), nullable=True)
+
+    __table_args__ = (
+        Index("idx_shared_review_comments_session", "session_id"),
+        Index("idx_shared_review_comments_child", "child_id"),
+        Index("idx_shared_review_comments_author", "author_id"),
+    )

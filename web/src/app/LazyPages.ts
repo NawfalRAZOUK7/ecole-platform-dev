@@ -204,6 +204,16 @@ export const MyChildrenPage = lazy(() =>
     default: m.MyChildrenPage,
   })),
 );
+export const SharedReviewPage = lazy(() =>
+  import('@/features/family/SharedReviewPage').then((m) => ({
+    default: m.SharedReviewPage,
+  })),
+);
+export const ReviewDetailPage = lazy(() =>
+  import('@/features/family/ReviewDetailPage').then((m) => ({
+    default: m.ReviewDetailPage,
+  })),
+);
 
 // Progress
 export const ProgressDashboardPage = lazy(() =>

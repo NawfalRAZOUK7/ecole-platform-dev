@@ -821,6 +821,27 @@ async def enqueue_task(task_name: str, **kwargs: Any) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Phase B2: Parent alerts — rule-based notifications for parents
+# ---------------------------------------------------------------------------
+async def task_check_parent_alerts(ctx: dict[str, Any]) -> None:
+    """Run parent alert checks: grade drops, inactivity, unjustified absences."""
+    from app.core.database import async_session
+    from app.services.parent_alerts import ParentAlertService
+
+    start = time.monotonic()
+    logger.info("Starting parent alerts check")
+    async with async_session() as db:
+        service = ParentAlertService(db)
+        counts = await service.run_all_checks()
+    elapsed = time.monotonic() - start
+    logger.info(
+        "Parent alerts completed in %.1fs: %s",
+        elapsed,
+        counts,
+    )
+
+
+# ---------------------------------------------------------------------------
 # ARQ Worker Settings — used by: arq app.core.tasks.WorkerSettings
 # ---------------------------------------------------------------------------
 class WorkerSettings:
@@ -843,6 +864,7 @@ class WorkerSettings:
         task_send_event_reminders,
         task_notify_expiring_documents,
         task_cleanup_deleted_documents,
+        task_check_parent_alerts,
     ]
 
     # Cron jobs
@@ -874,6 +896,8 @@ class WorkerSettings:
                 cron(task_retry_failed_payments, minute=30),
                 # Phase 11B: Send overdue reminders daily at 09:00 UTC (10:00 Morocco time)
                 cron(task_send_overdue_reminders, hour=9, minute=0),
+                # Phase B2: Parent alerts every 6 hours
+                cron(task_check_parent_alerts, hour={0, 6, 12, 18}, minute=15),
             ]
         )
 
