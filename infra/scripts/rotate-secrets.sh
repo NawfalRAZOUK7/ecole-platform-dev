@@ -74,6 +74,7 @@ rotate_redis() {
     new_password="$(openssl rand -hex 24)"
 
     compose exec -T redis redis-cli CONFIG SET requirepass "$new_password" >/dev/null
+    printf '%s\n' "$new_password" > "$SECRETS_DIR/redis_password.txt"
     printf 'redis://:%s@%s:6379/0\n' "$new_password" "$REDIS_HOST" > "$SECRETS_DIR/redis_url.txt"
 
     compose restart backend worker >/dev/null

@@ -4,7 +4,7 @@
        migrate-new migrate-down migrate-status test-cov lint-fix format web-install web-lint \
        openapi openapi-check worker worker-logs test-unit test-integration test-security \
        test-full test-perf rotate-jwt rotate-db rotate-redis rotate-all \
-       deploy-blue-green deploy-rollback deploy-status dev-init dev-reset seed-demo \
+       deploy-blue-green deploy-rollback deploy-status dev-init dev-reset seed-core \
        docs docs-schema
 
 # ==================== Compose Files ====================
@@ -100,15 +100,36 @@ migrate-validate:
 	$(DC) exec backend python scripts/validate_migrations.py --verbose
 
 seed:
+	@echo "══════════════════════════════════════════════════════"
+	@echo "  Step 1/2 — Core seed (all tables)"
+	@echo "══════════════════════════════════════════════════════"
 	$(DC) exec backend python -m app.seed
+	@echo ""
+	@echo "══════════════════════════════════════════════════════"
+	@echo "  Step 2/2 — Friend educational content (stories, PDFs, coloring)"
+	@echo "══════════════════════════════════════════════════════"
+	$(DC) exec backend mkdir -p /ecole-platform-reference/extraction/assets
+	docker cp ../ecole-platform-reference/extraction/assets/. ecole-backend:/ecole-platform-reference/extraction/assets
+	$(DC) exec backend python -m scripts.seed_friend_content
+	@docker cp ecole-backend:/app/seed-report.md ./seed-report.md 2>/dev/null || true
+	@docker cp ecole-backend:/app/seed-friend-report.md ./seed-friend-report.md 2>/dev/null || true
+	@echo ""
+	@echo "══════════════════════════════════════════════════════"
+	@echo "  Seed complete!"
+	@echo "  Reports: ./seed-report.md + ./seed-friend-report.md"
+	@echo "══════════════════════════════════════════════════════"
+
+seed-core:
+	$(DC) exec backend python -m app.seed
+	@docker cp ecole-backend:/app/seed-report.md ./seed-report.md 2>/dev/null || true
+	@echo "  Report: ./seed-report.md"
 
 seed-friend-content:
 	$(DC) exec backend mkdir -p /ecole-platform-reference/extraction/assets
 	docker cp ../ecole-platform-reference/extraction/assets/. ecole-backend:/ecole-platform-reference/extraction/assets
 	$(DC) exec backend python -m scripts.seed_friend_content
-
-seed-demo:
-	$(DC) run --rm backend python -m app.scripts.seed_demo
+	@docker cp ecole-backend:/app/seed-friend-report.md ./seed-friend-report.md 2>/dev/null || true
+	@echo "  Report: ./seed-friend-report.md"
 
 test:
 	$(DC) exec backend pytest -v --tb=short
@@ -165,10 +186,10 @@ shell-db-staging:
 # ==================== Redis ====================
 
 redis-cli:
-	$(DC) exec redis redis-cli
+	$(DC) exec redis redis-cli -a "$${REDIS_PASSWORD:-change-me-dev-redis}"
 
 redis-cli-staging:
-	$(DC_STAGING) exec redis redis-cli
+	$(DC_STAGING) exec redis redis-cli -a "$${REDIS_PASSWORD}"
 
 # ==================== Backup & Restore ====================
 
@@ -241,13 +262,14 @@ dev-init:
 	@echo "  Waiting for PostgreSQL..."
 	@sleep 5
 	@$(DC) run --rm backend alembic upgrade head
-	@$(DC) run --rm backend python -m app.scripts.seed_demo
+	@$(DC) run --rm backend python -m app.seed
 	@$(DC) up -d
 	@echo ""
 	@echo "  API:  http://localhost:8000/docs"
 	@echo "  Web:  http://localhost:5173"
-	@echo "  Demo school: Lycée Mohammed V (code: LMV-001)"
-	@echo "  Admin login: admin@ecole-demo.ma / Demo1234!"
+	@echo "  School: Ecole Benani (code: EB-001)"
+	@echo "  Admin login: admin@ecole-benani.ma / admin123"
+	@echo "  See: ai-workflow/SEED-REFERENCE.md for all credentials"
 	@echo "=== Setup complete ==="
 
 dev-reset:

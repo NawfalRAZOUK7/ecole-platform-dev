@@ -182,8 +182,14 @@ services:
   pgbouncer:
     image: edoburu/pgbouncer:1.22.0
     container_name: ecole-prod-pgbouncer
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        DB_PASS="$$(cat /run/secrets/db_password)"
+        export DATABASE_URL="postgres://${POSTGRES_USER:?POSTGRES_USER must be set}:$${DB_PASS}@postgres:5432/${POSTGRES_DB:?POSTGRES_DB must be set}"
+        exec /entrypoint.sh
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:?POSTGRES_USER must be set}:${PGBOUNCER_DB_PASSWORD:?PGBOUNCER_DB_PASSWORD must be set}@postgres:5432/${POSTGRES_DB:?POSTGRES_DB must be set}
       POOL_MODE: transaction
       DEFAULT_POOL_SIZE: 50
       MAX_CLIENT_CONN: 200
@@ -195,8 +201,10 @@ services:
       LOG_CONNECTIONS: 0
       LOG_DISCONNECTIONS: 0
       STATS_PERIOD: 60
-    ports:
-      - "6432:6432"
+    expose:
+      - "6432"
+    secrets:
+      - db_password
     depends_on:
       postgres:
         condition: service_healthy

@@ -20,7 +20,13 @@ RUN npm run build
 
 FROM nginx:alpine AS production
 
-COPY --from=build /workspace/web/dist /usr/share/nginx/html
+# Run nginx as non-root user
+RUN chown -R nginx:nginx /var/cache/nginx /var/log/nginx /etc/nginx/conf.d && \
+    touch /var/run/nginx.pid && chown nginx:nginx /var/run/nginx.pid
+
+COPY --from=build --chown=nginx:nginx /workspace/web/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+USER nginx
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

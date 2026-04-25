@@ -18,8 +18,9 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB:-ecole_platform_staging}
-    ports:
-      - "5432:5432"
+    # No host-exposed ports in staging — access via pgbouncer only
+    expose:
+      - "5432"
     volumes:
       - staging_postgres_data:/var/lib/postgresql/data
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
@@ -67,8 +68,8 @@ services:
       LOG_CONNECTIONS: 0
       LOG_DISCONNECTIONS: 0
       STATS_PERIOD: 60
-    ports:
-      - "6432:6432"
+    expose:
+      - "6432"
     depends_on:
       postgres:
         condition: service_healthy
@@ -85,14 +86,19 @@ services:
   redis:
     image: redis:7-alpine
     container_name: ecole-staging-redis
-    ports:
-      - "6379:6379"
+    expose:
+      - "6379"
     volumes:
       - staging_redis_data:/data
       - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
-    command: redis-server /usr/local/etc/redis/redis.conf
+    command:
+      - /bin/sh
+      - -c
+      - exec redis-server /usr/local/etc/redis/redis.conf --requirepass "$${REDIS_PASSWORD}"
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD must be set}
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" ping | grep PONG"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -109,20 +115,78 @@ services:
     container_name: ecole-staging-backend
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB:-ecole_platform_staging}
-      REDIS_URL: redis://redis:6379/0
+      REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD must be set}@redis:6379/0
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
       REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-2}
       APP_ENV: staging
       LOG_LEVEL: INFO
-      CORS_ORIGINS: ${CORS_ORIGINS:-https://staging.ecole-platform.example,http://localhost:5273}
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://staging.ecole-platform.example}
       ENABLE_TRACING: "true"
       ENABLE_STRICT_RATE_LIMIT: "false"
       SEED_ON_STARTUP: ${SEED_ON_STARTUP:-true}
       AI_PROVIDER: ${AI_PROVIDER:-mock}
-    ports:
-      - "8000:8000"
+      SMTP_HOST: ${SMTP_HOST:-localhost}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-noreply@ecole-platform.ma}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-École Platform (Staging)}
+      TOTP_ISSUER: ${TOTP_ISSUER:-EcolePlatformStaging}
+      UPLOAD_DIR: /app/uploads
+      TZ: ${TZ:-Africa/Casablanca}
+    expose:
+      - "8000"
+    volumes:
+      - staging_uploads:/app/uploads
+    depends_on:
+      pgbouncer:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import httpx; httpx.get('http://localhost:8000/api/v1/health').raise_for_status()\""]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+    networks:
+      - ecole-staging-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "1.0"
+        reservations:
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  # ==================== ARQ Background Worker (Stage) ====================
+  worker:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: ecole-staging-worker
+    command: ["python", "-m", "arq", "app.worker.WorkerSettings"]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB:-ecole_platform_staging}
+      REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD must be set}@redis:6379/0
+      APP_ENV: staging
+      LOG_LEVEL: INFO
+      SMTP_HOST: ${SMTP_HOST:-localhost}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
+      TZ: ${TZ:-Africa/Casablanca}
     depends_on:
       pgbouncer:
         condition: service_healthy
@@ -131,6 +195,41 @@ services:
     networks:
       - ecole-staging-network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+        reservations:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ==================== Web Frontend (Stage) ====================
+  web:
+    build:
+      context: ../web
+      dockerfile: Dockerfile
+      target: production
+    container_name: ecole-staging-web
+    networks:
+      - ecole-staging-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+        reservations:
+          memory: 64M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # ==================== Nginx Reverse Proxy (Stage) ====================
   nginx:
@@ -138,19 +237,39 @@ services:
     container_name: ecole-staging-nginx
     volumes:
       - ./nginx/nginx-staging.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/ssl:ro
     ports:
       - "80:80"
       - "443:443"
     depends_on:
       - backend
+      - web
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost/api/v1/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     networks:
       - ecole-staging-network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.5"
+        reservations:
+          memory: 32M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   staging_postgres_data:
   staging_redis_data:
   staging_wal_archive:
+  staging_uploads:
 
 networks:
   ecole-staging-network:

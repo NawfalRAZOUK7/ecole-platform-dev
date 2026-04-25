@@ -28,7 +28,7 @@ scrape_configs:
     static_configs:
       - targets: ["backend:8000"]
         labels:
-          env: "development"
+          env: "${APP_ENV:-development}"
           service: "api-backend"
 
   # ── Prometheus self-monitoring ──
