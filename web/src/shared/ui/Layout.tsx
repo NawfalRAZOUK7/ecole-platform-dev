@@ -22,6 +22,10 @@ import { LanguageSwitcher } from '@/shared/ui/LanguageSwitcher';
 import { formatDate } from '@/shared/i18n';
 import { useMyRewards } from '@/features/rewards/useRewards';
 import '@/shared/ui/kids-theme.css';
+import '@/shared/styles/themes/maternelle.css';
+import '@/shared/styles/themes/primaire.css';
+import '@/shared/styles/themes/college.css';
+import { useAgeTheme } from '@/shared/hooks/useAgeTheme';
 import { wsClient, type WsEvent } from '@/services/ws/WebSocketClient';
 
 interface NavItem {
@@ -36,6 +40,7 @@ const KIDS_NAV_ITEMS: NavItem[] = [
   { to: '/student/content', labelKey: 'nav.studentContent', icon: '📚', roles: ['STD'] },
   { to: '/student/quizzes', labelKey: 'nav.studentQuizzes', icon: '📝', roles: ['STD'] },
   { to: '/student/games', labelKey: 'nav.studentGames', icon: '🎮', roles: ['STD'] },
+  { to: '/student/writing', labelKey: 'nav.studentWriting', icon: '✏️', roles: ['STD'] },
   { to: '/progress', labelKey: 'nav.progress', icon: '📊', roles: ['STD'] },
   { to: '/rewards', labelKey: 'nav.myRewards', icon: '🏆', roles: ['STD'] },
   { to: '/submissions', labelKey: 'nav.submissions', icon: '📋', roles: ['STD'] },
@@ -251,6 +256,7 @@ export function Layout() {
 
   const queryClient = useQueryClient();
   const isStudent = userRole === 'STD';
+  useAgeTheme();
   const rewardsQuery = useMyRewards(isStudent);
   const rewards = rewardsQuery.data;
 

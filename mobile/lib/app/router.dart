@@ -54,6 +54,7 @@ import 'package:ecole_platform/features/teacher/class_progress_screen.dart';
 import 'package:ecole_platform/features/student/student_content_screen.dart';
 import 'package:ecole_platform/features/student/quiz_player_screen.dart';
 import 'package:ecole_platform/features/student/story_reader_screen.dart';
+import 'package:ecole_platform/features/student/writing_workspace_screen.dart';
 import 'package:ecole_platform/features/family/my_children_screen.dart';
 import 'package:ecole_platform/features/timetable/timetable_screen.dart';
 import 'package:ecole_platform/features/messages/conversations_screen.dart';
@@ -299,6 +300,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/student/quizzes',
             builder: (context, state) => const QuizPlayerScreen(),
+          ),
+          GoRoute(
+            path: '/student/writing',
+            builder: (context, state) => const WritingWorkspaceScreen(),
           ),
           GoRoute(
             path: '/games/memory',

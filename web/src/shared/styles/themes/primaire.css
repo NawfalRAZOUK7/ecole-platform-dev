@@ -1,0 +1,27 @@
+/**
+ * Primaire theme (ages 6-9) — default kid experience.
+ * Gamified, colorful, good balance between fun and structure.
+ * This is the baseline — the existing kids-theme.css covers most of this.
+ * This file adds minor refinements specific to the 6-9 range.
+ * Applied via [data-age-tier="primaire"] on <html>.
+ */
+
+:root[data-age-tier='primaire'] {
+  --kids-font-size-base: 1rem;
+  --kids-font-size-heading: 1.8rem;
+  --kids-card-radius: 20px;
+  --kids-card-padding: 16px;
+  --kids-icon-size: 2rem;
+  --kids-grid-min-width: 240px;
+  --kids-btn-padding: 14px 24px;
+  --kids-btn-font-size: 1.05rem;
+  --kids-btn-radius: 18px;
+  --kids-nav-icon-size: 1.3rem;
+  --kids-nav-font-size: 0.95rem;
+  --kids-mascot-display: none;
+}
+
+/* Mascot hidden for primaire */
+:root[data-age-tier='primaire'] .kids-mascot {
+  display: none;
+}

@@ -137,6 +137,7 @@ import {
   RubricGradingPage,
   TimetableConstraintsPage,
   TimetableGeneratePage,
+  WritingWorkspacePage,
 } from './LazyPages';
 
 /** Redirect based on user role */
@@ -462,6 +463,14 @@ function App() {
                 element={
                   <ProtectedRoute roles={['STD']}>
                     <GamePlayerPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/student/writing"
+                element={
+                  <ProtectedRoute roles={['STD']}>
+                    <WritingWorkspacePage />
                   </ProtectedRoute>
                 }
               />

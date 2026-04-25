@@ -1,0 +1,129 @@
+/**
+ * Collège theme (ages 10-13+) — more mature, compact layout.
+ * Toned down colors, smaller radii, denser information display.
+ * Applied via [data-age-tier="college"] on <html>.
+ */
+
+:root[data-age-tier='college'] {
+  --kids-font-size-base: 0.95rem;
+  --kids-font-size-heading: 1.5rem;
+  --kids-card-radius: 14px;
+  --kids-card-padding: 14px;
+  --kids-icon-size: 1.6rem;
+  --kids-grid-min-width: 200px;
+  --kids-btn-padding: 10px 20px;
+  --kids-btn-font-size: 0.95rem;
+  --kids-btn-radius: 14px;
+  --kids-nav-icon-size: 1.1rem;
+  --kids-nav-font-size: 0.88rem;
+  --kids-mascot-display: none;
+}
+
+/* More subdued color palette */
+:root[data-age-tier='college'] {
+  --color-primary: #6366f1;
+  --color-primary-light: #818cf8;
+  --color-primary-dark: #4f46e5;
+  --color-primary-hover: #4f46e5;
+  --color-bg: #fafafa;
+  --color-bg-secondary: #f3f4f6;
+  --color-border: #d1d5db;
+  --color-text-secondary: #6b7280;
+  --kids-theme-sidebar-bg: #4338ca;
+}
+
+/* Compact greeting */
+:root[data-age-tier='college'] .kids-home__greeting {
+  font-size: var(--kids-font-size-heading);
+  font-weight: 700;
+}
+
+/* More columns in stat cards */
+:root[data-age-tier='college'] .kids-stat-cards {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+:root[data-age-tier='college'] .kids-stat-card {
+  border-radius: var(--kids-card-radius);
+  padding: 14px 10px;
+  border-width: 1px;
+}
+
+:root[data-age-tier='college'] .kids-stat-card__icon {
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+}
+
+:root[data-age-tier='college'] .kids-stat-card__value {
+  font-size: 1.3rem;
+}
+
+/* Compact CTA buttons */
+:root[data-age-tier='college'] .kids-cta-btn {
+  padding: var(--kids-btn-padding);
+  border-radius: var(--kids-btn-radius);
+  font-size: var(--kids-btn-font-size);
+}
+
+:root[data-age-tier='college'] .kids-cta-btn__icon {
+  font-size: 1.2rem;
+}
+
+/* Denser content grid */
+:root[data-age-tier='college'] .kids-content-grid {
+  grid-template-columns: repeat(auto-fill, minmax(var(--kids-grid-min-width), 1fr));
+  gap: 12px;
+}
+
+:root[data-age-tier='college'] .kids-content-card {
+  border-radius: var(--kids-card-radius);
+  border-width: 1px;
+}
+
+:root[data-age-tier='college'] .kids-content-card__type-icon {
+  font-size: 1.5rem;
+}
+
+:root[data-age-tier='college'] .kids-content-card__action {
+  padding: 6px 14px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+}
+
+/* Compact navigation */
+:root[data-age-tier='college'] .nav-icon {
+  font-size: var(--kids-nav-icon-size);
+  min-width: 24px;
+}
+
+:root[data-age-tier='college'] .nav-label {
+  font-size: var(--kids-nav-font-size);
+}
+
+:root[data-age-tier='college'] .nav-link {
+  padding: 8px 12px;
+  margin: 1px 8px;
+  border-radius: 10px;
+}
+
+/* Section titles — less prominent */
+:root[data-age-tier='college'] .kids-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* Mascot hidden */
+:root[data-age-tier='college'] .kids-mascot {
+  display: none;
+}
+
+/* Remove hover lift effects (feels more mature) */
+:root[data-age-tier='college'] .kids-stat-card:hover {
+  transform: none;
+  box-shadow: var(--shadow-sm);
+}
+
+:root[data-age-tier='college'] .kids-content-card:hover {
+  transform: translateY(-2px);
+}

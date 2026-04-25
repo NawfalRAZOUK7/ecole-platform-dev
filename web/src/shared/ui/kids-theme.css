@@ -328,6 +328,53 @@
   font-size: 1.5rem;
 }
 
+/* ── Kids Writing CTA Button ── */
+.kids-cta-btn--writing {
+  background: linear-gradient(135deg, #10b981, #34d399);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+}
+
+/* ── Kids Mascot (maternelle only) ── */
+.kids-mascot {
+  display: none;
+  margin-bottom: 20px;
+}
+
+.kids-mascot__bubble {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  border: 3px solid var(--color-border, #e9d5ff);
+  border-radius: 24px;
+  padding: 14px 20px;
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.1);
+  animation: mascot-bounce 2s ease-in-out infinite;
+}
+
+.kids-mascot__emoji {
+  font-size: 3rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.kids-mascot__text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-primary, #7c3aed);
+}
+
+@keyframes mascot-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
 /* ── Kids XP Progress Bar ── */
 .kids-xp-bar-wrap {
   background: #e9d5ff;

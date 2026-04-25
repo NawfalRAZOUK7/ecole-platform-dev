@@ -108,6 +108,11 @@ export const ColoringViewerPage = lazy(() =>
 export const QuizPlayerPage = lazy(() =>
   import('@/features/student/QuizPlayerPage').then((m) => ({ default: m.QuizPlayerPage })),
 );
+export const WritingWorkspacePage = lazy(() =>
+  import('@/features/student/WritingWorkspacePage').then((m) => ({
+    default: m.WritingWorkspacePage,
+  })),
+);
 
 // Attendance
 export const AttendanceModulePage = lazy(() =>

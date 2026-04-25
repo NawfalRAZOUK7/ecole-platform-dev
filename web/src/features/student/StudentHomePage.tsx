@@ -3,12 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/services/auth/AuthContext';
 import { useMyRewards } from '@/features/rewards/useRewards';
 import { xpThresholdForLevel } from '@/features/rewards/rewards.service';
+import { useAgeTheme } from '@/shared/hooks/useAgeTheme';
 import { LoadingState } from '@/shared/ui/LoadingState';
 
 export function StudentHomePage() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const ageTier = useAgeTheme();
   const rewardsQuery = useMyRewards();
   const rewards = rewardsQuery.data;
 
@@ -26,11 +28,28 @@ export function StudentHomePage() {
   return (
     <div className="page kids-home">
       <h1 className="kids-home__greeting">
-        {t('studentHome.greeting', {
-          name: firstName,
-          defaultValue: `مرحبا، ${firstName}! 👋`,
-        })}
+        {ageTier === 'maternelle'
+          ? t('studentHome.greetingYoung', {
+              name: firstName,
+              defaultValue: `مرحبا ${firstName}! 🌟🎉`,
+            })
+          : t('studentHome.greeting', {
+              name: firstName,
+              defaultValue: `مرحبا، ${firstName}! 👋`,
+            })}
       </h1>
+
+      {/* Mascot — visible only for maternelle */}
+      <div className="kids-mascot" aria-hidden="true">
+        <div className="kids-mascot__bubble">
+          <span className="kids-mascot__emoji">🦊</span>
+          <span className="kids-mascot__text">
+            {t('studentHome.mascotMessage', {
+              defaultValue: "Let's learn together today!",
+            })}
+          </span>
+        </div>
+      </div>
 
       {/* Stats row */}
       <div className="kids-stat-cards">
@@ -89,6 +108,14 @@ export function StudentHomePage() {
         >
           <span className="kids-cta-btn__icon">📝</span>
           {t('studentHome.takeQuiz', 'Take a Quiz')}
+        </button>
+        <button
+          type="button"
+          className="kids-cta-btn kids-cta-btn--writing"
+          onClick={() => navigate('/student/writing')}
+        >
+          <span className="kids-cta-btn__icon">✏️</span>
+          {t('studentHome.writeStory', 'Write a Story')}
         </button>
       </div>
 
