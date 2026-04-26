@@ -52,6 +52,7 @@ import 'package:ecole_platform/features/teacher/attendance_screen.dart';
 import 'package:ecole_platform/features/teacher/content_library_screen.dart';
 import 'package:ecole_platform/features/teacher/class_progress_screen.dart';
 import 'package:ecole_platform/features/student/student_content_screen.dart';
+import 'package:ecole_platform/features/student/student_home_screen.dart';
 import 'package:ecole_platform/features/student/quiz_player_screen.dart';
 import 'package:ecole_platform/features/student/story_reader_screen.dart';
 import 'package:ecole_platform/features/student/writing_workspace_screen.dart';
@@ -106,7 +107,7 @@ import 'package:ecole_platform/presentation/shell_screen.dart';
 /// Role-based redirect targets.
 const _roleRedirects = <String, String>{
   'PAR': '/feed',
-  'STD': '/student/content',
+  'STD': '/student/home',
   'TCH': '/teacher/classes',
   'ADM': '/admin/dashboard',
   'DIR': '/admin/dashboard',
@@ -306,7 +307,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             ),
           ),
 
-          // ── Student routes (Phase 10C) ──
+          // ── Student routes ──
+          GoRoute(
+            path: '/student/home',
+            builder: (context, state) => const StudentHomeScreen(),
+          ),
           GoRoute(
             path: '/student/content',
             builder: (context, state) => const StudentContentScreen(),
