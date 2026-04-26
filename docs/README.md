@@ -1,12 +1,37 @@
-# Documentation
+# 📖 Documentation — École Platform
 
-Project documentation for Ecole Platform, a K-12 EdTech SaaS for Moroccan schools.
+## Documentation technique
 
-## Root Documentation
+| Document | Description |
+|----------|-------------|
+| [**ARCHITECTURE.md**](ARCHITECTURE.md) | Architecture globale, couches backend/web/mobile, patterns, diagrammes |
+| [**API-REFERENCE.md**](API-REFERENCE.md) | Référence complète des endpoints API, authentification, pagination, format de réponse |
+| [**DATABASE.md**](DATABASE.md) | Schéma de base de données, groupes de migration, modèles, commandes Alembic |
+| [**DEPLOYMENT.md**](DEPLOYMENT.md) | Docker, Kubernetes (Helm), CI/CD, monitoring, variables d'environnement |
+| [**TESTING.md**](TESTING.md) | Stratégie de tests, infrastructure Pytest/Vitest/MSW, couverture par fonctionnalité |
+| [**SECURITY.md**](SECURITY.md) | Authentification JWT + 2FA, RBAC, protection API, audit trail, GDPR |
+| [**CROSS-PLATFORM.md**](CROSS-PLATFORM.md) | Stratégie mobile-first/web-first, PlatformBridgeCard, cas d'utilisation |
 
-- **openapi.yaml** - Exported OpenAPI 3.0 specification for the REST API
-- **clamav-setup.md** - Antivirus setup and configuration guide for ClamAV integration
+## Documentation par couche
 
-## Directories
+| Document | Description |
+|----------|-------------|
+| [**backend/README.md**](../backend/README.md) | Architecture backend, API endpoints, migrations, sécurité |
+| [**web/README.md**](../web/README.md) | Architecture frontend React, composants, i18n |
+| [**mobile/README.md**](../mobile/README.md) | Architecture Flutter, Clean Architecture, Riverpod |
+| [**infra/README.md**](../infra/README.md) | Infrastructure Docker, Kubernetes, monitoring |
 
-- **legacy/** - Archived development documentation from the build process, including architecture specs, checklists, prompts, planning docs, and verification reports
+## Référence API
+
+| Ressource | Lien |
+|-----------|------|
+| Swagger UI (interactif) | http://localhost:8000/docs |
+| ReDoc | http://localhost:8000/redoc |
+| OpenAPI spec | [openapi.yaml](openapi.yaml) |
+
+## Autres documents
+
+| Document | Description |
+|----------|-------------|
+| [INNOVATION_ROADMAP.md](INNOVATION_ROADMAP.md) | Feuille de route d'innovation produit |
+| [clamav-setup.md](clamav-setup.md) | Configuration antivirus ClamAV |

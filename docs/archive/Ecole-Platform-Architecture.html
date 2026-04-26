@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ecole Platform — Architecture Overview</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #f0f4f8; color: #1a202c; }
+  .page { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+  h1 { font-size: 2rem; color: #1B4F72; margin-bottom: 8px; }
+  h2 { font-size: 1.4rem; color: #2874A6; margin: 32px 0 16px; border-bottom: 2px solid #2874A6; padding-bottom: 6px; }
+  .subtitle { color: #666; margin-bottom: 32px; font-size: 1.05rem; }
+
+  /* Architecture Diagram */
+  .arch-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin: 24px 0; }
+  .arch-card { background: white; border-radius: 14px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); border-left: 4px solid; }
+  .arch-card h3 { font-size: 1rem; margin-bottom: 10px; }
+  .arch-card ul { list-style: none; padding: 0; }
+  .arch-card li { padding: 3px 0; font-size: 0.88rem; color: #444; }
+  .arch-card li::before { content: "▸ "; color: inherit; opacity: 0.5; }
+
+  .c-web { border-color: #2563EB; }
+  .c-web h3 { color: #2563EB; }
+  .c-mobile { border-color: #7C3AED; }
+  .c-mobile h3 { color: #7C3AED; }
+  .c-api { border-color: #059669; }
+  .c-api h3 { color: #059669; }
+  .c-data { border-color: #D97706; }
+  .c-data h3 { color: #D97706; }
+  .c-infra { border-color: #DC2626; }
+  .c-infra h3 { color: #DC2626; }
+  .c-monitor { border-color: #7C3AED; }
+  .c-monitor h3 { color: #7C3AED; }
+
+  /* Stats */
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin: 24px 0; }
+  .stat-card { background: white; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+  .stat-card .value { font-size: 2rem; font-weight: 800; color: #1B4F72; }
+  .stat-card .label { font-size: 0.85rem; color: #666; margin-top: 4px; }
+
+  /* Role matrix */
+  table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin: 16px 0; }
+  th { background: #1B4F72; color: white; padding: 12px 16px; text-align: left; font-size: 0.85rem; }
+  td { padding: 10px 16px; border-bottom: 1px solid #e2e8f0; font-size: 0.88rem; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f7fafc; }
+
+  /* Flow */
+  .flow { display: flex; align-items: center; gap: 0; margin: 24px 0; flex-wrap: wrap; justify-content: center; }
+  .flow-item { background: white; border-radius: 10px; padding: 14px 20px; font-size: 0.88rem; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.06); text-align: center; min-width: 140px; }
+  .flow-arrow { font-size: 1.4rem; color: #94a3b8; padding: 0 8px; }
+  .f-client { border: 2px solid #2563EB; color: #2563EB; }
+  .f-proxy { border: 2px solid #059669; color: #059669; }
+  .f-api { border: 2px solid #D97706; color: #D97706; }
+  .f-db { border: 2px solid #DC2626; color: #DC2626; }
+
+  /* Tech badges */
+  .tech-badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+  .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; }
+  .b-py { background: #EBF5FB; color: #1B4F72; }
+  .b-ts { background: #EBF0FF; color: #2563EB; }
+  .b-dart { background: #F3E8FF; color: #7C3AED; }
+  .b-infra { background: #FEF3C7; color: #92400E; }
+  .b-test { background: #D1FAE5; color: #065F46; }
+
+  .footer { text-align: center; color: #999; margin-top: 48px; padding: 24px; font-size: 0.85rem; }
+
+  @media (max-width: 768px) { .arch-grid { grid-template-columns: 1fr; } .stats-row { grid-template-columns: 1fr 1fr; } }
+  @media print { body { background: white; } .arch-card, .stat-card, table { box-shadow: none; border: 1px solid #ddd; } }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>🏫 Ecole Platform</h1>
+<p class="subtitle">Plateforme SaaS E-Learning pour les Ecoles K-12 au Maroc — Documentation Architecture</p>
+
+<!-- Stats -->
+<div class="stats-row">
+  <div class="stat-card"><div class="value">~188K</div><div class="label">Lignes de code</div></div>
+  <div class="stat-card"><div class="value">901</div><div class="label">Fichiers source</div></div>
+  <div class="stat-card"><div class="value">57</div><div class="label">API Endpoints</div></div>
+  <div class="stat-card"><div class="value">56</div><div class="label">Migrations DB</div></div>
+  <div class="stat-card"><div class="value">160+</div><div class="label">Tests</div></div>
+  <div class="stat-card"><div class="value">3</div><div class="label">Langues (ar/fr/en)</div></div>
+</div>
+
+<!-- Request Flow -->
+<h2>🔄 Flux d'une Requete</h2>
+<div class="flow">
+  <div class="flow-item f-client">📱 Mobile / 💻 Web</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-item f-proxy">🌐 Nginx</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-item f-api">⚡ FastAPI</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-item f-db">🗄 PostgreSQL</div>
+</div>
+<div class="flow" style="margin-top: 8px;">
+  <div class="flow-item" style="border: 2px solid #94a3b8; color: #64748b;">Redis (Cache/Sessions/Queue)</div>
+  <div class="flow-arrow">↔</div>
+  <div class="flow-item f-api">⚡ FastAPI</div>
+  <div class="flow-arrow">↔</div>
+  <div class="flow-item" style="border: 2px solid #7C3AED; color: #7C3AED;">WebSocket (Sync)</div>
+</div>
+
+<!-- Architecture Layers -->
+<h2>🏗 Couches d'Architecture</h2>
+<div class="arch-grid">
+  <div class="arch-card c-web">
+    <h3>💻 Frontend Web (React)</h3>
+    <div class="tech-badges"><span class="badge b-ts">TypeScript</span><span class="badge b-ts">React 18</span><span class="badge b-ts">Vite</span></div>
+    <ul>
+      <li>338 fichiers — ~50 500 LOC</li>
+      <li>React Query (TanStack v5)</li>
+      <li>React Router v6</li>
+      <li>react-i18next (ar/fr/en)</li>
+      <li>25+ composants partages</li>
+      <li>Vitest + MSW + Testing Library</li>
+    </ul>
+  </div>
+  <div class="arch-card c-mobile">
+    <h3>📱 Application Mobile (Flutter)</h3>
+    <div class="tech-badges"><span class="badge b-dart">Dart</span><span class="badge b-dart">Flutter 3</span><span class="badge b-dart">Riverpod</span></div>
+    <ul>
+      <li>276 fichiers — ~57 300 LOC</li>
+      <li>35+ modules fonctionnels</li>
+      <li>GoRouter navigation</li>
+      <li>Clean Architecture (domain/data/features)</li>
+      <li>Design system enfant (KidsContentColors)</li>
+      <li>WebSocket sync temps reel</li>
+    </ul>
+  </div>
+  <div class="arch-card c-api">
+    <h3>⚡ Backend API (FastAPI)</h3>
+    <div class="tech-badges"><span class="badge b-py">Python 3.12</span><span class="badge b-py">FastAPI</span><span class="badge b-py">SQLAlchemy</span></div>
+    <ul>
+      <li>287 fichiers — ~80 500 LOC</li>
+      <li>57 fichiers de routes API v1</li>
+      <li>23 modules de modeles</li>
+      <li>Pydantic v2 validation</li>
+      <li>JWT + TOTP (2FA)</li>
+      <li>RBAC (5 roles, permissions granulaires)</li>
+    </ul>
+  </div>
+  <div class="arch-card c-data">
+    <h3>🗄 Base de Donnees</h3>
+    <div class="tech-badges"><span class="badge b-infra">PostgreSQL 16</span><span class="badge b-infra">Redis 7</span></div>
+    <ul>
+      <li>56 migrations Alembic (async)</li>
+      <li>6 groupes : IAM → ERP → LMS → COM → Billing → Audit</li>
+      <li>Backup automatise (CronJob K8s)</li>
+      <li>Replicas lecture (configurable)</li>
+      <li>Redis : sessions, rate limiting, cache</li>
+    </ul>
+  </div>
+  <div class="arch-card c-infra">
+    <h3>🚀 Infrastructure</h3>
+    <div class="tech-badges"><span class="badge b-infra">Docker</span><span class="badge b-infra">K8s</span><span class="badge b-infra">Helm</span></div>
+    <ul>
+      <li>Docker Compose (dev/staging/prod)</li>
+      <li>Helm Chart (15 templates)</li>
+      <li>9 workflows GitHub Actions</li>
+      <li>Blue-green deployment</li>
+      <li>HPA auto-scaling</li>
+      <li>NetworkPolicy + PDB</li>
+    </ul>
+  </div>
+  <div class="arch-card c-monitor">
+    <h3>📊 Monitoring</h3>
+    <div class="tech-badges"><span class="badge b-test">Prometheus</span><span class="badge b-test">Grafana</span><span class="badge b-test">Loki</span></div>
+    <ul>
+      <li>8 dashboards Grafana</li>
+      <li>Prometheus metriques</li>
+      <li>Loki + Promtail logs</li>
+      <li>Tempo tracing</li>
+      <li>Alertmanager notifications</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Roles -->
+<h2>👥 Matrice des Roles</h2>
+<table>
+  <tr><th>Role</th><th>Code</th><th>Plateforme</th><th>Fonctionnalites Principales</th></tr>
+  <tr><td>Administrateur</td><td>ADM</td><td>🌐 Web</td><td>Gestion ecole, utilisateurs, facturation, audit, feature toggles, conformite MEN</td></tr>
+  <tr><td>Directeur</td><td>DIR</td><td>🌐 Web</td><td>Dashboard analytique, rapports, gestion pedagogique, budgets</td></tr>
+  <tr><td>Enseignant</td><td>TCH</td><td>🌐 Web</td><td>Classes, notes, presence, contenu, quiz, evaluations, bibliotheque</td></tr>
+  <tr><td>Parent</td><td>PAR</td><td>📱 Mobile</td><td>Suivi enfant, bulletins, messages, paiements, documents</td></tr>
+  <tr><td>Eleve</td><td>STD</td><td>📱 Mobile</td><td>Cours, quiz, jeux educatifs, recompenses, progression, ecriture</td></tr>
+</table>
+
+<!-- Cross-Platform Strategy -->
+<h2>🔗 Strategie Cross-Platform</h2>
+<table>
+  <tr><th>Principe</th><th>Implementation</th></tr>
+  <tr><td><strong>Mobile-First</strong> (Eleve + Parent)</td><td>L'app Flutter est la plateforme principale. Le web offre un acces complementaire avec bridge cards.</td></tr>
+  <tr><td><strong>Web-First</strong> (Enseignant + Admin)</td><td>Le web React est la plateforme principale pour les taches de gestion. Le mobile offre un acces simplifie.</td></tr>
+  <tr><td><strong>PlatformBridgeCard</strong></td><td>Composant reutilisable (React + Flutter) informant l'utilisateur que la fonctionnalite est disponible sur l'autre plateforme.</td></tr>
+</table>
+
+<!-- Tech Stack -->
+<h2>🛠 Stack Technologique Complete</h2>
+<table>
+  <tr><th>Categorie</th><th>Technologies</th></tr>
+  <tr><td>Backend</td><td>FastAPI, SQLAlchemy 2.0 (async), Pydantic v2, Alembic, PyJWT, pyotp, Uvicorn</td></tr>
+  <tr><td>Frontend Web</td><td>React 18, TypeScript 5, Vite 5, React Query v5, React Router v6, react-i18next</td></tr>
+  <tr><td>Mobile</td><td>Flutter 3, Dart 3, Riverpod, GoRouter, Dio, SharedPreferences, Hive</td></tr>
+  <tr><td>Base de donnees</td><td>PostgreSQL 16, Redis 7</td></tr>
+  <tr><td>Infrastructure</td><td>Docker, Kubernetes, Helm, Nginx, GitHub Actions</td></tr>
+  <tr><td>Monitoring</td><td>Prometheus, Grafana (8 dashboards), Loki, Promtail, Tempo, Alertmanager</td></tr>
+  <tr><td>Tests</td><td>Pytest, Vitest, MSW, Testing Library, pytest-asyncio</td></tr>
+  <tr><td>Qualite</td><td>Ruff, MyPy, ESLint, Prettier, pre-commit, detect-secrets</td></tr>
+</table>
+
+<!-- API Modules -->
+<h2>📡 Modules API Backend (57 endpoints)</h2>
+<table>
+  <tr><th>Groupe</th><th>Modules</th></tr>
+  <tr><td>IAM (Identite)</td><td>auth, profiles, invitations, devices, recovery, gdpr, consents</td></tr>
+  <tr><td>ERP (Admin)</td><td>admin, schools, classes, enrollments, timetable, levels, features</td></tr>
+  <tr><td>LMS (Apprentissage)</td><td>content, content_library, courses, quizzes, question_bank, assessments, assignments, activities, submissions, rubrics</td></tr>
+  <tr><td>Communication</td><td>messaging, notifications, announcements, feed, events, calendar</td></tr>
+  <tr><td>Finance</td><td>billing, invoices, payments, budgets, financial_health</td></tr>
+  <tr><td>Gamification</td><td>rewards, games, skills, progress, results</td></tr>
+  <tr><td>Analytics/Audit</td><td>analytics, attendance, attendance_analytics, gradebook, reports, compliance, exports</td></tr>
+  <tr><td>Specialise</td><td>micro_school, shared_review, sync, ws, ai, cms, documents</td></tr>
+</table>
+
+<div class="footer">
+  <p>Ecole Platform — Projet de Fin d'Etudes — Nawfal Razouk — 2026</p>
+</div>
+
+</div>
+</body>
+</html>
