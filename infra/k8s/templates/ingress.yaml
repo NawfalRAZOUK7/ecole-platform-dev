@@ -1,0 +1,46 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "ecole.fullname" . }}
+  labels:
+    {{- include "ecole.labels" . | nindent 4 }}
+  annotations:
+    {{- with .Values.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  tls:
+    - hosts:
+        - {{ .Values.global.domain }}
+      secretName: {{ .Values.global.tlsSecret }}
+  rules:
+    - host: {{ .Values.global.domain }}
+      http:
+        paths:
+          # API traffic → backend
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "ecole.fullname" . }}-backend
+                port:
+                  name: http
+          # WebSocket traffic → backend
+          - path: /ws
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "ecole.fullname" . }}-backend
+                port:
+                  name: http
+          # Everything else → web SPA
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "ecole.fullname" . }}-web
+                port:
+                  name: http
+{{- end }}

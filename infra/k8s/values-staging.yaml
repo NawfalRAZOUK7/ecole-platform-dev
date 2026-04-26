@@ -1,0 +1,49 @@
+# Staging environment overrides
+
+global:
+  domain: staging.ecole-platform.example
+  tlsSecret: ecole-staging-tls
+
+backend:
+  replicas: 1
+  hpa:
+    enabled: false
+  env:
+    APP_ENV: staging
+    LOG_LEVEL: INFO
+    CORS_ORIGINS: "https://staging.ecole-platform.example"
+    ENABLE_STRICT_RATE_LIMIT: "false"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+
+worker:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+web:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 25m
+      memory: 32Mi
+    limits:
+      cpu: 250m
+      memory: 64Mi
+
+ingress:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-staging
+
+pdb:
+  enabled: false

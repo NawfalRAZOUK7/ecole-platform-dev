@@ -1,0 +1,115 @@
+# Default values for ecole-platform Helm chart.
+# Override per environment via values-staging.yaml / values-prod.yaml.
+
+# ---------------------------------------------------------------------------
+# Global
+# ---------------------------------------------------------------------------
+global:
+  domain: ecole-platform.example
+  tlsSecret: ecole-tls
+
+# ---------------------------------------------------------------------------
+# Container images
+# ---------------------------------------------------------------------------
+images:
+  backend:
+    repository: ghcr.io/ecole-platform/backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  web:
+    repository: ghcr.io/ecole-platform/web
+    tag: latest
+    pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+# ---------------------------------------------------------------------------
+# Backend (FastAPI)
+# ---------------------------------------------------------------------------
+backend:
+  replicas: 2
+  port: 8000
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: "2"
+      memory: 1Gi
+  hpa:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+    targetCPUUtilizationPercentage: 70
+  env:
+    APP_ENV: production
+    LOG_LEVEL: WARNING
+    CORS_ORIGINS: "https://ecole-platform.example"
+    ENABLE_TRACING: "true"
+    ENABLE_STRICT_RATE_LIMIT: "true"
+    UPLOAD_DIR: /app/uploads
+    MAX_FILE_SIZE_MB: "25"
+    TOTP_ISSUER: EcolePlatform
+    TZ: Africa/Casablanca
+    JWT_ALGORITHM: HS256
+    ACCESS_TOKEN_EXPIRE_MINUTES: "15"
+    REFRESH_TOKEN_EXPIRE_DAYS: "2"
+  # Secret references — these must exist in the cluster
+  secrets:
+    databaseUrl: ecole-database-url
+    redisUrl: ecole-redis-url
+    jwtSecretKey: ecole-jwt-secret
+    smtpPassword: ecole-smtp-password
+
+# ---------------------------------------------------------------------------
+# Worker (ARQ background tasks)
+# ---------------------------------------------------------------------------
+worker:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+
+# ---------------------------------------------------------------------------
+# Web (React SPA served by nginx)
+# ---------------------------------------------------------------------------
+web:
+  replicas: 2
+  port: 80
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 500m
+      memory: 128Mi
+
+# ---------------------------------------------------------------------------
+# Ingress
+# ---------------------------------------------------------------------------
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: 25m
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: 1m
+
+# ---------------------------------------------------------------------------
+# Pod Disruption Budget
+# ---------------------------------------------------------------------------
+pdb:
+  enabled: true
+  minAvailable: 1
+
+# ---------------------------------------------------------------------------
+# External services (managed — not deployed in k8s)
+# ---------------------------------------------------------------------------
+# PostgreSQL: connection via DATABASE_URL secret
+# Redis: connection via REDIS_URL secret
+# These should point to managed services (RDS, ElastiCache, etc.)
