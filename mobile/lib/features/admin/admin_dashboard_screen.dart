@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/admin.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
+import 'package:ecole_platform/shared/widgets/platform_bridge_card.dart';
 
 final _dashboardProvider =
     FutureProvider.autoDispose<DashboardStats>((ref) async {
@@ -151,6 +152,17 @@ class AdminDashboardScreen extends ConsumerWidget {
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push('/admin/school'),
                 ),
+              ),
+              const SizedBox(height: 24),
+
+              // Bridge card: advanced admin tools are web-only
+              const PlatformBridgeCard(
+                targetPlatform: BridgePlatform.web,
+                title: 'أدوات الإدارة المتقدمة',
+                description:
+                    'التسجيل الجماعي، سجل التدقيق، إدارة الشارات، وهياكل الرسوم متوفرة على المنصة عبر الحاسوب لتجربة إدارة كاملة.',
+                icon: Icons.admin_panel_settings_rounded,
+                textDirection: TextDirection.rtl,
               ),
             ],
           ),

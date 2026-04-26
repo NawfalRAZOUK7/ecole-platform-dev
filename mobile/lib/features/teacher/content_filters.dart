@@ -9,6 +9,17 @@ class _BrowseTab extends ConsumerWidget {
 
     return Column(
       children: [
+        // Bridge card: CMS editing is web-only
+        const Padding(
+          padding: EdgeInsets.fromLTRB(12, 12, 12, 0),
+          child: PlatformBridgeCard(
+            targetPlatform: BridgePlatform.web,
+            title: 'إنشاء المحتوى والاختبارات',
+            description:
+                'لإنشاء الاختبارات وتعديل المحتوى ومراجعة الطلبات، استخدم المنصة على الحاسوب لتجربة أفضل.',
+            icon: Icons.edit_note_rounded,
+          ),
+        ),
         _ContentFilters(state: state),
         Expanded(child: _LibraryGrid(state: state)),
       ],

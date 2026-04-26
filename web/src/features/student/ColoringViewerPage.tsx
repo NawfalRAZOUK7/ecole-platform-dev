@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { EmptyState, ErrorBanner, LoadingState } from '@/shared/ui';
+import { PlatformBridgeCard } from '@/shared/ui/PlatformBridgeCard';
 import { toBannerError } from '@/shared/ui/errorUtils';
 import type { ContentStoryPage } from '@/features/content/content.service';
 import {
@@ -88,17 +89,15 @@ export function ColoringViewerPage() {
         onRetry={() => void Promise.all([detailQuery.refetch(), pagesQuery.refetch()])}
       />
 
-      <div
-        className="card"
-        style={{
-          padding: 16,
-          marginBottom: 16,
-          background: 'var(--color-surface-warning)',
-          border: '1px solid var(--color-warning)',
-        }}
-      >
-        <strong>{t('studentContent.coloringMobileHint')}</strong>
-      </div>
+      <PlatformBridgeCard
+        targetPlatform="mobile"
+        title={t('bridge.coloringTitle', { defaultValue: 'تلوين تفاعلي' })}
+        description={t('bridge.coloringDescription', {
+          defaultValue:
+            'هذا النشاط مصمم للأجهزة اللوحية — استخدم التطبيق لتجربة تلوين تفاعلية بلمسة إصبعك. يمكنك هنا معاينة صفحات التلوين.',
+        })}
+        icon="🎨"
+      />
 
       {pages.length === 0 ? (
         <EmptyState message={t('studentContent.noColoringPages')} icon="🎨" />
