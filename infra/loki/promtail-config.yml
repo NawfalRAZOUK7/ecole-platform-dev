@@ -37,21 +37,25 @@ scrape_configs:
         replacement: "$1"
 
     pipeline_stages:
-      # Parse JSON logs from backend
+      # Parse JSON logs from backend / worker
       - json:
           expressions:
             level: level
             correlation_id: correlation_id
+            user_id: user_id
             method: method
             path: path
             status_code: status_code
             latency_ms: latency_ms
             error_code: error_code
+            message: message
+            module: module
 
-      # Extract correlation_id as a label for searchability
+      # Extract level as a label for filtering (keep high-cardinality fields
+      # like correlation_id and user_id as extracted fields, not labels,
+      # to avoid excessive cardinality in Loki 2.x — query with |= or line_format)
       - labels:
           level:
-          correlation_id:
 
       # Redact sensitive data patterns (emails, tokens, passwords)
       - replace:
