@@ -23,6 +23,4 @@ class DifficultyAdaptation(TimestampMixin, Base):
     new_difficulty: Mapped[str] = mapped_column(String(20), nullable=False)
     reason: Mapped[str] = mapped_column(String(50), nullable=False)
 
-    __table_args__ = (
-        Index("idx_diff_adapt_student_subject", "student_id", "subject"),
-    )
+    __table_args__ = (Index("idx_diff_adapt_student_subject", "student_id", "subject"),)

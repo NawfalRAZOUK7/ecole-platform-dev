@@ -58,7 +58,7 @@ export function SharedReviewPage() {
 
   if (sessionsQuery.isLoading) return <LoadingState />;
   if (sessionsQuery.isError) {
-    return <ErrorBanner message={t('errors.generic', 'Something went wrong.')} />;
+    return <ErrorBanner error={t('errors.generic', 'Something went wrong.')} />;
   }
 
   const data = sessionsQuery.data;

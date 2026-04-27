@@ -140,9 +140,11 @@ async def lifespan(app: FastAPI):
 
     if settings.seed_on_startup:
         import logging
+
         logger = logging.getLogger(__name__)
         try:
             from app.seed import main as seed_main
+
             await seed_main()
             logger.info("Staging seed data loaded")
         except Exception as exc:

@@ -44,7 +44,10 @@ async def create_quiz(
     )
 
 
-@router.get("/quizzes/recommended-difficulty", summary="Get recommended difficulty for a student")
+@router.get(
+    "/quizzes/recommended-difficulty",
+    summary="Get recommended difficulty for a student",
+)
 async def get_recommended_difficulty(
     subject: str = Query(...),
     auth: AuthContext = Depends(requires_permission(PERM_QUIZ_READ)),
@@ -90,8 +93,8 @@ async def list_quizzes(
         )
         for item in items:
             item["recommended"] = (
-                (item.get("difficulty") or "").upper() == recommended_difficulty
-            )
+                item.get("difficulty") or ""
+            ).upper() == recommended_difficulty
 
     response = list_response(items, next_cursor=next_cursor, has_more=has_more)
     if recommended_difficulty:

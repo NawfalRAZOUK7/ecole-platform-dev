@@ -12,16 +12,11 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
-import pytest_asyncio
 
-from app.services.parent_alerts import (
-    GRADE_DROP_THRESHOLD,
-    INACTIVITY_DAYS,
-    ParentAlertService,
-)
+from app.services.parent_alerts import ParentAlertService
 
 
 def _utc_now():
@@ -99,7 +94,9 @@ class TestGradeDropRule:
 
         assert count == 1
         service.notification_hub.create_single_notification.assert_called_once()
-        call_kwargs = service.notification_hub.create_single_notification.call_args.kwargs
+        call_kwargs = (
+            service.notification_hub.create_single_notification.call_args.kwargs
+        )
         assert "7.5" in call_kwargs["body"]
         assert call_kwargs["priority"] == "high"
 
@@ -111,9 +108,7 @@ class TestGradeDropRule:
 
         db = AsyncMock()
         db.execute = AsyncMock(
-            return_value=_FakeResult(
-                row=_FakeRow(score=14.0, created_at=recent_time)
-            )
+            return_value=_FakeResult(row=_FakeRow(score=14.0, created_at=recent_time))
         )
 
         service = ParentAlertService(db)
@@ -130,9 +125,7 @@ class TestGradeDropRule:
 
         db = AsyncMock()
         db.execute = AsyncMock(
-            return_value=_FakeResult(
-                row=_FakeRow(score=5.0, created_at=old_time)
-            )
+            return_value=_FakeResult(row=_FakeRow(score=5.0, created_at=old_time))
         )
 
         service = ParentAlertService(db)
@@ -190,9 +183,7 @@ class TestInactivityRule:
 
         db = AsyncMock()
         db.execute = AsyncMock(
-            return_value=_FakeResult(
-                row=_FakeRow(created_at=recent_session)
-            )
+            return_value=_FakeResult(row=_FakeRow(created_at=recent_session))
         )
 
         service = ParentAlertService(db)
@@ -220,7 +211,9 @@ class TestInactivityRule:
 
         count = await service._check_inactivity(link)
         assert count == 1
-        call_kwargs = service.notification_hub.create_single_notification.call_args.kwargs
+        call_kwargs = (
+            service.notification_hub.create_single_notification.call_args.kwargs
+        )
         assert "jamais" in call_kwargs["body"]
 
 
@@ -247,7 +240,9 @@ class TestUnjustifiedAbsenceRule:
 
         count = await service._check_unjustified_absence(link)
         assert count == 1
-        call_kwargs = service.notification_hub.create_single_notification.call_args.kwargs
+        call_kwargs = (
+            service.notification_hub.create_single_notification.call_args.kwargs
+        )
         assert "2 occurrences" in call_kwargs["body"]
         assert call_kwargs["category"] == "attendance"
 

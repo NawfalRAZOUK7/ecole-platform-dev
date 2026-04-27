@@ -11,13 +11,13 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import and_, desc, func, select
+from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import AuthContext, verify_parent_child_ownership
 from app.core.exceptions import NotFoundError
 from app.models.ai import WritingAttempt
-from app.models.iam import ParentChildLink, User
+from app.models.iam import ParentChildLink
 from app.models.lms import (
     ActivitySession,
     ContentItem,
@@ -61,9 +61,7 @@ class SharedReviewService:
         )
         return set(result.scalars().all())
 
-    async def _verify_child(
-        self, child_id: uuid.UUID, auth: AuthContext
-    ) -> None:
+    async def _verify_child(self, child_id: uuid.UUID, auth: AuthContext) -> None:
         child_ids = await self._get_child_ids(auth.user_id, auth.school_id)
         verify_parent_child_ownership(child_id, child_ids)
 
@@ -110,7 +108,9 @@ class SharedReviewService:
                     "score": float(row.score) if row.score is not None else None,
                     "max_score": row.max_score,
                     "status": row.status,
-                    "started_at": row.started_at.isoformat() if row.started_at else None,
+                    "started_at": row.started_at.isoformat()
+                    if row.started_at
+                    else None,
                     "completed_at": (
                         row.completed_at.isoformat() if row.completed_at else None
                     ),
@@ -252,8 +252,7 @@ class SharedReviewService:
         # Try each session type
         # 1) Quiz attempt
         quiz = await self.db.execute(
-            select(QuizAttempt)
-            .where(
+            select(QuizAttempt).where(
                 QuizAttempt.id == session_id,
                 QuizAttempt.student_id == child_id,
             )
@@ -278,8 +277,7 @@ class SharedReviewService:
 
         # 2) Content progress
         cp_result = await self.db.execute(
-            select(ContentProgress)
-            .where(
+            select(ContentProgress).where(
                 ContentProgress.id == session_id,
                 ContentProgress.student_id == child_id,
             )
@@ -302,8 +300,7 @@ class SharedReviewService:
 
         # 3) Writing attempt
         wa_result = await self.db.execute(
-            select(WritingAttempt)
-            .where(
+            select(WritingAttempt).where(
                 WritingAttempt.id == session_id,
                 WritingAttempt.student_id == child_id,
             )
@@ -326,8 +323,7 @@ class SharedReviewService:
 
         # 4) Activity session
         as_result = await self.db.execute(
-            select(ActivitySession)
-            .where(
+            select(ActivitySession).where(
                 ActivitySession.id == session_id,
                 ActivitySession.student_id == child_id,
             )
@@ -346,9 +342,7 @@ class SharedReviewService:
                 "title": activity_obj.title if activity_obj else "Activity",
                 "score": float(act.score) if act.score is not None else None,
                 "status": act.status,
-                "started_at": (
-                    act.created_at.isoformat() if act.created_at else None
-                ),
+                "started_at": (act.created_at.isoformat() if act.created_at else None),
                 "completed_at": (
                     act.updated_at.isoformat()
                     if act.status == "completed" and act.updated_at

@@ -49,9 +49,7 @@ export const sharedReviewService = {
     childId: string,
     params?: { limit?: number; offset?: number },
   ): Promise<SessionsListResponse> {
-    const resp = await api.get<SessionsListResponse>(`/shared-reviews/${childId}/sessions`, {
-      params,
-    });
+    const resp = await api.get<SessionsListResponse>(`/shared-reviews/${childId}/sessions`, params);
     return resp.data;
   },
 

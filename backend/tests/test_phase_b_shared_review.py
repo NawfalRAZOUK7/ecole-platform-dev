@@ -19,8 +19,6 @@ import pytest_asyncio
 from tests.conftest import (
     BASE_URL,
     LOGIN_TIMEOUT,
-    ADMIN_EMAIL,
-    ADMIN_PASSWORD,
     PARENT_EMAIL,
     PARENT_PASSWORD,
     STUDENT_EMAIL,
@@ -36,9 +34,7 @@ RANDOM_CHILD_ID = "00000000-dead-beef-0000-000000000099"
 
 @pytest_asyncio.fixture
 async def client():
-    async with httpx.AsyncClient(
-        base_url=BASE_URL, timeout=LOGIN_TIMEOUT
-    ) as c:
+    async with httpx.AsyncClient(base_url=BASE_URL, timeout=LOGIN_TIMEOUT) as c:
         yield c
 
 
@@ -121,9 +117,7 @@ class TestListChildSessions:
         assert resp.status_code in (403, 404)
 
     @pytest.mark.asyncio
-    async def test_unauthenticated_request_rejected(
-        self, client: httpx.AsyncClient
-    ):
+    async def test_unauthenticated_request_rejected(self, client: httpx.AsyncClient):
         """Unauthenticated request should be rejected."""
         resp = await client.get(f"/shared-reviews/{STUDENT_ID}/sessions")
         assert resp.status_code == 401

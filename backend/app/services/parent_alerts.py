@@ -16,7 +16,7 @@ import logging
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import and_, desc, func, not_, select
+from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.erp import AbsenceJustification, AttendanceRecord
@@ -252,8 +252,6 @@ class ParentAlertService:
     # Helper: get user display name
     # ------------------------------------------------------------------
     async def _get_user_name(self, user_id: uuid.UUID) -> str:
-        result = await self.db.execute(
-            select(User.full_name).where(User.id == user_id)
-        )
+        result = await self.db.execute(select(User.full_name).where(User.id == user_id))
         name = result.scalar_one_or_none()
         return name or "Élève"

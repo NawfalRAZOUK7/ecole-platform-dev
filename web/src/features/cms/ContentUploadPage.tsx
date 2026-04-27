@@ -19,11 +19,7 @@ import {
   type CmsContentFormValues,
 } from './content-upload.types';
 import { useCreateCmsContent, useUploadCmsContentAsset } from './useCms';
-import {
-  fetchLevelMappings,
-  buildLevelMap,
-  type LevelAgeMapping,
-} from '@/services/levels.service';
+import { fetchLevelMappings, buildLevelMap, type LevelAgeMapping } from '@/services/levels.service';
 
 const languageOptions = [
   { value: 'fr', label: 'Francais' },
@@ -81,7 +77,6 @@ export function CmsContentUploadPage() {
     if (!current.target_age_max) {
       methods.setValue('target_age_max', mapping.default_age_max);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchedLevelBand, levelMap]);
 
   const contentTypeOptions = useMemo(
@@ -291,8 +286,8 @@ export function CmsContentUploadPage() {
                       marginTop: 2,
                     }}
                   >
-                    {watchedLevelBand.toUpperCase()} → {levelMap[watchedLevelBand].default_age_min}
-                    -{levelMap[watchedLevelBand].default_age_max} ans
+                    {watchedLevelBand.toUpperCase()} → {levelMap[watchedLevelBand].default_age_min}-
+                    {levelMap[watchedLevelBand].default_age_max} ans
                   </span>
                 ) : null}
               </div>

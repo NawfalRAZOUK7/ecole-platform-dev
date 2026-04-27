@@ -148,9 +148,7 @@ class ERPService:
             student_id=(
                 str(attendance_record.student_id) if attendance_record else None
             ),
-            session_date=(
-                session.session_date.isoformat() if session else None
-            ),
+            session_date=(session.session_date.isoformat() if session else None),
         ).model_dump()
 
     def _review_to_response(self, review: JustificationReview) -> dict:
@@ -534,9 +532,7 @@ class ERPService:
         )
         verify_parent_child_ownership(record.student_id, child_ids)
 
-        session = await self.repo.get_attendance_session(
-            record.attendance_session_id
-        )
+        session = await self.repo.get_attendance_session(record.attendance_session_id)
 
         existing = await self.repo.get_absence_justification_by_record(
             body.attendance_record_id

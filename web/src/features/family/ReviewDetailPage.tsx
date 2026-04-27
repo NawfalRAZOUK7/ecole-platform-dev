@@ -48,7 +48,7 @@ export function ReviewDetailPage() {
 
   if (detailQuery.isLoading) return <LoadingState />;
   if (detailQuery.isError) {
-    return <ErrorBanner message={t('errors.generic', 'Something went wrong.')} />;
+    return <ErrorBanner error={t('errors.generic', 'Something went wrong.')} />;
   }
 
   const session = detailQuery.data!;

@@ -261,15 +261,11 @@ export function Layout() {
   const rewards = rewardsQuery.data;
 
   useEffect(() => {
-    if (isStudent) {
-      document.documentElement.setAttribute('data-theme', 'kids');
-    } else {
-      document.documentElement.removeAttribute('data-theme');
-    }
+    document.documentElement.setAttribute('data-theme', isStudent ? 'kids' : theme);
     return () => {
       document.documentElement.removeAttribute('data-theme');
     };
-  }, [isStudent]);
+  }, [isStudent, theme]);
 
   const handleNavPrefetch = useCallback(
     (to: string) => {

@@ -343,9 +343,7 @@ class QuizRepository(BaseRepository):
             rows = rows[:limit]
 
         items = [(attempt, full_name) for attempt, full_name in rows]
-        next_cursor = (
-            encode_cursor(items[-1][0].id) if items and has_more else None
-        )
+        next_cursor = encode_cursor(items[-1][0].id) if items and has_more else None
         return items, next_cursor, has_more
 
     async def get_attempt_stats(

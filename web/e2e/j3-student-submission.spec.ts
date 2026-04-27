@@ -80,8 +80,8 @@ test.describe('J3 — Student submission journey', () => {
     // 1. Login as student
     await login(page, 'student');
 
-    // 2. Should land on /content (STD default)
-    await expect(page).toHaveURL(/\/content/);
+    // 2. Should land on the student home page (STD default)
+    await expect(page).toHaveURL(/\/student\/home/);
 
     // 3. Navigate to submissions page
     await page.locator('a[href="/submissions"]').click();
