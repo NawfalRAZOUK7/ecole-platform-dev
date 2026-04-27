@@ -1,6 +1,6 @@
 """h2 difficulty adaptations table
 
-Revision ID: a1b2c3d4e5f6
+Revision ID: a3b4c5d6e7f8
 Revises: f6e5d4c3b2a1
 Create Date: 2026-04-19 00:00:00.000000
 """
@@ -10,7 +10,7 @@ from __future__ import annotations
 import sqlalchemy as sa
 from alembic import op
 
-revision = "a1b2c3d4e5f6"
+revision = "a3b4c5d6e7f8"
 down_revision = "f6e5d4c3b2a1"
 branch_labels = None
 depends_on = None

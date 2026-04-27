@@ -13,6 +13,7 @@ export function LoadingState({ message }: LoadingStateProps) {
 
   return (
     <div
+      className="loading-state"
       role="status"
       aria-live="polite"
       aria-label={t('app.loading')}

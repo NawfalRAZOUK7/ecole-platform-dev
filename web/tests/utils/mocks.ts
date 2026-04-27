@@ -53,6 +53,27 @@ export const handlers = [
     return apiResponse(createUser());
   }),
 
+  http.get('/api/v1/me/profile', () => {
+    const user = createUser({ role: 'STD', full_name: 'Student Example' });
+
+    return apiResponse({
+      user_id: user.id,
+      email: user.email,
+      full_name: user.full_name,
+      phone: null,
+      role: user.role,
+      school_id: user.school_id,
+      student_profile: {
+        student_number: 'STD-001',
+        date_of_birth: '2017-09-01',
+        class_level: 'ce2',
+        nationality: 'MA',
+      },
+      parent_profile: null,
+      teacher_profile: null,
+    });
+  }),
+
   http.get('/api/v1/teacher/classes', () => {
     return apiResponse([
       createClass({ id: 'class-1', code: '6A', name: 'Class 6A' }),

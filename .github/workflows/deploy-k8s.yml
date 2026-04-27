@@ -82,9 +82,22 @@ jobs:
         uses: azure/setup-kubectl@v3
 
       - name: Configure kubeconfig
+        env:
+          KUBE_CONFIG_B64: ${{ secrets.KUBE_CONFIG }}
         run: |
-          mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
+          if [ -z "${KUBE_CONFIG_B64:-}" ]; then
+            echo "::error title=Missing KUBE_CONFIG secret::Add a base64-encoded kubeconfig to the KUBE_CONFIG GitHub Actions secret."
+            exit 1
+          fi
+
+          mkdir -p "$HOME/.kube"
+          if ! printf '%s' "$KUBE_CONFIG_B64" | base64 -d > "$HOME/.kube/config"; then
+            echo "::error title=Invalid KUBE_CONFIG secret::KUBE_CONFIG must be a valid base64-encoded kubeconfig file."
+            exit 1
+          fi
+
+          chmod 600 "$HOME/.kube/config"
+          kubectl config current-context
 
       - name: Determine environment
         id: env
@@ -144,7 +157,7 @@ jobs:
           exit 1
 
       - name: Rollback on failure
-        if: failure()
+        if: failure() && steps.env.outputs.namespace != ''
         run: |
           echo "Deployment failed — rolling back"
           helm rollback ecole-platform 0 \

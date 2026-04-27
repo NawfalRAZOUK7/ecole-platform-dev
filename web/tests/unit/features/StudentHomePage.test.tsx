@@ -102,10 +102,10 @@ describe('StudentHomePage', () => {
 
     await screen.findByText('320'); // Wait for data load
 
-    expect(screen.getByText('Progress')).toBeInTheDocument();
-    expect(screen.getByText('Rewards')).toBeInTheDocument();
-    expect(screen.getByText('News')).toBeInTheDocument();
-    expect(screen.getByText('Calendar')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /progress/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /rewards/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /announcements/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /calendar/i })).toBeInTheDocument();
   });
 
   it('shows loading state while rewards are loading', () => {
