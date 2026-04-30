@@ -158,6 +158,22 @@ from app.api.v1.shared_review import router as shared_review_router
 
 # G46 — Level-age mappings
 from app.api.v1.levels import router as levels_router
+
+# G49 — Academic Program Management & Student Academic History
+from app.api.v1.programs import (
+    enrollment_program_router as enrollment_program_router,
+    program_equivalences_router as program_equivalences_router,
+    programs_router as programs_router,
+)
+from app.api.v1.snapshots import (
+    snapshots_router as snapshots_router,
+    student_snapshots_router as student_snapshots_router,
+)
+from app.api.v1.eligibility import (
+    eligibility_router as eligibility_router,
+    student_eligibility_router as student_eligibility_router,
+)
+from app.api.v1.student_academic import router as student_academic_router
 from app.core.database import get_db
 from app.core.redis import get_redis
 
@@ -350,3 +366,13 @@ router.include_router(shared_review_router)
 
 # Mount sub-routers — G46 Level-age mappings
 router.include_router(levels_router)
+
+# Mount sub-routers — G49 Academic Program Management
+router.include_router(programs_router)
+router.include_router(enrollment_program_router)
+router.include_router(program_equivalences_router)
+router.include_router(snapshots_router)
+router.include_router(student_snapshots_router)
+router.include_router(eligibility_router)
+router.include_router(student_eligibility_router)
+router.include_router(student_academic_router)

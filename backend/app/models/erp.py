@@ -188,6 +188,11 @@ class Enrollment(TimestampMixin, SchoolScopedMixin, Base):
     """Student enrollment in a class for a period.
 
     INV-ERP-CLASS-ACTIVE: only one active enrollment per student per period.
+
+    G49: optional program_id captures the academic program (filière) the student
+    is enrolled under for this period. Nullable so historical enrollment rows
+    backfill cleanly. The historical record of *changes* lives in
+    ``program_assignment_events`` (append-only).
     """
 
     __tablename__ = "enrollments"
@@ -200,6 +205,12 @@ class Enrollment(TimestampMixin, SchoolScopedMixin, Base):
     )
     period_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("periods.id", ondelete="CASCADE"), nullable=False
+    )
+    program_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("programs.id", ondelete="RESTRICT"), nullable=True
+    )
+    program_version_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("program_versions.id", ondelete="RESTRICT"), nullable=True
     )
     status: Mapped[str] = mapped_column(
         PgEnum(
@@ -214,6 +225,9 @@ class Enrollment(TimestampMixin, SchoolScopedMixin, Base):
 
     # Relationships
     class_: Mapped["Class"] = relationship(back_populates="enrollments")
+    program: Mapped["Program | None"] = relationship(
+        "Program", foreign_keys=[program_id], lazy="raise_on_sql"
+    )
 
     __table_args__ = (
         # uq_enrollments_school_student_period_active — one active enrollment per student per period
@@ -229,6 +243,12 @@ class Enrollment(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_enrollments_class", "class_id"),
         Index("idx_enrollments_student_id", "student_id"),
         Index("idx_enrollments_period_id", "period_id"),
+        Index(
+            "idx_enrollments_school_student_program",
+            "school_id",
+            "student_id",
+            "program_id",
+        ),
     )
 
     @property
@@ -709,4 +729,460 @@ class TimetableException(TimestampMixin, SchoolScopedMixin, Base):
         return (
             f"<TimetableException id={_short_id(self.id)} "
             f"date={self.exception_date}>"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Academic Program Management & Student Academic History (G49)
+# ---------------------------------------------------------------------------
+
+
+class ProgramAssignmentReason(str, enum.Enum):
+    """Reason codes for ``ProgramAssignmentEvent``.
+
+    Modeled as an application-level enum (string column) rather than a
+    PostgreSQL enum type so the catalog can be extended without a migration.
+    """
+
+    INITIAL = "INITIAL"
+    TRANSFER = "TRANSFER"
+    PROMOTION = "PROMOTION"
+    CORRECTION = "CORRECTION"
+    READMISSION = "READMISSION"
+
+
+class Program(TimestampMixin, SchoolScopedMixin, Base):
+    """Academic program / filière (e.g., 'Sciences Maths', 'Lettres Modernes').
+
+    School-scoped catalog of tracks a student can be enrolled under for a
+    given period. Soft-disable via ``is_active = false``; never hard-delete
+    (FKs from ``enrollments`` and ``program_assignment_events`` use RESTRICT
+    to preserve historical truth).
+
+    Lightweight versioning shim:
+        - ``version_label`` and ``effective_from`` let admins record
+          curriculum revisions without a full ProgramVersion table.
+        - When real curriculum drift becomes meaningful, promote into a
+          dedicated ``program_versions`` table; the API contract already
+          carries program code + name, so consumers won't break.
+    """
+
+    __tablename__ = "programs"
+
+    code: Mapped[str] = mapped_column(String(50), nullable=False)
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    level: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    version_label: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="1.0"
+    )
+    effective_from: Mapped[date | None] = mapped_column(Date, nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint("school_id", "code", name="uq_programs_school_code"),
+        Index("idx_programs_school_active", "school_id", "is_active"),
+        Index("idx_programs_school_level", "school_id", "level"),
+    )
+
+    @validates("code")
+    def validate_code(self, key: str, value: str) -> str:
+        cleaned = value.strip().upper().replace(" ", "-")
+        if not cleaned:
+            raise ValueError("Program code is required")
+        return cleaned
+
+    @validates("name")
+    def validate_name(self, key: str, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Program name is required")
+        return cleaned
+
+    def __repr__(self) -> str:
+        return (
+            f"<Program id={_short_id(self.id)} code={self.code} "
+            f"version={self.version_label}>"
+        )
+
+
+class ProgramVersion(TimestampMixin, SchoolScopedMixin, Base):
+    """A specific curriculum version of a Program (G50a / Phase 3.1).
+
+    Promotion of the lightweight ``programs.version_label`` shim into a
+    proper entity. Each ``Program`` has 1..N versions; an Enrollment can
+    optionally pin to a specific version via ``Enrollment.program_version_id``.
+    Append-only-ish: versions are soft-disabled via ``is_active = false`` and
+    their ``retired_at`` date can be set; we never hard-delete because
+    enrollments and assignment-event rows reference them with RESTRICT.
+    """
+
+    __tablename__ = "program_versions"
+
+    program_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("programs.id", ondelete="CASCADE"), nullable=False
+    )
+    version_label: Mapped[str] = mapped_column(String(20), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    effective_from: Mapped[date | None] = mapped_column(Date, nullable=True)
+    retired_at: Mapped[date | None] = mapped_column(Date, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+    __table_args__ = (
+        UniqueConstraint(
+            "program_id",
+            "version_label",
+            name="uq_program_versions_program_label",
+        ),
+        Index(
+            "idx_program_versions_school_program",
+            "school_id",
+            "program_id",
+        ),
+        Index(
+            "idx_program_versions_program_active",
+            "program_id",
+            "is_active",
+        ),
+    )
+
+    @validates("version_label")
+    def validate_version_label(self, key: str, value: str) -> str:
+        cleaned = (value or "").strip()
+        if not cleaned:
+            raise ValueError("ProgramVersion version_label is required")
+        return cleaned
+
+    def __repr__(self) -> str:
+        return (
+            f"<ProgramVersion id={_short_id(self.id)} "
+            f"program={_short_id(self.program_id)} label={self.version_label}>"
+        )
+
+
+class ProgramAssignmentEvent(SchoolScopedMixin, Base):
+    """Append-only audit log of student program changes (G49).
+
+    Every program change for a student writes one row here, in the same
+    transaction as the underlying enrollment write. Rows are NEVER updated
+    or deleted — a database trigger (created in the G49 migration) refuses
+    UPDATE / DELETE at the SQL level as defence-in-depth.
+
+    Use cases:
+        - Reconstruct *why* a student switched programs without inferring
+          from enrollment timestamps.
+        - Distinguish an INITIAL assignment from a mid-year TRANSFER from a
+          year-rollover PROMOTION.
+        - Power the ``GET /students/{id}/program-history`` endpoint.
+
+    Note: this model intentionally has no ``updated_at`` and no
+    ``TimestampMixin`` — the row is written once and never modified.
+    """
+
+    __tablename__ = "program_assignment_events"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, default=uuid.uuid4
+    )
+
+    student_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    academic_year_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("academic_years.id", ondelete="CASCADE"), nullable=False
+    )
+    period_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("periods.id", ondelete="SET NULL"), nullable=True
+    )
+    from_program_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("programs.id", ondelete="RESTRICT"), nullable=True
+    )
+    to_program_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("programs.id", ondelete="RESTRICT"), nullable=False
+    )
+    from_program_version_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("program_versions.id", ondelete="RESTRICT"), nullable=True
+    )
+    to_program_version_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("program_versions.id", ondelete="RESTRICT"), nullable=True
+    )
+    from_enrollment_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("enrollments.id", ondelete="SET NULL"), nullable=True
+    )
+    to_enrollment_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("enrollments.id", ondelete="SET NULL"), nullable=True
+    )
+    reason_code: Mapped[str] = mapped_column(String(30), nullable=False)
+    reason_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    actor_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    occurred_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "reason_code IN ("
+            "'INITIAL', 'TRANSFER', 'PROMOTION', 'CORRECTION', 'READMISSION'"
+            ")",
+            name="ck_prog_assignment_events_reason_code",
+        ),
+        CheckConstraint(
+            "from_program_id IS DISTINCT FROM to_program_id",
+            name="ck_prog_assignment_events_changed",
+        ),
+        Index(
+            "idx_prog_events_school_student_occurred",
+            "school_id",
+            "student_id",
+            "occurred_at",
+        ),
+        Index(
+            "idx_prog_events_school_year",
+            "school_id",
+            "academic_year_id",
+        ),
+        Index("idx_prog_events_to_program", "to_program_id"),
+    )
+
+    @validates("reason_code")
+    def validate_reason_code(self, key: str, value: str) -> str:
+        allowed = {r.value for r in ProgramAssignmentReason}
+        cleaned = (value or "").strip().upper()
+        if cleaned not in allowed:
+            raise ValueError(
+                "ProgramAssignmentEvent.reason_code must be one of: "
+                + ", ".join(sorted(allowed))
+            )
+        return cleaned
+
+    def __repr__(self) -> str:
+        return (
+            f"<ProgramAssignmentEvent id={_short_id(self.id)} "
+            f"student={_short_id(self.student_id)} reason={self.reason_code}>"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Program equivalences (Phase 3.2 / G50b)
+# ---------------------------------------------------------------------------
+class ProgramEquivalenceKind(str, enum.Enum):
+    """Kinds of inter-program equivalence; mirrored in the
+    ``ck_program_equivalences_kind`` CHECK constraint."""
+
+    EQUIVALENT = "EQUIVALENT"
+    SUPERSEDES = "SUPERSEDES"
+    PARTIAL = "PARTIAL"
+
+
+class ProgramEquivalence(TimestampMixin, SchoolScopedMixin, Base):
+    """Declared equivalence between two programs.
+
+    Directional (``from`` → ``to``). Not transitive at write time — the
+    transcript service computes reachability if it needs to chain.
+    """
+
+    __tablename__ = "program_equivalences"
+
+    from_program_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("programs.id", ondelete="CASCADE"), nullable=False
+    )
+    to_program_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("programs.id", ondelete="CASCADE"), nullable=False
+    )
+    kind: Mapped[str] = mapped_column(String(20), nullable=False)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    ratified_at: Mapped[date | None] = mapped_column(Date, nullable=True)
+    ratified_by: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "school_id",
+            "from_program_id",
+            "to_program_id",
+            name="uq_program_equivalences_school_pair",
+        ),
+        CheckConstraint(
+            "kind IN ('EQUIVALENT', 'SUPERSEDES', 'PARTIAL')",
+            name="ck_program_equivalences_kind",
+        ),
+        CheckConstraint(
+            "from_program_id <> to_program_id",
+            name="ck_program_equivalences_distinct_programs",
+        ),
+        Index(
+            "idx_program_equivalences_school_from",
+            "school_id",
+            "from_program_id",
+        ),
+        Index(
+            "idx_program_equivalences_school_to",
+            "school_id",
+            "to_program_id",
+        ),
+    )
+
+    @validates("kind")
+    def validate_kind(self, key: str, value: str) -> str:
+        allowed = {k.value for k in ProgramEquivalenceKind}
+        cleaned = (value or "").strip().upper()
+        if cleaned not in allowed:
+            raise ValueError(
+                "ProgramEquivalence.kind must be one of: "
+                + ", ".join(sorted(allowed))
+            )
+        return cleaned
+
+    def __repr__(self) -> str:
+        return (
+            f"<ProgramEquivalence id={_short_id(self.id)} "
+            f"{_short_id(self.from_program_id)}→{_short_id(self.to_program_id)} "
+            f"kind={self.kind}>"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Academic snapshots (Phase 3.3 / G50c)
+# ---------------------------------------------------------------------------
+class AcademicSnapshotKind(str, enum.Enum):
+    YEAR_END = "YEAR_END"
+    MID_YEAR = "MID_YEAR"
+    MANUAL = "MANUAL"
+
+
+class AcademicSnapshot(SchoolScopedMixin, Base):
+    """Frozen JSONB document for a (student, academic_year).
+
+    Append-only by service convention. We don't install a DB trigger
+    because admins are allowed to delete and re-take snapshots when a
+    snapshot was taken with bad inputs (e.g. before all grades were
+    finalized). The service layer logs deletions to audit_logs.
+    """
+
+    __tablename__ = "academic_snapshots"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+
+    student_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    academic_year_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("academic_years.id", ondelete="CASCADE"), nullable=False
+    )
+    snapshot_kind: Mapped[str] = mapped_column(String(20), nullable=False)
+    snapshot_data: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    taken_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    taken_by: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "snapshot_kind IN ('YEAR_END', 'MID_YEAR', 'MANUAL')",
+            name="ck_academic_snapshots_kind",
+        ),
+        Index(
+            "idx_academic_snapshots_student_year",
+            "school_id",
+            "student_id",
+            "academic_year_id",
+        ),
+        Index(
+            "idx_academic_snapshots_taken_at",
+            "school_id",
+            "taken_at",
+        ),
+    )
+
+    @validates("snapshot_kind")
+    def validate_kind(self, key: str, value: str) -> str:
+        allowed = {k.value for k in AcademicSnapshotKind}
+        cleaned = (value or "").strip().upper()
+        if cleaned not in allowed:
+            raise ValueError(
+                "AcademicSnapshot.snapshot_kind must be one of: "
+                + ", ".join(sorted(allowed))
+            )
+        return cleaned
+
+    def __repr__(self) -> str:
+        return (
+            f"<AcademicSnapshot id={_short_id(self.id)} "
+            f"student={_short_id(self.student_id)} "
+            f"year={_short_id(self.academic_year_id)} kind={self.snapshot_kind}>"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Eligibility rules (Phase 3.4 / G50d)
+# ---------------------------------------------------------------------------
+class EligibilityRuleKind(str, enum.Enum):
+    PROMOTION = "PROMOTION"
+    ADMISSION = "ADMISSION"
+    TRANSFER = "TRANSFER"
+
+
+class EligibilityRule(TimestampMixin, SchoolScopedMixin, Base):
+    """Declarative rule: 'student must satisfy condition X to do action Y on program Z'.
+
+    Service-side evaluator dispatches on ``condition_type`` and reads
+    ``condition_params`` (JSONB). Built-ins are documented in the service.
+    """
+
+    __tablename__ = "eligibility_rules"
+
+    kind: Mapped[str] = mapped_column(String(20), nullable=False)
+    target_program_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("programs.id", ondelete="CASCADE"), nullable=False
+    )
+    condition_type: Mapped[str] = mapped_column(String(40), nullable=False)
+    condition_params: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    message_key: Mapped[str] = mapped_column(String(100), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+    __table_args__ = (
+        CheckConstraint(
+            "kind IN ('PROMOTION', 'ADMISSION', 'TRANSFER')",
+            name="ck_eligibility_rules_kind",
+        ),
+        Index(
+            "idx_eligibility_rules_school_kind_target",
+            "school_id",
+            "kind",
+            "target_program_id",
+        ),
+        Index(
+            "idx_eligibility_rules_active",
+            "school_id",
+            "is_active",
+        ),
+    )
+
+    @validates("kind")
+    def validate_kind(self, key: str, value: str) -> str:
+        allowed = {k.value for k in EligibilityRuleKind}
+        cleaned = (value or "").strip().upper()
+        if cleaned not in allowed:
+            raise ValueError(
+                "EligibilityRule.kind must be one of: "
+                + ", ".join(sorted(allowed))
+            )
+        return cleaned
+
+    def __repr__(self) -> str:
+        return (
+            f"<EligibilityRule id={_short_id(self.id)} kind={self.kind} "
+            f"target={_short_id(self.target_program_id)} "
+            f"condition={self.condition_type}>"
         )

@@ -28,6 +28,7 @@ class EnrollmentCreateRequest(BaseModel):
     student_id: uuid.UUID
     class_id: uuid.UUID
     period_id: uuid.UUID
+    program_id: uuid.UUID | None = None
 
 
 @router.get(
@@ -87,6 +88,7 @@ async def create_enrollment(
         student_id=body.student_id,
         class_id=body.class_id,
         period_id=body.period_id,
+        program_id=body.program_id,
         auth=auth,
         ip_address=get_client_ip(request),
     )

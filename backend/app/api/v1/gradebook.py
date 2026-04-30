@@ -102,6 +102,13 @@ async def get_student_transcript(
 async def get_gradebook(
     class_id: uuid.UUID,
     period_id: uuid.UUID,
+    program_id: uuid.UUID | None = Query(
+        None,
+        description=(
+            "G49: filter to students whose enrollment in this (class, period) "
+            "is on the given program (filière)."
+        ),
+    ),
     auth: AuthContext = Depends(requires_permission("PERM-LMS:gradebook:read")),
     db: AsyncSession = Depends(get_db),
 ):
@@ -110,6 +117,7 @@ async def get_gradebook(
         await service.get_gradebook(
             class_id=class_id,
             period_id=period_id,
+            program_id=program_id,
             auth=auth,
         )
     )

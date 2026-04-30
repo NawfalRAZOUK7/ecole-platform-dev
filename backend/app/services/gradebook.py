@@ -510,6 +510,7 @@ class GradebookService(LMSServiceBase):
         class_id: uuid.UUID,
         period_id: uuid.UUID,
         auth: AuthContext,
+        program_id: uuid.UUID | None = None,
     ) -> dict[str, Any]:
         class_room, period = await self._ensure_class_access(
             class_id=class_id,
@@ -528,12 +529,35 @@ class GradebookService(LMSServiceBase):
             allow_empty_categories=True,
         )
 
+        # G49 Phase 2.5: optional program filter — restrict the row set to
+        # students whose enrollment in this (class, period) is on the given
+        # program. Computed once outside the row loop.
+        program_filtered_ids: set[uuid.UUID] | None = None
+        if program_id is not None:
+            from sqlalchemy import select as _sa_select
+            from app.models.erp import Enrollment as _Enrollment
+
+            result = await self.db.execute(
+                _sa_select(_Enrollment.student_id).where(
+                    _Enrollment.school_id == auth.school_id,
+                    _Enrollment.class_id == class_id,
+                    _Enrollment.period_id == period_id,
+                    _Enrollment.program_id == program_id,
+                )
+            )
+            program_filtered_ids = {row for row in result.scalars().all()}
+
         rows = []
         for record in metrics["ordered_records"]:
             student_id = record["student_id"]
             if (
                 visible_student_ids is not None
                 and student_id not in visible_student_ids
+            ):
+                continue
+            if (
+                program_filtered_ids is not None
+                and student_id not in program_filtered_ids
             ):
                 continue
 

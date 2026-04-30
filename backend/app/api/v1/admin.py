@@ -27,6 +27,7 @@ from app.core.permissions import (
     PERM_ADM_USER_MANAGE,
     PERM_ADM_USER_READ,
     PERM_ERP_ABSENCE_REVIEW,
+    PERM_ERP_ENROLLMENT_READ,
     PERM_IAM_PARENT_LINK_CREATE,
     PERM_IAM_PARENT_LINK_DELETE,
     PERM_IAM_PARENT_LINK_READ,
@@ -38,6 +39,7 @@ from app.core.response import list_response, success_response
 from app.schemas.auth import BatchRegisterRequest
 from app.services.admin import AdminService
 from app.services.auth import AuthService
+from app.services.program_service import ProgramService
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -103,6 +105,58 @@ async def list_users(
         limit=limit,
     )
     return list_response(data, next_cursor=next_cursor, has_more=has_more)
+
+
+@router.get(
+    "/enrollments",
+    summary="List enrollments in school (admin/director)",
+    response_description=(
+        "Paginated school-wide enrollments with student, class, period, "
+        "academic year and program embedded. Supports class_id, period_id, "
+        "status, and missing_program filters."
+    ),
+)
+async def list_enrollments_admin(
+    auth: AuthContext = Depends(requires_permission(PERM_ERP_ENROLLMENT_READ)),
+    db: AsyncSession = Depends(get_db),
+    class_id: uuid.UUID | None = Query(
+        None, description="Filter by class id."
+    ),
+    period_id: uuid.UUID | None = Query(
+        None, description="Filter by period id."
+    ),
+    status: str | None = Query(
+        None,
+        description=(
+            "Filter by enrollment status. One of: active, transferred, dropped."
+        ),
+    ),
+    missing_program: bool = Query(
+        False,
+        description=(
+            "If true, return only enrollments without an assigned program "
+            "(the 'needs program assignment' backlog)."
+        ),
+    ),
+    cursor: str | None = Query(None),
+    limit: int = Query(20, ge=1, le=100),
+):
+    """Admin/Director enrollment list — used by the EnrollmentsPage UI.
+
+    Distinct from the legacy ``GET /enrollments`` (which returns the
+    *current student's* active enrollments — a backward-compatibility shim).
+    """
+    service = ProgramService(db)
+    items, next_cursor, has_more = await service.list_enrollments_for_admin(
+        auth=auth,
+        class_id=class_id,
+        period_id=period_id,
+        status=status,
+        missing_program=missing_program,
+        cursor=cursor,
+        limit=limit,
+    )
+    return list_response(items, next_cursor=next_cursor, has_more=has_more)
 
 
 @router.post(

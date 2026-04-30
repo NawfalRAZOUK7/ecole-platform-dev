@@ -80,6 +80,13 @@ async def get_attendance_trends(
 async def list_attendance_alerts(
     period_id: uuid.UUID | None = Query(None),
     threshold: str | None = Query(None, pattern="^(warning|critical)$"),
+    program_id: uuid.UUID | None = Query(
+        None,
+        description=(
+            "G49: filter to alerts for students enrolled in the given program "
+            "for the alert's period."
+        ),
+    ),
     auth: AuthContext = Depends(
         requires_permission("PERM-ERP:attendance-alert:manage")
     ),
@@ -90,6 +97,7 @@ async def list_attendance_alerts(
         auth=auth,
         period_id=period_id,
         threshold_exceeded=threshold,
+        program_id=program_id,
     )
     return list_response(items, next_cursor=None, has_more=False)
 

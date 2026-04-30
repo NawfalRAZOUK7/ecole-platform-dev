@@ -177,6 +177,7 @@ class AttendanceAnalyticsRepository(BaseRepository):
         school_id: uuid.UUID,
         period_id: uuid.UUID | None = None,
         threshold_exceeded: str | None = None,
+        program_id: uuid.UUID | None = None,
     ) -> list[AttendanceAlert]:
         query = select(AttendanceAlert).where(AttendanceAlert.school_id == school_id)
         if period_id is not None:
@@ -184,6 +185,19 @@ class AttendanceAnalyticsRepository(BaseRepository):
         if threshold_exceeded is not None:
             query = query.where(
                 AttendanceAlert.threshold_exceeded == threshold_exceeded
+            )
+        if program_id is not None:
+            # G49 Phase 2.5: filter to alerts for students enrolled in the
+            # given program for the alert's period.
+            query = query.where(
+                select(Enrollment.id)
+                .where(
+                    Enrollment.school_id == AttendanceAlert.school_id,
+                    Enrollment.student_id == AttendanceAlert.student_id,
+                    Enrollment.period_id == AttendanceAlert.period_id,
+                    Enrollment.program_id == program_id,
+                )
+                .exists()
             )
         result = await self.db.execute(
             query.order_by(

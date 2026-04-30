@@ -125,6 +125,10 @@ class EnrollmentResponse(BaseModel):
     period_id: str
     school_id: str
     status: str
+    # G49 Phase 1 follow-up: populated when the enrollment carries a program,
+    # null otherwise. Additive — clients that don't read this field continue
+    # to see the same shape as before.
+    program_id: str | None = None
 
 
 # ---------------------------------------------------------------------------

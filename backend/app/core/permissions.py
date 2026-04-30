@@ -81,6 +81,10 @@ PERM_ERP_ABSENCE_REVIEW = "PERM-ERP:absence:review"
 PERM_ERP_ATTENDANCE_ANALYTICS_READ = "PERM-ERP:attendance-analytics:read"
 PERM_ERP_ATTENDANCE_ALERT_MANAGE = "PERM-ERP:attendance-alert:manage"
 
+# ERP — Programs / Filières (G49 — Academic Program Management)
+PERM_ERP_PROGRAM_READ = "PERM-ERP:program:read"
+PERM_ERP_PROGRAM_MANAGE = "PERM-ERP:program:manage"
+
 # ERP — Timetable (Phase 11A)
 PERM_ERP_TIMETABLE_CREATE = "PERM-ERP:timetable:create"
 PERM_ERP_TIMETABLE_READ = "PERM-ERP:timetable:read"
@@ -333,6 +337,11 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_ERP_ASSIGNMENT_UPDATE,
         PERM_ERP_ABSENCE_REVIEW,
         PERM_ERP_ATTENDANCE_ALERT_MANAGE,
+        # ERP — Programs (G49) — ADM manages catalog + assigns programs
+        PERM_ERP_PROGRAM_READ,
+        PERM_ERP_PROGRAM_MANAGE,
+        # ERP — Enrollment list (G49 Phase 2.b) — admin enrollments page
+        PERM_ERP_ENROLLMENT_READ,
         # ERP — Timetable administration beyond DIR/TCH inherited baseline
         PERM_ERP_TIMETABLE_CREATE,
         PERM_ERP_TIMETABLE_UPDATE,
@@ -375,6 +384,11 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # ERP / LMS oversight
         PERM_ERP_TIMETABLE_GENERATE,
         PERM_ERP_TIMETABLE_CONSTRAINT_MANAGE,
+        # ERP — Programs (G49) — DIR can manage catalog + read history
+        PERM_ERP_PROGRAM_READ,
+        PERM_ERP_PROGRAM_MANAGE,
+        # ERP — Enrollment list (G49 Phase 2.b)
+        PERM_ERP_ENROLLMENT_READ,
         PERM_LMS_COURSE_READ,
         PERM_LMS_ACTIVITY_READ,
         # Reporting & Analytics (Phase 14)
@@ -455,6 +469,8 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_ERP_CLASS_READ,
         PERM_ERP_ATTENDANCE_MARK,
         PERM_ERP_ATTENDANCE_ANALYTICS_READ,
+        # ERP — Programs (G49) — TCH reads program catalog & student program
+        PERM_ERP_PROGRAM_READ,
         # ERP — Timetable (Phase 11A)
         PERM_ERP_TIMETABLE_READ,
         PERM_ERP_TIMETABLE_EXCEPTION_CREATE,
@@ -587,6 +603,8 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # ERP — Timetable (Phase 11A)
         PERM_ERP_TIMETABLE_READ,
         PERM_ERP_TIMETABLE_EXCEPTION_READ,
+        # ERP — Programs (G49) — PAR reads child program catalog & history
+        PERM_ERP_PROGRAM_READ,
         # LMS — read child results + content assets
         PERM_LMS_RESULT_READ,
         PERM_LMS_GRADEBOOK_READ,
@@ -654,6 +672,8 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         # ERP — Timetable (Phase 11A)
         PERM_ERP_TIMETABLE_READ,
         PERM_ERP_TIMETABLE_EXCEPTION_READ,
+        # ERP — Programs (G49) — STD reads program catalog & own program history
+        PERM_ERP_PROGRAM_READ,
         # LMS — submit + read progress + files
         PERM_LMS_ASSIGNMENT_READ,
         PERM_LMS_SUBMISSION_CREATE,

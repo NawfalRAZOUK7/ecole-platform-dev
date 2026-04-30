@@ -46,6 +46,13 @@ async def analytics_overview(
 async def analytics_attendance(
     period: str = Query("weekly", pattern="^(daily|weekly|monthly)$"),
     class_id: uuid.UUID | None = Query(None),
+    program_id: uuid.UUID | None = Query(
+        None,
+        description=(
+            "G49: filter to students whose enrollment in the relevant period "
+            "belongs to the given program (filière)."
+        ),
+    ),
     from_date: date | None = Query(None, alias="from"),
     to_date: date | None = Query(None, alias="to"),
     compare: bool = Query(False),
@@ -66,6 +73,7 @@ async def analytics_attendance(
             to_date=end_date,
             period=period,
             class_id=class_id,
+            program_id=program_id,
             compare=compare,
         )
     )
@@ -75,6 +83,13 @@ async def analytics_attendance(
 async def analytics_grades(
     period: str | None = Query(None),
     subject: str | None = Query(None),
+    program_id: uuid.UUID | None = Query(
+        None,
+        description=(
+            "G49: filter to students with any enrollment in the given program "
+            "(filière)."
+        ),
+    ),
     from_date: date | None = Query(None, alias="from"),
     to_date: date | None = Query(None, alias="to"),
     compare: bool = Query(False),
@@ -93,6 +108,7 @@ async def analytics_grades(
             from_date=start_date,
             to_date=end_date,
             subject=subject,
+            program_id=program_id,
             compare=compare,
         )
     )

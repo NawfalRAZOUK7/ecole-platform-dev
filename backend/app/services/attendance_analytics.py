@@ -291,6 +291,7 @@ class AttendanceAnalyticsService:
         auth: AuthContext,
         period_id: uuid.UUID | None = None,
         threshold_exceeded: str | None = None,
+        program_id: uuid.UUID | None = None,
     ) -> list[dict]:
         if auth.role != ADM:
             raise NotFoundError("Attendance alerts not found", error_code="ERR-ERP-404")
@@ -302,6 +303,7 @@ class AttendanceAnalyticsService:
             school_id=auth.school_id,
             period_id=period_id,
             threshold_exceeded=threshold_exceeded,
+            program_id=program_id,
         )
         student_names = await self.repo.list_user_names(
             user_ids=list({alert.student_id for alert in alerts})

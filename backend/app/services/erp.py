@@ -83,6 +83,11 @@ class ERPService:
             period_id=str(enrollment.period_id),
             school_id=str(enrollment.school_id),
             status=enrollment.status,
+            program_id=(
+                str(enrollment.program_id)
+                if enrollment.program_id is not None
+                else None
+            ),
         ).model_dump()
 
     def _teacher_assignment_to_response(
@@ -296,6 +301,7 @@ class ERPService:
         period_id: uuid.UUID,
         auth: AuthContext,
         ip_address: str | None,
+        program_id: uuid.UUID | None = None,
     ) -> dict:
         student = await self.repo.get_user_by_id(student_id)
         if student is None:
@@ -317,6 +323,26 @@ class ERPService:
                 "Period is not active",
                 error_code="ERR-ERP-409",
             )
+
+        # G49 Phase 1 follow-up: optional program assignment on creation.
+        # Validate before any writes so we never half-create.
+        program = None
+        if program_id is not None:
+            from sqlalchemy import select as _select
+            from app.models.erp import Program as _Program
+
+            program_result = await self.db.execute(
+                _select(_Program).where(_Program.id == program_id)
+            )
+            program = program_result.scalar_one_or_none()
+            if program is None:
+                raise NotFoundError("Program not found", error_code="ERR-ERP-404")
+            verify_school_boundary(program.school_id, auth)
+            if not program.is_active:
+                raise ConflictError(
+                    "Program is not active",
+                    error_code="ERR-ERP-409",
+                )
 
         existing = await self.repo.get_active_enrollment(
             student_id=student_id,
@@ -350,7 +376,39 @@ class ERPService:
                 period_id=period_id,
                 school_id=auth.school_id,
                 status="active",
+                program_id=program_id,
             )
+
+            # G49: when a program is assigned at creation, mirror the same
+            # contract as POST /enrollments/{id}/program — write one
+            # ProgramAssignmentEvent (reason_code = INITIAL) in the same
+            # transaction. This keeps program-history consistent regardless of
+            # whether the program was set on create or via a follow-up call.
+            if program_id is not None:
+                from datetime import datetime, timezone
+                from app.models.erp import (
+                    ProgramAssignmentEvent,
+                    ProgramAssignmentReason,
+                )
+
+                now = datetime.now(timezone.utc)
+                event = ProgramAssignmentEvent(
+                    school_id=auth.school_id,
+                    student_id=student_id,
+                    academic_year_id=period.academic_year_id,
+                    period_id=period_id,
+                    from_program_id=None,
+                    to_program_id=program_id,
+                    from_enrollment_id=enrollment.id,
+                    to_enrollment_id=enrollment.id,
+                    reason_code=ProgramAssignmentReason.INITIAL.value,
+                    reason_note=None,
+                    actor_user_id=auth.user_id,
+                    occurred_at=now,
+                    created_at=now,
+                )
+                uow.session.add(event)
+                await uow.session.flush()
 
             await audit.log_event(
                 school_id=auth.school_id,
@@ -364,6 +422,9 @@ class ERPService:
                     "class_id": str(class_id),
                     "period_id": str(period_id),
                     "status": "active",
+                    "program_id": (
+                        str(program_id) if program_id is not None else None
+                    ),
                 },
                 ip_address=ip_address,
             )

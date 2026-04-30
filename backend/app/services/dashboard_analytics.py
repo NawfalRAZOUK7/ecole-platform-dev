@@ -201,6 +201,7 @@ class DashboardAnalyticsService:
         period: str,
         class_id: uuid.UUID | None,
         compare: bool,
+        program_id: uuid.UUID | None = None,
     ) -> dict[str, Any]:
         cache_key = self._cache_key(
             school_id,
@@ -209,6 +210,7 @@ class DashboardAnalyticsService:
             to_date=to_date.isoformat(),
             period=period,
             class_id=str(class_id) if class_id else "",
+            program_id=str(program_id) if program_id else "",
             compare=str(compare).lower(),
         )
         cached = await self._get_cached(cache_key)
@@ -224,6 +226,7 @@ class DashboardAnalyticsService:
             to_date=to_date,
             class_id=class_id,
             bucket=bucket,
+            program_id=program_id,
         )
         total = 0
         present = 0
@@ -257,6 +260,7 @@ class DashboardAnalyticsService:
                 period=period,
                 class_id=class_id,
                 compare=False,
+                program_id=program_id,
             )
             previous_rate = previous_data["summary"]["rate"]["current"]
 
@@ -265,6 +269,7 @@ class DashboardAnalyticsService:
             "to_date": to_date.isoformat(),
             "period": period,
             "class_id": str(class_id) if class_id else None,
+            "program_id": str(program_id) if program_id else None,
             "summary": {
                 "rate": _comparison_metric(
                     (present / total) * 100 if total > 0 else 0.0,
@@ -285,6 +290,7 @@ class DashboardAnalyticsService:
         to_date: date,
         subject: str | None,
         compare: bool,
+        program_id: uuid.UUID | None = None,
     ) -> dict[str, Any]:
         cache_key = self._cache_key(
             school_id,
@@ -292,6 +298,7 @@ class DashboardAnalyticsService:
             from_date=from_date.isoformat(),
             to_date=to_date.isoformat(),
             subject=subject or "",
+            program_id=str(program_id) if program_id else "",
             compare=str(compare).lower(),
         )
         cached = await self._get_cached(cache_key)
@@ -304,6 +311,7 @@ class DashboardAnalyticsService:
             from_dt=from_dt,
             to_dt=to_dt,
             subject=subject,
+            program_id=program_id,
         )
         buckets = {"0-5": 0, "5-10": 0, "10-15": 0, "15-20": 0}
         for score in scores:
@@ -326,6 +334,7 @@ class DashboardAnalyticsService:
                 to_date=from_date - timedelta(days=1),
                 subject=subject,
                 compare=False,
+                program_id=program_id,
             )
             previous_average = previous_data["summary"]["average"]["current"]
 
@@ -333,6 +342,7 @@ class DashboardAnalyticsService:
             "from_date": from_date.isoformat(),
             "to_date": to_date.isoformat(),
             "subject": subject,
+            "program_id": str(program_id) if program_id else None,
             "summary": {
                 "average": _comparison_metric(current_average, previous_average),
                 "count": len(scores),

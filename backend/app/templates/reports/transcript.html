@@ -1,0 +1,230 @@
+{% extends "reports/base.html" %}
+{% block content %}
+{% set student = transcript.student or {} %}
+{% set school = transcript.school or {} %}
+{% set year = transcript.academic_year or {} %}
+{% set source = transcript.source or {} %}
+{% set enrollments = transcript.enrollments or [] %}
+{% set events = transcript.program_events or [] %}
+{% set grades = transcript.grades_summary or [] %}
+{% set attendance = transcript.attendance_summary or {} %}
+{% set equivalences = transcript.equivalence_resolutions or [] %}
+
+<table class="plain-table">
+  <tr>
+    <td style="width: 60%;">
+      <h2>{% if lang == 'ar' %}هوية التلميذ{% elif lang == 'en' %}Student Identity{% else %}Identite eleve{% endif %}</h2>
+      <table class="kv-table">
+        <tr>
+          <th>{% if lang == 'ar' %}الاسم الكامل{% elif lang == 'en' %}Full Name{% else %}Nom complet{% endif %}</th>
+          <td>{{ student.full_name or "—" }}</td>
+        </tr>
+        <tr>
+          <th>{% if lang == 'ar' %}البريد{% elif lang == 'en' %}Email{% else %}E-mail{% endif %}</th>
+          <td>{{ student.email or "—" }}</td>
+        </tr>
+        <tr>
+          <th>{% if lang == 'ar' %}المؤسسة{% elif lang == 'en' %}School{% else %}Ecole{% endif %}</th>
+          <td>{{ school.name or "—" }}</td>
+        </tr>
+        <tr>
+          <th>{% if lang == 'ar' %}السنة الدراسية{% elif lang == 'en' %}Academic Year{% else %}Annee scolaire{% endif %}</th>
+          <td>{{ year.label or period }}</td>
+        </tr>
+      </table>
+    </td>
+    <td style="width: 40%; {% if is_rtl %}padding-right: 12px;{% else %}padding-left: 12px;{% endif %}">
+      <div class="section-box print-avoid" style="margin-top: 0;">
+        <div class="summary-label">{% if lang == 'ar' %}نوع المصدر{% elif lang == 'en' %}Source Type{% else %}Type de source{% endif %}</div>
+        <div class="summary-value" style="font-size: 15px;">{{ source_label }}</div>
+        <div class="compact-meta">{{ year.label or period }}</div>
+        <p class="muted small" style="margin-top: 8px;">
+          {% if lang == 'ar' %}معرف التلميذ{% elif lang == 'en' %}Student ID{% else %}ID eleve{% endif %}: {{ student.id or "—" }}
+        </p>
+        <p class="muted small">
+          {% if lang == 'ar' %}نسخة المخطط{% elif lang == 'en' %}Schema version{% else %}Version schema{% endif %}: {{ source.schema_version or "—" }}
+        </p>
+        {% if source.snapshot_id %}
+        <p class="muted small mono">
+          {% if lang == 'ar' %}اللقطة{% elif lang == 'en' %}Snapshot{% else %}Snapshot{% endif %}: {{ source.snapshot_id }}
+        </p>
+        {% endif %}
+      </div>
+    </td>
+  </tr>
+</table>
+
+<table class="summary-table">
+  <tr>
+    <td>
+      <div class="summary-label">{% if lang == 'ar' %}الفترات{% elif lang == 'en' %}Enrollments{% else %}Inscriptions{% endif %}</div>
+      <div class="summary-value">{{ enrollments | length }}</div>
+    </td>
+    <td>
+      <div class="summary-label">{% if lang == 'ar' %}تغييرات المسار{% elif lang == 'en' %}Program Changes{% else %}Changements de filiere{% endif %}</div>
+      <div class="summary-value">{{ events | length }}</div>
+    </td>
+    <td>
+      <div class="summary-label">{% if lang == 'ar' %}ملخصات النقط{% elif lang == 'en' %}Grade Summaries{% else %}Syntheses notes{% endif %}</div>
+      <div class="summary-value">{{ grades | length }}</div>
+    </td>
+    <td>
+      <div class="summary-label">{% if lang == 'ar' %}حالات الحضور{% elif lang == 'en' %}Attendance States{% else %}Etats presence{% endif %}</div>
+      <div class="summary-value">{{ attendance | length }}</div>
+    </td>
+  </tr>
+</table>
+
+<h2>{% if lang == 'ar' %}التسلسل الدراسي{% elif lang == 'en' %}Academic Timeline{% else %}Chronologie academique{% endif %}</h2>
+<p class="muted small">
+  {% if lang == 'ar' %}المسار الدراسي الفعلي عبر الفترات والاقسام والنسخ المعتمدة.{% elif lang == 'en' %}Actual academic path across periods, classes, and program versions.{% else %}Parcours scolaire effectif par periode, classe et version de filiere.{% endif %}
+</p>
+<table class="data-table print-avoid">
+  <thead>
+    <tr>
+      <th>{% if lang == 'ar' %}الفترة{% elif lang == 'en' %}Period{% else %}Periode{% endif %}</th>
+      <th>{% if lang == 'ar' %}القسم{% elif lang == 'en' %}Class{% else %}Classe{% endif %}</th>
+      <th>{% if lang == 'ar' %}المسار{% elif lang == 'en' %}Program{% else %}Filiere{% endif %}</th>
+      <th>{% if lang == 'ar' %}الحالة{% elif lang == 'en' %}Status{% else %}Statut{% endif %}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in enrollments %}
+    <tr>
+      <td>
+        <div><strong>{{ row.period.label or "—" }}</strong></div>
+        <div class="muted small">{{ row.period.date_start }} → {{ row.period.date_end }}</div>
+      </td>
+      <td>
+        <div class="mono"><strong>{{ row.class.code }}</strong></div>
+        <div>{{ row.class.name or "—" }}</div>
+      </td>
+      <td>
+        {% if row.program %}
+        <div class="mono"><strong>{{ row.program.code }}</strong></div>
+        <div>{{ row.program.name }}</div>
+        {% if row.program_version and row.program_version.version_label %}
+        <div class="muted small">v{{ row.program_version.version_label }}</div>
+        {% endif %}
+        {% else %}
+        —
+        {% endif %}
+      </td>
+      <td>{{ row.status or "—" }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="section-box">
+  <h3>{% if lang == 'ar' %}الاحداث التاريخية{% elif lang == 'en' %}Program Events{% else %}Evenements historiques{% endif %}</h3>
+  {% if events %}
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{% if lang == 'ar' %}السبب{% elif lang == 'en' %}Reason{% else %}Motif{% endif %}</th>
+        <th>{% if lang == 'ar' %}من{% elif lang == 'en' %}From{% else %}De{% endif %}</th>
+        <th>{% if lang == 'ar' %}الى{% elif lang == 'en' %}To{% else %}Vers{% endif %}</th>
+        <th>{% if lang == 'ar' %}التاريخ{% elif lang == 'en' %}Date{% else %}Date{% endif %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in events %}
+      <tr>
+        <td><span class="badge">{{ row.reason_code }}</span></td>
+        <td class="mono small">{{ row.from_program_id or "—" }}</td>
+        <td class="mono small">{{ row.to_program_id or "—" }}</td>
+        <td class="small">{{ row.occurred_at or "—" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">—</p>
+  {% endif %}
+</div>
+
+<div class="section-box">
+  <h3>{% if lang == 'ar' %}ملخص النقط{% elif lang == 'en' %}Grades Summary{% else %}Synthese des notes{% endif %}</h3>
+  {% if grades %}
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{% if lang == 'ar' %}المادة{% elif lang == 'en' %}Course{% else %}Cours{% endif %}</th>
+        <th>{% if lang == 'ar' %}العدد{% elif lang == 'en' %}Entries{% else %}Entrees{% endif %}</th>
+        <th>{% if lang == 'ar' %}المعدل{% elif lang == 'en' %}Average{% else %}Moyenne{% endif %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in grades %}
+      <tr>
+        <td>{{ row.course_title or "—" }}</td>
+        <td>{{ row.count or 0 }}</td>
+        <td>{% if row.average is not none %}{{ "%.2f"|format(row.average) }}/20{% else %}—{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">—</p>
+  {% endif %}
+</div>
+
+<div class="section-box">
+  <h3>{% if lang == 'ar' %}ملخص الحضور{% elif lang == 'en' %}Attendance Summary{% else %}Synthese presence{% endif %}</h3>
+  {% if attendance %}
+  <table class="data-table">
+    <thead>
+      <tr>
+        {% for key, _value in attendance.items() %}
+        <th>{{ key }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        {% for _key, value in attendance.items() %}
+        <td><span class="badge">{{ value }}</span></td>
+        {% endfor %}
+      </tr>
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">—</p>
+  {% endif %}
+</div>
+
+<div class="section-box">
+  <h3>{% if lang == 'ar' %}معادلات المسارات{% elif lang == 'en' %}Program Equivalences{% else %}Equivalences de filieres{% endif %}</h3>
+  {% if equivalences %}
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{% if lang == 'ar' %}المسار المرجعي{% elif lang == 'en' %}Source Program{% else %}Filiere source{% endif %}</th>
+        <th>{% if lang == 'ar' %}المسارات المعادلة{% elif lang == 'en' %}Resolved Programs{% else %}Filieres equivalentes{% endif %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in equivalences %}
+      <tr>
+        <td>
+          <div class="mono"><strong>{{ row.program.code or row.program.id }}</strong></div>
+          {% if row.program.name %}<div>{{ row.program.name }}</div>{% endif %}
+        </td>
+        <td>
+          {% for program in row.resolved_programs %}
+          <div class="stack">
+            <div class="mono">{{ program.code or program.id }}</div>
+            {% if program.name %}<div class="small">{{ program.name }}</div>{% endif %}
+          </div>
+          {% endfor %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">—</p>
+  {% endif %}
+</div>
+{% endblock %}

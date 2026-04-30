@@ -125,6 +125,7 @@ class AnalyticsRepository(BaseRepository):
         to_date: date,
         class_id: uuid.UUID | None,
         bucket: str,
+        program_id: uuid.UUID | None = None,
     ) -> list[dict]:
         query = (
             select(
@@ -155,6 +156,20 @@ class AnalyticsRepository(BaseRepository):
         )
         if class_id:
             query = query.where(AttendanceSession.class_id == class_id)
+        if program_id:
+            # G49 Phase 2.4: filter to students whose enrollment in the
+            # relevant period belonged to the given program. Uses EXISTS
+            # so we don't multiply rows on enrollment soft-replace history.
+            query = query.where(
+                select(Enrollment.id)
+                .where(
+                    Enrollment.school_id == AttendanceRecord.school_id,
+                    Enrollment.student_id == AttendanceRecord.student_id,
+                    Enrollment.period_id == AttendanceSession.period_id,
+                    Enrollment.program_id == program_id,
+                )
+                .exists()
+            )
         result = await self.db.execute(query)
         return [
             {
@@ -202,6 +217,7 @@ class AnalyticsRepository(BaseRepository):
         from_dt: datetime,
         to_dt: datetime,
         subject: str | None,
+        program_id: uuid.UUID | None = None,
     ) -> list[float]:
         query = (
             select(Grade.score)
@@ -217,6 +233,18 @@ class AnalyticsRepository(BaseRepository):
         )
         if subject:
             query = query.where(Course.title == subject)
+        if program_id:
+            # G49 Phase 2.4: filter to students with any enrollment in this
+            # program (no period match needed for grade analytics).
+            query = query.where(
+                select(Enrollment.id)
+                .where(
+                    Enrollment.school_id == Course.school_id,
+                    Enrollment.student_id == Submission.student_id,
+                    Enrollment.program_id == program_id,
+                )
+                .exists()
+            )
         result = await self.db.execute(query)
         return [float(score) for score in result.scalars().all() if score is not None]
 

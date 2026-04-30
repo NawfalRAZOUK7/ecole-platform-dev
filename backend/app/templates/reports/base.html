@@ -148,6 +148,9 @@
       color: #0f3d66;
       font-weight: 700;
     }
+    .data-table tbody tr:nth-child(even) td {
+      background: #fbfdff;
+    }
     .kv-table th {
       width: 28%;
     }
@@ -162,6 +165,8 @@
       padding: 12px;
       margin-top: 12px;
       background: #ffffff;
+      page-break-inside: avoid;
+      break-inside: avoid;
     }
     .list {
       margin: 8px 0 0;
@@ -211,6 +216,32 @@
     }
     .align-center {
       text-align: center;
+    }
+    .compact-meta {
+      display: inline-block;
+      margin-top: 4px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #4338ca;
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .print-avoid {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    .tight {
+      margin-top: 6px;
+    }
+    .small {
+      font-size: 11px;
+    }
+    .mono {
+      font-family: "SFMono-Regular", "Menlo", "Consolas", monospace;
+    }
+    .stack > * + * {
+      margin-top: 6px;
     }
   </style>
 </head>
