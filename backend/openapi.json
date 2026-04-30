@@ -1881,6 +1881,25 @@
               ],
               "title": "Threshold"
             }
+          },
+          {
+            "name": "program_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "G49: filter to alerts for students enrolled in the given program for the alert's period.",
+              "title": "Program Id"
+            },
+            "description": "G49: filter to alerts for students enrolled in the given program for the alert's period."
           }
         ],
         "responses": {
@@ -4686,6 +4705,25 @@
               "format": "uuid",
               "title": "Period Id"
             }
+          },
+          {
+            "name": "program_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "G49: filter to students whose enrollment in this (class, period) is on the given program (filière).",
+              "title": "Program Id"
+            },
+            "description": "G49: filter to students whose enrollment in this (class, period) is on the given program (filière)."
           }
         ],
         "responses": {
@@ -6471,6 +6509,139 @@
         "responses": {
           "200": {
             "description": "Paginated school user list",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/enrollments": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "List enrollments in school (admin/director)",
+        "description": "Admin/Director enrollment list — used by the EnrollmentsPage UI.\n\nDistinct from the legacy ``GET /enrollments`` (which returns the\n*current student's* active enrollments — a backward-compatibility shim).",
+        "operationId": "list_enrollments_admin_api_v1_admin_enrollments_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "class_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by class id.",
+              "title": "Class Id"
+            },
+            "description": "Filter by class id."
+          },
+          {
+            "name": "period_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by period id.",
+              "title": "Period Id"
+            },
+            "description": "Filter by period id."
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by enrollment status. One of: active, transferred, dropped.",
+              "title": "Status"
+            },
+            "description": "Filter by enrollment status. One of: active, transferred, dropped."
+          },
+          {
+            "name": "missing_program",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "If true, return only enrollments without an assigned program (the 'needs program assignment' backlog).",
+              "default": false,
+              "title": "Missing Program"
+            },
+            "description": "If true, return only enrollments without an assigned program (the 'needs program assignment' backlog)."
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated school-wide enrollments with student, class, period, academic year and program embedded. Supports class_id, period_id, status, and missing_program filters.",
             "content": {
               "application/json": {
                 "schema": {}
@@ -18355,6 +18526,25 @@
             }
           },
           {
+            "name": "program_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "G49: filter to students whose enrollment in the relevant period belongs to the given program (filière).",
+              "title": "Program Id"
+            },
+            "description": "G49: filter to students whose enrollment in the relevant period belongs to the given program (filière)."
+          },
+          {
             "name": "from",
             "in": "query",
             "required": false,
@@ -18465,6 +18655,25 @@
               ],
               "title": "Subject"
             }
+          },
+          {
+            "name": "program_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "G49: filter to students with any enrollment in the given program (filière).",
+              "title": "Program Id"
+            },
+            "description": "G49: filter to students with any enrollment in the given program (filière)."
           },
           {
             "name": "from",
@@ -21161,6 +21370,1097 @@
           }
         }
       }
+    },
+    "/api/v1/programs": {
+      "get": {
+        "tags": [
+          "erp-programs"
+        ],
+        "summary": "List academic programs (filières) for the caller's school",
+        "operationId": "list_programs_api_v1_programs_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "active_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "If true (default), only return programs with is_active = true.",
+              "default": true,
+              "title": "Active Only"
+            },
+            "description": "If true (default), only return programs with is_active = true."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Active programs (or all when active_only=false)",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "erp-programs"
+        ],
+        "summary": "Create an academic program",
+        "operationId": "create_program_api_v1_programs_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProgramCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Program record (idempotent on (school_id, code))",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/programs/{program_id}": {
+      "get": {
+        "tags": [
+          "erp-programs"
+        ],
+        "summary": "Get a single academic program",
+        "operationId": "get_program_api_v1_programs__program_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "program_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Program Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Program record",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "erp-programs"
+        ],
+        "summary": "Update an academic program",
+        "operationId": "update_program_api_v1_programs__program_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "program_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Program Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProgramUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated program record",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/programs/{program_id}/versions": {
+      "get": {
+        "tags": [
+          "erp-programs"
+        ],
+        "summary": "List versions for a program",
+        "operationId": "list_program_versions_api_v1_programs__program_id__versions_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "program_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Program Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Versions ordered: active first, newest effective_from first",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "erp-programs"
+        ],
+        "summary": "Create a version for a program (idempotent on (program, label))",
+        "operationId": "create_program_version_api_v1_programs__program_id__versions_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "program_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Program Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProgramVersionCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "ProgramVersion record",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/programs/{program_id}/versions/{version_id}": {
+      "patch": {
+        "tags": [
+          "erp-programs"
+        ],
+        "summary": "Update a program version (description, dates, active flag)",
+        "operationId": "update_program_version_api_v1_programs__program_id__versions__version_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "program_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Program Id"
+            }
+          },
+          {
+            "name": "version_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Version Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProgramVersionUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated ProgramVersion record",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/enrollments/{enrollment_id}/program": {
+      "post": {
+        "tags": [
+          "erp-programs"
+        ],
+        "summary": "Assign or change the program (filière) for an enrollment",
+        "description": "Assign a program to an enrollment.\n\n- INITIAL on a programless enrollment → in-place update.\n- Real change → soft-replace (mark previous TRANSFERRED, create new\n  active enrollment with the new program).\n- No-op (same program) → 409 ConflictError.\n\nAlways writes one ``ProgramAssignmentEvent`` row in the same transaction.",
+        "operationId": "assign_program_api_v1_enrollments__enrollment_id__program_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "enrollment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Enrollment Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProgramAssignRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "ProgramAssignmentEvent record (append-only audit row)",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/program-equivalences": {
+      "get": {
+        "tags": [
+          "erp-programs"
+        ],
+        "summary": "List program equivalences (optionally filtered by a program)",
+        "operationId": "list_equivalences_api_v1_program_equivalences_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "program_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Program Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "erp-programs"
+        ],
+        "summary": "Declare an equivalence between two programs",
+        "operationId": "create_equivalence_api_v1_program_equivalences_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProgramEquivalenceCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/program-equivalences/{equivalence_id}": {
+      "delete": {
+        "tags": [
+          "erp-programs"
+        ],
+        "summary": "Remove a declared program equivalence",
+        "operationId": "delete_equivalence_api_v1_program_equivalences__equivalence_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "equivalence_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Equivalence Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/academic-snapshots": {
+      "post": {
+        "tags": [
+          "erp-snapshots"
+        ],
+        "summary": "Take a new academic snapshot for a (student, academic_year)",
+        "operationId": "create_snapshot_api_v1_academic_snapshots_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcademicSnapshotCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Frozen snapshot record",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/academic-snapshots/{snapshot_id}": {
+      "get": {
+        "tags": [
+          "erp-snapshots"
+        ],
+        "summary": "Fetch a single snapshot by id",
+        "operationId": "get_snapshot_api_v1_academic_snapshots__snapshot_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "snapshot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Snapshot Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "erp-snapshots"
+        ],
+        "summary": "Delete a snapshot (e.g. one taken with bad inputs)",
+        "operationId": "delete_snapshot_api_v1_academic_snapshots__snapshot_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "snapshot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Snapshot Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/students/{student_id}/snapshots": {
+      "get": {
+        "tags": [
+          "erp-snapshots"
+        ],
+        "summary": "List academic snapshots for a student (newest first)",
+        "operationId": "list_student_snapshots_api_v1_students__student_id__snapshots_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "student_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Student Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/eligibility/rules": {
+      "get": {
+        "tags": [
+          "erp-eligibility"
+        ],
+        "summary": "List eligibility rules (optionally filtered)",
+        "operationId": "list_rules_api_v1_eligibility_rules_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(PROMOTION|ADMISSION|TRANSFER)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "name": "target_program_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Target Program Id"
+            }
+          },
+          {
+            "name": "active_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Active Only"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "erp-eligibility"
+        ],
+        "summary": "Create an eligibility rule",
+        "operationId": "create_rule_api_v1_eligibility_rules_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EligibilityRuleCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/eligibility/rules/{rule_id}": {
+      "delete": {
+        "tags": [
+          "erp-eligibility"
+        ],
+        "summary": "Delete an eligibility rule",
+        "operationId": "delete_rule_api_v1_eligibility_rules__rule_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Rule Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/students/{student_id}/eligibility": {
+      "get": {
+        "tags": [
+          "erp-eligibility"
+        ],
+        "summary": "Check eligibility for a student against rules of a kind+target",
+        "operationId": "check_eligibility_api_v1_students__student_id__eligibility_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "student_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Student Id"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^(PROMOTION|ADMISSION|TRANSFER)$",
+              "title": "Kind"
+            }
+          },
+          {
+            "name": "target_program_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Target Program Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/students/{student_id}/program-history": {
+      "get": {
+        "tags": [
+          "erp-academic-history"
+        ],
+        "summary": "Student program history (append-only events, newest first)",
+        "operationId": "get_program_history_api_v1_students__student_id__program_history_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "student_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Student Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of ProgramAssignmentEvent rows",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/students/{student_id}/academic-timeline": {
+      "get": {
+        "tags": [
+          "erp-academic-history"
+        ],
+        "summary": "Student academic timeline (per-period, oldest first)",
+        "operationId": "get_academic_timeline_api_v1_students__student_id__academic_timeline_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "student_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Student Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Enrollment + class + period + program rows",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/students/{student_id}/current-program": {
+      "get": {
+        "tags": [
+          "erp-academic-history"
+        ],
+        "summary": "Student's currently active program (most recent active enrollment)",
+        "operationId": "get_current_program_api_v1_students__student_id__current_program_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "student_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Student Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current program summary or null",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -21192,6 +22492,32 @@
         ],
         "title": "AIOptOutRequest",
         "description": "POST /ai/preferences/opt-out — parent opts out of AI personalization."
+      },
+      "AcademicSnapshotCreateRequest": {
+        "properties": {
+          "student_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Student Id"
+          },
+          "academic_year_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Academic Year Id"
+          },
+          "snapshot_kind": {
+            "type": "string",
+            "pattern": "^(YEAR_END|MID_YEAR|MANUAL)$",
+            "title": "Snapshot Kind",
+            "default": "MANUAL"
+          }
+        },
+        "type": "object",
+        "required": [
+          "student_id",
+          "academic_year_id"
+        ],
+        "title": "AcademicSnapshotCreateRequest"
       },
       "ActivitySessionCompleteRequest": {
         "properties": {
@@ -23102,6 +24428,50 @@
         ],
         "title": "DocumentLinkRequest"
       },
+      "EligibilityRuleCreateRequest": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "pattern": "^(PROMOTION|ADMISSION|TRANSFER)$",
+            "title": "Kind"
+          },
+          "target_program_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Target Program Id"
+          },
+          "condition_type": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Condition Type"
+          },
+          "condition_params": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Condition Params"
+          },
+          "message_key": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Message Key"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "target_program_id",
+          "condition_type",
+          "message_key"
+        ],
+        "title": "EligibilityRuleCreateRequest"
+      },
       "EmailVerifyRequest": {
         "properties": {
           "user_id": {
@@ -23146,6 +24516,18 @@
             "type": "string",
             "format": "uuid",
             "title": "Period Id"
+          },
+          "program_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Program Id"
           }
         },
         "type": "object",
@@ -26013,6 +27395,338 @@
           "num_installments"
         ],
         "title": "PaymentPlanCreateRequest"
+      },
+      "ProgramAssignRequest": {
+        "properties": {
+          "program_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Program Id"
+          },
+          "program_version_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Program Version Id"
+          },
+          "reason_code": {
+            "type": "string",
+            "pattern": "^(INITIAL|TRANSFER|PROMOTION|CORRECTION|READMISSION)$",
+            "title": "Reason Code",
+            "description": "Why the program is being assigned/changed. INITIAL: first program for this enrollment. TRANSFER: same period, switching filière. PROMOTION: year-rollover. CORRECTION: fixing a data error. READMISSION: returning student."
+          },
+          "reason_note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "program_id",
+          "reason_code"
+        ],
+        "title": "ProgramAssignRequest",
+        "description": "Assign or change the program on an existing enrollment.\n\nThe service creates a new active enrollment row (soft-replace) when this\nrepresents a real change (i.e. the previous enrollment had a different\nprogram). It always writes one ``ProgramAssignmentEvent`` row."
+      },
+      "ProgramCreateRequest": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "version_label": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "Version Label",
+            "default": "1.0"
+          },
+          "effective_from": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effective From"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name"
+        ],
+        "title": "ProgramCreateRequest",
+        "description": "Create an academic program (filière) inside the caller's school."
+      },
+      "ProgramEquivalenceCreateRequest": {
+        "properties": {
+          "from_program_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "From Program Id"
+          },
+          "to_program_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "To Program Id"
+          },
+          "kind": {
+            "type": "string",
+            "pattern": "^(EQUIVALENT|SUPERSEDES|PARTIAL)$",
+            "title": "Kind"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "ratified_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ratified At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "from_program_id",
+          "to_program_id",
+          "kind"
+        ],
+        "title": "ProgramEquivalenceCreateRequest"
+      },
+      "ProgramUpdateRequest": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "version_label": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Label"
+          },
+          "effective_from": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effective From"
+          }
+        },
+        "type": "object",
+        "title": "ProgramUpdateRequest",
+        "description": "Patch an existing program. All fields optional; ``code`` is immutable."
+      },
+      "ProgramVersionCreateRequest": {
+        "properties": {
+          "version_label": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Version Label"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "effective_from": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effective From"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "version_label"
+        ],
+        "title": "ProgramVersionCreateRequest"
+      },
+      "ProgramVersionUpdateRequest": {
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "effective_from": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effective From"
+          },
+          "retired_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retired At"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "ProgramVersionUpdateRequest"
       },
       "PushPayload": {
         "properties": {
