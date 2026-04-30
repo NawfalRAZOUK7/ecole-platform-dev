@@ -15,7 +15,8 @@ export const attendanceQueryKeys = {
     [...attendanceQueryKeys.all, 'class', classId, date] as const,
   trends: (classId: string, from: string, to: string) =>
     [...attendanceQueryKeys.all, 'trends', classId, from, to] as const,
-  alerts: (schoolId: string) => [...attendanceQueryKeys.all, 'alerts', schoolId] as const,
+  alerts: (schoolId: string, programId?: string) =>
+    [...attendanceQueryKeys.all, 'alerts', schoolId, programId ?? 'all'] as const,
   studentHistory: (studentId: string) =>
     [...attendanceQueryKeys.all, 'student', studentId] as const,
 };
@@ -109,10 +110,10 @@ export function useAttendanceTrends(classId: string, dateRange: { from: string; 
   });
 }
 
-export function useAttendanceAlerts(schoolId: string) {
+export function useAttendanceAlerts(schoolId: string, programId?: string) {
   return useQuery({
-    queryKey: attendanceQueryKeys.alerts(schoolId),
-    queryFn: async () => (await attendanceService.getAttendanceAlerts(schoolId)).data,
+    queryKey: attendanceQueryKeys.alerts(schoolId, programId),
+    queryFn: async () => (await attendanceService.getAttendanceAlerts(schoolId, programId)).data,
     enabled: Boolean(schoolId),
     staleTime: STALE_DEFAULT,
   });

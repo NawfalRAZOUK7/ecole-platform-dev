@@ -72,6 +72,9 @@ export interface AnalyticsDashboardFilters {
   attendanceBucket: Bucket;
   billingBucket: Bucket;
   subject: string;
+  /** G49 Phase 2.4: optional program/filière filter (UUID), forwarded to
+   *  /analytics/attendance and /analytics/grades. */
+  programId?: string;
 }
 
 export const analyticsService = {
@@ -87,10 +90,12 @@ export const analyticsService = {
       api.get<AttendancePayload>('/analytics/attendance', {
         ...baseParams,
         period: filters.attendanceBucket,
+        program_id: filters.programId || undefined,
       }),
       api.get<GradesPayload>('/analytics/grades', {
         ...baseParams,
         subject: filters.subject || undefined,
+        program_id: filters.programId || undefined,
       }),
       api.get<BillingPayload>('/analytics/billing', {
         ...baseParams,

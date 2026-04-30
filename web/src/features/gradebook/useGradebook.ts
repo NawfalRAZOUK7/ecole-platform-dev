@@ -5,8 +5,8 @@ import type { BulkGradeUpdate, CreateCategoryPayload } from './gradebook.types';
 
 export const gradebookQueryKeys = {
   all: ['gradebook'] as const,
-  classGradebook: (classId: string, periodId: string) =>
-    [...gradebookQueryKeys.all, 'class', classId, periodId] as const,
+  classGradebook: (classId: string, periodId: string, programId?: string) =>
+    [...gradebookQueryKeys.all, 'class', classId, periodId, programId ?? 'all'] as const,
   periodGradebook: (classId: string, period: string) =>
     [...gradebookQueryKeys.all, 'class', classId, 'period', period] as const,
   studentGrades: (studentId: string) => [...gradebookQueryKeys.all, 'student', studentId] as const,
@@ -18,10 +18,11 @@ export const gradebookQueryKeys = {
     [...gradebookQueryKeys.all, 'categories', classId, periodId] as const,
 };
 
-export function useClassGradebook(classId: string, periodId: string) {
+export function useClassGradebook(classId: string, periodId: string, programId?: string) {
   return useQuery({
-    queryKey: gradebookQueryKeys.classGradebook(classId, periodId),
-    queryFn: async () => (await gradebookService.getClassGradebook(classId, periodId)).data,
+    queryKey: gradebookQueryKeys.classGradebook(classId, periodId, programId),
+    queryFn: async () =>
+      (await gradebookService.getClassGradebook(classId, periodId, programId)).data,
     enabled: Boolean(classId && periodId),
     staleTime: STALE_DEFAULT,
   });

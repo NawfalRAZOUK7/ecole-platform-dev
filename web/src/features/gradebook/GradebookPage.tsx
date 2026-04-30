@@ -10,6 +10,7 @@ import { toBannerError } from '@/shared/ui/errorUtils';
 import { gradebookService } from './gradebook.service';
 import type { GradebookGrid, GradebookWeightedSummary } from './gradebook.types';
 import { useClassGradebook, useUpdateGrades, useWeightedSummary } from './useGradebook';
+import { useProgramsQuery } from '@/features/admin/usePrograms';
 
 type GradebookFormValues = {
   grades: Record<string, Record<string, number | null>>;
@@ -128,9 +129,15 @@ export function GradebookPage() {
   const [exportError, setExportError] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
 
+  const [selectedProgramId, setSelectedProgramId] = useState('');
   const classesQuery = useTeacherClasses();
   const periodsQuery = useTeacherPeriods();
-  const gradebookQuery = useClassGradebook(selectedClassId, selectedPeriodId);
+  const programsQuery = useProgramsQuery(true);
+  const gradebookQuery = useClassGradebook(
+    selectedClassId,
+    selectedPeriodId,
+    selectedProgramId || undefined,
+  );
   const weightedSummaryQuery = useWeightedSummary(selectedClassId, selectedPeriodId);
   const updateGradesMutation = useUpdateGrades();
   const gradebookSchema = useMemo(
@@ -282,6 +289,27 @@ export function GradebookPage() {
                 <option key={item.id} value={item.id}>
                   {item.label ||
                     `${formatDate(item.date_start, i18n.language)} → ${formatDate(item.date_end, i18n.language)}`}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="attendance-filter">
+            <span className="attendance-filter__label">
+              {t('gradebook.programFilter', { defaultValue: 'Program' })}
+            </span>
+            <select
+              className="filter-select"
+              aria-label={t('gradebook.programFilter', { defaultValue: 'Program' })}
+              value={selectedProgramId}
+              onChange={(event) => setSelectedProgramId(event.target.value)}
+            >
+              <option value="">
+                {t('analytics.allPrograms', { defaultValue: 'All programs' })}
+              </option>
+              {(programsQuery.data ?? []).map((program) => (
+                <option key={program.id} value={program.id}>
+                  {program.code} — {program.name}
                 </option>
               ))}
             </select>

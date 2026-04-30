@@ -107,8 +107,11 @@ function summarizeGradebook(grid: GradebookGrid): GradebookWeightedSummary {
 }
 
 export const gradebookService = {
-  async getClassGradebook(classId: string, periodId: string) {
-    const response = await api.get<BackendGradebookResponse>(`/gradebook/${classId}/${periodId}`);
+  async getClassGradebook(classId: string, periodId: string, programId?: string) {
+    const response = await api.get<BackendGradebookResponse>(
+      `/gradebook/${classId}/${periodId}`,
+      programId ? { program_id: programId } : undefined,
+    );
     return {
       data: mapGradebook(response.data),
       meta: response.meta,

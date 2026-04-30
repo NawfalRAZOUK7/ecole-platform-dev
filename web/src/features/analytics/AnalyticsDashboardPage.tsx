@@ -18,10 +18,8 @@ import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
 import { toBannerError } from '@/shared/ui/errorUtils';
-import {
-  useAnalyticsDashboard,
-  useAnalyticsExport,
-} from './useAnalytics';
+import { useAnalyticsDashboard, useAnalyticsExport } from './useAnalytics';
+import { useProgramsQuery } from '@/features/admin/usePrograms';
 import type {
   AttendancePayload,
   BillingPayload,
@@ -36,7 +34,13 @@ import type {
 
 const RANGE_PRESETS: RangePreset[] = ['this_week', 'this_month', 'this_period', 'custom'];
 const BUCKETS: Bucket[] = ['daily', 'weekly', 'monthly'];
-const EXPORT_ENTITIES: ExportEntity[] = ['students', 'grades', 'attendance', 'invoices', 'payments'];
+const EXPORT_ENTITIES: ExportEntity[] = [
+  'students',
+  'grades',
+  'attendance',
+  'invoices',
+  'payments',
+];
 
 function buildRange(preset: RangePreset) {
   const today = new Date();
@@ -78,9 +82,7 @@ async function exportChart(container: HTMLDivElement | null, filename: string) {
   const width = Math.max(Math.round(rect.width), 900);
   const height = Math.max(Math.round(rect.height), 360);
   const serialized = new XMLSerializer().serializeToString(svg);
-  const url = URL.createObjectURL(
-    new Blob([serialized], { type: 'image/svg+xml;charset=utf-8' })
-  );
+  const url = URL.createObjectURL(new Blob([serialized], { type: 'image/svg+xml;charset=utf-8' }));
 
   await new Promise<void>((resolve, reject) => {
     const image = new Image();
@@ -97,7 +99,9 @@ async function exportChart(container: HTMLDivElement | null, filename: string) {
       }
 
       context.scale(2, 2);
-      context.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--color-surface').trim() || 'white';
+      context.fillStyle =
+        getComputedStyle(document.documentElement).getPropertyValue('--color-surface').trim() ||
+        'white';
       context.fillRect(0, 0, width, height);
       context.drawImage(image, 0, 0, width, height);
       canvas.toBlob((blob) => {
@@ -131,7 +135,9 @@ export function AnalyticsDashboardPage() {
   const [attendanceBucket, setAttendanceBucket] = useState<Bucket>('weekly');
   const [billingBucket, setBillingBucket] = useState<Bucket>('monthly');
   const [subject, setSubject] = useState('');
+  const [programId, setProgramId] = useState('');
   const [exportEntity, setExportEntity] = useState<ExportEntity>('attendance');
+  const programsQuery = useProgramsQuery(true);
   const dashboardQuery = useAnalyticsDashboard({
     fromDate,
     toDate,
@@ -139,6 +145,7 @@ export function AnalyticsDashboardPage() {
     attendanceBucket,
     billingBucket,
     subject,
+    programId: programId || undefined,
   });
   const exportMutation = useAnalyticsExport();
   const overview: OverviewPayload | null = dashboardQuery.data?.overview ?? null;
@@ -147,7 +154,7 @@ export function AnalyticsDashboardPage() {
   const billing: BillingPayload | null = dashboardQuery.data?.billing ?? null;
   const engagement: EngagementPayload | null = dashboardQuery.data?.engagement ?? null;
   const dismissibleError = useDismissibleError(
-    toBannerError(dashboardQuery.error ?? exportMutation.error, t('app.error'))
+    toBannerError(dashboardQuery.error ?? exportMutation.error, t('app.error')),
   );
 
   useEffect(() => {
@@ -162,7 +169,7 @@ export function AnalyticsDashboardPage() {
 
   const overviewMap = useMemo(() => {
     return Object.fromEntries(
-      (overview?.metrics || []).map((item) => [item.key, item.value])
+      (overview?.metrics || []).map((item) => [item.key, item.value]),
     ) as Record<string, ComparisonMetric>;
   }, [overview]);
 
@@ -206,19 +213,44 @@ export function AnalyticsDashboardPage() {
             ))}
           </div>
           <label className="form-checkbox">
-            <input type="checkbox" checked={compare} onChange={(event) => setCompare(event.target.checked)} />
+            <input
+              type="checkbox"
+              checked={compare}
+              onChange={(event) => setCompare(event.target.checked)}
+            />
             <span>{t('analytics.compare')}</span>
           </label>
+          <select
+            className="filter-select"
+            aria-label={t('analytics.programFilterLabel')}
+            value={programId}
+            onChange={(event) => setProgramId(event.target.value)}
+          >
+            <option value="">{t('analytics.allPrograms')}</option>
+            {(programsQuery.data ?? []).map((program) => (
+              <option key={program.id} value={program.id}>
+                {program.code} — {program.name}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
-      <ErrorBanner error={dismissibleError.error} onDismiss={dismissibleError.dismiss} onRetry={() => void dashboardQuery.refetch()} />
+      <ErrorBanner
+        error={dismissibleError.error}
+        onDismiss={dismissibleError.dismiss}
+        onRetry={() => void dashboardQuery.refetch()}
+      />
 
       {rangePreset === 'custom' && (
         <div className="card analytics-filters">
           <label className="form-field">
             <span>{t('analytics.from')}</span>
-            <input type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} />
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(event) => setFromDate(event.target.value)}
+            />
           </label>
           <label className="form-field">
             <span>{t('analytics.to')}</span>
@@ -229,9 +261,17 @@ export function AnalyticsDashboardPage() {
 
       <section className="analytics-kpis">
         <KpiCard title={t('analytics.kpis.activeUsers')} metric={overviewMap.active_users} />
-        <KpiCard title={t('analytics.kpis.attendanceRate')} metric={overviewMap.attendance_rate} suffix="%" />
+        <KpiCard
+          title={t('analytics.kpis.attendanceRate')}
+          metric={overviewMap.attendance_rate}
+          suffix="%"
+        />
         <KpiCard title={t('analytics.kpis.averageGrade')} metric={overviewMap.average_grade} />
-        <KpiCard title={t('analytics.kpis.collectionRate')} metric={overviewMap.collection_rate} suffix="%" />
+        <KpiCard
+          title={t('analytics.kpis.collectionRate')}
+          metric={overviewMap.collection_rate}
+          suffix="%"
+        />
       </section>
 
       <section className="analytics-grid">
@@ -242,14 +282,21 @@ export function AnalyticsDashboardPage() {
               <p>{t('analytics.charts.attendanceHint')}</p>
             </div>
             <div className="page-actions">
-              <select className="filter-select" value={attendanceBucket} onChange={(event) => setAttendanceBucket(event.target.value as Bucket)}>
+              <select
+                className="filter-select"
+                value={attendanceBucket}
+                onChange={(event) => setAttendanceBucket(event.target.value as Bucket)}
+              >
                 {BUCKETS.map((item) => (
                   <option key={item} value={item}>
                     {t(`analytics.buckets.${item}`)}
                   </option>
                 ))}
               </select>
-              <button className="btn btn-secondary btn-sm" onClick={() => void exportChart(attendanceChartRef.current, 'attendance-trend.png')}>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => void exportChart(attendanceChartRef.current, 'attendance-trend.png')}
+              >
                 {t('analytics.exportPng')}
               </button>
             </div>
@@ -261,7 +308,13 @@ export function AnalyticsDashboardPage() {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="value" stroke="var(--color-primary)" strokeWidth={2} name={t('analytics.kpis.attendanceRate')} />
+              <Line
+                type="monotone"
+                dataKey="value"
+                stroke="var(--color-primary)"
+                strokeWidth={2}
+                name={t('analytics.kpis.attendanceRate')}
+              />
             </LineChart>
           </ResponsiveContainer>
         </article>
@@ -279,7 +332,10 @@ export function AnalyticsDashboardPage() {
                 value={subject}
                 onChange={(event) => setSubject(event.target.value)}
               />
-              <button className="btn btn-secondary btn-sm" onClick={() => void exportChart(gradesChartRef.current, 'grade-distribution.png')}>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => void exportChart(gradesChartRef.current, 'grade-distribution.png')}
+              >
                 {t('analytics.exportPng')}
               </button>
             </div>
@@ -302,14 +358,21 @@ export function AnalyticsDashboardPage() {
               <p>{t('analytics.charts.billingHint')}</p>
             </div>
             <div className="page-actions">
-              <select className="filter-select" value={billingBucket} onChange={(event) => setBillingBucket(event.target.value as Bucket)}>
+              <select
+                className="filter-select"
+                value={billingBucket}
+                onChange={(event) => setBillingBucket(event.target.value as Bucket)}
+              >
                 {BUCKETS.map((item) => (
                   <option key={item} value={item}>
                     {t(`analytics.buckets.${item}`)}
                   </option>
                 ))}
               </select>
-              <button className="btn btn-secondary btn-sm" onClick={() => void exportChart(billingChartRef.current, 'billing-waterfall.png')}>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => void exportChart(billingChartRef.current, 'billing-waterfall.png')}
+              >
                 {t('analytics.exportPng')}
               </button>
             </div>
@@ -331,14 +394,22 @@ export function AnalyticsDashboardPage() {
               <h2>{t('analytics.charts.engagement')}</h2>
               <p>{t('analytics.charts.engagementHint')}</p>
             </div>
-            <button className="btn btn-secondary btn-sm" onClick={() => void exportChart(engagementChartRef.current, 'engagement-funnel.png')}>
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={() => void exportChart(engagementChartRef.current, 'engagement-funnel.png')}
+            >
               {t('analytics.exportPng')}
             </button>
           </div>
           <ResponsiveContainer width="100%" height={300}>
             <FunnelChart>
               <Tooltip />
-              <Funnel dataKey="value" data={engagementFunnel} isAnimationActive fill="var(--color-info)" />
+              <Funnel
+                dataKey="value"
+                data={engagementFunnel}
+                isAnimationActive
+                fill="var(--color-info)"
+              />
             </FunnelChart>
           </ResponsiveContainer>
         </article>
@@ -351,7 +422,11 @@ export function AnalyticsDashboardPage() {
             <p>{t('analytics.exportDataSubtitle')}</p>
           </div>
           <div className="page-actions">
-            <select className="filter-select" value={exportEntity} onChange={(event) => setExportEntity(event.target.value as ExportEntity)}>
+            <select
+              className="filter-select"
+              value={exportEntity}
+              onChange={(event) => setExportEntity(event.target.value as ExportEntity)}
+            >
               {EXPORT_ENTITIES.map((item) => (
                 <option key={item} value={item}>
                   {t(`analytics.exportEntities.${item}`)}
@@ -361,15 +436,17 @@ export function AnalyticsDashboardPage() {
             <button
               className="btn btn-secondary"
               onClick={() => {
-                void exportMutation.mutateAsync({
-                  format: 'csv',
-                  entity: exportEntity,
-                  filters: {
-                    from_date: fromDate,
-                    to_date: toDate,
-                    subject,
-                  },
-                }).then((blob) => downloadBlob(blob, `${exportEntity}.csv`));
+                void exportMutation
+                  .mutateAsync({
+                    format: 'csv',
+                    entity: exportEntity,
+                    filters: {
+                      from_date: fromDate,
+                      to_date: toDate,
+                      subject,
+                    },
+                  })
+                  .then((blob) => downloadBlob(blob, `${exportEntity}.csv`));
               }}
             >
               CSV
@@ -377,15 +454,17 @@ export function AnalyticsDashboardPage() {
             <button
               className="btn btn-primary"
               onClick={() => {
-                void exportMutation.mutateAsync({
-                  format: 'xlsx',
-                  entity: exportEntity,
-                  filters: {
-                    from_date: fromDate,
-                    to_date: toDate,
-                    subject,
-                  },
-                }).then((blob) => downloadBlob(blob, `${exportEntity}.xlsx`));
+                void exportMutation
+                  .mutateAsync({
+                    format: 'xlsx',
+                    entity: exportEntity,
+                    filters: {
+                      from_date: fromDate,
+                      to_date: toDate,
+                      subject,
+                    },
+                  })
+                  .then((blob) => downloadBlob(blob, `${exportEntity}.xlsx`));
               }}
             >
               XLSX
@@ -411,7 +490,8 @@ function KpiCard({
   }
 
   const delta = metric.change_percent;
-  const deltaClass = delta === null || delta === 0 ? 'delta-flat' : delta > 0 ? 'delta-positive' : 'delta-negative';
+  const deltaClass =
+    delta === null || delta === 0 ? 'delta-flat' : delta > 0 ? 'delta-positive' : 'delta-negative';
 
   return (
     <article className="card analytics-kpi-card">

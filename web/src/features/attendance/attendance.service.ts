@@ -40,9 +40,10 @@ export const attendanceService = {
     });
   },
 
-  getAttendanceAlerts(schoolId: string) {
+  getAttendanceAlerts(schoolId: string, programId?: string) {
     return api.get<AttendanceAlert[]>('/analytics/attendance/alerts', {
       school_id: schoolId,
+      program_id: programId || undefined,
     });
   },
 

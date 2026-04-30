@@ -16,6 +16,7 @@ import { formatDate } from '@/shared/i18n';
 import { useTeacherClasses } from '@/features/teacher/useTeacher';
 import { attendanceService } from './attendance.service';
 import { useAttendanceAlerts, useAttendanceTrends } from './useAttendance';
+import { useProgramsQuery } from '@/features/admin/usePrograms';
 import { Badge, DataTable, ErrorBanner, Skeleton, Tabs } from '@/shared/ui';
 import { toBannerError } from '@/shared/ui/errorUtils';
 import type { AttendanceAlert } from './attendance.types';
@@ -33,6 +34,7 @@ export function AttendanceAnalyticsPage() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const [selectedClassId, setSelectedClassId] = useState('');
+  const [selectedProgramId, setSelectedProgramId] = useState('');
   const [from, setFrom] = useState(getDateOffset(-29));
   const [to, setTo] = useState(TODAY);
   const [exportMessage, setExportMessage] = useState<string | null>(null);
@@ -40,8 +42,9 @@ export function AttendanceAnalyticsPage() {
   const [isExporting, setIsExporting] = useState(false);
 
   const classesQuery = useTeacherClasses();
+  const programsQuery = useProgramsQuery(true);
   const trendsQuery = useAttendanceTrends(selectedClassId, { from, to });
-  const alertsQuery = useAttendanceAlerts(user?.school_id ?? '');
+  const alertsQuery = useAttendanceAlerts(user?.school_id ?? '', selectedProgramId || undefined);
 
   useEffect(() => {
     if (!selectedClassId && (classesQuery.data?.length ?? 0) > 0) {
@@ -50,8 +53,9 @@ export function AttendanceAnalyticsPage() {
   }, [classesQuery.data, selectedClassId]);
 
   const bannerError = useMemo(
-    () => toBannerError(classesQuery.error ?? trendsQuery.error ?? alertsQuery.error, t('app.error')),
-    [alertsQuery.error, classesQuery.error, t, trendsQuery.error]
+    () =>
+      toBannerError(classesQuery.error ?? trendsQuery.error ?? alertsQuery.error, t('app.error')),
+    [alertsQuery.error, classesQuery.error, t, trendsQuery.error],
   );
 
   const chartData = useMemo(
@@ -63,7 +67,7 @@ export function AttendanceAnalyticsPage() {
         absent: trend.absent,
         late: trend.late,
       })),
-    [i18n.language, trendsQuery.data]
+    [i18n.language, trendsQuery.data],
   );
 
   const alertColumns: ColumnDef<AttendanceAlertTableRow>[] = useMemo(
@@ -86,13 +90,11 @@ export function AttendanceAnalyticsPage() {
         header: 'attendance.alertLevel',
         sortable: false,
         render: (value) => (
-          <Badge variant={value === 'critical' ? 'error' : 'warning'}>
-            {String(value)}
-          </Badge>
+          <Badge variant={value === 'critical' ? 'error' : 'warning'}>{String(value)}</Badge>
         ),
       },
     ],
-    []
+    [],
   );
 
   async function handleExport(format: 'csv' | 'pdf') {
@@ -140,6 +142,28 @@ export function AttendanceAnalyticsPage() {
             </select>
           </label>
           <label className="attendance-filter">
+            <span className="attendance-filter__label">
+              {t('analytics.programFilterLabel', { defaultValue: 'Program' })}
+            </span>
+            <select
+              className="filter-select"
+              aria-label={t('analytics.programFilterLabel', {
+                defaultValue: 'Program',
+              })}
+              value={selectedProgramId}
+              onChange={(event) => setSelectedProgramId(event.target.value)}
+            >
+              <option value="">
+                {t('analytics.allPrograms', { defaultValue: 'All programs' })}
+              </option>
+              {(programsQuery.data ?? []).map((program) => (
+                <option key={program.id} value={program.id}>
+                  {program.code} — {program.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="attendance-filter">
             <span className="attendance-filter__label">{t('analytics.from')}</span>
             <input
               type="date"
@@ -182,7 +206,9 @@ export function AttendanceAnalyticsPage() {
 
       <ErrorBanner error={bannerError ?? exportError} />
 
-      {exportMessage && <div className="attendance-banner attendance-banner--success">{exportMessage}</div>}
+      {exportMessage && (
+        <div className="attendance-banner attendance-banner--success">{exportMessage}</div>
+      )}
 
       <Tabs
         defaultTab="trends"
