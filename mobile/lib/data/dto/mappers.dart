@@ -15,6 +15,7 @@ import 'package:ecole_platform/domain/entities/reporting.dart';
 import 'package:ecole_platform/domain/entities/teacher.dart';
 import 'package:ecole_platform/domain/entities/calendar_event.dart';
 import 'package:ecole_platform/domain/entities/document_management.dart';
+import 'package:ecole_platform/domain/entities/program.dart';
 
 // ── User ──
 
@@ -705,5 +706,87 @@ Period periodFromJson(Map<String, dynamic> json) {
   return Period(
     id: json['id'] as String,
     name: json['name'] as String? ?? json['id'] as String,
+  );
+}
+
+// ── Programs / academic history (G49 Phase 3) ──
+
+ProgramSummary? programSummaryFromJson(Map<String, dynamic>? json) {
+  if (json == null) return null;
+  return ProgramSummary(
+    id: json['id'] as String,
+    code: json['code'] as String,
+    name: json['name'] as String,
+    versionLabel: json['version_label'] as String,
+  );
+}
+
+CurrentProgram currentProgramFromJson(Map<String, dynamic> json) {
+  final program = json['program'];
+  return CurrentProgram(
+    studentId: json['student_id'] as String,
+    academicYearId: json['academic_year_id'] as String?,
+    periodId: json['period_id'] as String?,
+    enrollmentId: json['enrollment_id'] as String?,
+    program: program is Map<String, dynamic>
+        ? programSummaryFromJson(program)
+        : null,
+  );
+}
+
+AcademicTimelineEntry academicTimelineEntryFromJson(Map<String, dynamic> json) {
+  final program = json['program'];
+  return AcademicTimelineEntry(
+    enrollmentId: json['enrollment_id'] as String,
+    academicYearId: json['academic_year_id'] as String,
+    academicYearLabel: json['academic_year_label'] as String?,
+    academicYearStart: json['academic_year_start'] as String,
+    academicYearEnd: json['academic_year_end'] as String,
+    periodId: json['period_id'] as String,
+    periodLabel: json['period_label'] as String?,
+    periodStart: json['period_start'] as String,
+    periodEnd: json['period_end'] as String,
+    classId: json['class_id'] as String,
+    classCode: json['class_code'] as String,
+    className: json['class_name'] as String,
+    program: program is Map<String, dynamic>
+        ? programSummaryFromJson(program)
+        : null,
+    status: json['status'] as String,
+  );
+}
+
+ProgramAssignmentEvent programAssignmentEventFromJson(
+    Map<String, dynamic> json) {
+  final wire = json['reason_code'] as String;
+  return ProgramAssignmentEvent(
+    id: json['id'] as String,
+    schoolId: json['school_id'] as String,
+    studentId: json['student_id'] as String,
+    academicYearId: json['academic_year_id'] as String,
+    periodId: json['period_id'] as String?,
+    fromProgramId: json['from_program_id'] as String?,
+    toProgramId: json['to_program_id'] as String,
+    fromEnrollmentId: json['from_enrollment_id'] as String?,
+    toEnrollmentId: json['to_enrollment_id'] as String?,
+    reasonCode: ProgramAssignmentReason.fromWire(wire),
+    reasonCodeWire: wire,
+    reasonNote: json['reason_note'] as String?,
+    actorUserId: json['actor_user_id'] as String?,
+    occurredAt: json['occurred_at'] as String,
+  );
+}
+
+AcademicSnapshotSummary academicSnapshotSummaryFromJson(
+  Map<String, dynamic> json,
+) {
+  return AcademicSnapshotSummary(
+    id: json['id'] as String,
+    schoolId: json['school_id'] as String,
+    studentId: json['student_id'] as String,
+    academicYearId: json['academic_year_id'] as String,
+    snapshotKind: json['snapshot_kind'] as String,
+    takenAt: json['taken_at'] as String,
+    takenBy: json['taken_by'] as String?,
   );
 }

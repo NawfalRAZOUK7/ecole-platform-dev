@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:ecole_platform/app/providers.dart';
+import 'package:ecole_platform/data/api/api_client.dart';
 import 'package:ecole_platform/features/auth/biometric_service.dart';
 import 'package:ecole_platform/main.dart';
 import 'package:ecole_platform/shared/connectivity_service.dart';
@@ -31,6 +32,12 @@ void main() {
           ),
           secureStorageProvider.overrideWithValue(
             secureStorage as SecureTokenStorage,
+          ),
+          apiClientProvider.overrideWithValue(
+            ApiClient(
+              tokenStorage: secureStorage,
+              baseUrl: 'http://localhost:8000',
+            ),
           ),
           biometricServiceProvider.overrideWithValue(
             biometricService as BiometricService,

@@ -56,6 +56,7 @@ import 'package:ecole_platform/features/student/student_home_screen.dart';
 import 'package:ecole_platform/features/student/quiz_player_screen.dart';
 import 'package:ecole_platform/features/student/story_reader_screen.dart';
 import 'package:ecole_platform/features/student/writing_workspace_screen.dart';
+import 'package:ecole_platform/features/student/program_history_screen.dart';
 import 'package:ecole_platform/features/family/my_children_screen.dart';
 import 'package:ecole_platform/features/family/shared_review_screen.dart';
 import 'package:ecole_platform/features/timetable/timetable_screen.dart';
@@ -311,6 +312,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/student/home',
             builder: (context, state) => const StudentHomeScreen(),
+          ),
+          GoRoute(
+            path: '/students/:studentId/academic-history',
+            builder: (context, state) => AcademicHistoryScreen(
+              studentId: state.pathParameters['studentId']!,
+            ),
           ),
           GoRoute(
             path: '/student/content',

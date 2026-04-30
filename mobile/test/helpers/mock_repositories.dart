@@ -23,6 +23,7 @@ import 'package:ecole_platform/domain/repositories/teacher_repository.dart';
 import 'package:ecole_platform/domain/repositories/compliance_repository.dart';
 import 'package:ecole_platform/domain/repositories/financial_health_repository.dart';
 import 'package:ecole_platform/domain/repositories/question_bank_repository.dart';
+import 'package:ecole_platform/domain/repositories/program_repository.dart';
 
 class MockAdminRepository extends Mock implements AdminRepository {}
 
@@ -70,6 +71,8 @@ class MockFinancialHealthRepository extends Mock
 class MockQuestionBankRepository extends Mock
     implements QuestionBankRepository {}
 
+class MockProgramRepository extends Mock implements ProgramRepository {}
+
 List<Override> buildMockRepositoryOverrides({
   AdminRepository? adminRepository,
   AttendanceRepository? attendanceRepository,
@@ -92,6 +95,7 @@ List<Override> buildMockRepositoryOverrides({
   ComplianceRepository? complianceRepository,
   FinancialHealthRepository? financialHealthRepository,
   QuestionBankRepository? questionBankRepository,
+  ProgramRepository? programRepository,
 }) {
   final overrides = <Override>[];
 
@@ -184,6 +188,10 @@ List<Override> buildMockRepositoryOverrides({
     overrides.add(
       questionBankRepositoryProvider.overrideWithValue(questionBankRepository),
     );
+  }
+  if (programRepository != null) {
+    overrides
+        .add(programRepositoryProvider.overrideWithValue(programRepository));
   }
 
   return overrides;

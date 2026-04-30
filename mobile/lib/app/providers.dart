@@ -36,6 +36,7 @@ import 'package:ecole_platform/data/repositories_impl/sync_repository_impl.dart'
 import 'package:ecole_platform/data/repositories_impl/financial_health_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/content_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/result_repository_impl.dart';
+import 'package:ecole_platform/data/repositories_impl/program_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/invoice_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/admin_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/reporting_repository_impl.dart';
@@ -61,6 +62,7 @@ import 'package:ecole_platform/domain/entities/sync.dart';
 import 'package:ecole_platform/domain/repositories/financial_health_repository.dart';
 import 'package:ecole_platform/domain/repositories/content_repository.dart';
 import 'package:ecole_platform/domain/repositories/result_repository.dart';
+import 'package:ecole_platform/domain/repositories/program_repository.dart';
 import 'package:ecole_platform/domain/repositories/invoice_repository.dart';
 import 'package:ecole_platform/domain/repositories/admin_repository.dart';
 import 'package:ecole_platform/domain/repositories/reporting_repository.dart';
@@ -244,6 +246,13 @@ final contentRepositoryProvider = Provider<ContentRepository>((ref) {
 
 final resultRepositoryProvider = Provider<ResultRepository>((ref) {
   return ResultRepositoryImpl(
+    api: ref.watch(apiClientProvider),
+    cache: ref.watch(cacheStoreProvider),
+  );
+});
+
+final programRepositoryProvider = Provider<ProgramRepository>((ref) {
+  return ProgramRepositoryImpl(
     api: ref.watch(apiClientProvider),
     cache: ref.watch(cacheStoreProvider),
   );

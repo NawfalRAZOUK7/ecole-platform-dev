@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/app/providers.dart';
+import 'package:ecole_platform/data/api/api_client.dart';
 import 'package:ecole_platform/data/local_store/cache_store.dart';
 import 'package:ecole_platform/data/local_store/offline_queue.dart';
 import 'package:ecole_platform/domain/entities/attendance.dart';
@@ -153,6 +154,12 @@ class FakeAppEnvironment {
   List<Override> overrides() {
     return [
       secureStorageProvider.overrideWithValue(storage),
+      apiClientProvider.overrideWithValue(
+        ApiClient(
+          tokenStorage: storage,
+          baseUrl: 'http://localhost:8000',
+        ),
+      ),
       cacheStoreProvider.overrideWithValue(cacheStore),
       offlineQueueProvider.overrideWithValue(offlineQueue),
       biometricServiceProvider.overrideWithValue(biometricService),
