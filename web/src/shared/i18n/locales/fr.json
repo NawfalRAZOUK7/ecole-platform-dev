@@ -81,7 +81,11 @@
     "questionBank": "Banque de questions",
     "rubrics": "Grilles d'evaluation",
     "timetableConstraints": "Contraintes emploi du temps",
-    "timetableGenerate": "Generer emploi du temps"
+    "timetableGenerate": "Generer emploi du temps",
+    "adminPrograms": "Filières",
+    "adminEnrollments": "Inscriptions",
+    "adminEquivalences": "Équivalences",
+    "adminEligibilityRules": "Règles d'éligibilité"
   },
   "login": {
     "title": "Connexion",
@@ -1497,6 +1501,66 @@
       "statusRejected": "Refuse",
       "allStatuses": "Tous les statuts",
       "empty": "Aucun justificatif a examiner"
+    },
+    "programs": {
+      "title": "Filières académiques",
+      "subtitle": "Gérez les filières (parcours académiques) de votre école.",
+      "createTitle": "Créer une filière",
+      "create": "Créer la filière",
+      "edit": "Modifier",
+      "activate": "Activer",
+      "deactivate": "Désactiver",
+      "showInactive": "Afficher les filières inactives",
+      "empty": "Aucune filière — créez la première ci-dessus.",
+      "code": "Code",
+      "name": "Nom",
+      "level": "Niveau",
+      "versionLabel": "Version",
+      "effectiveFrom": "Effective à partir du",
+      "description": "Description",
+      "status": "Statut",
+      "statusActive": "Active",
+      "statusInactive": "Inactive",
+      "actions": "Actions",
+      "assign": {
+        "title": "Affecter une filière",
+        "subtitle": "Choisissez une filière et la raison du changement. L'inscription précédente est conservée comme historique.",
+        "programLabel": "Filière",
+        "programPlaceholder": "Sélectionner une filière…",
+        "reasonLabel": "Raison",
+        "noteLabel": "Note (optionnel)",
+        "notePlaceholder": "ex. demande des parents, passage en année supérieure, correction…",
+        "submit": "Affecter",
+        "reason": {
+          "INITIAL": "Affectation initiale",
+          "TRANSFER": "Transfert (en cours d’année)",
+          "PROMOTION": "Promotion (changement d’année)",
+          "CORRECTION": "Correction",
+          "READMISSION": "Réadmission"
+        }
+      }
+    },
+    "enrollments": {
+      "title": "Inscriptions",
+      "subtitle": "Liste des inscriptions de l’école avec affectation rapide de filière.",
+      "student": "Élève",
+      "class": "Classe",
+      "period": "Période",
+      "academicYear": "Année scolaire",
+      "program": "Filière",
+      "status": "Statut",
+      "created": "Inscrit le",
+      "actions": "Actions",
+      "statusFilter": "Filtrer par statut",
+      "allStatuses": "Tous les statuts",
+      "statusActive": "Active",
+      "statusTransferred": "Transférée",
+      "statusDropped": "Abandonnée",
+      "missingProgramOnly": "Afficher uniquement les inscriptions sans filière",
+      "noProgram": "Sans filière",
+      "assignProgram": "Affecter une filière",
+      "empty": "Aucune inscription ne correspond à ces filtres.",
+      "viewAcademicHistory": "Voir l'historique académique"
     }
   },
   "teacher": {
@@ -1645,7 +1709,9 @@
       "attendance": "Presence",
       "invoices": "Factures",
       "payments": "Paiements"
-    }
+    },
+    "allPrograms": "Toutes les filières",
+    "programFilterLabel": "Filtrer par filière"
   },
   "calendar": {
     "title": "Calendrier",
@@ -2656,5 +2722,24 @@
     "perStudent": "Par élève",
     "studentName": "Nom de l'élève",
     "assessmentResults": "Résultats des évaluations"
+  },
+  "student": {
+    "academicHistory": {
+      "title": "Historique académique",
+      "subtitle": "Toutes les inscriptions et changements de filière pour cet élève.",
+      "currentTitle": "Filière actuelle",
+      "currentEmpty": "Aucune filière active pour le moment.",
+      "timelineTitle": "Parcours académique",
+      "timelineEmpty": "Aucune inscription enregistrée.",
+      "historyTitle": "Changements de filière",
+      "historyEmpty": "Aucun changement de filière enregistré.",
+      "period": "Période",
+      "class": "Classe",
+      "program": "Filière",
+      "status": "Statut",
+      "from": "De",
+      "fromInitial": "Pas de filière précédente",
+      "to": "Vers"
+    }
   }
 }

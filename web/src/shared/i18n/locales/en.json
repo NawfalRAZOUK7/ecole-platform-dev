@@ -69,7 +69,11 @@
     "myChildren": "My Children",
     "rewards": "Rewards",
     "myRewards": "My Rewards",
-    "games": "Games"
+    "games": "Games",
+    "adminPrograms": "Programs",
+    "adminEnrollments": "Enrollments",
+    "adminEquivalences": "Equivalences",
+    "adminEligibilityRules": "Eligibility rules"
   },
   "login": {
     "title": "Sign In",
@@ -1334,6 +1338,66 @@
       "statusRejected": "Rejected",
       "allStatuses": "All statuses",
       "empty": "No justifications to review"
+    },
+    "programs": {
+      "title": "Academic Programs",
+      "subtitle": "Manage filières (academic tracks) for your school.",
+      "createTitle": "Create program",
+      "create": "Create program",
+      "edit": "Edit",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "showInactive": "Show inactive",
+      "empty": "No programs yet — create your first one above.",
+      "code": "Code",
+      "name": "Name",
+      "level": "Level",
+      "versionLabel": "Version",
+      "effectiveFrom": "Effective from",
+      "description": "Description",
+      "status": "Status",
+      "statusActive": "Active",
+      "statusInactive": "Inactive",
+      "actions": "Actions",
+      "assign": {
+        "title": "Assign program",
+        "subtitle": "Pick a program (filière) and the reason for the change. The previous enrollment is preserved as historical record.",
+        "programLabel": "Program",
+        "programPlaceholder": "Select a program…",
+        "reasonLabel": "Reason",
+        "noteLabel": "Note (optional)",
+        "notePlaceholder": "e.g. parent request, end-of-year promotion, data correction…",
+        "submit": "Assign program",
+        "reason": {
+          "INITIAL": "Initial assignment",
+          "TRANSFER": "Transfer (mid-period)",
+          "PROMOTION": "Promotion (year rollover)",
+          "CORRECTION": "Correction",
+          "READMISSION": "Re-admission"
+        }
+      }
+    },
+    "enrollments": {
+      "title": "Enrollments",
+      "subtitle": "School-wide enrollment list with quick program assignment.",
+      "student": "Student",
+      "class": "Class",
+      "period": "Period",
+      "academicYear": "Academic year",
+      "program": "Program",
+      "status": "Status",
+      "created": "Enrolled",
+      "actions": "Actions",
+      "statusFilter": "Filter by status",
+      "allStatuses": "All statuses",
+      "statusActive": "Active",
+      "statusTransferred": "Transferred",
+      "statusDropped": "Dropped",
+      "missingProgramOnly": "Show only enrollments without a program",
+      "noProgram": "No program",
+      "assignProgram": "Assign program",
+      "empty": "No enrollments match these filters.",
+      "viewAcademicHistory": "View academic history"
     }
   },
   "teacher": {
@@ -1482,7 +1546,9 @@
       "attendance": "Attendance",
       "invoices": "Invoices",
       "payments": "Payments"
-    }
+    },
+    "allPrograms": "All programs",
+    "programFilterLabel": "Filter by program"
   },
   "calendar": {
     "title": "Calendar",
@@ -2371,5 +2437,24 @@
     "perStudent": "Per Student",
     "studentName": "Student Name",
     "assessmentResults": "Assessment Results"
+  },
+  "student": {
+    "academicHistory": {
+      "title": "Academic history",
+      "subtitle": "All enrollments and program changes for this student.",
+      "currentTitle": "Current program",
+      "currentEmpty": "No active program assigned yet.",
+      "timelineTitle": "Academic timeline",
+      "timelineEmpty": "No enrollments recorded yet.",
+      "historyTitle": "Program changes",
+      "historyEmpty": "No program changes recorded yet.",
+      "period": "Period",
+      "class": "Class",
+      "program": "Program",
+      "status": "Status",
+      "from": "From",
+      "fromInitial": "No previous program",
+      "to": "To"
+    }
   }
 }

@@ -46,6 +46,32 @@ export const ParentChildLinksPage = lazy(() =>
 export const BadgesPage = lazy(() =>
   import('@/features/admin/BadgesPage').then((m) => ({ default: m.BadgesPage })),
 );
+export const ProgramsPage = lazy(() =>
+  import('@/features/admin/ProgramsPage').then((m) => ({ default: m.ProgramsPage })),
+);
+export const EnrollmentsPage = lazy(() =>
+  import('@/features/admin/EnrollmentsPage').then((m) => ({ default: m.EnrollmentsPage })),
+);
+export const ProgramEquivalencesPage = lazy(() =>
+  import('@/features/admin/ProgramEquivalencesPage').then((m) => ({
+    default: m.ProgramEquivalencesPage,
+  })),
+);
+export const ProgramVersionsPage = lazy(() =>
+  import('@/features/admin/ProgramVersionsPage').then((m) => ({
+    default: m.ProgramVersionsPage,
+  })),
+);
+export const EligibilityRulesPage = lazy(() =>
+  import('@/features/admin/EligibilityRulesPage').then((m) => ({
+    default: m.EligibilityRulesPage,
+  })),
+);
+export const StudentAcademicHistoryPage = lazy(() =>
+  import('@/features/admin/StudentAcademicHistoryPage').then((m) => ({
+    default: m.StudentAcademicHistoryPage,
+  })),
+);
 
 // Analytics
 export const AnalyticsDashboardPage = lazy(() =>

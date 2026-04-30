@@ -24,6 +24,10 @@ export interface EnrollmentPayload {
   student_id: string;
   class_id: string;
   period_id: string;
+  /** G49 Phase 1 follow-up: optional program (filière) on creation. When set,
+   *  the backend writes one INITIAL ProgramAssignmentEvent in the same
+   *  transaction. */
+  program_id?: string;
 }
 
 export interface EnrollmentRecord {
@@ -33,6 +37,8 @@ export interface EnrollmentRecord {
   period_id: string;
   school_id: string;
   status: string;
+  /** Always returned; null when no program is assigned. */
+  program_id: string | null;
 }
 
 export interface ClassContentItem {

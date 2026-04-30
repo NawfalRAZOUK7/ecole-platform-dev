@@ -33,6 +33,12 @@ import {
   BatchRegisterPage,
   ParentChildLinksPage,
   BadgesPage,
+  ProgramsPage,
+  EnrollmentsPage,
+  ProgramEquivalencesPage,
+  ProgramVersionsPage,
+  EligibilityRulesPage,
+  StudentAcademicHistoryPage,
   AnalyticsDashboardPage,
   TeacherClassesPage,
   TeacherCoursesPage,
@@ -189,6 +195,54 @@ function App() {
                 element={
                   <ProtectedRoute roles={['ADM', 'DIR']}>
                     <UsersPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/programs"
+                element={
+                  <ProtectedRoute roles={['ADM', 'DIR']}>
+                    <ProgramsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/enrollments"
+                element={
+                  <ProtectedRoute roles={['ADM', 'DIR']}>
+                    <EnrollmentsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/program-equivalences"
+                element={
+                  <ProtectedRoute roles={['ADM', 'DIR']}>
+                    <ProgramEquivalencesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/programs/:programId/versions"
+                element={
+                  <ProtectedRoute roles={['ADM', 'DIR']}>
+                    <ProgramVersionsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/eligibility-rules"
+                element={
+                  <ProtectedRoute roles={['ADM', 'DIR']}>
+                    <EligibilityRulesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/students/:studentId/academic-history"
+                element={
+                  <ProtectedRoute roles={['ADM', 'DIR', 'TCH', 'PAR', 'STD']}>
+                    <StudentAcademicHistoryPage />
                   </ProtectedRoute>
                 }
               />

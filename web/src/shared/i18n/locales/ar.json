@@ -69,7 +69,11 @@
     "myChildren": "أبنائي",
     "rewards": "المكافآت",
     "myRewards": "مكافآتي",
-    "games": "الألعاب"
+    "games": "الألعاب",
+    "adminPrograms": "الشُّعب",
+    "adminEnrollments": "التسجيلات",
+    "adminEquivalences": "المعادلات",
+    "adminEligibilityRules": "قواعد الأهلية"
   },
   "login": {
     "title": "تسجيل الدخول",
@@ -1334,6 +1338,66 @@
       "statusRejected": "مرفوض",
       "allStatuses": "جميع الحالات",
       "empty": "لا توجد مبررات للمراجعة"
+    },
+    "programs": {
+      "title": "الشُّعَب الأكاديمية",
+      "subtitle": "أدِر الشُّعَب (المسارات الأكاديمية) في مدرستك.",
+      "createTitle": "إنشاء شُعبة",
+      "create": "إنشاء",
+      "edit": "تعديل",
+      "activate": "تفعيل",
+      "deactivate": "إلغاء التفعيل",
+      "showInactive": "إظهار الشُّعَب غير المفعّلة",
+      "empty": "لا توجد شُعَب — أنشئ الأولى أعلاه.",
+      "code": "الرمز",
+      "name": "الاسم",
+      "level": "المستوى",
+      "versionLabel": "الإصدار",
+      "effectiveFrom": "سارية من",
+      "description": "الوصف",
+      "status": "الحالة",
+      "statusActive": "مفعّلة",
+      "statusInactive": "غير مفعّلة",
+      "actions": "الإجراءات",
+      "assign": {
+        "title": "تعيين شُعبة",
+        "subtitle": "اختر شُعبةً وسبب التغيير. يُحفظ التسجيل السابق ضمن السجل التاريخي.",
+        "programLabel": "الشُّعبة",
+        "programPlaceholder": "اختر شُعبة…",
+        "reasonLabel": "السبب",
+        "noteLabel": "ملاحظة (اختياري)",
+        "notePlaceholder": "مثلاً: طلب من الأولياء، انتقال آخر السنة، تصحيح…",
+        "submit": "تعيين",
+        "reason": {
+          "INITIAL": "تعيين أوّلي",
+          "TRANSFER": "نقل (خلال السنة)",
+          "PROMOTION": "انتقال (بداية السنة)",
+          "CORRECTION": "تصحيح",
+          "READMISSION": "إعادة قبول"
+        }
+      }
+    },
+    "enrollments": {
+      "title": "التسجيلات",
+      "subtitle": "قائمة التسجيلات في المدرسة مع تعيين سريع للشُّعبة.",
+      "student": "التلميذ",
+      "class": "الفصل",
+      "period": "الفترة",
+      "academicYear": "السنة الدراسية",
+      "program": "الشُّعبة",
+      "status": "الحالة",
+      "created": "تاريخ التسجيل",
+      "actions": "الإجراءات",
+      "statusFilter": "التصفية حسب الحالة",
+      "allStatuses": "جميع الحالات",
+      "statusActive": "نشطة",
+      "statusTransferred": "تم النقل",
+      "statusDropped": "منسحب",
+      "missingProgramOnly": "إظهار التسجيلات بدون شُعبة فقط",
+      "noProgram": "بدون شُعبة",
+      "assignProgram": "تعيين الشُّعبة",
+      "empty": "لا توجد تسجيلات مطابقة لهذه التصفية.",
+      "viewAcademicHistory": "عرض السجل الأكاديمي"
     }
   },
   "teacher": {
@@ -1482,7 +1546,9 @@
       "attendance": "الحضور",
       "invoices": "الفواتير",
       "payments": "المدفوعات"
-    }
+    },
+    "allPrograms": "جميع الشُّعَب",
+    "programFilterLabel": "التصفية حسب الشُّعبة"
   },
   "calendar": {
     "title": "التقويم",
@@ -2391,5 +2457,24 @@
     "perStudent": "لكل طالب",
     "studentName": "اسم الطالب",
     "assessmentResults": "نتائج التقييمات"
+  },
+  "student": {
+    "academicHistory": {
+      "title": "السجل الأكاديمي",
+      "subtitle": "جميع التسجيلات وتغييرات الشُّعبة لهذا التلميذ.",
+      "currentTitle": "الشُّعبة الحالية",
+      "currentEmpty": "لا توجد شُعبة نشطة حالياً.",
+      "timelineTitle": "المسار الأكاديمي",
+      "timelineEmpty": "لا توجد تسجيلات.",
+      "historyTitle": "تغييرات الشُّعبة",
+      "historyEmpty": "لا توجد تغييرات للشُّعبة.",
+      "period": "الفترة",
+      "class": "الفصل",
+      "program": "الشُّعبة",
+      "status": "الحالة",
+      "from": "من",
+      "fromInitial": "لا توجد شُعبة سابقة",
+      "to": "إلى"
+    }
   }
 }
