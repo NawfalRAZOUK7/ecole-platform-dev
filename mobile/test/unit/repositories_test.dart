@@ -404,7 +404,7 @@ void main() {
       final cache = MockCacheStore();
       final repository = ContentRepositoryImpl(api: api, cache: cache);
 
-      when(() => cache.get('content:first::')).thenAnswer(
+      when(() => cache.get('content:first:::')).thenAnswer(
         (_) async => const [
           {
             'id': 'content-1',

@@ -21,6 +21,7 @@ from tests.conftest import (
     LOGIN_TIMEOUT,
     PARENT_EMAIL,
     PARENT_PASSWORD,
+    SCHOOL_ID,
     STUDENT_EMAIL,
     STUDENT_PASSWORD,
     TEACHER_EMAIL,
@@ -32,29 +33,32 @@ STUDENT_ID = "10000000-0000-4000-8000-000000000007"
 RANDOM_CHILD_ID = "00000000-dead-beef-0000-000000000099"
 
 
-@pytest_asyncio.fixture
+@pytest_asyncio.fixture(loop_scope="function")
 async def client():
     async with httpx.AsyncClient(base_url=BASE_URL, timeout=LOGIN_TIMEOUT) as c:
         yield c
 
 
 async def _login(client: httpx.AsyncClient, email: str, password: str) -> str:
-    resp = await client.post("/auth/login", json={"email": email, "password": password})
+    resp = await client.post(
+        "/auth/login",
+        json={"email": email, "password": password, "school_id": SCHOOL_ID},
+    )
     assert resp.status_code == 200, f"Login failed for {email}: {resp.text}"
     return resp.json()["data"]["access_token"]
 
 
-@pytest_asyncio.fixture
+@pytest_asyncio.fixture(loop_scope="function")
 async def parent_token(client: httpx.AsyncClient) -> str:
     return await _login(client, PARENT_EMAIL, PARENT_PASSWORD)
 
 
-@pytest_asyncio.fixture
+@pytest_asyncio.fixture(loop_scope="function")
 async def student_token(client: httpx.AsyncClient) -> str:
     return await _login(client, STUDENT_EMAIL, STUDENT_PASSWORD)
 
 
-@pytest_asyncio.fixture
+@pytest_asyncio.fixture(loop_scope="function")
 async def teacher_token(client: httpx.AsyncClient) -> str:
     return await _login(client, TEACHER_EMAIL, TEACHER_PASSWORD)
 

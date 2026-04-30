@@ -229,7 +229,7 @@ async def finhealth_api_context(session_factory):
             status=InvoiceStatus.PAID.value,
             total_amount=15000.0,
             issued_date=date.today() - timedelta(days=25),
-            due_date=date.today().replace(day=1),
+            due_date=date.today() - timedelta(days=10),
         )
         await PaymentAttemptFactory.create(
             session=session,
