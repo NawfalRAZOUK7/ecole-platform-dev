@@ -162,6 +162,9 @@ services:
     expose:
       - "8000"
     volumes:
+      # GRACE PERIOD: keep this mount until 30 days after STORAGE_BACKEND=s3 is stable in staging.
+      # Remove this line AND staging_uploads in top-level volumes: after the grace period.
+      # See docs/MINIO_ROLLOUT.md §9 for the cleanup procedure.
       - staging_uploads:/app/uploads
     depends_on:
       pgbouncer:
@@ -310,6 +313,8 @@ volumes:
   staging_postgres_data:
   staging_redis_data:
   staging_wal_archive:
+  # GRACE PERIOD: remove staging_uploads after 30 days of stable STORAGE_BACKEND=s3.
+  # See docs/MINIO_ROLLOUT.md §9.  Do NOT remove until that procedure is followed.
   staging_uploads:
 
 networks:

@@ -2,11 +2,11 @@
 
 ## Environnements
 
-| Env | Fichier Compose | Description |
-|-----|----------------|-------------|
-| **Dev** | `infra/docker-compose.dev.yml` | Hot reload, logs debug, DB locale |
-| **Staging** | `infra/docker-compose.staging.yml` | Répliques, SSL, proche de la prod |
-| **Prod** | `infra/docker-compose.prod.yml` | HA, backups, Docker Secrets |
+| Env            | Fichier Compose                       | Description                         |
+| -------------- | ------------------------------------- | ----------------------------------- |
+| **Dev**        | `infra/docker-compose.dev.yml`        | Hot reload, logs debug, DB locale   |
+| **Staging**    | `infra/docker-compose.staging.yml`    | Répliques, SSL, proche de la prod   |
+| **Prod**       | `infra/docker-compose.prod.yml`       | HA, backups, Docker Secrets         |
 | **Monitoring** | `infra/docker-compose.monitoring.yml` | Prometheus + Grafana + Loki + Tempo |
 
 ---
@@ -33,13 +33,13 @@ make clean
 
 ### Services démarrés
 
-| Service | Port | Description |
-|---------|------|-------------|
-| API | `8000` | FastAPI backend |
-| Web | `5173` | Vite dev server (npm run dev) |
-| PostgreSQL | `5432` | Base de données |
-| Redis | `6379` | Cache / sessions / queue |
-| Nginx | `80/443` | Reverse proxy |
+| Service    | Port     | Description                   |
+| ---------- | -------- | ----------------------------- |
+| API        | `8000`   | FastAPI backend               |
+| Web        | `5173`   | Vite dev server (npm run dev) |
+| PostgreSQL | `5432`   | Base de données               |
+| Redis      | `6379`   | Cache / sessions / queue      |
+| Nginx      | `80/443` | Reverse proxy                 |
 
 ---
 
@@ -51,6 +51,7 @@ make staging-down   # Arrêter
 ```
 
 Différences avec dev :
+
 - Images built (pas de volumes mount)
 - SSL via Let's Encrypt ou certificats locaux
 - Répliques API (configurable)
@@ -121,16 +122,16 @@ autoscaling:
 
 ### Workflows
 
-| Workflow | Fichier | Déclencheur | Actions |
-|----------|---------|-------------|---------|
-| Backend CI | `ci.yml` | Push/PR → main | Lint (Ruff + MyPy), Tests (Pytest), Build Docker |
-| Web CI | `web-ci.yml` | Push/PR → main | Lint (ESLint), Tests (Vitest), Build Vite |
-| Web E2E | `web-e2e.yml` | PR → main | Tests Playwright end-to-end |
-| Deploy Staging | `deploy-staging.yml` | Merge → main | Build + Push image + Deploy staging auto |
-| Deploy K8s | `deploy-k8s.yml` | Tag release | Deploy production (blue-green) |
-| Docs | `docs.yml` | Push docs/ | Génération documentation API |
-| Cleanup | `cleanup-images.yml` | Cron hebdo | Nettoyage images Docker anciennes |
-| Dependabot | `dependabot-automerge.yml` | PR Dependabot | Auto-merge patches sécurité |
+| Workflow       | Fichier                    | Déclencheur    | Actions                                          |
+| -------------- | -------------------------- | -------------- | ------------------------------------------------ |
+| Backend CI     | `ci.yml`                   | Push/PR → main | Lint (Ruff + MyPy), Tests (Pytest), Build Docker |
+| Web CI         | `web-ci.yml`               | Push/PR → main | Lint (ESLint), Tests (Vitest), Build Vite        |
+| Web E2E        | `web-e2e.yml`              | PR → main      | Tests Playwright end-to-end                      |
+| Deploy Staging | `deploy-staging.yml`       | Merge → main   | Build + Push image + Deploy staging auto         |
+| Deploy K8s     | `deploy-k8s.yml`           | Tag release    | Deploy production (blue-green)                   |
+| Docs           | `docs.yml`                 | Push docs/     | Génération documentation API                     |
+| Cleanup        | `cleanup-images.yml`       | Cron hebdo     | Nettoyage images Docker anciennes                |
+| Dependabot     | `dependabot-automerge.yml` | PR Dependabot  | Auto-merge patches sécurité                      |
 
 ### Pipeline de déploiement
 
@@ -156,11 +157,11 @@ make monitoring-up
 
 ### Accès
 
-| Service | URL | Credentials |
-|---------|-----|-------------|
-| Grafana | `http://localhost:3000` | admin / admin |
-| Prometheus | `http://localhost:9090` | — |
-| Alertmanager | `http://localhost:9093` | — |
+| Service      | URL                     | Credentials   |
+| ------------ | ----------------------- | ------------- |
+| Grafana      | `http://localhost:3000` | admin / admin |
+| Prometheus   | `http://localhost:9090` | —             |
+| Alertmanager | `http://localhost:9093` | —             |
 
 ### 8 Dashboards Grafana
 
@@ -179,15 +180,15 @@ make monitoring-up
 
 Copier `.env.example` et configurer :
 
-| Variable | Défaut | Description |
-|----------|--------|-------------|
-| `APP_ENV` | `development` | Environnement (development/staging/production) |
-| `DATABASE_URL` | `postgresql+asyncpg://...` | Connexion PostgreSQL |
-| `REDIS_URL` | `redis://...` | Connexion Redis |
-| `JWT_SECRET_KEY` | `change-me-...` | Clé secrète JWT (générer une vraie clé en prod) |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | `30` | Durée de vie access token |
-| `MAX_SESSIONS_PER_USER` | `5` | Sessions simultanées max |
-| `LOG_LEVEL` | `DEBUG` | Niveau de log |
+| Variable                      | Défaut                     | Description                                     |
+| ----------------------------- | -------------------------- | ----------------------------------------------- |
+| `APP_ENV`                     | `development`              | Environnement (development/staging/production)  |
+| `DATABASE_URL`                | `postgresql+asyncpg://...` | Connexion PostgreSQL                            |
+| `REDIS_URL`                   | `redis://...`              | Connexion Redis                                 |
+| `JWT_SECRET_KEY`              | `change-me-...`            | Clé secrète JWT (générer une vraie clé en prod) |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | `30`                       | Durée de vie access token                       |
+| `MAX_SESSIONS_PER_USER`       | `5`                        | Sessions simultanées max                        |
+| `LOG_LEVEL`                   | `DEBUG`                    | Niveau de log                                   |
 
 ### Secrets en production
 
@@ -202,3 +203,68 @@ kubectl create secret generic ecole-secrets \
   --from-literal=jwt-secret-key=my-secret-key \
   --from-literal=db-password=my-db-password
 ```
+
+---
+
+## Object Storage (MinIO) — Phase 5 Activation
+
+The default storage backend is **local filesystem** (`STORAGE_BACKEND=local`).
+MinIO is present in dev compose but the backend does not write to it until the switch is flipped.
+
+### Current status per environment
+
+| Environment | `STORAGE_BACKEND` default | MinIO service                         | Ready to flip?                 |
+| ----------- | ------------------------- | ------------------------------------- | ------------------------------ |
+| dev         | `local`                   | ✅ running (`docker-compose.dev.yml`) | After migration script passes  |
+| staging     | `local`                   | External managed MinIO / S3           | After dev is stable ≥ 24 h     |
+| prod        | `local`                   | External managed MinIO / S3           | After staging is stable ≥ 24 h |
+
+### Activation (per environment)
+
+1. Run the migration script — must complete with `"failed": 0` and `"sample_passed": true`:
+
+   ```bash
+   python scripts/migrate_local_to_minio.py \
+       --source uploads/ \
+       --bucket ecole-<env>-private \
+       --verify-sample 50
+   ```
+
+2. Set both variables in your environment's `.env` or secrets manager:
+
+   ```bash
+   STORAGE_BACKEND=s3
+   DOCUMENT_STORAGE_BACKEND=s3
+   ```
+
+3. Restart backend and worker:
+
+   ```bash
+   # dev / staging
+   docker compose -f infra/docker-compose.<env>.yml restart backend worker
+
+   # prod (rolling)
+   docker compose -f infra/docker-compose.prod.yml up -d --no-deps backend worker
+   ```
+
+4. Run the full smoke test checklist: **docs/MINIO_ROLLOUT.md §7**.
+
+### Rollback (under 2 minutes)
+
+```bash
+# 1. Revert env vars
+STORAGE_BACKEND=local
+DOCUMENT_STORAGE_BACKEND=local
+
+# 2. Restart
+docker compose -f infra/docker-compose.<env>.yml restart backend worker
+
+# 3. Verify
+make health
+```
+
+Local files remain intact — the `upload_data` / `staging_uploads` / `backend_uploads` volumes
+are **never removed** during the 30-day grace period after a successful flip.
+
+For the complete rollout procedure, per-environment steps, rollback troubleshooting, and
+the deferred volume cleanup instructions see **docs/MINIO_ROLLOUT.md**.

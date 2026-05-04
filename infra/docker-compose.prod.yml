@@ -90,6 +90,9 @@ services:
       # Timezone
       TZ: ${TZ:-Africa/Casablanca}
     volumes:
+      # GRACE PERIOD: keep this mount until 30 days after STORAGE_BACKEND=s3 is stable in prod.
+      # Remove this line AND backend_uploads in top-level volumes: after the grace period.
+      # See docs/MINIO_ROLLOUT.md §9 for the cleanup procedure.
       - backend_uploads:/app/uploads
     secrets:
       - database_url
@@ -567,6 +570,8 @@ volumes:
   prod_postgres_replica_data:
   prod_redis_data:
   prod_wal_archive:
+  # GRACE PERIOD: remove backend_uploads after 30 days of stable STORAGE_BACKEND=s3 in prod.
+  # See docs/MINIO_ROLLOUT.md §9.  Do NOT remove until that procedure is followed.
   backend_uploads:
   certbot_webroot:
 
