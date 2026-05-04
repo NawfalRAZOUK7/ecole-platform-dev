@@ -5,6 +5,7 @@ Reference: Pack D3 — Runtime Configuration
 
 import os
 from pathlib import Path
+from typing import Literal
 
 from pydantic_settings import BaseSettings
 
@@ -80,6 +81,28 @@ class Settings(BaseSettings):
         "text/plain,"
         "application/zip"
     )
+
+    # -------------------------------------------------------------------------
+    # Core storage backend (Phase 2 — MinIO integration)
+    # -------------------------------------------------------------------------
+    # Values: "local" (default, filesystem) | "s3" (MinIO / AWS S3)
+    # Switch to "s3" only after Phase 2 implementation is complete.
+    storage_backend: Literal["local", "s3"] = "local"
+
+    # S3 / MinIO connection settings — used when storage_backend = "s3".
+    # Also cascade into document_storage_* defaults when those fields
+    # are still at their empty/placeholder values (see model_post_init).
+    s3_endpoint: str = ""              # http://minio:9000 (dev) | https://... (prod)
+    s3_region: str = "us-east-1"
+    s3_access_key: str = ""
+    s3_secret_key: str = ""
+    s3_bucket: str = ""               # ecole-dev-private / ecole-staging-private / etc.
+    s3_force_path_style: bool = False  # True required for MinIO; False for AWS S3
+    s3_sse_enabled: bool = False       # Enable AES256 server-side encryption on put
+
+    # Presigned URL TTLs (seconds)
+    s3_presign_get_ttl_seconds: int = 600   # 10 min — read / download links
+    s3_presign_put_ttl_seconds: int = 900   # 15 min — direct client upload links (Phase 8)
 
     # Document management (Phase 16)
     document_storage_backend: str = "local"  # local | s3
@@ -174,6 +197,34 @@ class Settings(BaseSettings):
         for field_name, value in secret_overrides.items():
             if value:
                 object.__setattr__(self, field_name, value)
+
+        # ----------------------------------------------------------------
+        # Backward-compatibility cascade: generic s3_* → document_storage_*
+        #
+        # Rationale: document_storage_* (Phase 16) and the new s3_* settings
+        # (Phase 2) both describe the same MinIO/S3 service in most deployments.
+        # To avoid forcing operators to duplicate credentials, we cascade the
+        # generic s3_* values into the document_storage_* slots when those
+        # slots are still at their empty / placeholder defaults.
+        #
+        # Explicit DOCUMENT_STORAGE_* env vars always take precedence.
+        # ----------------------------------------------------------------
+        _cascade: list[tuple[str, str, str]] = [
+            # (s3_field, doc_field, sentinel_meaning_not_explicitly_set)
+            ("s3_endpoint",    "document_storage_endpoint",   ""),
+            ("s3_access_key",  "document_storage_access_key", ""),
+            ("s3_secret_key",  "document_storage_secret_key", ""),
+        ]
+        for s3_field, doc_field, sentinel in _cascade:
+            s3_val = getattr(self, s3_field)
+            doc_val = getattr(self, doc_field)
+            if s3_val and doc_val == sentinel:
+                object.__setattr__(self, doc_field, s3_val)
+
+        # Bucket: cascade only when the doc bucket is still the placeholder default.
+        _DOC_BUCKET_DEFAULT = "ecole-platform"
+        if self.s3_bucket and self.document_storage_bucket == _DOC_BUCKET_DEFAULT:
+            object.__setattr__(self, "document_storage_bucket", self.s3_bucket)
 
     model_config = {
         "env_file": DEFAULT_ENV_FILES,
