@@ -67,9 +67,24 @@ services:
       SMTP_USER: ${SMTP_USER}
       SMTP_PASSWORD_FILE: /run/secrets/smtp_password
       # S3 / Object storage
+      # Activate after Phase 2: set STORAGE_BACKEND=s3 and
+      # DOCUMENT_STORAGE_BACKEND=s3 in your .env.prod file.
+      # Credentials must be injected via Docker secrets or IAM roles —
+      # never committed as plain-text values.
+      STORAGE_BACKEND: ${STORAGE_BACKEND:-local}
       S3_ENDPOINT: ${S3_ENDPOINT}
-      S3_BUCKET: ${S3_BUCKET:-ecole-uploads}
-      S3_REGION: ${S3_REGION:-auto}
+      S3_BUCKET: ${S3_BUCKET:-ecole-prod-private}
+      S3_REGION: ${S3_REGION:-us-east-1}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-}
+      S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-false}
+      DOCUMENT_STORAGE_BACKEND: ${DOCUMENT_STORAGE_BACKEND:-local}
+      DOCUMENT_STORAGE_ENDPOINT: ${S3_ENDPOINT}
+      DOCUMENT_STORAGE_BUCKET: ${S3_BUCKET:-ecole-prod-private}
+      DOCUMENT_STORAGE_REGION: ${S3_REGION:-us-east-1}
+      DOCUMENT_STORAGE_ACCESS_KEY: ${S3_ACCESS_KEY:-}
+      DOCUMENT_STORAGE_SECRET_KEY: ${S3_SECRET_KEY:-}
+      DOCUMENT_STORAGE_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-false}
       # TOTP
       TOTP_ISSUER: ${TOTP_ISSUER:-EcolePlatform}
       # Timezone
@@ -102,7 +117,13 @@ services:
         max-size: "10m"
         max-file: "5"
     healthcheck:
-      test: ["CMD", "python", "-c", "import httpx; r = httpx.get('http://localhost:8000/api/v1/health'); r.raise_for_status()"]
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import httpx; r = httpx.get('http://localhost:8000/api/v1/health'); r.raise_for_status()",
+        ]
       interval: 30s
       timeout: 10s
       start_period: 30s
@@ -158,7 +179,11 @@ services:
       - app_db_password
       - app_readonly_password
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:?POSTGRES_USER must be set} -d ${POSTGRES_DB:?POSTGRES_DB must be set}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:?POSTGRES_USER must be set} -d ${POSTGRES_DB:?POSTGRES_DB must be set}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -242,13 +267,13 @@ services:
       - /bin/sh
       - -c
       - |
-          if [ ! -s /var/lib/postgresql/data/PG_VERSION ]; then
-            until pg_basebackup -h postgres -U replicator -D /var/lib/postgresql/data -Fp -Xs -R; do
-              echo "Waiting for primary..."
-              sleep 5
-            done
-          fi
-          exec postgres -c hot_standby=on
+        if [ ! -s /var/lib/postgresql/data/PG_VERSION ]; then
+          until pg_basebackup -h postgres -U replicator -D /var/lib/postgresql/data -Fp -Xs -R; do
+            echo "Waiting for primary..."
+            sleep 5
+          done
+        fi
+        exec postgres -c hot_standby=on
     depends_on:
       postgres:
         condition: service_healthy
@@ -287,13 +312,17 @@ services:
       - /bin/sh
       - -c
       - |
-          REDIS_PASSWORD="$$(cat /run/secrets/redis_password)"
-          exec redis-server /usr/local/etc/redis/redis.conf \
-            --requirepass "$$REDIS_PASSWORD" \
-            --maxmemory 512mb \
-            --maxmemory-policy allkeys-lru
+        REDIS_PASSWORD="$$(cat /run/secrets/redis_password)"
+        exec redis-server /usr/local/etc/redis/redis.conf \
+          --requirepass "$$REDIS_PASSWORD" \
+          --maxmemory 512mb \
+          --maxmemory-policy allkeys-lru
     healthcheck:
-      test: ["CMD-SHELL", "REDIS_PASSWORD=\"$$(cat /run/secrets/redis_password)\" && redis-cli -a \"$$REDIS_PASSWORD\" ping | grep PONG"]
+      test:
+        [
+          "CMD-SHELL",
+          'REDIS_PASSWORD="$$(cat /run/secrets/redis_password)" && redis-cli -a "$$REDIS_PASSWORD" ping | grep PONG',
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -393,9 +422,21 @@ services:
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER}
       SMTP_PASSWORD_FILE: /run/secrets/smtp_password
+      # S3 / Object storage (worker mirrors backend config)
+      STORAGE_BACKEND: ${STORAGE_BACKEND:-local}
       S3_ENDPOINT: ${S3_ENDPOINT}
-      S3_BUCKET: ${S3_BUCKET:-ecole-uploads}
-      S3_REGION: ${S3_REGION:-auto}
+      S3_BUCKET: ${S3_BUCKET:-ecole-prod-private}
+      S3_REGION: ${S3_REGION:-us-east-1}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-}
+      S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-false}
+      DOCUMENT_STORAGE_BACKEND: ${DOCUMENT_STORAGE_BACKEND:-local}
+      DOCUMENT_STORAGE_ENDPOINT: ${S3_ENDPOINT}
+      DOCUMENT_STORAGE_BUCKET: ${S3_BUCKET:-ecole-prod-private}
+      DOCUMENT_STORAGE_REGION: ${S3_REGION:-us-east-1}
+      DOCUMENT_STORAGE_ACCESS_KEY: ${S3_ACCESS_KEY:-}
+      DOCUMENT_STORAGE_SECRET_KEY: ${S3_SECRET_KEY:-}
+      DOCUMENT_STORAGE_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-false}
       TZ: ${TZ:-Africa/Casablanca}
     secrets:
       - database_url
