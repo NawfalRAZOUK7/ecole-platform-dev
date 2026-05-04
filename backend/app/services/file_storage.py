@@ -1,4 +1,8 @@
-"""Phase 16 file storage service with local and S3-compatible backends."""
+"""Phase 16 file storage service — local and S3-compatible backends.
+
+Phase 2B (MinIO): S3FileStorageBackend now uses aioboto3 (fully async).
+The old sync boto3 client and tempfile-download pattern have been removed.
+"""
 
 from __future__ import annotations
 
@@ -7,24 +11,34 @@ import io
 import mimetypes
 import re
 import socket
-import tempfile
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 from app.core.config import settings
 from app.core.exceptions import NotFoundError, ValidationError
 
 try:  # pragma: no cover - optional runtime dependency
-    import boto3
-except Exception:  # pragma: no cover - handled at runtime
-    boto3 = None
-
-try:  # pragma: no cover - optional runtime dependency
     from PIL import Image
 except Exception:  # pragma: no cover - handled at runtime
     Image = None
+
+
+# ---------------------------------------------------------------------------
+# aioboto3 session singleton (document storage)
+# ---------------------------------------------------------------------------
+
+_s3_doc_session: Any = None
+
+
+def _get_s3_doc_session() -> Any:
+    """Return (or lazily create) the module-level aioboto3 session for document storage."""
+    global _s3_doc_session
+    if _s3_doc_session is None:
+        import aioboto3  # noqa: PLC0415
+        _s3_doc_session = aioboto3.Session()
+    return _s3_doc_session
 
 
 ALLOWED_MIME_TYPES = {
@@ -117,7 +131,21 @@ class FileStorageBackend(Protocol):
 
     async def delete(self, relative_path: str) -> None: ...
 
-    async def local_path(self, relative_path: str) -> Path: ...
+    async def local_path(self, relative_path: str) -> Path:
+        """Return absolute local Path for a stored file.
+
+        S3 backend raises NotImplementedError — use presign_get (Prompt 6)
+        for download responses or get_bytes for server-side processing.
+        """
+        ...
+
+    async def get_bytes(self, relative_path: str) -> bytes:
+        """Return the raw content of a stored file as bytes.
+
+        Suitable for server-side processing (e.g. version restore, zip assembly).
+        Not suitable for very large objects (>100 MB) — use presigned URLs instead.
+        """
+        ...
 
 
 class LocalFileStorageBackend:
@@ -153,31 +181,54 @@ class LocalFileStorageBackend:
             raise NotFoundError("Stored file not found", error_code="ERR-DOC-404")
         return target
 
+    async def get_bytes(self, relative_path: str) -> bytes:
+        """Return raw file content. Raises NotFoundError if missing."""
+        target = self.base_dir / relative_path
+        if not target.exists():
+            raise NotFoundError("Stored file not found", error_code="ERR-DOC-404")
+        return target.read_bytes()
+
 
 class S3FileStorageBackend:
-    def __init__(self, client=None) -> None:
-        if client is None:
-            if boto3 is None:  # pragma: no cover - optional dependency
-                raise RuntimeError("boto3 is required for the S3 storage backend")
-            client = boto3.client(
-                "s3",
-                endpoint_url=settings.document_storage_endpoint or None,
-                region_name=settings.document_storage_region,
-                aws_access_key_id=settings.document_storage_access_key or None,
-                aws_secret_access_key=settings.document_storage_secret_key or None,
-            )
-        self.client = client
-        self.bucket = settings.document_storage_bucket
+    """Async S3-compatible document storage backend using aioboto3.
+
+    Phase 2B: replaced blocking boto3 client + tempfile download with a fully
+    async aioboto3 session.  local_path() is intentionally not implemented —
+    callers that need a local file for download responses will be updated to
+    presigned URLs in Prompt 6.  Server-side callers (version restore, etc.)
+    should use get_bytes() instead.
+    """
+
+    def __init__(self) -> None:
+        self._bucket = settings.document_storage_bucket
+        self._client_kwargs: dict[str, Any] = {
+            "endpoint_url": settings.document_storage_endpoint or None,
+            "region_name": settings.document_storage_region,
+            "aws_access_key_id": settings.document_storage_access_key or None,
+            "aws_secret_access_key": settings.document_storage_secret_key or None,
+        }
+        if settings.document_storage_force_path_style:
+            from aiobotocore.config import AioConfig  # noqa: PLC0415
+            self._client_kwargs["config"] = AioConfig(s3={"addressing_style": "path"})
+
+    def _client(self) -> Any:
+        """Return a new aioboto3 S3 client async context manager."""
+        return _get_s3_doc_session().client("s3", **self._client_kwargs)
 
     async def save_bytes(
         self, *, relative_path: str, content: bytes, mime_type: str
     ) -> StoredObject:
-        self.client.put_object(
-            Bucket=self.bucket,
-            Key=relative_path,
-            Body=content,
-            ContentType=mime_type,
-        )
+        put_kwargs: dict[str, Any] = {
+            "Bucket": self._bucket,
+            "Key": relative_path,
+            "Body": content,
+            "ContentType": mime_type,
+            "CacheControl": "private, max-age=300",
+        }
+        if settings.s3_sse_enabled:
+            put_kwargs["ServerSideEncryption"] = "AES256"
+        async with self._client() as s3:
+            await s3.put_object(**put_kwargs)
         return StoredObject(
             storage_path=relative_path,
             size_bytes=len(content),
@@ -185,22 +236,55 @@ class S3FileStorageBackend:
         )
 
     async def exists(self, relative_path: str) -> bool:
-        try:
-            self.client.head_object(Bucket=self.bucket, Key=relative_path)
-            return True
-        except Exception:  # pragma: no cover - client-specific
-            return False
+        from botocore.exceptions import ClientError  # noqa: PLC0415
+
+        async with self._client() as s3:
+            try:
+                await s3.head_object(Bucket=self._bucket, Key=relative_path)
+                return True
+            except ClientError as exc:
+                if exc.response["Error"]["Code"] in ("404", "NoSuchKey"):
+                    return False
+                raise
 
     async def delete(self, relative_path: str) -> None:
-        self.client.delete_object(Bucket=self.bucket, Key=relative_path)
+        from botocore.exceptions import ClientError  # noqa: PLC0415
+
+        async with self._client() as s3:
+            try:
+                await s3.delete_object(Bucket=self._bucket, Key=relative_path)
+            except ClientError:
+                pass
 
     async def local_path(self, relative_path: str) -> Path:
-        temp_dir = Path(tempfile.gettempdir()) / "ecole-platform-documents"
-        temp_dir.mkdir(parents=True, exist_ok=True)
-        target = temp_dir / Path(relative_path).name
-        with target.open("wb") as handle:
-            self.client.download_fileobj(self.bucket, relative_path, handle)
-        return target
+        """Not implemented on S3 backend.
+
+        Download routes must use presigned URLs (Prompt 6).
+        For server-side byte access use get_bytes() instead.
+        """
+        raise NotImplementedError(
+            "S3FileStorageBackend does not support local_path(). "
+            "Call get_bytes() for server-side processing or obtain a presigned "
+            "URL via storage.presign_get() for download responses (Prompt 6)."
+        )
+
+    async def get_bytes(self, relative_path: str) -> bytes:
+        """Download S3 object body into memory.
+
+        Suitable for server-side processing (version restore, zip assembly).
+        Warning: reads the full object into memory; avoid for objects >100 MB.
+        For large streaming downloads, use presigned URLs (Prompt 6).
+        """
+        from botocore.exceptions import ClientError  # noqa: PLC0415
+
+        async with self._client() as s3:
+            try:
+                response = await s3.get_object(Bucket=self._bucket, Key=relative_path)
+                return await response["Body"].read()
+            except ClientError as exc:
+                if exc.response["Error"]["Code"] in ("404", "NoSuchKey"):
+                    raise NotFoundError("Stored file not found", error_code="ERR-DOC-404")
+                raise
 
 
 class FileStorageService:
@@ -317,6 +401,9 @@ class FileStorageService:
 
     async def local_path(self, relative_path: str) -> Path:
         return await self.backend.local_path(relative_path)
+
+    async def get_bytes(self, relative_path: str) -> bytes:
+        return await self.backend.get_bytes(relative_path)
 
     async def exists(self, relative_path: str) -> bool:
         return await self.backend.exists(relative_path)

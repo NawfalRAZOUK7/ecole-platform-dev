@@ -312,9 +312,7 @@ class StudentDocumentsService:
         if version is None:
             raise NotFoundError("Document version not found", error_code="ERR-DOC-404")
 
-        content = (
-            await file_storage_service.local_path(version.storage_path)
-        ).read_bytes()
+        content = await file_storage_service.get_bytes(version.storage_path)
         async with UnitOfWork(self.db) as uow:
             repo = DocumentsRepository(uow.session)
             audit = AuditService(uow.session)
