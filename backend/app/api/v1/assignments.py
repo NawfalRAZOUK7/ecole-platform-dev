@@ -5,7 +5,6 @@ from __future__ import annotations
 import uuid
 
 from fastapi import APIRouter, Depends, File, Query, Request, UploadFile
-from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -16,9 +15,11 @@ from app.core.dependencies import (
 )
 from app.core.filtering import FilterSpec, SortSpec, parse_filters, parse_sort
 from app.core.permissions import PERM_LMS_ASSIGNMENT_CREATE, PERM_LMS_ASSIGNMENT_READ
+from app.core.downloads import AS_QUERY, serve_file
 from app.core.request_utils import get_client_ip
 from app.core.response import clamp_page_size, list_response, success_response
 from app.core.search import parse_search
+from app.core.storage import storage
 from app.schemas.lms import AssignmentCreateRequest
 from app.services.lms import AssignmentService
 
@@ -112,16 +113,24 @@ async def upload_exercise_pdf(
 @router.get(
     "/{assignment_id}/exercise-pdf",
     summary="Download the exercise PDF",
-    response_description="PDF file binary",
+    response_description="PDF file binary or presigned redirect",
 )
 async def download_exercise_pdf(
     assignment_id: uuid.UUID,
+    as_: str | None = AS_QUERY,
     auth: AuthContext = Depends(requires_permission(PERM_LMS_ASSIGNMENT_CREATE)),
     db: AsyncSession = Depends(get_db),
 ):
     service = AssignmentService(db)
-    path, media_type, filename = await service.get_exercise_pdf(
+    storage_path, media_type, filename, size = await service.get_exercise_pdf(
         assignment_id=assignment_id,
         auth=auth,
     )
-    return FileResponse(path=path, media_type=media_type, filename=filename)
+    return await serve_file(
+        backend=storage,
+        storage_path=storage_path,
+        filename=filename,
+        mime_type=media_type,
+        size=size,
+        as_=as_,
+    )

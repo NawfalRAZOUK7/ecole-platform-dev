@@ -47,7 +47,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Protocol, runtime_checkable
 
 from fastapi import Query
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from starlette.responses import Response
 
 from app.core.config import settings
@@ -164,3 +164,49 @@ async def build_download_response(
         )
 
     return RedirectResponse(url=url, status_code=302)
+
+
+async def serve_file(
+    *,
+    backend: PresignableBackend,
+    storage_path: str,
+    filename: str,
+    mime_type: str,
+    size: int = 0,
+    as_: str | None = None,
+) -> Response:
+    """Route-level helper: presigned redirect for S3, FileResponse for local.
+
+    For S3/MinIO:
+        - Default: ``302 RedirectResponse`` with presigned ``Location``.
+        - ``as_='metadata'``: ``200 JSONResponse`` with ``DownloadMetadata``.
+
+    For local backend (``presign_get`` returns a relative path, not an HTTP
+    URL):
+        - Falls back to ``FileResponse`` served directly from disk.
+        - ``as_`` is ignored in local mode.
+
+    Authorization MUST be enforced by the caller before this function is called.
+    The ``storage_path`` must come from an ACL-checked DB row.
+    """
+    url = await backend.presign_get(storage_path, response_filename=filename)
+    if url.startswith(("http://", "https://")):
+        return await build_download_response(
+            backend=backend,
+            storage_path=storage_path,
+            filename=filename,
+            mime_type=mime_type,
+            size=size,
+            as_=as_,
+        )
+
+    # Local backend: presign_get returned the relative path — serve directly.
+    if hasattr(backend, "read"):
+        local_path = await backend.read(storage_path)
+    elif hasattr(backend, "local_path"):
+        local_path = await backend.local_path(storage_path)
+    else:  # pragma: no cover
+        raise RuntimeError(
+            f"Backend {type(backend).__name__} does not support local file access"
+        )
+    return FileResponse(path=local_path, media_type=mime_type, filename=filename)

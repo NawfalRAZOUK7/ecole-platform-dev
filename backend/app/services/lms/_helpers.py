@@ -6,13 +6,13 @@ import logging
 import math
 import uuid
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import AuthContext, verify_school_boundary
 from app.core.exceptions import NotFoundError, ValidationError
 from app.core.permissions import STD, TCH
-from app.core.storage import storage
 from app.domain.events.lms import (
     AssignmentCreated,
     GradePublished,
@@ -111,7 +111,7 @@ class LMSServiceBase(LMSSerializerMixin):
         *,
         assignment_id: uuid.UUID,
         auth: AuthContext,
-    ) -> tuple[str, str, str]:
+    ) -> tuple[str, str, str, int]:
         bundle = await self.repo.get_assignment_with_course(assignment_id)
         if bundle is None:
             raise NotFoundError("Assignment not found", error_code="ERR-LMS-404")
@@ -131,8 +131,12 @@ class LMSServiceBase(LMSSerializerMixin):
             if not enrolled:
                 raise NotFoundError("Assignment not found", error_code="ERR-LMS-404")
 
-        abs_path = await storage.read(assignment.exercise_pdf_path)
-        return str(abs_path), "application/pdf", f"exercise_{assignment_id}.pdf"
+        return (
+            assignment.exercise_pdf_path,
+            "application/pdf",
+            f"exercise_{assignment_id}.pdf",
+            0,
+        )
 
     async def get_submission_file(
         self,
@@ -140,7 +144,7 @@ class LMSServiceBase(LMSSerializerMixin):
         submission_id: uuid.UUID,
         file_id: uuid.UUID,
         auth: AuthContext,
-    ) -> tuple[str, str, str]:
+    ) -> tuple[str, str, str, int]:
         submission_file = await self.repo.get_submission_file(
             submission_id=submission_id,
             file_id=file_id,
@@ -159,11 +163,11 @@ class LMSServiceBase(LMSSerializerMixin):
         if auth.role == TCH and course.teacher_id != auth.user_id:
             raise NotFoundError("File not found", error_code="ERR-UPLOAD-404")
 
-        abs_path = await storage.read(submission_file.file_path)
         return (
-            str(abs_path),
+            submission_file.file_path,
             submission_file.mime_type or "application/octet-stream",
-            abs_path.name,
+            Path(submission_file.file_path).name,
+            submission_file.file_size or 0,
         )
 
     async def preview_submission_files(
@@ -227,7 +231,7 @@ class LMSServiceBase(LMSSerializerMixin):
         content_item_id: uuid.UUID,
         asset_id: uuid.UUID,
         auth: AuthContext,
-    ) -> tuple[str, str, str]:
+    ) -> tuple[str, str, str, int]:
         asset = await self.repo.get_content_asset(
             content_item_id=content_item_id,
             asset_id=asset_id,
@@ -241,11 +245,11 @@ class LMSServiceBase(LMSSerializerMixin):
         if content_item.school_id is not None:
             verify_school_boundary(content_item.school_id, auth)
 
-        abs_path = await storage.read(asset.file_path)
         return (
-            str(abs_path),
+            asset.file_path,
             asset.mime_type or "application/octet-stream",
-            abs_path.name,
+            Path(asset.file_path).name,
+            asset.file_size or 0,
         )
 
     async def get_quiz_attempt_results(

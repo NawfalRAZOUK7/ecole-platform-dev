@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, requires_permission
+from app.core.downloads import AS_QUERY, serve_file
 from app.core.exceptions import AuthenticationError, ValidationError
 from app.core.permissions import (
     PERM_DOC_BULK_DELETE,
@@ -33,6 +34,7 @@ from app.schemas.resources import (
     ResourceUpdateRequest,
 )
 from app.services.audit import AuditService
+from app.services.file_storage import file_storage_service
 from app.services.resource_library import ResourceLibraryService
 from app.services.student_documents import (
     DOCUMENT_DOWNLOAD_ACTION,
@@ -161,21 +163,25 @@ async def list_document_versions(
 async def get_document_version(
     document_id: uuid.UUID,
     version_number: int,
+    as_: str | None = AS_QUERY,
     auth: AuthContext = Depends(requires_permission(PERM_DOC_DOCUMENT_READ)),
     db: AsyncSession = Depends(get_db),
 ):
     service = StudentDocumentsService(db)
-    version, abs_path = await service.get_version(
+    version, storage_path = await service.get_version(
         document_id=document_id,
         version_number=version_number,
         school_id=auth.school_id,
         actor_id=auth.user_id,
         actor_role=auth.role,
     )
-    return FileResponse(
-        path=str(abs_path),
-        media_type=version.mime_type,
+    return await serve_file(
+        backend=file_storage_service.backend,
+        storage_path=storage_path,
         filename=version.original_filename,
+        mime_type=version.mime_type,
+        size=version.size_bytes,
+        as_=as_,
     )
 
 
@@ -239,6 +245,7 @@ async def download_document(
     document_id: uuid.UUID,
     request: Request,
     token: str | None = Query(None),
+    as_: str | None = AS_QUERY,
     auth: AuthContext | None = Depends(optional_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -266,7 +273,7 @@ async def download_document(
 
     if document.id != document_id:
         raise ValidationError("Document token mismatch", error_code="ERR-DOC-422")
-    abs_path = await service.read_document_file(document=document)
+    storage_path, mime_type, filename = await service.read_document_file(document=document)
     await audit.log_event(
         school_id=document.school_id,
         actor_id=actor_id,
@@ -278,10 +285,13 @@ async def download_document(
         ip_address=get_client_ip(request),
     )
     await db.commit()
-    return FileResponse(
-        path=str(abs_path),
-        media_type=document.mime_type,
-        filename=document.original_filename,
+    return await serve_file(
+        backend=file_storage_service.backend,
+        storage_path=storage_path,
+        filename=filename,
+        mime_type=mime_type,
+        size=document.size_bytes,
+        as_=as_,
     )
 
 
@@ -316,12 +326,12 @@ async def preview_document(
         )
     if document.id != document_id:
         raise ValidationError("Document token mismatch", error_code="ERR-DOC-422")
-    abs_path = await service.read_document_preview(document=document)
-    media_type = (
-        "image/png" if abs_path.suffix.lower() == ".png" else document.mime_type
-    )
-    return FileResponse(
-        path=str(abs_path), media_type=media_type, filename=abs_path.name
+    storage_path, media_type = await service.read_document_preview(document=document)
+    return await serve_file(
+        backend=file_storage_service.backend,
+        storage_path=storage_path,
+        filename=storage_path.rsplit("/", 1)[-1],
+        mime_type=media_type,
     )
 
 
@@ -709,6 +719,7 @@ async def download_resource(
     resource_id: uuid.UUID,
     request: Request,
     token: str | None = Query(None),
+    as_: str | None = AS_QUERY,
     auth: AuthContext | None = Depends(optional_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -732,7 +743,9 @@ async def download_resource(
         actor_id = auth.user_id
     if resource.id != resource_id:
         raise ValidationError("Resource token mismatch", error_code="ERR-DOC-422")
-    abs_path = await service.read_resource_file(resource=resource, document=document)
+    storage_path, mime_type, filename = await service.read_resource_file(
+        resource=resource, document=document
+    )
     await audit.log_event(
         school_id=resource.school_id,
         actor_id=actor_id,
@@ -744,10 +757,13 @@ async def download_resource(
         ip_address=get_client_ip(request),
     )
     await db.commit()
-    return FileResponse(
-        path=str(abs_path),
-        media_type=document.mime_type,
-        filename=document.original_filename,
+    return await serve_file(
+        backend=file_storage_service.backend,
+        storage_path=storage_path,
+        filename=filename,
+        mime_type=mime_type,
+        size=document.size_bytes,
+        as_=as_,
     )
 
 

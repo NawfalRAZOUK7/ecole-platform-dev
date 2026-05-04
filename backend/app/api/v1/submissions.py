@@ -5,11 +5,12 @@ from __future__ import annotations
 import uuid
 
 from fastapi import APIRouter, Depends, Form, Request, UploadFile
-from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, requires_permission
+from app.core.downloads import AS_QUERY, serve_file
+from app.core.storage import storage
 from app.core.permissions import (
     PERM_LMS_SUBMISSION_CREATE,
     PERM_LMS_SUBMISSION_FILE_READ,
@@ -122,21 +123,29 @@ async def upload_submission_file(
 @router.get(
     "/{submission_id}/files/{file_id}",
     summary="Download a submission file",
-    response_description="File binary content",
+    response_description="File binary content or presigned redirect",
 )
 async def download_submission_file(
     submission_id: uuid.UUID,
     file_id: uuid.UUID,
+    as_: str | None = AS_QUERY,
     auth: AuthContext = Depends(requires_permission(PERM_LMS_SUBMISSION_FILE_READ)),
     db: AsyncSession = Depends(get_db),
 ):
     service = AssignmentService(db)
-    path, media_type, filename = await service.get_submission_file(
+    storage_path, media_type, filename, size = await service.get_submission_file(
         submission_id=submission_id,
         file_id=file_id,
         auth=auth,
     )
-    return FileResponse(path=path, media_type=media_type, filename=filename)
+    return await serve_file(
+        backend=storage,
+        storage_path=storage_path,
+        filename=filename,
+        mime_type=media_type,
+        size=size,
+        as_=as_,
+    )
 
 
 @router.post(

@@ -5,7 +5,6 @@ from __future__ import annotations
 import uuid
 
 from fastapi import APIRouter, Depends, File, Form, Query, Request, UploadFile
-from fastapi.responses import FileResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,6 +19,7 @@ from app.core.dependencies import (
 )
 from app.services.student_service import get_student_age
 from app.core.filtering import FilterSpec, SortSpec, parse_filters, parse_sort
+from app.core.downloads import AS_QUERY, serve_file
 from app.core.exceptions import NotFoundError
 from app.core.permissions import (
     PERM_LMS_CONTENT_ASSET_DELETE,
@@ -226,10 +226,11 @@ async def upload_story_page(
 @router.get(
     "/{content_item_id}/stream",
     summary="Compatibility: stream the first content asset",
-    response_description="Binary content stream",
+    response_description="Binary content stream or presigned redirect",
 )
 async def stream_content_item(
     content_item_id: uuid.UUID,
+    as_: str | None = AS_QUERY,
     auth: AuthContext = Depends(requires_permission(PERM_LMS_CONTENT_READ)),
     db: AsyncSession = Depends(get_db),
 ):
@@ -251,11 +252,13 @@ async def stream_content_item(
     if asset is None:
         raise NotFoundError("Asset not found", error_code="ERR-UPLOAD-404")
 
-    path = await storage.read(asset.file_path)
-    return FileResponse(
-        path=path,
-        media_type=asset.mime_type or "application/octet-stream",
-        filename=path.name,
+    return await serve_file(
+        backend=storage,
+        storage_path=asset.file_path,
+        filename=asset.file_path.rsplit("/", 1)[-1],
+        mime_type=asset.mime_type or "application/octet-stream",
+        size=asset.file_size or 0,
+        as_=as_,
     )
 
 
@@ -360,21 +363,29 @@ async def upload_content_asset(
 @router.get(
     "/{content_item_id}/assets/{asset_id}",
     summary="Download a content asset",
-    response_description="File binary content",
+    response_description="File binary content or presigned redirect",
 )
 async def download_content_asset(
     content_item_id: uuid.UUID,
     asset_id: uuid.UUID,
+    as_: str | None = AS_QUERY,
     auth: AuthContext = Depends(requires_permission(PERM_LMS_CONTENT_ASSET_READ)),
     db: AsyncSession = Depends(get_db),
 ):
     service = ContentService(db)
-    path, media_type, filename = await service.get_content_asset(
+    storage_path, media_type, filename, size = await service.get_content_asset(
         content_item_id=content_item_id,
         asset_id=asset_id,
         auth=auth,
     )
-    return FileResponse(path=path, media_type=media_type, filename=filename)
+    return await serve_file(
+        backend=storage,
+        storage_path=storage_path,
+        filename=filename,
+        mime_type=media_type,
+        size=size,
+        as_=as_,
+    )
 
 
 @router.delete(

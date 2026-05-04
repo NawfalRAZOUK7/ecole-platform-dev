@@ -147,6 +147,20 @@ class FileStorageBackend(Protocol):
         """
         ...
 
+    async def presign_get(
+        self,
+        relative_path: str,
+        expires_in: int | None = None,
+        *,
+        response_filename: str | None = None,
+    ) -> str:
+        """Return a presigned GET URL (S3) or relative-path placeholder (local).
+
+        Routes should call serve_file() from app.core.downloads, which dispatches
+        to a 302 redirect for S3 or FileResponse for local.
+        """
+        ...
+
 
 class LocalFileStorageBackend:
     def __init__(self, base_dir: str | None = None) -> None:
@@ -187,6 +201,20 @@ class LocalFileStorageBackend:
         if not target.exists():
             raise NotFoundError("Stored file not found", error_code="ERR-DOC-404")
         return target.read_bytes()
+
+    async def presign_get(
+        self,
+        relative_path: str,
+        expires_in: int | None = None,
+        *,
+        response_filename: str | None = None,
+    ) -> str:
+        """Return relative path as a local placeholder (no real presigning).
+
+        serve_file() detects that this is not an HTTP URL and falls back to
+        FileResponse via local_path().
+        """
+        return relative_path
 
 
 class S3FileStorageBackend:
@@ -285,6 +313,38 @@ class S3FileStorageBackend:
                 if exc.response["Error"]["Code"] in ("404", "NoSuchKey"):
                     raise NotFoundError("Stored file not found", error_code="ERR-DOC-404")
                 raise
+
+    async def presign_get(
+        self,
+        relative_path: str,
+        expires_in: int | None = None,
+        *,
+        response_filename: str | None = None,
+    ) -> str:
+        """Return a short-lived presigned GET URL for the S3 object.
+
+        Args:
+            relative_path:     S3 object key.
+            expires_in:        TTL in seconds; defaults to
+                               ``settings.s3_presign_get_ttl_seconds``.
+            response_filename: When set, embeds a ``Content-Disposition:
+                               attachment; filename*=UTF-8''...`` header in the
+                               presigned URL so browsers save with the right name.
+        """
+        from urllib.parse import quote  # noqa: PLC0415
+
+        ttl = expires_in if expires_in is not None else settings.s3_presign_get_ttl_seconds
+        params: dict[str, Any] = {"Bucket": self._bucket, "Key": relative_path}
+        if response_filename:
+            params["ResponseContentDisposition"] = (
+                f"attachment; filename*=UTF-8''{quote(response_filename)}"
+            )
+        async with self._client() as s3:
+            return await s3.generate_presigned_url(
+                "get_object",
+                Params=params,
+                ExpiresIn=ttl,
+            )
 
 
 class FileStorageService:
@@ -404,6 +464,19 @@ class FileStorageService:
 
     async def get_bytes(self, relative_path: str) -> bytes:
         return await self.backend.get_bytes(relative_path)
+
+    async def presign_get(
+        self,
+        relative_path: str,
+        expires_in: int | None = None,
+        *,
+        response_filename: str | None = None,
+    ) -> str:
+        return await self.backend.presign_get(
+            relative_path,
+            expires_in,
+            response_filename=response_filename,
+        )
 
     async def exists(self, relative_path: str) -> bool:
         return await self.backend.exists(relative_path)

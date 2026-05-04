@@ -281,7 +281,7 @@ class StudentDocumentsService:
         )
         if version is None:
             raise NotFoundError("Document version not found", error_code="ERR-DOC-404")
-        return version, await file_storage_service.local_path(version.storage_path)
+        return version, version.storage_path
 
     async def restore_version(
         self,
@@ -735,32 +735,32 @@ class StudentDocumentsService:
         self,
         *,
         document: Document,
-    ):
+    ) -> tuple[str, str, str]:
         if self.db.info.get("_uow_depth"):
             document.download_count += 1
             await DocumentsRepository(self.db).save_document(document)
-            return await file_storage_service.local_path(document.storage_path)
+            return document.storage_path, document.mime_type, document.original_filename
 
         async with UnitOfWork(self.db) as uow:
             repo = DocumentsRepository(uow.session)
             document.download_count += 1
             await repo.save_document(document)
             await uow.commit()
-            return await file_storage_service.local_path(document.storage_path)
+            return document.storage_path, document.mime_type, document.original_filename
 
     async def read_document_preview(
         self,
         *,
         document: Document,
-    ):
+    ) -> tuple[str, str]:
         preview_path = document.thumbnail_path
         if preview_path and await file_storage_service.exists(preview_path):
-            return await file_storage_service.local_path(preview_path)
+            return preview_path, "image/png"
         if (
             document.mime_type.startswith("image/")
             or document.mime_type == "application/pdf"
         ):
-            return await file_storage_service.local_path(document.storage_path)
+            return document.storage_path, document.mime_type
         raise NotFoundError("Preview not available", error_code="ERR-DOC-404")
 
     async def get_bulk_download_archive(
