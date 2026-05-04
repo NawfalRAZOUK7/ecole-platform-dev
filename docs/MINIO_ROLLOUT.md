@@ -460,13 +460,13 @@ Common causes:
 
 ### Grace period policy
 
-| Event                                              | Timeline                |
-| -------------------------------------------------- | ----------------------- |
-| `STORAGE_BACKEND=s3` stable in prod                | Day 0                   |
-| Archive `uploads/` as `uploads_prod_<date>.tar.gz` | Day 0                   |
-| Keep `upload_data` volume mounted                  | Days 0 – 30             |
-| Remove `upload_data` mount from compose            | After Day 30            |
-| Delete archived tarball                            | After Day 60 (optional) |
+| Event                                              | Timeline                | Status                  |
+| -------------------------------------------------- | ----------------------- | ----------------------- |
+| `STORAGE_BACKEND=s3` stable in prod                | Day 0                   | ✅ done                 |
+| Archive `uploads/` as `uploads_prod_<date>.tar.gz` | Day 0                   | ✅ done                 |
+| Keep `upload_data` volume mounted                  | Days 0 – 30             | ✅ grace period elapsed |
+| Remove `upload_data` mount from compose            | After Day 30            | ✅ **done (Prompt 9)**  |
+| Delete archived tarball                            | After Day 60 (optional) | ⏳ deferred             |
 
 ### How to archive local uploads before removing the volume
 
@@ -482,54 +482,45 @@ docker run --rm \
 tar -tzf backups/uploads_dev_*.tar.gz | head -20
 ```
 
-### How to remove upload_data from compose (deferred — do not do this now)
+### Compose cleanup status
 
-Only execute these steps after the 30-day grace period has passed and no rollback
-was needed.
+**Done (Prompt 9).** Volume mounts have been removed from all three compose files:
 
-**`infra/docker-compose.dev.yml`** — remove these lines:
+| Compose file                 | Change                                                                                                 |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `docker-compose.dev.yml`     | `upload_data:/app/uploads` removed from `backend` and `worker`; `upload_data:` removed from `volumes:` |
+| `docker-compose.staging.yml` | `staging_uploads:/app/uploads` removed from `backend`; `staging_uploads:` removed from `volumes:`      |
+| `docker-compose.prod.yml`    | `backend_uploads:/app/uploads` removed from `backend`; `backend_uploads:` removed from `volumes:`      |
 
-```yaml
-# In backend service volumes: — REMOVE after Day 30 of stable s3 operation
-- upload_data:/app/uploads          # <-- remove this line
+`LocalStorageBackend` code is **not removed** — it remains the local dev fallback and the
+rollback path. Only the Docker volume mounts are gone.
 
-# In worker service volumes: — REMOVE after Day 30
-- upload_data:/app/uploads          # <-- remove this line
+### Remaining deferred step — manual Docker volume deletion
 
-# In top-level volumes: — REMOVE after Day 30
-upload_data:                        # <-- remove this line
-```
-
-**`infra/docker-compose.staging.yml`** — remove:
-
-```yaml
-# In backend service volumes:
-- staging_uploads:/app/uploads      # <-- remove after Day 30
-
-# In top-level volumes:
-staging_uploads:                    # <-- remove after Day 30
-```
-
-**`infra/docker-compose.prod.yml`** — remove:
-
-```yaml
-# In backend service volumes:
-- backend_uploads:/app/uploads      # <-- remove after Day 30
-
-# In top-level volumes:
-backend_uploads:                    # <-- remove after Day 30
-```
-
-After editing compose files:
+The Docker volumes still exist on the host until you explicitly delete them.
+Only do this **after** confirming the archive in `backups/` is intact.
 
 ```bash
-docker compose -f infra/docker-compose.dev.yml up -d --no-deps backend worker
-# Confirm health
-make health
+# Verify the archive first
+tar -tzf backups/uploads_dev_*.tar.gz | wc -l    # must show expected file count
+
+# Then delete the Docker volumes
+docker volume rm ecole-platform-dev_upload_data      # dev
+docker volume rm ecole-platform-dev_staging_uploads  # staging
+docker volume rm ecole-platform-dev_backend_uploads  # prod
 ```
 
-> `LocalStorageBackend` code remains in the codebase indefinitely — it is the local dev
-> fallback and the rollback path. Only the Docker volume mount is removed.
+### Rollback to local storage after compose cleanup
+
+If you ever need to switch back to `STORAGE_BACKEND=local`, re-add the volume mount
+manually — each compose file contains a commented-out reminder with the exact lines:
+
+```yaml
+# In docker-compose.dev.yml backend service volumes — re-add if needed:
+- upload_data:/app/uploads
+# Also re-add to top-level volumes:
+upload_data:
+```
 
 ---
 

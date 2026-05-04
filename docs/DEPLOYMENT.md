@@ -206,18 +206,19 @@ kubectl create secret generic ecole-secrets \
 
 ---
 
-## Object Storage (MinIO) — Phase 5 Activation
+## Object Storage (MinIO) — Phase 5 Complete
 
-The default storage backend is **local filesystem** (`STORAGE_BACKEND=local`).
-MinIO is present in dev compose but the backend does not write to it until the switch is flipped.
+All environments are running with `STORAGE_BACKEND=s3`. Uploads are stored in MinIO.
+Local `upload_data` Docker volume mounts have been removed from all compose files.
+`LocalStorageBackend` code remains in the codebase as the dev/test fallback.
 
 ### Current status per environment
 
-| Environment | `STORAGE_BACKEND` default | MinIO service                         | Ready to flip?                 |
-| ----------- | ------------------------- | ------------------------------------- | ------------------------------ |
-| dev         | `local`                   | ✅ running (`docker-compose.dev.yml`) | After migration script passes  |
-| staging     | `local`                   | External managed MinIO / S3           | After dev is stable ≥ 24 h     |
-| prod        | `local`                   | External managed MinIO / S3           | After staging is stable ≥ 24 h |
+| Environment | `STORAGE_BACKEND` default | MinIO service                         | Ready to flip? |
+| ----------- | ------------------------- | ------------------------------------- | -------------- |
+| dev         | `s3` ✅                   | ✅ running (`docker-compose.dev.yml`) | Complete       |
+| staging     | `s3` ✅                   | External managed MinIO / S3           | Complete       |
+| prod        | `s3` ✅                   | External managed MinIO / S3           | Complete       |
 
 ### Activation (per environment)
 
@@ -263,8 +264,12 @@ docker compose -f infra/docker-compose.<env>.yml restart backend worker
 make health
 ```
 
-Local files remain intact — the `upload_data` / `staging_uploads` / `backend_uploads` volumes
-are **never removed** during the 30-day grace period after a successful flip.
+Local files have been archived in `backups/`. The Docker volume mounts (`upload_data`,
+`staging_uploads`, `backend_uploads`) have been removed from all compose files.
+The actual Docker volumes still exist on the host and can be removed manually once
+the archive is confirmed — see **docs/MINIO_ROLLOUT.md §9**.
 
-For the complete rollout procedure, per-environment steps, rollback troubleshooting, and
-the deferred volume cleanup instructions see **docs/MINIO_ROLLOUT.md**.
+`LocalStorageBackend` code **remains** in the codebase as the dev fallback.
+If you re-add the volume mount and set `STORAGE_BACKEND=local`, it works immediately.
+
+For the full rollout history and remaining deferred steps see **docs/MINIO_ROLLOUT.md**.

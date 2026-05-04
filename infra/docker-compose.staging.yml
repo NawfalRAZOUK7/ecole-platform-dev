@@ -161,11 +161,10 @@ services:
       DOCUMENT_STORAGE_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-false}
     expose:
       - "8000"
-    volumes:
-      # GRACE PERIOD: keep this mount until 30 days after STORAGE_BACKEND=s3 is stable in staging.
-      # Remove this line AND staging_uploads in top-level volumes: after the grace period.
-      # See docs/MINIO_ROLLOUT.md §9 for the cleanup procedure.
-      - staging_uploads:/app/uploads
+    # uploads/ is stored in MinIO (STORAGE_BACKEND=s3). No local volume mount needed.
+    # If you temporarily switch back to STORAGE_BACKEND=local, re-add:
+    #   volumes:
+    #     - staging_uploads:/app/uploads  (and restore staging_uploads in top-level volumes)
     depends_on:
       pgbouncer:
         condition: service_healthy
@@ -313,9 +312,9 @@ volumes:
   staging_postgres_data:
   staging_redis_data:
   staging_wal_archive:
-  # GRACE PERIOD: remove staging_uploads after 30 days of stable STORAGE_BACKEND=s3.
-  # See docs/MINIO_ROLLOUT.md §9.  Do NOT remove until that procedure is followed.
-  staging_uploads:
+  # staging_uploads volume removed — Phase 5 cleanup complete (grace period elapsed).
+  # The Docker volume may still exist on the host; remove it only after confirming
+  # the archive is intact:  docker volume rm ecole-platform-dev_staging_uploads
 
 networks:
   ecole-staging-network:
