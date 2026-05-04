@@ -1,26 +1,47 @@
-"""File storage abstraction — StorageBackend protocol + LocalStorageBackend.
+"""File storage abstraction — StorageBackend protocol + LocalStorageBackend + S3StorageBackend.
 
-Reference: Phase 3B — File Upload & Storage Pipeline
-Provides: save, read, delete, exists operations with SHA-256 checksum and MIME validation.
+Reference: Phase 3B — File Upload & Storage Pipeline; Phase 2B — MinIO integration.
+Provides: save, read, delete, exists, presign_get, stat operations.
 Virus scan hook is a no-op placeholder (to be replaced by ClamAV integration later).
 """
 
 from __future__ import annotations
 
 import hashlib
+import mimetypes
 import uuid
+from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
-from typing import BinaryIO, Protocol, runtime_checkable
+from typing import Any, BinaryIO, Protocol, runtime_checkable
 
-from app.core.config import settings
+from app.core.config import Settings, settings
 from app.core.exceptions import ValidationError
 
+
+# ---------------------------------------------------------------------------
+# Value objects
+# ---------------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class ObjectStat:
+    """File/object metadata returned by StorageBackend.stat()."""
+
+    size_bytes: int
+    etag: str
+    content_type: str
+    last_modified: datetime | None
+
+
+# ---------------------------------------------------------------------------
+# Protocol
+# ---------------------------------------------------------------------------
 
 @runtime_checkable
 class StorageBackend(Protocol):
     """Abstract storage backend protocol.
 
-    Implementations: LocalStorageBackend, (future) S3StorageBackend.
+    Implementations: LocalStorageBackend, S3StorageBackend.
     """
 
     async def save(
@@ -34,7 +55,11 @@ class StorageBackend(Protocol):
         ...
 
     async def read(self, relative_path: str) -> Path:
-        """Return the absolute path to a stored file. Raises NotFoundError if missing."""
+        """Return the absolute path to a stored file.
+
+        Note: S3StorageBackend raises NotImplementedError — use presign_get() for S3.
+        Raises NotFoundError if missing (local backend only).
+        """
         ...
 
     async def delete(self, relative_path: str) -> None:
@@ -45,6 +70,28 @@ class StorageBackend(Protocol):
         """Check if a file exists in storage."""
         ...
 
+    async def presign_get(
+        self,
+        relative_path: str,
+        expires_in: int | None = None,
+        *,
+        response_filename: str | None = None,
+    ) -> str:
+        """Return a URL allowing the file to be downloaded without further auth.
+
+        S3/MinIO: returns a presigned URL (expires in `expires_in` seconds).
+        Local: returns the relative path as a placeholder (API wiring in Prompt 6).
+        """
+        ...
+
+    async def stat(self, relative_path: str) -> ObjectStat:
+        """Return metadata for a stored file. Raises NotFoundError if missing."""
+        ...
+
+
+# ---------------------------------------------------------------------------
+# Helpers (unchanged from Phase 3B)
+# ---------------------------------------------------------------------------
 
 def validate_mime_type(mime_type: str) -> None:
     """Validate that the MIME type is in the allowed list."""
@@ -76,6 +123,10 @@ async def virus_scan_hook(file_path: Path) -> None:
     pass
 
 
+# ---------------------------------------------------------------------------
+# LocalStorageBackend
+# ---------------------------------------------------------------------------
+
 class LocalStorageBackend:
     """Store files on the local filesystem under UPLOAD_DIR.
 
@@ -94,15 +145,12 @@ class LocalStorageBackend:
         subdirectory: str = "",
     ) -> tuple[str, str, int]:
         """Save file to local filesystem. Returns (relative_path, sha256, file_size)."""
-        # Build target directory
         target_dir = self.base_dir / subdirectory if subdirectory else self.base_dir
         target_dir.mkdir(parents=True, exist_ok=True)
 
-        # Generate unique filename to prevent collisions
         safe_name = f"{uuid.uuid4().hex}_{filename}"
         target_path = target_dir / safe_name
 
-        # Write file and compute SHA-256 in a single pass
         sha256 = hashlib.sha256()
         total_size = 0
 
@@ -115,13 +163,9 @@ class LocalStorageBackend:
                 sha256.update(chunk)
                 total_size += len(chunk)
 
-        # Validate file size after writing
         validate_file_size(total_size)
-
-        # Virus scan hook
         await virus_scan_hook(target_path)
 
-        # Return path relative to base_dir
         relative_path = str(target_path.relative_to(self.base_dir))
         return relative_path, sha256.hexdigest(), total_size
 
@@ -144,6 +188,196 @@ class LocalStorageBackend:
         """Check if file exists."""
         return (self.base_dir / relative_path).exists()
 
+    async def presign_get(
+        self,
+        relative_path: str,
+        expires_in: int | None = None,
+        *,
+        response_filename: str | None = None,
+    ) -> str:
+        """Return relative path as a local URL placeholder.
 
-# Singleton instance — used by endpoints
-storage = LocalStorageBackend()
+        Full route-based presigning is wired in Prompt 6.  Until then, callers
+        on the local backend should continue using read() + FileResponse.
+        """
+        return relative_path
+
+    async def stat(self, relative_path: str) -> ObjectStat:
+        """Return metadata for a locally stored file."""
+        from app.core.exceptions import NotFoundError
+
+        abs_path = self.base_dir / relative_path
+        if not abs_path.exists():
+            raise NotFoundError("File not found", error_code="ERR-UPLOAD-404")
+        stat_result = abs_path.stat()
+        content_type, _ = mimetypes.guess_type(str(abs_path))
+        return ObjectStat(
+            size_bytes=stat_result.st_size,
+            etag=hashlib.md5(abs_path.read_bytes()).hexdigest(),  # noqa: S324
+            content_type=content_type or "application/octet-stream",
+            last_modified=datetime.fromtimestamp(stat_result.st_mtime),
+        )
+
+
+# ---------------------------------------------------------------------------
+# S3StorageBackend
+# ---------------------------------------------------------------------------
+
+_s3_session: Any = None  # aioboto3.Session singleton
+
+
+def _get_s3_session() -> Any:
+    """Return (or lazily create) the module-level aioboto3 session singleton."""
+    global _s3_session
+    if _s3_session is None:
+        import aioboto3  # noqa: PLC0415
+        _s3_session = aioboto3.Session()
+    return _s3_session
+
+
+class S3StorageBackend:
+    """Store files in an S3-compatible object store (MinIO / AWS S3 / R2).
+
+    Configured via Settings.s3_* fields (see app.core.config).
+    Uses a module-level aioboto3 session singleton — one session per process.
+    """
+
+    def __init__(self, cfg: Settings | None = None) -> None:
+        if cfg is None:
+            cfg = settings
+        self._bucket = cfg.s3_bucket
+        self._sse = cfg.s3_sse_enabled
+        self._presign_get_ttl = cfg.s3_presign_get_ttl_seconds
+        self._client_kwargs: dict[str, Any] = {
+            "endpoint_url": cfg.s3_endpoint or None,
+            "region_name": cfg.s3_region,
+            "aws_access_key_id": cfg.s3_access_key or None,
+            "aws_secret_access_key": cfg.s3_secret_key or None,
+        }
+        if cfg.s3_force_path_style:
+            from aiobotocore.config import AioConfig  # noqa: PLC0415
+            self._client_kwargs["config"] = AioConfig(s3={"addressing_style": "path"})
+
+    def _client(self) -> Any:
+        """Return a new aioboto3 S3 client async context manager."""
+        return _get_s3_session().client("s3", **self._client_kwargs)
+
+    async def save(
+        self,
+        file: BinaryIO,
+        filename: str,
+        *,
+        subdirectory: str = "",
+    ) -> tuple[str, str, int]:
+        """Upload file to S3. Returns (object_key, sha256, size_bytes)."""
+        content = file.read()
+        sha256 = hashlib.sha256(content).hexdigest()
+        size = len(content)
+        validate_file_size(size)
+
+        safe_name = f"{uuid.uuid4().hex}_{filename}"
+        key = f"{subdirectory}/{safe_name}".lstrip("/") if subdirectory else safe_name
+
+        content_type, _ = mimetypes.guess_type(filename)
+        content_type = content_type or "application/octet-stream"
+
+        put_kwargs: dict[str, Any] = {
+            "Bucket": self._bucket,
+            "Key": key,
+            "Body": content,
+            "ContentType": content_type,
+            "CacheControl": "private, max-age=300",
+        }
+        if self._sse:
+            put_kwargs["ServerSideEncryption"] = "AES256"
+
+        async with self._client() as s3:
+            await s3.put_object(**put_kwargs)
+
+        return key, sha256, size
+
+    async def read(self, relative_path: str) -> Path:
+        """Not supported — use presign_get() to obtain a download URL."""
+        raise NotImplementedError(
+            "S3StorageBackend does not stream to a local Path. "
+            "Call presign_get() to obtain a presigned download URL."
+        )
+
+    async def delete(self, relative_path: str) -> None:
+        """Delete object from bucket. Silently ignores missing objects."""
+        from botocore.exceptions import ClientError  # noqa: PLC0415
+
+        async with self._client() as s3:
+            try:
+                await s3.delete_object(Bucket=self._bucket, Key=relative_path)
+            except ClientError:
+                pass
+
+    async def exists(self, relative_path: str) -> bool:
+        """Return True if the object exists in the bucket."""
+        from botocore.exceptions import ClientError  # noqa: PLC0415
+
+        async with self._client() as s3:
+            try:
+                await s3.head_object(Bucket=self._bucket, Key=relative_path)
+                return True
+            except ClientError as exc:
+                if exc.response["Error"]["Code"] in ("404", "NoSuchKey"):
+                    return False
+                raise
+
+    async def presign_get(
+        self,
+        relative_path: str,
+        expires_in: int | None = None,
+        *,
+        response_filename: str | None = None,
+    ) -> str:
+        """Return a presigned GET URL for the object."""
+        params: dict[str, Any] = {"Bucket": self._bucket, "Key": relative_path}
+        if response_filename:
+            params["ResponseContentDisposition"] = (
+                f'attachment; filename="{response_filename}"'
+            )
+        ttl = expires_in if expires_in is not None else self._presign_get_ttl
+        async with self._client() as s3:
+            return await s3.generate_presigned_url(
+                "get_object", Params=params, ExpiresIn=ttl
+            )
+
+    async def stat(self, relative_path: str) -> ObjectStat:
+        """Return metadata for an S3 object. Raises NotFoundError if missing."""
+        from app.core.exceptions import NotFoundError  # noqa: PLC0415
+        from botocore.exceptions import ClientError  # noqa: PLC0415
+
+        async with self._client() as s3:
+            try:
+                resp = await s3.head_object(Bucket=self._bucket, Key=relative_path)
+            except ClientError as exc:
+                if exc.response["Error"]["Code"] in ("404", "NoSuchKey"):
+                    raise NotFoundError("File not found", error_code="ERR-UPLOAD-404")
+                raise
+
+        return ObjectStat(
+            size_bytes=resp["ContentLength"],
+            etag=resp.get("ETag", "").strip('"'),
+            content_type=resp.get("ContentType", "application/octet-stream"),
+            last_modified=resp.get("LastModified"),
+        )
+
+
+# ---------------------------------------------------------------------------
+# Factory + singleton
+# ---------------------------------------------------------------------------
+
+def build_storage_backend(cfg: Settings | None = None) -> LocalStorageBackend | S3StorageBackend:
+    """Return the configured storage backend driven by STORAGE_BACKEND setting."""
+    if cfg is None:
+        cfg = settings
+    if cfg.storage_backend == "s3":
+        return S3StorageBackend(cfg)
+    return LocalStorageBackend()
+
+
+# Singleton — all callers do `from app.core.storage import storage`
+storage: LocalStorageBackend | S3StorageBackend = build_storage_backend()
