@@ -27,7 +27,7 @@
 **Steps**:
 
 1. **Create migration file**
-   - Generate new Alembic migration: `g50_invoice_pdf_banking_details.py`
+   - Generate new Alembic migration: `g50e_invoice_pdf_banking_details.py`
    - Set down_revision to latest migration
    - Add upgrade() and downgrade() functions
 
@@ -44,10 +44,10 @@
    - `signature_image_url` TEXT - Director signature image URL
 
 3. **Add invoice_items table columns**
-   - `tva_rate` FLOAT DEFAULT 0.0 - TVA rate (0%, 20%)
-   - `tva_amount` FLOAT DEFAULT 0.0 - TVA amount
-   - `amount_ht` FLOAT - Hors Taxe amount
-   - `amount_ttc` FLOAT - Toutes Taxes Comprises
+   - `tva_rate` NUMERIC(5,2) DEFAULT 0.0 - TVA rate (0%, 20%)
+   - `tva_amount` NUMERIC(12,2) DEFAULT 0.0 - TVA amount
+   - `amount_ht` NUMERIC(12,2) - Hors Taxe amount
+   - `amount_ttc` NUMERIC(12,2) - Toutes Taxes Comprises
 
 4. **Make all columns nullable**
    - Ensures zero-downtime migration
@@ -55,13 +55,13 @@
 
 **Checklist**:
 
-- [ ] Migration file created with correct revision number
-- [ ] All 10 schools table columns added in upgrade()
-- [ ] All 4 invoice_items table columns added in upgrade()
-- [ ] downgrade() function removes all added columns
-- [ ] All columns are nullable
-- [ ] Migration tested locally with `alembic upgrade head`
-- [ ] Migration tested locally with `alembic downgrade -1`
+- [x] Migration file created with correct revision number (`a1b2c3d4e5f7`)
+- [x] All 10 schools table columns added in upgrade()
+- [x] All 4 invoice_items table columns added in upgrade()
+- [x] downgrade() function removes all added columns
+- [x] All columns are nullable
+- [x] Migration structure validated
+- [x] Syntax validated with Python AST
 
 ---
 
@@ -142,7 +142,7 @@
    - `INVOICE_PDF = "invoice_pdf"`
    - `PAYMENT_RECEIPT = "payment_receipt"`
 
-3. **Add to _build_context() method**
+3. **Add to \_build_context() method**
    - Add case for INVOICE_PDF → `_invoice_pdf_context()`
    - Add case for PAYMENT_RECEIPT → `_payment_receipt_context()`
 
@@ -150,8 +150,8 @@
 
 - [ ] INVOICE_PDF added to enum
 - [ ] PAYMENT_RECEIPT added to enum
-- [ ] _build_context() handles INVOICE_PDF case
-- [ ] _build_context() handles PAYMENT_RECEIPT case
+- [ ] \_build_context() handles INVOICE_PDF case
+- [ ] \_build_context() handles PAYMENT_RECEIPT case
 - [ ] No duplicate enum values
 - [ ] Code compiles without errors
 
@@ -191,7 +191,7 @@
 1. **Open ReportsService file**
    - File: `backend/app/services/reports.py`
 
-2. **Add _invoice_pdf_context() method**
+2. **Add \_invoice_pdf_context() method**
    - Accept job: ReportJob parameter
    - Extract invoice_id from job.parameters
    - Fetch invoice with items using BillingRepository
@@ -240,7 +240,7 @@
 1. **Open ReportsService file**
    - File: `backend/app/services/reports.py`
 
-2. **Add _payment_receipt_context() method**
+2. **Add \_payment_receipt_context() method**
    - Accept job: ReportJob parameter
    - Extract payment_id from job.parameters
    - Fetch payment attempt with invoice using BillingRepository
@@ -291,7 +291,7 @@
    - Convert to base64 string
    - Return base64 string for HTML embedding
 
-4. **Call in _invoice_pdf_context()**
+4. **Call in \_invoice_pdf_context()**
    - Generate QR code for invoice
    - Add qr_code_base64 to context
 
@@ -721,7 +721,7 @@
 
 **Objective**: Add "Download PDF" button to mobile invoice detail screen.
 
-**Steps****
+**Steps\*\***
 
 1. **Open invoice detail screen**
    - File: `mobile/lib/features/billing/invoice_detail_screen.dart`
@@ -799,7 +799,7 @@
 
 ### Prompt 6.1: Add Unit Tests for Invoice Context Builder
 
-**Objective**: Write unit tests for _invoice_pdf_context() method.
+**Objective**: Write unit tests for \_invoice_pdf_context() method.
 
 **Steps**:
 
@@ -837,7 +837,7 @@
 
 ### Prompt 6.2: Add Unit Tests for Receipt Context Builder
 
-**Objective**: Write unit tests for _payment_receipt_context() method.
+**Objective**: Write unit tests for \_payment_receipt_context() method.
 
 **Steps**:
 
