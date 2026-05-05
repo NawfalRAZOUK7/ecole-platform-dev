@@ -1,0 +1,14 @@
+# Kind cluster configuration for Kubernetes E2E tests
+# Usage: kind create cluster --config infra/k8s/kind-config.yaml --name ecole-k8s-test
+
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: ecole-k8s-test
+
+nodes:
+  - role: control-plane
+    # Extra mounts for local development (optional)
+    extraMounts:
+      - hostPath: ./backend
+        containerPath: /backend
+        readOnly: true

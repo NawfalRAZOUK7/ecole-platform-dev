@@ -1,0 +1,9 @@
+{{- if .Values.namespace.create }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.namespace.name | default "default" }}
+  labels:
+    name: {{ .Values.namespace.name | default "default" }}
+    app.kubernetes.io/managed-by: helm
+{{- end }}
