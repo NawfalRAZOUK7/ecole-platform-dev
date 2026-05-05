@@ -1,0 +1,196 @@
+{% extends "reports/base.html" %}
+{% block content %}
+{# ── School info ──────────────────────────────────────────────────────────── #}
+<div class="section-box print-avoid" style="margin-top:0;">
+  <table class="plain-table">
+    <tr>
+      <td style="width:60%;">
+        <strong>{{ school.name_ar or school.name }}</strong><br>
+        {% if school.address %}<span class="muted small">{{ school.address }}</span><br>{% endif %}
+        {% if school.city %}<span class="muted small">{{ school.city }}{% if school.region %}، {{ school.region }}{% endif %}</span><br>{% endif %}
+        {% if school.phone %}<span class="muted small">هاتف: {{ school.phone }}</span><br>{% endif %}
+        {% if school.email %}<span class="muted small">البريد الإلكتروني: {{ school.email }}</span>{% endif %}
+      </td>
+      <td style="text-align:left; vertical-align:top;">
+        {% if school.tva_number %}<div class="small muted">رقم الضريبة على القيمة المضافة: <strong>{{ school.tva_number }}</strong></div>{% endif %}
+        {% if school.tax_id %}<div class="small muted">المعرف الضريبي: <strong>{{ school.tax_id }}</strong></div>{% endif %}
+      </td>
+    </tr>
+  </table>
+</div>
+
+{# ── Invoice header ───────────────────────────────────────────────────────── #}
+<div class="section-box print-avoid" style="margin-top:10px;">
+  <table class="plain-table">
+    <tr>
+      <td>
+        <h2 style="margin:0;">فاتورة</h2>
+        <div class="muted small">رقم {{ invoice.number }}</div>
+      </td>
+      <td style="text-align:left; vertical-align:top;">
+        <span class="badge">{{ invoice.status | upper }}</span>
+      </td>
+    </tr>
+  </table>
+  <table class="kv-table tight">
+    <tr>
+      <th>تاريخ الإصدار</th>
+      <td>{{ fmt_date(invoice.issued_date) }}</td>
+    </tr>
+    <tr>
+      <th>تاريخ الاستحقاق</th>
+      <td>{{ fmt_date(invoice.due_date) }}</td>
+    </tr>
+    <tr>
+      <th>العملة</th>
+      <td>{{ invoice.currency }}</td>
+    </tr>
+  </table>
+</div>
+
+{# ── Parent & students ────────────────────────────────────────────────────── #}
+<div class="section-box print-avoid">
+  <h3>معلومات العميل</h3>
+  <table class="kv-table">
+    <tr>
+      <th>ولي الأمر / الوصي</th>
+      <td>{{ parent.full_name }}</td>
+    </tr>
+    <tr>
+      <th>البريد الإلكتروني</th>
+      <td>{{ parent.email }}</td>
+    </tr>
+    {% if students %}
+    <tr>
+      <th>التلميذ/التلاميذ</th>
+      <td>{{ students | map(attribute='full_name') | join('، ') }}</td>
+    </tr>
+    {% endif %}
+  </table>
+</div>
+
+{# ── Invoice items ────────────────────────────────────────────────────────── #}
+<div class="section-box print-avoid">
+  <h3>تفصيل الخدمات</h3>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th style="width:40%;">البيان</th>
+        <th class="align-center">الكمية</th>
+        <th class="align-center">سعر الوحدة (بدون ضريبة)</th>
+        <th class="align-center">المبلغ بدون ضريبة</th>
+        <th class="align-center">نسبة الضريبة (%)</th>
+        <th class="align-center">مبلغ الضريبة</th>
+        <th class="align-center">المبلغ شامل الضريبة</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td>{{ item.description or '—' }}</td>
+        <td class="align-center">{{ item.quantity }}</td>
+        <td class="align-center">{{ fmt_number(item.unit_price) }}</td>
+        <td class="align-center">{{ fmt_number(item.amount_ht) }}</td>
+        <td class="align-center">{{ fmt_number(item.tva_rate) }}</td>
+        <td class="align-center">{{ fmt_number(item.tva_amount) }}</td>
+        <td class="align-center"><strong>{{ fmt_number(item.amount_ttc) }}</strong></td>
+      </tr>
+      {% if item.applied_discounts %}
+      {% for disc in item.applied_discounts %}
+      <tr style="background:#fffbeb;">
+        <td colspan="3" class="muted small" style="padding-right:20px;">↲ خصم: {{ disc.label }}</td>
+        <td class="align-center muted small">-{{ fmt_number(disc.discount_amount) }}</td>
+        <td colspan="3"></td>
+      </tr>
+      {% endfor %}
+      {% endif %}
+      {% endfor %}
+      {% if not items %}
+      <tr><td colspan="7" class="align-center muted">لا توجد بنود</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+{# ── Totals ───────────────────────────────────────────────────────────────── #}
+<div class="section-box print-avoid">
+  <table class="summary-table">
+    <tr>
+      <td>
+        <div class="summary-label">المجموع بدون ضريبة</div>
+        <div class="summary-value">{{ fmt_number(totals.ht) }} {{ invoice.currency }}</div>
+      </td>
+      <td>
+        <div class="summary-label">مجموع الضريبة</div>
+        <div class="summary-value">{{ fmt_number(totals.tva) }} {{ invoice.currency }}</div>
+      </td>
+      <td>
+        <div class="summary-label">المجموع شامل الضريبة</div>
+        <div class="summary-value" style="color:#1d4ed8;">{{ fmt_number(totals.ttc) }} {{ invoice.currency }}</div>
+      </td>
+    </tr>
+  </table>
+</div>
+
+{# ── Banking details ──────────────────────────────────────────────────────── #}
+{% if school.rib or school.iban or school.bic or school.bank_name %}
+<div class="section-box print-avoid">
+  <h3>المعلومات البنكية</h3>
+  <table class="kv-table">
+    {% if school.bank_name %}<tr><th>البنك</th><td>{{ school.bank_name }}</td></tr>{% endif %}
+    {% if school.rib %}<tr><th>رقم الحساب البنكي (RIB)</th><td class="mono">{{ school.rib }}</td></tr>{% endif %}
+    {% if school.iban %}<tr><th>IBAN</th><td class="mono">{{ school.iban }}</td></tr>{% endif %}
+    {% if school.bic %}<tr><th>BIC / SWIFT</th><td class="mono">{{ school.bic }}</td></tr>{% endif %}
+  </table>
+  <p class="small muted" style="margin-top:8px;">
+    يُرجى الإشارة إلى رقم الفاتورة <strong>{{ invoice.number }}</strong> عند إجراء التحويل البنكي.
+  </p>
+</div>
+{% endif %}
+
+{# ── TVA footer ───────────────────────────────────────────────────────────── #}
+{% if school.tva_number or school.tax_id %}
+<div class="section-box print-avoid small muted">
+  {% if school.tva_number %}<div>رقم الضريبة على القيمة المضافة: {{ school.tva_number }}</div>{% endif %}
+  {% if school.tax_id %}<div>المعرف الضريبي: {{ school.tax_id }}</div>{% endif %}
+  <div style="margin-top:4px;">وفقاً للتشريع المغربي المعمول به (القانون 47-06 والمدونة العامة للضرائب). ضريبة القيمة المضافة غير قابلة للاسترداد على الخدمات التعليمية المعفاة.</div>
+</div>
+{% endif %}
+
+{# ── Signature & stamp ────────────────────────────────────────────────────── #}
+<div class="section-box print-avoid" style="margin-top:12px;">
+  <table class="plain-table">
+    <tr>
+      <td style="width:50%; text-align:center;">
+        <div class="muted small" style="margin-bottom:4px;">التوقيع المعتمد</div>
+        {% if school.signature_image_url %}
+        <img src="{{ school.signature_image_url }}" style="max-height:64px; max-width:180px;">
+        {% else %}
+        <div class="signature-box">التوقيع</div>
+        {% endif %}
+      </td>
+      <td style="width:50%; text-align:center;">
+        <div class="muted small" style="margin-bottom:4px;">ختم المؤسسة</div>
+        {% if school.stamp_image_url %}
+        <img src="{{ school.stamp_image_url }}" style="max-height:64px; max-width:180px;">
+        {% else %}
+        <div class="signature-box">الختم</div>
+        {% endif %}
+      </td>
+    </tr>
+  </table>
+</div>
+
+{# ── QR code ──────────────────────────────────────────────────────────────── #}
+{% if qr_code_base64 %}
+<div class="section-box print-avoid" style="text-align:center; margin-top:10px;">
+  <div class="muted small" style="margin-bottom:4px;">التحقق الإلكتروني</div>
+  <img src="data:image/png;base64,{{ qr_code_base64 }}" style="width:80px; height:80px;">
+</div>
+{% endif %}
+
+{# ── Footer text ──────────────────────────────────────────────────────────── #}
+<div style="margin-top:12px; text-align:center; color:#94a3b8; font-size:10px;">
+  {{ school.footer_text or school.name_ar or school.name + ' — شكراً لثقتكم.' }}
+</div>
+{% endblock %}

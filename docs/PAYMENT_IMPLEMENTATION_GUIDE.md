@@ -402,22 +402,22 @@
 
 **Checklist**:
 
-- [ ] Template extends base.html
-- [ ] School header section complete
-- [ ] Invoice header section complete
-- [ ] Parent information section complete
-- [ ] Student information section complete
-- [ ] Items table with TVA breakdown
-- [ ] Sibling discount table
-- [ ] Totals section (HT, TVA, TTC)
-- [ ] Banking details section
-- [ ] Payment instructions
-- [ ] TVA footer
-- [ ] School branding footer
-- [ ] QR code section
-- [ ] Formatters used correctly
-- [ ] French labels used
-- [ ] LTR layout
+- [x] Template extends base.html
+- [x] School header section complete
+- [x] Invoice header section complete
+- [x] Parent information section complete
+- [x] Student information section complete
+- [x] Items table with TVA breakdown
+- [x] Sibling discount table
+- [x] Totals section (HT, TVA, TTC)
+- [x] Banking details section
+- [x] Payment instructions
+- [x] TVA footer
+- [x] School branding footer
+- [x] QR code section
+- [x] Formatters used correctly
+- [x] French labels used
+- [x] LTR layout
 
 ---
 
@@ -445,24 +445,24 @@
 
 **Checklist**:
 
-- [ ] Template extends base.html
-- [ ] RTL direction set
-- [ ] Arabic language set
-- [ ] School header section complete (Arabic)
-- [ ] Invoice header section complete (Arabic)
-- [ ] Parent information section complete (Arabic)
-- [ ] Student information section complete (Arabic)
-- [ ] Items table with TVA breakdown (Arabic)
-- [ ] Sibling discount table (Arabic)
-- [ ] Totals section (Arabic)
-- [ ] Banking details section (Arabic)
-- [ ] Payment instructions (Arabic)
-- [ ] TVA footer (Arabic)
-- [ ] School branding footer
-- [ ] QR code section
-- [ ] Formatters used correctly
-- [ ] Arabic labels used
-- [ ] RTL layout applied
+- [x] Template extends base.html
+- [x] RTL direction set
+- [x] Arabic language set
+- [x] School header section complete (Arabic)
+- [x] Invoice header section complete (Arabic)
+- [x] Parent information section complete (Arabic)
+- [x] Student information section complete (Arabic)
+- [x] Items table with TVA breakdown (Arabic)
+- [x] Sibling discount table (Arabic)
+- [x] Totals section (Arabic)
+- [x] Banking details section (Arabic)
+- [x] Payment instructions (Arabic)
+- [x] TVA footer (Arabic)
+- [x] School branding footer
+- [x] QR code section
+- [x] Formatters used correctly
+- [x] Arabic labels used
+- [x] RTL layout applied
 
 ---
 
@@ -493,18 +493,18 @@
 
 **Checklist**:
 
-- [ ] Template extends base.html
-- [ ] School header section complete
-- [ ] Receipt header section complete
-- [ ] Payment details section complete
-- [ ] Invoice reference section complete
-- [ ] Parent information section complete
-- [ ] Banking confirmation
-- [ ] Thank you footer
-- [ ] Stamp/signature placeholder
-- [ ] Formatters used correctly
-- [ ] French labels used
-- [ ] LTR layout
+- [x] Template extends base.html
+- [x] School header section complete
+- [x] Receipt header section complete
+- [x] Payment details section complete
+- [x] Invoice reference section complete
+- [x] Parent information section complete
+- [x] Banking confirmation
+- [x] Thank you footer
+- [x] Stamp/signature placeholder
+- [x] Formatters used correctly
+- [x] French labels used
+- [x] LTR layout
 
 ---
 
@@ -532,20 +532,20 @@
 
 **Checklist**:
 
-- [ ] Template extends base.html
-- [ ] RTL direction set
-- [ ] Arabic language set
-- [ ] School header section complete (Arabic)
-- [ ] Receipt header section complete (Arabic)
-- [ ] Payment details section complete (Arabic)
-- [ ] Invoice reference section complete (Arabic)
-- [ ] Parent information section complete (Arabic)
-- [ ] Banking confirmation (Arabic)
-- [ ] Thank you footer (Arabic)
-- [ ] Stamp/signature placeholder
-- [ ] Formatters used correctly
-- [ ] Arabic labels used
-- [ ] RTL layout applied
+- [x] Template extends base.html
+- [x] RTL direction set
+- [x] Arabic language set
+- [x] School header section complete (Arabic)
+- [x] Receipt header section complete (Arabic)
+- [x] Payment details section complete (Arabic)
+- [x] Invoice reference section complete (Arabic)
+- [x] Parent information section complete (Arabic)
+- [x] Banking confirmation (Arabic)
+- [x] Thank you footer (Arabic)
+- [x] Stamp/signature placeholder
+- [x] Formatters used correctly
+- [x] Arabic labels used
+- [x] RTL layout applied
 
 ---
 

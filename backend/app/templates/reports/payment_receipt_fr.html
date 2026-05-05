@@ -1,0 +1,144 @@
+{% extends "reports/base.html" %}
+{% block content %}
+{# ── School info ──────────────────────────────────────────────────────────── #}
+<div class="section-box print-avoid" style="margin-top:0;">
+  <table class="plain-table">
+    <tr>
+      <td style="width:65%;">
+        <strong>{{ school.name }}</strong><br>
+        {% if school.address %}<span class="muted small">{{ school.address }}</span><br>{% endif %}
+        {% if school.city %}<span class="muted small">{{ school.city }}{% if school.region %}, {{ school.region }}{% endif %}</span><br>{% endif %}
+        {% if school.phone %}<span class="muted small">Tél : {{ school.phone }}</span><br>{% endif %}
+        {% if school.email %}<span class="muted small">Email : {{ school.email }}</span>{% endif %}
+      </td>
+      <td style="text-align:right; vertical-align:top;">
+        <h2 style="margin:0; color:#059669;">Reçu de paiement</h2>
+        <div class="muted small">N° {{ payment.receipt_number }}</div>
+      </td>
+    </tr>
+  </table>
+</div>
+
+{# ── Payment details ──────────────────────────────────────────────────────── #}
+<div class="section-box print-avoid">
+  <h3>Détails du paiement</h3>
+  <table class="kv-table">
+    <tr>
+      <th>Date de paiement</th>
+      <td>{{ fmt_datetime(payment.finalized_at) }}</td>
+    </tr>
+    <tr>
+      <th>Montant reçu</th>
+      <td><strong style="font-size:14px; color:#059669;">{{ fmt_number(payment.amount) }} {{ invoice.currency }}</strong></td>
+    </tr>
+    <tr>
+      <th>Mode de paiement</th>
+      <td>
+        {% if payment.method == 'cash' %}Espèces
+        {% elif payment.method == 'bank_transfer' %}Virement bancaire
+        {% elif payment.method == 'card' %}Carte bancaire
+        {% elif payment.method == 'check' %}Chèque
+        {% else %}{{ payment.method | capitalize }}{% endif %}
+      </td>
+    </tr>
+    {% if payment.transaction_reference %}
+    <tr>
+      <th>Référence de transaction</th>
+      <td class="mono">{{ payment.transaction_reference }}</td>
+    </tr>
+    {% endif %}
+    <tr>
+      <th>Statut</th>
+      <td><span class="badge">{{ payment.status | upper }}</span></td>
+    </tr>
+  </table>
+</div>
+
+{# ── Invoice reference ────────────────────────────────────────────────────── #}
+<div class="section-box print-avoid">
+  <h3>Référence de la facture</h3>
+  <table class="kv-table">
+    <tr>
+      <th>N° de facture</th>
+      <td>{{ invoice.number }}</td>
+    </tr>
+    <tr>
+      <th>Date de facture</th>
+      <td>{{ fmt_date(invoice.issued_date) }}</td>
+    </tr>
+    <tr>
+      <th>Montant total de la facture</th>
+      <td>{{ fmt_number(invoice.total_amount) }} {{ invoice.currency }}</td>
+    </tr>
+  </table>
+</div>
+
+{# ── Parent info ──────────────────────────────────────────────────────────── #}
+<div class="section-box print-avoid">
+  <h3>Informations du client</h3>
+  <table class="kv-table">
+    <tr>
+      <th>Parent / Tuteur</th>
+      <td>{{ parent.full_name }}</td>
+    </tr>
+    <tr>
+      <th>E-mail</th>
+      <td>{{ parent.email }}</td>
+    </tr>
+  </table>
+</div>
+
+{# ── Confirmation message ─────────────────────────────────────────────────── #}
+<div class="section-box print-avoid" style="background:#f0fdf4; border-color:#bbf7d0;">
+  <p style="margin:0; color:#166534;">
+    Nous confirmons avoir reçu votre paiement de <strong>{{ fmt_number(payment.amount) }} {{ invoice.currency }}</strong>
+    en règlement de la facture N° <strong>{{ invoice.number }}</strong>.
+    Ce document constitue votre reçu officiel.
+  </p>
+</div>
+
+{# ── Banking details ──────────────────────────────────────────────────────── #}
+{% if school.rib or school.iban or school.bic or school.bank_name %}
+<div class="section-box print-avoid">
+  <h3>Coordonnées bancaires de l'établissement</h3>
+  <table class="kv-table">
+    {% if school.bank_name %}<tr><th>Banque</th><td>{{ school.bank_name }}</td></tr>{% endif %}
+    {% if school.rib %}<tr><th>RIB</th><td class="mono">{{ school.rib }}</td></tr>{% endif %}
+    {% if school.iban %}<tr><th>IBAN</th><td class="mono">{{ school.iban }}</td></tr>{% endif %}
+    {% if school.bic %}<tr><th>BIC / SWIFT</th><td class="mono">{{ school.bic }}</td></tr>{% endif %}
+  </table>
+</div>
+{% endif %}
+
+{# ── Signature & stamp ────────────────────────────────────────────────────── #}
+<div class="section-box print-avoid" style="margin-top:12px;">
+  <table class="plain-table">
+    <tr>
+      <td style="width:50%; text-align:center;">
+        <div class="muted small" style="margin-bottom:4px;">Signature autorisée</div>
+        {% if school.signature_image_url %}
+        <img src="{{ school.signature_image_url }}" style="max-height:64px; max-width:180px;">
+        {% else %}
+        <div class="signature-box">Signature</div>
+        {% endif %}
+      </td>
+      <td style="width:50%; text-align:center;">
+        <div class="muted small" style="margin-bottom:4px;">Cachet de l'établissement</div>
+        {% if school.stamp_image_url %}
+        <img src="{{ school.stamp_image_url }}" style="max-height:64px; max-width:180px;">
+        {% else %}
+        <div class="signature-box">Cachet</div>
+        {% endif %}
+      </td>
+    </tr>
+  </table>
+</div>
+
+{# ── Thank you footer ─────────────────────────────────────────────────────── #}
+<div style="margin-top:16px; text-align:center; color:#166534; font-size:13px; font-weight:600;">
+  Merci pour votre paiement et votre confiance.
+</div>
+<div style="margin-top:6px; text-align:center; color:#94a3b8; font-size:10px;">
+  {{ school.footer_text or school.name + ' — Document officiel de paiement.' }}
+</div>
+{% endblock %}

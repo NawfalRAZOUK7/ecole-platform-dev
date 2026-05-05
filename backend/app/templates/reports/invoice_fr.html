@@ -1,0 +1,196 @@
+{% extends "reports/base.html" %}
+{% block content %}
+{# ── School info ──────────────────────────────────────────────────────────── #}
+<div class="section-box print-avoid" style="margin-top:0;">
+  <table class="plain-table">
+    <tr>
+      <td style="width:60%;">
+        <strong>{{ school.name }}</strong><br>
+        {% if school.address %}<span class="muted small">{{ school.address }}</span><br>{% endif %}
+        {% if school.city %}<span class="muted small">{{ school.city }}{% if school.region %}, {{ school.region }}{% endif %}</span><br>{% endif %}
+        {% if school.phone %}<span class="muted small">Tél : {{ school.phone }}</span><br>{% endif %}
+        {% if school.email %}<span class="muted small">Email : {{ school.email }}</span>{% endif %}
+      </td>
+      <td style="text-align:right; vertical-align:top;">
+        {% if school.tva_number %}<div class="small muted">N° TVA : <strong>{{ school.tva_number }}</strong></div>{% endif %}
+        {% if school.tax_id %}<div class="small muted">Identifiant fiscal : <strong>{{ school.tax_id }}</strong></div>{% endif %}
+      </td>
+    </tr>
+  </table>
+</div>
+
+{# ── Invoice header ───────────────────────────────────────────────────────── #}
+<div class="section-box print-avoid" style="margin-top:10px;">
+  <table class="plain-table">
+    <tr>
+      <td>
+        <h2 style="margin:0;">Facture</h2>
+        <div class="muted small">N° {{ invoice.number }}</div>
+      </td>
+      <td style="text-align:right; vertical-align:top;">
+        <span class="badge">{{ invoice.status | upper }}</span>
+      </td>
+    </tr>
+  </table>
+  <table class="kv-table tight">
+    <tr>
+      <th>Date d'émission</th>
+      <td>{{ fmt_date(invoice.issued_date) }}</td>
+    </tr>
+    <tr>
+      <th>Date d'échéance</th>
+      <td>{{ fmt_date(invoice.due_date) }}</td>
+    </tr>
+    <tr>
+      <th>Devise</th>
+      <td>{{ invoice.currency }}</td>
+    </tr>
+  </table>
+</div>
+
+{# ── Parent & students ────────────────────────────────────────────────────── #}
+<div class="section-box print-avoid">
+  <h3>Informations du client</h3>
+  <table class="kv-table">
+    <tr>
+      <th>Parent / Tuteur</th>
+      <td>{{ parent.full_name }}</td>
+    </tr>
+    <tr>
+      <th>E-mail</th>
+      <td>{{ parent.email }}</td>
+    </tr>
+    {% if students %}
+    <tr>
+      <th>Élève(s)</th>
+      <td>{{ students | map(attribute='full_name') | join(', ') }}</td>
+    </tr>
+    {% endif %}
+  </table>
+</div>
+
+{# ── Invoice items ────────────────────────────────────────────────────────── #}
+<div class="section-box print-avoid">
+  <h3>Détail des prestations</h3>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th style="width:40%;">Description</th>
+        <th class="align-center">Qté</th>
+        <th class="align-center">Prix unitaire HT</th>
+        <th class="align-center">Montant HT</th>
+        <th class="align-center">TVA (%)</th>
+        <th class="align-center">Montant TVA</th>
+        <th class="align-center">Montant TTC</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td>{{ item.description or '—' }}</td>
+        <td class="align-center">{{ item.quantity }}</td>
+        <td class="align-center">{{ fmt_number(item.unit_price) }}</td>
+        <td class="align-center">{{ fmt_number(item.amount_ht) }}</td>
+        <td class="align-center">{{ fmt_number(item.tva_rate) }}</td>
+        <td class="align-center">{{ fmt_number(item.tva_amount) }}</td>
+        <td class="align-center"><strong>{{ fmt_number(item.amount_ttc) }}</strong></td>
+      </tr>
+      {% if item.applied_discounts %}
+      {% for disc in item.applied_discounts %}
+      <tr style="background:#fffbeb;">
+        <td colspan="3" class="muted small" style="padding-left:20px;">↳ Remise : {{ disc.label }}</td>
+        <td class="align-center muted small">-{{ fmt_number(disc.discount_amount) }}</td>
+        <td colspan="3"></td>
+      </tr>
+      {% endfor %}
+      {% endif %}
+      {% endfor %}
+      {% if not items %}
+      <tr><td colspan="7" class="align-center muted">Aucune ligne</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+{# ── Totals ───────────────────────────────────────────────────────────────── #}
+<div class="section-box print-avoid">
+  <table class="summary-table">
+    <tr>
+      <td>
+        <div class="summary-label">Total HT</div>
+        <div class="summary-value">{{ fmt_number(totals.ht) }} {{ invoice.currency }}</div>
+      </td>
+      <td>
+        <div class="summary-label">Total TVA</div>
+        <div class="summary-value">{{ fmt_number(totals.tva) }} {{ invoice.currency }}</div>
+      </td>
+      <td>
+        <div class="summary-label">Total TTC</div>
+        <div class="summary-value" style="color:#1d4ed8;">{{ fmt_number(totals.ttc) }} {{ invoice.currency }}</div>
+      </td>
+    </tr>
+  </table>
+</div>
+
+{# ── Banking details ──────────────────────────────────────────────────────── #}
+{% if school.rib or school.iban or school.bic or school.bank_name %}
+<div class="section-box print-avoid">
+  <h3>Coordonnées bancaires</h3>
+  <table class="kv-table">
+    {% if school.bank_name %}<tr><th>Banque</th><td>{{ school.bank_name }}</td></tr>{% endif %}
+    {% if school.rib %}<tr><th>RIB</th><td class="mono">{{ school.rib }}</td></tr>{% endif %}
+    {% if school.iban %}<tr><th>IBAN</th><td class="mono">{{ school.iban }}</td></tr>{% endif %}
+    {% if school.bic %}<tr><th>BIC / SWIFT</th><td class="mono">{{ school.bic }}</td></tr>{% endif %}
+  </table>
+  <p class="small muted" style="margin-top:8px;">
+    Veuillez effectuer le virement en indiquant le numéro de facture <strong>{{ invoice.number }}</strong> en référence.
+  </p>
+</div>
+{% endif %}
+
+{# ── TVA footer ───────────────────────────────────────────────────────────── #}
+{% if school.tva_number or school.tax_id %}
+<div class="section-box print-avoid small muted">
+  {% if school.tva_number %}<div>N° TVA intracommunautaire : {{ school.tva_number }}</div>{% endif %}
+  {% if school.tax_id %}<div>Identifiant fiscal : {{ school.tax_id }}</div>{% endif %}
+  <div style="margin-top:4px;">Conformément à la législation marocaine en vigueur (Loi 47-06 et CGI). TVA non récupérable pour les prestations d'enseignement exonérées.</div>
+</div>
+{% endif %}
+
+{# ── Signature & stamp ────────────────────────────────────────────────────── #}
+<div class="section-box print-avoid" style="margin-top:12px;">
+  <table class="plain-table">
+    <tr>
+      <td style="width:50%; text-align:center;">
+        <div class="muted small" style="margin-bottom:4px;">Signature autorisée</div>
+        {% if school.signature_image_url %}
+        <img src="{{ school.signature_image_url }}" style="max-height:64px; max-width:180px;">
+        {% else %}
+        <div class="signature-box">Signature</div>
+        {% endif %}
+      </td>
+      <td style="width:50%; text-align:center;">
+        <div class="muted small" style="margin-bottom:4px;">Cachet de l'établissement</div>
+        {% if school.stamp_image_url %}
+        <img src="{{ school.stamp_image_url }}" style="max-height:64px; max-width:180px;">
+        {% else %}
+        <div class="signature-box">Cachet</div>
+        {% endif %}
+      </td>
+    </tr>
+  </table>
+</div>
+
+{# ── QR code ──────────────────────────────────────────────────────────────── #}
+{% if qr_code_base64 %}
+<div class="section-box print-avoid" style="text-align:center; margin-top:10px;">
+  <div class="muted small" style="margin-bottom:4px;">Vérification en ligne</div>
+  <img src="data:image/png;base64,{{ qr_code_base64 }}" style="width:80px; height:80px;">
+</div>
+{% endif %}
+
+{# ── Footer text ──────────────────────────────────────────────────────────── #}
+<div style="margin-top:12px; text-align:center; color:#94a3b8; font-size:10px;">
+  {{ school.footer_text or school.name + ' — Merci de votre confiance.' }}
+</div>
+{% endblock %}

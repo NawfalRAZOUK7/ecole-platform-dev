@@ -1,0 +1,144 @@
+{% extends "reports/base.html" %}
+{% block content %}
+{# ── School info ──────────────────────────────────────────────────────────── #}
+<div class="section-box print-avoid" style="margin-top:0;">
+  <table class="plain-table">
+    <tr>
+      <td style="width:65%;">
+        <strong>{{ school.name_ar or school.name }}</strong><br>
+        {% if school.address %}<span class="muted small">{{ school.address }}</span><br>{% endif %}
+        {% if school.city %}<span class="muted small">{{ school.city }}{% if school.region %}، {{ school.region }}{% endif %}</span><br>{% endif %}
+        {% if school.phone %}<span class="muted small">هاتف: {{ school.phone }}</span><br>{% endif %}
+        {% if school.email %}<span class="muted small">البريد الإلكتروني: {{ school.email }}</span>{% endif %}
+      </td>
+      <td style="text-align:left; vertical-align:top;">
+        <h2 style="margin:0; color:#059669;">وصل استلام الدفع</h2>
+        <div class="muted small">رقم {{ payment.receipt_number }}</div>
+      </td>
+    </tr>
+  </table>
+</div>
+
+{# ── Payment details ──────────────────────────────────────────────────────── #}
+<div class="section-box print-avoid">
+  <h3>تفاصيل الدفع</h3>
+  <table class="kv-table">
+    <tr>
+      <th>تاريخ الدفع</th>
+      <td>{{ fmt_datetime(payment.finalized_at) }}</td>
+    </tr>
+    <tr>
+      <th>المبلغ المستلم</th>
+      <td><strong style="font-size:14px; color:#059669;">{{ fmt_number(payment.amount) }} {{ invoice.currency }}</strong></td>
+    </tr>
+    <tr>
+      <th>طريقة الدفع</th>
+      <td>
+        {% if payment.method == 'cash' %}نقداً
+        {% elif payment.method == 'bank_transfer' %}تحويل بنكي
+        {% elif payment.method == 'card' %}بطاقة بنكية
+        {% elif payment.method == 'check' %}شيك
+        {% else %}{{ payment.method }}{% endif %}
+      </td>
+    </tr>
+    {% if payment.transaction_reference %}
+    <tr>
+      <th>مرجع العملية</th>
+      <td class="mono">{{ payment.transaction_reference }}</td>
+    </tr>
+    {% endif %}
+    <tr>
+      <th>الحالة</th>
+      <td><span class="badge">{{ payment.status | upper }}</span></td>
+    </tr>
+  </table>
+</div>
+
+{# ── Invoice reference ────────────────────────────────────────────────────── #}
+<div class="section-box print-avoid">
+  <h3>مرجع الفاتورة</h3>
+  <table class="kv-table">
+    <tr>
+      <th>رقم الفاتورة</th>
+      <td>{{ invoice.number }}</td>
+    </tr>
+    <tr>
+      <th>تاريخ الفاتورة</th>
+      <td>{{ fmt_date(invoice.issued_date) }}</td>
+    </tr>
+    <tr>
+      <th>المبلغ الإجمالي للفاتورة</th>
+      <td>{{ fmt_number(invoice.total_amount) }} {{ invoice.currency }}</td>
+    </tr>
+  </table>
+</div>
+
+{# ── Parent info ──────────────────────────────────────────────────────────── #}
+<div class="section-box print-avoid">
+  <h3>معلومات العميل</h3>
+  <table class="kv-table">
+    <tr>
+      <th>ولي الأمر / الوصي</th>
+      <td>{{ parent.full_name }}</td>
+    </tr>
+    <tr>
+      <th>البريد الإلكتروني</th>
+      <td>{{ parent.email }}</td>
+    </tr>
+  </table>
+</div>
+
+{# ── Confirmation message ─────────────────────────────────────────────────── #}
+<div class="section-box print-avoid" style="background:#f0fdf4; border-color:#bbf7d0;">
+  <p style="margin:0; color:#166534;">
+    نُقرّ باستلام مبلغ <strong>{{ fmt_number(payment.amount) }} {{ invoice.currency }}</strong>
+    سداداً للفاتورة رقم <strong>{{ invoice.number }}</strong>.
+    يُعدّ هذا المستند وصلاً رسمياً للدفع.
+  </p>
+</div>
+
+{# ── Banking details ──────────────────────────────────────────────────────── #}
+{% if school.rib or school.iban or school.bic or school.bank_name %}
+<div class="section-box print-avoid">
+  <h3>المعلومات البنكية للمؤسسة</h3>
+  <table class="kv-table">
+    {% if school.bank_name %}<tr><th>البنك</th><td>{{ school.bank_name }}</td></tr>{% endif %}
+    {% if school.rib %}<tr><th>رقم الحساب البنكي (RIB)</th><td class="mono">{{ school.rib }}</td></tr>{% endif %}
+    {% if school.iban %}<tr><th>IBAN</th><td class="mono">{{ school.iban }}</td></tr>{% endif %}
+    {% if school.bic %}<tr><th>BIC / SWIFT</th><td class="mono">{{ school.bic }}</td></tr>{% endif %}
+  </table>
+</div>
+{% endif %}
+
+{# ── Signature & stamp ────────────────────────────────────────────────────── #}
+<div class="section-box print-avoid" style="margin-top:12px;">
+  <table class="plain-table">
+    <tr>
+      <td style="width:50%; text-align:center;">
+        <div class="muted small" style="margin-bottom:4px;">التوقيع المعتمد</div>
+        {% if school.signature_image_url %}
+        <img src="{{ school.signature_image_url }}" style="max-height:64px; max-width:180px;">
+        {% else %}
+        <div class="signature-box">التوقيع</div>
+        {% endif %}
+      </td>
+      <td style="width:50%; text-align:center;">
+        <div class="muted small" style="margin-bottom:4px;">ختم المؤسسة</div>
+        {% if school.stamp_image_url %}
+        <img src="{{ school.stamp_image_url }}" style="max-height:64px; max-width:180px;">
+        {% else %}
+        <div class="signature-box">الختم</div>
+        {% endif %}
+      </td>
+    </tr>
+  </table>
+</div>
+
+{# ── Thank you footer ─────────────────────────────────────────────────────── #}
+<div style="margin-top:16px; text-align:center; color:#166534; font-size:13px; font-weight:600;">
+  شكراً جزيلاً على دفعتكم وثقتكم.
+</div>
+<div style="margin-top:6px; text-align:center; color:#94a3b8; font-size:10px;">
+  {{ school.footer_text or school.name_ar or school.name + ' — وثيقة دفع رسمية.' }}
+</div>
+{% endblock %}

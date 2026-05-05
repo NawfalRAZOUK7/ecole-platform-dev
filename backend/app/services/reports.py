@@ -1378,10 +1378,15 @@ class ReportsService:
         return f"{_format_report_date(from_date)} → {_format_report_date(to_date)}"
 
     def _render_template(self, report_type: str, context: dict[str, Any]) -> str:
-        template = _jinja_env.get_template(
-            f"reports/{_normalize_report_type(report_type)}.html"
-        )
-        return template.render(**context)
+        normalized = _normalize_report_type(report_type)
+        lang = context.get("lang", "fr")
+        if normalized == ReportType.INVOICE_PDF.value:
+            tpl = f"reports/invoice_{'ar' if lang == 'ar' else 'fr'}.html"
+        elif normalized == ReportType.PAYMENT_RECEIPT.value:
+            tpl = f"reports/payment_receipt_{'ar' if lang == 'ar' else 'fr'}.html"
+        else:
+            tpl = f"reports/{normalized}.html"
+        return _jinja_env.get_template(tpl).render(**context)
 
     def _render_pdf_bytes(self, html: str) -> bytes:
         if HTML is not None:  # pragma: no branch
