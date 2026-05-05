@@ -36,8 +36,9 @@ class _SelectedFile {
 
   String get sizeLabel {
     if (sizeBytes < 1024) return '$sizeBytes B';
-    if (sizeBytes < 1024 * 1024)
+    if (sizeBytes < 1024 * 1024) {
       return '${(sizeBytes / 1024).toStringAsFixed(1)} KB';
+    }
     return '${(sizeBytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 
@@ -116,7 +117,7 @@ class _SubmissionUploadScreenState
         path: image.path,
         sizeBytes: size,
         mimeType: 'image/${image.name.split('.').last}',
-      ));
+      ),);
     } catch (e) {
       setState(() => _error = 'Erreur lors de la sélection: $e');
     }
@@ -140,7 +141,7 @@ class _SubmissionUploadScreenState
         path: photo.path,
         sizeBytes: size,
         mimeType: 'image/${photo.name.split('.').last}',
-      ));
+      ),);
     } catch (e) {
       setState(() => _error = 'Erreur lors de la capture: $e');
     }
@@ -160,7 +161,7 @@ class _SubmissionUploadScreenState
           'txt',
           'jpg',
           'jpeg',
-          'png'
+          'png',
         ],
       );
       if (result == null) return;
@@ -173,7 +174,7 @@ class _SubmissionUploadScreenState
           sizeBytes: file.size,
           mimeType:
               file.extension != null ? _mimeFromExt(file.extension!) : null,
-        ));
+        ),);
       }
     } catch (e) {
       setState(() => _error = 'Erreur lors de la sélection: $e');
@@ -209,7 +210,7 @@ class _SubmissionUploadScreenState
     }
     if (file.sizeBytes > _legacyMaxFileSize) {
       setState(
-          () => _error = '${file.name} dépasse la taille maximale (50 MB)');
+          () => _error = '${file.name} dépasse la taille maximale (50 MB)',);
       return;
     }
     setState(() {
@@ -239,7 +240,7 @@ class _SubmissionUploadScreenState
           SnackBar(
             content: Text(result.type == ResultType.done
                 ? 'PDF de l\'exercice téléchargé'
-                : result.message),
+                : result.message,),
             backgroundColor: result.type == ResultType.done
                 ? Theme.of(context).semanticPalette.success
                 : Theme.of(context).colorScheme.error,
@@ -322,7 +323,7 @@ class _SubmissionUploadScreenState
         try {
           await api.post('/submissions/finalize', body: {
             'assignment_id': widget.assignmentId,
-          });
+          },);
         } catch (_) {
           // Non-critical — submission was already uploaded
         }
@@ -331,7 +332,7 @@ class _SubmissionUploadScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Devoir soumis avec succès'),
+            content: const Text('Devoir soumis avec succès'),
             backgroundColor: Theme.of(context).semanticPalette.success,
           ),
         );
@@ -369,12 +370,12 @@ class _SubmissionUploadScreenState
               child: Row(
                 children: [
                   Icon(Icons.error_outline,
-                      color: theme.colorScheme.error, size: 20),
+                      color: theme.colorScheme.error, size: 20,),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(_error!,
                         style: TextStyle(
-                            color: theme.colorScheme.onErrorContainer)),
+                            color: theme.colorScheme.onErrorContainer,),),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close, size: 18),
@@ -398,11 +399,11 @@ class _SubmissionUploadScreenState
                     Row(
                       children: [
                         Icon(Icons.picture_as_pdf,
-                            color: theme.colorScheme.primary, size: 24),
+                            color: theme.colorScheme.primary, size: 24,),
                         const SizedBox(width: 8),
                         Text('Exercice à imprimer',
                             style: theme.textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.bold)),
+                                ?.copyWith(fontWeight: FontWeight.bold),),
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -423,11 +424,11 @@ class _SubmissionUploadScreenState
                                 height: 16,
                                 width: 16,
                                 child:
-                                    CircularProgressIndicator(strokeWidth: 2))
+                                    CircularProgressIndicator(strokeWidth: 2),)
                             : const Icon(Icons.download),
                         label: Text(_downloadingPdf
                             ? 'Téléchargement...'
-                            : 'Télécharger le PDF'),
+                            : 'Télécharger le PDF',),
                       ),
                     ),
                   ],
@@ -446,7 +447,7 @@ class _SubmissionUploadScreenState
                 children: [
                   Text('Ajouter des fichiers',
                       style: theme.textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.bold)),
+                          ?.copyWith(fontWeight: FontWeight.bold),),
                   const SizedBox(height: 4),
                   Text(
                     'Max $_maxFiles fichiers, 50 MB max par fichier',
@@ -485,7 +486,7 @@ class _SubmissionUploadScreenState
           if (_files.isNotEmpty) ...[
             Text('Fichiers sélectionnés (${_files.length}/$_maxFiles)',
                 style: theme.textTheme.titleSmall
-                    ?.copyWith(fontWeight: FontWeight.w600)),
+                    ?.copyWith(fontWeight: FontWeight.w600),),
             const SizedBox(height: 8),
             ..._files.asMap().entries.map((entry) {
               final index = entry.key;
@@ -515,11 +516,11 @@ class _SubmissionUploadScreenState
                           ),
                         ),
                   title: Text(file.name,
-                      maxLines: 1, overflow: TextOverflow.ellipsis),
+                      maxLines: 1, overflow: TextOverflow.ellipsis,),
                   subtitle: Text(file.sizeLabel),
                   trailing: IconButton(
                     icon: Icon(Icons.close,
-                        color: theme.colorScheme.error, size: 20),
+                        color: theme.colorScheme.error, size: 20,),
                     onPressed: _uploading ? null : () => _removeFile(index),
                   ),
                 ),
@@ -569,11 +570,11 @@ class _SubmissionUploadScreenState
                     height: 16,
                     width: 16,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: theme.colorScheme.onPrimary))
+                        strokeWidth: 2, color: theme.colorScheme.onPrimary,),)
                 : const Icon(Icons.upload_file),
             label: Text(_uploading
                 ? (_uploadProgress < 1.0 ? 'Envoi en cours...' : 'Analyse…')
-                : 'Soumettre'),
+                : 'Soumettre',),
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),

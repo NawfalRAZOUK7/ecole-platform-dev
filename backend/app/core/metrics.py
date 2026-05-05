@@ -321,7 +321,7 @@ STORAGE_OPERATION_ERRORS = Counter(
 # Phase 8 — Virus scan metrics
 # ---------------------------------------------------------------------------
 VIRUS_SCAN_RESULT = Counter(
-    "virus_scan_result_total",
+    "virus_scan_result",
     "Post-upload virus scan outcomes",
     ["env", "result"],  # result: "clean", "infected", "error"
     registry=REGISTRY,

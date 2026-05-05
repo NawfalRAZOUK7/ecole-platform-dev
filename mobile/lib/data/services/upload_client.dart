@@ -207,10 +207,12 @@ Future<void> _putToStorage(
   File file, {
   void Function(int sent, int total)? onSendProgress,
 }) async {
-  final externalDio = Dio(BaseOptions(
-    connectTimeout: const Duration(seconds: 30),
-    receiveTimeout: const Duration(minutes: 10),
-  ));
+  final externalDio = Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(minutes: 10),
+    ),
+  );
 
   try {
     final response = await externalDio.put(
@@ -266,10 +268,13 @@ Future<void> _completeUpload({
 
   for (var attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      await api.post('/uploads/complete', body: {
-        'upload_id': uploadId,
-        'size_bytes': sizeBytes,
-      });
+      await api.post(
+        '/uploads/complete',
+        body: {
+          'upload_id': uploadId,
+          'size_bytes': sizeBytes,
+        },
+      );
       return;
     } on ApiClientError catch (e) {
       // Do not retry 4xx — client-side problem (bad state, wrong size, etc.)
