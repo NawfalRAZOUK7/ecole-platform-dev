@@ -22,6 +22,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.14.0
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -64,6 +69,24 @@ jobs:
         run: |
           cd backend
           python scripts/export_openapi.py --check
+
+      - name: Helm lint
+        run: |
+          helm lint ./infra/k8s
+
+      - name: Helm template validation (staging)
+        run: |
+          helm template ecole-platform ./infra/k8s \
+            -f ./infra/k8s/values-staging.yaml \
+            --namespace ecole-staging \
+            --debug
+
+      - name: Helm template validation (production)
+        run: |
+          helm template ecole-platform ./infra/k8s \
+            -f ./infra/k8s/values-prod.yaml \
+            --namespace ecole-prod \
+            --debug
 
   security-trivy:
     name: Security - Trivy
