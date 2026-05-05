@@ -27,6 +27,7 @@ from sqlalchemy import or_, select, update
 from app.core.config import settings
 from app.core.database import async_session
 from app.core.exceptions import NotFoundError, ValidationError
+from app.core.metrics import record_virus_scan_result
 from app.core.storage import S3StorageBackend, storage, virus_scan_hook
 from app.models.uploads import UploadSession
 
@@ -209,6 +210,7 @@ async def task_post_upload_scan(ctx: dict, upload_id: str) -> bool:
                     upload_id,
                     session.object_key,
                 )
+                record_virus_scan_result(env=settings.app_env, result="infected")
                 await storage.delete(session.object_key)
                 session.upload_state = "quarantined"
                 session.error_message = "file failed virus scan"
@@ -220,7 +222,11 @@ async def task_post_upload_scan(ctx: dict, upload_id: str) -> bool:
                 logger.exception(
                     "Virus scan error for session %s — will retry", upload_id
                 )
+                record_virus_scan_result(env=settings.app_env, result="error")
                 raise  # Let ARQ retry
+
+            else:
+                record_virus_scan_result(env=settings.app_env, result="clean")
 
             finally:
                 if tmp_path and tmp_path.exists():

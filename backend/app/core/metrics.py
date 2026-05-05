@@ -317,6 +317,27 @@ STORAGE_OPERATION_ERRORS = Counter(
     registry=REGISTRY,
 )
 
+# ---------------------------------------------------------------------------
+# Phase 8 — Virus scan metrics
+# ---------------------------------------------------------------------------
+VIRUS_SCAN_RESULT = Counter(
+    "virus_scan_result_total",
+    "Post-upload virus scan outcomes",
+    ["env", "result"],  # result: "clean", "infected", "error"
+    registry=REGISTRY,
+)
+
+
+def record_virus_scan_result(*, env: str, result: str) -> None:
+    """Increment the virus scan outcome counter.
+
+    Args:
+        result: one of "clean", "infected", or "error"
+    """
+    safe_result = result if result in ("clean", "infected", "error") else "error"
+    safe_env = env if isinstance(env, str) and env else "unknown"
+    VIRUS_SCAN_RESULT.labels(env=safe_env, result=safe_result).inc()
+
 _SAFE_MIME_RE = re.compile(r"^[a-z0-9][a-z0-9!#$&^_.+-]{0,126}/[a-z0-9][a-z0-9!#$&^_.+-]{0,126}$")
 
 

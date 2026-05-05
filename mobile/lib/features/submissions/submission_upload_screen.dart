@@ -449,7 +449,7 @@ class _SubmissionUploadScreenState
                           ?.copyWith(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
                   Text(
-                    'Max $_maxFiles fichiers, 10 MB chacun',
+                    'Max $_maxFiles fichiers, 50 MB max par fichier',
                     style: theme.textTheme.bodySmall
                         ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                   ),

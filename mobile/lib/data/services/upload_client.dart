@@ -261,10 +261,28 @@ Future<void> _completeUpload({
   required String uploadId,
   required int sizeBytes,
 }) async {
-  await api.post('/uploads/complete', body: {
-    'upload_id': uploadId,
-    'size_bytes': sizeBytes,
-  });
+  const maxRetries = 3;
+  var delay = const Duration(milliseconds: 500);
+
+  for (var attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      await api.post('/uploads/complete', body: {
+        'upload_id': uploadId,
+        'size_bytes': sizeBytes,
+      });
+      return;
+    } on ApiClientError catch (e) {
+      // Do not retry 4xx — client-side problem (bad state, wrong size, etc.)
+      if (e.statusCode >= 400 && e.statusCode < 500) rethrow;
+      if (attempt == maxRetries) rethrow;
+    } catch (_) {
+      if (attempt == maxRetries) rethrow;
+    }
+    await Future<void>.delayed(delay);
+    delay = delay * 2 > const Duration(seconds: 4)
+        ? const Duration(seconds: 4)
+        : delay * 2;
+  }
 }
 
 // ── Internal: poll ───────────────────────────────────────────────────────────
