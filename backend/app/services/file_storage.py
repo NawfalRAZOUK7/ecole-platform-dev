@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import io
+import logging
 import mimetypes
 import re
 import socket
@@ -18,6 +19,15 @@ from typing import Any, Protocol, runtime_checkable
 
 from app.core.config import settings
 from app.core.exceptions import NotFoundError, ValidationError
+from app.core.metrics import (
+    log_storage_failure,
+    record_storage_error,
+    record_storage_presign,
+    record_storage_upload,
+    storage_operation_observer,
+)
+
+logger = logging.getLogger(__name__)
 
 try:  # pragma: no cover - optional runtime dependency
     from PIL import Image
@@ -171,10 +181,26 @@ class LocalFileStorageBackend:
     async def save_bytes(
         self, *, relative_path: str, content: bytes, mime_type: str
     ) -> StoredObject:
-        target = self.base_dir / relative_path
-        target.parent.mkdir(parents=True, exist_ok=True)
-        if not target.exists():
-            target.write_bytes(content)
+        stored = False
+        with storage_operation_observer(
+            env=settings.app_env,
+            backend="local",
+            operation="upload",
+            mime_type=mime_type,
+            logger=logger,
+        ):
+            target = self.base_dir / relative_path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            if not target.exists():
+                target.write_bytes(content)
+                stored = True
+        if stored:
+            record_storage_upload(
+                env=settings.app_env,
+                backend="local",
+                mime_type=mime_type,
+                size_bytes=len(content),
+            )
         return StoredObject(
             storage_path=relative_path,
             size_bytes=len(content),
@@ -182,25 +208,49 @@ class LocalFileStorageBackend:
         )
 
     async def exists(self, relative_path: str) -> bool:
-        return (self.base_dir / relative_path).exists()
+        with storage_operation_observer(
+            env=settings.app_env,
+            backend="local",
+            operation="exists",
+            logger=logger,
+        ):
+            return (self.base_dir / relative_path).exists()
 
     async def delete(self, relative_path: str) -> None:
-        target = self.base_dir / relative_path
-        if target.exists():
-            target.unlink()
+        with storage_operation_observer(
+            env=settings.app_env,
+            backend="local",
+            operation="delete",
+            logger=logger,
+        ):
+            target = self.base_dir / relative_path
+            if target.exists():
+                target.unlink()
 
     async def local_path(self, relative_path: str) -> Path:
-        target = self.base_dir / relative_path
-        if not target.exists():
-            raise NotFoundError("Stored file not found", error_code="ERR-DOC-404")
-        return target
+        with storage_operation_observer(
+            env=settings.app_env,
+            backend="local",
+            operation="local_path",
+            logger=logger,
+        ):
+            target = self.base_dir / relative_path
+            if not target.exists():
+                raise NotFoundError("Stored file not found", error_code="ERR-DOC-404")
+            return target
 
     async def get_bytes(self, relative_path: str) -> bytes:
         """Return raw file content. Raises NotFoundError if missing."""
-        target = self.base_dir / relative_path
-        if not target.exists():
-            raise NotFoundError("Stored file not found", error_code="ERR-DOC-404")
-        return target.read_bytes()
+        with storage_operation_observer(
+            env=settings.app_env,
+            backend="local",
+            operation="get_bytes",
+            logger=logger,
+        ):
+            target = self.base_dir / relative_path
+            if not target.exists():
+                raise NotFoundError("Stored file not found", error_code="ERR-DOC-404")
+            return target.read_bytes()
 
     async def presign_get(
         self,
@@ -214,7 +264,19 @@ class LocalFileStorageBackend:
         serve_file() detects that this is not an HTTP URL and falls back to
         FileResponse via local_path().
         """
-        return relative_path
+        with storage_operation_observer(
+            env=settings.app_env,
+            backend="local",
+            operation="presign_get",
+            logger=logger,
+        ):
+            result = relative_path
+        record_storage_presign(
+            env=settings.app_env,
+            backend="local",
+            operation="presign_get",
+        )
+        return result
 
 
 class S3FileStorageBackend:
@@ -229,6 +291,7 @@ class S3FileStorageBackend:
 
     def __init__(self) -> None:
         self._bucket = settings.document_storage_bucket
+        self._sse = settings.s3_sse_enabled
         self._client_kwargs: dict[str, Any] = {
             "endpoint_url": settings.document_storage_endpoint or None,
             "region_name": settings.document_storage_region,
@@ -246,17 +309,30 @@ class S3FileStorageBackend:
     async def save_bytes(
         self, *, relative_path: str, content: bytes, mime_type: str
     ) -> StoredObject:
-        put_kwargs: dict[str, Any] = {
-            "Bucket": self._bucket,
-            "Key": relative_path,
-            "Body": content,
-            "ContentType": mime_type,
-            "CacheControl": "private, max-age=300",
-        }
-        if settings.s3_sse_enabled:
-            put_kwargs["ServerSideEncryption"] = "AES256"
-        async with self._client() as s3:
-            await s3.put_object(**put_kwargs)
+        with storage_operation_observer(
+            env=settings.app_env,
+            backend="s3",
+            operation="upload",
+            mime_type=mime_type,
+            logger=logger,
+        ):
+            put_kwargs: dict[str, Any] = {
+                "Bucket": self._bucket,
+                "Key": relative_path,
+                "Body": content,
+                "ContentType": mime_type,
+                "CacheControl": "private, max-age=300",
+            }
+            if self._sse:
+                put_kwargs["ServerSideEncryption"] = "AES256"
+            async with self._client() as s3:
+                await s3.put_object(**put_kwargs)
+        record_storage_upload(
+            env=settings.app_env,
+            backend="s3",
+            mime_type=mime_type,
+            size_bytes=len(content),
+        )
         return StoredObject(
             storage_path=relative_path,
             size_bytes=len(content),
@@ -266,23 +342,49 @@ class S3FileStorageBackend:
     async def exists(self, relative_path: str) -> bool:
         from botocore.exceptions import ClientError  # noqa: PLC0415
 
-        async with self._client() as s3:
-            try:
-                await s3.head_object(Bucket=self._bucket, Key=relative_path)
-                return True
-            except ClientError as exc:
-                if exc.response["Error"]["Code"] in ("404", "NoSuchKey"):
-                    return False
-                raise
+        with storage_operation_observer(
+            env=settings.app_env,
+            backend="s3",
+            operation="exists",
+            logger=logger,
+        ):
+            async with self._client() as s3:
+                try:
+                    await s3.head_object(Bucket=self._bucket, Key=relative_path)
+                    return True
+                except ClientError as exc:
+                    if exc.response["Error"]["Code"] in ("404", "NoSuchKey"):
+                        return False
+                    raise
 
     async def delete(self, relative_path: str) -> None:
         from botocore.exceptions import ClientError  # noqa: PLC0415
 
-        async with self._client() as s3:
-            try:
-                await s3.delete_object(Bucket=self._bucket, Key=relative_path)
-            except ClientError:
-                pass
+        with storage_operation_observer(
+            env=settings.app_env,
+            backend="s3",
+            operation="delete",
+            logger=logger,
+        ):
+            async with self._client() as s3:
+                try:
+                    await s3.delete_object(Bucket=self._bucket, Key=relative_path)
+                except ClientError as exc:
+                    code = exc.response.get("Error", {}).get("Code")
+                    if code not in ("404", "NoSuchKey"):
+                        record_storage_error(
+                            env=settings.app_env,
+                            backend="s3",
+                            operation="delete",
+                        )
+                        log_storage_failure(
+                            logger,
+                            env=settings.app_env,
+                            backend="s3",
+                            operation="delete",
+                            mime_type=None,
+                            exc=exc,
+                        )
 
     async def local_path(self, relative_path: str) -> Path:
         """Not implemented on S3 backend.
@@ -305,14 +407,23 @@ class S3FileStorageBackend:
         """
         from botocore.exceptions import ClientError  # noqa: PLC0415
 
-        async with self._client() as s3:
-            try:
-                response = await s3.get_object(Bucket=self._bucket, Key=relative_path)
-                return await response["Body"].read()
-            except ClientError as exc:
-                if exc.response["Error"]["Code"] in ("404", "NoSuchKey"):
-                    raise NotFoundError("Stored file not found", error_code="ERR-DOC-404")
-                raise
+        with storage_operation_observer(
+            env=settings.app_env,
+            backend="s3",
+            operation="get_bytes",
+            logger=logger,
+        ):
+            async with self._client() as s3:
+                try:
+                    response = await s3.get_object(Bucket=self._bucket, Key=relative_path)
+                    return await response["Body"].read()
+                except ClientError as exc:
+                    if exc.response["Error"]["Code"] in ("404", "NoSuchKey"):
+                        raise NotFoundError(
+                            "Stored file not found",
+                            error_code="ERR-DOC-404",
+                        )
+                    raise
 
     async def presign_get(
         self,
@@ -339,12 +450,24 @@ class S3FileStorageBackend:
             params["ResponseContentDisposition"] = (
                 f"attachment; filename*=UTF-8''{quote(response_filename)}"
             )
-        async with self._client() as s3:
-            return await s3.generate_presigned_url(
-                "get_object",
-                Params=params,
-                ExpiresIn=ttl,
-            )
+        with storage_operation_observer(
+            env=settings.app_env,
+            backend="s3",
+            operation="presign_get",
+            logger=logger,
+        ):
+            async with self._client() as s3:
+                result = await s3.generate_presigned_url(
+                    "get_object",
+                    Params=params,
+                    ExpiresIn=ttl,
+                )
+        record_storage_presign(
+            env=settings.app_env,
+            backend="s3",
+            operation="presign_get",
+        )
+        return result
 
 
 class FileStorageService:

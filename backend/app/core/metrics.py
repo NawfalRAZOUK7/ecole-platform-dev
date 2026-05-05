@@ -9,7 +9,11 @@ Metrics endpoint: GET /metrics (public, no auth)
 
 from __future__ import annotations
 
+import logging
+import re
 import time
+from contextlib import contextmanager
+from collections.abc import Iterator
 
 from fastapi import FastAPI, Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
@@ -271,6 +275,211 @@ DOCUMENT_STORAGE_TOTAL_BYTES = Gauge(
     ["env"],
     registry=REGISTRY,
 )
+
+# ---------------------------------------------------------------------------
+# Object storage metrics (MinIO / S3 integration)
+# ---------------------------------------------------------------------------
+STORAGE_LABELS = ["env", "backend", "operation", "mime_type"]
+
+STORAGE_UPLOAD_COUNT = Counter(
+    "storage_upload_count",
+    "Total object-storage upload operations",
+    STORAGE_LABELS,
+    registry=REGISTRY,
+)
+
+STORAGE_UPLOAD_BYTES = Counter(
+    "storage_upload_bytes",
+    "Total object-storage upload bytes",
+    STORAGE_LABELS,
+    registry=REGISTRY,
+)
+
+STORAGE_PRESIGN_COUNT = Counter(
+    "storage_presign_count",
+    "Total object-storage presign operations",
+    STORAGE_LABELS,
+    registry=REGISTRY,
+)
+
+STORAGE_OPERATION_LATENCY = Histogram(
+    "storage_operation_latency",
+    "Object-storage operation latency in seconds",
+    STORAGE_LABELS,
+    buckets=(0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0),
+    registry=REGISTRY,
+)
+
+STORAGE_OPERATION_ERRORS = Counter(
+    "storage_operation_errors",
+    "Total object-storage operation errors",
+    STORAGE_LABELS,
+    registry=REGISTRY,
+)
+
+_SAFE_MIME_RE = re.compile(r"^[a-z0-9][a-z0-9!#$&^_.+-]{0,126}/[a-z0-9][a-z0-9!#$&^_.+-]{0,126}$")
+
+
+def _normalize_storage_backend(backend: str) -> str:
+    """Keep the storage backend label bounded to the documented values."""
+    return "s3" if backend.lower() == "s3" else "local"
+
+
+def normalize_storage_mime_type(mime_type: str | None) -> str:
+    """Return a low-cardinality, safe MIME label value."""
+    if not mime_type:
+        return "unknown"
+    value = mime_type.split(";", 1)[0].strip().lower()
+    if not value or len(value) > 128 or not _SAFE_MIME_RE.fullmatch(value):
+        return "unknown"
+    return value
+
+
+def _storage_labels(
+    *,
+    env: str,
+    backend: str,
+    operation: str,
+    mime_type: str | None = None,
+) -> dict[str, str]:
+    safe_env = env if isinstance(env, str) and env else "unknown"
+    return {
+        "env": safe_env,
+        "backend": _normalize_storage_backend(backend),
+        "operation": operation,
+        "mime_type": normalize_storage_mime_type(mime_type),
+    }
+
+
+def record_storage_upload(
+    *,
+    env: str,
+    backend: str,
+    operation: str = "upload",
+    mime_type: str | None = None,
+    size_bytes: int,
+) -> None:
+    labels = _storage_labels(
+        env=env,
+        backend=backend,
+        operation=operation,
+        mime_type=mime_type,
+    )
+    STORAGE_UPLOAD_COUNT.labels(**labels).inc()
+    STORAGE_UPLOAD_BYTES.labels(**labels).inc(size_bytes)
+
+
+def record_storage_presign(
+    *,
+    env: str,
+    backend: str,
+    operation: str,
+    mime_type: str | None = None,
+) -> None:
+    STORAGE_PRESIGN_COUNT.labels(
+        **_storage_labels(
+            env=env,
+            backend=backend,
+            operation=operation,
+            mime_type=mime_type,
+        )
+    ).inc()
+
+
+def record_storage_error(
+    *,
+    env: str,
+    backend: str,
+    operation: str,
+    mime_type: str | None = None,
+) -> None:
+    STORAGE_OPERATION_ERRORS.labels(
+        **_storage_labels(
+            env=env,
+            backend=backend,
+            operation=operation,
+            mime_type=mime_type,
+        )
+    ).inc()
+
+
+def log_storage_failure(
+    logger: logging.Logger,
+    *,
+    env: str,
+    backend: str,
+    operation: str,
+    mime_type: str | None,
+    exc: BaseException,
+) -> None:
+    """Log storage failures without object keys, filenames, URLs, or credentials."""
+    safe_env = env if isinstance(env, str) and env else "unknown"
+    safe_backend = _normalize_storage_backend(backend)
+    safe_mime = normalize_storage_mime_type(mime_type)
+    error_type = type(exc).__name__
+    error_code = "unknown"
+    response = getattr(exc, "response", None)
+    if isinstance(response, dict):
+        error_code = str(response.get("Error", {}).get("Code") or "unknown")
+    logger.error(
+        "storage_operation_failed env=%s backend=%s operation=%s mime_type=%s error_type=%s error_code=%s",
+        safe_env,
+        safe_backend,
+        operation,
+        safe_mime,
+        error_type,
+        error_code,
+        extra={
+            "event": "storage_operation_failed",
+            "storage_env": safe_env,
+            "storage_backend": safe_backend,
+            "storage_operation": operation,
+            "storage_mime_type": safe_mime,
+            "storage_error_type": error_type,
+            "storage_error_code": error_code,
+        },
+    )
+
+
+@contextmanager
+def storage_operation_observer(
+    *,
+    env: str,
+    backend: str,
+    operation: str,
+    mime_type: str | None = None,
+    logger: logging.Logger | None = None,
+) -> Iterator[None]:
+    """Observe latency and failures for a bounded-label storage operation."""
+    start = time.perf_counter()
+    try:
+        yield
+    except Exception as exc:
+        record_storage_error(
+            env=env,
+            backend=backend,
+            operation=operation,
+            mime_type=mime_type,
+        )
+        if logger is not None:
+            log_storage_failure(
+                logger,
+                env=env,
+                backend=backend,
+                operation=operation,
+                mime_type=mime_type,
+                exc=exc,
+            )
+        raise
+    finally:
+        STORAGE_OPERATION_LATENCY.labels(
+            **_storage_labels(
+                env=env,
+                backend=backend,
+                operation=operation,
+                mime_type=mime_type,
+            )
+        ).observe(time.perf_counter() - start)
 
 
 class _CollectorNameProxy:

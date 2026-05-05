@@ -8,6 +8,7 @@ Virus scan hook is a no-op placeholder (to be replaced by ClamAV integration lat
 from __future__ import annotations
 
 import hashlib
+import logging
 import mimetypes
 import uuid
 from dataclasses import dataclass
@@ -17,6 +18,15 @@ from typing import Any, BinaryIO, Protocol, runtime_checkable
 
 from app.core.config import Settings, settings
 from app.core.exceptions import ValidationError
+from app.core.metrics import (
+    log_storage_failure,
+    record_storage_error,
+    record_storage_presign,
+    record_storage_upload,
+    storage_operation_observer,
+)
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -161,48 +171,80 @@ class LocalStorageBackend:
         subdirectory: str = "",
     ) -> tuple[str, str, int]:
         """Save file to local filesystem. Returns (relative_path, sha256, file_size)."""
-        target_dir = self.base_dir / subdirectory if subdirectory else self.base_dir
-        target_dir.mkdir(parents=True, exist_ok=True)
+        content_type, _ = mimetypes.guess_type(filename)
+        with storage_operation_observer(
+            env=settings.app_env,
+            backend="local",
+            operation="upload",
+            mime_type=content_type,
+            logger=logger,
+        ):
+            target_dir = self.base_dir / subdirectory if subdirectory else self.base_dir
+            target_dir.mkdir(parents=True, exist_ok=True)
 
-        safe_name = f"{uuid.uuid4().hex}_{filename}"
-        target_path = target_dir / safe_name
+            safe_name = f"{uuid.uuid4().hex}_{filename}"
+            target_path = target_dir / safe_name
 
-        sha256 = hashlib.sha256()
-        total_size = 0
+            sha256 = hashlib.sha256()
+            total_size = 0
 
-        with open(target_path, "wb") as f:
-            while True:
-                chunk = file.read(8192)
-                if not chunk:
-                    break
-                f.write(chunk)
-                sha256.update(chunk)
-                total_size += len(chunk)
+            with open(target_path, "wb") as f:
+                while True:
+                    chunk = file.read(8192)
+                    if not chunk:
+                        break
+                    f.write(chunk)
+                    sha256.update(chunk)
+                    total_size += len(chunk)
 
-        validate_file_size(total_size)
-        await virus_scan_hook(target_path)
+            validate_file_size(total_size)
+            await virus_scan_hook(target_path)
 
-        relative_path = str(target_path.relative_to(self.base_dir))
+            relative_path = str(target_path.relative_to(self.base_dir))
+        record_storage_upload(
+            env=settings.app_env,
+            backend="local",
+            mime_type=content_type,
+            size_bytes=total_size,
+        )
         return relative_path, sha256.hexdigest(), total_size
 
     async def read(self, relative_path: str) -> Path:
         """Return absolute path to file. Raises if not found."""
         from app.core.exceptions import NotFoundError
 
-        abs_path = self.base_dir / relative_path
-        if not abs_path.exists():
-            raise NotFoundError("File not found", error_code="ERR-UPLOAD-404")
-        return abs_path
+        with storage_operation_observer(
+            env=settings.app_env,
+            backend="local",
+            operation="read",
+            logger=logger,
+        ):
+            abs_path = self.base_dir / relative_path
+            if not abs_path.exists():
+                raise NotFoundError("File not found", error_code="ERR-UPLOAD-404")
+            return abs_path
 
     async def delete(self, relative_path: str) -> None:
         """Delete file from local filesystem."""
-        abs_path = self.base_dir / relative_path
-        if abs_path.exists():
-            abs_path.unlink()
+        with storage_operation_observer(
+            env=settings.app_env,
+            backend="local",
+            operation="delete",
+            logger=logger,
+        ):
+            abs_path = self.base_dir / relative_path
+            if abs_path.exists():
+                abs_path.unlink()
 
     async def exists(self, relative_path: str) -> bool:
         """Check if file exists."""
-        return (self.base_dir / relative_path).exists()
+        with storage_operation_observer(
+            env=settings.app_env,
+            backend="local",
+            operation="exists",
+            logger=logger,
+        ):
+            return (self.base_dir / relative_path).exists()
 
     async def presign_get(
         self,
@@ -216,7 +258,19 @@ class LocalStorageBackend:
         Full route-based presigning is wired in Prompt 6.  Until then, callers
         on the local backend should continue using read() + FileResponse.
         """
-        return relative_path
+        with storage_operation_observer(
+            env=settings.app_env,
+            backend="local",
+            operation="presign_get",
+            logger=logger,
+        ):
+            result = relative_path
+        record_storage_presign(
+            env=settings.app_env,
+            backend="local",
+            operation="presign_get",
+        )
+        return result
 
     async def presign_put(
         self,
@@ -236,17 +290,23 @@ class LocalStorageBackend:
         """Return metadata for a locally stored file."""
         from app.core.exceptions import NotFoundError
 
-        abs_path = self.base_dir / relative_path
-        if not abs_path.exists():
-            raise NotFoundError("File not found", error_code="ERR-UPLOAD-404")
-        stat_result = abs_path.stat()
-        content_type, _ = mimetypes.guess_type(str(abs_path))
-        return ObjectStat(
-            size_bytes=stat_result.st_size,
-            etag=hashlib.md5(abs_path.read_bytes()).hexdigest(),  # noqa: S324
-            content_type=content_type or "application/octet-stream",
-            last_modified=datetime.fromtimestamp(stat_result.st_mtime),
-        )
+        with storage_operation_observer(
+            env=settings.app_env,
+            backend="local",
+            operation="stat",
+            logger=logger,
+        ):
+            abs_path = self.base_dir / relative_path
+            if not abs_path.exists():
+                raise NotFoundError("File not found", error_code="ERR-UPLOAD-404")
+            stat_result = abs_path.stat()
+            content_type, _ = mimetypes.guess_type(str(abs_path))
+            return ObjectStat(
+                size_bytes=stat_result.st_size,
+                etag=hashlib.md5(abs_path.read_bytes()).hexdigest(),  # noqa: S324
+                content_type=content_type or "application/octet-stream",
+                last_modified=datetime.fromtimestamp(stat_result.st_mtime),
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -300,30 +360,47 @@ class S3StorageBackend:
         subdirectory: str = "",
     ) -> tuple[str, str, int]:
         """Upload file to S3. Returns (object_key, sha256, size_bytes)."""
-        content = file.read()
-        sha256 = hashlib.sha256(content).hexdigest()
-        size = len(content)
-        validate_file_size(size)
-
-        safe_name = f"{uuid.uuid4().hex}_{filename}"
-        key = f"{subdirectory}/{safe_name}".lstrip("/") if subdirectory else safe_name
-
         content_type, _ = mimetypes.guess_type(filename)
         content_type = content_type or "application/octet-stream"
 
-        put_kwargs: dict[str, Any] = {
-            "Bucket": self._bucket,
-            "Key": key,
-            "Body": content,
-            "ContentType": content_type,
-            "CacheControl": "private, max-age=300",
-        }
-        if self._sse:
-            put_kwargs["ServerSideEncryption"] = "AES256"
+        with storage_operation_observer(
+            env=settings.app_env,
+            backend="s3",
+            operation="upload",
+            mime_type=content_type,
+            logger=logger,
+        ):
+            content = file.read()
+            sha256 = hashlib.sha256(content).hexdigest()
+            size = len(content)
+            validate_file_size(size)
 
-        async with self._client() as s3:
-            await s3.put_object(**put_kwargs)
+            safe_name = f"{uuid.uuid4().hex}_{filename}"
+            key = (
+                f"{subdirectory}/{safe_name}".lstrip("/")
+                if subdirectory
+                else safe_name
+            )
 
+            put_kwargs: dict[str, Any] = {
+                "Bucket": self._bucket,
+                "Key": key,
+                "Body": content,
+                "ContentType": content_type,
+                "CacheControl": "private, max-age=300",
+            }
+            if self._sse:
+                put_kwargs["ServerSideEncryption"] = "AES256"
+
+            async with self._client() as s3:
+                await s3.put_object(**put_kwargs)
+
+        record_storage_upload(
+            env=settings.app_env,
+            backend="s3",
+            mime_type=content_type,
+            size_bytes=size,
+        )
         return key, sha256, size
 
     async def read(self, relative_path: str) -> Path:
@@ -337,24 +414,50 @@ class S3StorageBackend:
         """Delete object from bucket. Silently ignores missing objects."""
         from botocore.exceptions import ClientError  # noqa: PLC0415
 
-        async with self._client() as s3:
-            try:
-                await s3.delete_object(Bucket=self._bucket, Key=relative_path)
-            except ClientError:
-                pass
+        with storage_operation_observer(
+            env=settings.app_env,
+            backend="s3",
+            operation="delete",
+            logger=logger,
+        ):
+            async with self._client() as s3:
+                try:
+                    await s3.delete_object(Bucket=self._bucket, Key=relative_path)
+                except ClientError as exc:
+                    code = exc.response.get("Error", {}).get("Code")
+                    if code not in ("404", "NoSuchKey"):
+                        record_storage_error(
+                            env=settings.app_env,
+                            backend="s3",
+                            operation="delete",
+                        )
+                        log_storage_failure(
+                            logger,
+                            env=settings.app_env,
+                            backend="s3",
+                            operation="delete",
+                            mime_type=None,
+                            exc=exc,
+                        )
 
     async def exists(self, relative_path: str) -> bool:
         """Return True if the object exists in the bucket."""
         from botocore.exceptions import ClientError  # noqa: PLC0415
 
-        async with self._client() as s3:
-            try:
-                await s3.head_object(Bucket=self._bucket, Key=relative_path)
-                return True
-            except ClientError as exc:
-                if exc.response["Error"]["Code"] in ("404", "NoSuchKey"):
-                    return False
-                raise
+        with storage_operation_observer(
+            env=settings.app_env,
+            backend="s3",
+            operation="exists",
+            logger=logger,
+        ):
+            async with self._client() as s3:
+                try:
+                    await s3.head_object(Bucket=self._bucket, Key=relative_path)
+                    return True
+                except ClientError as exc:
+                    if exc.response["Error"]["Code"] in ("404", "NoSuchKey"):
+                        return False
+                    raise
 
     async def presign_get(
         self,
@@ -370,10 +473,22 @@ class S3StorageBackend:
                 f'attachment; filename="{response_filename}"'
             )
         ttl = expires_in if expires_in is not None else self._presign_get_ttl
-        async with self._client() as s3:
-            return await s3.generate_presigned_url(
-                "get_object", Params=params, ExpiresIn=ttl
-            )
+        with storage_operation_observer(
+            env=settings.app_env,
+            backend="s3",
+            operation="presign_get",
+            logger=logger,
+        ):
+            async with self._client() as s3:
+                result = await s3.generate_presigned_url(
+                    "get_object", Params=params, ExpiresIn=ttl
+                )
+        record_storage_presign(
+            env=settings.app_env,
+            backend="s3",
+            operation="presign_get",
+        )
+        return result
 
     async def presign_put(
         self,
@@ -396,30 +511,50 @@ class S3StorageBackend:
         }
         if self._sse:
             params["ServerSideEncryption"] = "AES256"
-        async with self._client() as s3:
-            return await s3.generate_presigned_url(
-                "put_object", Params=params, ExpiresIn=expires_in
-            )
+        with storage_operation_observer(
+            env=settings.app_env,
+            backend="s3",
+            operation="presign_put",
+            mime_type=content_type,
+            logger=logger,
+        ):
+            async with self._client() as s3:
+                result = await s3.generate_presigned_url(
+                    "put_object", Params=params, ExpiresIn=expires_in
+                )
+        record_storage_presign(
+            env=settings.app_env,
+            backend="s3",
+            operation="presign_put",
+            mime_type=content_type,
+        )
+        return result
 
     async def stat(self, relative_path: str) -> ObjectStat:
         """Return metadata for an S3 object. Raises NotFoundError if missing."""
         from app.core.exceptions import NotFoundError  # noqa: PLC0415
         from botocore.exceptions import ClientError  # noqa: PLC0415
 
-        async with self._client() as s3:
-            try:
-                resp = await s3.head_object(Bucket=self._bucket, Key=relative_path)
-            except ClientError as exc:
-                if exc.response["Error"]["Code"] in ("404", "NoSuchKey"):
-                    raise NotFoundError("File not found", error_code="ERR-UPLOAD-404")
-                raise
+        with storage_operation_observer(
+            env=settings.app_env,
+            backend="s3",
+            operation="stat",
+            logger=logger,
+        ):
+            async with self._client() as s3:
+                try:
+                    resp = await s3.head_object(Bucket=self._bucket, Key=relative_path)
+                except ClientError as exc:
+                    if exc.response["Error"]["Code"] in ("404", "NoSuchKey"):
+                        raise NotFoundError("File not found", error_code="ERR-UPLOAD-404")
+                    raise
 
-        return ObjectStat(
-            size_bytes=resp["ContentLength"],
-            etag=resp.get("ETag", "").strip('"'),
-            content_type=resp.get("ContentType", "application/octet-stream"),
-            last_modified=resp.get("LastModified"),
-        )
+            return ObjectStat(
+                size_bytes=resp["ContentLength"],
+                etag=resp.get("ETag", "").strip('"'),
+                content_type=resp.get("ContentType", "application/octet-stream"),
+                last_modified=resp.get("LastModified"),
+            )
 
 
 # ---------------------------------------------------------------------------

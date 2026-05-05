@@ -18,6 +18,7 @@
 8. [Rollback procedure](#8-rollback-procedure)
 9. [Grace period and upload_data cleanup](#9-grace-period-and-upload_data-cleanup)
 10. [Reference — environment variables](#10-reference--environment-variables)
+11. [MinIO operations runbook](#11-minio-operations-runbook)
 
 ---
 
@@ -566,3 +567,160 @@ A correctly issued presigned URL:
 - Contains `X-Amz-Expires=600` (or the configured TTL)
 - Does **not** require an `Authorization` header
 - Returns `200 OK` directly from MinIO (no backend hop)
+
+---
+
+## 11. MinIO operations runbook
+
+### Metrics and labels
+
+Backend storage metrics use the same bounded label set everywhere:
+
+| Metric | Type | Labels |
+| --- | --- | --- |
+| `storage_upload_count` | Counter | `env`, `backend`, `operation`, `mime_type` |
+| `storage_upload_bytes` | Counter | `env`, `backend`, `operation`, `mime_type` |
+| `storage_presign_count` | Counter | `env`, `backend`, `operation`, `mime_type` |
+| `storage_operation_latency` | Histogram | `env`, `backend`, `operation`, `mime_type` |
+| `storage_operation_errors` | Counter | `env`, `backend`, `operation`, `mime_type` |
+
+`backend` is always `local` or `s3`. `operation` is a bounded storage verb such
+as `upload`, `presign_get`, `presign_put`, `exists`, `delete`, `stat`,
+`get_bytes`, `read`, or `local_path`. Missing or unsafe MIME values are emitted
+as `unknown`.
+
+Prometheus counter samples are exposed with the standard `_total` suffix, for
+example `storage_operation_errors_total`.
+
+Never add user IDs, school IDs, filenames, object keys, or presigned URL query
+strings as metric labels or log fields.
+
+### MinIO down
+
+Symptoms:
+
+- `StorageOperationErrorsHigh` alert fires.
+- Backend logs contain `storage_operation_failed ... backend=s3`.
+- Uploads fail or downloads cannot produce `302` / metadata responses.
+
+Immediate checks:
+
+```bash
+docker compose -f infra/docker-compose.dev.yml ps minio
+docker exec ecole-backend curl -sf http://minio:9000/minio/health/live
+docker compose -f infra/docker-compose.dev.yml logs --tail=100 minio
+```
+
+Actions:
+
+- If MinIO is stopped, restart MinIO first, then backend workers if clients still fail.
+- If DNS or networking changed, verify `S3_ENDPOINT` from inside the backend container.
+- If the outage blocks critical workflows, follow [Rollback procedure](#8-rollback-procedure).
+- Do not paste full presigned URLs in tickets or logs; redact everything after `?`.
+
+### Presigned URL 403
+
+Symptoms:
+
+- API metadata request succeeds, but the direct MinIO/CDN request returns `403`.
+- Browser/mobile playback fails after a period of inactivity.
+- Range requests return `403` instead of `206`.
+
+Checks:
+
+```bash
+# API auth path: should return JSON metadata
+curl -s -H "Authorization: Bearer $TOKEN" "$API/<download-endpoint>?as=metadata"
+
+# Use only a fresh URL locally; do not store or share it.
+curl -sI "$PRESIGNED_URL" | head -5
+curl -sI -H "Range: bytes=0-1023" "$PRESIGNED_URL" | head -5
+```
+
+Common causes and fixes:
+
+| Cause | Fix |
+| --- | --- |
+| URL expired | Client must refetch `?as=metadata`; verify app cache uses 80% of TTL. |
+| Clock skew | Sync backend and MinIO host clocks with NTP. |
+| Wrong external endpoint | Set `S3_ENDPOINT` to the public MinIO/CDN hostname used by clients. |
+| Signature params stripped by CDN | Preserve all `X-Amz-*` query parameters at the CDN/proxy layer. |
+| Wrong response headers in signature | Regenerate through the backend endpoint; do not hand-edit URLs. |
+
+### Migration partial failure
+
+Symptoms:
+
+- Migration artifact shows non-zero `"failed"`.
+- Some downloads return `404` / `NoSuchKey` after switching to `s3`.
+- Object count differs materially from the local source count.
+
+Actions:
+
+```bash
+cat artifacts/minio_migration_*.json | python3 -m json.tool
+mc alias set ecole "$S3_ENDPOINT" "$S3_ACCESS_KEY" "$S3_SECRET_KEY"
+mc ls --recursive ecole/$S3_BUCKET | wc -l
+```
+
+- Re-run the migration script; it is idempotent and should skip matching objects.
+- Lower `--concurrency` if MinIO is timing out.
+- Keep `STORAGE_BACKEND=local` until `"failed": 0` and verification passes.
+- If the flip already happened and users are impacted, roll back to local before retrying.
+
+### Rollback to local
+
+Use [Section 8](#8-rollback-procedure) for the full procedure.
+
+Minimum emergency path:
+
+```bash
+STORAGE_BACKEND=local
+DOCUMENT_STORAGE_BACKEND=local
+docker compose -f infra/docker-compose.prod.yml up -d --no-deps backend worker
+```
+
+After rollback:
+
+- Confirm downloads return local file responses or local-mode behavior expected for the environment.
+- Watch `storage_operation_errors_total{backend="local"}` and API `5xx`.
+- Keep MinIO objects intact; rollback does not mean deleting the bucket.
+
+### Bucket lifecycle verification
+
+Verify lifecycle rules before production and after any bucket recreation:
+
+```bash
+mc ilm ls ecole/$S3_BUCKET
+mc version info ecole/$S3_BUCKET
+mc encrypt info ecole/$S3_BUCKET
+```
+
+Expected policy:
+
+- `schools/*/submissions/*` expires after two academic years.
+- `documents/` does not expire.
+- `documents/previews/` expires after source deletion or the configured preview retention.
+- Bucket encryption reports SSE-S3 or the approved provider equivalent.
+
+### CORS troubleshooting
+
+Symptoms:
+
+- Browser console shows blocked direct MinIO/CDN requests.
+- API metadata succeeds, but `<video>`, `<audio>`, images, or PDF preview fail in browser.
+- Mobile direct fetch works while web fails.
+
+Checks:
+
+```bash
+mc cors get ecole/$S3_BUCKET
+curl -sI -H "Origin: https://app.example.com" "$PRESIGNED_URL" | grep -i access-control
+```
+
+Fixes:
+
+- Allow the web app origins configured in `CORS_ORIGINS`.
+- Allow `GET`, `HEAD`, and range-friendly headers used by media playback.
+- Expose `Content-Length`, `Content-Range`, `Accept-Ranges`, `Content-Type`, and `ETag`.
+- Do not add API `Authorization` headers to MinIO/CDN requests; presigned URLs are self-authenticating.

@@ -86,6 +86,21 @@ Dashboard JSON definitions for monitoring Ecole Platform. Each dashboard is auto
 - Detect memory pressure
 - Track cache effectiveness
 
+### storage-minio.json
+**Purpose** - MinIO/S3-backed object storage operations
+
+**Metrics Monitored**
+- Upload count and uploaded bytes by backend and MIME type
+- Presigned URL generation rate
+- Storage operation latency by operation
+- Storage operation errors by backend and operation
+
+**Use Cases**
+- Detect MinIO connectivity or credential failures
+- Monitor presigned URL generation during media-heavy usage
+- Verify upload throughput during migrations or releases
+- Confirm storage errors stay low after rollback or backend flips
+
 ## Adding New Dashboards
 
 1. Create dashboard in Grafana UI

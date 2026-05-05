@@ -140,6 +140,20 @@ groups:
           description: "{{ $value }} provider timeouts detected."
           runbook: "RBK-F4-003"
 
+      # MinIO / S3 storage operation failures
+      - alert: StorageOperationErrorsHigh
+        expr: |
+          sum(increase(storage_operation_errors_total{backend="s3"}[5m])) > 10
+        for: 2m
+        labels:
+          severity: SEV-2
+          service: object-storage
+          category: storage
+        annotations:
+          summary: "MinIO/S3 storage operation errors are elevated (SEV-2)"
+          description: "{{ $value }} storage operation errors in the last 5 minutes. Check backend logs for storage_operation_failed entries."
+          runbook: "docs/MINIO_ROLLOUT.md#11-minio-operations-runbook"
+
       # Backup job failure
       - alert: BackupJobFailed
         expr: |
