@@ -669,15 +669,15 @@
 
 **Checklist**:
 
-- [ ] Download function implemented
-- [ ] POST endpoint called correctly
-- [ ] Job polling implemented
-- [ ] Download from existing endpoint
-- [ ] Button added to UI
-- [ ] Language selector added
-- [ ] Loading state shown
-- [ ] Error handling added
-- [ ] Success feedback shown
+- [x] Download function implemented
+- [x] POST endpoint called correctly
+- [x] Job polling implemented
+- [x] Download from existing endpoint
+- [x] Button added to UI
+- [x] Language selector added
+- [x] Loading state shown
+- [x] Error handling added
+- [x] Success feedback shown
 
 ---
 
@@ -705,15 +705,15 @@
 
 **Checklist**:
 
-- [ ] Download function implemented
-- [ ] POST endpoint called correctly
-- [ ] Job polling implemented
-- [ ] Download from existing endpoint
-- [ ] Button added to UI
-- [ ] Language selector added
-- [ ] Loading state shown
-- [ ] Error handling added
-- [ ] Success feedback shown
+- [x] Download function implemented
+- [x] POST endpoint called correctly
+- [x] Job polling implemented
+- [x] Download from existing endpoint
+- [x] Button added to UI
+- [x] Language selector added
+- [x] Loading state shown
+- [x] Error handling added
+- [x] Success feedback shown
 
 ---
 
@@ -743,16 +743,16 @@
 
 **Checklist**:
 
-- [ ] Download function implemented
-- [ ] POST endpoint called correctly
-- [ ] Job polling implemented
-- [ ] Download from existing endpoint
-- [ ] PDF saved to device
-- [ ] Button added to UI
-- [ ] Language selector added
-- [ ] Loading indicator shown
-- [ ] Error handling added
-- [ ] Success feedback shown
+- [x] Download function implemented
+- [x] POST endpoint called correctly
+- [x] Job polling implemented
+- [x] Download from existing endpoint
+- [x] PDF saved to device
+- [x] Button added to UI
+- [x] Language selector added
+- [x] Loading indicator shown
+- [x] Error handling added
+- [x] Success feedback shown
 
 ---
 
@@ -782,16 +782,16 @@
 
 **Checklist**:
 
-- [ ] Download function implemented
-- [ ] POST endpoint called correctly
-- [ ] Job polling implemented
-- [ ] Download from existing endpoint
-- [ ] PDF saved to device
-- [ ] Button added to UI
-- [ ] Language selector added
-- [ ] Loading indicator shown
-- [ ] Error handling added
-- [ ] Success feedback shown
+- [x] Download function implemented
+- [x] POST endpoint called correctly
+- [x] Job polling implemented
+- [x] Download from existing endpoint
+- [x] PDF saved to device
+- [x] Button added to UI
+- [x] Language selector added
+- [x] Loading indicator shown
+- [x] Error handling added
+- [x] Success feedback shown
 
 ---
 

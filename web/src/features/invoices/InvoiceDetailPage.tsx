@@ -6,6 +6,7 @@ import { DataTable, ErrorBanner, FileUpload, LoadingState } from '@/shared/ui';
 import { formatDate } from '@/shared/i18n';
 import { toBannerError } from '@/shared/ui/errorUtils';
 import type { InvoiceLineItem, PaymentRecord } from './invoices.service';
+import { invoicesService } from './invoices.service';
 import {
   useCreatePayment,
   useInvoiceDetail,
@@ -31,6 +32,26 @@ function getInvoiceTotal(items: InvoiceLineItem[]) {
   return items.reduce((sum, item) => sum + item.amount, 0);
 }
 
+async function pollUntilReady(jobId: string): Promise<string> {
+  for (let attempt = 0; attempt < 30; attempt++) {
+    const resp = await invoicesService.getReportJobStatus(jobId);
+    const job = resp.data;
+    if (job.status === 'ready' && job.download_url) return job.download_url;
+    if (job.status === 'failed') throw new Error(job.error_message ?? 'Report generation failed');
+    await new Promise<void>((r) => setTimeout(r, 2000));
+  }
+  throw new Error('Timed out waiting for PDF');
+}
+
+function triggerDownload(url: string, filename: string) {
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
 export function InvoiceDetailPage() {
   const { t, i18n } = useTranslation();
   const { id = '' } = useParams();
@@ -39,6 +60,13 @@ export function InvoiceDetailPage() {
   const [selectedPaymentId, setSelectedPaymentId] = useState('');
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // PDF / receipt download state
+  const [pdfLanguage, setPdfLanguage] = useState<'fr' | 'ar'>('fr');
+  const [pdfDownloading, setPdfDownloading] = useState(false);
+  const [receiptDownloading, setReceiptDownloading] = useState(false);
+  const [selectedReceiptPaymentId, setSelectedReceiptPaymentId] = useState('');
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
   const invoiceDetailQuery = useInvoiceDetail(id);
   const paymentsQuery = useInvoicePayments(id);
@@ -109,6 +137,46 @@ export function InvoiceDetailPage() {
     setSuccessMessage(t('invoices.proofUploaded'));
   }
 
+  async function handleDownloadPdf() {
+    setDownloadError(null);
+    setPdfDownloading(true);
+    try {
+      const jobResp = await invoicesService.generateInvoicePdf(id, pdfLanguage);
+      const job = jobResp.data;
+      const downloadUrl =
+        job.status === 'ready' && job.download_url
+          ? job.download_url
+          : await pollUntilReady(job.id);
+      triggerDownload(downloadUrl, `invoice-${id}.pdf`);
+    } catch (err) {
+      setDownloadError(err instanceof Error ? err.message : t('app.error'));
+    } finally {
+      setPdfDownloading(false);
+    }
+  }
+
+  async function handleDownloadReceipt() {
+    if (!selectedReceiptPaymentId) return;
+    setDownloadError(null);
+    setReceiptDownloading(true);
+    try {
+      const jobResp = await invoicesService.generatePaymentReceipt(
+        selectedReceiptPaymentId,
+        pdfLanguage,
+      );
+      const job = jobResp.data;
+      const downloadUrl =
+        job.status === 'ready' && job.download_url
+          ? job.download_url
+          : await pollUntilReady(job.id);
+      triggerDownload(downloadUrl, `receipt-${selectedReceiptPaymentId}.pdf`);
+    } catch (err) {
+      setDownloadError(err instanceof Error ? err.message : t('app.error'));
+    } finally {
+      setReceiptDownloading(false);
+    }
+  }
+
   if (invoiceDetailQuery.isLoading || paymentsQuery.isLoading) {
     return <LoadingState />;
   }
@@ -131,6 +199,28 @@ export function InvoiceDetailPage() {
             {t('invoices.balanceDue')}: {madFormatter.format(balanceDue)}
           </span>
         </div>
+        <div className="filters-bar">
+          <select
+            className="filter-select"
+            aria-label={t('invoices.pdfLanguage', { defaultValue: 'PDF Language' })}
+            value={pdfLanguage}
+            onChange={(e) => setPdfLanguage(e.target.value as 'fr' | 'ar')}
+          >
+            <option value="fr">Français</option>
+            <option value="ar">العربية</option>
+          </select>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            aria-label={t('invoices.downloadPdf', { defaultValue: 'Download PDF' })}
+            disabled={pdfDownloading}
+            onClick={() => void handleDownloadPdf()}
+          >
+            {pdfDownloading
+              ? t('app.loading')
+              : t('invoices.downloadPdf', { defaultValue: 'Download PDF' })}
+          </button>
+        </div>
       </div>
 
       <ErrorBanner
@@ -142,6 +232,10 @@ export function InvoiceDetailPage() {
           t('app.error'),
         )}
       />
+
+      {downloadError && (
+        <div className="attendance-banner attendance-banner--error">{downloadError}</div>
+      )}
 
       {successMessage && (
         <div className="attendance-banner attendance-banner--success">{successMessage}</div>
@@ -251,6 +345,39 @@ export function InvoiceDetailPage() {
           >
             {uploadProofMutation.isPending ? t('app.loading') : t('invoices.uploadProof')}
           </button>
+        </section>
+
+        <section className="card">
+          <h2 className="attendance-page__section-title">
+            {t('invoices.downloadReceipt', { defaultValue: 'Download Receipt' })}
+          </h2>
+          <div className="filters-bar">
+            <select
+              className="filter-select"
+              aria-label={t('invoices.selectPayment')}
+              value={selectedReceiptPaymentId}
+              onChange={(event) => setSelectedReceiptPaymentId(event.target.value)}
+            >
+              <option value="">{t('invoices.selectPayment')}</option>
+              {payments.map((payment) => (
+                <option key={payment.id} value={payment.id}>
+                  {formatDate(payment.created_at ?? payment.finalized_at ?? '', i18n.language)} ·{' '}
+                  {madFormatter.format(payment.amount)}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              aria-label={t('invoices.downloadReceipt', { defaultValue: 'Download Receipt' })}
+              disabled={receiptDownloading || !selectedReceiptPaymentId}
+              onClick={() => void handleDownloadReceipt()}
+            >
+              {receiptDownloading
+                ? t('app.loading')
+                : t('invoices.downloadReceipt', { defaultValue: 'Download Receipt' })}
+            </button>
+          </div>
         </section>
       </div>
     </div>

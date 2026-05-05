@@ -28,6 +28,8 @@ class InvoiceDetailScreen extends ConsumerStatefulWidget {
 class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
   bool _submittingPayment = false;
   bool _uploadingProof = false;
+  bool _downloadingPdf = false;
+  bool _downloadingReceipt = false;
 
   Future<void> _createPayment(Invoice invoice) async {
     final amountController = TextEditingController(
@@ -135,15 +137,85 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
     }
   }
 
-  Future<void> _downloadPdf() async {
-    final file = await ref.read(invoiceRepositoryProvider).downloadInvoicePdf(
-          widget.invoiceId,
-        );
-    await OpenFilex.open(file.path);
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('PDF downloaded: ${file.path.split('/').last}')),
+  Future<String?> _showLanguageDialog(String title) async {
+    String language = 'fr';
+    return showDialog<String>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setStateDialog) => AlertDialog(
+          title: Text(title),
+          content: DropdownButtonFormField<String>(
+            initialValue: language,
+            items: const [
+              DropdownMenuItem(value: 'fr', child: Text('Français')),
+              DropdownMenuItem(value: 'ar', child: Text('العربية')),
+            ],
+            onChanged: (v) => setStateDialog(() => language = v ?? 'fr'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, language),
+              child: const Text('Download'),
+            ),
+          ],
+        ),
+      ),
     );
+  }
+
+  Future<void> _downloadPdf() async {
+    final language = await _showLanguageDialog('PDF Language');
+    if (language == null || !mounted) return;
+
+    setState(() => _downloadingPdf = true);
+    try {
+      final file = await ref.read(invoiceRepositoryProvider).downloadInvoicePdf(
+            widget.invoiceId,
+            language: language,
+          );
+      await OpenFilex.open(file.path);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('PDF downloaded: ${file.path.split('/').last}')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _downloadingPdf = false);
+    }
+  }
+
+  Future<void> _downloadReceipt(String paymentId) async {
+    final language = await _showLanguageDialog('Receipt Language');
+    if (language == null || !mounted) return;
+
+    setState(() => _downloadingReceipt = true);
+    try {
+      final file = await ref
+          .read(invoiceRepositoryProvider)
+          .downloadPaymentReceipt(paymentId, language: language);
+      await OpenFilex.open(file.path);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Receipt downloaded: ${file.path.split('/').last}'),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _downloadingReceipt = false);
+    }
   }
 
   @override
@@ -156,8 +228,14 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
         title: Text(t.t('invoices.detail')),
         actions: [
           IconButton(
-            onPressed: _downloadPdf,
-            icon: const Icon(Icons.picture_as_pdf_outlined),
+            onPressed: _downloadingPdf ? null : _downloadPdf,
+            icon: _downloadingPdf
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.picture_as_pdf_outlined),
           ),
         ],
       ),
@@ -259,7 +337,9 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
                   (payment) => _PaymentCard(
                     payment: payment,
                     uploading: _uploadingProof,
+                    downloadingReceipt: _downloadingReceipt,
                     onUploadProof: () => _uploadProof(payment.id),
+                    onDownloadReceipt: () => _downloadReceipt(payment.id),
                   ),
                 ),
             ],
@@ -275,12 +355,16 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
 class _PaymentCard extends StatelessWidget {
   final InvoicePaymentRecord payment;
   final bool uploading;
+  final bool downloadingReceipt;
   final VoidCallback onUploadProof;
+  final VoidCallback onDownloadReceipt;
 
   const _PaymentCard({
     required this.payment,
     required this.uploading,
+    required this.downloadingReceipt,
     required this.onUploadProof,
+    required this.onDownloadReceipt,
   });
 
   @override
@@ -315,19 +399,33 @@ class _PaymentCard extends StatelessWidget {
             const SizedBox(height: 8),
             AppCurrencyText(amount: payment.amount),
             const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerRight,
-              child: FilledButton.tonalIcon(
-                onPressed: uploading ? null : onUploadProof,
-                icon: uploading
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.upload_file_outlined),
-                label: const Text('Upload proof'),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                FilledButton.tonalIcon(
+                  onPressed: downloadingReceipt ? null : onDownloadReceipt,
+                  icon: downloadingReceipt
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.receipt_long_outlined),
+                  label: const Text('Receipt'),
+                ),
+                const SizedBox(width: 8),
+                FilledButton.tonalIcon(
+                  onPressed: uploading ? null : onUploadProof,
+                  icon: uploading
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.upload_file_outlined),
+                  label: const Text('Upload proof'),
+                ),
+              ],
             ),
           ],
         ),

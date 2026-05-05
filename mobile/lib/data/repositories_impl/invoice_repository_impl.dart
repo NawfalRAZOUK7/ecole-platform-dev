@@ -57,11 +57,14 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
     required double amount,
     required String method,
   }) async {
-    final response = await _api.post('/payments/initiate', body: {
-      'invoice_id': invoiceId,
-      'amount': amount,
-      'method': method,
-    });
+    final response = await _api.post(
+      '/payments/initiate',
+      body: {
+        'invoice_id': invoiceId,
+        'amount': amount,
+        'method': method,
+      },
+    );
     await _cache.invalidatePrefix('invoices:');
     return invoicePaymentFromJson(response.data);
   }
@@ -76,16 +79,60 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
 
   @override
   Future<List<InvoicePaymentRecord>> getInvoicePayments(
-      String invoiceId) async {
+    String invoiceId,
+  ) async {
     final response = await _api.list('/payments/$invoiceId');
     return response.data.map(invoicePaymentFromJson).toList();
   }
 
+  Future<String> _pollUntilReady(String jobId) async {
+    for (var attempt = 0; attempt < 30; attempt++) {
+      final resp = await _api.get('/reports/$jobId/status');
+      final status = resp.data['status'] as String?;
+      final url = resp.data['download_url'] as String?;
+      if (status == 'ready' && url != null) return url;
+      if (status == 'failed') {
+        throw Exception(
+          resp.data['error_message'] ?? 'Report generation failed',
+        );
+      }
+      await Future.delayed(const Duration(seconds: 2));
+    }
+    throw Exception('Timed out waiting for PDF');
+  }
+
   @override
-  Future<File> downloadInvoicePdf(String invoiceId) async {
+  Future<File> downloadInvoicePdf(
+    String invoiceId, {
+    String language = 'fr',
+  }) async {
+    final jobResp =
+        await _api.post('/invoices/$invoiceId/pdf?language=$language');
+    final status = jobResp.data['status'] as String?;
+    final immediateUrl = jobResp.data['download_url'] as String?;
+    final downloadUrl = (status == 'ready' && immediateUrl != null)
+        ? immediateUrl
+        : await _pollUntilReady(jobResp.data['id'] as String);
     final directory = await getTemporaryDirectory();
     final savePath = '${directory.path}/invoice-$invoiceId.pdf';
-    return _api.download('/invoices/$invoiceId/pdf', savePath: savePath);
+    return _api.download(downloadUrl, savePath: savePath);
+  }
+
+  @override
+  Future<File> downloadPaymentReceipt(
+    String paymentId, {
+    String language = 'fr',
+  }) async {
+    final jobResp =
+        await _api.post('/payments/$paymentId/receipt?language=$language');
+    final status = jobResp.data['status'] as String?;
+    final immediateUrl = jobResp.data['download_url'] as String?;
+    final downloadUrl = (status == 'ready' && immediateUrl != null)
+        ? immediateUrl
+        : await _pollUntilReady(jobResp.data['id'] as String);
+    final directory = await getTemporaryDirectory();
+    final savePath = '${directory.path}/receipt-$paymentId.pdf';
+    return _api.download(downloadUrl, savePath: savePath);
   }
 
   @override
@@ -103,10 +150,12 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
       '/billing/sibling-policy',
       body: {
         'discounts': discounts
-            .map((item) => {
-                  'sibling_rank': item.siblingRank,
-                  'discount_percent': item.discountPercent,
-                })
+            .map(
+              (item) => {
+                'sibling_rank': item.siblingRank,
+                'discount_percent': item.discountPercent,
+              },
+            )
             .toList(),
         'max_siblings_covered': maxSiblingsCovered,
       },
@@ -168,10 +217,12 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
         'total_amount': totalAmount,
         'start_date': startDate,
         'installments': installments
-            .map((item) => {
-                  'due_date': item.dueDate,
-                  'amount': item.amount,
-                })
+            .map(
+              (item) => {
+                'due_date': item.dueDate,
+                'amount': item.amount,
+              },
+            )
             .toList(),
       },
     );

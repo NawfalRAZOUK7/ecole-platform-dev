@@ -23,7 +23,9 @@ abstract class InvoiceRepository {
 
   Future<List<InvoicePaymentRecord>> getInvoicePayments(String invoiceId);
 
-  Future<File> downloadInvoicePdf(String invoiceId);
+  Future<File> downloadInvoicePdf(String invoiceId, {String language = 'fr'});
+
+  Future<File> downloadPaymentReceipt(String paymentId, {String language = 'fr'});
 
   Future<SiblingPolicy> getSiblingPolicy();
 

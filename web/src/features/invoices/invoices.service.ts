@@ -1,5 +1,13 @@
 import { api } from '@/services/api/client';
 
+export interface ReportJob {
+  id: string;
+  type: string;
+  status: string;
+  download_url: string | null;
+  error_message: string | null;
+}
+
 export interface InvoiceSummary {
   id: string;
   invoice_number?: string;
@@ -68,5 +76,17 @@ export const invoicesService = {
 
   getInvoicePayments(invoiceId: string) {
     return api.get<PaymentRecord[]>(`/payments/${invoiceId}`);
+  },
+
+  generateInvoicePdf(invoiceId: string, language: 'fr' | 'ar') {
+    return api.post<ReportJob>(`/invoices/${invoiceId}/pdf?language=${language}`);
+  },
+
+  generatePaymentReceipt(paymentId: string, language: 'fr' | 'ar') {
+    return api.post<ReportJob>(`/payments/${paymentId}/receipt?language=${language}`);
+  },
+
+  getReportJobStatus(jobId: string) {
+    return api.get<ReportJob>(`/reports/${jobId}/status`);
   },
 };
