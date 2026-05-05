@@ -1,9 +1,5 @@
 # Staging environment overrides
 
-namespace:
-  create: true
-  name: ecole-staging
-
 global:
   domain: staging.ecole-platform.example
   tlsSecret: ecole-staging-tls

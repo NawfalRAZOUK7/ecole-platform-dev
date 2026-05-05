@@ -1,9 +1,5 @@
 # Production environment overrides
 
-namespace:
-  create: true
-  name: ecole-prod
-
 global:
   domain: ecole-platform.example
   tlsSecret: ecole-prod-tls

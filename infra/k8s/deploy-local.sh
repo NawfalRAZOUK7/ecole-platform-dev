@@ -75,6 +75,22 @@ else
     echo -e "${YELLOW}Note: Images are available locally but may not be accessible to Docker Desktop Kubernetes${NC}"
 fi
 
+# Kind connectivity warning: host.docker.internal does not resolve inside Kind pods
+if [ "$USE_KIND" = true ]; then
+    if [[ "${DATABASE_URL:-}" == *"host.docker.internal"* ]] || [ -z "${DATABASE_URL:-}" ]; then
+        echo -e "${YELLOW}WARNING: Kind pods cannot reach host.docker.internal.${NC}"
+        echo -e "${YELLOW}Set DATABASE_URL and REDIS_URL to services reachable from inside the cluster.${NC}"
+        echo -e "${YELLOW}Options:${NC}"
+        echo "  1. Deploy Postgres + Redis in-cluster (e.g. helm install postgres bitnami/postgresql)"
+        echo "  2. Use the docker-compose dev stack and pass the bridge gateway IP:"
+        echo "     GATEWAY_IP=\$(docker network inspect bridge | jq -r '.[0].IPAM.Config[0].Gateway')"
+        echo "     export DATABASE_URL=\"postgresql://ecole:ecole@\${GATEWAY_IP}:5432/ecole_platform\""
+        echo "     export REDIS_URL=\"redis://\${GATEWAY_IP}:6379/0\""
+        echo "     Then re-run this script."
+        echo ""
+    fi
+fi
+
 # Set namespace
 NAMESPACE="ecole-local"
 echo -e "${GREEN}Using namespace: $NAMESPACE${NC}"
