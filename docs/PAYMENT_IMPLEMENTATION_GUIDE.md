@@ -111,21 +111,21 @@
    - File: `backend/app/models/billing.py`
 
 2. **Add TVA fields**
-   - `tva_rate: Mapped[float] = mapped_column(Float, default=0.0)`
-   - `tva_amount: Mapped[float] = mapped_column(Float, default=0.0)`
-   - `amount_ht: Mapped[float] = mapped_column(Float)`
-   - `amount_ttc: Mapped[float] = mapped_column(Float)`
+   - `tva_rate: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False, default=0.0)`
+   - `tva_amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False, default=0.0)`
+   - `amount_ht: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)`
+   - `amount_ttc: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)`
 
 3. **Note**: These fields will be populated during invoice generation in BillingService
 
 **Checklist**:
 
-- [ ] All 4 TVA fields added to InvoiceItem model
-- [ ] tva_rate and tva_amount have default=0.0
-- [ ] amount_ht and amount_ttc are required (no nullable)
-- [ ] Float type used for all fields
-- [ ] Model passes type checking
-- [ ] No syntax errors
+- [x] All 4 TVA fields added to InvoiceItem model
+- [x] tva_rate and tva_amount have default=0.0
+- [x] amount_ht and amount_ttc are required (nullable=False)
+- [x] Numeric type used (consistent with codebase)
+- [x] Model passes type checking
+- [x] No syntax errors
 
 ---
 

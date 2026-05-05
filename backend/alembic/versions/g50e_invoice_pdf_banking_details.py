@@ -47,11 +47,11 @@ def upgrade() -> None:
     )
     op.add_column(
         "invoice_items",
-        sa.Column("amount_ht", sa.Numeric(12, 2), nullable=True),
+        sa.Column("amount_ht", sa.Numeric(12, 2), nullable=False, server_default=sa.text("0.00")),
     )
     op.add_column(
         "invoice_items",
-        sa.Column("amount_ttc", sa.Numeric(12, 2), nullable=True),
+        sa.Column("amount_ttc", sa.Numeric(12, 2), nullable=False, server_default=sa.text("0.00")),
     )
 
 
