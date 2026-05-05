@@ -153,6 +153,9 @@ from app.api.v1.events import router as events_router
 # Phase 16 — Documents
 from app.api.v1.documents import router as documents_router
 
+# Phase 8 — Direct uploads
+from app.api.v1.uploads import router as uploads_router
+
 # Phase B1 — Shared Review (parent-child)
 from app.api.v1.shared_review import router as shared_review_router
 
@@ -360,6 +363,9 @@ router.include_router(events_router)
 
 # Mount sub-routers — Phase 16 Documents
 router.include_router(documents_router)
+
+# Mount sub-routers — Phase 8 Direct uploads
+router.include_router(uploads_router)
 
 # Mount sub-routers — Phase B1 Shared Review
 router.include_router(shared_review_router)

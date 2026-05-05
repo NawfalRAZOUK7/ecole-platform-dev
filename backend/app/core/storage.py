@@ -84,6 +84,22 @@ class StorageBackend(Protocol):
         """
         ...
 
+    async def presign_put(
+        self,
+        relative_path: str,
+        *,
+        expires_in: int,
+        content_type: str,
+        max_size: int,
+    ) -> str:
+        """Return a presigned PUT URL for a direct client-to-storage upload.
+
+        S3/MinIO: signs the URL with ContentType; client must send matching header.
+        Local: raises NotImplementedError — direct PUT is S3-only.
+        `max_size` is used by callers to calculate TTL; not embedded in the URL.
+        """
+        ...
+
     async def stat(self, relative_path: str) -> ObjectStat:
         """Return metadata for a stored file. Raises NotFoundError if missing."""
         ...
@@ -201,6 +217,20 @@ class LocalStorageBackend:
         on the local backend should continue using read() + FileResponse.
         """
         return relative_path
+
+    async def presign_put(
+        self,
+        relative_path: str,
+        *,
+        expires_in: int,
+        content_type: str,
+        max_size: int,
+    ) -> str:
+        """Local backend does not support direct client PUT uploads."""
+        raise NotImplementedError(
+            "LocalStorageBackend does not support presigned PUT. "
+            "Set STORAGE_BACKEND=s3 to use direct uploads."
+        )
 
     async def stat(self, relative_path: str) -> ObjectStat:
         """Return metadata for a locally stored file."""
@@ -343,6 +373,32 @@ class S3StorageBackend:
         async with self._client() as s3:
             return await s3.generate_presigned_url(
                 "get_object", Params=params, ExpiresIn=ttl
+            )
+
+    async def presign_put(
+        self,
+        relative_path: str,
+        *,
+        expires_in: int,
+        content_type: str,
+        max_size: int,  # noqa: ARG002 — used by callers for TTL; not embedded in URL
+    ) -> str:
+        """Return a presigned PUT URL for a direct client upload.
+
+        The URL includes ContentType in the signature so MinIO rejects any PUT
+        that sends a different Content-Type header, preventing MIME spoofing.
+        SSE-S3 is included when enabled so the object is encrypted at rest.
+        """
+        params: dict[str, Any] = {
+            "Bucket": self._bucket,
+            "Key": relative_path,
+            "ContentType": content_type,
+        }
+        if self._sse:
+            params["ServerSideEncryption"] = "AES256"
+        async with self._client() as s3:
+            return await s3.generate_presigned_url(
+                "put_object", Params=params, ExpiresIn=expires_in
             )
 
     async def stat(self, relative_path: str) -> ObjectStat:

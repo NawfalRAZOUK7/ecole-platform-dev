@@ -850,6 +850,11 @@ class WorkerSettings:
     redis_settings = get_redis_settings()
 
     # Task registry
+    from app.workers.post_upload import (
+        task_cleanup_orphaned_uploads,
+        task_post_upload_scan,
+    )
+
     functions = [
         task_send_email,
         task_cleanup_expired_sessions,
@@ -865,6 +870,9 @@ class WorkerSettings:
         task_notify_expiring_documents,
         task_cleanup_deleted_documents,
         task_check_parent_alerts,
+        # Phase 8 — direct upload scan + orphan cleanup
+        task_post_upload_scan,
+        task_cleanup_orphaned_uploads,
     ]
 
     # Cron jobs
@@ -883,6 +891,8 @@ class WorkerSettings:
         cron(task_notify_expiring_documents, minute=0),
         # Phase 16: Hard cleanup of deleted documents daily at 04:30 UTC
         cron(task_cleanup_deleted_documents, hour=4, minute=30),
+        # Phase 8: Orphaned upload session cleanup daily at 05:00 UTC
+        cron(task_cleanup_orphaned_uploads, hour=5, minute=0),
         # Phase 15: Event reminder dispatch every 5 minutes
         cron(task_send_event_reminders, minute=set(range(0, 60, 5))),
     ]

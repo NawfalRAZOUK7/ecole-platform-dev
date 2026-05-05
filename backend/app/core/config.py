@@ -104,6 +104,12 @@ class Settings(BaseSettings):
     s3_presign_get_ttl_seconds: int = 600   # 10 min — read / download links
     s3_presign_put_ttl_seconds: int = 900   # 15 min — direct client upload links (Phase 8)
 
+    # Phase 8 — per-kind upload size limits (MB)
+    max_video_size_mb: int = 2048           # 2 GB
+    max_audio_size_mb: int = 200
+    max_submission_file_size_mb: int = 100
+    max_content_asset_size_mb: int = 200
+
     # Document management (Phase 16)
     document_storage_backend: str = "local"  # local | s3
     document_storage_subdirectory: str = "documents"
