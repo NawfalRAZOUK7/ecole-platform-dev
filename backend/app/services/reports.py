@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import io
 import json
@@ -11,6 +12,8 @@ from collections import defaultdict
 from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
 from typing import Any
+
+from io import BytesIO
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from jose import JWTError, jwt
@@ -24,7 +27,9 @@ from app.core.unit_of_work import UnitOfWork
 from app.models.erp import Class
 from app.models.iam import User
 from app.models.reporting import ReportJob, ReportJobStatus, ReportType
+from app.repositories.billing import BillingRepository
 from app.repositories.reports import ReportsRepository
+from app.repositories.school import SchoolRepository
 from app.schemas.reports import ReportGenerateRequest
 from app.services.dashboard_analytics import DashboardAnalyticsService
 from app.services.notification_hub import NotificationHubService
@@ -40,6 +45,11 @@ try:  # pragma: no cover - optional fallback dependency
 except Exception:  # pragma: no cover - handled at runtime
     A4 = None
     canvas = None
+
+try:  # pragma: no cover - optional QR code dependency
+    import qrcode
+except Exception:  # pragma: no cover - handled at runtime
+    qrcode = None
 
 
 TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
@@ -156,6 +166,8 @@ class ReportsService:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
         self.repo = ReportsRepository(db)
+        self.billing_repo = BillingRepository(db)
+        self.school_repo = SchoolRepository(db)
         self.analytics = DashboardAnalyticsService(db)
 
     async def submit_report_job(
@@ -566,6 +578,48 @@ class ReportsService:
                     "This role cannot generate school analytics reports",
                     error_code="ERR-REPORT-403",
                 )
+
+        elif report_type == ReportType.INVOICE_PDF.value:
+            if requester_role not in {PAR, ADM, DIR}:
+                raise AuthorizationError(
+                    "This role cannot generate invoice PDFs",
+                    error_code="ERR-REPORT-403",
+                )
+            if not request.invoice_id:
+                raise ValidationError(
+                    "invoice_id is required for invoice PDF",
+                    error_code="ERR-REPORT-422",
+                )
+            # Verify invoice exists and check permissions
+            invoice = await self.billing_repo.get_invoice_by_id(
+                uuid.UUID(request.invoice_id), include_items=False
+            )
+            if invoice is None:
+                raise NotFoundError("Invoice not found", error_code="ERR-REPORT-404")
+            if requester_role == PAR and invoice.parent_id != requester_id:
+                raise NotFoundError("Invoice not found", error_code="ERR-REPORT-404")
+            parameters["invoice_id"] = request.invoice_id
+
+        elif report_type == ReportType.PAYMENT_RECEIPT.value:
+            if requester_role not in {PAR, ADM, DIR}:
+                raise AuthorizationError(
+                    "This role cannot generate payment receipts",
+                    error_code="ERR-REPORT-403",
+                )
+            if not request.payment_id:
+                raise ValidationError(
+                    "payment_id is required for payment receipt",
+                    error_code="ERR-REPORT-422",
+                )
+            # Verify payment exists and check permissions
+            payment = await self.billing_repo.get_payment_by_id(
+                uuid.UUID(request.payment_id)
+            )
+            if payment is None:
+                raise NotFoundError("Payment not found", error_code="ERR-REPORT-404")
+            if requester_role == PAR and payment.parent_id != requester_id:
+                raise NotFoundError("Payment not found", error_code="ERR-REPORT-404")
+            parameters["payment_id"] = request.payment_id
 
         else:
             raise ValidationError(
@@ -1083,6 +1137,213 @@ class ReportsService:
             ),
             "period": self._period_label(job.parameters, from_date, to_date),
             "snapshot": snapshot,
+        }
+
+    def _generate_qr_code(self, invoice_id: str, base_url: str) -> str | None:
+        """Generate QR code for invoice verification URL.
+
+        Args:
+            invoice_id: The invoice ID to encode
+            base_url: Base API URL for verification endpoint
+
+        Returns:
+            Base64-encoded PNG image of QR code, or None if generation fails
+        """
+        if qrcode is None:
+            return None
+
+        try:
+            verification_url = f"{base_url}/invoices/{invoice_id}/verify"
+
+            qr = qrcode.QRCode(version=1, box_size=10, border=5)
+            qr.add_data(verification_url)
+            qr.make(fit=True)
+
+            img = qr.make_image(fill_color="black", back_color="white")
+            buffer = BytesIO()
+            img.save(buffer, format="PNG")
+
+            return base64.b64encode(buffer.getvalue()).decode()
+        except Exception:
+            return None
+
+    async def _invoice_pdf_context(self, job: ReportJob) -> dict[str, Any]:
+        """Build context for invoice PDF generation."""
+        invoice_id = uuid.UUID(job.parameters["invoice_id"])
+
+        # Fetch invoice with items (eager load to avoid N+1)
+        invoice = await self.billing_repo.get_invoice_by_id(
+            invoice_id, include_items=True
+        )
+        if invoice is None:
+            raise NotFoundError("Invoice not found", error_code="ERR-REPORT-404")
+
+        # Fetch school data
+        school = await self.school_repo.get_school(job.school_id)
+        if school is None:
+            raise NotFoundError("School not found", error_code="ERR-REPORT-404")
+
+        # Fetch parent data
+        parent = await self.repo.get_user_in_school(
+            user_id=invoice.parent_id, school_id=job.school_id
+        )
+        if parent is None:
+            raise NotFoundError("Parent not found", error_code="ERR-REPORT-404")
+
+        # Build items with TVA breakdown
+        items = []
+        total_ht = 0.0
+        total_tva = 0.0
+        total_ttc = 0.0
+
+        for item in invoice.items:
+            amount_ht = float(item.amount_ht or 0)
+            tva_amount = float(item.tva_amount or 0)
+            amount_ttc = float(item.amount_ttc or 0)
+            tva_rate = float(item.tva_rate or 0)
+
+            total_ht += amount_ht
+            total_tva += tva_amount
+            total_ttc += amount_ttc
+
+            # Parse sibling discounts from description if present
+            applied_discounts = []
+            if item.description and "discount" in item.description.lower():
+                # TODO: Implement discount parsing in Phase 2.1 refinement
+                pass
+
+            items.append(
+                {
+                    "description": item.description,
+                    "quantity": item.quantity,
+                    "unit_price": float(item.unit_price or 0),
+                    "amount_ht": amount_ht,
+                    "tva_rate": tva_rate,
+                    "tva_amount": tva_amount,
+                    "amount_ttc": amount_ttc,
+                    "applied_discounts": applied_discounts,
+                }
+            )
+
+        # Generate QR code
+        qr_code_base64 = self._generate_qr_code(
+            str(invoice.id), settings.api_base_url
+        )
+
+        return {
+            "lang": job.parameters.get("locale", "fr"),
+            "is_rtl": job.parameters.get("locale") == "ar",
+            "generated_at": _utc_now().isoformat(),
+            "report_title": self._report_title(job.type, job.parameters.get("locale", "fr")),
+            "school": {
+                "id": str(school.id),
+                "name": school.name,
+                "name_ar": school.name_ar,
+                "address": school.address,
+                "city": school.city,
+                "region": school.region,
+                "phone": school.phone,
+                "email": school.email,
+                "logo_path": school.logo_path,
+                "rib": school.rib,
+                "iban": school.iban,
+                "bic": school.bic,
+                "bank_name": school.bank_name,
+                "tva_number": school.tva_number,
+                "tax_id": school.tax_id,
+                "brand_color": school.brand_color,
+                "footer_text": school.footer_text,
+                "stamp_image_url": school.stamp_image_url,
+                "signature_image_url": school.signature_image_url,
+            },
+            "invoice": {
+                "id": str(invoice.id),
+                "number": str(invoice.id)[:8].upper(),  # Short ID as invoice number
+                "issued_date": invoice.issued_date.isoformat(),
+                "due_date": invoice.due_date.isoformat(),
+                "status": invoice.status,
+                "total_amount": float(invoice.total_amount or 0),
+                "currency": invoice.currency,
+                "total_ht": total_ht,
+                "total_tva": total_tva,
+                "total_ttc": total_ttc,
+            },
+            "items": items,
+            "parent": {
+                "id": str(parent.id),
+                "full_name": parent.full_name,
+                "email": parent.email,
+            },
+            "students": [],  # TODO: Fetch children in Phase 2.1 refinement
+            "totals": {"ht": total_ht, "tva": total_tva, "ttc": total_ttc},
+            "qr_code_base64": qr_code_base64,
+        }
+
+    async def _payment_receipt_context(self, job: ReportJob) -> dict[str, Any]:
+        """Build context for payment receipt PDF generation."""
+        payment_id = uuid.UUID(job.parameters["payment_id"])
+
+        # Fetch payment attempt
+        payment = await self.billing_repo.get_payment_by_id(payment_id)
+        if payment is None:
+            raise NotFoundError("Payment not found", error_code="ERR-REPORT-404")
+
+        # Fetch associated invoice
+        invoice = await self.billing_repo.get_invoice_by_id(
+            payment.invoice_id, include_items=False
+        )
+        if invoice is None:
+            raise NotFoundError("Invoice not found", error_code="ERR-REPORT-404")
+
+        # Fetch school data
+        school = await self.school_repo.get_school(job.school_id)
+        if school is None:
+            raise NotFoundError("School not found", error_code="ERR-REPORT-404")
+
+        # Fetch parent data
+        parent = await self.repo.get_user_in_school(
+            user_id=payment.parent_id, school_id=job.school_id
+        )
+        if parent is None:
+            raise NotFoundError("Parent not found", error_code="ERR-REPORT-404")
+
+        return {
+            "lang": job.parameters.get("locale", "fr"),
+            "is_rtl": job.parameters.get("locale") == "ar",
+            "generated_at": _utc_now().isoformat(),
+            "report_title": self._report_title(job.type, job.parameters.get("locale", "fr")),
+            "school": {
+                "id": str(school.id),
+                "name": school.name,
+                "address": school.address,
+                "phone": school.phone,
+                "email": school.email,
+                "rib": school.rib,
+                "iban": school.iban,
+                "bic": school.bic,
+                "bank_name": school.bank_name,
+            },
+            "payment": {
+                "id": str(payment.id),
+                "amount": float(payment.amount) if hasattr(payment, "amount") else 0.0,
+                "method": getattr(payment, "method", "unknown"),
+                "transaction_reference": getattr(payment, "transaction_reference", None),
+                "status": payment.status,
+                "finalized_at": payment.finalized_at.isoformat() if payment.finalized_at else None,
+                "receipt_number": f"RCP-{str(payment.id)[:8].upper()}",
+            },
+            "invoice": {
+                "id": str(invoice.id),
+                "number": str(invoice.id)[:8].upper(),
+                "issued_date": invoice.issued_date.isoformat(),
+                "total_amount": float(invoice.total_amount or 0),
+                "currency": invoice.currency,
+            },
+            "parent": {
+                "id": str(parent.id),
+                "full_name": parent.full_name,
+                "email": parent.email,
+            },
         }
 
     async def _class_student_ids(

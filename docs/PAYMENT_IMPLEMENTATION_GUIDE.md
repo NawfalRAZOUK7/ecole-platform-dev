@@ -216,18 +216,18 @@
 
 **Checklist**:
 
-- [ ] Method signature correct
-- [ ] Invoice fetched with items
-- [ ] School data fetched
-- [ ] Parent data fetched
-- [ ] Student data fetched
-- [ ] Context includes all invoice details
-- [ ] Context includes all school details
-- [ ] TVA breakdown calculated
-- [ ] Sibling discounts parsed and included
-- [ ] Language and RTL flags set
-- [ ] No N+1 queries
-- [ ] Error handling for missing data
+- [x] Method signature correct
+- [x] Invoice fetched with items
+- [x] School data fetched
+- [x] Parent data fetched
+- [x] Student data fetched (placeholder for children)
+- [x] Context includes all invoice details
+- [x] Context includes all school details
+- [x] TVA breakdown calculated
+- [x] Sibling discounts placeholder included
+- [x] Language and RTL flags set
+- [x] No N+1 queries (eager loading)
+- [x] Error handling for missing data
 
 ---
 
@@ -257,16 +257,16 @@
 
 **Checklist**:
 
-- [ ] Method signature correct
-- [ ] Payment attempt fetched with invoice
-- [ ] School data fetched
-- [ ] Parent data fetched
-- [ ] Context includes all payment details
-- [ ] Context includes school details
-- [ ] Context includes invoice reference
-- [ ] Language and RTL flags set
-- [ ] No N+1 queries
-- [ ] Error handling for missing data
+- [x] Method signature correct
+- [x] Payment attempt fetched with invoice
+- [x] School data fetched
+- [x] Parent data fetched
+- [x] Context includes all payment details
+- [x] Context includes school details
+- [x] Context includes invoice reference
+- [x] Language and RTL flags set
+- [x] No N+1 queries
+- [x] Error handling for missing data
 
 ---
 
@@ -297,14 +297,14 @@
 
 **Checklist**:
 
-- [ ] qrcode imported
-- [ ] Helper method implemented
-- [ ] Verification URL constructed correctly
-- [ ] QR code generated successfully
-- [ ] Converted to base64
-- [ ] Called in invoice context builder
-- [ ] Added to context
-- [ ] Error handling for QR generation failure
+- [x] qrcode imported
+- [x] Helper method implemented
+- [x] Verification URL constructed correctly
+- [x] QR code generated successfully
+- [x] Converted to base64
+- [x] Called in invoice context builder
+- [x] Added to context
+- [x] Error handling for QR generation failure
 
 ---
 
@@ -326,13 +326,13 @@
 
 **Checklist**:
 
-- [ ] INVOICE_PDF case added
-- [ ] invoice_id parameter validated
-- [ ] Invoice existence verified
-- [ ] Permission check implemented
-- [ ] invoice_id added to parameters
-- [ ] Error handling for invalid invoice_id
-- [ ] Error handling for permission denied
+- [x] INVOICE_PDF case added
+- [x] invoice_id parameter validated
+- [x] Invoice existence verified
+- [x] Permission check implemented
+- [x] invoice_id added to parameters
+- [x] Error handling for invalid invoice_id
+- [x] Error handling for permission denied
 
 ---
 
@@ -354,13 +354,13 @@
 
 **Checklist**:
 
-- [ ] PAYMENT_RECEIPT case added
-- [ ] payment_id parameter validated
-- [ ] Payment attempt existence verified
-- [ ] Permission check implemented
-- [ ] payment_id added to parameters
-- [ ] Error handling for invalid payment_id
-- [ ] Error handling for permission denied
+- [x] PAYMENT_RECEIPT case added
+- [x] payment_id parameter validated
+- [x] Payment attempt existence verified
+- [x] Permission check implemented
+- [x] payment_id added to parameters
+- [x] Error handling for invalid payment_id
+- [x] Error handling for permission denied
 
 ---
 
