@@ -1,6 +1,6 @@
 """G51 — Phase 8: upload_sessions table for direct-to-MinIO uploads.
 
-Revision ID: a1b2c3d4e5f6
+Revision ID: 8670b612eb3e
 Revises: 748989a9f381
 Create Date: 2026-05-05
 
@@ -16,7 +16,7 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-revision: str = "a1b2c3d4e5f6"
+revision: str = "8670b612eb3e"
 down_revision: Union[str, None] = "748989a9f381"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
