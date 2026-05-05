@@ -17,7 +17,7 @@ RUN apt-get update && \
       libpangoft2-1.0-0 \
       libharfbuzz0b \
       libfontconfig1 \
-      libgdk-pixbuf2.0-0 \
+      libgdk-pixbuf-2.0-0 \
       libcairo2 \
       shared-mime-info \
       fonts-dejavu-core \

@@ -40,11 +40,16 @@ spec:
             - -c
             - |
               echo "Waiting for database to be ready..."
+              DB_READY=0
               for i in $(seq 1 30); do
-                python -c "import asyncpg, asyncio, os; asyncio.run(asyncpg.connect(os.environ['DATABASE_URL']))" 2>/dev/null && break
+                python -c "import asyncpg, asyncio, os; dsn = os.environ['DATABASE_URL'].replace('postgresql+asyncpg://', 'postgresql://', 1); asyncio.run(asyncpg.connect(dsn))" 2>/dev/null && DB_READY=1 && break
                 echo "Attempt $i/30: DB not ready, retrying in 5s..."
                 sleep 5
               done
+              if [ "$DB_READY" != "1" ]; then
+                echo "Database not ready after 30 attempts"
+                exit 1
+              fi
               alembic upgrade head
           envFrom:
             - configMapRef:
@@ -63,6 +68,14 @@ spec:
             runAsNonRoot: true
             runAsUser: 1000
             allowPrivilegeEscalation: false
+          {{- with .Values.backend.command }}
+          command:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.backend.args }}
+          args:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           ports:
             - containerPort: {{ .Values.backend.port }}
               protocol: TCP

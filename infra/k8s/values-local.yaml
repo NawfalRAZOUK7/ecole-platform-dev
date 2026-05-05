@@ -36,6 +36,14 @@ namespace:
 backend:
   replicas: 1
   port: 8000
+  command:
+    - uvicorn
+  args:
+    - app.main:app
+    - --host
+    - 0.0.0.0
+    - --port
+    - "8000"
   hpa:
     enabled: false # No HPA for single-node local cluster
   env:
@@ -64,10 +72,10 @@ backend:
   resources:
     requests:
       cpu: 100m
-      memory: 128Mi
+      memory: 256Mi
     limits:
       cpu: 500m
-      memory: 256Mi
+      memory: 1Gi
 
 # ---------------------------------------------------------------------------
 # Worker (ARQ background tasks)
