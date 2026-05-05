@@ -43,9 +43,7 @@ from app.schemas.programs import (
 from app.services.program_service import ProgramService
 
 programs_router = APIRouter(prefix="/programs", tags=["erp-programs"])
-enrollment_program_router = APIRouter(
-    prefix="/enrollments", tags=["erp-programs"]
-)
+enrollment_program_router = APIRouter(prefix="/enrollments", tags=["erp-programs"])
 program_equivalences_router = APIRouter(
     prefix="/program-equivalences", tags=["erp-programs"]
 )
@@ -229,9 +227,7 @@ async def assign_program(
     enrollment_id: uuid.UUID,
     body: ProgramAssignRequest,
     request: Request,
-    auth: AuthContext = Depends(
-        requires_permission(PERM_ERP_ENROLLMENT_ASSIGN)
-    ),
+    auth: AuthContext = Depends(requires_permission(PERM_ERP_ENROLLMENT_ASSIGN)),
     db: AsyncSession = Depends(get_db),
 ):
     """Assign a program to an enrollment.
@@ -269,9 +265,7 @@ async def list_equivalences(
     db: AsyncSession = Depends(get_db),
 ):
     service = ProgramService(db)
-    items = await service.list_program_equivalences(
-        auth=auth, program_id=program_id
-    )
+    items = await service.list_program_equivalences(auth=auth, program_id=program_id)
     return list_response(items, next_cursor=None, has_more=False)
 
 

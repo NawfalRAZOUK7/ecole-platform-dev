@@ -337,9 +337,7 @@ class TestUploadOne:
     # --- skip on size match ---
 
     @pytest.mark.asyncio
-    async def test_skips_when_remote_size_matches(
-        self, record: _FileRecord
-    ) -> None:
+    async def test_skips_when_remote_size_matches(self, record: _FileRecord) -> None:
         file_size = record.local_path.stat().st_size
         s3 = AsyncMock()
         s3.head_object = AsyncMock(
@@ -359,9 +357,7 @@ class TestUploadOne:
     @pytest.mark.asyncio
     async def test_uploads_when_object_absent(self, record: _FileRecord) -> None:
         s3 = AsyncMock()
-        s3.head_object = AsyncMock(
-            side_effect=_make_client_error("404")
-        )
+        s3.head_object = AsyncMock(side_effect=_make_client_error("404"))
         s3.upload_fileobj = AsyncMock(return_value=None)
         stats = MigrationStats()
 
@@ -392,15 +388,15 @@ class TestUploadOne:
     # --- SSE header ---
 
     @pytest.mark.asyncio
-    async def test_sse_header_included_when_enabled(
-        self, record: _FileRecord
-    ) -> None:
+    async def test_sse_header_included_when_enabled(self, record: _FileRecord) -> None:
         s3 = AsyncMock()
         s3.head_object = AsyncMock(side_effect=_make_client_error("404"))
         s3.upload_fileobj = AsyncMock(return_value=None)
         stats = MigrationStats()
 
-        await upload_one(s3, "bucket", record, sse_enabled=True, sem=_make_sem(), stats=stats)
+        await upload_one(
+            s3, "bucket", record, sse_enabled=True, sem=_make_sem(), stats=stats
+        )
 
         call = s3.upload_fileobj.call_args
         extra = call.kwargs.get("ExtraArgs") or call[1].get("ExtraArgs")
@@ -408,15 +404,15 @@ class TestUploadOne:
         assert extra.get("ServerSideEncryption") == "AES256"
 
     @pytest.mark.asyncio
-    async def test_sse_header_absent_when_disabled(
-        self, record: _FileRecord
-    ) -> None:
+    async def test_sse_header_absent_when_disabled(self, record: _FileRecord) -> None:
         s3 = AsyncMock()
         s3.head_object = AsyncMock(side_effect=_make_client_error("404"))
         s3.upload_fileobj = AsyncMock(return_value=None)
         stats = MigrationStats()
 
-        await upload_one(s3, "bucket", record, sse_enabled=False, sem=_make_sem(), stats=stats)
+        await upload_one(
+            s3, "bucket", record, sse_enabled=False, sem=_make_sem(), stats=stats
+        )
 
         call = s3.upload_fileobj.call_args
         extra = call.kwargs.get("ExtraArgs") or call[1].get("ExtraArgs")
@@ -470,9 +466,7 @@ class TestUploadOne:
     # --- total_bytes tracking ---
 
     @pytest.mark.asyncio
-    async def test_total_bytes_incremented_on_upload(
-        self, record: _FileRecord
-    ) -> None:
+    async def test_total_bytes_incremented_on_upload(self, record: _FileRecord) -> None:
         s3 = AsyncMock()
         s3.head_object = AsyncMock(side_effect=_make_client_error("404"))
         s3.upload_fileobj = AsyncMock(return_value=None)
@@ -488,9 +482,7 @@ class TestUploadOne:
     ) -> None:
         file_size = record.local_path.stat().st_size
         s3 = AsyncMock()
-        s3.head_object = AsyncMock(
-            return_value={"ContentLength": file_size}
-        )
+        s3.head_object = AsyncMock(return_value={"ContentLength": file_size})
         stats = MigrationStats()
 
         await upload_one(s3, "bucket", record, False, _make_sem(), stats)

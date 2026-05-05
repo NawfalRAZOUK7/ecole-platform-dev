@@ -29,7 +29,6 @@ from app.core.exceptions import NotFoundError
 from app.core.unit_of_work import UnitOfWork
 from app.models.erp import (
     AcademicSnapshot,
-    AcademicSnapshotKind,
     AcademicYear,
     AttendanceRecord,
     AttendanceSession,
@@ -70,9 +69,7 @@ class AcademicSnapshotService:
             "snapshot_data": snapshot.snapshot_data,
             "taken_at": snapshot.taken_at.isoformat(),
             "taken_by": (
-                str(snapshot.taken_by)
-                if snapshot.taken_by is not None
-                else None
+                str(snapshot.taken_by) if snapshot.taken_by is not None else None
             ),
         }
 
@@ -83,9 +80,7 @@ class AcademicSnapshotService:
         auth: AuthContext,
     ) -> list[dict]:
         # Cheap school-scope check by looking up the student row.
-        student = await self.db.execute(
-            select(User).where(User.id == student_id)
-        )
+        student = await self.db.execute(select(User).where(User.id == student_id))
         student_row = student.scalar_one_or_none()
         if student_row is None:
             raise NotFoundError("Student not found", error_code="ERR-ERP-404")
@@ -141,9 +136,7 @@ class AcademicSnapshotService:
         )
         academic_year = ay_result.scalar_one_or_none()
         if academic_year is None:
-            raise NotFoundError(
-                "Academic year not found", error_code="ERR-ERP-404"
-            )
+            raise NotFoundError("Academic year not found", error_code="ERR-ERP-404")
         verify_school_boundary(academic_year.school_id, auth)
 
         blob = await self._build_blob(
@@ -205,9 +198,7 @@ class AcademicSnapshotService:
         async with UnitOfWork(self.db) as uow:
             attached = await uow.session.get(AcademicSnapshot, snapshot.id)
             if attached is None:
-                raise NotFoundError(
-                    "Snapshot not found", error_code="ERR-ERP-404"
-                )
+                raise NotFoundError("Snapshot not found", error_code="ERR-ERP-404")
             await uow.session.delete(attached)
             await uow.session.flush()
 

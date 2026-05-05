@@ -338,7 +338,10 @@ def record_virus_scan_result(*, env: str, result: str) -> None:
     safe_env = env if isinstance(env, str) and env else "unknown"
     VIRUS_SCAN_RESULT.labels(env=safe_env, result=safe_result).inc()
 
-_SAFE_MIME_RE = re.compile(r"^[a-z0-9][a-z0-9!#$&^_.+-]{0,126}/[a-z0-9][a-z0-9!#$&^_.+-]{0,126}$")
+
+_SAFE_MIME_RE = re.compile(
+    r"^[a-z0-9][a-z0-9!#$&^_.+-]{0,126}/[a-z0-9][a-z0-9!#$&^_.+-]{0,126}$"
+)
 
 
 def _normalize_storage_backend(backend: str) -> str:

@@ -157,31 +157,35 @@ async def test_initial_assignment_in_place_writes_event(
 
     # Database-level check: enrollment now has the program, status still ACTIVE.
     async with session_factory() as session:
-        e = (await session.execute(
-            select(Enrollment).where(Enrollment.id == enrollment_id)
-        )).scalar_one()
+        e = (
+            await session.execute(
+                select(Enrollment).where(Enrollment.id == enrollment_id)
+            )
+        ).scalar_one()
         assert str(e.program_id) == program_id
         assert e.status == EnrollmentStatus.ACTIVE.value
 
 
 @pytest.mark.asyncio
-async def test_transfer_soft_replaces_enrollment(
-    client, api_context, session_factory
-):
+async def test_transfer_soft_replaces_enrollment(client, api_context, session_factory):
     admin_token = api_context["admin"]["token"]
     student_uuid = api_context["student"]["user"].id
     enrollment_id = await _active_enrollment_id(session_factory, student_uuid)
 
-    p1 = (await client.post(
-        "/programs",
-        headers=auth_header(admin_token),
-        json={"code": "SCI-MATH", "name": "Sciences Mathématiques"},
-    )).json()["data"]
-    p2 = (await client.post(
-        "/programs",
-        headers=auth_header(admin_token),
-        json={"code": "LM", "name": "Lettres Modernes"},
-    )).json()["data"]
+    p1 = (
+        await client.post(
+            "/programs",
+            headers=auth_header(admin_token),
+            json={"code": "SCI-MATH", "name": "Sciences Mathématiques"},
+        )
+    ).json()["data"]
+    p2 = (
+        await client.post(
+            "/programs",
+            headers=auth_header(admin_token),
+            json={"code": "LM", "name": "Lettres Modernes"},
+        )
+    ).json()["data"]
 
     # First, set initial program.
     await client.post(
@@ -210,42 +214,52 @@ async def test_transfer_soft_replaces_enrollment(
 
     # Old enrollment is now TRANSFERRED, new is ACTIVE with p2.
     async with session_factory() as session:
-        old = (await session.execute(
-            select(Enrollment).where(Enrollment.id == enrollment_id)
-        )).scalar_one()
+        old = (
+            await session.execute(
+                select(Enrollment).where(Enrollment.id == enrollment_id)
+            )
+        ).scalar_one()
         assert old.status == EnrollmentStatus.TRANSFERRED.value
         assert str(old.program_id) == p1["id"]
 
-        new = (await session.execute(
-            select(Enrollment).where(Enrollment.id == event["to_enrollment_id"])
-        )).scalar_one()
+        new = (
+            await session.execute(
+                select(Enrollment).where(Enrollment.id == event["to_enrollment_id"])
+            )
+        ).scalar_one()
         assert new.status == EnrollmentStatus.ACTIVE.value
         assert str(new.program_id) == p2["id"]
         assert new.student_id == student_uuid
 
         # Two events: INITIAL + TRANSFER.
-        events = (await session.execute(
-            select(ProgramAssignmentEvent).where(
-                ProgramAssignmentEvent.student_id == student_uuid
+        events = (
+            (
+                await session.execute(
+                    select(ProgramAssignmentEvent).where(
+                        ProgramAssignmentEvent.student_id == student_uuid
+                    )
+                )
             )
-        )).scalars().all()
+            .scalars()
+            .all()
+        )
         codes = sorted(e.reason_code for e in events)
         assert codes == ["INITIAL", "TRANSFER"]
 
 
 @pytest.mark.asyncio
-async def test_assigning_same_program_is_409(
-    client, api_context, session_factory
-):
+async def test_assigning_same_program_is_409(client, api_context, session_factory):
     admin_token = api_context["admin"]["token"]
     student_uuid = api_context["student"]["user"].id
     enrollment_id = await _active_enrollment_id(session_factory, student_uuid)
 
-    program = (await client.post(
-        "/programs",
-        headers=auth_header(admin_token),
-        json={"code": "SCI-MATH", "name": "Sciences Mathématiques"},
-    )).json()["data"]
+    program = (
+        await client.post(
+            "/programs",
+            headers=auth_header(admin_token),
+            json={"code": "SCI-MATH", "name": "Sciences Mathématiques"},
+        )
+    ).json()["data"]
 
     await client.post(
         f"/enrollments/{enrollment_id}/program",
@@ -273,16 +287,20 @@ async def test_program_history_and_timeline_and_current(
     student_uuid = api_context["student"]["user"].id
     enrollment_id = await _active_enrollment_id(session_factory, student_uuid)
 
-    p1 = (await client.post(
-        "/programs",
-        headers=auth_header(admin_token),
-        json={"code": "SCI-MATH", "name": "Sciences Mathématiques"},
-    )).json()["data"]
-    p2 = (await client.post(
-        "/programs",
-        headers=auth_header(admin_token),
-        json={"code": "LM", "name": "Lettres Modernes"},
-    )).json()["data"]
+    p1 = (
+        await client.post(
+            "/programs",
+            headers=auth_header(admin_token),
+            json={"code": "SCI-MATH", "name": "Sciences Mathématiques"},
+        )
+    ).json()["data"]
+    p2 = (
+        await client.post(
+            "/programs",
+            headers=auth_header(admin_token),
+            json={"code": "LM", "name": "Lettres Modernes"},
+        )
+    ).json()["data"]
 
     await client.post(
         f"/enrollments/{enrollment_id}/program",
@@ -317,9 +335,7 @@ async def test_program_history_and_timeline_and_current(
     assert len(timeline_items) == 2
     statuses = sorted(t["status"] for t in timeline_items)
     assert statuses == ["active", "transferred"]
-    programs = {
-        t["status"]: (t["program"] or {}).get("code") for t in timeline_items
-    }
+    programs = {t["status"]: (t["program"] or {}).get("code") for t in timeline_items}
     assert programs["active"] == "LM"
     assert programs["transferred"] == "SCI-MATH"
 
@@ -357,11 +373,13 @@ async def test_parent_can_read_linked_child_history(
     student_uuid = api_context["student"]["user"].id
     enrollment_id = await _active_enrollment_id(session_factory, student_uuid)
 
-    program = (await client.post(
-        "/programs",
-        headers=auth_header(admin_token),
-        json={"code": "SCI-MATH", "name": "Sciences Mathématiques"},
-    )).json()["data"]
+    program = (
+        await client.post(
+            "/programs",
+            headers=auth_header(admin_token),
+            json={"code": "SCI-MATH", "name": "Sciences Mathématiques"},
+        )
+    ).json()["data"]
     await client.post(
         f"/enrollments/{enrollment_id}/program",
         headers=auth_header(admin_token),
@@ -428,11 +446,13 @@ async def test_admin_enrollments_filter_missing_program(
     student_uuid = api_context["student"]["user"].id
     enrollment_id = await _active_enrollment_id(session_factory, student_uuid)
 
-    program = (await client.post(
-        "/programs",
-        headers=auth_header(admin_token),
-        json={"code": "SCI-MATH", "name": "Sciences Mathématiques"},
-    )).json()["data"]
+    program = (
+        await client.post(
+            "/programs",
+            headers=auth_header(admin_token),
+            json={"code": "SCI-MATH", "name": "Sciences Mathématiques"},
+        )
+    ).json()["data"]
     await client.post(
         f"/enrollments/{enrollment_id}/program",
         headers=auth_header(admin_token),
@@ -489,9 +509,7 @@ async def test_student_cannot_list_enrollments(client, api_context):
 # G49 Phase 2.4 — Analytics endpoints accept program_id filter
 # ---------------------------------------------------------------------------
 @pytest.mark.asyncio
-async def test_analytics_attendance_passes_program_id_filter(
-    client, api_context
-):
+async def test_analytics_attendance_passes_program_id_filter(client, api_context):
     """GET /analytics/attendance?program_id=X echoes the filter and stays 200.
 
     The attendance series for a school with no records is empty either way,
@@ -500,11 +518,13 @@ async def test_analytics_attendance_passes_program_id_filter(
     """
     admin_token = api_context["admin"]["token"]
 
-    program = (await client.post(
-        "/programs",
-        headers=auth_header(admin_token),
-        json={"code": "SCI-MATH", "name": "Sciences Mathématiques"},
-    )).json()["data"]
+    program = (
+        await client.post(
+            "/programs",
+            headers=auth_header(admin_token),
+            json={"code": "SCI-MATH", "name": "Sciences Mathématiques"},
+        )
+    ).json()["data"]
 
     response = await client.get(
         f"/analytics/attendance?program_id={program['id']}",
@@ -520,9 +540,7 @@ async def test_analytics_attendance_passes_program_id_filter(
 
 
 @pytest.mark.asyncio
-async def test_analytics_attendance_without_program_id_unchanged(
-    client, api_context
-):
+async def test_analytics_attendance_without_program_id_unchanged(client, api_context):
     """The new param is fully optional — omitting it returns the
     pre-existing shape with program_id explicitly null."""
     admin_token = api_context["admin"]["token"]
@@ -540,11 +558,13 @@ async def test_analytics_grades_passes_program_id_filter(client, api_context):
     """GET /analytics/grades?program_id=X is accepted and echoes the filter."""
     admin_token = api_context["admin"]["token"]
 
-    program = (await client.post(
-        "/programs",
-        headers=auth_header(admin_token),
-        json={"code": "LM", "name": "Lettres Modernes"},
-    )).json()["data"]
+    program = (
+        await client.post(
+            "/programs",
+            headers=auth_header(admin_token),
+            json={"code": "LM", "name": "Lettres Modernes"},
+        )
+    ).json()["data"]
 
     response = await client.get(
         f"/analytics/grades?program_id={program['id']}",
@@ -556,9 +576,7 @@ async def test_analytics_grades_passes_program_id_filter(client, api_context):
 
 
 @pytest.mark.asyncio
-async def test_analytics_grades_invalid_program_id_returns_422(
-    client, api_context
-):
+async def test_analytics_grades_invalid_program_id_returns_422(client, api_context):
     """A malformed program_id is rejected by FastAPI's UUID validation."""
     admin_token = api_context["admin"]["token"]
     response = await client.get(
@@ -575,11 +593,13 @@ async def test_analytics_grades_invalid_program_id_returns_422(
 async def test_attendance_alerts_accept_program_id_filter(client, api_context):
     """GET /analytics/attendance/alerts?program_id=X is accepted (200)."""
     admin_token = api_context["admin"]["token"]
-    program = (await client.post(
-        "/programs",
-        headers=auth_header(admin_token),
-        json={"code": "SCI-MATH", "name": "Sciences Mathématiques"},
-    )).json()["data"]
+    program = (
+        await client.post(
+            "/programs",
+            headers=auth_header(admin_token),
+            json={"code": "SCI-MATH", "name": "Sciences Mathématiques"},
+        )
+    ).json()["data"]
 
     response = await client.get(
         f"/analytics/attendance/alerts?program_id={program['id']}",
@@ -601,11 +621,13 @@ async def test_create_enrollment_with_program_id_writes_initial_event(
     admin_token = api_context["admin"]["token"]
 
     # Create a program first.
-    program = (await client.post(
-        "/programs",
-        headers=auth_header(admin_token),
-        json={"code": "SCI-MATH", "name": "Sciences Mathématiques"},
-    )).json()["data"]
+    program = (
+        await client.post(
+            "/programs",
+            headers=auth_header(admin_token),
+            json={"code": "SCI-MATH", "name": "Sciences Mathématiques"},
+        )
+    ).json()["data"]
 
     # Create a *new* student so we don't trip the existing-enrollment
     # idempotency path (api_context already enrolls 'student' in CLS-INT).
@@ -633,8 +655,8 @@ async def test_create_enrollment_with_program_id_writes_initial_event(
         json={
             "student_id": str(api_context["student"]["user"].id),
             "class_id": str(api_context["school_class"].id)
-                if "school_class" in api_context
-                else "00000000-0000-4000-8000-000000000000",
+            if "school_class" in api_context
+            else "00000000-0000-4000-8000-000000000000",
             "period_id": "00000000-0000-4000-8000-000000000000",
             "program_id": program["id"],
         },
@@ -646,9 +668,7 @@ async def test_create_enrollment_with_program_id_writes_initial_event(
 
 
 @pytest.mark.asyncio
-async def test_create_enrollment_unchanged_without_program_id(
-    client, api_context
-):
+async def test_create_enrollment_unchanged_without_program_id(client, api_context):
     """The new optional field doesn't change behaviour when omitted —
     response shape is the same as before."""
     admin_token = api_context["admin"]["token"]
@@ -658,8 +678,8 @@ async def test_create_enrollment_unchanged_without_program_id(
         json={
             "student_id": str(api_context["student"]["user"].id),
             "class_id": str(api_context["school_class"].id)
-                if "school_class" in api_context
-                else "00000000-0000-4000-8000-000000000000",
+            if "school_class" in api_context
+            else "00000000-0000-4000-8000-000000000000",
             "period_id": "00000000-0000-4000-8000-000000000000",
         },
     )
@@ -677,13 +697,17 @@ async def test_gradebook_accepts_program_id_filter(client, api_context):
     the same envelope (the test rig has no graded data, so we just check
     the request doesn't blow up)."""
     admin_token = api_context["admin"]["token"]
-    program = (await client.post(
-        "/programs",
-        headers=auth_header(admin_token),
-        json={"code": "LM", "name": "Lettres Modernes"},
-    )).json()["data"]
+    program = (
+        await client.post(
+            "/programs",
+            headers=auth_header(admin_token),
+            json={"code": "LM", "name": "Lettres Modernes"},
+        )
+    ).json()["data"]
 
-    class_id = str(api_context["school_class"].id) if "school_class" in api_context else None
+    class_id = (
+        str(api_context["school_class"].id) if "school_class" in api_context else None
+    )
     if class_id is None:
         # api_context fixture exposes the class via a known attribute name
         # in this repo. Skip gracefully if it's not surfaced — the route is

@@ -31,9 +31,7 @@ from app.schemas.programs import EligibilityRuleCreateRequest
 from app.services.eligibility_service import EligibilityService
 
 eligibility_router = APIRouter(prefix="/eligibility", tags=["erp-eligibility"])
-student_eligibility_router = APIRouter(
-    prefix="/students", tags=["erp-eligibility"]
-)
+student_eligibility_router = APIRouter(prefix="/students", tags=["erp-eligibility"])
 
 
 @eligibility_router.get(

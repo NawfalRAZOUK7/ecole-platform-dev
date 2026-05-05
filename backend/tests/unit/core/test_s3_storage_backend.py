@@ -81,6 +81,7 @@ def s3_backend() -> S3StorageBackend:
 # Protocol conformance
 # ---------------------------------------------------------------------------
 
+
 class TestProtocolConformance:
     def test_local_implements_protocol(self, tmp_local):
         assert isinstance(tmp_local, StorageBackend)
@@ -92,6 +93,7 @@ class TestProtocolConformance:
 # ---------------------------------------------------------------------------
 # LocalStorageBackend
 # ---------------------------------------------------------------------------
+
 
 class TestLocalStorageBackendSave:
     async def test_returns_relative_path_sha256_size(self, tmp_local):
@@ -160,13 +162,16 @@ class TestLocalStorageBackendPresignGet:
 
     async def test_accepts_optional_args(self, tmp_local):
         rel, _, _ = await tmp_local.save(_file(), "p.pdf")
-        result = await tmp_local.presign_get(rel, expires_in=60, response_filename="custom.pdf")
+        result = await tmp_local.presign_get(
+            rel, expires_in=60, response_filename="custom.pdf"
+        )
         assert isinstance(result, str)
 
 
 # ---------------------------------------------------------------------------
 # S3StorageBackend — mocked client
 # ---------------------------------------------------------------------------
+
 
 class TestS3StorageBackendSave:
     async def test_calls_put_object_and_returns_tuple(self, s3_backend):
@@ -197,7 +202,9 @@ class TestS3StorageBackendSave:
         client = AsyncMock()
         client.put_object = AsyncMock(return_value={})
         with patch.object(s3_backend, "_client", return_value=_make_client_ctx(client)):
-            key, _, _ = await s3_backend.save(_file(), "f.pdf", subdirectory="schools/1")
+            key, _, _ = await s3_backend.save(
+                _file(), "f.pdf", subdirectory="schools/1"
+            )
         assert key.startswith("schools/1/")
         assert not key.startswith("/")
 
@@ -222,7 +229,9 @@ class TestS3StorageBackendExists:
         from botocore.exceptions import ClientError
 
         client = AsyncMock()
-        err = ClientError({"Error": {"Code": "404", "Message": "Not Found"}}, "HeadObject")
+        err = ClientError(
+            {"Error": {"Code": "404", "Message": "Not Found"}}, "HeadObject"
+        )
         client.head_object = AsyncMock(side_effect=err)
         with patch.object(s3_backend, "_client", return_value=_make_client_ctx(client)):
             assert await s3_backend.exists("missing.pdf") is False
@@ -234,13 +243,17 @@ class TestS3StorageBackendDelete:
         client.delete_object = AsyncMock(return_value={})
         with patch.object(s3_backend, "_client", return_value=_make_client_ctx(client)):
             await s3_backend.delete("some/key.pdf")
-        client.delete_object.assert_called_once_with(Bucket="test-bucket", Key="some/key.pdf")
+        client.delete_object.assert_called_once_with(
+            Bucket="test-bucket", Key="some/key.pdf"
+        )
 
     async def test_suppresses_client_error(self, s3_backend):
         from botocore.exceptions import ClientError
 
         client = AsyncMock()
-        err = ClientError({"Error": {"Code": "NoSuchKey", "Message": ""}}, "DeleteObject")
+        err = ClientError(
+            {"Error": {"Code": "NoSuchKey", "Message": ""}}, "DeleteObject"
+        )
         client.delete_object = AsyncMock(side_effect=err)
         with patch.object(s3_backend, "_client", return_value=_make_client_ctx(client)):
             await s3_backend.delete("missing.pdf")  # must not raise
@@ -249,12 +262,14 @@ class TestS3StorageBackendDelete:
 class TestS3StorageBackendStat:
     async def test_parses_head_response(self, s3_backend):
         client = AsyncMock()
-        client.head_object = AsyncMock(return_value={
-            "ContentLength": 1024,
-            "ETag": '"abc123"',
-            "ContentType": "application/pdf",
-            "LastModified": datetime(2026, 1, 1),
-        })
+        client.head_object = AsyncMock(
+            return_value={
+                "ContentLength": 1024,
+                "ETag": '"abc123"',
+                "ContentType": "application/pdf",
+                "LastModified": datetime(2026, 1, 1),
+            }
+        )
         with patch.object(s3_backend, "_client", return_value=_make_client_ctx(client)):
             info = await s3_backend.stat("doc.pdf")
 
@@ -268,7 +283,9 @@ class TestS3StorageBackendStat:
         from botocore.exceptions import ClientError
 
         client = AsyncMock()
-        err = ClientError({"Error": {"Code": "404", "Message": "Not Found"}}, "HeadObject")
+        err = ClientError(
+            {"Error": {"Code": "404", "Message": "Not Found"}}, "HeadObject"
+        )
         client.head_object = AsyncMock(side_effect=err)
         with patch.object(s3_backend, "_client", return_value=_make_client_ctx(client)):
             with pytest.raises(NotFoundError):
@@ -315,6 +332,7 @@ class TestS3StorageBackendPresignGet:
 # build_storage_backend factory
 # ---------------------------------------------------------------------------
 
+
 class TestBuildStorageBackend:
     def test_returns_local_when_storage_backend_local(self, monkeypatch):
         monkeypatch.delenv("STORAGE_BACKEND", raising=False)
@@ -343,6 +361,7 @@ class TestBuildStorageBackend:
 # Requires dev MinIO running: docker compose -f infra/docker-compose.dev.yml up minio
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.skipif(
     not os.getenv("MINIO_INTEGRATION"),
     reason="Set MINIO_INTEGRATION=1 to run against dev MinIO",
@@ -353,15 +372,17 @@ class TestMinIOIntegration:
         from app.core.config import Settings
 
         endpoint = os.getenv("S3_ENDPOINT", "http://minio:9000")
-        return S3StorageBackend(Settings(
-            **_REQUIRED_SETTINGS,
-            s3_bucket=os.getenv("S3_BUCKET", "ecole-dev-private"),
-            s3_endpoint=endpoint,
-            s3_access_key=os.getenv("S3_ACCESS_KEY", "minioadmin"),
-            s3_secret_key=os.getenv("S3_SECRET_KEY", "minioadmin123"),
-            s3_force_path_style=True,
-            s3_sse_enabled=True,
-        ))
+        return S3StorageBackend(
+            Settings(
+                **_REQUIRED_SETTINGS,
+                s3_bucket=os.getenv("S3_BUCKET", "ecole-dev-private"),
+                s3_endpoint=endpoint,
+                s3_access_key=os.getenv("S3_ACCESS_KEY", "minioadmin"),
+                s3_secret_key=os.getenv("S3_SECRET_KEY", "minioadmin123"),
+                s3_force_path_style=True,
+                s3_sse_enabled=True,
+            )
+        )
 
     async def test_full_round_trip(self, minio_backend):
         content = b"integration test content"

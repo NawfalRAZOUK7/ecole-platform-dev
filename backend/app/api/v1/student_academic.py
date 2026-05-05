@@ -57,9 +57,7 @@ async def get_academic_timeline(
     db: AsyncSession = Depends(get_db),
 ):
     service = ProgramService(db)
-    items = await service.get_academic_timeline(
-        student_id=student_id, auth=auth
-    )
+    items = await service.get_academic_timeline(student_id=student_id, auth=auth)
     return list_response(items, next_cursor=None, has_more=False)
 
 
@@ -74,9 +72,7 @@ async def get_current_program(
     db: AsyncSession = Depends(get_db),
 ):
     service = ProgramService(db)
-    item = await service.get_current_program(
-        student_id=student_id, auth=auth
-    )
+    item = await service.get_current_program(student_id=student_id, auth=auth)
     return success_response(item)
 
 

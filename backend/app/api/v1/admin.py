@@ -119,12 +119,8 @@ async def list_users(
 async def list_enrollments_admin(
     auth: AuthContext = Depends(requires_permission(PERM_ERP_ENROLLMENT_READ)),
     db: AsyncSession = Depends(get_db),
-    class_id: uuid.UUID | None = Query(
-        None, description="Filter by class id."
-    ),
-    period_id: uuid.UUID | None = Query(
-        None, description="Filter by period id."
-    ),
+    class_id: uuid.UUID | None = Query(None, description="Filter by class id."),
+    period_id: uuid.UUID | None = Query(None, description="Filter by period id."),
     status: str | None = Query(
         None,
         description=(

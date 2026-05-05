@@ -70,9 +70,7 @@ class EligibilityService:
             "is_active": rule.is_active,
             "created_at": rule.created_at.isoformat(),
             "updated_at": (
-                rule.updated_at.isoformat()
-                if rule.updated_at is not None
-                else None
+                rule.updated_at.isoformat() if rule.updated_at is not None else None
             ),
         }
 
@@ -90,9 +88,7 @@ class EligibilityService:
         if kind is not None:
             stmt = stmt.where(EligibilityRule.kind == kind)
         if target_program_id is not None:
-            stmt = stmt.where(
-                EligibilityRule.target_program_id == target_program_id
-            )
+            stmt = stmt.where(EligibilityRule.target_program_id == target_program_id)
         if active_only:
             stmt = stmt.where(EligibilityRule.is_active.is_(True))
         stmt = stmt.order_by(desc(EligibilityRule.created_at))
@@ -297,8 +293,7 @@ class EligibilityService:
                 .select_from(AttendanceRecord)
                 .join(
                     AttendanceSession,
-                    AttendanceSession.id
-                    == AttendanceRecord.attendance_session_id,
+                    AttendanceSession.id == AttendanceRecord.attendance_session_id,
                 )
                 .where(
                     AttendanceRecord.school_id == rule.school_id,
@@ -328,11 +323,7 @@ class EligibilityService:
             total = int(result.total or 0)
             present = int(result.present or 0)
             rate = (present / total) if total else 0.0
-            scope = (
-                f", year={str(academic_year_id)[:8]}…"
-                if academic_year_id
-                else ""
-            )
+            scope = f", year={str(academic_year_id)[:8]}…" if academic_year_id else ""
             return (
                 rate >= min_rate,
                 f"rate={rate:.2f} (required >= {min_rate:.2f}, n={total}{scope})",

@@ -35,6 +35,7 @@ from app.services.file_storage import (
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _bytes(content: bytes = b"sample document") -> bytes:
     return content
 
@@ -82,6 +83,7 @@ def local_service(local_backend: LocalFileStorageBackend) -> FileStorageService:
 # Helpers & validators
 # ---------------------------------------------------------------------------
 
+
 class TestSafeFilename:
     def test_strips_path_traversal(self):
         assert _safe_filename("../../etc/passwd") == "passwd"
@@ -106,7 +108,9 @@ class TestValidateDocumentUpload:
         with patch("app.services.file_storage.settings") as ms:
             ms.max_document_size_mb = 1
             ms.allowed_document_mime_types = "application/pdf"
-            with patch("app.services.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}):
+            with patch(
+                "app.services.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}
+            ):
                 with pytest.raises(ValidationError) as exc_info:
                     validate_document_upload(
                         mime_type="application/pdf", size_bytes=2 * 1024 * 1024
@@ -117,6 +121,7 @@ class TestValidateDocumentUpload:
 # ---------------------------------------------------------------------------
 # Protocol conformance
 # ---------------------------------------------------------------------------
+
 
 class TestProtocolConformance:
     def test_local_implements_protocol(self, local_backend):
@@ -129,6 +134,7 @@ class TestProtocolConformance:
 # ---------------------------------------------------------------------------
 # LocalFileStorageBackend
 # ---------------------------------------------------------------------------
+
 
 class TestLocalBackendSaveBytes:
     async def test_returns_stored_object(self, local_backend):
@@ -203,6 +209,7 @@ class TestLocalBackendGetBytes:
 # ---------------------------------------------------------------------------
 # S3FileStorageBackend — mocked client
 # ---------------------------------------------------------------------------
+
 
 class TestS3BackendSaveBytes:
     async def test_calls_put_object(self, s3_backend):
@@ -311,6 +318,7 @@ class TestS3BackendLocalPathAndGetBytes:
 # FileStorageService — local backend
 # ---------------------------------------------------------------------------
 
+
 class TestFileStorageServiceStoreUpload:
     async def test_returns_storage_and_thumbnail_paths(self, tmp_path):
         backend = LocalFileStorageBackend(base_dir=str(tmp_path))
@@ -367,10 +375,14 @@ class TestFileStorageServiceStoreUpload:
                 "app.services.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}
             ):
                 path1, _ = await svc.store_upload(
-                    content=content, original_filename="a.pdf", mime_type="application/pdf"
+                    content=content,
+                    original_filename="a.pdf",
+                    mime_type="application/pdf",
                 )
                 path2, _ = await svc.store_upload(
-                    content=content, original_filename="b.pdf", mime_type="application/pdf"
+                    content=content,
+                    original_filename="b.pdf",
+                    mime_type="application/pdf",
                 )
         assert path1 == path2
 
@@ -390,7 +402,9 @@ class TestFileStorageServiceReuseUpload:
                 "app.services.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}
             ):
                 path, _ = await svc.store_upload(
-                    content=content, original_filename="r.pdf", mime_type="application/pdf"
+                    content=content,
+                    original_filename="r.pdf",
+                    mime_type="application/pdf",
                 )
                 reused_path, _ = await svc.reuse_upload(
                     storage_path=path, thumbnail_path=None
@@ -419,10 +433,14 @@ class TestFileStorageServiceStoreUploadCopy:
                 "app.services.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}
             ):
                 path1, _ = await svc.store_upload_copy(
-                    content=content, original_filename="c.pdf", mime_type="application/pdf"
+                    content=content,
+                    original_filename="c.pdf",
+                    mime_type="application/pdf",
                 )
                 path2, _ = await svc.store_upload_copy(
-                    content=content, original_filename="c.pdf", mime_type="application/pdf"
+                    content=content,
+                    original_filename="c.pdf",
+                    mime_type="application/pdf",
                 )
         assert path1 != path2
         assert "copies" in path1
@@ -443,12 +461,15 @@ class TestFileStorageServiceGetBytes:
 # S3-backed FileStorageService (mocked backend)
 # ---------------------------------------------------------------------------
 
+
 class TestFileStorageServiceS3Backend:
     async def test_store_upload_calls_save_bytes(self):
         mock_backend = AsyncMock(spec=LocalFileStorageBackend)
-        mock_backend.save_bytes = AsyncMock(return_value=StoredObject(
-            storage_path="docs/ab/abc.pdf", size_bytes=5, sha256="abc"
-        ))
+        mock_backend.save_bytes = AsyncMock(
+            return_value=StoredObject(
+                storage_path="docs/ab/abc.pdf", size_bytes=5, sha256="abc"
+            )
+        )
         mock_backend.exists = AsyncMock(return_value=False)
         svc = FileStorageService(backend=mock_backend)
         content = b"hello"
@@ -458,9 +479,13 @@ class TestFileStorageServiceS3Backend:
             ms.virus_scan_enabled = False
             ms.document_storage_subdirectory = "docs"
             ms.document_preview_subdirectory = "previews"
-            with patch("app.services.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}):
+            with patch(
+                "app.services.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}
+            ):
                 path, _ = await svc.store_upload(
-                    content=content, original_filename="f.pdf", mime_type="application/pdf"
+                    content=content,
+                    original_filename="f.pdf",
+                    mime_type="application/pdf",
                 )
         mock_backend.save_bytes.assert_called_once()
 
@@ -478,6 +503,7 @@ class TestFileStorageServiceS3Backend:
 # ---------------------------------------------------------------------------
 # Factory
 # ---------------------------------------------------------------------------
+
 
 class TestBuildBackend:
     def test_returns_local_by_default(self, tmp_path):

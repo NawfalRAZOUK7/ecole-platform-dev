@@ -27,11 +27,14 @@ class UploadSession(TimestampMixin, Base):
     __tablename__ = "upload_sessions"
 
     upload_state: Mapped[str] = mapped_column(
-        String(20), nullable=False, default="uploading"
+        String(20),
+        nullable=False,
+        default="uploading",
         # uploading → scanning → available | quarantined | failed
     )
     kind: Mapped[str] = mapped_column(
-        String(30), nullable=False
+        String(30),
+        nullable=False,
         # assignment_pdf | submission_file | content_asset | video | audio
     )
     object_key: Mapped[str] = mapped_column(Text, nullable=False)
@@ -47,7 +50,9 @@ class UploadSession(TimestampMixin, Base):
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
     scope_data: Mapped[dict] = mapped_column(
-        JSONB, nullable=False, default=dict
+        JSONB,
+        nullable=False,
+        default=dict,
         # {"assignment_id": "...", "submission_id": "...", "content_item_id": "..."}
     )
     expires_at: Mapped[datetime] = mapped_column(

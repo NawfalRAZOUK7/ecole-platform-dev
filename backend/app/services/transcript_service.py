@@ -291,8 +291,12 @@ class TranscriptService:
             resolved_programs = result.scalars().all()
             items.append(
                 {
-                    "program": self._program_payload(source_program, fallback_id=program_id),
-                    "resolved_program_ids": [str(item.id) for item in resolved_programs],
+                    "program": self._program_payload(
+                        source_program, fallback_id=program_id
+                    ),
+                    "resolved_program_ids": [
+                        str(item.id) for item in resolved_programs
+                    ],
                     "resolved_programs": [
                         self._program_payload(item, fallback_id=item.id)
                         for item in resolved_programs

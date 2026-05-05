@@ -881,9 +881,7 @@ class ProgramAssignmentEvent(SchoolScopedMixin, Base):
 
     __tablename__ = "program_assignment_events"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
 
     student_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
@@ -1034,8 +1032,7 @@ class ProgramEquivalence(TimestampMixin, SchoolScopedMixin, Base):
         cleaned = (value or "").strip().upper()
         if cleaned not in allowed:
             raise ValueError(
-                "ProgramEquivalence.kind must be one of: "
-                + ", ".join(sorted(allowed))
+                "ProgramEquivalence.kind must be one of: " + ", ".join(sorted(allowed))
             )
         return cleaned
 
@@ -1077,9 +1074,7 @@ class AcademicSnapshot(SchoolScopedMixin, Base):
     )
     snapshot_kind: Mapped[str] = mapped_column(String(20), nullable=False)
     snapshot_data: Mapped[dict] = mapped_column(JSONB, nullable=False)
-    taken_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
+    taken_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     taken_by: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
@@ -1175,8 +1170,7 @@ class EligibilityRule(TimestampMixin, SchoolScopedMixin, Base):
         cleaned = (value or "").strip().upper()
         if cleaned not in allowed:
             raise ValueError(
-                "EligibilityRule.kind must be one of: "
-                + ", ".join(sorted(allowed))
+                "EligibilityRule.kind must be one of: " + ", ".join(sorted(allowed))
             )
         return cleaned
 

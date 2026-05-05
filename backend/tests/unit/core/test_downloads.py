@@ -35,10 +35,13 @@ from app.schemas.storage import DownloadMetadata
 # Fake presignable backend
 # ---------------------------------------------------------------------------
 
+
 class _FakeBackend:
     """Minimal PresignableBackend implementation for testing."""
 
-    def __init__(self, url: str = "https://minio.test/bucket/key?X-Amz-sig=abc") -> None:
+    def __init__(
+        self, url: str = "https://minio.test/bucket/key?X-Amz-sig=abc"
+    ) -> None:
         self._url = url
         self.last_call: dict = {}
 
@@ -77,6 +80,7 @@ _COMMON = dict(
 # Protocol conformance
 # ---------------------------------------------------------------------------
 
+
 class TestPresignableBackendProtocol:
     def test_fake_backend_satisfies_protocol(self, backend):
         assert isinstance(backend, PresignableBackend)
@@ -106,6 +110,7 @@ class TestPresignableBackendProtocol:
 # AS_QUERY
 # ---------------------------------------------------------------------------
 
+
 class TestAsQuery:
     def test_alias_is_as(self):
         assert AS_QUERY.alias == "as"
@@ -117,6 +122,7 @@ class TestAsQuery:
 # ---------------------------------------------------------------------------
 # build_download_response — redirect (default)
 # ---------------------------------------------------------------------------
+
 
 class TestBuildDownloadResponseRedirect:
     async def test_default_returns_302(self, backend):
@@ -141,7 +147,9 @@ class TestBuildDownloadResponseRedirect:
     async def test_as_other_value_returns_redirect(self, backend):
         with patch("app.core.downloads.settings") as ms:
             ms.s3_presign_get_ttl_seconds = 600
-            resp = await build_download_response(backend=backend, as_="inline", **_COMMON)
+            resp = await build_download_response(
+                backend=backend, as_="inline", **_COMMON
+            )
         assert isinstance(resp, RedirectResponse)
 
 
@@ -149,11 +157,14 @@ class TestBuildDownloadResponseRedirect:
 # build_download_response — metadata JSON
 # ---------------------------------------------------------------------------
 
+
 class TestBuildDownloadResponseMetadata:
     async def test_metadata_returns_200_json(self, backend):
         with patch("app.core.downloads.settings") as ms:
             ms.s3_presign_get_ttl_seconds = 600
-            resp = await build_download_response(backend=backend, as_="metadata", **_COMMON)
+            resp = await build_download_response(
+                backend=backend, as_="metadata", **_COMMON
+            )
         assert isinstance(resp, JSONResponse)
         assert resp.status_code == 200
 
@@ -177,7 +188,9 @@ class TestBuildDownloadResponseMetadata:
     async def test_metadata_etag_omitted_when_none(self, backend):
         with patch("app.core.downloads.settings") as ms:
             ms.s3_presign_get_ttl_seconds = 600
-            resp = await build_download_response(backend=backend, as_="metadata", **_COMMON)
+            resp = await build_download_response(
+                backend=backend, as_="metadata", **_COMMON
+            )
         body = json.loads(resp.body)
         assert body["etag"] is None
 
@@ -185,7 +198,9 @@ class TestBuildDownloadResponseMetadata:
         with patch("app.core.downloads.settings") as ms:
             ms.s3_presign_get_ttl_seconds = 600
             before = datetime.now(timezone.utc)
-            resp = await build_download_response(backend=backend, as_="metadata", **_COMMON)
+            resp = await build_download_response(
+                backend=backend, as_="metadata", **_COMMON
+            )
             after = datetime.now(timezone.utc)
         body = json.loads(resp.body)
         expires_at = datetime.fromisoformat(body["expires_at"])
@@ -208,6 +223,7 @@ class TestBuildDownloadResponseMetadata:
 # ---------------------------------------------------------------------------
 # presign_get is called correctly
 # ---------------------------------------------------------------------------
+
 
 class TestPresignGetCalling:
     async def test_filename_forwarded_as_response_filename(self, backend):
@@ -245,6 +261,7 @@ class TestPresignGetCalling:
 # AsyncMock variant — ensures await path is correct
 # ---------------------------------------------------------------------------
 
+
 class TestBuildDownloadResponseWithMockBackend:
     async def test_works_with_async_mock_backend(self):
         mock_backend = AsyncMock(spec=_FakeBackend)
@@ -272,6 +289,7 @@ class TestBuildDownloadResponseWithMockBackend:
 # ---------------------------------------------------------------------------
 # DownloadMetadata schema
 # ---------------------------------------------------------------------------
+
 
 class TestDownloadMetadataSchema:
     def _make(self, **overrides) -> DownloadMetadata:
@@ -302,7 +320,14 @@ class TestDownloadMetadataSchema:
     def test_model_dump_json_is_stable(self):
         m = self._make(etag="abc")
         d = m.model_dump(mode="json")
-        assert set(d.keys()) == {"download_url", "expires_at", "mime_type", "size", "filename", "etag"}
+        assert set(d.keys()) == {
+            "download_url",
+            "expires_at",
+            "mime_type",
+            "size",
+            "filename",
+            "etag",
+        }
 
     def test_size_must_be_non_negative(self):
         with pytest.raises(Exception):

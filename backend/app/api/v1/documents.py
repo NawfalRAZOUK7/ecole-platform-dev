@@ -273,7 +273,9 @@ async def download_document(
 
     if document.id != document_id:
         raise ValidationError("Document token mismatch", error_code="ERR-DOC-422")
-    storage_path, mime_type, filename = await service.read_document_file(document=document)
+    storage_path, mime_type, filename = await service.read_document_file(
+        document=document
+    )
     await audit.log_event(
         school_id=document.school_id,
         actor_id=actor_id,

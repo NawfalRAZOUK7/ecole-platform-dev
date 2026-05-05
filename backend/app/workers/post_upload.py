@@ -38,6 +38,7 @@ logger = logging.getLogger(__name__)
 # Target-entity creation helpers
 # ---------------------------------------------------------------------------
 
+
 async def _create_target_entity(
     db,
     session: UploadSession,
@@ -76,7 +77,9 @@ async def _create_target_entity(
 
     if kind in ("content_asset", "video", "audio"):
         content_item_id = uuid.UUID(scope["content_item_id"])
-        asset_type = {"video": "video", "audio": "audio", "content_asset": "document"}[kind]
+        asset_type = {"video": "video", "audio": "audio", "content_asset": "document"}[
+            kind
+        ]
         asset = ContentItemAsset(
             content_item_id=content_item_id,
             file_path=session.object_key,
@@ -95,6 +98,7 @@ async def _create_target_entity(
 # ---------------------------------------------------------------------------
 # Thumbnail generation (images only; video thumbnails are future work)
 # ---------------------------------------------------------------------------
+
 
 async def _maybe_generate_thumbnail(session: UploadSession) -> None:
     """Generate and store a 200×200 JPEG thumbnail for image content assets."""
@@ -142,6 +146,7 @@ async def _maybe_generate_thumbnail(session: UploadSession) -> None:
 # task_post_upload_scan
 # ---------------------------------------------------------------------------
 
+
 async def task_post_upload_scan(ctx: dict, upload_id: str) -> bool:
     """Post-upload virus scan and entity creation.
 
@@ -181,7 +186,9 @@ async def task_post_upload_scan(ctx: dict, upload_id: str) -> bool:
                 upload_id,
             )
             session.upload_state = "failed"
-            session.error_message = "object not found in storage after upload completion"
+            session.error_message = (
+                "object not found in storage after upload completion"
+            )
             session.scanned_at = now
             await db.commit()
             return False
@@ -245,9 +252,7 @@ async def task_post_upload_scan(ctx: dict, upload_id: str) -> bool:
                 db, session, stat.size_bytes
             )
         except Exception:
-            logger.exception(
-                "Failed to create target entity for session %s", upload_id
-            )
+            logger.exception("Failed to create target entity for session %s", upload_id)
             session.upload_state = "failed"
             session.error_message = "failed to create target entity after scan"
             session.scanned_at = now
@@ -273,6 +278,7 @@ async def task_post_upload_scan(ctx: dict, upload_id: str) -> bool:
 # ---------------------------------------------------------------------------
 # task_cleanup_orphaned_uploads
 # ---------------------------------------------------------------------------
+
 
 async def task_cleanup_orphaned_uploads(ctx: dict) -> int:
     """Mark stale upload sessions as failed and delete their objects.

@@ -38,12 +38,21 @@ def _make(monkeypatch: pytest.MonkeyPatch, **env: str) -> Settings:
     """
     _clear = [
         "STORAGE_BACKEND",
-        "S3_ENDPOINT", "S3_REGION", "S3_ACCESS_KEY", "S3_SECRET_KEY",
-        "S3_BUCKET", "S3_FORCE_PATH_STYLE", "S3_SSE_ENABLED",
-        "S3_PRESIGN_GET_TTL_SECONDS", "S3_PRESIGN_PUT_TTL_SECONDS",
-        "DOCUMENT_STORAGE_BACKEND", "DOCUMENT_STORAGE_ENDPOINT",
-        "DOCUMENT_STORAGE_ACCESS_KEY", "DOCUMENT_STORAGE_SECRET_KEY",
-        "DOCUMENT_STORAGE_BUCKET", "DOCUMENT_STORAGE_REGION",
+        "S3_ENDPOINT",
+        "S3_REGION",
+        "S3_ACCESS_KEY",
+        "S3_SECRET_KEY",
+        "S3_BUCKET",
+        "S3_FORCE_PATH_STYLE",
+        "S3_SSE_ENABLED",
+        "S3_PRESIGN_GET_TTL_SECONDS",
+        "S3_PRESIGN_PUT_TTL_SECONDS",
+        "DOCUMENT_STORAGE_BACKEND",
+        "DOCUMENT_STORAGE_ENDPOINT",
+        "DOCUMENT_STORAGE_ACCESS_KEY",
+        "DOCUMENT_STORAGE_SECRET_KEY",
+        "DOCUMENT_STORAGE_BUCKET",
+        "DOCUMENT_STORAGE_REGION",
         "DOCUMENT_STORAGE_FORCE_PATH_STYLE",
     ]
     for var in _clear:
@@ -57,6 +66,7 @@ def _make(monkeypatch: pytest.MonkeyPatch, **env: str) -> Settings:
 # ---------------------------------------------------------------------------
 # Default values (no S3 env vars)
 # ---------------------------------------------------------------------------
+
 
 class TestDefaults:
     def test_storage_backend_default_is_local(self, monkeypatch):
@@ -103,6 +113,7 @@ class TestDefaults:
 # Validation: Literal["local", "s3"]
 # ---------------------------------------------------------------------------
 
+
 class TestStorageBackendValidation:
     def test_local_is_accepted(self, monkeypatch):
         s = _make(monkeypatch, STORAGE_BACKEND="local")
@@ -121,6 +132,7 @@ class TestStorageBackendValidation:
 # ---------------------------------------------------------------------------
 # Dev MinIO env vars (mirrors docker-compose.dev.yml defaults)
 # ---------------------------------------------------------------------------
+
 
 class TestDevMinIOEnvVars:
     @pytest.fixture()
@@ -161,6 +173,7 @@ class TestDevMinIOEnvVars:
 # ---------------------------------------------------------------------------
 # Cascade: s3_* → document_storage_* (when doc fields are at defaults)
 # ---------------------------------------------------------------------------
+
 
 class TestCascade:
     def test_endpoint_cascades_to_document_storage(self, monkeypatch):
@@ -212,6 +225,7 @@ class TestCascade:
 # Presigned URL TTL overrides
 # ---------------------------------------------------------------------------
 
+
 class TestPresignTTL:
     def test_get_ttl_overrideable(self, monkeypatch):
         s = _make(monkeypatch, S3_PRESIGN_GET_TTL_SECONDS="3600")
@@ -225,6 +239,7 @@ class TestPresignTTL:
 # ---------------------------------------------------------------------------
 # Backward compatibility: existing document_storage_* still work standalone
 # ---------------------------------------------------------------------------
+
 
 class TestDocumentStorageBackwardCompat:
     def test_document_storage_backend_can_be_set_independently(self, monkeypatch):

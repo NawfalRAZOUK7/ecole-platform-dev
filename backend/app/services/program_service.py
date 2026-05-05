@@ -405,9 +405,7 @@ class ProgramService:
         )
         version = result.scalar_one_or_none()
         if version is None:
-            raise NotFoundError(
-                "Program version not found", error_code="ERR-ERP-404"
-            )
+            raise NotFoundError("Program version not found", error_code="ERR-ERP-404")
         verify_school_boundary(version.school_id, auth)
 
         before = {
@@ -473,20 +471,14 @@ class ProgramService:
             "kind": eq.kind,
             "note": eq.note,
             "ratified_at": (
-                eq.ratified_at.isoformat()
-                if eq.ratified_at is not None
-                else None
+                eq.ratified_at.isoformat() if eq.ratified_at is not None else None
             ),
             "ratified_by": (
-                str(eq.ratified_by)
-                if eq.ratified_by is not None
-                else None
+                str(eq.ratified_by) if eq.ratified_by is not None else None
             ),
             "created_at": eq.created_at.isoformat(),
             "updated_at": (
-                eq.updated_at.isoformat()
-                if eq.updated_at is not None
-                else None
+                eq.updated_at.isoformat() if eq.updated_at is not None else None
             ),
         }
 
@@ -587,23 +579,17 @@ class ProgramService:
         ip_address: str | None,
     ) -> None:
         result = await self.db.execute(
-            select(ProgramEquivalence).where(
-                ProgramEquivalence.id == equivalence_id
-            )
+            select(ProgramEquivalence).where(ProgramEquivalence.id == equivalence_id)
         )
         eq = result.scalar_one_or_none()
         if eq is None:
-            raise NotFoundError(
-                "Equivalence not found", error_code="ERR-ERP-404"
-            )
+            raise NotFoundError("Equivalence not found", error_code="ERR-ERP-404")
         verify_school_boundary(eq.school_id, auth)
 
         async with UnitOfWork(self.db) as uow:
             attached = await uow.session.get(ProgramEquivalence, eq.id)
             if attached is None:
-                raise NotFoundError(
-                    "Equivalence not found", error_code="ERR-ERP-404"
-                )
+                raise NotFoundError("Equivalence not found", error_code="ERR-ERP-404")
             await uow.session.delete(attached)
             await uow.session.flush()
 
@@ -717,9 +703,7 @@ class ProgramService:
         program_version = None
         if program_version_id is not None:
             pv_result = await self.db.execute(
-                select(ProgramVersion).where(
-                    ProgramVersion.id == program_version_id
-                )
+                select(ProgramVersion).where(ProgramVersion.id == program_version_id)
             )
             program_version = pv_result.scalar_one_or_none()
             if program_version is None:
@@ -743,9 +727,7 @@ class ProgramService:
         period = await self.repo.get_period(enrollment.period_id)
         if period is None:
             raise NotFoundError("Period not found", error_code="ERR-ERP-404")
-        academic_year_id = (
-            await self._academic_year_id_for_period(period.id)
-        )
+        academic_year_id = await self._academic_year_id_for_period(period.id)
 
         previous_program_id = enrollment.program_id
         previous_program_version_id = enrollment.program_version_id
@@ -773,9 +755,7 @@ class ProgramService:
             session = uow.session
             attached_enrollment = await session.get(Enrollment, enrollment.id)
             if attached_enrollment is None:
-                raise NotFoundError(
-                    "Enrollment not found", error_code="ERR-ERP-404"
-                )
+                raise NotFoundError("Enrollment not found", error_code="ERR-ERP-404")
 
             from_enrollment_id = attached_enrollment.id
             to_enrollment_id: uuid.UUID
@@ -1041,10 +1021,7 @@ class ProgramService:
                     ) from exc
                 stmt = stmt.where(
                     (Enrollment.created_at < boundary)
-                    | (
-                        (Enrollment.created_at == boundary)
-                        & (Enrollment.id < last_id)
-                    )
+                    | ((Enrollment.created_at == boundary) & (Enrollment.id < last_id))
                 )
             else:
                 stmt = stmt.where(Enrollment.id < last_id)
@@ -1109,9 +1086,7 @@ class ProgramService:
     # Internals
     # ------------------------------------------------------------------
     async def _fetch_program(self, program_id: uuid.UUID) -> Program | None:
-        result = await self.db.execute(
-            select(Program).where(Program.id == program_id)
-        )
+        result = await self.db.execute(select(Program).where(Program.id == program_id))
         return result.scalar_one_or_none()
 
     async def _fetch_program_by_code(
@@ -1128,17 +1103,13 @@ class ProgramService:
         )
         return result.scalar_one_or_none()
 
-    async def _fetch_enrollment(
-        self, enrollment_id: uuid.UUID
-    ) -> Enrollment | None:
+    async def _fetch_enrollment(self, enrollment_id: uuid.UUID) -> Enrollment | None:
         result = await self.db.execute(
             select(Enrollment).where(Enrollment.id == enrollment_id)
         )
         return result.scalar_one_or_none()
 
-    async def _academic_year_id_for_period(
-        self, period_id: uuid.UUID
-    ) -> uuid.UUID:
+    async def _academic_year_id_for_period(self, period_id: uuid.UUID) -> uuid.UUID:
         result = await self.db.execute(
             select(Period.academic_year_id).where(Period.id == period_id)
         )
@@ -1161,9 +1132,7 @@ class ProgramService:
 
         if auth.role == STD:
             if auth.user_id != student_id:
-                raise NotFoundError(
-                    "Resource not found", error_code="ERR-RES-404"
-                )
+                raise NotFoundError("Resource not found", error_code="ERR-RES-404")
             return
 
         if auth.role == PAR:

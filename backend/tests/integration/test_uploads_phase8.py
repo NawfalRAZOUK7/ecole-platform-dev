@@ -10,9 +10,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, patch
 
-import pytest
 
-from app.core.storage import storage
 from app.models.uploads import UploadSession
 from tests.integration.api.helpers import auth_header
 
@@ -43,7 +41,9 @@ def _patch_s3(presign_url: str = _FAKE_PRESIGN_URL):
 
     return patch.multiple(
         "app.api.v1.uploads",
-        isinstance=lambda obj, cls: True if cls is S3StorageBackend else __builtins__["isinstance"](obj, cls),
+        isinstance=lambda obj, cls: True
+        if cls is S3StorageBackend
+        else __builtins__["isinstance"](obj, cls),
         storage=AsyncMock(presign_put=AsyncMock(return_value=presign_url)),
     )
 
@@ -64,7 +64,11 @@ class TestUploadInit:
         resp = await client.post(
             "/uploads/init",
             headers=auth_header(token),
-            json={"filename": "x.pdf", "mime_type": "application/pdf", "size_bytes": 1024},
+            json={
+                "filename": "x.pdf",
+                "mime_type": "application/pdf",
+                "size_bytes": 1024,
+            },
         )
         assert resp.status_code == 422
 
@@ -110,7 +114,9 @@ class TestUploadInit:
         # Both indicate the upload was blocked before any presign was issued.
         assert resp.status_code in (404, 422)
 
-    async def test_teacher_content_asset_local_storage_rejects(self, client, api_context):
+    async def test_teacher_content_asset_local_storage_rejects(
+        self, client, api_context
+    ):
         """Teachers uploading content assets are also rejected on local storage."""
         token = api_context["teacher"]["token"]
         school_id = str(api_context["school"].id)
@@ -149,7 +155,9 @@ class TestUploadStatus:
         )
         assert resp.status_code == 404
 
-    async def test_session_inserted_directly_is_visible(self, client, api_context, session_factory):
+    async def test_session_inserted_directly_is_visible(
+        self, client, api_context, session_factory
+    ):
         """Insert an UploadSession row directly and verify the status endpoint reflects it."""
         school = api_context["school"]
         student = api_context["student"]
@@ -181,7 +189,9 @@ class TestUploadStatus:
         assert data["upload_id"] == str(upload_id)
         assert data["state"] == "uploading"
 
-    async def test_any_school_member_can_poll_session(self, client, api_context, session_factory):
+    async def test_any_school_member_can_poll_session(
+        self, client, api_context, session_factory
+    ):
         """A teacher can poll a student's upload session (same school, different uploader)."""
         school = api_context["school"]
         student = api_context["student"]
@@ -244,7 +254,9 @@ class TestUploadComplete:
         )
         assert resp.status_code == 422
 
-    async def test_already_scanning_returns_409(self, client, api_context, session_factory):
+    async def test_already_scanning_returns_409(
+        self, client, api_context, session_factory
+    ):
         """Calling /complete twice on the same session → 409 Conflict."""
         school = api_context["school"]
         student = api_context["student"]

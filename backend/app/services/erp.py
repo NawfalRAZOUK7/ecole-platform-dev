@@ -422,9 +422,7 @@ class ERPService:
                     "class_id": str(class_id),
                     "period_id": str(period_id),
                     "status": "active",
-                    "program_id": (
-                        str(program_id) if program_id is not None else None
-                    ),
+                    "program_id": (str(program_id) if program_id is not None else None),
                 },
                 ip_address=ip_address,
             )

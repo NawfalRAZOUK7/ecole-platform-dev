@@ -58,6 +58,7 @@ from app.schemas.storage import DownloadMetadata
 # Protocol
 # ---------------------------------------------------------------------------
 
+
 @runtime_checkable
 class PresignableBackend(Protocol):
     """Minimal interface required by the download helper.
@@ -99,6 +100,7 @@ parameter ``as_`` and use this alias::
 # ---------------------------------------------------------------------------
 # Core helper
 # ---------------------------------------------------------------------------
+
 
 async def build_download_response(
     *,

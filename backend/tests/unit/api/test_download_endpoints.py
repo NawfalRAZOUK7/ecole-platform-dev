@@ -51,7 +51,9 @@ from app.core.downloads import serve_file
 class _S3Backend:
     """Fake backend that behaves like an S3 backend (no read/local_path)."""
 
-    def __init__(self, url: str = "https://minio.test/bucket/key?X-Amz-sig=abc") -> None:
+    def __init__(
+        self, url: str = "https://minio.test/bucket/key?X-Amz-sig=abc"
+    ) -> None:
         self._url = url
         self.last_call: dict = {}
 
@@ -302,6 +304,7 @@ class TestLocalFileStorageBackendPresignGet:
     @pytest.fixture()
     def backend(self, tmp_path: Path):
         from app.services.file_storage import LocalFileStorageBackend
+
         return LocalFileStorageBackend(base_dir=str(tmp_path))
 
     @pytest.mark.asyncio
@@ -337,6 +340,7 @@ class TestS3FileStorageBackendPresignGet:
 
     def _make_backend(self, **overrides):
         from app.services.file_storage import S3FileStorageBackend
+
         with patch("app.services.file_storage.settings") as mock_settings:
             mock_settings.document_storage_bucket = "test-bucket"
             mock_settings.document_storage_endpoint = None
@@ -435,8 +439,14 @@ class TestS3FileStorageBackendPresignGet:
 class TestFileStorageServicePresignGet:
     @pytest.fixture()
     def service(self, tmp_path: Path):
-        from app.services.file_storage import FileStorageService, LocalFileStorageBackend
-        return FileStorageService(backend=LocalFileStorageBackend(base_dir=str(tmp_path)))
+        from app.services.file_storage import (
+            FileStorageService,
+            LocalFileStorageBackend,
+        )
+
+        return FileStorageService(
+            backend=LocalFileStorageBackend(base_dir=str(tmp_path))
+        )
 
     @pytest.mark.asyncio
     async def test_delegates_to_backend(self, service) -> None:
@@ -448,7 +458,9 @@ class TestFileStorageServicePresignGet:
         assert result == "schools/1/doc.pdf"
 
     @pytest.mark.asyncio
-    async def test_passthrough_matches_backend_directly(self, service, tmp_path: Path) -> None:
+    async def test_passthrough_matches_backend_directly(
+        self, service, tmp_path: Path
+    ) -> None:
         path = "schools/1/test.pdf"
         service_result = await service.presign_get(path)
         backend_result = await service.backend.presign_get(path)
@@ -533,9 +545,7 @@ class TestRefactoredServiceReturnTypes:
         svc.repo = mock_repo
 
         assignment_id = uuid.uuid4()
-        result = await svc.get_exercise_pdf(
-            assignment_id=assignment_id, auth=mock_auth
-        )
+        result = await svc.get_exercise_pdf(assignment_id=assignment_id, auth=mock_auth)
         storage_path, mime_type, filename, size = result
         assert isinstance(storage_path, str), "storage_path must be str, not Path"
         assert storage_path == "exercises/abc/exercise.pdf"

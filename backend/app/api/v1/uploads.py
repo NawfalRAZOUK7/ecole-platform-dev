@@ -124,6 +124,7 @@ _KIND_PERMISSIONS: dict[str, str] = {
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _max_size_bytes(kind: str) -> int:
     match kind:
         case "assignment_pdf":
@@ -144,7 +145,9 @@ def _calc_ttl(size_bytes: int) -> int:
     return min(86400, max(900, math.ceil(size_bytes / 102400)))
 
 
-def _build_object_key(kind: str, scope: UploadScope, mime_type: str, file_id: str) -> str:
+def _build_object_key(
+    kind: str, scope: UploadScope, mime_type: str, file_id: str
+) -> str:
     ext = _MIME_TO_EXT.get(mime_type, ".bin")
     sid = str(scope.school_id)
     match kind:
@@ -218,6 +221,7 @@ async def _verify_scope(
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
+
 
 @router.post(
     "/init",
@@ -300,9 +304,15 @@ async def init_upload(
         school_id=auth.school_id,
         uploader_id=auth.user_id,
         scope_data={
-            "assignment_id": str(body.scope.assignment_id) if body.scope.assignment_id else None,
-            "submission_id": str(body.scope.submission_id) if body.scope.submission_id else None,
-            "content_item_id": str(body.scope.content_item_id) if body.scope.content_item_id else None,
+            "assignment_id": str(body.scope.assignment_id)
+            if body.scope.assignment_id
+            else None,
+            "submission_id": str(body.scope.submission_id)
+            if body.scope.submission_id
+            else None,
+            "content_item_id": str(body.scope.content_item_id)
+            if body.scope.content_item_id
+            else None,
         },
         expires_at=expires_at,
     )

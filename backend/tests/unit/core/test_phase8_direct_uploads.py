@@ -99,7 +99,9 @@ class TestS3PresignPut:
     async def test_returns_presigned_url(self):
         backend = _make_s3_backend()
         mock_s3 = MagicMock()
-        mock_s3.generate_presigned_url = AsyncMock(return_value="https://minio/signed-url")
+        mock_s3.generate_presigned_url = AsyncMock(
+            return_value="https://minio/signed-url"
+        )
 
         with patch.object(backend, "_client", return_value=_make_client_ctx(mock_s3)):
             url = await backend.presign_put(
@@ -229,34 +231,47 @@ class TestBuildObjectKey:
     def test_assignment_pdf_key(self):
         from app.api.v1.uploads import _build_object_key
 
-        key = _build_object_key("assignment_pdf", self.scope, "application/pdf", "abc123")
-        assert key == f"schools/{self.school_id}/exercises/{self.assignment_id}/abc123.pdf"
+        key = _build_object_key(
+            "assignment_pdf", self.scope, "application/pdf", "abc123"
+        )
+        assert (
+            key == f"schools/{self.school_id}/exercises/{self.assignment_id}/abc123.pdf"
+        )
 
     def test_submission_file_key(self):
         from app.api.v1.uploads import _build_object_key
 
-        key = _build_object_key(
-            "submission_file", self.scope, "image/jpeg", "def456"
+        key = _build_object_key("submission_file", self.scope, "image/jpeg", "def456")
+        assert (
+            key
+            == f"schools/{self.school_id}/submissions/{self.submission_id}/def456.jpg"
         )
-        assert key == f"schools/{self.school_id}/submissions/{self.submission_id}/def456.jpg"
 
     def test_video_key(self):
         from app.api.v1.uploads import _build_object_key
 
         key = _build_object_key("video", self.scope, "video/mp4", "ghi789")
-        assert key == f"schools/{self.school_id}/videos/{self.content_item_id}/ghi789.mp4"
+        assert (
+            key == f"schools/{self.school_id}/videos/{self.content_item_id}/ghi789.mp4"
+        )
 
     def test_audio_key_mpeg(self):
         from app.api.v1.uploads import _build_object_key
 
         key = _build_object_key("audio", self.scope, "audio/mpeg", "jkl012")
-        assert key == f"schools/{self.school_id}/audio/{self.content_item_id}/jkl012.mp3"
+        assert (
+            key == f"schools/{self.school_id}/audio/{self.content_item_id}/jkl012.mp3"
+        )
 
     def test_content_asset_pdf(self):
         from app.api.v1.uploads import _build_object_key
 
-        key = _build_object_key("content_asset", self.scope, "application/pdf", "mno345")
-        assert key == f"schools/{self.school_id}/content/{self.content_item_id}/mno345.pdf"
+        key = _build_object_key(
+            "content_asset", self.scope, "application/pdf", "mno345"
+        )
+        assert (
+            key == f"schools/{self.school_id}/content/{self.content_item_id}/mno345.pdf"
+        )
 
     def test_unknown_kind_raises(self):
         from app.api.v1.uploads import _build_object_key
@@ -289,7 +304,12 @@ class TestMimeAllowlists:
     def test_audio_includes_four_types(self):
         from app.api.v1.uploads import ALLOWED_MIMES
 
-        assert ALLOWED_MIMES["audio"] == {"audio/mpeg", "audio/mp4", "audio/ogg", "audio/wav"}
+        assert ALLOWED_MIMES["audio"] == {
+            "audio/mpeg",
+            "audio/mp4",
+            "audio/ogg",
+            "audio/wav",
+        }
 
 
 # ---------------------------------------------------------------------------
@@ -323,7 +343,10 @@ class TestMaxSizeBytes:
         from app.api.v1.uploads import _max_size_bytes
         from app.core.config import settings
 
-        assert _max_size_bytes("assignment_pdf") == settings.max_document_size_mb * 1024 * 1024
+        assert (
+            _max_size_bytes("assignment_pdf")
+            == settings.max_document_size_mb * 1024 * 1024
+        )
 
 
 # ---------------------------------------------------------------------------

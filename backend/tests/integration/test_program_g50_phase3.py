@@ -20,11 +20,13 @@ from tests.integration.api.helpers import auth_header
 async def test_program_versions_crud(client, api_context):
     admin_token = api_context["admin"]["token"]
 
-    program = (await client.post(
-        "/programs",
-        headers=auth_header(admin_token),
-        json={"code": "SCI-MATH", "name": "Sciences Mathématiques"},
-    )).json()["data"]
+    program = (
+        await client.post(
+            "/programs",
+            headers=auth_header(admin_token),
+            json={"code": "SCI-MATH", "name": "Sciences Mathématiques"},
+        )
+    ).json()["data"]
 
     # Backfill: a v1.0 should already exist via the migration. Listing
     # must include at least one row.
@@ -71,11 +73,13 @@ async def test_teacher_cannot_create_version(client, api_context):
     teacher_token = api_context["teacher"]["token"]
     admin_token = api_context["admin"]["token"]
 
-    program = (await client.post(
-        "/programs",
-        headers=auth_header(admin_token),
-        json={"code": "LM", "name": "Lettres Modernes"},
-    )).json()["data"]
+    program = (
+        await client.post(
+            "/programs",
+            headers=auth_header(admin_token),
+            json={"code": "LM", "name": "Lettres Modernes"},
+        )
+    ).json()["data"]
 
     response = await client.post(
         f"/programs/{program['id']}/versions",
@@ -92,16 +96,20 @@ async def test_teacher_cannot_create_version(client, api_context):
 async def test_program_equivalences_crud_and_filter(client, api_context):
     admin_token = api_context["admin"]["token"]
 
-    p1 = (await client.post(
-        "/programs",
-        headers=auth_header(admin_token),
-        json={"code": "SCI-MATH", "name": "Sciences Mathématiques"},
-    )).json()["data"]
-    p2 = (await client.post(
-        "/programs",
-        headers=auth_header(admin_token),
-        json={"code": "SCI-MATH-V2", "name": "Sciences Maths v2"},
-    )).json()["data"]
+    p1 = (
+        await client.post(
+            "/programs",
+            headers=auth_header(admin_token),
+            json={"code": "SCI-MATH", "name": "Sciences Mathématiques"},
+        )
+    ).json()["data"]
+    p2 = (
+        await client.post(
+            "/programs",
+            headers=auth_header(admin_token),
+            json={"code": "SCI-MATH-V2", "name": "Sciences Maths v2"},
+        )
+    ).json()["data"]
 
     create_resp = await client.post(
         "/program-equivalences",
@@ -160,9 +168,7 @@ async def test_program_equivalences_crud_and_filter(client, api_context):
 # 3.3 — academic_snapshots
 # ---------------------------------------------------------------------------
 @pytest.mark.asyncio
-async def test_academic_snapshot_take_and_read(
-    client, api_context, session_factory
-):
+async def test_academic_snapshot_take_and_read(client, api_context, session_factory):
     """Take a snapshot for the api_context student + their academic year,
     read it back, then list snapshots for that student.
     """
@@ -207,7 +213,9 @@ async def test_academic_snapshot_take_and_read(
 
 
 @pytest.mark.asyncio
-async def test_transcript_preview_and_snapshot_modes(client, api_context, session_factory):
+async def test_transcript_preview_and_snapshot_modes(
+    client, api_context, session_factory
+):
     admin_token = api_context["admin"]["token"]
     student_token = api_context["student"]["token"]
     student_id = str(api_context["student"]["user"].id)
@@ -288,7 +296,9 @@ async def test_transcript_preview_and_snapshot_modes(client, api_context, sessio
 
 
 @pytest.mark.asyncio
-async def test_transcript_resolves_program_equivalences(client, api_context, session_factory):
+async def test_transcript_resolves_program_equivalences(
+    client, api_context, session_factory
+):
     admin_token = api_context["admin"]["token"]
     student_token = api_context["student"]["token"]
     student_uuid = api_context["student"]["user"].id
@@ -299,16 +309,20 @@ async def test_transcript_resolves_program_equivalences(client, api_context, ses
 
     enrollment_id = await _active_enrollment_id(session_factory, student_uuid)
 
-    p1 = (await client.post(
-        "/programs",
-        headers=auth_header(admin_token),
-        json={"code": "SCI-MATH", "name": "Sciences Mathématiques"},
-    )).json()["data"]
-    p2 = (await client.post(
-        "/programs",
-        headers=auth_header(admin_token),
-        json={"code": "SCI-MATH-V2", "name": "Sciences Maths v2"},
-    )).json()["data"]
+    p1 = (
+        await client.post(
+            "/programs",
+            headers=auth_header(admin_token),
+            json={"code": "SCI-MATH", "name": "Sciences Mathématiques"},
+        )
+    ).json()["data"]
+    p2 = (
+        await client.post(
+            "/programs",
+            headers=auth_header(admin_token),
+            json={"code": "SCI-MATH-V2", "name": "Sciences Maths v2"},
+        )
+    ).json()["data"]
 
     assign_resp = await client.post(
         f"/enrollments/{enrollment_id}/program",
@@ -353,11 +367,13 @@ async def test_eligibility_rule_crud_and_check(client, api_context):
     admin_token = api_context["admin"]["token"]
     student_id = str(api_context["student"]["user"].id)
 
-    program = (await client.post(
-        "/programs",
-        headers=auth_header(admin_token),
-        json={"code": "SCI-MATH", "name": "Sciences Mathématiques"},
-    )).json()["data"]
+    program = (
+        await client.post(
+            "/programs",
+            headers=auth_header(admin_token),
+            json={"code": "SCI-MATH", "name": "Sciences Mathématiques"},
+        )
+    ).json()["data"]
 
     # Create a rule that always evaluates against attendance — student has
     # no attendance records in the fixture so the rule fails by default,
@@ -410,9 +426,7 @@ async def test_eligibility_rule_crud_and_check(client, api_context):
 
 
 @pytest.mark.asyncio
-async def test_min_attendance_rate_honours_academic_year_id(
-    client, api_context
-):
+async def test_min_attendance_rate_honours_academic_year_id(client, api_context):
     """Polish #5: a rule scoped to an academic_year_id must filter the
     attendance window. We exercise the contract via the public API:
     creating a rule with academic_year_id should yield a check whose
@@ -423,11 +437,13 @@ async def test_min_attendance_rate_honours_academic_year_id(
         pytest.skip("api_context does not surface academic_year")
     academic_year_id = str(api_context["academic_year"].id)
 
-    program = (await client.post(
-        "/programs",
-        headers=auth_header(admin_token),
-        json={"code": "SCI-MATH", "name": "Sciences Mathématiques"},
-    )).json()["data"]
+    program = (
+        await client.post(
+            "/programs",
+            headers=auth_header(admin_token),
+            json={"code": "SCI-MATH", "name": "Sciences Mathématiques"},
+        )
+    ).json()["data"]
 
     await client.post(
         "/eligibility/rules",
@@ -452,8 +468,7 @@ async def test_min_attendance_rate_honours_academic_year_id(
     assert check_resp.status_code == 200, check_resp.text
     body = check_resp.json()["data"]
     rule_results = [
-        r for r in body["rules"]
-        if r["condition_type"] == "min_attendance_rate"
+        r for r in body["rules"] if r["condition_type"] == "min_attendance_rate"
     ]
     assert rule_results, "expected at least one min_attendance_rate result"
     # The detail must contain the "year=" marker — proves the year filter

@@ -34,7 +34,9 @@ class DownloadMetadata(BaseModel):
     download_url: str = Field(
         ...,
         description="Short-lived presigned GET URL for the file.",
-        examples=["https://minio.ecole.example.com/ecole-dev-private/schools/42/doc.pdf?X-Amz-..."],
+        examples=[
+            "https://minio.ecole.example.com/ecole-dev-private/schools/42/doc.pdf?X-Amz-..."
+        ],
     )
     expires_at: datetime = Field(
         ...,

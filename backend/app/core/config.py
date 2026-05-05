@@ -92,20 +92,22 @@ class Settings(BaseSettings):
     # S3 / MinIO connection settings — used when storage_backend = "s3".
     # Also cascade into document_storage_* defaults when those fields
     # are still at their empty/placeholder values (see model_post_init).
-    s3_endpoint: str = ""              # http://minio:9000 (dev) | https://... (prod)
+    s3_endpoint: str = ""  # http://minio:9000 (dev) | https://... (prod)
     s3_region: str = "us-east-1"
     s3_access_key: str = ""
     s3_secret_key: str = ""
-    s3_bucket: str = ""               # ecole-dev-private / ecole-staging-private / etc.
+    s3_bucket: str = ""  # ecole-dev-private / ecole-staging-private / etc.
     s3_force_path_style: bool = False  # True required for MinIO; False for AWS S3
-    s3_sse_enabled: bool = False       # Enable AES256 server-side encryption on put
+    s3_sse_enabled: bool = False  # Enable AES256 server-side encryption on put
 
     # Presigned URL TTLs (seconds)
-    s3_presign_get_ttl_seconds: int = 600   # 10 min — read / download links
-    s3_presign_put_ttl_seconds: int = 900   # 15 min — direct client upload links (Phase 8)
+    s3_presign_get_ttl_seconds: int = 600  # 10 min — read / download links
+    s3_presign_put_ttl_seconds: int = (
+        900  # 15 min — direct client upload links (Phase 8)
+    )
 
     # Phase 8 — per-kind upload size limits (MB)
-    max_video_size_mb: int = 2048           # 2 GB
+    max_video_size_mb: int = 2048  # 2 GB
     max_audio_size_mb: int = 200
     max_submission_file_size_mb: int = 100
     max_content_asset_size_mb: int = 200
@@ -217,9 +219,9 @@ class Settings(BaseSettings):
         # ----------------------------------------------------------------
         _cascade: list[tuple[str, str, str]] = [
             # (s3_field, doc_field, sentinel_meaning_not_explicitly_set)
-            ("s3_endpoint",    "document_storage_endpoint",   ""),
-            ("s3_access_key",  "document_storage_access_key", ""),
-            ("s3_secret_key",  "document_storage_secret_key", ""),
+            ("s3_endpoint", "document_storage_endpoint", ""),
+            ("s3_access_key", "document_storage_access_key", ""),
+            ("s3_secret_key", "document_storage_secret_key", ""),
         ]
         for s3_field, doc_field, sentinel in _cascade:
             s3_val = getattr(self, s3_field)

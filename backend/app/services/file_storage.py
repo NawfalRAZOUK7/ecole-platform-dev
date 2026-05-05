@@ -47,6 +47,7 @@ def _get_s3_doc_session() -> Any:
     global _s3_doc_session
     if _s3_doc_session is None:
         import aioboto3  # noqa: PLC0415
+
         _s3_doc_session = aioboto3.Session()
     return _s3_doc_session
 
@@ -300,6 +301,7 @@ class S3FileStorageBackend:
         }
         if settings.document_storage_force_path_style:
             from aiobotocore.config import AioConfig  # noqa: PLC0415
+
             self._client_kwargs["config"] = AioConfig(s3={"addressing_style": "path"})
 
     def _client(self) -> Any:
@@ -415,7 +417,9 @@ class S3FileStorageBackend:
         ):
             async with self._client() as s3:
                 try:
-                    response = await s3.get_object(Bucket=self._bucket, Key=relative_path)
+                    response = await s3.get_object(
+                        Bucket=self._bucket, Key=relative_path
+                    )
                     return await response["Body"].read()
                 except ClientError as exc:
                     if exc.response["Error"]["Code"] in ("404", "NoSuchKey"):
@@ -444,7 +448,11 @@ class S3FileStorageBackend:
         """
         from urllib.parse import quote  # noqa: PLC0415
 
-        ttl = expires_in if expires_in is not None else settings.s3_presign_get_ttl_seconds
+        ttl = (
+            expires_in
+            if expires_in is not None
+            else settings.s3_presign_get_ttl_seconds
+        )
         params: dict[str, Any] = {"Bucket": self._bucket, "Key": relative_path}
         if response_filename:
             params["ResponseContentDisposition"] = (

@@ -33,6 +33,7 @@ logger = logging.getLogger(__name__)
 # Value objects
 # ---------------------------------------------------------------------------
 
+
 @dataclass(frozen=True)
 class ObjectStat:
     """File/object metadata returned by StorageBackend.stat()."""
@@ -46,6 +47,7 @@ class ObjectStat:
 # ---------------------------------------------------------------------------
 # Protocol
 # ---------------------------------------------------------------------------
+
 
 @runtime_checkable
 class StorageBackend(Protocol):
@@ -119,6 +121,7 @@ class StorageBackend(Protocol):
 # Helpers (unchanged from Phase 3B)
 # ---------------------------------------------------------------------------
 
+
 def validate_mime_type(mime_type: str) -> None:
     """Validate that the MIME type is in the allowed list."""
     allowed = {m.strip() for m in settings.allowed_mime_types.split(",")}
@@ -152,6 +155,7 @@ async def virus_scan_hook(file_path: Path) -> None:
 # ---------------------------------------------------------------------------
 # LocalStorageBackend
 # ---------------------------------------------------------------------------
+
 
 class LocalStorageBackend:
     """Store files on the local filesystem under UPLOAD_DIR.
@@ -321,6 +325,7 @@ def _get_s3_session() -> Any:
     global _s3_session
     if _s3_session is None:
         import aioboto3  # noqa: PLC0415
+
         _s3_session = aioboto3.Session()
     return _s3_session
 
@@ -346,6 +351,7 @@ class S3StorageBackend:
         }
         if cfg.s3_force_path_style:
             from aiobotocore.config import AioConfig  # noqa: PLC0415
+
             self._client_kwargs["config"] = AioConfig(s3={"addressing_style": "path"})
 
     def _client(self) -> Any:
@@ -377,9 +383,7 @@ class S3StorageBackend:
 
             safe_name = f"{uuid.uuid4().hex}_{filename}"
             key = (
-                f"{subdirectory}/{safe_name}".lstrip("/")
-                if subdirectory
-                else safe_name
+                f"{subdirectory}/{safe_name}".lstrip("/") if subdirectory else safe_name
             )
 
             put_kwargs: dict[str, Any] = {
@@ -546,7 +550,9 @@ class S3StorageBackend:
                     resp = await s3.head_object(Bucket=self._bucket, Key=relative_path)
                 except ClientError as exc:
                     if exc.response["Error"]["Code"] in ("404", "NoSuchKey"):
-                        raise NotFoundError("File not found", error_code="ERR-UPLOAD-404")
+                        raise NotFoundError(
+                            "File not found", error_code="ERR-UPLOAD-404"
+                        )
                     raise
 
             return ObjectStat(
@@ -561,7 +567,10 @@ class S3StorageBackend:
 # Factory + singleton
 # ---------------------------------------------------------------------------
 
-def build_storage_backend(cfg: Settings | None = None) -> LocalStorageBackend | S3StorageBackend:
+
+def build_storage_backend(
+    cfg: Settings | None = None,
+) -> LocalStorageBackend | S3StorageBackend:
     """Return the configured storage backend driven by STORAGE_BACKEND setting."""
     if cfg is None:
         cfg = settings

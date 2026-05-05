@@ -32,12 +32,8 @@ from app.schemas.programs import AcademicSnapshotCreateRequest
 from app.services.academic_snapshot_service import AcademicSnapshotService
 from app.services.transcript_service import TranscriptService
 
-snapshots_router = APIRouter(
-    prefix="/academic-snapshots", tags=["erp-snapshots"]
-)
-student_snapshots_router = APIRouter(
-    prefix="/students", tags=["erp-snapshots"]
-)
+snapshots_router = APIRouter(prefix="/academic-snapshots", tags=["erp-snapshots"])
+student_snapshots_router = APIRouter(prefix="/students", tags=["erp-snapshots"])
 
 
 @snapshots_router.post(

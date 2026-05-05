@@ -123,9 +123,7 @@ def setup_service(monkeypatch: pytest.MonkeyPatch):
     uow = FakeUnitOfWork()
 
     monkeypatch.setattr(program_module, "UnitOfWork", lambda _db: uow)
-    monkeypatch.setattr(
-        program_module, "AuditService", lambda _session: AsyncMock()
-    )
+    monkeypatch.setattr(program_module, "AuditService", lambda _session: AsyncMock())
     return service, uow
 
 
@@ -151,9 +149,7 @@ class TestAssignProgramInvariants:
             )
 
     @pytest.mark.asyncio
-    async def test_missing_enrollment_raises_404(
-        self, monkeypatch: pytest.MonkeyPatch
-    ):
+    async def test_missing_enrollment_raises_404(self, monkeypatch: pytest.MonkeyPatch):
         service, _uow = setup_service(monkeypatch)
         auth = make_auth("ADM")
         service._fetch_enrollment = AsyncMock(return_value=None)
@@ -169,15 +165,11 @@ class TestAssignProgramInvariants:
             )
 
     @pytest.mark.asyncio
-    async def test_inactive_program_raises_409(
-        self, monkeypatch: pytest.MonkeyPatch
-    ):
+    async def test_inactive_program_raises_409(self, monkeypatch: pytest.MonkeyPatch):
         service, _uow = setup_service(monkeypatch)
         auth = make_auth("ADM")
 
-        enrollment = make_enrollment(
-            school_id=auth.school_id, student_id=uuid.uuid4()
-        )
+        enrollment = make_enrollment(school_id=auth.school_id, student_id=uuid.uuid4())
         program = make_program(school_id=auth.school_id, is_active=False)
         service._fetch_enrollment = AsyncMock(return_value=enrollment)
         service._fetch_program = AsyncMock(return_value=program)
@@ -193,9 +185,7 @@ class TestAssignProgramInvariants:
             )
 
     @pytest.mark.asyncio
-    async def test_same_program_no_op_raises_409(
-        self, monkeypatch: pytest.MonkeyPatch
-    ):
+    async def test_same_program_no_op_raises_409(self, monkeypatch: pytest.MonkeyPatch):
         service, _uow = setup_service(monkeypatch)
         auth = make_auth("ADM")
 
@@ -346,9 +336,7 @@ class TestAssignProgramInvariants:
         # Exactly one event row, from old → new, linking both enrollments.
         from app.models.erp import ProgramAssignmentEvent
 
-        events = [
-            o for o in uow.added if isinstance(o, ProgramAssignmentEvent)
-        ]
+        events = [o for o in uow.added if isinstance(o, ProgramAssignmentEvent)]
         assert len(events) == 1
         event = events[0]
         assert event.from_program_id == old_program.id
@@ -373,9 +361,7 @@ class TestSchoolBoundary:
         auth = make_auth("ADM", school_id=uuid.uuid4())
 
         # Enrollment belongs to a *different* school.
-        enrollment = make_enrollment(
-            school_id=uuid.uuid4(), student_id=uuid.uuid4()
-        )
+        enrollment = make_enrollment(school_id=uuid.uuid4(), student_id=uuid.uuid4())
         service._fetch_enrollment = AsyncMock(return_value=enrollment)
 
         with pytest.raises(NotFoundError):
