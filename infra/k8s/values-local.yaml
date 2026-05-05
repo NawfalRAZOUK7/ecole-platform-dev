@@ -46,6 +46,10 @@ backend:
     ENABLE_STRICT_RATE_LIMIT: "false"
     UPLOAD_DIR: /app/uploads
     MAX_FILE_SIZE_MB: "50"
+    # Local k8s uses emptyDir for uploads — data is ephemeral.
+    # Run the docker-compose dev stack for persistent MinIO-backed storage.
+    STORAGE_BACKEND: "local"
+    DOCUMENT_STORAGE_BACKEND: "local"
     TOTP_ISSUER: EcolePlatform
     TZ: Africa/Casablanca
     JWT_ALGORITHM: HS256

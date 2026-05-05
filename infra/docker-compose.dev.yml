@@ -208,12 +208,14 @@ services:
 
   # ==================== Vite Web Frontend ====================
   web:
-    image: node:22-alpine
+    build:
+      context: ../web
+      dockerfile: Dockerfile.dev
     container_name: ecole-web
     working_dir: /app
     environment:
       VITE_API_PROXY_TARGET: http://backend:8000
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    command: sh -c "npm ci && npm run dev -- --host 0.0.0.0"
     ports:
       - "5173:5173"
     volumes:

@@ -50,6 +50,9 @@ build-prod:
 # ==================== Staging ====================
 
 staging-up:
+	@echo "Starting staging environment..."
+	@test -f infra/secrets/jwt_secret_key.txt || (echo "Missing infra/secrets/jwt_secret_key.txt" && exit 1)
+	@test -f infra/secrets/db_password.txt || (echo "Missing infra/secrets/db_password.txt" && exit 1)
 	$(DC_STAGING) up -d --build
 
 staging-down:

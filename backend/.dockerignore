@@ -11,3 +11,12 @@ __pycache__/
 coverage.xml
 coverage-*.xml
 .DS_Store
+.git/
+.github/
+*.env
+.env.*
+docker-compose*
+Makefile
+*.md
+pyproject.toml
+*.toml

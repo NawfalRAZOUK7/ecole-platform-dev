@@ -470,7 +470,7 @@ services:
   # Runs once to obtain/renew certs, then exits.
   # Automated renewal via infra/scripts/ssl-renew.sh (cron).
   certbot:
-    image: certbot/certbot:latest
+    image: certbot/certbot:v2.11.0
     container_name: ecole-prod-certbot
     volumes:
       - ./certs:/etc/letsencrypt

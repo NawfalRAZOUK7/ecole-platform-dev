@@ -994,23 +994,39 @@ jobs:
       - name: Run k6 login scenario
         run: |
           k6 run tests/load/scenario1_logins.js \
-            --env BASE_URL=http://localhost:8000/api/v1
+            --env BASE_URL=http://localhost:8000/api/v1 \
+            --out json=k6-results-scenario1.json \
+            --summary-trend-stats="avg,p(90),p(95),p(99)"
 
       - name: Run k6 GET requests scenario
         run: |
           k6 run tests/load/scenario2_get_requests.js \
-            --env BASE_URL=http://localhost:8000/api/v1
+            --env BASE_URL=http://localhost:8000/api/v1 \
+            --out json=k6-results-scenario2.json \
+            --summary-trend-stats="avg,p(90),p(95),p(99)"
 
       - name: Run k6 file upload scenario
         run: |
           k6 run tests/load/scenario3_file_uploads.js \
-            --env BASE_URL=http://localhost:8000/api/v1
+            --env BASE_URL=http://localhost:8000/api/v1 \
+            --out json=k6-results-scenario3.json \
+            --summary-trend-stats="avg,p(90),p(95),p(99)"
 
       - name: Run k6 WebSocket scenario
         run: |
           k6 run tests/load/scenario4_websocket.js \
             --env BASE_URL=http://localhost:8000/api/v1 \
-            --env WS_URL=ws://localhost:8000/api/v1/ws
+            --env WS_URL=ws://localhost:8000/api/v1/ws \
+            --out json=k6-results-scenario4.json \
+            --summary-trend-stats="avg,p(90),p(95),p(99)"
+
+      - name: Upload k6 results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-load-test-results
+          path: k6-results-*.json
+          retention-days: 30
 
   publish-images:
     name: Publish Images

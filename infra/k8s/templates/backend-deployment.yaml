@@ -7,6 +7,12 @@ metadata:
     app.kubernetes.io/component: backend
 spec:
   replicas: {{ .Values.backend.replicas }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  minReadySeconds: 15
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ .Chart.Name }}
@@ -29,7 +35,17 @@ spec:
         - name: migrate
           image: "{{ .Values.images.backend.repository }}:{{ .Values.images.backend.tag }}"
           imagePullPolicy: {{ .Values.images.backend.pullPolicy }}
-          command: ["alembic", "upgrade", "head"]
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Waiting for database to be ready..."
+              for i in $(seq 1 30); do
+                python -c "import asyncpg, asyncio, os; asyncio.run(asyncpg.connect(os.environ['DATABASE_URL']))" 2>/dev/null && break
+                echo "Attempt $i/30: DB not ready, retrying in 5s..."
+                sleep 5
+              done
+              alembic upgrade head
           envFrom:
             - configMapRef:
                 name: {{ include "ecole.fullname" . }}-config
@@ -43,6 +59,10 @@ spec:
         - name: backend
           image: "{{ .Values.images.backend.repository }}:{{ .Values.images.backend.tag }}"
           imagePullPolicy: {{ .Values.images.backend.pullPolicy }}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
           ports:
             - containerPort: {{ .Values.backend.port }}
               protocol: TCP

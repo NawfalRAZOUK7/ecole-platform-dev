@@ -141,18 +141,22 @@ jobs:
 
       - name: Post-deploy health check
         run: |
-          # Wait for the backend to be healthy
+          kubectl port-forward \
+            -n ${{ steps.env.outputs.namespace }} \
+            deploy/ecole-platform-ecole-platform-backend \
+            18000:8000 &
+          PF_PID=$!
+          sleep 3
           for i in $(seq 1 30); do
-            STATUS=$(kubectl exec -n ${{ steps.env.outputs.namespace }} \
-              deploy/ecole-platform-ecole-platform-backend -- \
-              python -c "import httpx; print(httpx.get('http://localhost:8000/api/v1/health').status_code)" 2>/dev/null || echo "0")
-            if [ "$STATUS" = "200" ]; then
-              echo "Health check passed"
+            if curl -sf http://localhost:18000/api/v1/health; then
+              echo "Health check passed on attempt $i"
+              kill $PF_PID 2>/dev/null || true
               exit 0
             fi
-            echo "Attempt $i: status=$STATUS, retrying..."
+            echo "Attempt $i: not healthy yet, waiting 5s..."
             sleep 5
           done
+          kill $PF_PID 2>/dev/null || true
           echo "Health check failed after 30 attempts"
           exit 1
 
