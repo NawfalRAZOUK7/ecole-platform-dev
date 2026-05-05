@@ -12,12 +12,14 @@ from pydantic import BaseModel, Field, model_validator
 class ReportGenerateRequest(BaseModel):
     type: str = Field(
         ...,
-        pattern="^(student_report_card|class_summary|attendance_report|billing_statement|school_analytics)$",
+        pattern="^(student_report_card|class_summary|attendance_report|billing_statement|school_analytics|invoice_pdf|payment_receipt)$",
     )
     period_id: uuid.UUID | None = None
     class_id: uuid.UUID | None = None
     student_id: uuid.UUID | None = None
     parent_id: uuid.UUID | None = None
+    invoice_id: str | None = None
+    payment_id: str | None = None
     from_date: date | None = None
     to_date: date | None = None
     locale: str = Field(default="fr", pattern="^(fr|ar|en)$")

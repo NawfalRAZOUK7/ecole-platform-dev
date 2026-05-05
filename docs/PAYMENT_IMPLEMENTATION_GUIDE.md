@@ -582,18 +582,18 @@
 
 **Checklist**:
 
-- [ ] Endpoint path correct
-- [ ] POST method used
-- [ ] Permission check added
-- [ ] ReportsService imported
-- [ ] ReportGenerateRequest imported
-- [ ] Request built correctly
-- [ ] submit_report_job() called
-- [ ] Job response returned
-- [ ] Language query parameter added
-- [ ] Language validation added
-- [ ] Error handling for invalid invoice_id
-- [ ] Error handling for permission denied
+- [x] Endpoint path correct
+- [x] POST method used
+- [x] Permission check added
+- [x] ReportsService imported
+- [x] ReportGenerateRequest imported
+- [x] Request built correctly
+- [x] submit_report_job() called
+- [x] Job response returned
+- [x] Language query parameter added
+- [x] Language validation added
+- [x] Error handling for invalid invoice_id
+- [x] Error handling for permission denied
 
 ---
 
@@ -628,18 +628,18 @@
 
 **Checklist**:
 
-- [ ] Endpoint path correct
-- [ ] POST method used
-- [ ] Permission check added
-- [ ] ReportsService imported
-- [ ] ReportGenerateRequest imported
-- [ ] Request built correctly
-- [ ] submit_report_job() called
-- [ ] Job response returned
-- [ ] Language query parameter added
-- [ ] Language validation added
-- [ ] Error handling for invalid payment_id
-- [ ] Error handling for permission denied
+- [x] Endpoint path correct
+- [x] POST method used
+- [x] Permission check added
+- [x] ReportsService imported
+- [x] ReportGenerateRequest imported
+- [x] Request built correctly
+- [x] submit_report_job() called
+- [x] Job response returned
+- [x] Language query parameter added
+- [x] Language validation added
+- [x] Error handling for invalid payment_id
+- [x] Error handling for permission denied
 
 ---
 
