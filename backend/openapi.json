@@ -2370,11 +2370,29 @@
               "format": "uuid",
               "title": "Assignment Id"
             }
+          },
+          {
+            "name": "as",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Pass \"metadata\" to receive JSON instead of a 302 redirect.",
+              "title": "As"
+            },
+            "description": "Pass \"metadata\" to receive JSON instead of a 302 redirect."
           }
         ],
         "responses": {
           "200": {
-            "description": "PDF file binary",
+            "description": "PDF file binary or presigned redirect",
             "content": {
               "application/json": {
                 "schema": {}
@@ -2628,11 +2646,29 @@
               "format": "uuid",
               "title": "File Id"
             }
+          },
+          {
+            "name": "as",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Pass \"metadata\" to receive JSON instead of a 302 redirect.",
+              "title": "As"
+            },
+            "description": "Pass \"metadata\" to receive JSON instead of a 302 redirect."
           }
         ],
         "responses": {
           "200": {
-            "description": "File binary content",
+            "description": "File binary content or presigned redirect",
             "content": {
               "application/json": {
                 "schema": {}
@@ -3191,11 +3227,29 @@
               "format": "uuid",
               "title": "Content Item Id"
             }
+          },
+          {
+            "name": "as",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Pass \"metadata\" to receive JSON instead of a 302 redirect.",
+              "title": "As"
+            },
+            "description": "Pass \"metadata\" to receive JSON instead of a 302 redirect."
           }
         ],
         "responses": {
           "200": {
-            "description": "Binary content stream",
+            "description": "Binary content stream or presigned redirect",
             "content": {
               "application/json": {
                 "schema": {}
@@ -3471,11 +3525,29 @@
               "format": "uuid",
               "title": "Asset Id"
             }
+          },
+          {
+            "name": "as",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Pass \"metadata\" to receive JSON instead of a 302 redirect.",
+              "title": "As"
+            },
+            "description": "Pass \"metadata\" to receive JSON instead of a 302 redirect."
           }
         ],
         "responses": {
           "200": {
-            "description": "File binary content",
+            "description": "File binary content or presigned redirect",
             "content": {
               "application/json": {
                 "schema": {}
@@ -19960,6 +20032,24 @@
               "type": "integer",
               "title": "Version Number"
             }
+          },
+          {
+            "name": "as",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Pass \"metadata\" to receive JSON instead of a 302 redirect.",
+              "title": "As"
+            },
+            "description": "Pass \"metadata\" to receive JSON instead of a 302 redirect."
           }
         ],
         "responses": {
@@ -20177,6 +20267,24 @@
               ],
               "title": "Token"
             }
+          },
+          {
+            "name": "as",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Pass \"metadata\" to receive JSON instead of a 302 redirect.",
+              "title": "As"
+            },
+            "description": "Pass \"metadata\" to receive JSON instead of a 302 redirect."
           }
         ],
         "responses": {
@@ -20923,6 +21031,24 @@
               ],
               "title": "Token"
             }
+          },
+          {
+            "name": "as",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Pass \"metadata\" to receive JSON instead of a 302 redirect.",
+              "title": "As"
+            },
+            "description": "Pass \"metadata\" to receive JSON instead of a 302 redirect."
           }
         ],
         "responses": {
@@ -21033,6 +21159,155 @@
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/uploads/init": {
+      "post": {
+        "tags": [
+          "uploads"
+        ],
+        "summary": "Initialise a direct upload",
+        "description": "Authorise and initialise a direct-to-MinIO upload.\n\nReturns a presigned PUT URL the client should use directly.\nThe object is not visible to users until POST /uploads/complete is called\nand the post-upload virus scan passes.",
+        "operationId": "init_upload_api_v1_uploads_init_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InitUploadRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Presigned PUT URL and upload session ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Init Upload Api V1 Uploads Init Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/uploads/complete": {
+      "post": {
+        "tags": [
+          "uploads"
+        ],
+        "summary": "Complete a direct upload",
+        "description": "Signal upload completion and enqueue the post-upload scan job.\n\nThe backend HEAD-verifies the object exists in MinIO and matches the\ndeclared size before transitioning state. The upload is NOT yet visible\nto users — that happens only after the scan passes.",
+        "operationId": "complete_upload_api_v1_uploads_complete_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteUploadRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Upload session transitioned to scanning state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Complete Upload Api V1 Uploads Complete Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/uploads/{upload_id}/status": {
+      "get": {
+        "tags": [
+          "uploads"
+        ],
+        "summary": "Poll upload state",
+        "description": "Return the current state of an upload session.\n\n`target_id` is populated only when `state == available`.\nThe client should use `target_id` + `target_kind` to reload the\nfinalised entity (e.g. ContentItemAsset, SubmissionFile).",
+        "operationId": "get_upload_status_api_v1_uploads__upload_id__status_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "upload_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Upload Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current upload session state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Upload Status Api V1 Uploads  Upload Id  Status Get"
+                }
               }
             }
           },
@@ -22049,6 +22324,166 @@
         }
       }
     },
+    "/api/v1/academic-snapshots/{snapshot_id}/transcript": {
+      "get": {
+        "tags": [
+          "erp-snapshots"
+        ],
+        "summary": "Render transcript from a frozen academic snapshot",
+        "operationId": "get_snapshot_transcript_api_v1_academic_snapshots__snapshot_id__transcript_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "snapshot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Snapshot Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/academic-snapshots/{snapshot_id}/transcript/html": {
+      "get": {
+        "tags": [
+          "erp-snapshots"
+        ],
+        "summary": "Render transcript HTML preview from a frozen academic snapshot",
+        "operationId": "get_snapshot_transcript_html_api_v1_academic_snapshots__snapshot_id__transcript_html_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "snapshot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Snapshot Id"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "fr",
+              "title": "Lang"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/academic-snapshots/{snapshot_id}/transcript/pdf": {
+      "get": {
+        "tags": [
+          "erp-snapshots"
+        ],
+        "summary": "Render transcript PDF from a frozen academic snapshot",
+        "operationId": "get_snapshot_transcript_pdf_api_v1_academic_snapshots__snapshot_id__transcript_pdf_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "snapshot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Snapshot Id"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "fr",
+              "title": "Lang"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/students/{student_id}/snapshots": {
       "get": {
         "tags": [
@@ -22443,6 +22878,228 @@
         "responses": {
           "200": {
             "description": "Current program summary or null",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/students/{student_id}/transcript": {
+      "get": {
+        "tags": [
+          "erp-academic-history"
+        ],
+        "summary": "Student transcript for an academic year",
+        "operationId": "get_student_transcript_api_v1_students__student_id__transcript_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "student_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Student Id"
+            }
+          },
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Academic Year Id"
+            }
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "preview = live render, snapshot = latest frozen snapshot",
+              "default": "preview",
+              "title": "Mode"
+            },
+            "description": "preview = live render, snapshot = latest frozen snapshot"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Live preview or latest snapshot transcript",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/students/{student_id}/transcript/html": {
+      "get": {
+        "tags": [
+          "erp-academic-history"
+        ],
+        "summary": "Student transcript HTML preview for an academic year",
+        "operationId": "get_student_transcript_html_api_v1_students__student_id__transcript_html_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "student_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Student Id"
+            }
+          },
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Academic Year Id"
+            }
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "preview",
+              "title": "Mode"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "fr",
+              "title": "Lang"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/students/{student_id}/transcript/pdf": {
+      "get": {
+        "tags": [
+          "erp-academic-history"
+        ],
+        "summary": "Student transcript PDF for an academic year",
+        "operationId": "get_student_transcript_pdf_api_v1_students__student_id__transcript_pdf_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "student_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Student Id"
+            }
+          },
+          {
+            "name": "academic_year_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Academic Year Id"
+            }
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "preview",
+              "title": "Mode"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "fr",
+              "title": "Lang"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {}
@@ -24014,6 +24671,40 @@
         ],
         "title": "CommentCreate",
         "description": "Request body for adding a comment."
+      },
+      "CompleteUploadRequest": {
+        "properties": {
+          "upload_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Upload Id"
+          },
+          "sha256": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sha256",
+            "description": "Hex SHA-256 of the uploaded file, used for integrity check"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Size Bytes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "upload_id",
+          "size_bytes"
+        ],
+        "title": "CompleteUploadRequest"
       },
       "ComplianceReportGenerateRequest": {
         "properties": {
@@ -26042,6 +26733,42 @@
         },
         "type": "object",
         "title": "HolidayUpdateRequest"
+      },
+      "InitUploadRequest": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/UploadKind"
+          },
+          "filename": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Filename"
+          },
+          "mime_type": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 1,
+            "title": "Mime Type"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Size Bytes"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/UploadScope"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "filename",
+          "mime_type",
+          "size_bytes",
+          "scope"
+        ],
+        "title": "InitUploadRequest"
       },
       "InviteConsumeRequest": {
         "properties": {
@@ -30595,6 +31322,67 @@
           "code"
         ],
         "title": "TwoFactorVerifySetupRequest"
+      },
+      "UploadKind": {
+        "type": "string",
+        "enum": [
+          "assignment_pdf",
+          "submission_file",
+          "content_asset",
+          "video",
+          "audio"
+        ],
+        "title": "UploadKind"
+      },
+      "UploadScope": {
+        "properties": {
+          "school_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "School Id"
+          },
+          "assignment_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignment Id"
+          },
+          "submission_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submission Id"
+          },
+          "content_item_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Item Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "school_id"
+        ],
+        "title": "UploadScope"
       },
       "ValidationError": {
         "properties": {

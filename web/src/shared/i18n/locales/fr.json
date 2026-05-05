@@ -1969,6 +1969,7 @@
     "level": "Niveau",
     "file": "Fichier",
     "uploading": "Envoi en cours",
+    "scanning": "Analyse en cours…",
     "upload": "Telecharger",
     "uploadSuccess": "Telechargement reussi !",
     "uploadSuccessMsg": "Votre contenu a ete telecharge dans la bibliotheque de l'ecole.",

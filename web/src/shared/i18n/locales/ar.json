@@ -1803,6 +1803,7 @@
     "level": "المستوى",
     "file": "الملف",
     "uploading": "جاري الرفع",
+    "scanning": "جاري الفحص\u2026",
     "upload": "رفع",
     "uploadSuccess": "تم الرفع بنجاح!",
     "uploadSuccessMsg": "تم رفع المحتوى إلى مكتبة المدرسة.",

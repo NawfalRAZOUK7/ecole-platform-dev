@@ -1,4 +1,11 @@
-import { getAccessToken, api, getDownloadUrl, type DownloadMetadata } from '@/services/api/client';
+import {
+  getAccessToken,
+  getSchoolId,
+  api,
+  getDownloadUrl,
+  type DownloadMetadata,
+} from '@/services/api/client';
+import { directUpload, shouldUseDirect } from '@/services/uploads/directUpload';
 
 export interface AssignmentOption {
   id: string;
@@ -28,12 +35,25 @@ export const submissionsService = {
     });
   },
 
-  uploadSubmissionFile(
+  async uploadSubmissionFile(
     submissionId: string,
     file: File,
     fileTypeHint?: string,
     onProgress?: (completed: number) => void,
   ) {
+    if (shouldUseDirect(file, 'submission_file')) {
+      const schoolId = getSchoolId();
+      if (!schoolId) throw new Error('No school context available');
+      await directUpload({
+        kind: 'submission_file',
+        scope: { school_id: schoolId, submission_id: submissionId },
+        file,
+        onProgress,
+      });
+      return;
+    }
+
+    // Small files: legacy multipart path through the backend
     return new Promise<void>((resolve, reject) => {
       const formData = new FormData();
       formData.append('file', file);

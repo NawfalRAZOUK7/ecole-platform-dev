@@ -1783,6 +1783,7 @@
     "level": "Level",
     "file": "File",
     "uploading": "Uploading",
+    "scanning": "Scanning file\u2026",
     "upload": "Upload",
     "uploadSuccess": "Upload Successful!",
     "uploadSuccessMsg": "Your content has been uploaded to the school library.",

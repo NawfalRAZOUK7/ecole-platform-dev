@@ -24,6 +24,17 @@ export function getAccessToken(): string | null {
   return accessToken;
 }
 
+// In-memory school ID — set alongside accessToken on login/restore, cleared on logout
+let _schoolId: string | null = null;
+
+export function setSchoolId(id: string | null): void {
+  _schoolId = id;
+}
+
+export function getSchoolId(): string | null {
+  return _schoolId;
+}
+
 function generateCorrelationId(): string {
   return crypto.randomUUID();
 }

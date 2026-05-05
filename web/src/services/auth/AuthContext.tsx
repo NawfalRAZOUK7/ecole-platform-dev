@@ -18,7 +18,13 @@ import {
   type ReactNode,
 } from 'react';
 
-import { api, setAccessToken, ApiClientError, type ApiError } from '@/services/api/client';
+import {
+  api,
+  setAccessToken,
+  setSchoolId,
+  ApiClientError,
+  type ApiError,
+} from '@/services/api/client';
 
 export interface UserProfile {
   id: string;
@@ -147,6 +153,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // Fetch user profile
         const profileResp = await api.get<UserProfile>('/auth/me');
         if (!cancelled) {
+          setSchoolId(profileResp.data.school_id);
           setState({
             user: profileResp.data,
             isAuthenticated: true,
@@ -211,6 +218,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // Fetch profile
       const profileResp = await api.get<UserProfile>('/auth/me');
+      setSchoolId(profileResp.data.school_id);
       setState({
         user: profileResp.data,
         isAuthenticated: true,
@@ -260,6 +268,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setAccessToken(token);
 
         const profileResp = await api.get<UserProfile>('/auth/me');
+        setSchoolId(profileResp.data.school_id);
         setState({
           user: profileResp.data,
           isAuthenticated: true,
@@ -286,6 +295,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Ignore logout errors
     } finally {
       setAccessToken(null);
+      setSchoolId(null);
       setState({
         user: null,
         isAuthenticated: false,

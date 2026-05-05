@@ -147,7 +147,9 @@ export function ContentUploadPanel() {
           {uploadMutation.isPending && (
             <div style={{ marginBottom: 12 }}>
               <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 4 }}>
-                {t('teacherContent.uploading')} {progress}%
+                {progress < 100
+                  ? `${t('teacherContent.uploading')} ${progress}%`
+                  : t('teacherContent.scanning')}
               </div>
               <div style={{ height: 6, background: 'var(--color-bg-secondary)', borderRadius: 3 }}>
                 <div
@@ -155,8 +157,9 @@ export function ContentUploadPanel() {
                     height: '100%',
                     borderRadius: 3,
                     background: 'var(--color-primary)',
-                    width: `${progress}%`,
-                    transition: 'width 0.3s',
+                    width: progress < 100 ? `${progress}%` : '100%',
+                    transition: progress < 100 ? 'width 0.3s' : 'none',
+                    animation: progress >= 100 ? 'pulse 1.5s ease-in-out infinite' : 'none',
                   }}
                 />
               </div>

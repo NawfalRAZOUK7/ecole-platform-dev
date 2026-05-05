@@ -1,4 +1,5 @@
-import { api, getAccessToken } from '@/services/api/client';
+import { api, getAccessToken, getSchoolId } from '@/services/api/client';
+import { directUpload, shouldUseDirect, type UploadKind } from '@/services/uploads/directUpload';
 import { quizzesService, type QuizPayload } from '@/features/quizzes/quizzes.service';
 
 export interface TeacherCursorFilters extends Record<string, string | number | undefined> {
@@ -301,8 +302,6 @@ export const teacherService = {
   },
 
   async uploadContentItem(payload: ContentUploadPayload, onProgress?: (progress: number) => void) {
-    onProgress?.(15);
-
     const createResponse = await api.post<{ id: string }>('/cms/content', {
       title: payload.title.trim(),
       description: payload.description?.trim() || null,
@@ -313,13 +312,37 @@ export const teacherService = {
       status: 'draft',
     });
 
-    onProgress?.(55);
+    const contentItemId = createResponse.data.id;
 
+    const kindMap: Record<string, UploadKind> = {
+      video: 'video',
+      audio: 'audio',
+      pdf: 'content_asset',
+      interactive: 'content_asset',
+      story: 'content_asset',
+      coloring_book: 'content_asset',
+    };
+    const kind: UploadKind = kindMap[payload.content_type] ?? 'content_asset';
+
+    if (shouldUseDirect(payload.file, kind)) {
+      const schoolId = getSchoolId();
+      if (!schoolId) throw new Error('No school context available');
+      await directUpload({
+        kind,
+        scope: { school_id: schoolId, content_item_id: contentItemId },
+        file: payload.file,
+        onProgress,
+      });
+      return;
+    }
+
+    // Small files: legacy multipart path through the backend
+    onProgress?.(15);
     const formData = new FormData();
     formData.append('file', payload.file);
 
     const token = getAccessToken();
-    const uploadResponse = await fetch(`/api/v1/content-items/${createResponse.data.id}/assets`, {
+    const uploadResponse = await fetch(`/api/v1/content-items/${contentItemId}/assets`, {
       method: 'POST',
       body: formData,
       credentials: 'include',
