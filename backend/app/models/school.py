@@ -44,6 +44,22 @@ class School(TimestampMixin, SoftDeleteMixin, Base):
     website: Mapped[str | None] = mapped_column(String(500), nullable=True)
     logo_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
+    # Banking details (G50E - Invoice PDF support)
+    rib: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    iban: Mapped[str | None] = mapped_column(String(34), nullable=True)
+    bic: Mapped[str | None] = mapped_column(String(11), nullable=True)
+    bank_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    # TVA compliance fields
+    tva_number: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    tax_id: Mapped[str | None] = mapped_column(String(50), nullable=True)
+
+    # Branding fields for invoice PDFs
+    brand_color: Mapped[str | None] = mapped_column(String(7), nullable=True)
+    footer_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    stamp_image_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    signature_image_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+
     max_students: Mapped[int | None] = mapped_column(Integer, nullable=True)
     max_teachers: Mapped[int | None] = mapped_column(Integer, nullable=True)
     subscription_plan: Mapped[str | None] = mapped_column(String(50), nullable=True)

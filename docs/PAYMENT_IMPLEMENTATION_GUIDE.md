@@ -92,12 +92,12 @@
 
 **Checklist**:
 
-- [ ] All 10 fields added to School model
-- [ ] All fields use `Mapped[str | None]` for nullable strings
-- [ ] Correct String lengths specified
-- [ ] Text type used for long text fields
-- [ ] Model passes type checking
-- [ ] No syntax errors
+- [x] All 10 fields added to School model
+- [x] All fields use `Mapped[str | None]` for nullable strings
+- [x] Correct String lengths specified
+- [x] Text type used for long text fields
+- [x] Model passes type checking
+- [x] No syntax errors
 
 ---
 
