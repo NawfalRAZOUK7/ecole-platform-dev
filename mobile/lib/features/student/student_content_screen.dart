@@ -5,10 +5,16 @@
 /// API: GET /classes/{classId}/content, POST /content-items/{id}/progress
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:pdf_render/pdf_render_widgets.dart';
+import 'package:video_player/video_player.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/quiz.dart';
@@ -456,6 +462,14 @@ class _DownloadButtonState extends State<_DownloadButton> {
 
 // ── Content Player ──
 
+String _streamPath(AssignedContent item) {
+  final streamUrl = item.streamUrl?.trim();
+  if (streamUrl != null && streamUrl.isNotEmpty) {
+    return streamUrl;
+  }
+  return '/content-items/${item.contentItemId}/stream';
+}
+
 class _ContentPlayer extends StatelessWidget {
   final AssignedContent item;
   final VoidCallback onBack;
@@ -480,7 +494,6 @@ class _ContentPlayer extends StatelessWidget {
         ),
         title: Text(item.title, overflow: TextOverflow.ellipsis),
         actions: [
-          // Mark as completed
           TextButton.icon(
             onPressed: () {
               onProgress('completed');
@@ -498,10 +511,7 @@ class _ContentPlayer extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // Player area
-          Expanded(child: _buildPlayer(context, type)),
-
-          // Info bar
+          Expanded(child: _buildPlayer(type)),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -546,160 +556,630 @@ class _ContentPlayer extends StatelessWidget {
     );
   }
 
-  Widget _buildPlayer(BuildContext context, String type) {
-    final theme = Theme.of(context);
-    final playerBackground = theme.brightness == Brightness.dark
-        ? theme.colorScheme.surfaceContainerHighest
-        : theme.colorScheme.onSurface;
-    final onPlayerBackground = theme.brightness == Brightness.dark
-        ? theme.colorScheme.onSurface
-        : theme.colorScheme.surface;
-
+  Widget _buildPlayer(String type) {
+    final path = _streamPath(item);
     switch (type) {
       case 'VIDEO':
-        // Use platform video player via URL launch or show placeholder
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: double.infinity,
-                height: 220,
-                margin: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: playerBackground,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.play_circle_fill,
-                        size: 64, color: onPlayerBackground),
-                    const SizedBox(height: 12),
-                    Text(item.title,
-                        style: TextStyle(color: onPlayerBackground),
-                        textAlign: TextAlign.center),
-                    const SizedBox(height: 16),
-                    FilledButton.icon(
-                      onPressed: () {
-                        final url = item.streamUrl;
-                        if (url != null) {
-                          _showExternalLink(context, url);
-                        }
-                        onProgress('in_progress');
-                      },
-                      icon: const Icon(Icons.play_arrow),
-                      label: const Text('Lire la vidéo'),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+        return _SignedVideoPlayer(
+          path: path,
+          title: item.title,
+          onStarted: () => onProgress('in_progress'),
         );
-
       case 'AUDIO':
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.audiotrack,
-                  size: 80, color: theme.colorScheme.secondary),
-              const SizedBox(height: 24),
-              Text(item.title,
-                  style: theme.textTheme.titleMedium,
-                  textAlign: TextAlign.center),
-              const SizedBox(height: 24),
-              FilledButton.icon(
-                onPressed: () {
-                  final url = item.streamUrl;
-                  if (url != null) {
-                    _showExternalLink(context, url);
-                  }
-                  onProgress('in_progress');
-                },
-                icon: const Icon(Icons.play_arrow),
-                label: const Text('Écouter'),
-                style: FilledButton.styleFrom(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                ),
-              ),
-            ],
-          ),
+        return _SignedAudioPlayer(
+          path: path,
+          title: item.title,
+          onStarted: () => onProgress('in_progress'),
         );
-
       case 'DOCUMENT':
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.picture_as_pdf,
-                  size: 80, color: theme.colorScheme.primary),
-              const SizedBox(height: 24),
-              Text(item.title,
-                  style: theme.textTheme.titleMedium,
-                  textAlign: TextAlign.center),
-              const SizedBox(height: 24),
-              FilledButton.icon(
-                onPressed: () {
-                  final url = item.streamUrl;
-                  if (url != null) {
-                    _showExternalLink(context, url);
-                  }
-                  onProgress('in_progress');
-                },
-                icon: const Icon(Icons.open_in_new),
-                label: const Text('Ouvrir le document'),
-                style: FilledButton.styleFrom(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                ),
-              ),
-            ],
-          ),
+        return _SignedPdfPlayer(
+          path: path,
+          title: item.title,
+          contentItemId: item.contentItemId,
+          onOpened: () => onProgress('in_progress'),
         );
-
       case 'INTERACTIVE':
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.touch_app,
-                  size: 80, color: theme.semanticPalette.warning),
-              const SizedBox(height: 24),
-              Text(item.title,
-                  style: theme.textTheme.titleMedium,
-                  textAlign: TextAlign.center),
-              const SizedBox(height: 24),
-              FilledButton.icon(
-                onPressed: () {
-                  final url = item.streamUrl;
-                  if (url != null) {
-                    _showExternalLink(context, url);
-                  }
-                  onProgress('in_progress');
-                },
-                icon: const Icon(Icons.launch),
-                label: const Text('Ouvrir'),
-                style: FilledButton.styleFrom(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                ),
-              ),
-            ],
-          ),
+        return _SignedOpenFilePanel(
+          path: path,
+          title: item.title,
+          contentItemId: item.contentItemId,
+          onOpened: () => onProgress('in_progress'),
         );
-
       default:
         return const Center(child: Text('Type de contenu non supporté'));
     }
   }
+}
 
-  void _showExternalLink(BuildContext context, String url) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Lien externe: $url'),
+class _SignedVideoPlayer extends ConsumerStatefulWidget {
+  final String path;
+  final String title;
+  final VoidCallback onStarted;
+
+  const _SignedVideoPlayer({
+    required this.path,
+    required this.title,
+    required this.onStarted,
+  });
+
+  @override
+  ConsumerState<_SignedVideoPlayer> createState() => _SignedVideoPlayerState();
+}
+
+class _SignedVideoPlayerState extends ConsumerState<_SignedVideoPlayer>
+    with WidgetsBindingObserver {
+  VideoPlayerController? _controller;
+  String? _signedUrl;
+  bool _loading = true;
+  bool _recovering = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    unawaited(_load());
+  }
+
+  @override
+  void didUpdateWidget(covariant _SignedVideoPlayer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.path != widget.path) {
+      unawaited(_load(forceRefresh: true));
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.read(signedUrlCacheProvider).clearExpired();
+      unawaited(_load(preservePosition: true));
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _controller?.removeListener(_handleVideoValue);
+    unawaited(_controller?.dispose());
+    super.dispose();
+  }
+
+  Future<void> _load({
+    bool forceRefresh = false,
+    bool preservePosition = false,
+  }) async {
+    final previous = _controller;
+    final resumePosition = preservePosition ? previous?.value.position : null;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    try {
+      final url = await ref
+          .read(signedUrlCacheProvider)
+          .getUrl(widget.path, forceRefresh: forceRefresh);
+      if (!forceRefresh && url == _signedUrl && previous != null) {
+        if (mounted) setState(() => _loading = false);
+        return;
+      }
+
+      final controller = VideoPlayerController.networkUrl(Uri.parse(url));
+      controller.addListener(_handleVideoValue);
+      await controller.initialize();
+      if (resumePosition != null && resumePosition > Duration.zero) {
+        await controller.seekTo(resumePosition);
+      }
+      if (!mounted) {
+        await controller.dispose();
+        return;
+      }
+      previous?.removeListener(_handleVideoValue);
+      await previous?.dispose();
+      setState(() {
+        _controller = controller;
+        _signedUrl = url;
+        _loading = false;
+        _recovering = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = e.toString();
+      });
+    }
+  }
+
+  void _handleVideoValue() {
+    final controller = _controller;
+    if (controller == null || !controller.value.hasError || _recovering) {
+      return;
+    }
+    _recovering = true;
+    ref.read(signedUrlCacheProvider).invalidate(widget.path);
+    unawaited(_load(forceRefresh: true, preservePosition: true));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = _controller;
+    if (_loading && controller == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_error != null && controller == null) {
+      return _MediaError(
+          message: _error!, onRetry: () => _load(forceRefresh: true));
+    }
+    if (controller == null || !controller.value.isInitialized) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AspectRatio(
+              aspectRatio: controller.value.aspectRatio,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: VideoPlayer(controller),
+              ),
+            ),
+            const SizedBox(height: 12),
+            VideoProgressIndicator(
+              controller,
+              allowScrubbing: true,
+              padding: const EdgeInsets.symmetric(vertical: 8),
+            ),
+            Row(
+              children: [
+                IconButton.filled(
+                  onPressed: () {
+                    if (controller.value.isPlaying) {
+                      unawaited(controller.pause());
+                    } else {
+                      widget.onStarted();
+                      unawaited(controller.play());
+                    }
+                    setState(() {});
+                  },
+                  icon: Icon(controller.value.isPlaying
+                      ? Icons.pause
+                      : Icons.play_arrow),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    widget.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SignedAudioPlayer extends ConsumerStatefulWidget {
+  final String path;
+  final String title;
+  final VoidCallback onStarted;
+
+  const _SignedAudioPlayer({
+    required this.path,
+    required this.title,
+    required this.onStarted,
+  });
+
+  @override
+  ConsumerState<_SignedAudioPlayer> createState() => _SignedAudioPlayerState();
+}
+
+class _SignedAudioPlayerState extends ConsumerState<_SignedAudioPlayer>
+    with WidgetsBindingObserver {
+  final AudioPlayer _player = AudioPlayer();
+  StreamSubscription<Duration>? _positionSub;
+  StreamSubscription<Duration?>? _durationSub;
+  StreamSubscription<PlayerState>? _playerStateSub;
+  StreamSubscription<PlaybackEvent>? _playbackEventSub;
+  Duration _position = Duration.zero;
+  Duration _duration = Duration.zero;
+  bool _playing = false;
+  bool _loading = true;
+  bool _recovering = false;
+  String? _signedUrl;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _positionSub = _player.positionStream.listen((position) {
+      if (mounted) setState(() => _position = position);
+    });
+    _durationSub = _player.durationStream.listen((duration) {
+      if (mounted) setState(() => _duration = duration ?? Duration.zero);
+    });
+    _playerStateSub = _player.playerStateStream.listen((state) {
+      if (mounted) setState(() => _playing = state.playing);
+    });
+    _playbackEventSub = _player.playbackEventStream.listen(
+      (_) {},
+      onError: (_, __) => _recoverAfterAudioError(),
+    );
+    unawaited(_load());
+  }
+
+  @override
+  void didUpdateWidget(covariant _SignedAudioPlayer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.path != widget.path) {
+      unawaited(_load(forceRefresh: true));
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.read(signedUrlCacheProvider).clearExpired();
+      unawaited(_load(preservePosition: true));
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    unawaited(_positionSub?.cancel());
+    unawaited(_durationSub?.cancel());
+    unawaited(_playerStateSub?.cancel());
+    unawaited(_playbackEventSub?.cancel());
+    unawaited(_player.dispose());
+    super.dispose();
+  }
+
+  Future<void> _load({
+    bool forceRefresh = false,
+    bool preservePosition = false,
+  }) async {
+    final resumePosition = preservePosition ? _position : Duration.zero;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final url = await ref
+          .read(signedUrlCacheProvider)
+          .getUrl(widget.path, forceRefresh: forceRefresh);
+      if (!forceRefresh && url == _signedUrl) {
+        if (mounted) setState(() => _loading = false);
+        return;
+      }
+      await _player.setAudioSource(AudioSource.uri(Uri.parse(url)));
+      if (resumePosition > Duration.zero) {
+        await _player.seek(resumePosition);
+      }
+      if (!mounted) return;
+      setState(() {
+        _signedUrl = url;
+        _loading = false;
+        _recovering = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = e.toString();
+      });
+    }
+  }
+
+  void _recoverAfterAudioError() {
+    if (_recovering) return;
+    _recovering = true;
+    ref.read(signedUrlCacheProvider).invalidate(widget.path);
+    unawaited(_load(forceRefresh: true, preservePosition: true));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading && _signedUrl == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_error != null && _signedUrl == null) {
+      return _MediaError(
+          message: _error!, onRetry: () => _load(forceRefresh: true));
+    }
+
+    final max = _duration.inMilliseconds <= 0
+        ? 1.0
+        : _duration.inMilliseconds.toDouble();
+    final value = _position.inMilliseconds.clamp(0, max.toInt()).toDouble();
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.audiotrack,
+              size: 80,
+              color: Theme.of(context).colorScheme.secondary,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              widget.title,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 16),
+            Slider(
+              value: value,
+              max: max,
+              onChanged: (next) =>
+                  unawaited(_player.seek(Duration(milliseconds: next.round()))),
+            ),
+            IconButton.filled(
+              iconSize: 36,
+              onPressed: () {
+                if (_playing) {
+                  unawaited(_player.pause());
+                } else {
+                  widget.onStarted();
+                  unawaited(_player.play());
+                }
+              },
+              icon: Icon(_playing ? Icons.pause : Icons.play_arrow),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SignedPdfPlayer extends ConsumerStatefulWidget {
+  final String path;
+  final String title;
+  final String contentItemId;
+  final VoidCallback onOpened;
+
+  const _SignedPdfPlayer({
+    required this.path,
+    required this.title,
+    required this.contentItemId,
+    required this.onOpened,
+  });
+
+  @override
+  ConsumerState<_SignedPdfPlayer> createState() => _SignedPdfPlayerState();
+}
+
+class _SignedPdfPlayerState extends ConsumerState<_SignedPdfPlayer>
+    with WidgetsBindingObserver {
+  File? _file;
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    unawaited(_download());
+  }
+
+  @override
+  void didUpdateWidget(covariant _SignedPdfPlayer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.path != widget.path) {
+      unawaited(_download(forceRefresh: true));
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.read(signedUrlCacheProvider).clearExpired();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  Future<void> _download({bool forceRefresh = false}) async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      if (forceRefresh) {
+        ref.read(signedUrlCacheProvider).invalidate(widget.path);
+      }
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/content-${widget.contentItemId}.pdf');
+      final downloaded = await ref
+          .read(signedUrlCacheProvider)
+          .download(widget.path, savePath: file.path);
+      widget.onOpened();
+      if (!mounted) return;
+      setState(() {
+        _file = downloaded;
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = e.toString();
+      });
+    }
+  }
+
+  Future<void> _openExternally() async {
+    final file = _file;
+    if (file == null) return;
+    await OpenFilex.open(file.path);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading && _file == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_error != null && _file == null) {
+      return _MediaError(
+        message: _error!,
+        onRetry: () => _download(forceRefresh: true),
+      );
+    }
+    final file = _file;
+    if (file == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    return Column(
+      children: [
+        Align(
+          alignment: Alignment.centerRight,
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: OutlinedButton.icon(
+              onPressed: _openExternally,
+              icon: const Icon(Icons.open_in_new),
+              label: const Text('Ouvrir'),
+            ),
+          ),
+        ),
+        Expanded(child: PdfViewer.openFile(file.path)),
+      ],
+    );
+  }
+}
+
+class _SignedOpenFilePanel extends ConsumerStatefulWidget {
+  final String path;
+  final String title;
+  final String contentItemId;
+  final VoidCallback onOpened;
+
+  const _SignedOpenFilePanel({
+    required this.path,
+    required this.title,
+    required this.contentItemId,
+    required this.onOpened,
+  });
+
+  @override
+  ConsumerState<_SignedOpenFilePanel> createState() =>
+      _SignedOpenFilePanelState();
+}
+
+class _SignedOpenFilePanelState extends ConsumerState<_SignedOpenFilePanel> {
+  bool _opening = false;
+  String? _error;
+
+  Future<void> _open() async {
+    setState(() {
+      _opening = true;
+      _error = null;
+    });
+    try {
+      final metadata =
+          await ref.read(signedUrlCacheProvider).getMetadata(widget.path);
+      final dir = await getTemporaryDirectory();
+      final filename = metadata.filename.isEmpty
+          ? 'content-${widget.contentItemId}'
+          : metadata.filename;
+      final file = File('${dir.path}/$filename');
+      final downloaded = await ref
+          .read(signedUrlCacheProvider)
+          .download(widget.path, savePath: file.path);
+      widget.onOpened();
+      await OpenFilex.open(downloaded.path);
+    } catch (e) {
+      if (mounted) setState(() => _error = e.toString());
+    } finally {
+      if (mounted) setState(() => _opening = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.touch_app,
+                size: 80, color: theme.semanticPalette.warning),
+            const SizedBox(height: 24),
+            Text(
+              widget.title,
+              style: theme.textTheme.titleMedium,
+              textAlign: TextAlign.center,
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: 12),
+              Text(_error!, textAlign: TextAlign.center),
+            ],
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: _opening ? null : _open,
+              icon: _opening
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.open_in_new),
+              label: Text(_opening ? 'Ouverture...' : 'Ouvrir'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MediaError extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _MediaError({
+    required this.message,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline, size: 48),
+            const SizedBox(height: 12),
+            Text(message, textAlign: TextAlign.center),
+            const SizedBox(height: 12),
+            FilledButton.tonal(
+              onPressed: onRetry,
+              child: const Text('Réessayer'),
+            ),
+          ],
+        ),
       ),
     );
   }

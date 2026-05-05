@@ -300,8 +300,8 @@ class _DocumentThumb extends StatelessWidget {
         item.thumbnailUrl!.isNotEmpty) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(10),
-        child: Image.network(
-          '${dotenv.env['API_BASE_URL'] ?? 'http://localhost:8000'}${item.thumbnailUrl!}',
+        child: SignedNetworkImage(
+          path: item.thumbnailUrl!,
           width: 52,
           height: 52,
           fit: BoxFit.cover,

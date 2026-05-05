@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:ecole_platform/data/api/api_client.dart';
 import 'package:ecole_platform/data/dto/mappers.dart';
 import 'package:ecole_platform/data/local_store/documents_store.dart';
+import 'package:ecole_platform/data/services/signed_url_cache.dart';
 import 'package:ecole_platform/domain/entities/document_management.dart';
 import 'package:ecole_platform/domain/repositories/document_repository.dart';
 import 'package:ecole_platform/domain/repositories/feed_repository.dart';
@@ -21,12 +22,15 @@ const _defaultDocumentCategories = <String>[
 class DocumentRepositoryImpl implements DocumentRepository {
   final ApiClient _api;
   final DocumentsStore _documentsStore;
+  final SignedUrlCache _signedUrls;
 
   DocumentRepositoryImpl({
     required ApiClient api,
     required DocumentsStore documentsStore,
+    SignedUrlCache? signedUrls,
   })  : _api = api,
-        _documentsStore = documentsStore;
+        _documentsStore = documentsStore,
+        _signedUrls = signedUrls ?? SignedUrlCache(api: api);
 
   @override
   Future<DocumentOptions> getDocumentOptions() async {
@@ -245,7 +249,7 @@ class DocumentRepositoryImpl implements DocumentRepository {
 
     final savePath =
         '${documentsDir.path}${Platform.pathSeparator}${document.id}${_fileExtension(document.originalFilename)}';
-    final file = await _api.download(
+    final file = await _signedUrls.download(
       _normalizeDownloadPath(document.downloadUrl!),
       savePath: savePath,
     );
@@ -279,7 +283,7 @@ class DocumentRepositoryImpl implements DocumentRepository {
         : resource.title;
     final savePath =
         '${resourcesDir.path}${Platform.pathSeparator}${resource.id}${_fileExtension(originalName)}';
-    final file = await _api.download(
+    final file = await _signedUrls.download(
       _normalizeDownloadPath(resource.downloadUrl!),
       savePath: savePath,
     );

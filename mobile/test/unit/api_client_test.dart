@@ -208,6 +208,116 @@ void main() {
       await server.close();
     });
 
+    test('fetchSignedUrl calls metadata variant and parses raw JSON', () async {
+      late _RunningServer server;
+      server = await _startServer((request) async {
+        expect(
+          request.uri.path,
+          '/api/v1/content-items/content-1/assets/asset-1',
+        );
+        expect(request.uri.queryParameters['foo'], 'bar');
+        expect(request.uri.queryParameters['as'], 'metadata');
+        expect(request.headers.value('authorization'), 'Bearer access-123');
+        await _writeJson(
+          request.response,
+          HttpStatus.ok,
+          {
+            'download_url': 'https://minio.test/bucket/object?X-Amz=1',
+            'expires_at': '2026-05-05T12:10:00Z',
+            'mime_type': 'video/mp4',
+            'size': 1234,
+            'filename': 'lesson.mp4',
+            'etag': 'abc123',
+          },
+        );
+      });
+
+      final client = ApiClient(
+        tokenStorage: tokenStorage,
+        baseUrl: server.baseUrl,
+      )..setAccessToken('access-123');
+
+      final metadata = await client.fetchSignedUrl(
+        '/content-items/content-1/assets/asset-1?foo=bar',
+      );
+
+      expect(metadata.downloadUrl, startsWith('https://minio.test/'));
+      expect(metadata.expiresAt, DateTime.utc(2026, 5, 5, 12, 10));
+      expect(metadata.mimeType, 'video/mp4');
+      expect(metadata.size, 1234);
+      expect(metadata.filename, 'lesson.mp4');
+      expect(metadata.etag, 'abc123');
+      await server.close();
+    });
+
+    test('fetchSignedUrl normalizes absolute backend URLs and refreshes auth',
+        () async {
+      await tokenStorage.saveRefreshToken('refresh-1');
+      var metadataCalls = 0;
+      late _RunningServer server;
+      server = await _startServer((request) async {
+        if (request.uri.path == '/api/v1/auth/refresh') {
+          await _writeJson(
+            request.response,
+            HttpStatus.ok,
+            {
+              'data': {
+                'access_token': 'fresh-access',
+              },
+            },
+          );
+          return;
+        }
+
+        expect(request.uri.path, '/api/v1/documents/doc-1/download');
+        expect(request.uri.queryParameters['as'], 'metadata');
+        metadataCalls += 1;
+        if (request.headers.value('authorization') == 'Bearer expired') {
+          await _writeJson(
+            request.response,
+            HttpStatus.unauthorized,
+            {
+              'error': {
+                'code': 'ERR-AUTH-401',
+                'message': 'Expired token',
+                'category': 'auth',
+                'retryable': false,
+              },
+            },
+          );
+          return;
+        }
+
+        expect(request.headers.value('authorization'), 'Bearer fresh-access');
+        await _writeJson(
+          request.response,
+          HttpStatus.ok,
+          {
+            'download_url': 'https://minio.test/doc.pdf?X-Amz=1',
+            'expires_at': '2026-05-05T12:10:00Z',
+            'mime_type': 'application/pdf',
+            'size': 42,
+            'filename': 'doc.pdf',
+            'etag': null,
+          },
+        );
+      });
+
+      final client = ApiClient(
+        tokenStorage: tokenStorage,
+        baseUrl: server.baseUrl,
+      )..setAccessToken('expired');
+
+      final metadata = await client.fetchSignedUrl(
+        'https://api.example.test/api/v1/documents/doc-1/download',
+      );
+
+      expect(metadata.filename, 'doc.pdf');
+      expect(client.accessToken, 'fresh-access');
+      expect(metadataCalls, 2);
+      await server.close();
+    });
+
     test('throws ApiClientError for structured API errors', () async {
       late _RunningServer server;
       server = await _startServer((request) async {
@@ -239,7 +349,10 @@ void main() {
               .having((e) => e.apiError.code, 'code', 'ERR-VAL-001')
               .having((e) => e.apiError.category, 'category', 'validation')
               .having(
-                  (e) => e.apiError.correlationId, 'correlationId', 'corr-1'),
+                (e) => e.apiError.correlationId,
+                'correlationId',
+                'corr-1',
+              ),
         ),
       );
 

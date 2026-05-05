@@ -13,6 +13,7 @@ import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
 import 'package:ecole_platform/shared/ui/widgets/animated_guide.dart';
 import 'package:ecole_platform/shared/ui/widgets/drawing_overlay.dart';
 import 'package:ecole_platform/shared/widgets/app_empty_state.dart';
+import 'package:ecole_platform/shared/widgets/signed_network_image.dart';
 
 class StoryReaderScreen extends ConsumerStatefulWidget {
   final String contentItemId;
@@ -63,14 +64,6 @@ class _StoryReaderScreenState extends ConsumerState<StoryReaderScreen> {
     _pageController.dispose();
     unawaited(ref.read(ttsServiceProvider).stop());
     super.dispose();
-  }
-
-  Map<String, String> get _imageHeaders {
-    final token = ref.read(apiClientProvider).accessToken;
-    if (token == null || token.isEmpty) {
-      return const <String, String>{};
-    }
-    return <String, String>{'Authorization': 'Bearer $token'};
   }
 
   Future<void> _handlePageChanged(int index) async {
@@ -287,7 +280,6 @@ class _StoryReaderScreenState extends ConsumerState<StoryReaderScreen> {
                               final page = storyState.pages[index];
                               return _StoryPageCanvas(
                                 page: page,
-                                imageHeaders: _imageHeaders,
                                 isDrawingMode: storyState.isDrawingMode,
                                 savedPaths:
                                     _drawingsByPage[page.id] ?? const [],
@@ -496,14 +488,12 @@ class _StoryTopBar extends StatelessWidget {
 
 class _StoryPageCanvas extends StatelessWidget {
   final ContentItemAsset page;
-  final Map<String, String> imageHeaders;
   final bool isDrawingMode;
   final List<DrawingPath> savedPaths;
   final ValueChanged<List<DrawingPath>> onDrawingChanged;
 
   const _StoryPageCanvas({
     required this.page,
-    required this.imageHeaders,
     required this.isDrawingMode,
     required this.savedPaths,
     required this.onDrawingChanged,
@@ -518,9 +508,8 @@ class _StoryPageCanvas extends StatelessWidget {
         fit: StackFit.expand,
         children: <Widget>[
           Center(
-            child: Image.network(
-              page.downloadUrl,
-              headers: imageHeaders,
+            child: SignedNetworkImage(
+              path: page.downloadUrl,
               fit: BoxFit.contain,
               errorBuilder: (_, __, ___) => const _PagePlaceholder(),
               loadingBuilder: (context, child, loadingProgress) {

@@ -8,6 +8,7 @@ import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/content_item.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
+import 'package:ecole_platform/shared/widgets/signed_network_image.dart';
 
 enum AnimatedGuideState {
   happy,
@@ -18,7 +19,6 @@ enum AnimatedGuideState {
 final samiGuideImagesProvider =
     FutureProvider<Map<AnimatedGuideState, String>>((ref) async {
   final repo = ref.read(contentRepositoryProvider);
-  final api = ref.read(apiClientProvider);
   final items = <ContentItem>[];
   String? cursor;
   var hasMore = true;
@@ -40,9 +40,8 @@ final samiGuideImagesProvider =
   final fallback = items.first;
   return <AnimatedGuideState, String>{
     for (final state in AnimatedGuideState.values)
-      state: api.resolveUrl(
-        '/content-items/${(_matchGuideItem(items, state) ?? fallback).id}/stream',
-      ),
+      state:
+          '/content-items/${(_matchGuideItem(items, state) ?? fallback).id}/stream',
   };
 });
 
@@ -325,8 +324,8 @@ class _GuideImage extends StatelessWidget {
         borderRadius: BorderRadius.circular(size * 0.28),
         child: imageUrl.isEmpty
             ? const _GuidePlaceholder()
-            : Image.network(
-                imageUrl,
+            : SignedNetworkImage(
+                path: imageUrl,
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => const _GuidePlaceholder(),
                 loadingBuilder: (context, child, loadingProgress) {

@@ -13,6 +13,7 @@ import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
 import 'package:ecole_platform/shared/ui/widgets/animated_guide.dart';
 import 'package:ecole_platform/shared/widgets/app_error_widget.dart';
+import 'package:ecole_platform/shared/widgets/signed_network_image.dart';
 
 class MemoryMatchScreen extends ConsumerStatefulWidget {
   const MemoryMatchScreen({super.key});
@@ -107,7 +108,6 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
                         final card = session.visibleMemoryCards[index];
                         return _MemoryFlipCard(
                           card: card,
-                          imageHeaders: _imageHeaders,
                           onTap: () => _flipCard(card),
                         );
                       },
@@ -130,14 +130,6 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
         },
       ),
     );
-  }
-
-  Map<String, String> get _imageHeaders {
-    final token = ref.read(apiClientProvider).accessToken;
-    if (token == null || token.isEmpty) {
-      return const <String, String>{};
-    }
-    return <String, String>{'Authorization': 'Bearer $token'};
   }
 
   Future<void> _handleCompleted(GameSessionState session) async {
@@ -261,12 +253,10 @@ class _MetricChip extends StatelessWidget {
 class _MemoryFlipCard extends StatefulWidget {
   const _MemoryFlipCard({
     required this.card,
-    required this.imageHeaders,
     required this.onTap,
   });
 
   final MemoryCardState card;
-  final Map<String, String> imageHeaders;
   final VoidCallback onTap;
 
   @override
@@ -324,7 +314,6 @@ class _MemoryFlipCardState extends State<_MemoryFlipCard>
                     transform: Matrix4.identity()..rotateY(pi),
                     child: _CardFaceFront(
                       card: widget.card,
-                      imageHeaders: widget.imageHeaders,
                     ),
                   )
                 : const _CardFaceBack(),
@@ -366,11 +355,9 @@ class _CardFaceBack extends StatelessWidget {
 class _CardFaceFront extends StatelessWidget {
   const _CardFaceFront({
     required this.card,
-    required this.imageHeaders,
   });
 
   final MemoryCardState card;
-  final Map<String, String> imageHeaders;
 
   @override
   Widget build(BuildContext context) {
@@ -398,10 +385,9 @@ class _CardFaceFront extends StatelessWidget {
                 card.imageUrl!.isNotEmpty
             ? ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: Image.network(
-                  card.imageUrl!,
+                child: SignedNetworkImage(
+                  path: card.imageUrl!,
                   fit: BoxFit.cover,
-                  headers: imageHeaders,
                   errorBuilder: (_, __, ___) => _FrontLabel(label: card.label),
                 ),
               )

@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/features/coloring/coloring_provider.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
 import 'package:ecole_platform/shared/widgets/app_error_widget.dart';
 import 'package:ecole_platform/shared/ui/widgets/kids_skeleton_layouts.dart';
 import 'package:ecole_platform/shared/widgets/app_empty_state.dart';
+import 'package:ecole_platform/shared/widgets/signed_network_image.dart';
 
 class ColoringListScreen extends ConsumerWidget {
   const ColoringListScreen({super.key});
@@ -66,7 +66,6 @@ class ColoringListScreen extends ConsumerWidget {
                     final page = pages[index];
                     return _ColoringPageCard(
                       page: page,
-                      imageHeaders: _imageHeaders(ref),
                       onTap: () => context.push('/coloring/${page.id}'),
                     );
                   },
@@ -78,25 +77,15 @@ class ColoringListScreen extends ConsumerWidget {
       ),
     );
   }
-
-  static Map<String, String> _imageHeaders(WidgetRef ref) {
-    final token = ref.read(apiClientProvider).accessToken;
-    if (token == null || token.isEmpty) {
-      return const <String, String>{};
-    }
-    return <String, String>{'Authorization': 'Bearer $token'};
-  }
 }
 
 class _ColoringPageCard extends StatelessWidget {
   const _ColoringPageCard({
     required this.page,
-    required this.imageHeaders,
     required this.onTap,
   });
 
   final ColoringPageEntry page;
-  final Map<String, String> imageHeaders;
   final VoidCallback onTap;
 
   @override
@@ -117,9 +106,8 @@ class _ColoringPageCard extends StatelessWidget {
               child: Container(
                 width: double.infinity,
                 color: Colors.white,
-                child: Image.network(
-                  page.imageUrl,
-                  headers: imageHeaders,
+                child: SignedNetworkImage(
+                  path: page.imageUrl,
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => const _ThumbnailFallback(),
                   loadingBuilder: (context, child, loadingProgress) {

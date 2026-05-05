@@ -75,9 +75,7 @@ class ContentRepositoryImpl implements ContentRepository {
           .map(
             (json) => contentItemAssetFromJson(
               json,
-              downloadUrl: _api.resolveUrl(
-                '/content-items/$contentItemId/assets/${json['id']}',
-              ),
+              downloadUrl: '/content-items/$contentItemId/assets/${json['id']}',
             ),
           )
           .toList();
@@ -89,9 +87,7 @@ class ContentRepositoryImpl implements ContentRepository {
         .map(
           (json) => contentItemAssetFromJson(
             json,
-            downloadUrl: _api.resolveUrl(
-              '/content-items/$contentItemId/assets/${json['id']}',
-            ),
+            downloadUrl: '/content-items/$contentItemId/assets/${json['id']}',
           ),
         )
         .toList();

@@ -6,13 +6,10 @@ import 'package:open_filex/open_filex.dart';
 import 'package:pdf_render/pdf_render_widgets.dart';
 import 'package:share_plus/share_plus.dart';
 
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/document_management.dart';
 import 'package:ecole_platform/l10n/app_localizations.dart';
-
-final _documentPreviewBackendBaseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:8000';
+import 'package:ecole_platform/shared/widgets/signed_network_image.dart';
 
 class DocumentPreviewScreen extends ConsumerStatefulWidget {
   final ManagedDocument? document;
@@ -206,8 +203,8 @@ class _DocumentPreviewScreenState extends ConsumerState<DocumentPreviewScreen> {
         minScale: 1,
         maxScale: 5,
         child: Center(
-          child: Image.network(
-            _absoluteUrl(previewUrl),
+          child: SignedNetworkImage(
+            path: previewUrl,
             fit: BoxFit.contain,
           ),
         ),
@@ -235,12 +232,5 @@ class _DocumentPreviewScreenState extends ConsumerState<DocumentPreviewScreen> {
         ),
       ),
     );
-  }
-
-  String _absoluteUrl(String url) {
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
-    return '$_documentPreviewBackendBaseUrl$url';
   }
 }

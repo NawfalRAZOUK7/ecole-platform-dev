@@ -17,6 +17,7 @@ import 'package:ecole_platform/shared/ui/widgets/drawing_overlay.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
 import 'package:ecole_platform/shared/widgets/app_error_widget.dart';
+import 'package:ecole_platform/shared/widgets/signed_network_image.dart';
 
 const List<Color> _extendedColoringPalette = <Color>[
   ...kidFriendlyColorPalette,
@@ -200,9 +201,8 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen> {
                               Container(
                                 color: KidsContentColors.canvasBackground,
                               ),
-                              Image.network(
-                                page.imageUrl,
-                                headers: _imageHeaders,
+                              SignedNetworkImage(
+                                path: page.imageUrl,
                                 fit: BoxFit.contain,
                                 errorBuilder: (_, __, ___) =>
                                     const _TemplateUnavailable(),
@@ -248,14 +248,6 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen> {
         ),
       ),
     );
-  }
-
-  Map<String, String> get _imageHeaders {
-    final token = ref.read(apiClientProvider).accessToken;
-    if (token == null || token.isEmpty) {
-      return const <String, String>{};
-    }
-    return <String, String>{'Authorization': 'Bearer $token'};
   }
 
   Future<bool> _handleBackNavigation() async {

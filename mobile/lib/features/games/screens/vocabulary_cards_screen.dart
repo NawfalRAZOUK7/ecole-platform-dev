@@ -11,6 +11,7 @@ import 'package:ecole_platform/features/rewards/rewards_widgets.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
 import 'package:ecole_platform/shared/widgets/app_error_widget.dart';
+import 'package:ecole_platform/shared/widgets/signed_network_image.dart';
 
 class VocabularyCardsScreen extends ConsumerStatefulWidget {
   const VocabularyCardsScreen({super.key});
@@ -119,7 +120,6 @@ class _VocabularyCardsScreenState extends ConsumerState<VocabularyCardsScreen> {
                         child: _VocabularyCard(
                           item: current,
                           showBack: session.vocabularyShowingBack,
-                          imageHeaders: _imageHeaders,
                           onFlip: () {
                             ref
                                 .read(
@@ -184,14 +184,6 @@ class _VocabularyCardsScreenState extends ConsumerState<VocabularyCardsScreen> {
         },
       ),
     );
-  }
-
-  Map<String, String> get _imageHeaders {
-    final token = ref.read(apiClientProvider).accessToken;
-    if (token == null || token.isEmpty) {
-      return const <String, String>{};
-    }
-    return <String, String>{'Authorization': 'Bearer $token'};
   }
 
   Future<void> _handleCompleted(GameSessionState session) async {
@@ -291,14 +283,12 @@ class _VocabularyCard extends StatelessWidget {
   const _VocabularyCard({
     required this.item,
     required this.showBack,
-    required this.imageHeaders,
     required this.onFlip,
     required this.onSpeak,
   });
 
   final GameItem item;
   final bool showBack;
-  final Map<String, String> imageHeaders;
   final VoidCallback onFlip;
   final VoidCallback onSpeak;
 
@@ -335,9 +325,8 @@ class _VocabularyCard extends StatelessWidget {
                         child: item.imageUrl != null
                             ? ClipRRect(
                                 borderRadius: BorderRadius.circular(24),
-                                child: Image.network(
-                                  item.imageUrl!,
-                                  headers: imageHeaders,
+                                child: SignedNetworkImage(
+                                  path: item.imageUrl!,
                                   fit: BoxFit.cover,
                                   errorBuilder: (_, __, ___) =>
                                       _ImageFallback(label: item.answer),

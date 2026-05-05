@@ -15,6 +15,7 @@ import 'package:path_provider/path_provider.dart';
 
 import 'package:ecole_platform/data/api/api_client.dart';
 import 'package:ecole_platform/data/local_store/cache_store.dart';
+import 'package:ecole_platform/data/services/signed_url_cache.dart';
 
 // ── Download status ───────────────────────────────────────────────────────────
 
@@ -40,6 +41,7 @@ class DownloadState {
 class OfflineContentManager {
   final ApiClient _api;
   final CacheStore _cache;
+  final SignedUrlCache _signedUrls;
 
   /// Live download states keyed by contentItemId.
   final _downloadStates =
@@ -49,9 +51,13 @@ class OfflineContentManager {
   Stream<Map<String, DownloadState>> get downloadStatesStream =>
       _downloadStates.stream;
 
-  OfflineContentManager({required ApiClient api, required CacheStore cache})
-      : _api = api,
-        _cache = cache;
+  OfflineContentManager({
+    required ApiClient api,
+    required CacheStore cache,
+    SignedUrlCache? signedUrls,
+  })  : _api = api,
+        _cache = cache,
+        _signedUrls = signedUrls ?? SignedUrlCache(api: api);
 
   // ── Filesystem helpers ─────────────────────────────────────────────────────
 
@@ -123,7 +129,7 @@ class OfflineContentManager {
         if (assetId.isEmpty) continue;
 
         final savePath = '${contentDir.path}/$assetId';
-        await _api.download(
+        await _signedUrls.download(
           '/content-items/$contentItemId/assets/$assetId',
           savePath: savePath,
         );
@@ -144,10 +150,8 @@ class OfflineContentManager {
       manifest[contentItemId] = assetIds;
       await _writeManifest(manifest);
 
-      _updateState(
-          contentItemId,
-          const DownloadState(
-              status: DownloadStatus.done, progress: 1));
+      _updateState(contentItemId,
+          const DownloadState(status: DownloadStatus.done, progress: 1));
     } catch (e) {
       _updateState(
         contentItemId,
@@ -163,8 +167,7 @@ class OfflineContentManager {
   }
 
   /// Returns cached metadata for offline content, or null if not available.
-  Future<Map<String, dynamic>?> getOfflineContent(
-      String contentItemId) async {
+  Future<Map<String, dynamic>?> getOfflineContent(String contentItemId) async {
     final cached = await _cache.get('offline:content:$contentItemId');
     if (cached == null || cached.isEmpty) return null;
     return cached.first;
@@ -236,4 +239,3 @@ class OfflineContentManager {
     _downloadStates.close();
   }
 }
-

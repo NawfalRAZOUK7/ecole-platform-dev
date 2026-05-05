@@ -47,6 +47,7 @@ import 'package:ecole_platform/data/repositories_impl/quiz_repository_impl.dart'
 import 'package:ecole_platform/data/repositories_impl/gradebook_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/question_bank_repository_impl.dart';
 import 'package:ecole_platform/data/repositories_impl/rubric_repository_impl.dart';
+import 'package:ecole_platform/data/services/signed_url_cache.dart';
 import 'package:ecole_platform/domain/repositories/auth_repository.dart';
 import 'package:ecole_platform/domain/repositories/attendance_repository.dart';
 import 'package:ecole_platform/domain/repositories/budget_repository.dart';
@@ -94,10 +95,16 @@ final apiClientProvider = Provider<ApiClient>((ref) {
   );
 });
 
+final signedUrlCacheProvider = Provider<SignedUrlCache>((ref) {
+  return SignedUrlCache(api: ref.watch(apiClientProvider));
+});
+
 final offlineContentManagerProvider = Provider<OfflineContentManager>((ref) {
   final api = ref.watch(apiClientProvider);
   final cache = ref.watch(cacheStoreProvider);
-  final manager = OfflineContentManager(api: api, cache: cache);
+  final signedUrls = ref.watch(signedUrlCacheProvider);
+  final manager =
+      OfflineContentManager(api: api, cache: cache, signedUrls: signedUrls);
   ref.onDispose(manager.dispose);
   return manager;
 });
@@ -226,6 +233,7 @@ final documentRepositoryProvider = Provider<DocumentRepository>((ref) {
   return DocumentRepositoryImpl(
     api: ref.watch(apiClientProvider),
     documentsStore: ref.watch(documentsStoreProvider),
+    signedUrls: ref.watch(signedUrlCacheProvider),
   );
 });
 

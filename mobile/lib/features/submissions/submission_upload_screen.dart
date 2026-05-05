@@ -12,6 +12,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
@@ -221,12 +223,22 @@ class _SubmissionUploadScreenState
     if (widget.assignmentId == null) return;
     setState(() => _downloadingPdf = true);
     try {
-      // For now show success — on real device this would use url_launcher or open_file
+      final dir = await getTemporaryDirectory();
+      final savePath = '${dir.path}/exercise-${widget.assignmentId}.pdf';
+      final file = await ref.read(signedUrlCacheProvider).download(
+            '/assignments/${widget.assignmentId}/exercise-pdf',
+            savePath: savePath,
+          );
+      final result = await OpenFilex.open(file.path);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('PDF de l\'exercice téléchargé'),
-            backgroundColor: Theme.of(context).semanticPalette.success,
+            content: Text(result.type == ResultType.done
+                ? 'PDF de l\'exercice téléchargé'
+                : result.message),
+            backgroundColor: result.type == ResultType.done
+                ? Theme.of(context).semanticPalette.success
+                : Theme.of(context).colorScheme.error,
           ),
         );
       }

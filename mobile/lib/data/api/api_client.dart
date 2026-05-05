@@ -76,6 +76,43 @@ class ApiResponse<T> {
   const ApiResponse({required this.data});
 }
 
+/// Metadata returned by backend download endpoints with `?as=metadata`.
+class DownloadMetadata {
+  final String downloadUrl;
+  final DateTime expiresAt;
+  final String mimeType;
+  final int size;
+  final String filename;
+  final String? etag;
+
+  const DownloadMetadata({
+    required this.downloadUrl,
+    required this.expiresAt,
+    required this.mimeType,
+    required this.size,
+    required this.filename,
+    this.etag,
+  });
+
+  factory DownloadMetadata.fromJson(Map<String, dynamic> json) {
+    return DownloadMetadata(
+      downloadUrl: json['download_url'] as String,
+      expiresAt: DateTime.parse(json['expires_at'] as String).toUtc(),
+      mimeType: json['mime_type'] as String? ?? 'application/octet-stream',
+      size: (json['size'] as num?)?.toInt() ?? 0,
+      filename: json['filename'] as String? ?? 'download',
+      etag: json['etag'] as String?,
+    );
+  }
+}
+
+class _MetadataRequest {
+  final String path;
+  final Map<String, dynamic> queryParameters;
+
+  const _MetadataRequest(this.path, this.queryParameters);
+}
+
 /// Central API client — singleton managed by Riverpod.
 class ApiClient {
   final Dio _dio;
@@ -323,6 +360,95 @@ class ApiClient {
       options: Options(headers: _headers()),
     );
     return File(savePath);
+  }
+
+  Future<DownloadMetadata> fetchSignedUrl(String path) async {
+    final request = _metadataRequest(path);
+    final resp = await _request(
+      'GET',
+      request.path,
+      queryParameters: request.queryParameters,
+    );
+    final body = resp.data;
+    if (body is! Map<String, dynamic>) {
+      throw const ApiClientError(
+        500,
+        ApiError(
+          code: 'ERR-DOWNLOAD-METADATA',
+          message: 'Invalid download metadata response',
+          category: 'system',
+          retryable: false,
+        ),
+      );
+    }
+    return DownloadMetadata.fromJson(body);
+  }
+
+  Future<File> downloadSignedUrl(
+    String signedUrl, {
+    required String savePath,
+    void Function(int received, int total)? onReceiveProgress,
+  }) async {
+    await _dio.download(
+      signedUrl,
+      savePath,
+      options: Options(headers: const <String, String>{}),
+      onReceiveProgress: onReceiveProgress,
+    );
+    return File(savePath);
+  }
+
+  _MetadataRequest _metadataRequest(String rawPath) {
+    final trimmed = rawPath.trim();
+    if (trimmed.isEmpty) {
+      throw ArgumentError.value(rawPath, 'path', 'Path must not be empty');
+    }
+
+    final uri = Uri.parse(trimmed);
+    final apiBaseUri = Uri.parse(_dio.options.baseUrl);
+    String requestPath;
+    final query = <String, dynamic>{};
+
+    if (uri.hasScheme) {
+      final sameBackend = uri.scheme == apiBaseUri.scheme &&
+          uri.host == apiBaseUri.host &&
+          uri.port == apiBaseUri.port;
+      final apiPath = uri.path.startsWith(_apiBase);
+      if (!sameBackend && !apiPath) {
+        throw ArgumentError.value(
+          rawPath,
+          'path',
+          'Signed URL metadata must be fetched from the backend API',
+        );
+      }
+      requestPath = uri.path;
+      query.addAll(_flattenQuery(uri.queryParametersAll));
+    } else {
+      requestPath = uri.path.isEmpty ? trimmed : uri.path;
+      query.addAll(_flattenQuery(uri.queryParametersAll));
+    }
+
+    if (requestPath.startsWith(_apiBase)) {
+      requestPath = requestPath.substring(_apiBase.length);
+    }
+    if (requestPath.isEmpty) {
+      requestPath = '/';
+    }
+    if (!requestPath.startsWith('/')) {
+      requestPath = '/$requestPath';
+    }
+
+    query['as'] = 'metadata';
+    return _MetadataRequest(requestPath, query);
+  }
+
+  Map<String, dynamic> _flattenQuery(Map<String, List<String>> source) {
+    return source.map((key, values) {
+      if (values.length == 1) {
+        return MapEntry(key, values.first);
+      }
+      return MapEntry(key, values);
+    });
   }
 
   Future<ApiResponse<Map<String, dynamic>>> uploadFile(
