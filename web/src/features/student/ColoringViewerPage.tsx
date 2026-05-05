@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useSignedUrl } from '@/shared/hooks/useSignedUrl';
 import { EmptyState, ErrorBanner, LoadingState } from '@/shared/ui';
 import { PlatformBridgeCard } from '@/shared/ui/PlatformBridgeCard';
 import { toBannerError } from '@/shared/ui/errorUtils';
@@ -19,8 +20,37 @@ function isImageAsset(asset: ContentStoryPage) {
   );
 }
 
-function getAssetUrl(contentId: string, assetId: string) {
-  return `/api/v1/content-items/${encodeURIComponent(contentId)}/assets/${encodeURIComponent(assetId)}`;
+function getAssetPath(contentId: string, assetId: string) {
+  return `/content-items/${encodeURIComponent(contentId)}/assets/${encodeURIComponent(assetId)}`;
+}
+
+function SignedColoringImage({
+  contentId,
+  assetId,
+  alt,
+}: {
+  contentId: string;
+  assetId: string;
+  alt: string;
+}) {
+  const signedAsset = useSignedUrl(getAssetPath(contentId, assetId));
+
+  if (signedAsset.isLoading) {
+    return <LoadingState />;
+  }
+
+  if (!signedAsset.url) {
+    return <EmptyState message={alt} icon="🎨" />;
+  }
+
+  return (
+    <img
+      src={signedAsset.url}
+      alt={alt}
+      style={{ width: '100%', display: 'block', objectFit: 'contain' }}
+      onError={() => void signedAsset.refresh()}
+    />
+  );
 }
 
 export function ColoringViewerPage() {
@@ -124,12 +154,12 @@ export function ColoringViewerPage() {
                   border: '1px solid var(--kids-color-picker-border)',
                 }}
               >
-                <img
-                  src={getAssetUrl(id, page.id)}
+                <SignedColoringImage
+                  contentId={id}
+                  assetId={page.id}
                   alt={t('studentContent.coloringPageLabel', {
                     page: page.page_number ?? 1,
                   })}
-                  style={{ width: '100%', display: 'block', objectFit: 'contain' }}
                 />
               </div>
             </article>

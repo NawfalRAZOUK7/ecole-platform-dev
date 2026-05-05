@@ -7,9 +7,10 @@
  * PRINTABLE_PDF: Download exercise → Upload solution → Finalize (POST /submissions/{id}/submit).
  */
 
-import { useMemo, useState, type FormEvent } from 'react';
+import { useMemo, useState, type FormEvent, type MouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
+import { useSignedUrl } from '@/shared/hooks/useSignedUrl';
 import { EmptyState } from '@/shared/ui/EmptyState';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
@@ -17,7 +18,6 @@ import { FileUpload } from '@/shared/ui/FileUpload';
 import { toBannerError } from '@/shared/ui/errorUtils';
 import {
   useCreateStudentSubmission,
-  useDownloadExercisePdf,
   useFinalizeStudentSubmission,
   useSubmissionAssignments,
   useUploadSubmissionFile,
@@ -37,9 +37,18 @@ export function StudentSubmissionPage() {
   const createSubmissionMutation = useCreateStudentSubmission();
   const uploadFileMutation = useUploadSubmissionFile();
   const finalizeSubmissionMutation = useFinalizeStudentSubmission();
-  const downloadExerciseMutation = useDownloadExercisePdf();
-  const assignments: AssignmentOption[] = useMemo(() => assignmentsQuery.data ?? [], [assignmentsQuery.data]);
-  const selectedAssignment = assignments.find((assignment) => assignment.id === selectedAssignmentId);
+  const assignments: AssignmentOption[] = useMemo(
+    () => assignmentsQuery.data ?? [],
+    [assignmentsQuery.data],
+  );
+  const selectedAssignment = assignments.find(
+    (assignment) => assignment.id === selectedAssignmentId,
+  );
+  const exercisePdfPath =
+    selectedAssignment?.exercise_type === 'PRINTABLE_PDF' && selectedAssignment.exercise_pdf_path
+      ? `/assignments/${selectedAssignment.id}/exercise-pdf`
+      : null;
+  const exercisePdfUrl = useSignedUrl(exercisePdfPath);
   const dismissibleError = useDismissibleError(
     useMemo(
       () =>
@@ -49,19 +58,19 @@ export function StudentSubmissionPage() {
             createSubmissionMutation.error ??
             uploadFileMutation.error ??
             finalizeSubmissionMutation.error ??
-            downloadExerciseMutation.error,
-          t('app.error')
+            exercisePdfUrl.error,
+          t('app.error'),
         ),
       [
         assignmentsQuery.error,
         createSubmissionMutation.error,
-        downloadExerciseMutation.error,
+        exercisePdfUrl.error,
         finalizeSubmissionMutation.error,
         localError,
         t,
         uploadFileMutation.error,
-      ]
-    )
+      ],
+    ),
   );
 
   async function handleSubmit(event: FormEvent) {
@@ -106,14 +115,24 @@ export function StudentSubmissionPage() {
     }
   }
 
-  async function handleDownloadPdf(assignmentId: string) {
-    const blob = await downloadExerciseMutation.mutateAsync(assignmentId);
-    const url = URL.createObjectURL(blob);
+  function triggerExercisePdfDownload(url: string, filename: string) {
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = `exercise_${assignmentId}.pdf`;
+    anchor.download = filename;
     anchor.click();
-    URL.revokeObjectURL(url);
+  }
+
+  async function handleExercisePdfClick(event: MouseEvent<HTMLAnchorElement>) {
+    if (!exercisePdfUrl.url || exercisePdfUrl.isExpired) {
+      event.preventDefault();
+      const metadata = await exercisePdfUrl.refresh();
+      if (metadata) {
+        triggerExercisePdfDownload(
+          metadata.download_url,
+          metadata.filename || `exercise_${selectedAssignment?.id ?? 'assignment'}.pdf`,
+        );
+      }
+    }
   }
 
   function handleReset() {
@@ -136,7 +155,14 @@ export function StudentSubmissionPage() {
 
       {step === 'done' && (
         <div className="card" style={{ maxWidth: 500 }}>
-          <h3 style={{ color: 'var(--color-success)', marginBottom: 12, fontSize: 16, fontWeight: 600 }}>
+          <h3
+            style={{
+              color: 'var(--color-success)',
+              marginBottom: 12,
+              fontSize: 16,
+              fontWeight: 600,
+            }}
+          >
             {t('studentSubmission.success')}
           </h3>
           <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', marginBottom: 16 }}>
@@ -175,16 +201,33 @@ export function StudentSubmissionPage() {
                 </div>
 
                 {selectedAssignment && (
-                  <div style={{ marginBottom: 16, padding: 12, background: 'var(--color-bg)', borderRadius: 'var(--radius)', fontSize: 13 }}>
-                    <div><strong>{selectedAssignment.title}</strong></div>
-                    {selectedAssignment.exercise_type && selectedAssignment.exercise_type !== 'STANDARD' && (
-                      <div style={{ color: 'var(--color-primary)', marginTop: 4, fontWeight: 600 }}>
-                        {t(`studentSubmission.exerciseType_${selectedAssignment.exercise_type}`, selectedAssignment.exercise_type)}
-                      </div>
-                    )}
+                  <div
+                    style={{
+                      marginBottom: 16,
+                      padding: 12,
+                      background: 'var(--color-bg)',
+                      borderRadius: 'var(--radius)',
+                      fontSize: 13,
+                    }}
+                  >
+                    <div>
+                      <strong>{selectedAssignment.title}</strong>
+                    </div>
+                    {selectedAssignment.exercise_type &&
+                      selectedAssignment.exercise_type !== 'STANDARD' && (
+                        <div
+                          style={{ color: 'var(--color-primary)', marginTop: 4, fontWeight: 600 }}
+                        >
+                          {t(
+                            `studentSubmission.exerciseType_${selectedAssignment.exercise_type}`,
+                            selectedAssignment.exercise_type,
+                          )}
+                        </div>
+                      )}
                     {selectedAssignment.due_at && (
                       <div style={{ color: 'var(--color-text-secondary)', marginTop: 4 }}>
-                        {t('studentSubmission.dueAt')}: {new Date(selectedAssignment.due_at).toLocaleString()}
+                        {t('studentSubmission.dueAt')}:{' '}
+                        {new Date(selectedAssignment.due_at).toLocaleString()}
                       </div>
                     )}
                     <div style={{ color: 'var(--color-text-secondary)', marginTop: 2 }}>
@@ -193,23 +236,45 @@ export function StudentSubmissionPage() {
                   </div>
                 )}
 
-                {selectedAssignment?.exercise_type === 'PRINTABLE_PDF' && selectedAssignment.exercise_pdf_path && (
-                  <div style={{ marginBottom: 16, padding: 12, background: 'var(--color-bg)', borderRadius: 'var(--radius)', border: '1px solid var(--color-primary)' }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{t('studentSubmission.pdfExercise')}</div>
-                    <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', margin: '0 0 8px' }}>
-                      {t('studentSubmission.pdfInstructions')}
-                    </p>
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      style={{ fontSize: 12 }}
-                      onClick={() => void handleDownloadPdf(selectedAssignment.id)}
-                      disabled={downloadExerciseMutation.isPending}
+                {selectedAssignment?.exercise_type === 'PRINTABLE_PDF' &&
+                  selectedAssignment.exercise_pdf_path && (
+                    <div
+                      style={{
+                        marginBottom: 16,
+                        padding: 12,
+                        background: 'var(--color-bg)',
+                        borderRadius: 'var(--radius)',
+                        border: '1px solid var(--color-primary)',
+                      }}
                     >
-                      {downloadExerciseMutation.isPending ? t('app.loading') : t('studentSubmission.downloadPdf')}
-                    </button>
-                  </div>
-                )}
+                      <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
+                        {t('studentSubmission.pdfExercise')}
+                      </div>
+                      <p
+                        style={{
+                          fontSize: 12,
+                          color: 'var(--color-text-secondary)',
+                          margin: '0 0 8px',
+                        }}
+                      >
+                        {t('studentSubmission.pdfInstructions')}
+                      </p>
+                      <a
+                        href={exercisePdfUrl.url ?? '#'}
+                        download={
+                          exercisePdfUrl.filename ?? `exercise_${selectedAssignment.id}.pdf`
+                        }
+                        className="btn btn-primary"
+                        style={{ fontSize: 12 }}
+                        onClick={(event) => void handleExercisePdfClick(event)}
+                        aria-disabled={exercisePdfUrl.isFetching && !exercisePdfUrl.url}
+                      >
+                        {exercisePdfUrl.isFetching && !exercisePdfUrl.url
+                          ? t('app.loading')
+                          : t('studentSubmission.downloadPdf')}
+                      </a>
+                    </div>
+                  )}
 
                 <div className="form-field" style={{ marginBottom: 16 }}>
                   <label>{t('studentSubmission.attachFiles')}</label>
@@ -224,7 +289,13 @@ export function StudentSubmissionPage() {
 
                 {step === 'uploading' && files.length > 0 && (
                   <div style={{ marginBottom: 16 }}>
-                    <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 4 }}>
+                    <div
+                      style={{
+                        fontSize: 13,
+                        color: 'var(--color-text-secondary)',
+                        marginBottom: 4,
+                      }}
+                    >
                       {t('studentSubmission.uploading')} ({uploadProgress}/{files.length})
                     </div>
                     <div style={{ height: 4, background: 'var(--color-border)', borderRadius: 2 }}>
@@ -244,9 +315,15 @@ export function StudentSubmissionPage() {
                 <button
                   type="submit"
                   className="btn btn-primary"
-                  disabled={createSubmissionMutation.isPending || uploadFileMutation.isPending || !selectedAssignmentId}
+                  disabled={
+                    createSubmissionMutation.isPending ||
+                    uploadFileMutation.isPending ||
+                    !selectedAssignmentId
+                  }
                 >
-                  {createSubmissionMutation.isPending || uploadFileMutation.isPending ? t('app.loading') : t('studentSubmission.submit')}
+                  {createSubmissionMutation.isPending || uploadFileMutation.isPending
+                    ? t('app.loading')
+                    : t('studentSubmission.submit')}
                 </button>
               </div>
             </form>

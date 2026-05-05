@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useSignedUrl } from '@/shared/hooks/useSignedUrl';
 import { EmptyState, ErrorBanner, LoadingState } from '@/shared/ui';
 import { toBannerError } from '@/shared/ui/errorUtils';
 import { ApiClientError } from '@/services/api/client';
@@ -67,8 +68,61 @@ function buildSlides(pages: ContentStoryPage[]): StorySlide[] {
   return [...slides.values()].sort((left, right) => left.pageNumber - right.pageNumber);
 }
 
-function getAssetUrl(contentId: string, assetId: string) {
-  return `/api/v1/content-items/${encodeURIComponent(contentId)}/assets/${encodeURIComponent(assetId)}`;
+function getAssetPath(contentId: string, assetId: string) {
+  return `/content-items/${encodeURIComponent(contentId)}/assets/${encodeURIComponent(assetId)}`;
+}
+
+function SignedStoryImage({
+  contentId,
+  assetId,
+  alt,
+}: {
+  contentId: string;
+  assetId: string;
+  alt: string;
+}) {
+  const signedAsset = useSignedUrl(getAssetPath(contentId, assetId));
+
+  if (signedAsset.isLoading) {
+    return <LoadingState />;
+  }
+
+  if (!signedAsset.url) {
+    return <EmptyState message="Image unavailable" icon="🖼️" />;
+  }
+
+  return (
+    <img
+      src={signedAsset.url}
+      alt={alt}
+      style={{ width: '100%', maxHeight: 640, objectFit: 'contain' }}
+      onError={() => void signedAsset.refresh()}
+    />
+  );
+}
+
+function SignedStoryAudio({ contentId, assetId }: { contentId: string; assetId: string }) {
+  const { t } = useTranslation();
+  const signedAsset = useSignedUrl(getAssetPath(contentId, assetId));
+
+  if (signedAsset.isLoading) {
+    return <LoadingState />;
+  }
+
+  if (!signedAsset.url) {
+    return null;
+  }
+
+  return (
+    <audio
+      controls
+      src={signedAsset.url}
+      style={{ width: '100%' }}
+      onError={() => void signedAsset.refresh()}
+    >
+      {t('studentContent.audioUnsupported')}
+    </audio>
+  );
 }
 
 export function StoryViewerPage() {
@@ -251,10 +305,10 @@ export function StoryViewerPage() {
             }}
           >
             {currentSlide.imageAsset ? (
-              <img
-                src={getAssetUrl(id, currentSlide.imageAsset.id)}
+              <SignedStoryImage
+                contentId={id}
+                assetId={currentSlide.imageAsset.id}
                 alt={`${detailQuery.data?.title ?? t('studentContent.storyViewerTitle')} ${currentSlide.pageNumber}`}
-                style={{ width: '100%', maxHeight: 640, objectFit: 'contain' }}
               />
             ) : (
               <EmptyState message={t('studentContent.noPages')} icon="🖼️" />
@@ -263,10 +317,7 @@ export function StoryViewerPage() {
 
           {currentSlide.audioAsset ? (
             <div style={{ marginBottom: 16 }}>
-              <audio controls style={{ width: '100%' }}>
-                <source src={getAssetUrl(id, currentSlide.audioAsset.id)} />
-                {t('studentContent.audioUnsupported')}
-              </audio>
+              <SignedStoryAudio contentId={id} assetId={currentSlide.audioAsset.id} />
             </div>
           ) : null}
 

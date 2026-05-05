@@ -62,6 +62,15 @@ export interface ApiListResponse<T> {
   };
 }
 
+export interface DownloadMetadata {
+  download_url: string;
+  expires_at: string;
+  mime_type: string;
+  size: number;
+  filename: string;
+  etag: string | null;
+}
+
 export class ApiClientError extends Error {
   public readonly status: number;
   public readonly apiError: ApiError;
@@ -130,10 +139,7 @@ interface RequestOptions {
   retries?: number;
 }
 
-async function request<T>(
-  path: string,
-  options: RequestOptions = {}
-): Promise<T> {
+async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = 'GET', body, params, skipAuth = false, retries = 0 } = options;
   const isFormData = body instanceof FormData;
 
@@ -152,7 +158,7 @@ async function request<T>(
 
   // Build headers
   const headers: Record<string, string> = {
-    'Accept': 'application/json',
+    Accept: 'application/json',
     'Accept-Language': i18next.language || 'fr',
     'X-Correlation-Id': generateCorrelationId(),
     'X-Client-Version': CLIENT_VERSION,
@@ -187,13 +193,16 @@ async function request<T>(
     }
     // Refresh failed — throw auth error
     const errorBody = await resp.json().catch(() => null);
-    throw new ApiClientError(401, errorBody?.error || {
-      code: 'ERR-AUTHN-001',
-      message: 'Authentication required',
-      category: 'authn',
-      retryable: false,
-      timestamp: new Date().toISOString(),
-    });
+    throw new ApiClientError(
+      401,
+      errorBody?.error || {
+        code: 'ERR-AUTHN-001',
+        message: 'Authentication required',
+        category: 'authn',
+        retryable: false,
+        timestamp: new Date().toISOString(),
+      },
+    );
   }
 
   // Parse response
@@ -221,6 +230,48 @@ async function request<T>(
   return responseBody as T;
 }
 
+function normalizeDownloadMetadataPath(path: string): string {
+  const trimmed = path.trim();
+  if (!trimmed) {
+    throw new Error('Download metadata path is required');
+  }
+
+  let pathWithSearch: string;
+  if (/^https?:\/\//i.test(trimmed)) {
+    const url = new URL(trimmed, window.location.origin);
+    if (url.origin !== window.location.origin) {
+      throw new Error('Download metadata must be requested through the backend API');
+    }
+    pathWithSearch = `${url.pathname}${url.search}`;
+  } else {
+    pathWithSearch = trimmed;
+  }
+
+  if (pathWithSearch.startsWith(API_BASE)) {
+    pathWithSearch = pathWithSearch.slice(API_BASE.length) || '/';
+  }
+
+  if (!pathWithSearch.startsWith('/')) {
+    throw new Error('Download metadata path must be a backend API path');
+  }
+
+  const url = new URL(pathWithSearch, window.location.origin);
+  url.searchParams.set('as', 'metadata');
+  return `${url.pathname}${url.search}`;
+}
+
+function isApiResponse<T>(value: T | ApiResponse<T>): value is ApiResponse<T> {
+  return Boolean(value && typeof value === 'object' && 'data' in value && 'meta' in value);
+}
+
+export async function getDownloadUrl(path: string): Promise<DownloadMetadata> {
+  const response = await request<DownloadMetadata | ApiResponse<DownloadMetadata>>(
+    normalizeDownloadMetadataPath(path),
+  );
+
+  return isApiResponse(response) ? response.data : response;
+}
+
 // Typed convenience methods
 export const api = {
   get: <T>(path: string, params?: Record<string, string | number | undefined>) =>
@@ -235,9 +286,9 @@ export const api = {
   patch: <T>(path: string, body?: unknown) =>
     request<ApiResponse<T>>(path, { method: 'PATCH', body }),
 
-  put: <T>(path: string, body?: unknown) =>
-    request<ApiResponse<T>>(path, { method: 'PUT', body }),
+  put: <T>(path: string, body?: unknown) => request<ApiResponse<T>>(path, { method: 'PUT', body }),
 
-  delete: <T>(path: string) =>
-    request<ApiResponse<T>>(path, { method: 'DELETE' }),
+  delete: <T>(path: string) => request<ApiResponse<T>>(path, { method: 'DELETE' }),
+
+  getDownloadUrl,
 };

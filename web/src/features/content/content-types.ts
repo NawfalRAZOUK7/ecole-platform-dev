@@ -9,7 +9,14 @@ export const EXTENDED_CONTENT_TYPES = [
 
 export type ExtendedContentType = (typeof EXTENDED_CONTENT_TYPES)[number];
 
-export type ContentDisplayType = 'video' | 'document' | 'quiz' | 'story' | 'coloring_book' | 'link';
+export type ContentDisplayType =
+  | 'video'
+  | 'audio'
+  | 'document'
+  | 'quiz'
+  | 'story'
+  | 'coloring_book'
+  | 'link';
 
 export function normalizeContentType(contentType: string | null | undefined): ContentDisplayType {
   const value = (contentType || '').toLowerCase();
@@ -18,7 +25,11 @@ export function normalizeContentType(contentType: string | null | undefined): Co
     return 'video';
   }
 
-  if (['document', 'pdf', 'audio'].includes(value)) {
+  if (value === 'audio') {
+    return 'audio';
+  }
+
+  if (['document', 'pdf'].includes(value)) {
     return 'document';
   }
 
@@ -42,6 +53,10 @@ export function getContentTypeIcon(contentType: string | null | undefined): stri
 
   if (normalized === 'video') {
     return '🎬';
+  }
+
+  if (normalized === 'audio') {
+    return '🎧';
   }
 
   if (normalized === 'document') {

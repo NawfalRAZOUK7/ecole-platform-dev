@@ -1,4 +1,4 @@
-import { api } from '@/services/api/client';
+import { api, getDownloadUrl, type DownloadMetadata } from '@/services/api/client';
 
 export type ContentProgressStatus = 'not_started' | 'in_progress' | 'completed';
 
@@ -127,14 +127,12 @@ export const contentService = {
     return api.put<void>(`/cms/content/${contentId}`, { sort_order: sortOrder });
   },
 
-  streamContent(contentItemId: string) {
-    return api.get<{ stream_url: string; mime_type: string }>(
-      `/content-items/${contentItemId}/stream`,
-    );
+  streamContent(contentItemId: string): Promise<DownloadMetadata> {
+    return getDownloadUrl(`/content-items/${contentItemId}/stream`);
   },
 
-  getAsset(contentItemId: string, assetId: string) {
-    return api.get<ContentAsset>(`/content-items/${contentItemId}/assets/${assetId}`);
+  getAsset(contentItemId: string, assetId: string): Promise<DownloadMetadata> {
+    return getDownloadUrl(`/content-items/${contentItemId}/assets/${assetId}`);
   },
 
   deleteAsset(contentItemId: string, assetId: string) {

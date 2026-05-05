@@ -1,4 +1,4 @@
-import { getAccessToken, api } from '@/services/api/client';
+import { getAccessToken, api, getDownloadUrl } from '@/services/api/client';
 import { quizzesService, type QuizPayload } from '@/features/quizzes/quizzes.service';
 import type { CmsStoryPage, StoryPageUploadValues } from './content-upload.types';
 
@@ -193,11 +193,14 @@ function uploadAsset(contentId: string, file: File, onProgress?: (progress: numb
 }
 
 async function fetchAssetBlob(contentId: string, assetId: string): Promise<Blob> {
-  const token = getAccessToken();
-  const response = await fetch(`/api/v1/content-items/${contentId}/assets/${assetId}`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    credentials: 'include',
-  });
+  const metadataPath = `/content-items/${contentId}/assets/${assetId}`;
+  let metadata = await getDownloadUrl(metadataPath);
+  let response = await fetch(metadata.download_url);
+
+  if (response.status === 403) {
+    metadata = await getDownloadUrl(metadataPath);
+    response = await fetch(metadata.download_url);
+  }
 
   if (!response.ok) {
     throw new Error('Asset download failed');

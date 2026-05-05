@@ -1,4 +1,4 @@
-import { api, getAccessToken } from '@/services/api/client';
+import { api } from '@/services/api/client';
 import {
   quizzesService,
   type QuizAttempt as QuizEngineAttempt,
@@ -119,11 +119,6 @@ export const studentService = {
   },
 
   buildContentStreamUrl(contentItemId: string) {
-    const token = getAccessToken();
-    const url = new URL(`/api/v1/content-items/${contentItemId}/stream`, window.location.origin);
-    if (token) {
-      url.searchParams.set('token', token);
-    }
-    return url.toString();
+    return `/content-items/${encodeURIComponent(contentItemId)}/stream`;
   },
 };

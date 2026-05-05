@@ -10,12 +10,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
+import { useSignedUrl } from '@/shared/hooks/useSignedUrl';
 import { EmptyState } from '@/shared/ui/EmptyState';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
 import { toBannerError } from '@/shared/ui/errorUtils';
 import { getContentTypeIcon, normalizeContentType } from '@/features/content/content-types';
-import { studentService, type ClassContentItem, type StudentClassOption } from './student.service';
+import type { ClassContentItem, StudentClassOption } from './student.service';
 import { useStudentClassContent, useStudentClasses, useUpdateContentProgress } from './useStudent';
 
 export function StudentContentPage() {
@@ -224,7 +225,9 @@ function ContentPlayer({
   progress: string | undefined;
 }) {
   const { t } = useTranslation();
-  const streamUrl = studentService.buildContentStreamUrl(item.content_item_id);
+  const stream = useSignedUrl(`/content-items/${item.content_item_id}/stream`);
+  const streamUrl = stream.url;
+  const normalizedType = normalizeContentType(item.content_type);
 
   return (
     <div>
@@ -252,39 +255,51 @@ function ContentPlayer({
             justifyContent: 'center',
           }}
         >
-          {item.content_type === 'video' && (
+          {stream.error ? (
+            <ErrorBanner
+              error={toBannerError(stream.error, t('app.error'))}
+              onRetry={() => void stream.refresh()}
+            />
+          ) : null}
+
+          {stream.isLoading ? <LoadingState /> : null}
+
+          {normalizedType === 'video' && streamUrl ? (
             <video
               controls
+              src={streamUrl}
               style={{ width: '100%', maxHeight: 500 }}
               onEnded={() => onProgressUpdate('completed')}
+              onError={() => void stream.refresh()}
             >
-              <source src={streamUrl} />
               {t('studentContent.videoUnsupported')}
             </video>
-          )}
+          ) : null}
 
-          {item.content_type === 'audio' && (
+          {normalizedType === 'audio' && streamUrl ? (
             <div style={{ padding: 40, width: '100%' }}>
               <audio
                 controls
+                src={streamUrl}
                 style={{ width: '100%' }}
                 onEnded={() => onProgressUpdate('completed')}
+                onError={() => void stream.refresh()}
               >
-                <source src={streamUrl} />
                 {t('studentContent.audioUnsupported')}
               </audio>
             </div>
-          )}
+          ) : null}
 
-          {item.content_type === 'pdf' && (
+          {normalizedType === 'document' && streamUrl ? (
             <iframe
               src={streamUrl}
               style={{ width: '100%', height: 600, border: 'none' }}
               title={item.title}
+              onError={() => void stream.refresh()}
             />
-          )}
+          ) : null}
 
-          {item.content_type === 'interactive' && (
+          {normalizedType === 'link' && streamUrl ? (
             <div style={{ color: 'var(--color-inverse-text)', padding: 40, textAlign: 'center' }}>
               <p>{t('studentContent.interactiveHint')}</p>
               <a
@@ -296,7 +311,7 @@ function ContentPlayer({
                 {t('studentContent.openInteractive')}
               </a>
             </div>
-          )}
+          ) : null}
         </div>
 
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>

@@ -130,7 +130,7 @@ export function useUpdateContentOrdering() {
 export function useStreamContent(contentItemId: string) {
   return useQuery({
     queryKey: [...contentQueryKeys.all, 'stream', contentItemId] as const,
-    queryFn: async () => (await contentService.streamContent(contentItemId)).data,
+    queryFn: async () => contentService.streamContent(contentItemId),
     enabled: Boolean(contentItemId),
     staleTime: STALE_CONTENT,
   });
@@ -139,7 +139,7 @@ export function useStreamContent(contentItemId: string) {
 export function useContentAsset(contentItemId: string, assetId: string) {
   return useQuery({
     queryKey: [...contentQueryKeys.all, 'asset', contentItemId, assetId] as const,
-    queryFn: async () => (await contentService.getAsset(contentItemId, assetId)).data,
+    queryFn: async () => contentService.getAsset(contentItemId, assetId),
     enabled: Boolean(contentItemId && assetId),
     staleTime: STALE_CONTENT,
   });

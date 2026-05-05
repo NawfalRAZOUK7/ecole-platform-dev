@@ -1,17 +1,50 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useSignedUrl } from '@/shared/hooks/useSignedUrl';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
 import { Tabs } from '@/shared/ui/Tabs';
 import { CmsLibraryBrowseTab } from './CmsLibraryBrowseTab';
 import { CONTENT_TYPES } from './content-upload.types';
 import { useCmsContent } from './useCms';
-import {
-  fetchLevelMappings,
-  buildLevelMap,
-  type LevelAgeMapping,
-} from '@/services/levels.service';
+import { fetchLevelMappings, buildLevelMap, type LevelAgeMapping } from '@/services/levels.service';
+import type { CmsContentItem } from './cms.service';
+
+function resolveThumbnailPath(item: CmsContentItem) {
+  if (!item.thumbnail_path) {
+    return null;
+  }
+
+  if (
+    item.thumbnail_path.startsWith('/api/v1/') ||
+    item.thumbnail_path.startsWith('/content-items/')
+  ) {
+    return item.thumbnail_path;
+  }
+
+  return null;
+}
+
+function SignedThumbnail({ item }: { item: CmsContentItem }) {
+  const signedThumbnail = useSignedUrl(resolveThumbnailPath(item));
+
+  if (!signedThumbnail.url) {
+    return null;
+  }
+
+  return (
+    <img
+      src={signedThumbnail.url}
+      alt=""
+      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+      onError={(event) => {
+        (event.target as HTMLImageElement).style.display = 'none';
+        void signedThumbnail.refresh();
+      }}
+    />
+  );
+}
 const LEVELS = [
   'maternelle',
   'cp',
@@ -233,7 +266,7 @@ export function CmsContentListPage() {
                           style={{ cursor: 'pointer' }}
                           onClick={() => navigate(`/cms/content/${item.id}/edit`)}
                         >
-                          {item.thumbnail_path ? (
+                          {resolveThumbnailPath(item) ? (
                             <div
                               style={{
                                 height: 140,
@@ -242,14 +275,7 @@ export function CmsContentListPage() {
                                 overflow: 'hidden',
                               }}
                             >
-                              <img
-                                src={`/api/v1/content-items/${item.id}/assets/${item.thumbnail_path}`}
-                                alt=""
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                onError={(event) => {
-                                  (event.target as HTMLImageElement).style.display = 'none';
-                                }}
-                              />
+                              <SignedThumbnail item={item} />
                             </div>
                           ) : null}
                           <div style={{ padding: 12 }}>

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { STALE_DEFAULT } from '@/shared/hooks/useQueryDefaults';
+import { useSignedUrl } from '@/shared/hooks/useSignedUrl';
 import { submissionsService } from './submissions.service';
 
 export const submissionsQueryKeys = {
@@ -80,12 +81,9 @@ export function useUploadSubmissionFiles() {
 }
 
 export function useSubmissionFile(submissionId: string, fileId: string) {
-  return useQuery({
-    queryKey: [...submissionsQueryKeys.all, 'file', submissionId, fileId] as const,
-    queryFn: async () => (await submissionsService.getFile(submissionId, fileId)).data,
-    enabled: Boolean(submissionId && fileId),
-    staleTime: STALE_DEFAULT,
-  });
+  return useSignedUrl(
+    submissionId && fileId ? `/submissions/${submissionId}/files/${fileId}` : null,
+  );
 }
 
 export function usePreviewSubmission(submissionId: string) {

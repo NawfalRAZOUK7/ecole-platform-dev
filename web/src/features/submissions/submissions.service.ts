@@ -1,4 +1,4 @@
-import { getAccessToken, api } from '@/services/api/client';
+import { getAccessToken, api, getDownloadUrl, type DownloadMetadata } from '@/services/api/client';
 
 export interface AssignmentOption {
   id: string;
@@ -98,27 +98,8 @@ export const submissionsService = {
     return (body?.data ?? body) as ExercisePdfUploadResponse;
   },
 
-  async downloadExercisePdf(assignmentId: string) {
-    const headers: Record<string, string> = {
-      Accept: 'application/pdf',
-    };
-    const token = getAccessToken();
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
-
-    const response = await fetch(`/api/v1/assignments/${assignmentId}/exercise-pdf`, {
-      method: 'GET',
-      credentials: 'include',
-      headers,
-    });
-
-    if (!response.ok) {
-      const body = await response.json().catch(() => null);
-      throw new Error(body?.error?.message || 'Download failed');
-    }
-
-    return response.blob();
+  downloadExercisePdf(assignmentId: string) {
+    return getDownloadUrl(`/assignments/${assignmentId}/exercise-pdf`);
   },
 
   overridePenalty(submissionId: string, payload: { penalty_override: number; reason?: string }) {
@@ -131,10 +112,8 @@ export const submissionsService = {
     );
   },
 
-  getFile(submissionId: string, fileId: string) {
-    return api.get<{ id: string; filename: string; download_url: string; mime_type: string }>(
-      `/submissions/${submissionId}/files/${fileId}`,
-    );
+  getFile(submissionId: string, fileId: string): Promise<DownloadMetadata> {
+    return getDownloadUrl(`/submissions/${submissionId}/files/${fileId}`);
   },
 
   previewSubmission(submissionId: string) {

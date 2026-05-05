@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type MouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { ColumnDef } from '@/shared/ui/DataTable';
 import { useAuth } from '@/services/auth/AuthContext';
+import { useSignedUrl } from '@/shared/hooks/useSignedUrl';
 import { Badge, DataTable, ErrorBanner, LoadingState, StatCard, Tabs } from '@/shared/ui';
 import { toBannerError } from '@/shared/ui/errorUtils';
 import type { ContentAsset, ContentProgressStatus } from './content.service';
@@ -16,6 +17,47 @@ import {
 
 type AssetRow = ContentAsset & Record<string, unknown>;
 type AnalyticsRow = { metric: string; value: string } & Record<string, unknown>;
+
+function AssetOpenButton({
+  contentId,
+  asset,
+  label,
+}: {
+  contentId: string;
+  asset: AssetRow;
+  label: string;
+}) {
+  const signedAsset = useSignedUrl(
+    contentId && asset.id ? `/content-items/${contentId}/assets/${asset.id}` : null,
+  );
+
+  async function handleClick(event: MouseEvent<HTMLAnchorElement>) {
+    if (!signedAsset.url || signedAsset.isExpired) {
+      event.preventDefault();
+      const metadata = await signedAsset.refresh();
+      if (metadata?.download_url) {
+        window.open(metadata.download_url, '_blank', 'noopener,noreferrer');
+      }
+    }
+  }
+
+  if (!asset.id) {
+    return <span>-</span>;
+  }
+
+  return (
+    <a
+      href={signedAsset.url ?? '#'}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="btn btn-secondary btn-sm"
+      aria-disabled={signedAsset.isFetching && !signedAsset.url}
+      onClick={(event) => void handleClick(event)}
+    >
+      {signedAsset.isFetching && !signedAsset.url ? '...' : label}
+    </a>
+  );
+}
 
 function getProgressPercent(status: ContentProgressStatus | undefined) {
   if (status === 'completed') {
@@ -64,22 +106,14 @@ export function ContentDetailPage() {
         header: 'content.actions',
         sortable: false,
         render: (_value, row) =>
-          row.download_url || row.url ? (
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={() =>
-                window.open(String(row.download_url || row.url), '_blank', 'noopener,noreferrer')
-              }
-            >
-              {t('content.openAsset')}
-            </button>
+          id ? (
+            <AssetOpenButton contentId={id} asset={row} label={t('content.openAsset')} />
           ) : (
             <span>-</span>
           ),
       },
     ],
-    [t],
+    [id, t],
   );
 
   const analyticsRows = useMemo<AnalyticsRow[]>(() => {

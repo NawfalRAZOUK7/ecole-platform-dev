@@ -1,43 +1,67 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ApiClientError, getAccessToken } from '@/services/api/client';
+import { ApiClientError } from '@/services/api/client';
+import { useSignedUrl } from '@/shared/hooks/useSignedUrl';
 import { EmptyState, ErrorBanner, LoadingState } from '@/shared/ui';
 import { toBannerError } from '@/shared/ui/errorUtils';
 import type { ContentProgressStatus } from './content.service';
 import { normalizeContentType } from './content-types';
 import { useContentDetail, useUpdateContentProgress } from './useContent';
 
-function resolveContentUrl(content: {
+type ContentSource =
+  | { kind: 'external'; url: string }
+  | { kind: 'backend'; path: string }
+  | { kind: 'missing' };
+
+function isBackendPath(value: string) {
+  if (value.startsWith('/')) {
+    return true;
+  }
+
+  if (/^https?:\/\//i.test(value)) {
+    const url = new URL(value, window.location.origin);
+    return url.origin === window.location.origin && url.pathname.startsWith('/api/v1/');
+  }
+
+  return false;
+}
+
+function resolveContentSource(content: {
   body_url?: string | null;
   embed_url?: string | null;
   external_url?: string | null;
-  assets?: Array<{ download_url?: string | null; url?: string | null }> | null;
+  assets?: Array<{ id?: string | null; download_url?: string | null; url?: string | null }> | null;
   id?: string | null;
-}): string | null {
-  if (content.embed_url) return content.embed_url;
-  if (content.external_url) return content.external_url;
+}): ContentSource {
+  if (content.embed_url) return { kind: 'external', url: content.embed_url };
+  if (content.external_url) return { kind: 'external', url: content.external_url };
 
-  const token = getAccessToken();
-  const apiUrl =
-    content.body_url ||
-    content.assets?.[0]?.download_url ||
-    content.assets?.[0]?.url ||
-    (content.id ? `/api/v1/content-items/${content.id}/stream` : null);
+  if (content.body_url) {
+    if (isBackendPath(content.body_url)) {
+      return { kind: 'backend', path: content.body_url };
+    }
 
-  if (!apiUrl) {
-    return null;
-  }
-
-  if (token) {
-    const url = new URL(apiUrl, window.location.origin);
-    if (apiUrl.startsWith('/') || url.origin === window.location.origin) {
-      url.searchParams.set('token', token);
-      return url.toString();
+    if (/^https?:\/\//i.test(content.body_url)) {
+      return { kind: 'external', url: content.body_url };
     }
   }
 
-  return apiUrl;
+  const assetCandidate = content.assets?.[0]?.download_url || content.assets?.[0]?.url;
+  if (assetCandidate && isBackendPath(assetCandidate)) {
+    return { kind: 'backend', path: assetCandidate };
+  }
+
+  const assetId = content.assets?.[0]?.id;
+  if (content.id && assetId) {
+    return { kind: 'backend', path: `/content-items/${content.id}/assets/${assetId}` };
+  }
+
+  if (content.id) {
+    return { kind: 'backend', path: `/content-items/${content.id}/stream` };
+  }
+
+  return { kind: 'missing' };
 }
 
 export function ContentPlayerPage() {
@@ -47,8 +71,16 @@ export function ContentPlayerPage() {
   const detailQuery = useContentDetail(id);
   const updateProgressMutation = useUpdateContentProgress();
   const [autoMarkedStarted, setAutoMarkedStarted] = useState(false);
-  const contentUrl = resolveContentUrl(detailQuery.data ?? {});
+  const contentSource = resolveContentSource(detailQuery.data ?? {});
+  const signedContent = useSignedUrl(contentSource.kind === 'backend' ? contentSource.path : null);
+  const contentUrl =
+    contentSource.kind === 'external'
+      ? contentSource.url
+      : contentSource.kind === 'backend'
+        ? signedContent.url
+        : null;
   const contentType = normalizeContentType(detailQuery.data?.content_type);
+  const signedUrlError = contentSource.kind === 'backend' ? signedContent.error : null;
 
   useEffect(() => {
     if (
@@ -124,18 +156,35 @@ export function ContentPlayerPage() {
       </div>
 
       <ErrorBanner
-        error={toBannerError(detailQuery.error ?? updateProgressMutation.error, t('app.error'))}
-        onRetry={() => void detailQuery.refetch()}
+        error={toBannerError(
+          detailQuery.error ?? signedUrlError ?? updateProgressMutation.error,
+          t('app.error'),
+        )}
+        onRetry={() =>
+          void Promise.all([
+            detailQuery.refetch(),
+            contentSource.kind === 'backend' ? signedContent.refresh() : Promise.resolve(),
+          ])
+        }
       />
 
       <div className="card" style={{ padding: 20 }}>
         {contentType === 'video' && contentUrl ? (
-          <iframe
+          <video
+            controls
             title={detailQuery.data?.title || 'content-player'}
             src={contentUrl}
-            style={{ width: '100%', minHeight: 520, border: 'none', borderRadius: 12 }}
-            allow="autoplay; encrypted-media; picture-in-picture"
-            allowFullScreen
+            style={{ width: '100%', maxHeight: 640, borderRadius: 12 }}
+            onError={() => void signedContent.refresh()}
+          />
+        ) : null}
+
+        {contentType === 'audio' && contentUrl ? (
+          <audio
+            controls
+            src={contentUrl}
+            style={{ width: '100%' }}
+            onError={() => void signedContent.refresh()}
           />
         ) : null}
 
@@ -144,6 +193,7 @@ export function ContentPlayerPage() {
             title={detailQuery.data?.title || 'content-document'}
             src={contentUrl}
             style={{ width: '100%', minHeight: 640, border: 'none', borderRadius: 12 }}
+            onError={() => void signedContent.refresh()}
           />
         ) : null}
 
@@ -152,6 +202,7 @@ export function ContentPlayerPage() {
             title={detailQuery.data?.title || 'content-preview'}
             src={contentUrl}
             style={{ width: '100%', minHeight: 640, border: 'none', borderRadius: 12 }}
+            onError={() => void signedContent.refresh()}
           />
         ) : null}
 
@@ -182,7 +233,9 @@ export function ContentPlayerPage() {
           </div>
         ) : null}
 
-        {!contentUrl && contentType !== 'quiz' ? (
+        {contentSource.kind === 'backend' && signedContent.isLoading ? <LoadingState /> : null}
+
+        {!contentUrl && contentType !== 'quiz' && !signedContent.isLoading ? (
           <EmptyState message={t('content.playerUnavailable')} icon="🧩" />
         ) : null}
       </div>
