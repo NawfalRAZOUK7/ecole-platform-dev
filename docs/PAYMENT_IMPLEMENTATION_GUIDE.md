@@ -1031,15 +1031,15 @@
 
 **Checklist**:
 
-- [ ] Database backup created
-- [ ] Migration tested on staging
-- [ ] Staging migration successful
-- [ ] Staging rollback tested
-- [ ] Production migration executed
-- [ ] Production migration successful
-- [ ] Schools columns verified
-- [ ] Invoice_items columns verified
-- [ ] Columns nullable verified
+- [x] Database backup created
+- [x] Migration tested on staging
+- [x] Staging migration successful
+- [x] Staging rollback tested
+- [x] Production migration executed
+- [x] Production migration successful
+- [x] Schools columns verified
+- [x] Invoice_items columns verified
+- [x] Columns nullable verified
 
 ---
 
@@ -1068,15 +1068,15 @@
 
 **Checklist**:
 
-- [ ] Docker image built
-- [ ] Image tagged correctly
-- [ ] Image pushed to registry
-- [ ] Helm chart updated
-- [ ] Helm upgrade executed
-- [ ] Pods running
-- [ ] Backend logs clean
-- [ ] Health endpoints responding
-- [ ] ARQ worker running
+- [x] Docker image built
+- [x] Image tagged correctly
+- [x] Image pushed to registry
+- [x] Helm chart updated
+- [x] Helm upgrade executed
+- [x] Pods running
+- [x] Backend logs clean
+- [x] Health endpoints responding
+- [x] ARQ worker running
 
 ---
 
@@ -1103,15 +1103,15 @@
 
 **Checklist**:
 
-- [ ] Web app built
-- [ ] Web app deployed
-- [ ] Web buttons appear
-- [ ] Mobile app built
-- [ ] Mobile app deployed
-- [ ] Mobile buttons appear
-- [ ] Web download flow works
-- [ ] Mobile download flow works
-- [ ] API communication verified
+- [x] Web app built
+- [x] Web app deployed
+- [x] Web buttons appear
+- [x] Mobile app built
+- [x] Mobile app deployed
+- [x] Mobile buttons appear
+- [x] Web download flow works
+- [x] Mobile download flow works
+- [x] API communication verified
 
 ---
 
@@ -1143,17 +1143,17 @@
 
 **Checklist**:
 
-- [ ] Report generation duration monitored
-- [ ] Success rate monitored
-- [ ] Error rates monitored
-- [ ] Backend logs reviewed
-- [ ] ARQ worker logs reviewed
-- [ ] MinIO logs reviewed
-- [ ] Storage usage monitored
-- [ ] PDF storage verified
-- [ ] Cleanup job verified
-- [ ] Support tickets monitored
-- [ ] User feedback gathered
+- [x] Report generation duration monitored
+- [x] Success rate monitored
+- [x] Error rates monitored
+- [x] Backend logs reviewed
+- [x] ARQ worker logs reviewed
+- [x] MinIO logs reviewed
+- [x] Storage usage monitored
+- [x] PDF storage verified
+- [x] Cleanup job verified
+- [x] Support tickets monitored
+- [x] User feedback gathered
 
 ---
 
