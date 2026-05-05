@@ -167,16 +167,16 @@
    - File: `backend/requirements.txt`
 
 2. **Add qrcode package**
-   - `qrcode>=7.4`
+   - `qrcode[pil]==8.0.*` (already present)
 
 3. **Note**: WeasyPrint already installed, no need to add
 
 **Checklist**:
 
-- [ ] qrcode>=7.4 added to requirements.txt
-- [ ] Version constraint specified
-- [ ] No duplicate entries
-- [ ] File saved
+- [x] qrcode>=7.4 present in requirements.txt (installed: 8.0.\*)
+- [x] Version constraint specified (==8.0.\*)
+- [x] No duplicate entries
+- [x] PIL extra included for image support
 
 ---
 
