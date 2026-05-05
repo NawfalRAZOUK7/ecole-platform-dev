@@ -822,16 +822,16 @@
 
 **Checklist**:
 
-- [ ] Test file created
-- [ ] Valid invoice test passes
-- [ ] Missing school data test passes
-- [ ] Missing parent data test passes
-- [ ] TVA breakdown test passes
-- [ ] Sibling discount test passes
-- [ ] Language test passes
-- [ ] RTL flag test passes
-- [ ] All mocks configured
-- [ ] Tests run successfully
+- [x] Test file created
+- [x] Valid invoice test passes
+- [x] Missing school data test passes
+- [x] Missing parent data test passes
+- [x] TVA breakdown test passes
+- [x] Sibling discount test passes
+- [x] Language test passes
+- [x] RTL flag test passes
+- [x] All mocks configured
+- [x] Tests run successfully
 
 ---
 
@@ -857,14 +857,14 @@
 
 **Checklist**:
 
-- [ ] Test file created
-- [ ] Valid payment test passes
-- [ ] Missing school data test passes
-- [ ] Missing invoice data test passes
-- [ ] Language test passes
-- [ ] RTL flag test passes
-- [ ] All mocks configured
-- [ ] Tests run successfully
+- [x] Test file created
+- [x] Valid payment test passes
+- [x] Missing school data test passes
+- [x] Missing invoice data test passes
+- [x] Language test passes
+- [x] RTL flag test passes
+- [x] All mocks configured
+- [x] Tests run successfully
 
 ---
 
@@ -895,18 +895,18 @@
 
 **Checklist**:
 
-- [ ] Test file created
-- [ ] Valid invoice test passes
-- [ ] French language test passes
-- [ ] Arabic language test passes
-- [ ] Parent permission test passes
-- [ ] Parent denied test passes
-- [ ] Admin permission test passes
-- [ ] 404 test passes
-- [ ] 403 test passes
-- [ ] Invalid language test passes
-- [ ] Test data created
-- [ ] Tests run successfully
+- [x] Test file created
+- [x] Valid invoice test passes
+- [x] French language test passes
+- [x] Arabic language test passes
+- [x] Parent permission test passes
+- [x] Parent denied test passes
+- [x] Admin permission test passes
+- [x] 404 test passes
+- [x] 403 test passes
+- [x] Invalid language test passes
+- [x] Test data created
+- [x] Tests run successfully
 
 ---
 
@@ -937,18 +937,18 @@
 
 **Checklist**:
 
-- [ ] Test file created
-- [ ] Valid payment test passes
-- [ ] French language test passes
-- [ ] Arabic language test passes
-- [ ] Parent permission test passes
-- [ ] Parent denied test passes
-- [ ] Admin permission test passes
-- [ ] 404 test passes
-- [ ] 403 test passes
-- [ ] Invalid language test passes
-- [ ] Test data created
-- [ ] Tests run successfully
+- [x] Test file created
+- [x] Valid payment test passes
+- [x] French language test passes
+- [x] Arabic language test passes
+- [x] Parent permission test passes
+- [x] Parent denied test passes
+- [x] Admin permission test passes
+- [x] 404 test passes
+- [x] 403 test passes
+- [x] Invalid language test passes
+- [x] Test data created
+- [x] Tests run successfully
 
 ---
 
