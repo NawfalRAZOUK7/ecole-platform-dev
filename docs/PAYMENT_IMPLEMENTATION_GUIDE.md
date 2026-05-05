@@ -148,12 +148,12 @@
 
 **Checklist**:
 
-- [ ] INVOICE_PDF added to enum
-- [ ] PAYMENT_RECEIPT added to enum
-- [ ] \_build_context() handles INVOICE_PDF case
-- [ ] \_build_context() handles PAYMENT_RECEIPT case
-- [ ] No duplicate enum values
-- [ ] Code compiles without errors
+- [x] INVOICE_PDF added to enum
+- [x] PAYMENT_RECEIPT added to enum
+- [x] \_build_context() handles INVOICE_PDF case
+- [x] \_build_context() handles PAYMENT_RECEIPT case
+- [x] No duplicate enum values
+- [x] Code compiles without errors
 
 ---
 

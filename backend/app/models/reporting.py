@@ -30,6 +30,8 @@ class ReportType(str, enum.Enum):
     ATTENDANCE_REPORT = "attendance_report"
     BILLING_STATEMENT = "billing_statement"
     SCHOOL_ANALYTICS = "school_analytics"
+    INVOICE_PDF = "invoice_pdf"
+    PAYMENT_RECEIPT = "payment_receipt"
 
 
 class ReportJobStatus(str, enum.Enum):

@@ -636,6 +636,10 @@ class ReportsService:
             return await self._billing_statement_context(job)
         if report_type == ReportType.SCHOOL_ANALYTICS.value:
             return await self._school_analytics_context(job)
+        if report_type == ReportType.INVOICE_PDF.value:
+            return await self._invoice_pdf_context(job)
+        if report_type == ReportType.PAYMENT_RECEIPT.value:
+            return await self._payment_receipt_context(job)
         raise ValidationError("Unsupported report type", error_code="ERR-REPORT-422")
 
     async def _student_report_context(self, job: ReportJob) -> dict[str, Any]:
