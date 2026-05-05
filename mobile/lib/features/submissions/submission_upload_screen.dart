@@ -16,6 +16,8 @@ import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'package:ecole_platform/app/providers.dart';
+import 'package:ecole_platform/data/services/upload_client.dart';
+import 'package:ecole_platform/features/auth/auth_provider.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 
 /// Represents a file selected for upload.
@@ -80,7 +82,9 @@ class _SubmissionUploadScreenState
   double _uploadProgress = 0;
   String? _error;
 
-  static const _maxFileSize = 10 * 1024 * 1024; // 10 MB
+  // Files up to this limit use the legacy multipart path; larger files are
+  // routed to direct-to-MinIO upload (handled in _upload).
+  static const _legacyMaxFileSize = 50 * 1024 * 1024; // 50 MB per file
   static const _maxFiles = 5;
   bool _downloadingPdf = false;
 
@@ -203,9 +207,9 @@ class _SubmissionUploadScreenState
       setState(() => _error = 'Maximum $_maxFiles fichiers autorisés');
       return;
     }
-    if (file.sizeBytes > _maxFileSize) {
+    if (file.sizeBytes > _legacyMaxFileSize) {
       setState(
-          () => _error = '${file.name} dépasse la taille maximale (10 MB)');
+          () => _error = '${file.name} dépasse la taille maximale (50 MB)');
       return;
     }
     setState(() {
@@ -266,26 +270,52 @@ class _SubmissionUploadScreenState
     try {
       final api = ref.read(apiClientProvider);
 
-      // Build multipart form data
-      final formFields = <String, dynamic>{};
-      if (widget.assignmentId != null) {
-        formFields['assignment_id'] = widget.assignmentId;
-      }
-      if (_commentController.text.trim().isNotEmpty) {
-        formFields['comment'] = _commentController.text.trim();
-      }
+      // Single large file → direct-to-MinIO path.
+      // Multiple files or small files → legacy multipart path.
+      final isSingleLargeFile = _files.length == 1 &&
+          shouldUseDirect(
+            File(_files.first.path),
+            UploadKind.submissionFile,
+          );
 
-      // Upload with progress tracking
-      await api.uploadFiles(
-        '/submissions/upload',
-        files: _files.map((f) => File(f.path)).toList(),
-        fields: formFields,
-        onProgress: (sent, total) {
-          if (total > 0) {
-            setState(() => _uploadProgress = sent / total);
-          }
-        },
-      );
+      if (isSingleLargeFile) {
+        final schoolId = ref.read(authProvider).user?.schoolId ?? '';
+        await directUpload(
+          api: api,
+          kind: UploadKind.submissionFile,
+          scope: UploadScope(
+            schoolId: schoolId,
+            submissionId: widget.assignmentId,
+          ),
+          file: File(_files.first.path),
+          onProgress: (sent, total) {
+            if (total > 0) {
+              setState(() => _uploadProgress = sent / total);
+            }
+          },
+        );
+      } else {
+        // Build multipart form data
+        final formFields = <String, dynamic>{};
+        if (widget.assignmentId != null) {
+          formFields['assignment_id'] = widget.assignmentId;
+        }
+        if (_commentController.text.trim().isNotEmpty) {
+          formFields['comment'] = _commentController.text.trim();
+        }
+
+        // Upload with progress tracking
+        await api.uploadFiles(
+          '/submissions/upload',
+          files: _files.map((f) => File(f.path)).toList(),
+          fields: formFields,
+          onProgress: (sent, total) {
+            if (total > 0) {
+              setState(() => _uploadProgress = sent / total);
+            }
+          },
+        );
+      }
 
       // Phase 10C: finalize PRINTABLE_PDF submission
       if (_isPrintablePdf && widget.assignmentId != null) {
@@ -512,14 +542,18 @@ class _SubmissionUploadScreenState
           ),
           const SizedBox(height: 24),
 
-          // Upload progress
+          // Upload progress — determinate during PUT, indeterminate during scan
           if (_uploading) ...[
             Column(
               children: [
-                LinearProgressIndicator(value: _uploadProgress),
+                _uploadProgress < 1.0
+                    ? LinearProgressIndicator(value: _uploadProgress)
+                    : const LinearProgressIndicator(),
                 const SizedBox(height: 8),
                 Text(
-                  'Envoi en cours... ${(_uploadProgress * 100).toStringAsFixed(0)}%',
+                  _uploadProgress < 1.0
+                      ? 'Envoi... ${(_uploadProgress * 100).toStringAsFixed(0)}%'
+                      : 'Analyse en cours…',
                   style: theme.textTheme.bodySmall,
                 ),
               ],
@@ -537,7 +571,9 @@ class _SubmissionUploadScreenState
                     child: CircularProgressIndicator(
                         strokeWidth: 2, color: theme.colorScheme.onPrimary))
                 : const Icon(Icons.upload_file),
-            label: Text(_uploading ? 'Envoi en cours...' : 'Soumettre'),
+            label: Text(_uploading
+                ? (_uploadProgress < 1.0 ? 'Envoi en cours...' : 'Analyse…')
+                : 'Soumettre'),
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),

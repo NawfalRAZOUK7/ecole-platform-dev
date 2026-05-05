@@ -1,5 +1,9 @@
 part of 'content_library_screen.dart';
 
+// Scanning state is inferred from upload progress:
+//   progress < 1.0 → uploading
+//   progress == 1.0 while still pending → backend scanning / processing
+
 class _UploadTab extends ConsumerStatefulWidget {
   const _UploadTab();
 
@@ -101,9 +105,11 @@ class _UploadTabState extends ConsumerState<_UploadTab> {
 
     try {
       final repo = ref.read(contentLibraryRepositoryProvider);
+      final schoolId = ref.read(authProvider).user?.schoolId ?? '';
       await repo.uploadContent(
         title: _titleController.text.trim(),
         contentType: _contentType,
+        schoolId: schoolId,
         description: _descriptionController.text.trim().isNotEmpty
             ? _descriptionController.text.trim()
             : null,
@@ -370,10 +376,16 @@ class UploadForm extends StatelessWidget {
         ),
         const SizedBox(height: 24),
         if (uploading) ...[
-          LinearProgressIndicator(value: uploadProgress),
+          // progress < 1.0 → uploading phase with determinate bar.
+          // progress == 1.0 → PUT complete, backend scanning (indeterminate).
+          uploadProgress < 1.0
+              ? LinearProgressIndicator(value: uploadProgress)
+              : const LinearProgressIndicator(),
           const SizedBox(height: 8),
           Text(
-            'Envoi... ${(uploadProgress * 100).toStringAsFixed(0)}%',
+            uploadProgress < 1.0
+                ? 'Envoi... ${(uploadProgress * 100).toStringAsFixed(0)}%'
+                : 'Analyse en cours…',
             style: theme.textTheme.bodySmall,
             textAlign: TextAlign.center,
           ),
@@ -391,7 +403,9 @@ class UploadForm extends StatelessWidget {
                   ),
                 )
               : const Icon(Icons.upload),
-          label: Text(uploading ? 'Envoi en cours...' : 'Téléverser'),
+          label: Text(uploading
+              ? (uploadProgress < 1.0 ? 'Envoi en cours...' : 'Analyse…')
+              : 'Téléverser'),
           style: FilledButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),
           ),

@@ -6,6 +6,7 @@ import 'dart:io';
 
 import 'package:ecole_platform/data/api/api_client.dart';
 import 'package:ecole_platform/data/dto/mappers.dart';
+import 'package:ecole_platform/data/services/upload_client.dart';
 import 'package:ecole_platform/data/local_store/cache_store.dart';
 import 'package:ecole_platform/domain/entities/quiz.dart';
 import 'package:ecole_platform/domain/entities/teacher.dart';
@@ -100,6 +101,7 @@ class ContentLibraryRepositoryImpl implements ContentLibraryRepository {
   Future<void> uploadContent({
     required String title,
     required String contentType,
+    required String schoolId,
     String? description,
     String? level,
     String? subject,
@@ -107,6 +109,26 @@ class ContentLibraryRepositoryImpl implements ContentLibraryRepository {
     required File file,
     void Function(int sent, int total)? onProgress,
   }) async {
+    // Map content_type string → UploadKind for routing decision.
+    final kind = switch (contentType.toLowerCase()) {
+      'video' => UploadKind.video,
+      'audio' => UploadKind.audio,
+      _ => UploadKind.contentAsset,
+    };
+
+    if (shouldUseDirect(file, kind)) {
+      // Direct-to-MinIO path for video, audio, or files > 10 MB.
+      await directUpload(
+        api: _api,
+        kind: kind,
+        scope: UploadScope(schoolId: schoolId),
+        file: file,
+        onProgress: onProgress,
+      );
+      return;
+    }
+
+    // Legacy multipart path for small, non-streaming files.
     final fields = <String, dynamic>{
       'title': title,
       'content_type': contentType,

@@ -26,9 +26,13 @@ abstract class ContentLibraryRepository {
   });
 
   /// Upload school-scoped content from device.
+  ///
+  /// [schoolId] is required for the direct upload scope when the file is routed
+  /// through MinIO direct upload (video/audio/large files).
   Future<void> uploadContent({
     required String title,
     required String contentType,
+    required String schoolId,
     String? description,
     String? level,
     String? subject,
