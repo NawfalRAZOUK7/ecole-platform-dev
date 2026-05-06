@@ -26,17 +26,12 @@ branch = true
 omit = ["app/alembic/*", "app/core/config.py"]
 
 [tool.coverage.report]
-fail_under = 80
+fail_under = 90
 show_missing = true
-include = [
-  "app/api/v1/budgets.py",
-  "app/api/v1/router.py",
-  "app/core/permissions.py",
-  "app/domain/events/budget.py",
-  "app/models/budget.py",
-  "app/repositories/budget.py",
-  "app/schemas/budget.py",
-  "app/services/budget_service.py",
+omit = [
+  "app/main.py",
+  "app/core/config.py",
+  "tests/*",
 ]
 exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "if __name__"]
 

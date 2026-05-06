@@ -9,10 +9,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ecole_platform/domain/entities/rewards.dart';
+import 'package:ecole_platform/domain/entities/timetable.dart';
 import 'package:ecole_platform/features/auth/auth_provider.dart';
 import 'package:ecole_platform/features/rewards/rewards_provider.dart';
 import 'package:ecole_platform/features/rewards/widgets/level_badge.dart';
 import 'package:ecole_platform/features/rewards/widgets/streak_card.dart';
+import 'package:ecole_platform/features/timetable/timetable_provider.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
 
@@ -24,6 +26,7 @@ class StudentHomeScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final authState = ref.watch(authProvider);
     final rewardsAsync = ref.watch(rewardsProvider);
+    final timetableState = ref.watch(timetableProvider);
     final user = authState.user;
     final firstName = user?.fullName.split(' ').first ?? '';
 
@@ -65,8 +68,7 @@ class StudentHomeScreen extends ConsumerWidget {
                   ),
                 ),
                 error: (_, __) => _ErrorCard(
-                  onRetry: () =>
-                      ref.read(rewardsProvider.notifier).refresh(),
+                  onRetry: () => ref.read(rewardsProvider.notifier).refresh(),
                 ),
                 data: (rewards) => Column(
                   children: [
@@ -89,6 +91,10 @@ class StudentHomeScreen extends ConsumerWidget {
                   ],
                 ),
               ),
+
+              // ── Today's schedule ──
+              _TodayScheduleSection(timetableState: timetableState),
+              const SizedBox(height: AppSpacing.lg),
 
               // ── CTA: Ready to learn? ──
               _SectionTitle(
@@ -147,7 +153,8 @@ class StudentHomeScreen extends ConsumerWidget {
                   _QuickLink(emoji: '📊', label: 'تقدّمي', path: '/progress'),
                   _QuickLink(emoji: '🏆', label: 'جوائزي', path: '/rewards'),
                   _QuickLink(emoji: '🎨', label: 'تلوين', path: '/coloring'),
-                  _QuickLink(emoji: '📢', label: 'أخبار', path: '/announcements'),
+                  _QuickLink(
+                      emoji: '📢', label: 'أخبار', path: '/announcements'),
                   _QuickLink(emoji: '🗓️', label: 'التقويم', path: '/calendar'),
                 ],
               ),
@@ -516,6 +523,122 @@ class _ErrorCard extends StatelessWidget {
           TextButton(
             onPressed: onRetry,
             child: const Text('إعادة المحاولة'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Today's schedule section ──
+
+class _TodayScheduleSection extends StatelessWidget {
+  final TimetableState timetableState;
+
+  const _TodayScheduleSection({required this.timetableState});
+
+  @override
+  Widget build(BuildContext context) {
+    final today = DateTime.now().weekday;
+
+    if (timetableState.isLoading) {
+      return const SizedBox(
+        height: 60,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (timetableState.error != null) {
+      return const SizedBox.shrink();
+    }
+
+    final schedule = timetableState.schedule;
+    if (schedule == null || schedule.slots.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // Filter slots for today
+    final todaySlots = schedule.slots
+        .where((slot) => slot.dayOfWeek == today)
+        .toList()
+      ..sort((a, b) => a.startTime.compareTo(b.startTime));
+
+    if (todaySlots.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionTitle(
+          emoji: '📅',
+          title: 'جدول اليوم',
+          textDirection: TextDirection.rtl,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        ...todaySlots.map((slot) => _ScheduleSlotCard(slot: slot)),
+      ],
+    );
+  }
+}
+
+class _ScheduleSlotCard extends StatelessWidget {
+  final TimetableSlot slot;
+
+  const _ScheduleSlotCard({required this.slot});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: AppSpacing.xs,
+            ),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              '${slot.startTime.substring(0, 5)}',
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: theme.colorScheme.onPrimaryContainer,
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  slot.subject,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                if (slot.room != null)
+                  Text(
+                    slot.room!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+              ],
+            ),
           ),
         ],
       ),

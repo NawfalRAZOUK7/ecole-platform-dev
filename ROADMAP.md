@@ -49,20 +49,32 @@
 - [x] 9 GitHub Actions CI/CD workflows
 - [x] Blue-green deployment
 - [x] Prometheus + Grafana (8 dashboards) + Loki + Tempo
+- [x] MinIO / S3-compatible object storage (Phase 5 complete)
+- [x] Local Kubernetes setup with Kind (ecole-dev cluster)
 
 ### Testing
 - [x] 133 backend test files (unit/integration/security/performance)
 - [x] 27 web test files (Vitest + MSW)
 - [x] Test infrastructure (factories, fixtures, render helpers)
 
+### Academic Records
+- [x] Academic Program Management (G49-G50 migrations — programs, versions, equivalences, snapshots)
+- [x] Student transcript feature (PDF transcript generation via WeasyPrint, transcript service + API)
+
+### Payment & Finance
+- [x] Invoice PDF generation + Moroccan compliance (WeasyPrint, TVA, bilingual) — all 7 phases
+
 ### Documentation
 - [x] README.md with architecture overview
-- [x] 7 docs/ files (Architecture, API, DB, Deploy, Tests, Security, Cross-Platform)
+- [x] 12 docs/ files (Architecture, API, DB, Deploy, Tests, Security, Cross-Platform, K8s Setup, MinIO Rollout, MinIO Architecture, Payment, ClamAV)
 - [x] CHANGELOG, ROADMAP, CONTRIBUTING, INSTALLATION, LICENSE
 
 ---
 
 ## 🔄 In Progress
+
+### Payment & Finance
+- [x] Invoice PDF generation + Moroccan compliance (WeasyPrint, TVA, bilingual) — Phase 7 complete
 
 ### Quality & Polish
 - [ ] Increase backend test coverage to 90%+

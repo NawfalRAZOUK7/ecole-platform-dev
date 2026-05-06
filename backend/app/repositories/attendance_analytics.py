@@ -6,7 +6,7 @@ import uuid
 from datetime import date, timedelta
 from typing import Any
 
-from sqlalchemy import case, func, select
+from sqlalchemy import Date, case, cast, func, select
 
 from app.models.erp import (
     AttendanceAlert,
@@ -110,8 +110,22 @@ class AttendanceAnalyticsRepository(BaseRepository):
         period_id: uuid.UUID,
         granularity: str = "weekly",
     ) -> list[tuple[date, int, int]]:
-        result = await self.db.execute(
-            select(AttendanceSession.session_date, AttendanceRecord.status)
+        if granularity == "weekly":
+            # date_trunc needs a timestamp; cast date → timestamp, then back to date
+            bucket_expr = func.date_trunc(
+                "week",
+                cast(AttendanceSession.session_date, "TIMESTAMP"),
+            ).cast(Date)
+        else:
+            bucket_expr = AttendanceSession.session_date
+
+        absent_count = func.sum(
+            case((AttendanceRecord.status == "absent", 1), else_=0)
+        ).label("absent_count")
+        total_count = func.count(AttendanceRecord.id).label("total_sessions")
+
+        stmt = (
+            select(bucket_expr.label("bucket"), absent_count, total_count)
             .select_from(AttendanceRecord)
             .join(
                 AttendanceSession,
@@ -120,30 +134,19 @@ class AttendanceAnalyticsRepository(BaseRepository):
             .where(
                 AttendanceSession.class_id == class_id,
                 AttendanceSession.period_id == period_id,
+                AttendanceRecord.status != "excused",
             )
-            .order_by(AttendanceSession.session_date.asc())
+            .group_by(bucket_expr)
+            .order_by(bucket_expr.asc())
         )
-
-        aggregates: dict[date, dict[str, int]] = {}
-        for session_date, status in result.all():
-            if status == "excused":
-                continue
-            bucket = (
-                session_date
-                if granularity == "daily"
-                else session_date - timedelta(days=session_date.weekday())
-            )
-            aggregates.setdefault(
-                bucket,
-                {"absent_count": 0, "total_sessions": 0},
-            )
-            aggregates[bucket]["total_sessions"] += 1
-            if status == "absent":
-                aggregates[bucket]["absent_count"] += 1
-
+        result = await self.db.execute(stmt)
         return [
-            (bucket, values["absent_count"], values["total_sessions"])
-            for bucket, values in sorted(aggregates.items())
+            (
+                row.bucket.date() if hasattr(row.bucket, "date") else row.bucket,
+                int(row.absent_count or 0),
+                int(row.total_sessions or 0),
+            )
+            for row in result.all()
         ]
 
     async def get_attendance_alert(
