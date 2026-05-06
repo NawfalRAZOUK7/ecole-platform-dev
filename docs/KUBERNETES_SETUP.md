@@ -66,9 +66,10 @@ helm install postgres bitnami/postgresql \
   --set auth.username=ecole --set auth.password=ecole --set auth.database=ecole_platform
 helm install redis bitnami/redis \
   -n ecole-local \
-  --set auth.enabled=false
+  --set auth.enabled=false \
+  --set replica.replicaCount=0
 
-export DATABASE_URL="postgresql://ecole:ecole@postgres-postgresql.ecole-local.svc.cluster.local:5432/ecole_platform"
+export DATABASE_URL="postgresql+asyncpg://ecole:ecole@postgres-postgresql.ecole-local.svc.cluster.local:5432/ecole_platform"
 export REDIS_URL="redis://redis-master.ecole-local.svc.cluster.local:6379/0"
 ```
 
@@ -108,11 +109,11 @@ Or use the convenience script (which runs steps 2–6 automatically):
 The ingress is disabled for local; use port-forwarding:
 ```bash
 # Backend API
-kubectl port-forward -n ecole-local svc/ecole-platform-ecole-platform-backend 8000:8000
+kubectl port-forward -n ecole-local svc/ecole-platform-backend 8000:8000
 curl http://localhost:8000/api/v1/health
 
 # Web UI
-kubectl port-forward -n ecole-local svc/ecole-platform-ecole-platform-web 3000:80
+kubectl port-forward -n ecole-local svc/ecole-platform-web 3000:80
 open http://localhost:3000
 ```
 
@@ -177,8 +178,8 @@ helm upgrade --install ecole-platform ./infra/k8s \
 kubectl get pods -n ecole-local
 
 # Watch rollout
-kubectl rollout status deploy/ecole-platform-ecole-platform-backend -n ecole-local
-kubectl rollout status deploy/ecole-platform-ecole-platform-web -n ecole-local
+kubectl rollout status deploy/ecole-platform-backend -n ecole-local
+kubectl rollout status deploy/ecole-platform-web -n ecole-local
 
 # View backend logs
 kubectl logs -n ecole-local -l app.kubernetes.io/component=backend -f
@@ -191,15 +192,28 @@ kubectl logs -n ecole-local -l app.kubernetes.io/component=worker -f
 
 ## Teardown
 
-```bash
-# Uninstall Helm release
-helm uninstall ecole-platform -n ecole-local
+### Partial teardown — redeploy from scratch (keep Kind cluster)
 
-# Delete namespace and all resources
+Uninstall all Helm releases and wipe the namespace, then follow the setup steps again from step 2:
+
+```bash
+# Uninstall all releases (ecole-platform + in-cluster postgres/redis if deployed)
+helm uninstall ecole-platform postgres redis -n ecole-local 2>/dev/null || true
+
+# Delete namespace — removes all pods, secrets, services, PVCs
 kubectl delete namespace ecole-local
 
-# Delete Kind cluster (if using Kind)
+# Confirm clean
+kubectl get all -n ecole-local 2>&1  # should say "No resources found"
+```
+
+### Full teardown — destroy the Kind cluster entirely
+
+```bash
 kind delete cluster --name ecole-dev
+
+# Optionally remove leftover local images
+docker rmi ecole-platform-backend:local ecole-platform-web:local 2>/dev/null || true
 ```
 
 ---
