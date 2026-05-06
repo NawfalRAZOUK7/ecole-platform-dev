@@ -17,8 +17,10 @@ import httpx
 import pytest
 import pytest_asyncio
 import redis.asyncio as redis
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import ENUM as PgEnum
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
 from testcontainers.postgres import PostgresContainer
 
 import app.core.feature_flags as feature_flags_module
@@ -28,9 +30,12 @@ import app.core.redis as core_redis_module
 import app.services.dashboard_analytics as dashboard_analytics_module
 import app.services.notification_hub as notification_hub_module
 import app.services.progress as progress_module
+from app.core.config import settings
 from app.core.database import Base, engine as app_engine
 from app.core.dependencies import AuthContext
 from app.core.permissions import get_permissions_for_role
+from app.core.security import hash_password
+from app.models.iam import User
 
 # Fixed IDs from seed.py
 SCHOOL_ID = "00000000-0000-4000-8000-000000000001"
@@ -55,6 +60,22 @@ BACKEND_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = BACKEND_ROOT.parent
 LOGIN_TIMEOUT = httpx.Timeout(30.0, connect=5.0)
 _seed_attempted = False
+_seed_auth_state_restored = False
+
+SEED_AUTH_CREDENTIALS = {
+    ADMIN_EMAIL: ADMIN_PASSWORD,
+    TEACHER_EMAIL: TEACHER_PASSWORD,
+    PARENT_EMAIL: PARENT_PASSWORD,
+    STUDENT_EMAIL: STUDENT_PASSWORD,
+}
+
+LIVE_SEED_AUTH_FIXTURES = {
+    "client",
+    "admin_token",
+    "teacher_token",
+    "student_token",
+    "parent_token",
+}
 
 
 def _requires_live_redis(request: pytest.FixtureRequest) -> bool:
@@ -63,6 +84,57 @@ def _requires_live_redis(request: pytest.FixtureRequest) -> bool:
     if "unit" in path.parts or path.name.startswith("test_unit_"):
         return False
     return True
+
+
+def _uses_root_live_seed_auth(request: pytest.FixtureRequest) -> bool:
+    """Return True for root integration tests that authenticate against dev seed users."""
+    path = Path(str(request.node.fspath)).resolve()
+    if path.parent != BACKEND_ROOT / "tests":
+        return False
+    return bool(LIVE_SEED_AUTH_FIXTURES.intersection(request.fixturenames))
+
+
+def _mutates_seed_admin_password(request: pytest.FixtureRequest) -> bool:
+    """Known live API tests that exercise password changes on the seeded admin."""
+    return (
+        "tests/test_security_audit.py::TestPasswordPolicy"
+        in request.node.nodeid.replace("\\", "/")
+    )
+
+
+async def _restore_seed_auth_credentials(
+    credentials: dict[str, str] | None = None,
+) -> None:
+    """Best-effort repair for shared dev seed credentials mutated by API tests."""
+    selected_credentials = credentials or SEED_AUTH_CREDENTIALS
+    engine = create_async_engine(
+        settings.database_url,
+        echo=False,
+        poolclass=NullPool,
+        connect_args={"statement_cache_size": 0},
+    )
+    session_factory = async_sessionmaker(
+        engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+    try:
+        async with session_factory() as session:
+            result = await session.execute(
+                select(User).where(User.email.in_(list(selected_credentials)))
+            )
+            users_by_email = {user.email: user for user in result.scalars()}
+            for email, password in selected_credentials.items():
+                user = users_by_email.get(email)
+                if user is not None:
+                    user.password_hash = hash_password(password)
+            await session.commit()
+    except Exception:
+        # Some isolated/unit suites run without the shared dev database.
+        # Login-dependent tests will still fail clearly if seed data is unavailable.
+        pass
+    finally:
+        await engine.dispose()
 
 
 def pytest_collection_modifyitems(
@@ -109,6 +181,26 @@ async def client():
     """Async HTTP client for integration tests."""
     async with httpx.AsyncClient(base_url=BASE_URL, timeout=LOGIN_TIMEOUT) as c:
         yield c
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def restore_live_seed_auth_state(request: pytest.FixtureRequest):
+    """Keep shared dev seed credentials stable across tests and reruns."""
+    global _seed_auth_state_restored
+
+    if not _uses_root_live_seed_auth(request):
+        yield
+        return
+
+    if not _seed_auth_state_restored:
+        await _restore_seed_auth_credentials()
+        _seed_auth_state_restored = True
+
+    try:
+        yield
+    finally:
+        if _mutates_seed_admin_password(request):
+            await _restore_seed_auth_credentials({ADMIN_EMAIL: ADMIN_PASSWORD})
 
 
 def _reseed_dev_database() -> None:
