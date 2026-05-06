@@ -23,6 +23,7 @@ addopts = ["--strict-markers", "--tb=short", "-q"]
 [tool.coverage.run]
 source = ["app"]
 branch = true
+data_file = ".coverage.pytest"
 omit = ["app/alembic/*", "app/core/config.py"]
 
 [tool.coverage.report]

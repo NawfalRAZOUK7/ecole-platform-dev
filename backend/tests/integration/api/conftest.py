@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import date
+from decimal import Decimal
 
 import httpx
 import pytest_asyncio
@@ -18,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 import app.models  # noqa: F401
 from app.core.database import Base, get_db
 from app.core.security import hash_password
+from app.models.billing import Invoice, InvoiceItem
 from app.main import app
 from app.models.erp import (
     AcademicYear,
@@ -50,6 +52,8 @@ ENROLLMENT_ID = uuid.UUID("72000000-0000-4000-8000-000000000001")
 TEACHER_ASSIGNMENT_ID = uuid.UUID("73000000-0000-4000-8000-000000000001")
 ATTENDANCE_SESSION_ID = uuid.UUID("74000000-0000-4000-8000-000000000001")
 ATTENDANCE_RECORD_ID = uuid.UUID("75000000-0000-4000-8000-000000000001")
+INVOICE_ID = uuid.UUID("40000000-0000-4000-8000-000000000001")
+INVOICE_ITEM_ID = uuid.UUID("41000000-0000-4000-8000-000000000001")
 
 ADMIN_ID = uuid.UUID("10000000-0000-4000-8000-000000000001")
 TEACHER_ID = uuid.UUID("10000000-0000-4000-8000-000000000003")
@@ -267,6 +271,35 @@ async def legacy_api_seed(isolated_legacy_api_db, session_factory):
                 attendance_session=attendance_session,
                 student=student,
                 status="absent",
+            )
+        if await session.get(Invoice, INVOICE_ID) is None:
+            session.add(
+                Invoice(
+                    id=INVOICE_ID,
+                    school_id=school.id,
+                    parent_id=parent.id,
+                    period_id=period.id,
+                    status="pending",
+                    total_amount=Decimal("3500.00"),
+                    currency="MAD",
+                    issued_date=date(2026, 2, 1),
+                    due_date=date(2026, 2, 28),
+                )
+            )
+        if await session.get(InvoiceItem, INVOICE_ITEM_ID) is None:
+            session.add(
+                InvoiceItem(
+                    id=INVOICE_ITEM_ID,
+                    invoice_id=INVOICE_ID,
+                    description="Frais de scolarite - Semestre 2",
+                    amount=Decimal("3500.00"),
+                    unit_price=Decimal("3500.00"),
+                    quantity=1,
+                    tva_rate=Decimal("0.00"),
+                    tva_amount=Decimal("0.00"),
+                    amount_ht=Decimal("3500.00"),
+                    amount_ttc=Decimal("3500.00"),
+                )
             )
         await session.commit()
 

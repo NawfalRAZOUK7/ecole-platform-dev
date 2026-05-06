@@ -361,6 +361,7 @@ class TestWorkerSettings:
             "cron:task_notify_expiring_documents",
             "cron:task_cleanup_deleted_documents",
             "cron:task_send_event_reminders",
+            "cron:task_cleanup_orphaned_uploads",
         }
         if settings.app_env in ("staging", "production"):
             expected_names.update(

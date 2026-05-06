@@ -6,7 +6,7 @@ import uuid
 from datetime import date, timedelta
 from typing import Any
 
-from sqlalchemy import Date, case, cast, func, select
+from sqlalchemy import Date, DateTime, case, cast, func, select
 
 from app.models.erp import (
     AttendanceAlert,
@@ -114,7 +114,7 @@ class AttendanceAnalyticsRepository(BaseRepository):
             # date_trunc needs a timestamp; cast date → timestamp, then back to date
             bucket_expr = func.date_trunc(
                 "week",
-                cast(AttendanceSession.session_date, "TIMESTAMP"),
+                cast(AttendanceSession.session_date, DateTime),
             ).cast(Date)
         else:
             bucket_expr = AttendanceSession.session_date

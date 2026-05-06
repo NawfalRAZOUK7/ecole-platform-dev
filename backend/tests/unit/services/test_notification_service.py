@@ -44,6 +44,13 @@ def make_notification(
         read_at=now if is_read else None,
         is_read=is_read,
         created_at=now,
+        updated_at=None,  # Required by serialize_notification in notification_hub.py
+        deleted_at=None,  # Required by serialize_notification in notification_hub.py
+        deliveries=[],  # Required by serialize_notification in notification_hub.py
+        event_ref=None,  # Required by serialize_notification in notification_hub.py
+        priority="normal",  # Required by serialize_notification in notification_hub.py
+        action_url=None,  # Required by serialize_notification in notification_hub.py
+        action_payload=None,  # Required by serialize_notification in notification_hub.py
     )
 
 

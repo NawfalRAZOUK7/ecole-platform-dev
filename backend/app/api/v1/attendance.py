@@ -12,8 +12,8 @@ from __future__ import annotations
 import uuid
 from datetime import date as date_type
 
-from fastapi import APIRouter, Depends, File, Form, Query, Request, UploadFile
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from pydantic import BaseModel, ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -149,9 +149,6 @@ async def list_student_attendance_records(
 )
 async def create_justification(
     request: Request,
-    attendance_record_id: uuid.UUID = Form(...),
-    reason: str = Form(..., min_length=1, max_length=2000),
-    attachment: UploadFile | None = File(None),
     auth: AuthContext = Depends(requires_permission("PERM-ERP:absence:justify")),
     db: AsyncSession = Depends(get_db),
 ):
@@ -162,6 +159,35 @@ async def create_justification(
       - reason (str, required)
       - attachment (file, optional)
     """
+    content_type = request.headers.get("content-type", "").lower()
+    attachment = None
+    if (
+        content_type.startswith("multipart/form-data")
+        or content_type.startswith("application/x-www-form-urlencoded")
+    ):
+        form = await request.form()
+        payload = {
+            "attendance_record_id": form.get("attendance_record_id"),
+            "reason": form.get("reason"),
+        }
+        maybe_attachment = form.get("attachment")
+        if (
+            maybe_attachment is not None
+            and hasattr(maybe_attachment, "filename")
+            and hasattr(maybe_attachment, "read")
+        ):
+            attachment = maybe_attachment
+    else:
+        try:
+            payload = await request.json()
+        except Exception as exc:
+            raise HTTPException(status_code=422, detail="Invalid request body") from exc
+
+    try:
+        body = JustificationCreateRequest.model_validate(payload)
+    except ValidationError as exc:
+        raise HTTPException(status_code=422, detail=exc.errors()) from exc
+
     attachment_url: str | None = None
     if attachment is not None and attachment.filename:
         content = await attachment.read()
@@ -174,10 +200,6 @@ async def create_justification(
             attachment_url = storage_path
 
     service = ERPService(db)
-    body = JustificationCreateRequest(
-        attendance_record_id=attendance_record_id,
-        reason=reason,
-    )
     result = await service.create_justification(
         body=body,
         auth=auth,

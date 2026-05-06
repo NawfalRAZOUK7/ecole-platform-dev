@@ -215,8 +215,12 @@ class InvoiceItem(TimestampMixin, Base):
     # TVA breakdown fields (G50E - Invoice PDF support)
     tva_rate: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False, default=0.0)
     tva_amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False, default=0.0)
-    amount_ht: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
-    amount_ttc: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    amount_ht: Mapped[float] = mapped_column(
+        Numeric(12, 2), nullable=False, default=0.0
+    )
+    amount_ttc: Mapped[float] = mapped_column(
+        Numeric(12, 2), nullable=False, default=0.0
+    )
 
     # Relationships
     invoice: Mapped["Invoice"] = relationship(back_populates="items")

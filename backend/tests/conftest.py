@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+import sys
 import uuid
 from pathlib import Path
 
@@ -50,7 +51,8 @@ TEST_REDIS_URL = os.getenv(
         f"redis://:{os.getenv('REDIS_PASSWORD', 'change-me-dev-redis')}@localhost:6379/0",
     ),
 )
-REPO_ROOT = Path(__file__).resolve().parents[2]
+BACKEND_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = BACKEND_ROOT.parent
 LOGIN_TIMEOUT = httpx.Timeout(30.0, connect=5.0)
 _seed_attempted = False
 
@@ -138,8 +140,8 @@ def _reseed_dev_database() -> None:
         # Docker may not be available; fall back to direct seed if possible.
         try:
             subprocess.run(
-                ["python", "-m", "app.seed"],
-                cwd=REPO_ROOT,
+                [sys.executable, "-m", "app.seed"],
+                cwd=BACKEND_ROOT,
                 check=True,
                 capture_output=True,
                 text=True,

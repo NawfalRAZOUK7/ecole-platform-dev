@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime, timezone
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -41,7 +42,7 @@ def make_announcement(
         target_class_ids=None,
         published_at=None,
         status=status,
-        created_at="2026-05-01T10:00:00",
+        created_at=datetime(2026, 5, 1, 10, 0, 0, tzinfo=timezone.utc),
         updated_at=None,
     )
 

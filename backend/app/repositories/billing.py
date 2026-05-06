@@ -277,6 +277,10 @@ class BillingRepository(BaseRepository):
         return invoice
 
     async def create_invoice_item(self, **kwargs: Any) -> InvoiceItem:
+        if kwargs.get("amount_ht") is None:
+            kwargs["amount_ht"] = kwargs.get("amount", 0)
+        if kwargs.get("amount_ttc") is None:
+            kwargs["amount_ttc"] = kwargs.get("amount", 0)
         item = InvoiceItem(**kwargs)
         self.db.add(item)
         await self.db.flush()

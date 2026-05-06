@@ -980,6 +980,10 @@ async def seed_billing(session: AsyncSession) -> None:
             amount=3000.00,
             unit_price=3000.00,
             quantity=1,
+            tva_rate=0.00,
+            tva_amount=0.00,
+            amount_ht=3000.00,
+            amount_ttc=3000.00,
         ),
         InvoiceItem(
             invoice_id=INVOICE_1_ID,
@@ -987,6 +991,10 @@ async def seed_billing(session: AsyncSession) -> None:
             amount=500.00,
             unit_price=500.00,
             quantity=1,
+            tva_rate=0.00,
+            tva_amount=0.00,
+            amount_ht=500.00,
+            amount_ttc=500.00,
         ),
     ]
     session.add_all(items)

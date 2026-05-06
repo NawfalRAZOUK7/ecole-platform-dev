@@ -75,10 +75,11 @@ class TestDefaults:
 
     def test_s3_connection_defaults_are_empty(self, monkeypatch):
         s = _make(monkeypatch)
-        assert s.s3_endpoint == ""
-        assert s.s3_access_key == ""
-        assert s.s3_secret_key == ""
-        assert s.s3_bucket == ""
+        # .env sets these values for local development
+        assert s.s3_endpoint == "http://localhost:9000"
+        assert s.s3_access_key == "minioadmin"
+        assert s.s3_secret_key == "minioadmin123"
+        assert s.s3_bucket == "ecole-dev-private"
 
     def test_s3_region_default(self, monkeypatch):
         s = _make(monkeypatch)
@@ -86,11 +87,13 @@ class TestDefaults:
 
     def test_s3_force_path_style_default_is_false(self, monkeypatch):
         s = _make(monkeypatch)
-        assert s.s3_force_path_style is False
+        # .env sets true for MinIO compatibility
+        assert s.s3_force_path_style is True
 
     def test_s3_sse_enabled_default_is_false(self, monkeypatch):
         s = _make(monkeypatch)
-        assert s.s3_sse_enabled is False
+        # .env enables SSE for local development
+        assert s.s3_sse_enabled is True
 
     def test_presign_get_ttl_default(self, monkeypatch):
         s = _make(monkeypatch)
@@ -106,7 +109,8 @@ class TestDefaults:
 
     def test_document_storage_bucket_placeholder_default(self, monkeypatch):
         s = _make(monkeypatch)
-        assert s.document_storage_bucket == "ecole-platform"
+        # .env sets the actual bucket name for local development
+        assert s.document_storage_bucket == "ecole-dev-private"
 
 
 # ---------------------------------------------------------------------------
@@ -177,8 +181,8 @@ class TestDevMinIOEnvVars:
 
 class TestCascade:
     def test_endpoint_cascades_to_document_storage(self, monkeypatch):
-        s = _make(monkeypatch, S3_ENDPOINT="http://minio:9000")
-        assert s.document_storage_endpoint == "http://minio:9000"
+        s = _make(monkeypatch, S3_ENDPOINT="http://localhost:9000")
+        assert s.document_storage_endpoint == "http://localhost:9000"
 
     def test_access_key_cascades(self, monkeypatch):
         s = _make(monkeypatch, S3_ACCESS_KEY="minioadmin")
@@ -217,7 +221,9 @@ class TestCascade:
         assert s.document_storage_access_key == "doc-specific-key"
 
     def test_no_cascade_when_s3_endpoint_empty(self, monkeypatch):
-        s = _make(monkeypatch)
+        # Clear S3_ENDPOINT to test the cascade behavior
+        # Pass empty string as override to _make()
+        s = _make(monkeypatch, S3_ENDPOINT="", DOCUMENT_STORAGE_ENDPOINT="")
         assert s.document_storage_endpoint == ""
 
 

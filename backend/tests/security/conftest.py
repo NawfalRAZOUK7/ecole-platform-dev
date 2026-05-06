@@ -10,11 +10,18 @@ import httpx
 import pytest_asyncio
 from sqlalchemy import select
 
-from app.core.database import async_session
+from app.core.database import async_session as app_async_session
+from app.core.database import get_db
 from app.core.security import create_access_token, hash_password
+from app.main import app
 from app.models.erp import AttendanceRecord, AttendanceSession
 from app.models.iam import Membership, ParentChildLink, Session, User
 from app.models.lms import Assignment, Course, GradeCategory, Submission
+from tests.integration.api.conftest import (  # noqa: F401
+    isolated_legacy_api_db,
+    legacy_api_seed,
+    session_factory,
+)
 
 SCHOOL_ID = "00000000-0000-4000-8000-000000000001"
 YEAR_ID = "20000000-0000-4000-8000-000000000001"
@@ -27,8 +34,6 @@ ADMIN_ID = "10000000-0000-4000-8000-000000000001"
 
 SUPERADMIN_EMAIL = "superadmin@ecole-platform.ma"
 SUPERADMIN_PASSWORD = "superadmin123"
-CONTENT_MGR_EMAIL = "cms@ecole-platform.ma"
-CONTENT_MGR_PASSWORD = "content123"
 
 SCHOOL_UUID = uuid.UUID(SCHOOL_ID)
 YEAR_UUID = uuid.UUID(YEAR_ID)
@@ -38,6 +43,51 @@ STUDENT_UUID = uuid.UUID(STUDENT_ID)
 TEACHER_UUID = uuid.UUID(TEACHER_ID)
 PARENT_UUID = uuid.UUID(PARENT_ID)
 ADMIN_UUID = uuid.UUID(ADMIN_ID)
+
+_security_session_factory = None
+
+
+def _security_session():
+    if _security_session_factory is not None:
+        return _security_session_factory()
+    return app_async_session()
+
+
+@pytest_asyncio.fixture(loop_scope="function", autouse=True)
+async def security_database(legacy_api_seed, session_factory):
+    """Run security tests against the disposable seeded database."""
+    global _security_session_factory
+    _ = legacy_api_seed
+    _security_session_factory = session_factory
+    try:
+        yield
+    finally:
+        _security_session_factory = None
+
+
+@pytest_asyncio.fixture(loop_scope="function")
+async def client(security_database, session_factory):
+    _ = security_database
+
+    async def override_get_db():
+        async with session_factory() as session:
+            try:
+                yield session
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise
+            finally:
+                await session.close()
+
+    app.dependency_overrides[get_db] = override_get_db
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(
+        transport=transport,
+        base_url="http://testserver/api/v1",
+    ) as api_client:
+        yield api_client
+    app.dependency_overrides.clear()
 
 
 @dataclass(frozen=True)
@@ -80,7 +130,7 @@ async def ensure_role_actor(
     session_id = uuid.uuid4()
     email = f"{key}@security.ecole.ma"
 
-    async with async_session() as db:
+    async with _security_session() as db:
         user = await db.get(User, user_id)
         if user is None:
             user = User(
@@ -138,7 +188,7 @@ async def ensure_parent_link(
     student_id: uuid.UUID,
     status: str,
 ) -> None:
-    async with async_session() as db:
+    async with _security_session() as db:
         link = (
             await db.execute(
                 select(ParentChildLink).where(
@@ -167,7 +217,7 @@ async def ensure_parent_link(
 async def create_absence_record() -> uuid.UUID:
     attendance_session_id = uuid.uuid4()
     attendance_record_id = uuid.uuid4()
-    async with async_session() as db:
+    async with _security_session() as db:
         db.add(
             AttendanceSession(
                 id=attendance_session_id,
@@ -196,7 +246,7 @@ async def create_absence_record() -> uuid.UUID:
 async def ensure_grade_category() -> uuid.UUID:
     """Create a grade category for the security test class/period if missing."""
     category_id = uuid.uuid5(uuid.NAMESPACE_URL, "security-grade-category")
-    async with async_session() as db:
+    async with _security_session() as db:
         existing_for_scope = (
             (
                 await db.execute(
@@ -238,7 +288,7 @@ async def create_grading_scope_submission(
     submission_id = uuid.uuid4()
     now = datetime.now(timezone.utc)
 
-    async with async_session() as db:
+    async with _security_session() as db:
         db.add(
             Course(
                 id=course_id,
@@ -294,12 +344,17 @@ async def superadmin_token(client: httpx.AsyncClient) -> str:
 
 
 @pytest_asyncio.fixture(loop_scope="function")
-async def content_mgr_token(client: httpx.AsyncClient) -> str:
-    return await login_token(
-        client,
-        email=CONTENT_MGR_EMAIL,
-        password=CONTENT_MGR_PASSWORD,
+async def content_mgr_actor() -> SecurityActor:
+    return await ensure_role_actor(
+        role="CONTENT_MGR",
+        key="content-mgr-role",
+        full_name="Security Content Manager",
     )
+
+
+@pytest_asyncio.fixture(loop_scope="function")
+async def content_mgr_token(content_mgr_actor: SecurityActor) -> str:
+    return content_mgr_actor.token
 
 
 @pytest_asyncio.fixture(loop_scope="function")
