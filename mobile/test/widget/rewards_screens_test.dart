@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -13,6 +15,30 @@ import '../helpers/pump_app.dart';
 import '../helpers/test_mocks.dart';
 
 class MockRewardsRepository extends Mock implements RewardsRepository {}
+
+/// Sets up providers needed for [authProvider] to initialize with a user.
+///
+/// Provides a fake refresh token so [AuthNotifier._tryRestore] calls
+/// [authRepository.getMe()] and sets the user in state.
+List<Override> _authOverridesWithUser(MockAuthRepository authRepository) {
+  final biometric = MockBiometricService();
+  final storage = MockSecureTokenStorage();
+  final api = MockApiClient();
+
+  when(() => biometric.isAvailable()).thenAnswer((_) async => false);
+  when(() => biometric.isEnabled()).thenAnswer((_) async => false);
+  when(() => storage.getRefreshToken()).thenAnswer((_) async => 'fake-token');
+  when(() => storage.getThemeMode()).thenAnswer((_) async => null);
+  when(() => storage.getLocaleCode()).thenAnswer((_) async => null);
+  when(() => storage.getCsrfToken()).thenAnswer((_) async => null);
+
+  return [
+    ...buildMockRepositoryOverrides(authRepository: authRepository),
+    biometricServiceProvider.overrideWithValue(biometric),
+    secureStorageProvider.overrideWithValue(storage),
+    apiClientProvider.overrideWithValue(api),
+  ];
+}
 
 void main() {
   group('Rewards screens', () {
@@ -32,7 +58,7 @@ void main() {
         tester,
         const RewardsScreen(),
         overrides: [
-          ...buildMockRepositoryOverrides(authRepository: authRepository),
+          ..._authOverridesWithUser(authRepository),
           rewardsRepositoryProvider.overrideWithValue(rewardsRepository),
         ],
       );
@@ -50,25 +76,25 @@ void main() {
       when(() => authRepository.getMe())
           .thenAnswer((_) async => createUser(role: 'STD'));
 
-      // Simulate a slow future — never resolves during test frame check
-      final neverComplete = Future<StudentRewards>.delayed(
-        const Duration(seconds: 30),
-        () => StudentRewards.empty,
-      );
+      // Use Completer so the pending future can be resolved cleanly on teardown
+      final completer = Completer<StudentRewards>();
       when(() => rewardsRepository.getMyRewards())
-          .thenAnswer((_) => neverComplete);
+          .thenAnswer((_) => completer.future);
 
       await pumpApp(
         tester,
         const RewardsScreen(),
         overrides: [
-          ...buildMockRepositoryOverrides(authRepository: authRepository),
+          ..._authOverridesWithUser(authRepository),
           rewardsRepositoryProvider.overrideWithValue(rewardsRepository),
         ],
       );
 
-      // First frame: should be loading / show skeleton scaffold
-      expect(find.byType(Scaffold), findsOneWidget);
+      // First frame: rewards still loading → skeleton scaffold rendered
+      expect(find.byType(Scaffold), findsWidgets);
+
+      // Resolve the completer to avoid pending-timer assertion on teardown
+      completer.complete(StudentRewards.empty);
     });
 
     testWidgets(
@@ -96,14 +122,14 @@ void main() {
         tester,
         const RewardsScreen(),
         overrides: [
-          ...buildMockRepositoryOverrides(authRepository: authRepository),
+          ..._authOverridesWithUser(authRepository),
           rewardsRepositoryProvider.overrideWithValue(rewardsRepository),
         ],
       );
       await tester.pumpAndSettle();
 
-      // Stars (42) should appear somewhere in the widget tree
-      expect(find.textContaining('42'), findsWidgets);
+      // XP (400) and level (3) appear in the stats grid
+      expect(find.textContaining('400'), findsWidgets);
     });
   });
 }

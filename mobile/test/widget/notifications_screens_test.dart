@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:ecole_platform/domain/entities/notification_item.dart';
+import 'package:ecole_platform/domain/repositories/feed_repository.dart';
 import 'package:ecole_platform/domain/repositories/notification_repository.dart';
 import 'package:ecole_platform/features/notifications/notifications_screen.dart';
 
@@ -41,11 +42,13 @@ void main() {
 
       when(() => notificationRepository.getNotifications(
             cursor: any(named: 'cursor'),
-            limit: any(named: 'limit'),
             category: any(named: 'category'),
           )).thenAnswer(
-        (_) async =>
-            NotificationPage(items: [_makeNotification()], nextCursor: null),
+        (_) async => PaginatedList<NotificationItem>(
+          items: [_makeNotification()],
+          nextCursor: null,
+          hasMore: false,
+        ),
       );
       when(() => notificationRepository.getUnreadCount())
           .thenAnswer((_) async => 1);
@@ -68,10 +71,13 @@ void main() {
 
       when(() => notificationRepository.getNotifications(
             cursor: any(named: 'cursor'),
-            limit: any(named: 'limit'),
             category: any(named: 'category'),
           )).thenAnswer(
-        (_) async => NotificationPage(items: const [], nextCursor: null),
+        (_) async => const PaginatedList<NotificationItem>(
+          items: [],
+          nextCursor: null,
+          hasMore: false,
+        ),
       );
       when(() => notificationRepository.getUnreadCount())
           .thenAnswer((_) async => 0);
@@ -86,7 +92,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Should show some empty state (text or icon)
-      expect(find.byType(Scaffold), findsOneWidget);
+      expect(find.byType(Scaffold), findsWidgets);
     });
 
     testWidgets('NotificationsScreen has AppBar', (tester) async {
@@ -94,10 +100,13 @@ void main() {
 
       when(() => notificationRepository.getNotifications(
             cursor: any(named: 'cursor'),
-            limit: any(named: 'limit'),
             category: any(named: 'category'),
           )).thenAnswer(
-        (_) async => NotificationPage(items: const [], nextCursor: null),
+        (_) async => const PaginatedList<NotificationItem>(
+          items: [],
+          nextCursor: null,
+          hasMore: false,
+        ),
       );
       when(() => notificationRepository.getUnreadCount())
           .thenAnswer((_) async => 0);

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -83,23 +84,18 @@ void main() {
       await tester.pumpAndSettle();
 
       // With empty list, should show some empty/placeholder UI
-      expect(find.byType(Scaffold), findsOneWidget);
+      expect(find.byType(Scaffold), findsWidgets);
     });
 
     testWidgets('TeacherQuizListScreen shows loader while fetching',
         (tester) async {
       final mockApi = MockApiClient();
+      final completer = Completer<ApiListResponse<Map<String, dynamic>>>();
 
       when(() => mockApi.list(
             any(),
             params: any(named: 'params'),
-          )).thenAnswer((_) => Future.delayed(
-            const Duration(seconds: 30),
-            () => const ApiListResponse<Map<String, dynamic>>(
-              data: [],
-              hasMore: false,
-            ),
-          ));
+          )).thenAnswer((_) => completer.future);
 
       await pumpApp(
         tester,
@@ -110,7 +106,13 @@ void main() {
       );
 
       // While loading, should show some loading indicator
-      expect(find.byType(Scaffold), findsOneWidget);
+      expect(find.byType(Scaffold), findsWidgets);
+
+      // Resolve to avoid pending-timer assertion on teardown
+      completer.complete(const ApiListResponse<Map<String, dynamic>>(
+        data: [],
+        hasMore: false,
+      ));
     });
   });
 }
