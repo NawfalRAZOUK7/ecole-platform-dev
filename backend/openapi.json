@@ -1538,32 +1538,12 @@
         "summary": "Submit absence justification",
         "description": "Submit an absence justification for a student.\n\nAccepts multipart/form-data:\n  - attendance_record_id (UUID, required)\n  - reason (str, required)\n  - attachment (file, optional)",
         "operationId": "create_justification_api_v1_attendance_justifications_post",
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/Body_create_justification_api_v1_attendance_justifications_post"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "201": {
             "description": "Justification record",
             "content": {
               "application/json": {
                 "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
               }
             }
           }
@@ -5295,6 +5275,67 @@
         }
       }
     },
+    "/api/v1/invoices/{invoice_id}/pdf": {
+      "post": {
+        "tags": [
+          "billing-invoices"
+        ],
+        "summary": "Generate invoice PDF",
+        "description": "Queue a PDF generation job for the given invoice.\n\nPAR: can only generate PDFs for own invoices.\nADM/DIR: can generate PDFs for any invoice in the school.\nPoll GET /reports/{job_id}/status, then download via GET /reports/{job_id}/download.",
+        "operationId": "generate_invoice_pdf_api_v1_invoices__invoice_id__pdf_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "invoice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Invoice Id"
+            }
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "fr",
+                "ar"
+              ],
+              "type": "string",
+              "default": "fr",
+              "title": "Language"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Report job queued for invoice PDF generation",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/payments/initiate": {
       "post": {
         "tags": [
@@ -5425,6 +5466,67 @@
         "responses": {
           "201": {
             "description": "Uploaded proof acknowledgement",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payments/{payment_id}/receipt": {
+      "post": {
+        "tags": [
+          "billing-payments"
+        ],
+        "summary": "Generate payment receipt PDF",
+        "description": "Queue a PDF receipt generation job for the given payment attempt.\n\nPAR: can only generate receipts for own payments.\nADM/DIR: can generate receipts for any payment in the school.\nPoll GET /reports/{job_id}/status, then download via GET /reports/{job_id}/download.",
+        "operationId": "generate_payment_receipt_api_v1_payments__payment_id__receipt_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "payment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Payment Id"
+            }
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "fr",
+                "ar"
+              ],
+              "type": "string",
+              "default": "fr",
+              "title": "Language"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Report job queued for payment receipt generation",
             "content": {
               "application/json": {
                 "schema": {}
@@ -23753,39 +23855,6 @@
         ],
         "title": "BatchRegisterRequest"
       },
-      "Body_create_justification_api_v1_attendance_justifications_post": {
-        "properties": {
-          "attendance_record_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Attendance Record Id"
-          },
-          "reason": {
-            "type": "string",
-            "maxLength": 2000,
-            "minLength": 1,
-            "title": "Reason"
-          },
-          "attachment": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "binary"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Attachment"
-          }
-        },
-        "type": "object",
-        "required": [
-          "attendance_record_id",
-          "reason"
-        ],
-        "title": "Body_create_justification_api_v1_attendance_justifications_post"
-      },
       "Body_create_resource_api_v1_resources_post": {
         "properties": {
           "file": {
@@ -29134,7 +29203,7 @@
         "properties": {
           "type": {
             "type": "string",
-            "pattern": "^(student_report_card|class_summary|attendance_report|billing_statement|school_analytics)$",
+            "pattern": "^(student_report_card|class_summary|attendance_report|billing_statement|school_analytics|invoice_pdf|payment_receipt)$",
             "title": "Type"
           },
           "period_id": {
@@ -29184,6 +29253,28 @@
               }
             ],
             "title": "Parent Id"
+          },
+          "invoice_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Id"
+          },
+          "payment_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Id"
           },
           "from_date": {
             "anyOf": [
