@@ -342,6 +342,7 @@ class AttendanceSession(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_attendance_sessions_class", "class_id"),
         Index("idx_attendance_sessions_period", "period_id"),
         Index("idx_attendance_sessions_teacher", "teacher_id"),
+        Index("ix_attendance_sessions_period_date", "period_id", "session_date"),
     )
 
     def __repr__(self) -> str:
@@ -389,6 +390,8 @@ class AttendanceRecord(TimestampMixin, SchoolScopedMixin, Base):
             "student_id",
         ),
         Index("idx_attendance_records_student_id", "student_id"),
+        Index("ix_attendance_records_session_id", "attendance_session_id"),
+        Index("ix_attendance_records_status", "status"),
         # One record per student per session
         UniqueConstraint(
             "attendance_session_id",

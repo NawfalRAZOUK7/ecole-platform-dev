@@ -317,16 +317,16 @@ version:
 # ==================== Test Matrix ====================
 
 test-unit:
-	cd backend && .venv/bin/python -m pytest tests/unit -m unit --timeout=10 -q
+	cd backend && .venv/bin/python -m pytest tests/unit --timeout=10 -q
 
 test-integration:
-	cd backend && .venv/bin/python -m pytest tests/unit tests/integration -m "unit or integration" --timeout=30
+	cd backend && .venv/bin/python -m pytest tests/integration --timeout=30
 
 test-security:
-	cd backend && .venv/bin/python -m pytest tests/security -m security --timeout=60
+	cd backend && .venv/bin/python -m pytest tests/security --timeout=60
 
 test-full:
 	cd backend && .venv/bin/python -m pytest --cov=app --cov-branch --cov-report=html --cov-report=term-missing
 
 test-perf:
-	cd backend && .venv/bin/python -m pytest tests/performance -m performance --timeout=300 --benchmark-enable
+	cd backend && .venv/bin/python -m pytest tests/performance --timeout=300 --benchmark-enable
