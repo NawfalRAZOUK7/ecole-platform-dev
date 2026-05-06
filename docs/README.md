@@ -34,4 +34,8 @@
 | Document | Description |
 |----------|-------------|
 | [INNOVATION_ROADMAP.md](INNOVATION_ROADMAP.md) | Feuille de route d'innovation produit |
+| [KUBERNETES_SETUP.md](KUBERNETES_SETUP.md) | Guide de déploiement Kubernetes local (Kind) |
+| [MINIO_ROLLOUT.md](MINIO_ROLLOUT.md) | Runbook de déploiement MinIO / stockage S3 |
+| [MINIO_INTEGRATION_ARCHITECTURE.md](MINIO_INTEGRATION_ARCHITECTURE.md) | Architecture de stockage S3-compatible (design doc) |
+| [PAYMENT_DOCUMENTATION.md](PAYMENT_DOCUMENTATION.md) | Système de facturation et paiements (implémenté) |
 | [clamav-setup.md](clamav-setup.md) | Configuration antivirus ClamAV |
