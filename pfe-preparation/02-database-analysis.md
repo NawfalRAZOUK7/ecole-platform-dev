@@ -175,7 +175,7 @@ School (root)
 
 ### 2.3.6 Migration Group G6 — Audit, Gamification & Specialized
 
-**Tables**: `audit_logs`, `student_rewards`, `reward_events`, `reward_badges`, `game_configs`, `difficulty_adaptations`, `skill_dimensions`, `skill_milestones`, `skill_passports`, `skill_progress`, `level_age_mappings`, `events` (calendar), `event_rsvps`, `event_reminders`, `event_reminder_preferences`, `documents`, `document_versions`, `student_document_requirements`, `compliance_reports`, `curriculum_mappings`, `men_curricula`, `men_objectives`, `sync_devices`, `sync_queue`, `sync_conflicts`, `sync_checkpoints`, `micro_schools`, `micro_groups`, `micro_enrollments`, `micro_payments`, `micro_progress_logs`, `micro_resources`, `feature_toggles`, `report_jobs`, `report_schedules`, `ai_preferences`, `shared_review_comments`
+**Tables**: `audit_logs`, `student_rewards`, `reward_events`, `reward_badges`, `game_configs`, `difficulty_adaptations`, `skill_dimensions`, `skill_milestones`, `skill_passports`, `skill_progress`, `level_age_mappings`, `events` (calendar), `event_rsvps`, `event_reminders`, `event_reminder_preferences`, `documents`, `document_versions`, `student_document_requirements`, `compliance_reports`, `curriculum_mappings`, `men_curricula`, `men_objectives`, `sync_devices`, `sync_queue`, `sync_conflicts`, `sync_checkpoints`, `micro_schools`, `micro_groups`, `micro_enrollments`, `micro_payments`, `micro_progress_logs`, `micro_resources`, `feature_toggles`, `report_jobs`, `report_schedules`, `shared_review_comments`
 
 **Audit log** (append-only):
 - `actor_id`, `action_type`, `target_type`, `target_id`
@@ -331,7 +331,7 @@ The seed system achieves **~93% table coverage** (122 of 131 tables populated) a
 
 Three coordinated modules:
 - **`seed.py`** — Core seed orchestrator (~3,700 LOC). Clears data via `TRUNCATE CASCADE`, seeds in dependency order, generates `seed-report.md`
-- **`seed_extensions.py`** — Extended seeders for newer features (documents, AI, reporting, program management, device tokens)
+- **`seed_extensions.py`** — Extended seeders for newer features (documents, reporting, program management, device tokens)
 - **`seed_enhanced.py`** — High-volume demo seeders (22 functions) covering rubrics, question bank, quiz responses, micro-schools, sync queue, attendance alerts, absence justifications, budget, financial health, payment plans, billing policies, shared reviews, program assignment events
 
 ### 2.8.3 Fixture System

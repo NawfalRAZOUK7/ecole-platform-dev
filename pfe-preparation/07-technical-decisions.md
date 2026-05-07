@@ -300,7 +300,7 @@ The entire stack runs self-hosted in Docker containers — no SaaS vendor depend
 
 **Three-environment topology:**
 - **Development** (`docker-compose.dev.yml`) — 5 services, host volume mounts, hot reload
-- **Staging** (`docker-compose.staging.yml`) — Mirrors production with PgBouncer, WAL archiving, mock AI provider, seed data on startup
+- **Staging** (`docker-compose.staging.yml`) — Mirrors production with PgBouncer, WAL archiving, seed data on startup
 - **Production** (`docker-compose.prod.yml`) — 10 services including read replica, PgBouncer, certbot, Nginx reverse proxy
 
 **Docker secrets.** Production uses 9 Docker secrets (`/run/secrets/*`) instead of environment variables. The `Settings.model_post_init()` method reads `DATABASE_URL_FILE`, `REDIS_URL_FILE`, `JWT_SECRET_KEY_FILE`, etc. from the filesystem, preventing secrets from appearing in `docker inspect` output or process environment listings.

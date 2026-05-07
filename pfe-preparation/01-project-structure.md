@@ -122,7 +122,6 @@ This enforces **multi-tenant school isolation at the data access level** — eve
 ### 1.2.7 Service Layer (`services/`)
 
 72 service files organized by domain, with notable sub-packages:
-- `services/ai/` — AI provider abstraction with factory pattern (`provider_factory.py`), supporting Claude (`claude_provider.py`) and mock (`mock_provider.py`) implementations
 - `services/delivery/` — Notification delivery strategy pattern with `base.py` interface and 4 implementations: `InAppDeliveryStrategy`, `PushDeliveryStrategy`, `EmailDeliveryStrategy`, `SmsDeliveryStrategy`
 - `services/lms/` — LMS-specific service decomposition: `assignment_service.py`, `content_service.py`, `course_service.py`, `grading_service.py`, `progress_service.py`, `quiz_service.py` with shared `_helpers.py` and `_serializers.py`
 

@@ -30,11 +30,9 @@
 | Performance Tests | `tests/performance/` | 2 | ~265 | ~15 |
 | Test Factories | `tests/factories/` | 17 | ~1,808 | — |
 | E2E Tests (Playwright) | `web/e2e/` | 15 | ~4,170 | ~60 |
-| Mobile Unit/Widget Tests | `mobile/test/` | 41 | ~3,200 | ~120 |
-| Mobile Integration Tests | `mobile/integration_test/` | 2 | ~800 | ~8 |
-| **Total** | | **182 files** | **~41,929** (all layers) | **~1,467** |
+| **Total** | | **119 files** | **~33,759** (backend) + **~4,170** (E2E) | **~1,339** |
 
-Total: **182 backend+mobile test files**, **15 E2E spec files**, **~41,929 LOC** of test code, **~1,467 backend+mobile test functions**.
+Total: **182 backend test files**, **15 E2E spec files**, **~37,929 LOC** of test code, **~1,339 backend test functions**.
 
 ---
 
@@ -209,7 +207,7 @@ The `tests/integration/conftest.py` (291 lines) extends the root with:
 14 legacy integration files test feature milestones:
 
 - `test_auth.py` (551 lines): Full authentication journey — login, token refresh, logout, session listing, profile, 2FA setup/verify/disable, email verification, password change.
-- `test_phase3.py`: ERP endpoints — classes, enrollments, teacher assignments, attendance, courses, assignments, submissions, results, content, activities, assessments, invoices, payments, notifications, consents, feed, admin dashboard, AI endpoints.
+- `test_phase3.py`: ERP endpoints — classes, enrollments, teacher assignments, attendance, courses, assignments, submissions, results, content, activities, assessments, invoices, payments, notifications, consents, feed, admin dashboard.
 - `test_phase3b_uploads.py`: File upload via multipart form, size limits, MIME type validation.
 - `test_phase3c_websocket.py`: WebSocket connection, authentication, real-time event delivery.
 - `test_phase3d_filters.py`: Cursor-based pagination, sorting, filtering across endpoints.
@@ -321,16 +319,6 @@ The `tests/security/` directory (12 files, 2,935 LOC) systematically validates r
 - Invoice total amount validation under 1ms
 
 **test_load_patterns.py**: Load pattern simulation for capacity planning.
-
-### 9.1 Seed Validation Tests
-
-The seed script (`python -m app.seed`) is tested as part of CI to ensure the database can always be initialized with consistent reference data:
-
-- **Table coverage**: Validates ~93% table coverage (122/131 tables receive seed data)
-- **Idempotency**: Tests that truncate + re-seed produces identical results across multiple runs
-- **Foreign key integrity**: Validates that all seeded relationships maintain referential integrity across the entire schema
-
-This ensures that fresh deployments, staging resets, and integration test fixtures all start from a known-good database state.
 
 ---
 

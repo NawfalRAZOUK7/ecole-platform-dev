@@ -76,7 +76,7 @@ Les repositories retournent des modèles ORM ou des tuples de résultat, jamais 
 | **G8 — Conformité & Reporting** | `men_compliance.py`, `reporting.py` | compliance_reports, curriculum_mappings, report_jobs, report_schedules, data_exports |
 | **G9 — Stockage & Sync** | `documents.py`, `uploads.py`, `sync_queue.py` | documents, document_versions, resources, upload_sessions, sync_queue, sync_devices, sync_conflicts |
 
-Modules transversaux : `ai.py`, `difficulty_adaptation.py`, `micro_school.py`, `calendar.py`.
+Modules transversaux : `difficulty_adaptation.py`, `micro_school.py`, `calendar.py`.
 
 ---
 

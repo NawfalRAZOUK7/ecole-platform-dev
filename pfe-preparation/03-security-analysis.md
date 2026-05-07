@@ -285,11 +285,11 @@ Response headers on all requests:
 
 ---
 
-## 3.9 AI Security Guardrails
+## 3.9 Content Safety Guardrails
 
-- Input PII redaction before AI processing
-- Content safety checks on AI outputs
-- Parent opt-out for child AI features (consent_preferences)
+- Input PII redaction before text processing
+- Content safety checks on generated outputs
+- Parent opt-out for automated features (consent_preferences)
 - Trilingual pattern matching for Moroccan context (Arabic/French/English)
 - Output validation layer before user delivery
 
@@ -312,7 +312,7 @@ Append-only table (`audit_logs`) recording:
 ### 3.10.2 Audit Triggers
 
 - All **401/403/404 (scope-masked)** responses
-- Sensitive allow events: payment state changes, support access grants, AI requests
+- Sensitive allow events: payment state changes, support access grants
 - User lifecycle: registration, login, logout, password change, 2FA enable/disable
 - Data mutations: create, update, delete on sensitive entities
 

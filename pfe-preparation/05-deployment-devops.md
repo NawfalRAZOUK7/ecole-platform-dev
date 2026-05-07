@@ -79,7 +79,7 @@ Uses `docker-compose.dev.yml`. Backend runs in development mode with `--reload`,
 
 ### 3.2 Staging Environment
 
-Uses `docker-compose.staging.yml`. Mirrors production topology but with relaxed settings: PgBouncer present (transaction pooling, 50 pool size), WAL archiving enabled for PITR, backend runs production Docker target, `SEED_ON_STARTUP=true` for demo data (the seed system achieves ~93% table coverage), `AI_PROVIDER=mock` to avoid real API costs, TLS via Nginx, no ports exposed except 80/443 via Nginx. Named `ecole-staging-*` containers. Separate `ecole-staging-network`.
+Uses `docker-compose.staging.yml`. Mirrors production topology but with relaxed settings: PgBouncer present (transaction pooling, 50 pool size), WAL archiving enabled for PITR, backend runs production Docker target, `SEED_ON_STARTUP=true` for demo data (the seed system achieves ~93% table coverage), TLS via Nginx, no ports exposed except 80/443 via Nginx. Named `ecole-staging-*` containers. Separate `ecole-staging-network`.
 
 ### 3.3 Production Environment
 

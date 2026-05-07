@@ -17,7 +17,7 @@ The backend organizes business logic into **12 distinct functional modules**, ea
 | 4 | Communication | `communication.py`, `notification_hub.py`, `event_dispatcher.py`, `delivery/` | 2,450 | `messaging.py`, `notifications.py`, `feed.py`, `consents.py` |
 | 5 | Finance | `billing.py`, `budget_service.py`, `financial_health_service.py`, `payment_plan.py`, `payment_retry.py` | 3,848 | `billing.py`, `invoices.py`, `payments.py`, `budgets.py`, `financial_health.py` |
 | 6 | Gamification | `rewards_service.py`, `game_service.py`, `difficulty_adapter.py` | 706 | `rewards.py`, `games.py`, `levels.py` |
-| 7 | AI & Analytics | `ai/ai_service.py`, `analytics.py`, `kpi.py`, `dashboard_analytics.py` | 1,922 | `ai.py`, `analytics.py`, `reports.py` |
+| 7 | Analytics & Reporting | `analytics.py`, `kpi.py`, `dashboard_analytics.py` | 1,268 | `analytics.py`, `reports.py` |
 | 8 | Admin | `admin.py`, `school.py`, `gdpr.py`, `compliance_service.py` | 1,217+ | `admin.py`, `schools.py`, `gdpr.py`, `compliance.py` |
 | 9 | Program Management | `eligibility_engine.py`, `program_service.py` | 800+ | `programs.py`, `eligibility.py`, `enrollments.py` |
 | 10 | Document Management | `document_service.py`, `resource_service.py`, `upload_service.py` | 1,200+ | `documents.py`, `resources.py`, `uploads.py` |
@@ -334,28 +334,13 @@ Manages mobile game configurations with trilingual titles (en/fr/ar). Key featur
 
 ---
 
-## 8. AI & Analytics Module
+## 8. Analytics & Reporting Module
 
 ### 8.1 Purpose
 
-Provides AI-powered writing assistance, personalized content recommendations, school-level KPI computation, analytics event emission with PII protection, and dashboard aggregation.
+Provides school-level KPI computation, analytics event emission with PII protection, and dashboard aggregation.
 
 ### 8.2 Service Analysis
-
-**AIService** (654 lines) — AI orchestrator with guardrails:
-
-**Provider abstraction**: `create_ai_provider(settings)` returns either `ClaudeProvider` (production, 145 lines, calls Anthropic Claude API) or `MockProvider` (dev/test, 230 lines, returns deterministic responses). Base protocol in `provider_base.py` (36 lines) defines `analyze_writing()`, `generate_recommendations()`, `compute_kpi_insights()`.
-
-**Writing assistance pipeline**:
-1. **PII guard**: `validate_ai_input()` scans text with 4 regex patterns (email, Moroccan phone, international phone, national ID) + field name blocklist. Detected PII is redacted with `[REDACTED]`.
-2. **Content safety**: `check_content_safety()` scans output for unsafe patterns (password exposure, injection terms) in 3 languages (English, French, Arabic).
-3. **Prompt template management**: versioned templates (`PROMPT-G3-001` through `PROMPT-G3-003`) enabling A/B testing and drift detection.
-4. **Output validation**: `validate_ai_output()` checks required fields and re-scans for PII in response.
-5. **Graceful degradation**: trilingual fallback responses (`_FALLBACK_RESPONSES`) with French and Arabic translations returned when AI provider fails, is unavailable, or opt-out is active.
-
-**Opt-out compliance**: Parents can opt children out of AI features. `AIPreference` table stores `opt_out` flag per user. When active, service returns fallback response without calling provider.
-
-**Prometheus metrics**: `ai_request_count`, `ai_error_count`, `ai_fallback_count`, `ai_latency` (histogram with buckets 0.1s→30s), `ai_opt_out_count`.
 
 **Analytics event emitter** (415 lines):
 - Structured JSON events for Loki/Promtail ingestion.
@@ -373,7 +358,6 @@ Provides AI-powered writing assistance, personalized content recommendations, sc
 
 ### 8.3 Key Technical Choices
 
-- **Provider strategy pattern**: Swappable AI backend without touching business logic. `MockProvider` enables full test coverage without API keys.
 - **PII-first design**: Both input sanitization and output validation, with trilingual regex patterns for Moroccan market (phone format: `(?:\+?212|0)[5-7]\d{8}`).
 - **Actor pseudonymization**: `hmac.new(key, str(uuid), sha256).hexdigest()` — irreversible, consistent, enables analytics without GDPR exposure.
 
@@ -394,7 +378,7 @@ Provides school administration capabilities: dashboard statistics, user manageme
 - Audit log listing with date range, action type, and actor filters.
 
 **GDPRService** (436 lines):
-- `export_user_data()`: Exports all data associated with a user across all modules (profile, enrollments, attendance, grades, notifications, payments, AI interactions) as structured JSON — GDPR data portability (Article 20).
+- `export_user_data()`: Exports all data associated with a user across all modules (profile, enrollments, attendance, grades, notifications, payments) as structured JSON — GDPR data portability (Article 20).
 - `anonymize_user()`: Replaces PII fields with anonymized values, preserving referential integrity for aggregate analytics while removing personal identifiers.
 - `delete_user_data()`: Full erasure with cascade tracking — GDPR right to erasure (Article 17).
 - `list_data_processing_activities()`: Documents all data processing activities per GDPR Article 30.
@@ -556,7 +540,7 @@ Calendar ─ EventCreated, HolidayAdded, etc. ───────────�
 
 LMS ─── quiz/activity completion ──→ Gamification (RewardsService.award)
 Finance ─── enrollment data ←───── ERP
-AI ───── audit events ←──────────── ALL MODULES (KPI computation)
+Analytics ─ audit events ←────────── ALL MODULES (KPI computation)
 Admin ──── read access ──→ ALL MODULES (dashboard aggregation)
 ```
 
@@ -572,7 +556,6 @@ Admin ──── read access ──→ ALL MODULES (dashboard aggregation)
 | **Communication** | ABAC-enforced messaging ensures appropriate parent-teacher communication channels. Multi-channel notification reduces missed school events. |
 | **Finance** | Automates fee collection with sibling discount policies common in Moroccan schools. Late fee automation with configurable grace periods. MAD currency native support. |
 | **Gamification** | Engages young students (K-12) with age-appropriate game mechanics. Trilingual badges/titles for Arabic-French-English curriculum. |
-| **AI** | Writing assistance supports trilingual education. PII protection compliant with Morocco's data protection law (Loi 09-08). Parent opt-out for child AI features. |
 | **Admin** | Single dashboard for school operations. GDPR/Loi 09-08 compliance tools (data export, anonymization, erasure). |
 | **Program Management** | Enables flexible pedagogical tracks (bilingual, international). Immutable enrollment snapshots guarantee rule stability for enrolled students. |
 | **Document Management** | Centralizes all school documents with versioning, virus scanning, and S3-compatible storage. Replaces scattered file shares. |
@@ -590,10 +573,8 @@ Admin ──── read access ──→ ALL MODULES (dashboard aggregation)
 
 3. **Financial precision**: The `Money` value object, combined with `Decimal`-backed database columns and structured invoice item breakdown, prevents the floating-point errors that plague naive financial implementations.
 
-4. **Trilingual from the ground up**: Not a retrofit — game titles, AI fallbacks, notification templates, and badge descriptions all have `_ar`, `_fr`, `_en` variants as first-class fields.
+4. **Trilingual from the ground up**: Not a retrofit — game titles, notification templates, and badge descriptions all have `_ar`, `_fr`, `_en` variants as first-class fields.
 
 5. **ABAC depth**: The communication module's 4-tier ABAC validation (parent→child-teacher, teacher→class-parent, student→class-teacher, admin→unrestricted) demonstrates genuine multi-role authorization beyond simple role checks.
 
-6. **AI safety layers**: Input PII redaction → content safety check → output validation → opt-out compliance — four layers of protection before any AI response reaches a user, with trilingual pattern matching for the Moroccan context.
-
-7. **Module LOC distribution**: The Finance module is the densest (3,848 LOC) reflecting the complexity of fee structures, discount policies, payment flows, and late fee calculations. IAM (2,172 LOC) is second, reflecting the security surface area. LMS (3,112 LOC) is third, split across 6 sub-services for maintainability.
+6. **Module LOC distribution**: The Finance module is the densest (3,848 LOC) reflecting the complexity of fee structures, discount policies, payment flows, and late fee calculations. IAM (2,172 LOC) is second, reflecting the security surface area. LMS (3,112 LOC) is third, split across 6 sub-services for maintainability.
