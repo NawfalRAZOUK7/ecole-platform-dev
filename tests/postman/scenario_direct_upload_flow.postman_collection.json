@@ -1,0 +1,193 @@
+{
+  "info": {
+    "name": "Direct Upload Flow",
+    "description": "End-to-end signed upload flow: initiate → PUT → complete → scan → download via signed redirect.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01 - Initiate Signed Upload",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"filename\": \"test-document.pdf\",\n  \"content_type\": \"application/pdf\",\n  \"size_bytes\": 1048576\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/uploads/signed/initiate",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "uploads", "signed", "initiate"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+              "pm.test('Response has upload_url and complete_url', function () {",
+              "  var json = pm.response.json();",
+              "  pm.expect(json.data).to.have.property('upload_url');",
+              "  pm.expect(json.data).to.have.property('complete_url');",
+              "  pm.expect(json.data).to.have.property('upload_id');",
+              "  pm.environment.set('upload_url', json.data.upload_url);",
+              "  pm.environment.set('complete_url', json.data.complete_url);",
+              "  pm.environment.set('upload_id', json.data.upload_id);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - PUT File to Signed URL",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/pdf"
+          }
+        ],
+        "body": {
+          "mode": "file",
+          "file": {
+            "src": "fixtures/sample-document.pdf"
+          }
+        },
+        "url": {
+          "raw": "{{upload_url}}",
+          "host": ["{{upload_url}}"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Upload successful (2xx)', function () {",
+              "  pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Complete Upload",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"upload_id\": \"{{upload_id}}\"\n}"
+        },
+        "url": {
+          "raw": "{{complete_url}}",
+          "host": ["{{complete_url}}"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('File record created', function () {",
+              "  var json = pm.response.json();",
+              "  pm.expect(json.data).to.have.property('file_id');",
+              "  pm.expect(json.data).to.have.property('status');",
+              "  pm.environment.set('file_id', json.data.file_id);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Poll Scan Status",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/v1/uploads/{{file_id}}/status",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "uploads", "{{file_id}}", "status"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Scan status present', function () {",
+              "  var json = pm.response.json();",
+              "  pm.expect(json.data).to.have.property('scan_status');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Download via Signed Redirect",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/v1/uploads/{{file_id}}/download",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "uploads", "{{file_id}}", "download"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Returns 307 redirect to signed URL', function () {",
+              "  pm.expect(pm.response.code).to.be.oneOf([307, 302]);",
+              "  pm.expect(pm.response.to.have.header('Location'));",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    }
+  ]
+}
