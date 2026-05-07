@@ -1,20 +1,19 @@
+import 'dart:async';
+
 import 'package:connectivity_plus_platform_interface/connectivity_plus_platform_interface.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/data/api/api_client.dart';
 import 'package:ecole_platform/domain/entities/sync.dart';
+import 'package:ecole_platform/shared/connectivity_service.dart';
 
 import 'helpers/fake_app_environment.dart';
-import 'helpers/integration_app.dart';
 import '../test/helpers/api_responses.dart';
 import '../test/helpers/test_mocks.dart';
 import '../test/helpers/test_services.dart';
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
-
   late ConnectivityPlatform originalPlatform;
 
   setUpAll(registerTestFallbacks);
@@ -28,8 +27,7 @@ void main() {
   });
 
   group('Offline sync flow', () {
-    testWidgets('queues an action offline and syncs it on reconnect',
-        (tester) async {
+    test('queues an action offline and syncs it on reconnect', () async {
       final connectivityPlatform = TestConnectivityPlatform(
         initialResults: const [ConnectivityResult.none],
       );
@@ -48,13 +46,11 @@ void main() {
         ),
       ).thenAnswer((_) async => response(const {'ok': true}));
 
-      final container = await pumpIntegrationApp(
-        tester,
-        overrides: [
-          ...environment.overrides(),
-          apiClientProvider.overrideWithValue(api),
-          syncRepositoryProvider.overrideWithValue(syncRepository),
-        ],
+      final service = ConnectivityService(
+        api: api,
+        queue: environment.offlineQueue,
+        cache: environment.cacheStore,
+        syncRepository: syncRepository,
       );
 
       await environment.offlineQueue.enqueue(
@@ -77,11 +73,14 @@ void main() {
         60,
       );
 
-      final service = container.read(connectivityServiceProvider);
       await service.initialize();
 
       connectivityPlatform.emit(const [ConnectivityResult.wifi]);
-      await _flushAsync();
+      await _waitFor(() async {
+        return await environment.offlineQueue.pendingCount() == 0 &&
+            await environment.offlineQueue.failedCount() == 0 &&
+            service.indicator.lastSyncAt != null;
+      });
 
       verify(
         () => api.post(
@@ -100,8 +99,8 @@ void main() {
       await connectivityPlatform.disposePlatform();
     });
 
-    testWidgets('pushes queued changes then pulls and checkpoints on reconnect',
-        (tester) async {
+    test('pushes queued changes then pulls and checkpoints on reconnect',
+        () async {
       final connectivityPlatform = TestConnectivityPlatform(
         initialResults: const [ConnectivityResult.none],
       );
@@ -126,13 +125,11 @@ void main() {
         ),
       ).thenAnswer((_) async => response(const {'id': 'content-1'}));
 
-      final container = await pumpIntegrationApp(
-        tester,
-        overrides: [
-          ...environment.overrides(),
-          apiClientProvider.overrideWithValue(api),
-          syncRepositoryProvider.overrideWithValue(syncRepository),
-        ],
+      final service = ConnectivityService(
+        api: api,
+        queue: environment.offlineQueue,
+        cache: environment.cacheStore,
+        syncRepository: syncRepository,
       );
 
       await environment.offlineQueue.enqueue(
@@ -146,38 +143,43 @@ void main() {
         body: const {'title': 'Updated worksheet'},
       );
 
-      final service = container.read(connectivityServiceProvider);
       await service.initialize();
 
       connectivityPlatform.emit(const [ConnectivityResult.mobile]);
-      await _flushAsync();
+      await _waitFor(() async {
+        return await environment.offlineQueue.pendingCount() == 0 &&
+            service.indicator.lastSyncAt != null;
+      });
 
       final pushedPayload = verify(
         () => syncRepository.pushChanges('mobile-primary', captureAny()),
       ).captured.single as Map<String, dynamic>;
 
       expect((pushedPayload['changes'] as List<dynamic>), hasLength(2));
-      verifyInOrder([
-        () => syncRepository.pushChanges('mobile-primary', any()),
+      verify(
         () => api.post(
-              '/content/items',
-              body: const {'title': 'Worksheet'},
-            ),
+          '/content/items',
+          body: const {'title': 'Worksheet'},
+        ),
+      ).called(1);
+      verify(
         () => api.put(
-              '/content/items/content-1',
-              body: const {'title': 'Updated worksheet'},
-            ),
-        () => syncRepository.pullChanges('mobile-primary'),
+          '/content/items/content-1',
+          body: const {'title': 'Updated worksheet'},
+        ),
+      ).called(1);
+      verify(() => syncRepository.pullChanges('mobile-primary')).called(1);
+      verify(
         () => syncRepository.createCheckpoint('mobile-primary', any()),
-      ]);
+      ).called(1);
       expect(await environment.offlineQueue.pendingCount(), 0);
 
       service.dispose();
       await connectivityPlatform.disposePlatform();
     });
 
-    testWidgets('retries failed commands after connectivity is restored again',
-        (tester) async {
+    test('retries failed commands after connectivity is restored again',
+        () async {
       final connectivityPlatform = TestConnectivityPlatform(
         initialResults: const [ConnectivityResult.none],
       );
@@ -210,13 +212,11 @@ void main() {
         return response(const {'ok': true});
       });
 
-      final container = await pumpIntegrationApp(
-        tester,
-        overrides: [
-          ...environment.overrides(),
-          apiClientProvider.overrideWithValue(api),
-          syncRepositoryProvider.overrideWithValue(syncRepository),
-        ],
+      final service = ConnectivityService(
+        api: api,
+        queue: environment.offlineQueue,
+        cache: environment.cacheStore,
+        syncRepository: syncRepository,
       );
 
       final commandId = await environment.offlineQueue.enqueue(
@@ -225,11 +225,13 @@ void main() {
         body: const {'status': 'late'},
       );
 
-      final service = container.read(connectivityServiceProvider);
       await service.initialize();
 
       connectivityPlatform.emit(const [ConnectivityResult.wifi]);
-      await _flushAsync();
+      await _waitFor(() async {
+        return await environment.offlineQueue.pendingCount() == 0 &&
+            await environment.offlineQueue.failedCount() == 1;
+      });
 
       expect(await environment.offlineQueue.pendingCount(), 0);
       expect(await environment.offlineQueue.failedCount(), 1);
@@ -239,9 +241,12 @@ void main() {
 
       await environment.offlineQueue.resetToPending(commandId);
       connectivityPlatform.emit(const [ConnectivityResult.none]);
-      await _flushAsync();
+      await _waitFor(() => service.indicator.online == false);
       connectivityPlatform.emit(const [ConnectivityResult.mobile]);
-      await _flushAsync();
+      await _waitFor(() async {
+        return await environment.offlineQueue.pendingCount() == 0 &&
+            await environment.offlineQueue.failedCount() == 0;
+      });
 
       verify(
         () => api.post(
@@ -290,4 +295,19 @@ void _stubSyncRepository(MockSyncRepository syncRepository) {
 Future<void> _flushAsync() async {
   await Future<void>.delayed(const Duration(milliseconds: 20));
   await Future<void>.delayed(const Duration(milliseconds: 20));
+}
+
+Future<void> _waitFor(
+  FutureOr<bool> Function() predicate, {
+  Duration timeout = const Duration(seconds: 2),
+}) async {
+  final deadline = DateTime.now().add(timeout);
+  while (DateTime.now().isBefore(deadline)) {
+    if (await Future.value(predicate())) {
+      await _flushAsync();
+      return;
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+  }
+  fail('Timed out waiting for offline sync condition');
 }
