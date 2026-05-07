@@ -4,7 +4,7 @@ Integration tests run against the Docker-backed backend + postgres + redis stack
 Seed data must be loaded before execution (make seed).
 
 Run:
-  python -m pytest tests/test_phase13_notifications.py -v
+  python -m pytest tests/integration/api/communication/test_notifications.py -v
 """
 
 from __future__ import annotations

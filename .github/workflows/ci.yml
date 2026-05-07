@@ -289,12 +289,11 @@ jobs:
       - name: Run unit tests with coverage
         run: |
           cd backend
-          UNIT_COVERAGE_FILES='app/core/exceptions.py,app/core/permissions.py,app/core/response.py,app/core/security.py'
           coverage erase
-          coverage run --parallel-mode --source=app -m pytest tests/test_unit_*.py -v --tb=short
+          coverage run --parallel-mode --source=app -m pytest tests/unit/ -v --tb=short
           coverage combine
-          coverage report --include="$UNIT_COVERAGE_FILES" --fail-under=95
-          coverage xml -o coverage-unit.xml --include="$UNIT_COVERAGE_FILES"
+          coverage report --fail-under=90
+          coverage xml -o coverage-unit.xml
 
       - name: Upload unit coverage report
         uses: actions/upload-artifact@v4
@@ -401,7 +400,7 @@ jobs:
             curl -sf http://localhost:8000/api/v1/health && break
             sleep 1
           done
-          pytest tests/test_auth.py tests/test_phase3.py -v --tb=short
+          pytest tests/integration/api/iam/test_complete_auth.py tests/integration/api/iam/test_role_flow.py -v --tb=short
           kill -INT "$SERVER_PID" || true
           wait "$SERVER_PID" || true
           trap - EXIT
@@ -495,7 +494,7 @@ jobs:
             curl -sf http://localhost:8000/api/v1/health && break
             sleep 1
           done
-          pytest tests/test_contract.py -v --tb=short
+          pytest tests/contract/test_api_contracts_envelope.py -v --tb=short
           kill -INT "$SERVER_PID" || true
           wait "$SERVER_PID" || true
           trap - EXIT
@@ -589,7 +588,7 @@ jobs:
             curl -sf http://localhost:8000/api/v1/health && break
             sleep 1
           done
-          pytest tests/test_rbac_security.py -v --tb=short
+          pytest tests/security/rbac/test_rbac_security.py -v --tb=short
           kill -INT "$SERVER_PID" || true
           wait "$SERVER_PID" || true
           trap - EXIT
@@ -636,6 +635,7 @@ jobs:
         run: |
           cd backend
           pip install -r requirements-dev.txt
+          pip install diff-cover
 
       - name: Download backend coverage data
         uses: actions/download-artifact@v4
@@ -651,6 +651,12 @@ jobs:
           coverage html -d htmlcov --fail-under=0
           coverage xml -o coverage.xml --fail-under=0
           coverage report --fail-under=0
+
+      - name: Run diff-cover on PRs
+        if: github.event_name == 'pull_request'
+        run: |
+          cd backend
+          diff-cover coverage.xml --compare-branch=origin/${{ github.base_ref }} --fail-under=95
 
       - name: Upload full coverage report
         uses: actions/upload-artifact@v4
@@ -900,7 +906,7 @@ jobs:
             curl -sf http://localhost:8000/api/v1/health && break
             sleep 1
           done
-          pytest tests/test_security_audit.py -v --tb=short
+          pytest tests/security/audit/test_security_audit.py -v --tb=short
           kill -INT "$SERVER_PID" || true
           wait "$SERVER_PID" || true
           trap - EXIT

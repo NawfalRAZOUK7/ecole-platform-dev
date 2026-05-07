@@ -4,7 +4,7 @@ Integration tests run against the Docker-backed backend + postgres + redis stack
 Seed data must be loaded before execution (make seed).
 
 Run:
-  python -m pytest tests/test_phase15_calendar_events.py -v
+  python -m pytest tests/integration/api/operations/test_calendar_events.py -v
 """
 
 from __future__ import annotations

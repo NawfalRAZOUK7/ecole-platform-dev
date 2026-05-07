@@ -18,7 +18,7 @@ from app.core.database import async_session
 from app.models.lms import Submission, SubmissionFile
 
 
-# Fixed seed IDs (must match test_phase3.py / seed data)
+# Fixed seed IDs (must match test_role_flow.py / seed data)
 ASSIGNMENT_ID = "30000000-0000-4000-8000-000000000003"
 CONTENT_ITEM_ID = "30000000-0000-4000-8000-000000000005"
 STUDENT_ID = "10000000-0000-4000-8000-000000000007"

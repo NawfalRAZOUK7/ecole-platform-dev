@@ -120,7 +120,9 @@ test.describe('J5 — Two-factor authentication flow', () => {
     if (await backupToggle.isVisible({ timeout: 2_000 }).catch(() => false)) {
       await backupToggle.click();
       // Backup code input should appear
-      const backupInput = page.locator('input[maxlength="20"], input[placeholder*="backup" i], input[placeholder*="secours" i]');
+      const backupInput = page.locator(
+        'input[maxlength="20"], input[placeholder*="backup" i], input[placeholder*="secours" i]',
+      );
       await expect(backupInput.first()).toBeVisible({ timeout: 3_000 });
     }
   });

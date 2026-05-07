@@ -151,7 +151,7 @@ jobs:
           sleep 5
           
           # Run contract tests
-          pytest tests/test_contract.py -v --tb=short
+          pytest tests/contract/test_api_contracts_envelope.py -v --tb=short
 
       - name: Get pod logs on failure
         if: failure()

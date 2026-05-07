@@ -4,7 +4,7 @@ Integration tests run against the Docker-backed backend + postgres + redis stack
 Seed data must be loaded before execution (make seed).
 
 Run:
-  python -m pytest tests/test_phase16_document_management.py -v
+  python -m pytest tests/integration/api/operations/test_documents.py -v
 """
 
 from __future__ import annotations
