@@ -179,13 +179,33 @@ class AdminDashboardScreen extends ConsumerWidget {
         return SizedBox(
           width: 160,
           child: Card(
-            child: Padding(
+            elevation: 2,
+            shadowColor: card.color.withOpacity(0.15),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    theme.colorScheme.surface,
+                    Color.lerp(theme.colorScheme.surface, card.color, 0.06) ?? theme.colorScheme.surface,
+                  ],
+                ),
+              ),
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(card.icon, color: card.color, size: 28),
-                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: card.color.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(card.icon, color: card.color, size: 24),
+                  ),
+                  const SizedBox(height: 12),
                   Text(card.value,
                       style: theme.textTheme.headlineSmall
                           ?.copyWith(fontWeight: FontWeight.bold)),

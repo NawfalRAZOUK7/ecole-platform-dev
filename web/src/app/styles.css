@@ -46,6 +46,11 @@
   --color-chart-4: var(--color-secondary);
   --color-chart-5: var(--color-info);
   --color-chart-6: var(--color-error);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+  --shadow-glow-primary: 0 0 20px color-mix(in srgb, var(--color-primary) 20%, transparent);
   --sidebar-width: 260px;
 
   /* Spacing scale — matches mobile AppSpacing */
@@ -76,7 +81,10 @@
   --radius: 8px; /* legacy alias for --radius-md */
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --shadow-glow-primary: 0 0 20px color-mix(in srgb, var(--color-primary) 15%, transparent);
   font-family:
     'Cairo',
     -apple-system,
@@ -1578,13 +1586,26 @@ button {
 }
 
 .btn-primary {
-  background: var(--color-primary);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   color: var(--color-surface);
-  border-color: var(--color-primary);
+  border-color: transparent;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary) 30%, transparent);
+  min-height: 40px;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-hover);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-hover) 0%,
+    var(--color-primary-dark) 100%
+  );
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 40%, transparent);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
 .btn-sm {
@@ -1596,21 +1617,35 @@ button {
   background: var(--color-surface);
   color: var(--color-text);
   border-color: var(--color-border);
+  min-height: 40px;
 }
 
 .btn-secondary:hover:not(:disabled) {
   background: var(--color-bg);
+  border-color: var(--color-primary-light);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.btn-secondary:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .btn-danger {
   background: transparent;
   color: var(--color-danger);
   border-color: var(--color-danger);
+  min-height: 40px;
 }
 
 .btn-danger:hover:not(:disabled) {
-  background: var(--color-danger);
+  background: linear-gradient(135deg, var(--color-danger) 0%, var(--color-danger-hover) 100%);
   color: var(--color-surface);
+  border-color: transparent;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-danger) 30%, transparent);
+}
+
+.btn-danger:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 /* ── Login Page ── */
@@ -1619,18 +1654,61 @@ button {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: var(--color-bg);
+  background: linear-gradient(
+    135deg,
+    var(--color-bg) 0%,
+    color-mix(in srgb, var(--color-primary) 5%, var(--color-bg)) 50%,
+    var(--color-bg) 100%
+  );
   padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-page::before {
+  content: '';
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-primary) 8%, transparent) 0%,
+    transparent 70%
+  );
+  top: -200px;
+  right: -200px;
+  pointer-events: none;
+}
+
+.login-page::after {
+  content: '';
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-secondary) 8%, transparent) 0%,
+    transparent 70%
+  );
+  bottom: -150px;
+  left: -150px;
+  pointer-events: none;
 }
 
 .login-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   padding: 40px;
   width: 100%;
   max-width: 420px;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  z-index: 1;
+  backdrop-filter: blur(8px);
+  background: color-mix(in srgb, var(--color-surface) 95%, transparent);
 }
 
 .login-header {

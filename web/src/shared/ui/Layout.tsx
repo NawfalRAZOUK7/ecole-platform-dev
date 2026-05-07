@@ -19,6 +19,7 @@ import { useFeedUnreadSummary } from '@/features/feed/useFeed';
 import { useSyncDevices, useSyncHealth, useSyncStatus } from '@/features/sync/useSync';
 import { useFocusManagement } from '@/shared/hooks/useFocusManagement';
 import { useTheme } from '@/shared/hooks/useTheme';
+import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
 import { LanguageSwitcher } from '@/shared/ui/LanguageSwitcher';
 import { getNavIcon } from '@/shared/ui/navIcons';
 import { X, LogOut } from 'lucide-react';
@@ -262,6 +263,7 @@ export function Layout() {
   const [recentNotifications, setRecentNotifications] = useState<NotificationPreview[]>([]);
   const navRef = useRef<HTMLElement>(null);
   const { theme, toggleTheme } = useTheme();
+  const prefersReducedMotion = useReducedMotion();
   const userRole = user?.role || '';
   const feedUnreadSummary = useFeedUnreadSummary(userRole === 'PAR');
   const { unreadCount: feedUnreadCount, refetch: refetchFeedUnread } = feedUnreadSummary;
@@ -676,18 +678,22 @@ export function Layout() {
           </div>
         </div>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={location.pathname}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            style={{ minHeight: '100%' }}
-          >
-            <Outlet />
-          </motion.div>
-        </AnimatePresence>
+        {prefersReducedMotion ? (
+          <Outlet />
+        ) : (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              style={{ minHeight: '100%' }}
+            >
+              <Outlet />
+            </motion.div>
+          </AnimatePresence>
+        )}
       </main>
 
       {toasts.length > 0 && (

@@ -18,6 +18,7 @@ import '@/shared/i18n';
 // Global styles
 import '@/app/styles.css';
 import '@/shared/styles/animations.css';
+import '@/shared/styles/glassmorphism.css';
 
 const queryClient = new QueryClient({
   queryCache: new QueryCache({

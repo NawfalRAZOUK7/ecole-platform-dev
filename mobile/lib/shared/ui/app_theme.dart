@@ -35,9 +35,10 @@ final ThemeData appLightTheme = ThemeData(
     ),
   ),
   cardTheme: CardThemeData(
-    elevation: 0,
+    elevation: 1,
     color: AppColors.background,
     surfaceTintColor: Colors.transparent,
+    shadowColor: Colors.black.withOpacity(0.08),
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(AppRadii.lg),
       side: const BorderSide(color: AppColors.border),
@@ -74,6 +75,15 @@ final ThemeData appLightTheme = ThemeData(
     color: AppColors.border,
     thickness: 1,
     space: AppSpacing.lg,
+  ),
+  filledButtonTheme: FilledButtonThemeData(
+    style: FilledButton.styleFrom(
+      minimumSize: const Size(0, 48),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.md),
+      ),
+    ),
   ),
   chipTheme: ChipThemeData(
     backgroundColor: AppColors.surface,

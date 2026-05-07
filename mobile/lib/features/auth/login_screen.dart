@@ -235,25 +235,96 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       body: Semantics(
         container: true,
         label: 'Écran de connexion',
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Logo / Title
-                    Semantics(
-                      excludeSemantics: true,
-                      child: Icon(
-                        Icons.school,
-                        size: 64,
-                        color: theme.colorScheme.primary,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                theme.colorScheme.surface,
+                Color.lerp(theme.colorScheme.surface, theme.colorScheme.primary, 0.05) ?? theme.colorScheme.surface,
+                theme.colorScheme.surface,
+              ],
+            ),
+          ),
+          child: SafeArea(
+            child: Stack(
+              children: [
+                // Decorative blob — top right
+                Positioned(
+                  top: -80,
+                  right: -80,
+                  child: Container(
+                    width: 250,
+                    height: 250,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          theme.colorScheme.primary.withOpacity(0.08),
+                          Colors.transparent,
+                        ],
                       ),
                     ),
+                  ),
+                ),
+                // Decorative blob — bottom left
+                Positioned(
+                  bottom: -60,
+                  left: -60,
+                  child: Container(
+                    width: 200,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          theme.colorScheme.secondary.withOpacity(0.08),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Logo / Title
+                          Semantics(
+                            excludeSemantics: true,
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    theme.colorScheme.primary,
+                                    theme.colorScheme.secondary,
+                                  ],
+                                ),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: theme.colorScheme.primary.withOpacity(0.3),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.school,
+                                size: 48,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
                     const SizedBox(height: 16),
                     Text(
                       'École Platform',
@@ -408,9 +479,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
             ),
-          ),
+            ),
+          ],
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 }
