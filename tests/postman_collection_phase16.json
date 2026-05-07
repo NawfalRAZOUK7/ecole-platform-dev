@@ -10,12 +10,36 @@
       "value": "http://localhost:8000/api/v1"
     },
     {
+      "key": "schoolId",
+      "value": "00000000-0000-4000-8000-000000000001"
+    },
+    {
+      "key": "admin_email",
+      "value": "admin@ecole-benani.ma"
+    },
+    {
+      "key": "admin_password",
+      "value": "admin123"
+    },
+    {
+      "key": "teacher_email",
+      "value": "prof.math@ecole-benani.ma"
+    },
+    {
+      "key": "teacher_password",
+      "value": "teacher123"
+    },
+    {
       "key": "accessToken",
       "value": ""
     },
     {
-      "key": "studentId",
+      "key": "teacherAccessToken",
       "value": ""
+    },
+    {
+      "key": "studentId",
+      "value": "10000000-0000-4000-8000-000000000007"
     },
     {
       "key": "documentId",
@@ -28,7 +52,61 @@
   ],
   "item": [
     {
+      "name": "Auth - Login Admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Admin login 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.expect(json.data.access_token).to.be.a('string');",
+              "pm.collectionVariables.set('accessToken', json.data.access_token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"{{admin_email}}\",\"password\":\"{{admin_password}}\",\"school_id\":\"{{schoolId}}\"}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "auth",
+            "login"
+          ]
+        }
+      }
+    },
+    {
       "name": "Documents - Upload",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Document upload 201', () => pm.response.to.have.status(201));",
+              "const json = pm.response.json();",
+              "pm.expect(json.data.id).to.be.a('string');",
+              "pm.collectionVariables.set('documentId', json.data.id);"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [
@@ -53,7 +131,7 @@
             {
               "key": "file",
               "type": "file",
-              "src": ""
+              "src": "tests/postman/fixtures/phase16-upload.pdf"
             }
           ]
         },
@@ -71,6 +149,19 @@
     },
     {
       "name": "Documents - List Mine",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Documents list 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.expect(json.data).to.be.an('array');"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [
@@ -102,6 +193,19 @@
     },
     {
       "name": "Documents - Student Checklist",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Student checklist 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.expect(json.data).to.be.an('object');"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [
@@ -111,21 +215,37 @@
           }
         ],
         "url": {
-          "raw": "{{baseUrl}}/students/{{studentId}}/documents/checklist",
+          "raw": "{{baseUrl}}/documents/options?student_id={{studentId}}",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
-            "students",
-            "{{studentId}}",
             "documents",
-            "checklist"
+            "options"
+          ],
+          "query": [
+            {
+              "key": "student_id",
+              "value": "{{studentId}}"
+            }
           ]
         }
       }
     },
     {
       "name": "Documents - Download",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Document download 200', () => pm.response.to.have.status(200));",
+              "pm.test('Document download has body', () => pm.expect(pm.response.text().length).to.be.above(0));"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [
@@ -149,6 +269,20 @@
     },
     {
       "name": "Resources - Upload",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Resource upload 201', () => pm.response.to.have.status(201));",
+              "const json = pm.response.json();",
+              "pm.expect(json.data.id).to.be.a('string');",
+              "pm.collectionVariables.set('resourceId', json.data.id);"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [
@@ -193,7 +327,7 @@
             {
               "key": "file",
               "type": "file",
-              "src": ""
+              "src": "tests/postman/fixtures/phase16-upload.pdf"
             }
           ]
         },
@@ -210,6 +344,19 @@
     },
     {
       "name": "Resources - Search",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Resources search 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.expect(json.data).to.be.an('array');"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [
@@ -244,13 +391,66 @@
       }
     },
     {
+      "name": "Auth - Login Teacher",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Teacher login 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.expect(json.data.access_token).to.be.a('string');",
+              "pm.collectionVariables.set('teacherAccessToken', json.data.access_token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"{{teacher_email}}\",\"password\":\"{{teacher_password}}\",\"school_id\":\"{{schoolId}}\"}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "auth",
+            "login"
+          ]
+        }
+      }
+    },
+    {
       "name": "Resources - Rate",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Resource rate 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.expect(json.data).to.be.an('object');"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer {{accessToken}}"
+            "value": "Bearer {{teacherAccessToken}}"
           },
           {
             "key": "Content-Type",

@@ -7,7 +7,29 @@ Manual API testing collections and load test scripts. Complements automated pyte
 - **Approach**: Postman collections for API exploration, k6 scripts for load simulation
 - **Audience**: QA testers, developers, performance engineers
 - **Execution**: Manual via Postman UI or automated via CLI/CI
-- **Data**: Uses live backend with test database fixtures
+- **Data**: Use the disposable API-test stack by default. Do not point these
+  collections or k6 scenarios at `localhost:8000` unless you intentionally want
+  to mutate your normal dev database.
+
+## Safe Execution
+
+Start an isolated backend on `localhost:8010`, run the API/load checks, then
+remove the stack and its volumes:
+
+```bash
+make api-test-up
+make test-postman
+CI=1 make test-load SCENARIO=scenario1_logins.js
+make api-test-down
+```
+
+The Postman runner and k6 config refuse `localhost:8000` by default. Override
+only for an intentional dirty-dev-DB run:
+
+```bash
+tests/run_tests.sh --all --allow-dev-db
+cd tests/load && K6_ALLOW_DEV_DB=1 k6 run scenario1_logins.js
+```
 
 ## Test Files
 
@@ -32,7 +54,7 @@ Organized by feature phase, each collection contains request sequences with asse
    - Click "Import"
 
 2. **Set Environment Variables**
-   - Base URL: `http://localhost:8000/api`
+   - Base URL: `http://localhost:8010/api/v1` when using `make api-test-up`
    - Auth Token: Obtain via POST `/auth/login`
    - School ID: Copy from collection variable
    - Class ID: Copy from collection variable
@@ -72,17 +94,20 @@ Bash script to run Postman collections via CLI.
 
 **Usage:**
 ```bash
-./run_tests.sh                    # Run all phases
-./run_tests.sh phase12            # Run specific phase
-./run_tests.sh phase13 --verbose  # Verbose output
+POSTMAN_BASE_URL=http://localhost:8010/api/v1 tests/run_tests.sh --all-phases
+POSTMAN_BASE_URL=http://localhost:8010/api/v1 tests/run_tests.sh --include-scenarios
+POSTMAN_BASE_URL=http://localhost:8010/api/v1 tests/run_tests.sh --full-collection
+POSTMAN_BASE_URL=http://localhost:8010/api/v1 tests/run_tests.sh --all
+tests/run_tests.sh --phase phase12 --base-url http://localhost:8010/api/v1
+tests/run_tests.sh --list --all
 ```
 
 **Script Features:**
 - Sequential test execution
-- Automatic environment setup
+- Safe target guard for the normal dev DB
+- Automatic base URL overrides for both Postman variable styles
 - JSON test report generation
-- Failure summaries
-- Performance metrics
+- Assertion guard for collections with zero test scripts
 
 **Output:**
 ```
@@ -201,7 +226,7 @@ import ws from "k6/ws";
 import { check } from "k6";
 
 export default function () {
-  const url = "ws://localhost:8000/ws/notifications";
+  const url = "ws://localhost:8010/api/v1/ws/notifications";
   const res = ws.connect(url, null, function (socket) {
     socket.on("open", function () {
       console.log("Connected");
@@ -236,11 +261,11 @@ brew install k6  # macOS
 
 ### Run Individual Scenario
 ```bash
-# Run scenario 1 (logins)
-k6 run tests/load/scenario1_logins.js
+# Run scenario 1 (logins) against the disposable API-test stack
+CI=1 make test-load SCENARIO=scenario1_logins.js
 
-# Run with environment variables
-k6 run -e BASE_URL=http://localhost:8000/api tests/load/scenario1_logins.js
+# Run WebSocket scenario
+cd tests/load && CI=1 BASE_URL=http://localhost:8010/api/v1 WS_URL=ws://localhost:8010/api/v1/ws k6 run scenario4_websocket.js
 
 # Run with output to cloud
 k6 run -o cloud tests/load/scenario1_logins.js
