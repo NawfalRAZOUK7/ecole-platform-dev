@@ -86,6 +86,32 @@ from app.seed_extensions import (
     seed_programs,
     seed_reporting,
 )
+from app.seed_enhanced import (
+    seed_absence_justifications,
+    seed_billing_policies,
+    seed_budget,
+    seed_enhanced_attendance,
+    seed_enhanced_invoices,
+    seed_enhanced_messaging,
+    seed_enhanced_notifications,
+    seed_enhanced_students,
+    seed_financial_health,
+    seed_grade_categories_and_averages,
+    seed_men_compliance_extra,
+    seed_micro_school,
+    seed_payment_plans,
+    seed_misc_empty_tables,
+    seed_program_assignment_events,
+    seed_question_bank,
+    seed_quiz_responses,
+    seed_rubrics,
+    seed_school_2_minimal,
+    seed_shared_reviews,
+    seed_submission_files,
+    seed_sync_queue,
+    seed_timetable_extras,
+    seed_upload_sessions,
+)
 from app.services.compliance_service import seed_men_reference_data
 
 # ── Fixed UUIDs for deterministic seeding ──────────────────────────────────
@@ -253,6 +279,7 @@ async def clear_all(session: AsyncSession) -> None:
         "courses",
         "justification_reviews",
         "absence_justifications",
+        "attendance_alerts",
         "attendance_records",
         "attendance_sessions",
         "teacher_assignments",
@@ -271,6 +298,54 @@ async def clear_all(session: AsyncSession) -> None:
         "sessions",
         "memberships",
         "users",
+        "micro_progress_logs",
+        "micro_resources",
+        "micro_payments",
+        "micro_enrollments",
+        "micro_groups",
+        "micro_schools",
+        "budget_transactions",
+        "budget_requests",
+        "budget_allocations",
+        "micro_budgets",
+        "financial_snapshots",
+        "cost_per_student",
+        "cashflow_forecasts",
+        "retention_metrics",
+        "sync_checkpoints",
+        "sync_conflicts",
+        "sync_queue",
+        "sync_devices",
+        "installments",
+        "payment_plans",
+        "late_fee_policies",
+        "sibling_discount_policies",
+        "shared_review_comments",
+        "upload_sessions",
+        "device_tokens",
+        "notification_preferences",
+        "quiz_responses",
+        "question_bank_items",
+        "program_assignment_events",
+        "timetable_generation_jobs",
+        "timetable_constraints",
+        "event_reminders",
+        "event_rsvps",
+        "events",
+        "resource_ratings",
+        "resources",
+        "document_versions",
+        "documents",
+        "student_document_requirements",
+        "data_exports",
+        "report_jobs",
+        "report_schedules",
+        "event_reminder_preferences",
+        "moroccan_holidays",
+        "program_equivalences",
+        "program_versions",
+        "programs",
+        "eligibility_rules",
     ]
     present_tables = [table for table in tables_in_order if table in existing_tables]
     if not present_tables:
@@ -3389,6 +3464,33 @@ async def main() -> None:
         await seed_ai_preferences(session)
         await seed_notification_preferences(session)
 
+        # ── Enhanced seeders (high-volume demo data) ──
+        print("\n  [Enhanced] Seeding high-volume demo data:")
+        await seed_enhanced_students(session)
+        await seed_enhanced_invoices(session)
+        await seed_payment_plans(session)
+        await seed_billing_policies(session)
+        await seed_rubrics(session)
+        await seed_submission_files(session)
+        await seed_question_bank(session)
+        await seed_quiz_responses(session)
+        await seed_grade_categories_and_averages(session)
+        await seed_enhanced_attendance(session)
+        await seed_absence_justifications(session)
+        await seed_budget(session)
+        await seed_financial_health(session)
+        await seed_micro_school(session)
+        await seed_sync_queue(session)
+        await seed_men_compliance_extra(session)
+        await seed_upload_sessions(session)
+        await seed_shared_reviews(session)
+        await seed_enhanced_messaging(session)
+        await seed_enhanced_notifications(session)
+        await seed_school_2_minimal(session)
+        await seed_timetable_extras(session)
+        await seed_program_assignment_events(session)
+        await seed_misc_empty_tables(session)
+
         await session.commit()
 
     print("\n" + "=" * 60)
@@ -3444,8 +3546,9 @@ def _generate_seed_report() -> None:
 
 | Class | Level | Students |
 |-------|-------|----------|
-| 6eme A | 6eme | Yassine Alaoui, Salma Idrissi |
-| 6eme B | 6eme | Omar Benali |
+| 6eme A | 6eme | 8 students (Yassine, Salma, + 6 more) |
+| 6eme B | 6eme | 6 students (Omar, + 5 more) |
+| 5eme A | 5eme | 4 students |
 | CP A | CP | Amina Tazi |
 | CE2 A | CE2 | Karim Fassi |
 | CM2 A | CM2 | Leila Mansouri |
@@ -3484,7 +3587,9 @@ def _generate_seed_report() -> None:
 | Inscription | 500 | Annual |
 | Parascolaire | 300 | Annual |
 
-Invoice statuses seeded: `pending`, `paid`, `failed`, `canceled`
+Invoices: 18 total (pending, paid, failed, canceled) + payment proofs + webhook events
+Payment Plans: 2 active plans with installments
+Billing Policies: Sibling discount + Late fee policies configured
 
 ## Gamification
 
@@ -3514,6 +3619,62 @@ Dimensions: Mathematiques, Lecture, Sciences, Creativite, Communication
 | Yassine | math | EASY → MEDIUM → HARD (promoted) |
 | Omar | math | MEDIUM → EASY (demoted) |
 
+## Rubrics
+
+2 rubrics: "Presentation orale — Mathematiques" (template) + "Redaction — Expression ecrite"
+6 criteria, 18 levels, sample rubric scores on graded submissions
+
+## Budget
+
+1 micro-budget: 50,000 MAD (35k allocated, 15k remaining)
+3 allocations, 2 requests, 4 transactions
+
+## Financial Health
+
+Retention rate: 95.83% | Cost/student: 2,800 MAD | Margin: 700 MAD
+Cashflow forecasts: 3 months | Financial snapshots: 2 (Mar + Apr 2026)
+
+## Micro-School
+
+1 micro-school: "Petite Ecole des Orangers" (Casablanca)
+2 groups, 4 enrollments, 4 payments, 3 resources, 6 progress logs
+
+## Attendance
+
+~45 sessions across 3 weeks (6A, 6B, 5A)
+2 attendance alerts triggered for high absence rates
+2 absence justifications (1 pending, 1 approved)
+
+## Messaging
+
+5 conversations (2 direct + 3 group)
+~18 messages total, 10+ read receipts
+
+## Calendar
+
+8 events (portes ouvertes, examens, excursion, fete de fin d'annee...)
+9 RSVPs, 5 reminders
+
+## Documents
+
+4 documents (bulletins, certificats, autorisations) + 2 versions
+5 shared resources (lesson plans, worksheets, exam templates)
+
+## Reporting
+
+3 schedules (assiduite, notes, financier)
+6 jobs (completed, pending, generating, failed)
+
+## Notifications
+
+12+ notifications across all categories (academic, billing, attendance, system, announcement)
+20+ delivery records (email + in-app)
+
+## Multi-Tenant
+
+School 1 (Ecole Benani): Full dataset (~90% table coverage)
+School 2 (Ecole Atlas): Minimal demo data (4 users, 1 class, 1 invoice, 1 announcement)
+
 ## Feature Toggles
 
 gamification, rewards, skill_passport, difficulty_adaptation, parent_dashboard_v2 — all **enabled**
@@ -3525,6 +3686,13 @@ Mon 08:00 Maths, Mon 09:45 Francais, Wed 08:00 Maths, Thu 09:45 Francais
 ## Content Library
 
 6 platform CMS items + 24 level-banded items (maternelle → Terminale) + 2 CMS drafts
+
+## Fixture Files
+
+PDF/Excel/JPG stubs in `backend/app/templates/fixtures/`:
+- sample_bulletin.pdf, sample_worksheet_math.pdf, sample_submission_yassine.pdf
+- sample_coloring_page.pdf, sample_national_id.jpg
+- sample_invoice_template.xlsx, sample_attendance_export.xlsx
 
 ---
 
