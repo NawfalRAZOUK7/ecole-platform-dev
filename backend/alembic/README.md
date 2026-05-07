@@ -18,11 +18,11 @@ alembic/
 ├── env.py               # Migration environment configuration
 ├── script.py.mako       # Migration file template
 ├── versions/            # Individual migration files
-│   ├── 9f7257bc8dd1_g1_g6_initial_schema_iam_erp_lms_com.py
-│   ├── a2f8b3c4d5e6_g7_ai_writing_attempts_preferences.py
-│   ├── b3c4d5e6f7a8_g8_parent_child_links_views_kpi.py
+│   ├── 9f7257bc8dd1_create_schema_iam_erp_lms_com_billing_audit.py
+│   ├── a2f8b3c4d5e6_add_ai_writing_preferences.py
+│   ├── b3c4d5e6f7a8_add_parent_child_links_views_kpi.py
 │   ├── ... (65+ total migrations)
-│   └── b2c3d4e5f6a7_g51a_attendance_performance_indexes.py
+│   └── b2c3d4e5f6a7_index_attendance_performance_indexes.py
 │
 └── (no other config files — see alembic.ini in backend/)
 ```
@@ -169,17 +169,20 @@ def downgrade() -> None:
 ## Migration Naming Convention
 
 ```
-{12-char-hex}_{group}_{description}.py
+{12-char-revision}_{action}_{description}.py
 
 Examples:
-9f7257bc8dd1_g1_g6_initial_schema_iam_erp_lms_com.py
-a2f8b3c4d5e6_g7_ai_writing_attempts_preferences.py
-b3c4d5e6f7a8_g8_parent_child_links_views_kpi.py
+9f7257bc8dd1_create_schema_iam_erp_lms_com_billing_audit.py
+a2f8b3c4d5e6_add_ai_writing_preferences.py
+e6f7a8b9c0d1_index_gin_indexes_fulltext_search.py
+b544b2132f31_constraint_grade_range_check_constraints.py
 ```
 
-- **12-char hex**: First 12 characters of the Alembic revision ID
-- **group**: Logical feature group (g1-g51a, h2, i4)
-- **description**: Semantic description of what changed
+| Part | Meaning |
+|------|---------|
+| **12-char revision** | First 12 characters of the Alembic revision ID |
+| **action** | What the migration does: `create`, `add`, `alter`, `index`, `constraint`, `merge` |
+| **description** | Semantic, kebab-case description of what changed |
 
 ## Working with Migrations
 

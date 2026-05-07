@@ -7,7 +7,8 @@ Contains 65+ database migration files. Each migration defines `upgrade()` and `d
 - Migrations are auto-generated via `alembic revision --autogenerate -m "description"`
 - Each file is prefixed with a 12-char revision hash and linked to its parent via `down_revision`
 - All migrations are tested in CI via `alembic upgrade head` + `alembic downgrade base` round-trip
-- Filename format: `{12-char-hex}_{group}_{description}.py`
+- Filename format: `{12-char-revision}_{action}_{description}.py`
+  - `action` is one of: `create`, `add`, `alter`, `index`, `constraint`, `merge`
 
 ## Safety
 

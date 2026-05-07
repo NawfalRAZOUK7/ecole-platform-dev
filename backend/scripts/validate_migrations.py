@@ -34,24 +34,15 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 VERSIONS_DIR = os.path.join(os.path.dirname(__file__), "..", "alembic", "versions")
 
-# Expected filename pattern: {12-char-hex}_{group}_{description}.py
+# Expected filename pattern: {12-char-revision}_{action}_{description}.py
 # Examples:
-#   9f7257bc8dd1_g1_g6_initial_schema_iam_erp_lms_com.py
-#   a2f8b3c4d5e6_g7_ai_writing_attempts_preferences.py
-#   b3c4d5e6f7a8_g8_parent_child_links_views_kpi.py
-FILENAME_PATTERN = re.compile(r"^[0-9a-f]{12}_[a-z0-9][a-z0-9_]*\.py$")
+#   9f7257bc8dd1_create_schema_iam_erp_lms_com_billing_audit.py
+#   a2f8b3c4d5e6_add_ai_writing_preferences.py
+#   e6f7a8b9c0d1_index_gin_indexes_fulltext_search.py
+FILENAME_PATTERN = re.compile(r"^[0-9a-f]{12}_(create|add|alter|index|constraint|merge)_[a-z0-9_]+\.py$")
 
-# Known migration groups (auto-generated from existing files)
-def _get_valid_groups() -> set[str]:
-    groups = set()
-    for fname in os.listdir(VERSIONS_DIR):
-        if fname.endswith(".py") and not fname.startswith("__"):
-            parts = fname.split("_")
-            if len(parts) >= 2:
-                groups.add(parts[1])
-    return groups
-
-VALID_GROUPS = _get_valid_groups()
+# Valid action verbs
+VALID_ACTIONS = {"create", "add", "alter", "index", "constraint", "merge"}
 
 
 # ---------------------------------------------------------------------------
