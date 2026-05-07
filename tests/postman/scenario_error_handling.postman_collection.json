@@ -1,549 +1,252 @@
 {
   "info": {
-    "name": "Error Handling Validation Scenario",
-    "description": "Comprehensive error path validation for all HTTP status codes and validation rules",
+    "_postman_id": "c0ad0a3d-3f57-4aaa-8cfb-b27b2cf1d76a",
+    "name": "Ecole Platform Scenario - Error Handling",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
-  "item": [
-    {
-      "name": "1. Login for Auth Tests",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Login successful - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test('Save token for auth tests', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.environment.set('valid_token', jsonData.access_token);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {"key": "Content-Type", "value": "application/json"}
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"email\": \"testuser@ecole.ma\", \"password\": \"ValidPass123!\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/auth/login",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "auth", "login"]
-        }
-      }
-    },
-    {
-      "name": "2. POST with Invalid JSON (Expected: 422)",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Invalid JSON - 422 Unprocessable Entity', function() {",
-              "  pm.expect(pm.response.code).to.equal(422);",
-              "});",
-              "",
-              "pm.test('Response has error details', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('error');",
-              "  pm.expect(jsonData).to.have.property('message');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {"key": "Content-Type", "value": "application/json"}
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"email\": \"test@ecole.ma\", \"password\": \"pass\""
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/auth/login",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "auth", "login"]
-        }
-      }
-    },
-    {
-      "name": "3. POST with Missing Required Field (Expected: 422)",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Missing required field - 422 Unprocessable Entity', function() {",
-              "  pm.expect(pm.response.code).to.equal(422);",
-              "});",
-              "",
-              "pm.test('Response details missing field', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('error');",
-              "  var errorStr = JSON.stringify(jsonData);",
-              "  pm.expect(errorStr.toLowerCase()).to.include('email');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {"key": "Content-Type", "value": "application/json"}
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"password\": \"ValidPass123!\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/auth/login",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "auth", "login"]
-        }
-      }
-    },
-    {
-      "name": "4. GET Non-Existent Resource (Expected: 404)",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Non-existent resource - 404 Not Found', function() {",
-              "  pm.expect(pm.response.code).to.equal(404);",
-              "});",
-              "",
-              "pm.test('Response has error', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('error');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "GET",
-        "header": [
-          {"key": "Authorization", "value": "Bearer {{valid_token}}"}
-        ],
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/schools/00000000-0000-0000-0000-000000000000",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "schools", "00000000-0000-0000-0000-000000000000"]
-        }
-      }
-    },
-    {
-      "name": "5. Grade Score > 20 (Expected: 422)",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Grade > 20 - 422 Unprocessable Entity', function() {",
-              "  pm.expect(pm.response.code).to.equal(422);",
-              "});",
-              "",
-              "pm.test('Error mentions grade validation', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('error');",
-              "  var errorStr = JSON.stringify(jsonData);",
-              "  pm.expect(errorStr.toLowerCase()).to.include('grade');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {"key": "Authorization", "value": "Bearer {{valid_token}}"},
-          {"key": "Content-Type", "value": "application/json"}
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"grade\": 25, \"feedback\": \"Invalid grade\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/submissions/sub123/grade",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "submissions", "sub123", "grade"]
-        }
-      }
-    },
-    {
-      "name": "6. Grade Score < 0 (Expected: 422)",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Grade < 0 - 422 Unprocessable Entity', function() {",
-              "  pm.expect(pm.response.code).to.equal(422);",
-              "});",
-              "",
-              "pm.test('Error indicates validation failure', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('error');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {"key": "Authorization", "value": "Bearer {{valid_token}}"},
-          {"key": "Content-Type", "value": "application/json"}
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"grade\": -1, \"feedback\": \"Negative grade\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/submissions/sub123/grade",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "submissions", "sub123", "grade"]
-        }
-      }
-    },
-    {
-      "name": "7. Negative Fee Amount (Expected: 422)",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Negative amount - 422 Unprocessable Entity', function() {",
-              "  pm.expect(pm.response.code).to.equal(422);",
-              "});",
-              "",
-              "pm.test('Error mentions amount', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('error');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {"key": "Authorization", "value": "Bearer {{valid_token}}"},
-          {"key": "Content-Type", "value": "application/json"}
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"school_id\": \"sch1\", \"name\": \"Fee\", \"amount\": -100, \"currency\": \"MAD\", \"academic_year\": \"2025-2026\", \"due_date\": \"2026-09-30\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/billing/fee-structures",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "billing", "fee-structures"]
-        }
-      }
-    },
-    {
-      "name": "8. Invalid Email Format (Expected: 422)",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Invalid email - 422 Unprocessable Entity', function() {",
-              "  pm.expect(pm.response.code).to.equal(422);",
-              "});",
-              "",
-              "pm.test('Error mentions email validation', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('error');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {"key": "Content-Type", "value": "application/json"}
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"email\": \"not-an-email\", \"password\": \"ValidPass123!\", \"first_name\": \"Test\", \"last_name\": \"User\", \"role\": \"STUDENT\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/auth/register",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "auth", "register"]
-        }
-      }
-    },
-    {
-      "name": "9. Expired Token (Expected: 401)",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Expired token - 401 Unauthorized', function() {",
-              "  pm.expect(pm.response.code).to.equal(401);",
-              "});",
-              "",
-              "pm.test('Response has auth error', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('error');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "GET",
-        "header": [
-          {"key": "Authorization", "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NDAwMDAwMDB9.invalid_token_signature"}
-        ],
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/admin/users",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "admin", "users"]
-        }
-      }
-    },
-    {
-      "name": "10. Missing Authentication Token (Expected: 401)",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('No token - 401 Unauthorized', function() {",
-              "  pm.expect(pm.response.code).to.equal(401);",
-              "});",
-              "",
-              "pm.test('Response requires auth', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('error');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "GET",
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/auth/me",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "auth", "me"]
-        }
-      }
-    },
-    {
-      "name": "11. Unauthorized Action - Student Creating School (Expected: 403)",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Student creating school - 403 Forbidden', function() {",
-              "  pm.expect(pm.response.code).to.equal(403);",
-              "});",
-              "",
-              "pm.test('Response denies access', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('error');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {"key": "Authorization", "value": "Bearer {{valid_token}}"},
-          {"key": "Content-Type", "value": "application/json"}
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"name\": \"School Test\", \"code\": \"TST123\", \"city\": \"Rabat\", \"country\": \"Morocco\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/schools",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "schools"]
-        }
-      }
-    },
-    {
-      "name": "12. Duplicate Email Registration (Expected: 409)",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Duplicate email - 409 Conflict', function() {",
-              "  pm.expect(pm.response.code).to.equal(409);",
-              "});",
-              "",
-              "pm.test('Response indicates duplicate', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('error');",
-              "  var errorStr = JSON.stringify(jsonData);",
-              "  pm.expect(errorStr.toLowerCase()).to.include('exists');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {"key": "Content-Type", "value": "application/json"}
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"email\": \"existing@ecole.ma\", \"password\": \"ValidPass123!\", \"first_name\": \"Test\", \"last_name\": \"User\", \"role\": \"STUDENT\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/auth/register",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "auth", "register"]
-        }
-      }
-    },
-    {
-      "name": "13. Create Course with Empty Name (Expected: 422)",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Empty course name - 422 Unprocessable Entity', function() {",
-              "  pm.expect(pm.response.code).to.equal(422);",
-              "});",
-              "",
-              "pm.test('Error mentions required field', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('error');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {"key": "Authorization", "value": "Bearer {{valid_token}}"},
-          {"key": "Content-Type", "value": "application/json"}
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"name\": \"\", \"description\": \"A course\", \"code\": \"CRS123\", \"class_id\": \"cls1\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/courses",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "courses"]
-        }
-      }
-    },
-    {
-      "name": "14. Invalid Phone Format (Expected: 422)",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Invalid phone format - 422 Unprocessable Entity', function() {",
-              "  pm.expect(pm.response.code).to.equal(422);",
-              "});",
-              "",
-              "pm.test('Error mentions phone validation', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('error');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "PUT",
-        "header": [
-          {"key": "Authorization", "value": "Bearer {{valid_token}}"},
-          {"key": "Content-Type", "value": "application/json"}
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"phone\": \"+1234\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/me/profile",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "me", "profile"]
-        }
-      }
-    },
-    {
-      "name": "15. Invalid Currency (Expected: 422)",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Invalid currency USD - 422 Unprocessable Entity', function() {",
-              "  pm.expect(pm.response.code).to.equal(422);",
-              "});",
-              "",
-              "pm.test('Error mentions currency requirement', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('error');",
-              "  var errorStr = JSON.stringify(jsonData);",
-              "  pm.expect(errorStr.toUpperCase()).to.include('MAD');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {"key": "Authorization", "value": "Bearer {{valid_token}}"},
-          {"key": "Content-Type", "value": "application/json"}
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"school_id\": \"sch1\", \"name\": \"Fee\", \"amount\": 5000, \"currency\": \"USD\", \"academic_year\": \"2025-2026\", \"due_date\": \"2026-09-30\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/billing/fee-structures",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "billing", "fee-structures"]
-        }
-      }
-    }
-  ],
   "variable": [
     {
-      "key": "base_url",
-      "value": "http://localhost:3000"
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api/v1"
     },
     {
-      "key": "api_prefix",
-      "value": "/api/v1"
+      "key": "schoolId",
+      "value": "00000000-0000-4000-8000-000000000001"
     },
     {
-      "key": "valid_token",
+      "key": "studentId",
+      "value": "10000000-0000-4000-8000-000000000007"
+    },
+    {
+      "key": "adminToken",
       "value": ""
+    },
+    {
+      "key": "sysToken",
+      "value": ""
+    },
+    {
+      "key": "teacherToken",
+      "value": ""
+    },
+    {
+      "key": "parentToken",
+      "value": ""
+    },
+    {
+      "key": "studentToken",
+      "value": ""
+    },
+    {
+      "key": "cmsToken",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth - Wrong Password",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Wrong password 401', () => pm.response.to.have.status(401));",
+              "const json = pm.response.json();",
+              "pm.expect(json).to.have.property('error');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"admin@ecole-benani.ma\",\"password\":\"wrong-password\",\"school_id\":\"{{schoolId}}\"}"
+        },
+        "url": "{{baseUrl}}/auth/login"
+      }
+    },
+    {
+      "name": "Auth - Missing School ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Missing school_id 422', () => pm.response.to.have.status(422));",
+              "const json = pm.response.json();",
+              "pm.expect(json).to.have.property('error');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"admin@ecole-benani.ma\",\"password\":\"admin123\"}"
+        },
+        "url": "{{baseUrl}}/auth/login"
+      }
+    },
+    {
+      "name": "Auth - Login Admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Login Admin 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.expect(json.data).to.be.an('object');",
+              "pm.expect(json.data.access_token).to.be.a('string');",
+              "pm.collectionVariables.set('adminToken', json.data.access_token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"admin@ecole-benani.ma\",\"password\":\"admin123\",\"school_id\":\"{{schoolId}}\"}"
+        },
+        "url": "{{baseUrl}}/auth/login"
+      }
+    },
+    {
+      "name": "Admin - Missing School 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Admin - Missing School 404 status', () => pm.expect(pm.response.code).to.be.oneOf([404]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has error', () => pm.expect(json).to.have.property('error')); "
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/schools/00000000-0000-0000-0000-000000000000"
+      }
+    },
+    {
+      "name": "Admin - Invalid Export Entity 422",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Admin - Invalid Export Entity 422 status', () => pm.expect(pm.response.code).to.be.oneOf([422]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has error', () => pm.expect(json).to.have.property('error')); "
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/export/csv?entity=not_a_real_entity"
+      }
+    },
+    {
+      "name": "Auth - Login Parent",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Login Parent 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.expect(json.data).to.be.an('object');",
+              "pm.expect(json.data.access_token).to.be.a('string');",
+              "pm.collectionVariables.set('parentToken', json.data.access_token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"parent.alaoui@gmail.com\",\"password\":\"parent123\",\"school_id\":\"{{schoolId}}\"}"
+        },
+        "url": "{{baseUrl}}/auth/login"
+      }
+    },
+    {
+      "name": "Parent - Admin Users Forbidden",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Parent - Admin Users Forbidden status', () => pm.expect(pm.response.code).to.be.oneOf([403]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has error', () => pm.expect(json).to.have.property('error')); "
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{parentToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/users"
+      }
     }
   ]
 }

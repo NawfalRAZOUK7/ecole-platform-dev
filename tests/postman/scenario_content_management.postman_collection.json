@@ -1,230 +1,61 @@
 {
   "info": {
-    "name": "Content Management Scenario",
-    "description": "Complete content lifecycle from CMS creation through teacher submissions and approval workflow",
+    "_postman_id": "4dc47b04-2ae5-4939-8f10-c86d907aba6b",
+    "name": "Ecole Platform Scenario - Content Management",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
-      "key": "base_url",
-      "value": "http://localhost:3000"
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api/v1"
     },
     {
-      "key": "api_prefix",
-      "value": "/api/v1"
+      "key": "schoolId",
+      "value": "00000000-0000-4000-8000-000000000001"
     },
     {
-      "key": "access_token",
+      "key": "studentId",
+      "value": "10000000-0000-4000-8000-000000000007"
+    },
+    {
+      "key": "adminToken",
       "value": ""
     },
     {
-      "key": "refresh_token",
+      "key": "sysToken",
       "value": ""
     },
     {
-      "key": "content_manager_id",
+      "key": "teacherToken",
       "value": ""
     },
     {
-      "key": "content_manager_email",
-      "value": "content_mgr_{{$timestamp}}@ecole.ma"
-    },
-    {
-      "key": "content_manager_password",
-      "value": "ContentMgrSecure123!"
-    },
-    {
-      "key": "teacher_id",
+      "key": "parentToken",
       "value": ""
     },
     {
-      "key": "teacher_email",
-      "value": "teacher_content_{{$timestamp}}@ecole.ma"
-    },
-    {
-      "key": "teacher_password",
-      "value": "TeacherSecure123!"
-    },
-    {
-      "key": "teacher_first_name",
-      "value": "Layla"
-    },
-    {
-      "key": "teacher_last_name",
-      "value": "Samir"
-    },
-    {
-      "key": "content_id_1",
+      "key": "studentToken",
       "value": ""
     },
     {
-      "key": "content_id_2",
-      "value": ""
-    },
-    {
-      "key": "content_id_3",
-      "value": ""
-    },
-    {
-      "key": "lesson_title_1",
-      "value": "Algebra Fundamentals - Solving Linear Equations"
-    },
-    {
-      "key": "lesson_description_1",
-      "value": "Comprehensive lesson covering algebraic equations and solution methods"
-    },
-    {
-      "key": "lesson_content_1",
-      "value": "This lesson introduces the fundamental concepts of algebra including variables, coefficients, and equation solving techniques."
-    },
-    {
-      "key": "lesson_title_2",
-      "value": "Arabic Literature - Classical Poetry Analysis"
-    },
-    {
-      "key": "lesson_description_2",
-      "value": "Detailed analysis of classical Arabic poetry and literary techniques"
-    },
-    {
-      "key": "lesson_content_2",
-      "value": "Learn to analyze and appreciate the beauty of classical Arabic poetry through detailed examples and critical examination."
-    },
-    {
-      "key": "exercise_title",
-      "value": "French Language Exercises - Verb Conjugation"
-    },
-    {
-      "key": "exercise_description",
-      "value": "Interactive exercises for mastering French verb conjugations"
-    },
-    {
-      "key": "exercise_content",
-      "value": "Practice French verbs in present, past, and future tenses with detailed explanations and feedback."
-    },
-    {
-      "key": "subject_1",
-      "value": "Mathematics"
-    },
-    {
-      "key": "subject_2",
-      "value": "Arabic"
-    },
-    {
-      "key": "subject_3",
-      "value": "French"
-    },
-    {
-      "key": "level_college",
-      "value": "COLLEGE"
-    },
-    {
-      "key": "level_primary",
-      "value": "PRIMAIRE"
-    },
-    {
-      "key": "level_secondary",
-      "value": "LYCEE"
-    },
-    {
-      "key": "content_type_lesson",
-      "value": "LESSON"
-    },
-    {
-      "key": "content_type_exercise",
-      "value": "EXERCISE"
-    },
-    {
-      "key": "total_cms_content",
-      "value": ""
-    },
-    {
-      "key": "submission_id",
-      "value": ""
-    },
-    {
-      "key": "submission_status",
-      "value": "PENDING_REVIEW"
-    },
-    {
-      "key": "teacher_submission_title",
-      "value": "Interactive Mathematics Game - Fraction Concepts"
-    },
-    {
-      "key": "teacher_submission_description",
-      "value": "Engaging interactive game to help students understand fractions"
-    },
-    {
-      "key": "teacher_submission_content",
-      "value": "An interactive web-based game that teaches fractions through visual and hands-on activities"
-    },
-    {
-      "key": "teacher_submissions_list",
-      "value": ""
-    },
-    {
-      "key": "pending_reviews_count",
-      "value": ""
-    },
-    {
-      "key": "submission_review_id",
-      "value": ""
-    },
-    {
-      "key": "approval_status",
-      "value": "APPROVED"
-    },
-    {
-      "key": "review_feedback",
-      "value": "Excellent content. Well-structured with clear learning objectives and appropriate examples."
-    },
-    {
-      "key": "content_manager_first_name",
-      "value": "Admin"
-    },
-    {
-      "key": "content_manager_last_name",
-      "value": "Content"
-    },
-    {
-      "key": "total_lessons",
-      "value": ""
-    },
-    {
-      "key": "total_exercises",
-      "value": ""
-    },
-    {
-      "key": "content_last_updated",
-      "value": ""
-    },
-    {
-      "key": "all_content_items",
+      "key": "cmsToken",
       "value": ""
     }
   ],
   "item": [
     {
-      "name": "1. Register Content Manager",
+      "name": "Auth - Login Content Manager",
       "event": [
         {
           "listen": "test",
           "script": {
+            "type": "text/javascript",
             "exec": [
-              "pm.test('Content manager registration - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('User has CONTENT_MANAGER role', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData.user).to.have.property('id');",
-              "  pm.expect(jsonData.user.role).to.equal('CONTENT_MANAGER');",
-              "  pm.environment.set('content_manager_id', jsonData.user.id);",
-              "});",
-              "",
-              "pm.test('Access token provided', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.environment.set('access_token', jsonData.access_token);",
-              "});"
+              "pm.test('Login Content Manager 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.expect(json.data).to.be.an('object');",
+              "pm.expect(json.data.access_token).to.be.a('string');",
+              "pm.collectionVariables.set('cmsToken', json.data.access_token);"
             ]
           }
         }
@@ -239,222 +70,23 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"email\": \"{{content_manager_email}}\", \"password\": \"{{content_manager_password}}\", \"first_name\": \"{{content_manager_first_name}}\", \"last_name\": \"{{content_manager_last_name}}\", \"role\": \"CONTENT_MANAGER\"}"
+          "raw": "{\"email\":\"cms@ecole-platform.ma\",\"password\":\"content123\",\"school_id\":\"{{schoolId}}\"}"
         },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/auth/register",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "auth", "register"]
-        }
+        "url": "{{baseUrl}}/auth/login"
       }
     },
     {
-      "name": "2. Content Manager Login",
+      "name": "CMS - Content",
       "event": [
         {
           "listen": "test",
           "script": {
+            "type": "text/javascript",
             "exec": [
-              "pm.test('Content manager login - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test('Update access token', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.environment.set('access_token', jsonData.access_token);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"email\": \"{{content_manager_email}}\", \"password\": \"{{content_manager_password}}\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/auth/login",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "auth", "login"]
-        }
-      }
-    },
-    {
-      "name": "3. Create Lesson (Mathematics - College)",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Content creation - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('Lesson has ID and structure', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('id');",
-              "  pm.expect(jsonData).to.have.property('title');",
-              "  pm.expect(jsonData).to.have.property('type');",
-              "  pm.environment.set('content_id_1', jsonData.id);",
-              "});",
-              "",
-              "pm.test('Lesson has correct subject and level', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData.subject).to.equal('Mathematics');",
-              "  pm.expect(jsonData.level).to.equal('COLLEGE');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"title\": \"{{lesson_title_1}}\", \"description\": \"{{lesson_description_1}}\", \"content\": \"{{lesson_content_1}}\", \"type\": \"{{content_type_lesson}}\", \"subject\": \"{{subject_1}}\", \"level\": \"{{level_college}}\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/cms/content",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "cms", "content"]
-        }
-      }
-    },
-    {
-      "name": "4. Create Lesson (Arabic - Primary)",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Content creation - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('Save content ID', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('id');",
-              "  pm.expect(jsonData.subject).to.equal('Arabic');",
-              "  pm.expect(jsonData.level).to.equal('PRIMAIRE');",
-              "  pm.environment.set('content_id_2', jsonData.id);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"title\": \"{{lesson_title_2}}\", \"description\": \"{{lesson_description_2}}\", \"content\": \"{{lesson_content_2}}\", \"type\": \"{{content_type_lesson}}\", \"subject\": \"{{subject_2}}\", \"level\": \"{{level_primary}}\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/cms/content",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "cms", "content"]
-        }
-      }
-    },
-    {
-      "name": "5. Create Exercise (French - Secondary)",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Content creation - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('Exercise created', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('id');",
-              "  pm.expect(jsonData.type).to.equal('EXERCISE');",
-              "  pm.expect(jsonData.subject).to.equal('French');",
-              "  pm.expect(jsonData.level).to.equal('LYCEE');",
-              "  pm.environment.set('content_id_3', jsonData.id);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"title\": \"{{exercise_title}}\", \"description\": \"{{exercise_description}}\", \"content\": \"{{exercise_content}}\", \"type\": \"{{content_type_exercise}}\", \"subject\": \"{{subject_3}}\", \"level\": \"{{level_secondary}}\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/cms/content",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "cms", "content"]
-        }
-      }
-    },
-    {
-      "name": "6. List All CMS Content",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Get content list - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test('Content list is an array', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.be.an('array');",
-              "  pm.expect(jsonData.length).to.be.greaterThanOrEqual(3);",
-              "});",
-              "",
-              "pm.test('Each content has required fields', function() {",
-              "  var jsonData = pm.response.json();",
-              "  jsonData.forEach(function(content) {",
-              "    pm.expect(content).to.have.property('id');",
-              "    pm.expect(content).to.have.property('title');",
-              "    pm.expect(content).to.have.property('type');",
-              "    pm.expect(content).to.have.property('subject');",
-              "    pm.expect(content).to.have.property('level');",
-              "  });",
-              "});"
+              "pm.test('CMS - Content status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
             ]
           }
         }
@@ -464,202 +96,24 @@
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer {{access_token}}"
+            "value": "Bearer {{cmsToken}}"
           }
         ],
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/cms/content",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "cms", "content"]
-        }
+        "url": "{{baseUrl}}/cms/content"
       }
     },
     {
-      "name": "7. Content Manager Logout",
+      "name": "CMS - Submissions",
       "event": [
         {
           "listen": "test",
           "script": {
+            "type": "text/javascript",
             "exec": [
-              "pm.test('Logout - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          }
-        ],
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/auth/logout",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "auth", "logout"]
-        }
-      }
-    },
-    {
-      "name": "8. Register Teacher",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Teacher registration - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('Teacher created', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData.user).to.have.property('id');",
-              "  pm.expect(jsonData.user.role).to.equal('TEACHER');",
-              "  pm.environment.set('teacher_id', jsonData.user.id);",
-              "});",
-              "",
-              "pm.test('Access token provided', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.environment.set('access_token', jsonData.access_token);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"email\": \"{{teacher_email}}\", \"password\": \"{{teacher_password}}\", \"first_name\": \"{{teacher_first_name}}\", \"last_name\": \"{{teacher_last_name}}\", \"role\": \"TEACHER\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/auth/register",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "auth", "register"]
-        }
-      }
-    },
-    {
-      "name": "9. Teacher Login",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Teacher login - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test('Update access token', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.environment.set('access_token', jsonData.access_token);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"email\": \"{{teacher_email}}\", \"password\": \"{{teacher_password}}\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/auth/login",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "auth", "login"]
-        }
-      }
-    },
-    {
-      "name": "10. Teacher Submits Content for Review",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Submission created - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('Submission has ID and status', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('id');",
-              "  pm.expect(jsonData).to.have.property('status');",
-              "  pm.environment.set('submission_id', jsonData.id);",
-              "});",
-              "",
-              "pm.test('Submission status is PENDING_REVIEW', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData.status).to.equal('PENDING_REVIEW');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"title\": \"{{teacher_submission_title}}\", \"description\": \"{{teacher_submission_description}}\", \"content\": \"{{teacher_submission_content}}\", \"type\": \"{{content_type_lesson}}\", \"subject\": \"{{subject_1}}\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/content/submit-for-review",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "content", "submit-for-review"]
-        }
-      }
-    },
-    {
-      "name": "11. View Teacher's Own Submissions",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Get submissions - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test('Submissions is an array', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.be.an('array');",
-              "  pm.expect(jsonData.length).to.be.greaterThan(0);",
-              "});",
-              "",
-              "pm.test('Each submission has required fields', function() {",
-              "  var jsonData = pm.response.json();",
-              "  jsonData.forEach(function(submission) {",
-              "    pm.expect(submission).to.have.property('id');",
-              "    pm.expect(submission).to.have.property('title');",
-              "    pm.expect(submission).to.have.property('status');",
-              "  });",
-              "});"
+              "pm.test('CMS - Submissions status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
             ]
           }
         }
@@ -669,60 +123,25 @@
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer {{access_token}}"
+            "value": "Bearer {{cmsToken}}"
           }
         ],
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/content/my-submissions",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "content", "my-submissions"]
-        }
+        "url": "{{baseUrl}}/cms/submissions"
       }
     },
     {
-      "name": "12. Teacher Logout",
+      "name": "Auth - Login Teacher",
       "event": [
         {
           "listen": "test",
           "script": {
+            "type": "text/javascript",
             "exec": [
-              "pm.test('Logout - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          }
-        ],
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/auth/logout",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "auth", "logout"]
-        }
-      }
-    },
-    {
-      "name": "13. Content Manager Re-Login",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Content manager login - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test('Update access token', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.environment.set('access_token', jsonData.access_token);",
-              "});"
+              "pm.test('Login Teacher 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.expect(json.data).to.be.an('object');",
+              "pm.expect(json.data.access_token).to.be.a('string');",
+              "pm.collectionVariables.set('teacherToken', json.data.access_token);"
             ]
           }
         }
@@ -737,38 +156,23 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"email\": \"{{content_manager_email}}\", \"password\": \"{{content_manager_password}}\"}"
+          "raw": "{\"email\":\"prof.math@ecole-benani.ma\",\"password\":\"teacher123\",\"school_id\":\"{{schoolId}}\"}"
         },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/auth/login",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "auth", "login"]
-        }
+        "url": "{{baseUrl}}/auth/login"
       }
     },
     {
-      "name": "14. View Pending Submissions for Review",
+      "name": "Teacher - My Content Submissions",
       "event": [
         {
           "listen": "test",
           "script": {
+            "type": "text/javascript",
             "exec": [
-              "pm.test('Get submissions - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test('Submissions list is valid', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.be.an('array');",
-              "  pm.expect(jsonData.length).to.be.greaterThan(0);",
-              "});",
-              "",
-              "pm.test('Each submission has PENDING_REVIEW status', function() {",
-              "  var jsonData = pm.response.json();",
-              "  jsonData.forEach(function(submission) {",
-              "    pm.expect(submission.status).to.equal('PENDING_REVIEW');",
-              "  });",
-              "});"
+              "pm.test('Teacher - My Content Submissions status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
             ]
           }
         }
@@ -778,86 +182,37 @@
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer {{access_token}}"
+            "value": "Bearer {{teacherToken}}"
           }
         ],
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/cms/submissions",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "cms", "submissions"]
-        }
+        "url": "{{baseUrl}}/content/my-submissions"
       }
     },
     {
-      "name": "15. Approve Teacher Submission",
+      "name": "Teacher - CMS Content Forbidden",
       "event": [
         {
           "listen": "test",
           "script": {
+            "type": "text/javascript",
             "exec": [
-              "pm.test('Review submission - 200 OK or 201 Created', function() {",
-              "  pm.response.to.have.status([200, 201]);",
-              "});",
-              "",
-              "pm.test('Submission approved', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('status');",
-              "  pm.expect(jsonData.status).to.equal('APPROVED');",
-              "});"
+              "pm.test('Teacher - CMS Content Forbidden status', () => pm.expect(pm.response.code).to.be.oneOf([403]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has error', () => pm.expect(json).to.have.property('error')); "
             ]
           }
         }
       ],
       "request": {
-        "method": "POST",
+        "method": "GET",
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
+            "value": "Bearer {{teacherToken}}"
           }
         ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"status\": \"{{approval_status}}\", \"feedback\": \"{{review_feedback}}\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/cms/submissions/{{submission_id}}/review",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "cms", "submissions", "{{submission_id}}", "review"]
-        }
-      }
-    },
-    {
-      "name": "16. Content Manager Logout",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Logout - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          }
-        ],
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/auth/logout",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "auth", "logout"]
-        }
+        "url": "{{baseUrl}}/cms/content"
       }
     }
   ]

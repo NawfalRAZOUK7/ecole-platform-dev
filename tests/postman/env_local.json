@@ -15,74 +15,92 @@
       "enabled": true
     },
     {
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api/v1",
+      "type": "default",
+      "enabled": true
+    },
+    {
       "key": "sys_admin_email",
-      "value": "sysadmin@ecole-test.ma",
+      "value": "superadmin@ecole-platform.ma",
       "type": "default",
       "enabled": true
     },
     {
       "key": "sys_admin_password",
-      "value": "TestPassword123!",
+      "value": "superadmin123",
       "type": "secret",
       "enabled": true
     },
     {
       "key": "admin_email",
-      "value": "admin@ecole-test.ma",
+      "value": "admin@ecole-benani.ma",
       "type": "default",
       "enabled": true
     },
     {
       "key": "admin_password",
-      "value": "TestPassword123!",
+      "value": "admin123",
       "type": "secret",
       "enabled": true
     },
     {
       "key": "director_email",
-      "value": "director@ecole-test.ma",
+      "value": "directeur@ecole-benani.ma",
       "type": "default",
       "enabled": true
     },
     {
       "key": "director_password",
-      "value": "TestPassword123!",
+      "value": "director123",
       "type": "secret",
       "enabled": true
     },
     {
       "key": "teacher_email",
-      "value": "teacher@ecole-test.ma",
+      "value": "prof.math@ecole-benani.ma",
       "type": "default",
       "enabled": true
     },
     {
       "key": "teacher_password",
-      "value": "TestPassword123!",
+      "value": "teacher123",
       "type": "secret",
       "enabled": true
     },
     {
       "key": "parent_email",
-      "value": "parent@ecole-test.ma",
+      "value": "parent.alaoui@gmail.com",
       "type": "default",
       "enabled": true
     },
     {
       "key": "parent_password",
-      "value": "TestPassword123!",
+      "value": "parent123",
       "type": "secret",
       "enabled": true
     },
     {
       "key": "student_email",
-      "value": "student@ecole-test.ma",
+      "value": "yassine.alaoui@ecole-benani.ma",
       "type": "default",
       "enabled": true
     },
     {
       "key": "student_password",
-      "value": "TestPassword123!",
+      "value": "student123",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "content_manager_email",
+      "value": "cms@ecole-platform.ma",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "content_manager_password",
+      "value": "content123",
       "type": "secret",
       "enabled": true
     },
@@ -100,55 +118,97 @@
     },
     {
       "key": "school_id",
-      "value": "",
+      "value": "00000000-0000-4000-8000-000000000001",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "schoolId",
+      "value": "00000000-0000-4000-8000-000000000001",
       "type": "default",
       "enabled": true
     },
     {
       "key": "class_id",
-      "value": "",
+      "value": "20000000-0000-4000-8000-000000000004",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "classId",
+      "value": "20000000-0000-4000-8000-000000000004",
       "type": "default",
       "enabled": true
     },
     {
       "key": "course_id",
-      "value": "",
+      "value": "30000000-0000-4000-8000-000000000001",
       "type": "default",
       "enabled": true
     },
     {
       "key": "academic_year_id",
-      "value": "",
+      "value": "20000000-0000-4000-8000-000000000001",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "academicYearId",
+      "value": "20000000-0000-4000-8000-000000000001",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "period_id",
+      "value": "20000000-0000-4000-8000-000000000002",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "periodId",
+      "value": "20000000-0000-4000-8000-000000000002",
       "type": "default",
       "enabled": true
     },
     {
       "key": "student_id",
-      "value": "",
+      "value": "10000000-0000-4000-8000-000000000007",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "studentId",
+      "value": "10000000-0000-4000-8000-000000000007",
       "type": "default",
       "enabled": true
     },
     {
       "key": "teacher_id",
-      "value": "",
+      "value": "10000000-0000-4000-8000-000000000003",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "teacherId",
+      "value": "10000000-0000-4000-8000-000000000003",
       "type": "default",
       "enabled": true
     },
     {
       "key": "parent_id",
-      "value": "",
+      "value": "10000000-0000-4000-8000-000000000005",
       "type": "default",
       "enabled": true
     },
     {
       "key": "user_id",
-      "value": "",
+      "value": "10000000-0000-4000-8000-000000000001",
       "type": "default",
       "enabled": true
     },
     {
       "key": "assignment_id",
-      "value": "",
+      "value": "30000000-0000-4000-8000-000000000003",
       "type": "default",
       "enabled": true
     },
@@ -172,7 +232,13 @@
     },
     {
       "key": "invoice_id",
-      "value": "",
+      "value": "40000000-0000-4000-8000-000000000001",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "invoiceId",
+      "value": "40000000-0000-4000-8000-000000000001",
       "type": "default",
       "enabled": true
     },
@@ -184,7 +250,13 @@
     },
     {
       "key": "fee_structure_id",
-      "value": "",
+      "value": "60000000-0000-4000-8000-000000000001",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "feeStructureId",
+      "value": "60000000-0000-4000-8000-000000000001",
       "type": "default",
       "enabled": true
     },
@@ -196,7 +268,13 @@
     },
     {
       "key": "conversation_id",
-      "value": "",
+      "value": "70000000-0000-4000-8000-000000000001",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "conversationId",
+      "value": "70000000-0000-4000-8000-000000000001",
       "type": "default",
       "enabled": true
     },
@@ -238,7 +316,7 @@
     },
     {
       "key": "content_item_id",
-      "value": "",
+      "value": "30000000-0000-4000-8000-000000000005",
       "type": "default",
       "enabled": true
     },
@@ -268,7 +346,7 @@
     },
     {
       "key": "assessment_id",
-      "value": "",
+      "value": "30000000-0000-4000-8000-000000000004",
       "type": "default",
       "enabled": true
     }

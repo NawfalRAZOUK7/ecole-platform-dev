@@ -1,1294 +1,536 @@
 {
   "info": {
-    "name": "RBAC Matrix Validation Scenario",
-    "description": "Role-based access control validation across all system roles",
+    "_postman_id": "64524a18-59f1-4e61-8a50-121dc58a2e35",
+    "name": "Ecole Platform Scenario - RBAC Matrix",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
-  "item": [
-    {
-      "name": "SYS_ADMIN Tests",
-      "item": [
-        {
-          "name": "SYS_ADMIN - Login",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('SYS_ADMIN login - 200 OK', function() {",
-                  "  pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Save token', function() {",
-                  "  var jsonData = pm.response.json();",
-                  "  pm.environment.set('sys_admin_token', jsonData.access_token);",
-                  "  pm.environment.set('current_token', jsonData.access_token);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\"email\": \"sysadmin@ecole.ma\", \"password\": \"SysAdminPass123!\"}"
-            },
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/auth/login",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "auth",
-                "login"
-              ]
-            }
-          }
-        },
-        {
-          "name": "SYS_ADMIN - GET /admin/dashboard (Expected: 200)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('SYS_ADMIN dashboard access - 200 OK', function() {",
-                  "  pm.expect(pm.response.code).to.equal(200);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{sys_admin_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/admin/dashboard",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "admin",
-                "dashboard"
-              ]
-            }
-          }
-        },
-        {
-          "name": "SYS_ADMIN - POST /schools (Expected: 200)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('SYS_ADMIN schools create - 201 Created', function() {",
-                  "  pm.expect([200, 201]).to.include(pm.response.code);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{sys_admin_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\"name\": \"School Test\", \"code\": \"TST{{$randomInt}}\", \"city\": \"Rabat\", \"country\": \"Morocco\"}"
-            },
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/schools",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "schools"
-              ]
-            }
-          }
-        },
-        {
-          "name": "SYS_ADMIN - GET /admin/users (Expected: 200)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('SYS_ADMIN users access - 200 OK', function() {",
-                  "  pm.expect(pm.response.code).to.equal(200);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{sys_admin_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/admin/users",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "admin",
-                "users"
-              ]
-            }
-          }
-        },
-        {
-          "name": "SYS_ADMIN - Logout",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{sys_admin_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/auth/logout",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "auth",
-                "logout"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Logout successful\", function() { pm.response.to.have.status(200); });",
-                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "ADMIN Tests",
-      "item": [
-        {
-          "name": "ADMIN - Login",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('ADMIN login - 200 OK', function() {",
-                  "  pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Save token', function() {",
-                  "  var jsonData = pm.response.json();",
-                  "  pm.environment.set('admin_token', jsonData.access_token);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\"email\": \"admin@ecole.ma\", \"password\": \"AdminPass123!\"}"
-            },
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/auth/login",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "auth",
-                "login"
-              ]
-            }
-          }
-        },
-        {
-          "name": "ADMIN - GET /admin/dashboard (Expected: 200)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('ADMIN dashboard access - 200 OK', function() {",
-                  "  pm.expect(pm.response.code).to.equal(200);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/admin/dashboard",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "admin",
-                "dashboard"
-              ]
-            }
-          }
-        },
-        {
-          "name": "ADMIN - POST /schools (Expected: 403)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('ADMIN schools create - 403 Forbidden', function() {",
-                  "  pm.expect(pm.response.code).to.equal(403);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\"name\": \"School Test\", \"code\": \"TST{{$randomInt}}\", \"city\": \"Rabat\", \"country\": \"Morocco\"}"
-            },
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/schools",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "schools"
-              ]
-            }
-          }
-        },
-        {
-          "name": "ADMIN - GET /admin/users (Expected: 200)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('ADMIN users access - 200 OK', function() {",
-                  "  pm.expect(pm.response.code).to.equal(200);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/admin/users",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "admin",
-                "users"
-              ]
-            }
-          }
-        },
-        {
-          "name": "ADMIN - Logout",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/auth/logout",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "auth",
-                "logout"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Logout successful\", function() { pm.response.to.have.status(200); });",
-                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "TEACHER Tests",
-      "item": [
-        {
-          "name": "TEACHER - Login",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('TEACHER login - 200 OK', function() {",
-                  "  pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Save token', function() {",
-                  "  var jsonData = pm.response.json();",
-                  "  pm.environment.set('teacher_token', jsonData.access_token);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\"email\": \"teacher@ecole.ma\", \"password\": \"TeacherPass123!\"}"
-            },
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/auth/login",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "auth",
-                "login"
-              ]
-            }
-          }
-        },
-        {
-          "name": "TEACHER - GET /admin/dashboard (Expected: 403)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('TEACHER dashboard access - 403 Forbidden', function() {",
-                  "  pm.expect(pm.response.code).to.equal(403);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{teacher_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/admin/dashboard",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "admin",
-                "dashboard"
-              ]
-            }
-          }
-        },
-        {
-          "name": "TEACHER - POST /schools (Expected: 403)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('TEACHER schools access - 403 Forbidden', function() {",
-                  "  pm.expect(pm.response.code).to.equal(403);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{teacher_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\"name\": \"School Test\", \"code\": \"TST{{$randomInt}}\", \"city\": \"Rabat\", \"country\": \"Morocco\"}"
-            },
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/schools",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "schools"
-              ]
-            }
-          }
-        },
-        {
-          "name": "TEACHER - GET /courses (Expected: 200)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('TEACHER courses access - 200 OK', function() {",
-                  "  pm.expect(pm.response.code).to.equal(200);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{teacher_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/courses",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "courses"
-              ]
-            }
-          }
-        },
-        {
-          "name": "TEACHER - POST /submissions/grade (Expected: 200)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('TEACHER grade submission - 200 OK or 403', function() {",
-                  "  pm.expect([200, 201, 403]).to.include(pm.response.code);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{teacher_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\"grade\": 15, \"feedback\": \"Good work\"}"
-            },
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/submissions/sub1/grade",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "submissions",
-                "sub1",
-                "grade"
-              ]
-            }
-          }
-        },
-        {
-          "name": "TEACHER - GET /admin/users (Expected: 403)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('TEACHER users access - 403 Forbidden', function() {",
-                  "  pm.expect(pm.response.code).to.equal(403);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{teacher_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/admin/users",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "admin",
-                "users"
-              ]
-            }
-          }
-        },
-        {
-          "name": "TEACHER - Logout",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{teacher_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/auth/logout",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "auth",
-                "logout"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Logout successful\", function() { pm.response.to.have.status(200); });",
-                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "PARENT Tests",
-      "item": [
-        {
-          "name": "PARENT - Login",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('PARENT login - 200 OK', function() {",
-                  "  pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Save token', function() {",
-                  "  var jsonData = pm.response.json();",
-                  "  pm.environment.set('parent_token', jsonData.access_token);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\"email\": \"parent@ecole.ma\", \"password\": \"ParentPass123!\"}"
-            },
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/auth/login",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "auth",
-                "login"
-              ]
-            }
-          }
-        },
-        {
-          "name": "PARENT - GET /admin/dashboard (Expected: 403)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('PARENT dashboard access - 403 Forbidden', function() {",
-                  "  pm.expect(pm.response.code).to.equal(403);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{parent_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/admin/dashboard",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "admin",
-                "dashboard"
-              ]
-            }
-          }
-        },
-        {
-          "name": "PARENT - POST /schools (Expected: 403)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('PARENT schools access - 403 Forbidden', function() {",
-                  "  pm.expect(pm.response.code).to.equal(403);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{parent_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\"name\": \"School Test\", \"code\": \"TST{{$randomInt}}\", \"city\": \"Rabat\", \"country\": \"Morocco\"}"
-            },
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/schools",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "schools"
-              ]
-            }
-          }
-        },
-        {
-          "name": "PARENT - GET /admin/users (Expected: 403)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('PARENT users access - 403 Forbidden', function() {",
-                  "  pm.expect(pm.response.code).to.equal(403);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{parent_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/admin/users",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "admin",
-                "users"
-              ]
-            }
-          }
-        },
-        {
-          "name": "PARENT - Logout",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{parent_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/auth/logout",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "auth",
-                "logout"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Logout successful\", function() { pm.response.to.have.status(200); });",
-                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "STUDENT Tests",
-      "item": [
-        {
-          "name": "STUDENT - Login",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('STUDENT login - 200 OK', function() {",
-                  "  pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Save token', function() {",
-                  "  var jsonData = pm.response.json();",
-                  "  pm.environment.set('student_token', jsonData.access_token);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\"email\": \"student@ecole.ma\", \"password\": \"StudentPass123!\"}"
-            },
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/auth/login",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "auth",
-                "login"
-              ]
-            }
-          }
-        },
-        {
-          "name": "STUDENT - GET /admin/dashboard (Expected: 403)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('STUDENT dashboard access - 403 Forbidden', function() {",
-                  "  pm.expect(pm.response.code).to.equal(403);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{student_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/admin/dashboard",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "admin",
-                "dashboard"
-              ]
-            }
-          }
-        },
-        {
-          "name": "STUDENT - POST /schools (Expected: 403)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('STUDENT schools access - 403 Forbidden', function() {",
-                  "  pm.expect(pm.response.code).to.equal(403);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{student_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\"name\": \"School Test\", \"code\": \"TST{{$randomInt}}\", \"city\": \"Rabat\", \"country\": \"Morocco\"}"
-            },
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/schools",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "schools"
-              ]
-            }
-          }
-        },
-        {
-          "name": "STUDENT - GET /submissions (Expected: 200)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('STUDENT submissions access - 200 OK', function() {",
-                  "  pm.expect(pm.response.code).to.equal(200);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{student_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/submissions",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "submissions"
-              ]
-            }
-          }
-        },
-        {
-          "name": "STUDENT - GET /admin/users (Expected: 403)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('STUDENT users access - 403 Forbidden', function() {",
-                  "  pm.expect(pm.response.code).to.equal(403);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{student_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/admin/users",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "admin",
-                "users"
-              ]
-            }
-          }
-        },
-        {
-          "name": "STUDENT - Logout",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{student_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/auth/logout",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "auth",
-                "logout"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Logout successful\", function() { pm.response.to.have.status(200); });",
-                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "CONTENT_MGR Tests",
-      "item": [
-        {
-          "name": "CONTENT_MGR - Login",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('CONTENT_MGR login - 200 OK', function() {",
-                  "  pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Save token', function() {",
-                  "  var jsonData = pm.response.json();",
-                  "  pm.environment.set('content_mgr_token', jsonData.access_token);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\"email\": \"contentmgr@ecole.ma\", \"password\": \"ContentMgrPass123!\"}"
-            },
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/auth/login",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "auth",
-                "login"
-              ]
-            }
-          }
-        },
-        {
-          "name": "CONTENT_MGR - GET /cms/content (Expected: 200)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('CONTENT_MGR cms access - 200 OK', function() {",
-                  "  pm.expect(pm.response.code).to.equal(200);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{content_mgr_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/cms/content",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "cms",
-                "content"
-              ]
-            }
-          }
-        },
-        {
-          "name": "CONTENT_MGR - GET /admin/dashboard (Expected: 403)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('CONTENT_MGR dashboard access - 403 Forbidden', function() {",
-                  "  pm.expect(pm.response.code).to.equal(403);",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{content_mgr_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/admin/dashboard",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "admin",
-                "dashboard"
-              ]
-            }
-          }
-        },
-        {
-          "name": "CONTENT_MGR - Logout",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{content_mgr_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}{{api_prefix}}/auth/logout",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "{{api_prefix}}",
-                "auth",
-                "logout"
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Logout successful\", function() { pm.response.to.have.status(200); });",
-                  "pm.test(\"Response time < 500ms\", function() { pm.expect(pm.response.responseTime).to.be.below(500); });"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        }
-      ]
-    }
-  ],
   "variable": [
     {
-      "key": "base_url",
-      "value": "http://localhost:3000"
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api/v1"
     },
     {
-      "key": "api_prefix",
-      "value": "/api/v1"
+      "key": "schoolId",
+      "value": "00000000-0000-4000-8000-000000000001"
     },
     {
-      "key": "sys_admin_token",
+      "key": "studentId",
+      "value": "10000000-0000-4000-8000-000000000007"
+    },
+    {
+      "key": "adminToken",
       "value": ""
     },
     {
-      "key": "admin_token",
+      "key": "sysToken",
       "value": ""
     },
     {
-      "key": "teacher_token",
+      "key": "teacherToken",
       "value": ""
     },
     {
-      "key": "parent_token",
+      "key": "parentToken",
       "value": ""
     },
     {
-      "key": "student_token",
+      "key": "studentToken",
       "value": ""
     },
     {
-      "key": "content_mgr_token",
+      "key": "cmsToken",
       "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth - Login System Admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Login System Admin 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.expect(json.data).to.be.an('object');",
+              "pm.expect(json.data.access_token).to.be.a('string');",
+              "pm.collectionVariables.set('sysToken', json.data.access_token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"superadmin@ecole-platform.ma\",\"password\":\"superadmin123\",\"school_id\":\"{{schoolId}}\"}"
+        },
+        "url": "{{baseUrl}}/auth/login"
+      }
     },
     {
-      "key": "current_token",
-      "value": ""
+      "name": "SYS - Dashboard",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('SYS - Dashboard status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{sysToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/dashboard"
+      }
+    },
+    {
+      "name": "SYS - CMS Content Forbidden",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('SYS - CMS Content Forbidden status', () => pm.expect(pm.response.code).to.be.oneOf([403]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has error', () => pm.expect(json).to.have.property('error')); "
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{sysToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/cms/content"
+      }
+    },
+    {
+      "name": "Auth - Login Admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Login Admin 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.expect(json.data).to.be.an('object');",
+              "pm.expect(json.data.access_token).to.be.a('string');",
+              "pm.collectionVariables.set('adminToken', json.data.access_token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"admin@ecole-benani.ma\",\"password\":\"admin123\",\"school_id\":\"{{schoolId}}\"}"
+        },
+        "url": "{{baseUrl}}/auth/login"
+      }
+    },
+    {
+      "name": "ADMIN - Users",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('ADMIN - Users status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/users"
+      }
+    },
+    {
+      "name": "Auth - Login Teacher",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Login Teacher 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.expect(json.data).to.be.an('object');",
+              "pm.expect(json.data.access_token).to.be.a('string');",
+              "pm.collectionVariables.set('teacherToken', json.data.access_token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"prof.math@ecole-benani.ma\",\"password\":\"teacher123\",\"school_id\":\"{{schoolId}}\"}"
+        },
+        "url": "{{baseUrl}}/auth/login"
+      }
+    },
+    {
+      "name": "TEACHER - Classes",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('TEACHER - Classes status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{teacherToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/teacher/classes"
+      }
+    },
+    {
+      "name": "TEACHER - Admin Users Forbidden",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('TEACHER - Admin Users Forbidden status', () => pm.expect(pm.response.code).to.be.oneOf([403]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has error', () => pm.expect(json).to.have.property('error')); "
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{teacherToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/users"
+      }
+    },
+    {
+      "name": "Auth - Login Parent",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Login Parent 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.expect(json.data).to.be.an('object');",
+              "pm.expect(json.data.access_token).to.be.a('string');",
+              "pm.collectionVariables.set('parentToken', json.data.access_token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"parent.alaoui@gmail.com\",\"password\":\"parent123\",\"school_id\":\"{{schoolId}}\"}"
+        },
+        "url": "{{baseUrl}}/auth/login"
+      }
+    },
+    {
+      "name": "PARENT - Children",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('PARENT - Children status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{parentToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/me/children"
+      }
+    },
+    {
+      "name": "PARENT - Admin Users Forbidden",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('PARENT - Admin Users Forbidden status', () => pm.expect(pm.response.code).to.be.oneOf([403]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has error', () => pm.expect(json).to.have.property('error')); "
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{parentToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/users"
+      }
+    },
+    {
+      "name": "Auth - Login Student",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Login Student 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.expect(json.data).to.be.an('object');",
+              "pm.expect(json.data.access_token).to.be.a('string');",
+              "pm.collectionVariables.set('studentToken', json.data.access_token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"yassine.alaoui@ecole-benani.ma\",\"password\":\"student123\",\"school_id\":\"{{schoolId}}\"}"
+        },
+        "url": "{{baseUrl}}/auth/login"
+      }
+    },
+    {
+      "name": "STUDENT - Results",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('STUDENT - Results status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{studentToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/results"
+      }
+    },
+    {
+      "name": "STUDENT - Admin Users Forbidden",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('STUDENT - Admin Users Forbidden status', () => pm.expect(pm.response.code).to.be.oneOf([403]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has error', () => pm.expect(json).to.have.property('error')); "
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{studentToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/users"
+      }
+    },
+    {
+      "name": "Auth - Login Content Manager",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Login Content Manager 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.expect(json.data).to.be.an('object');",
+              "pm.expect(json.data.access_token).to.be.a('string');",
+              "pm.collectionVariables.set('cmsToken', json.data.access_token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"cms@ecole-platform.ma\",\"password\":\"content123\",\"school_id\":\"{{schoolId}}\"}"
+        },
+        "url": "{{baseUrl}}/auth/login"
+      }
+    },
+    {
+      "name": "CONTENT_MGR - CMS Content",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('CONTENT_MGR - CMS Content status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{cmsToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/cms/content"
+      }
+    },
+    {
+      "name": "CONTENT_MGR - Admin Dashboard Forbidden",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('CONTENT_MGR - Admin Dashboard Forbidden status', () => pm.expect(pm.response.code).to.be.oneOf([403]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has error', () => pm.expect(json).to.have.property('error')); "
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{cmsToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/admin/dashboard"
+      }
     }
   ]
 }

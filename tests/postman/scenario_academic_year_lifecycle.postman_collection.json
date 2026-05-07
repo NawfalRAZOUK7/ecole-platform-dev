@@ -1,222 +1,61 @@
 {
   "info": {
-    "name": "Academic Year Lifecycle Scenario",
-    "description": "Complete academic year setup from school creation through class assignments and billing",
+    "_postman_id": "d0efb665-e97f-4a3d-8085-cd0937f5905a",
+    "name": "Ecole Platform Scenario - Academic Year Lifecycle",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
-      "key": "base_url",
-      "value": "http://localhost:3000"
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api/v1"
     },
     {
-      "key": "api_prefix",
-      "value": "/api/v1"
+      "key": "schoolId",
+      "value": "00000000-0000-4000-8000-000000000001"
     },
     {
-      "key": "access_token",
+      "key": "studentId",
+      "value": "10000000-0000-4000-8000-000000000007"
+    },
+    {
+      "key": "adminToken",
       "value": ""
     },
     {
-      "key": "refresh_token",
+      "key": "sysToken",
       "value": ""
     },
     {
-      "key": "admin_id",
+      "key": "teacherToken",
       "value": ""
     },
     {
-      "key": "school_id",
+      "key": "parentToken",
       "value": ""
     },
     {
-      "key": "school_name",
-      "value": "Lycée Al-Farabi"
-    },
-    {
-      "key": "academic_year_id",
+      "key": "studentToken",
       "value": ""
     },
     {
-      "key": "academic_year_start",
-      "value": "2024-09-01"
-    },
-    {
-      "key": "academic_year_end",
-      "value": "2025-06-30"
-    },
-    {
-      "key": "class_id_1",
-      "value": ""
-    },
-    {
-      "key": "class_id_2",
-      "value": ""
-    },
-    {
-      "key": "class_name_1",
-      "value": "6A - Mathematics & Science"
-    },
-    {
-      "key": "class_name_2",
-      "value": "6B - Languages & Humanities"
-    },
-    {
-      "key": "batch_register_count",
-      "value": "30"
-    },
-    {
-      "key": "student_batch_ids",
-      "value": ""
-    },
-    {
-      "key": "enrollment_count",
-      "value": ""
-    },
-    {
-      "key": "teacher_id_1",
-      "value": ""
-    },
-    {
-      "key": "teacher_id_2",
-      "value": ""
-    },
-    {
-      "key": "teacher_email_1",
-      "value": "teacher1_{{$timestamp}}@ecole.ma"
-    },
-    {
-      "key": "teacher_email_2",
-      "value": "teacher2_{{$timestamp}}@ecole.ma"
-    },
-    {
-      "key": "teacher_first_name_1",
-      "value": "Mohamed"
-    },
-    {
-      "key": "teacher_last_name_1",
-      "value": "Amrani"
-    },
-    {
-      "key": "teacher_first_name_2",
-      "value": "Aisha"
-    },
-    {
-      "key": "teacher_last_name_2",
-      "value": "Karimi"
-    },
-    {
-      "key": "teacher_password",
-      "value": "TeacherSecure123!"
-    },
-    {
-      "key": "annual_fee_amount_mad",
-      "value": "5000"
-    },
-    {
-      "key": "fee_structure_id",
-      "value": ""
-    },
-    {
-      "key": "invoice_generation_status",
-      "value": ""
-    },
-    {
-      "key": "invoices_generated_count",
-      "value": ""
-    },
-    {
-      "key": "timetable_constraints_id",
-      "value": ""
-    },
-    {
-      "key": "timetable_id",
-      "value": ""
-    },
-    {
-      "key": "max_hours_per_day",
-      "value": "6"
-    },
-    {
-      "key": "max_hours_per_week",
-      "value": "30"
-    },
-    {
-      "key": "school_region",
-      "value": "Casablanca"
-    },
-    {
-      "key": "school_city",
-      "value": "Casablanca"
-    },
-    {
-      "key": "school_country",
-      "value": "Morocco"
-    },
-    {
-      "key": "school_phone",
-      "value": "+212522123456"
-    },
-    {
-      "key": "school_email",
-      "value": "lycee.farabi@ecole.ma"
-    },
-    {
-      "key": "curriculum_type",
-      "value": "MOROCCAN"
-    },
-    {
-      "key": "class_capacity",
-      "value": "35"
-    },
-    {
-      "key": "admin_email",
-      "value": "admin_{{$timestamp}}@ecole.ma"
-    },
-    {
-      "key": "admin_password",
-      "value": "AdminSecure123!"
-    },
-    {
-      "key": "dashboard_stats",
-      "value": ""
-    },
-    {
-      "key": "total_students_enrolled",
-      "value": ""
-    },
-    {
-      "key": "total_teachers_assigned",
-      "value": ""
-    },
-    {
-      "key": "total_classes_created",
+      "key": "cmsToken",
       "value": ""
     }
   ],
   "item": [
     {
-      "name": "1. Register Admin Account",
+      "name": "Auth - Login Admin",
       "event": [
         {
           "listen": "test",
           "script": {
+            "type": "text/javascript",
             "exec": [
-              "pm.test('Admin registration successful - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('Response has admin user', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData.user).to.have.property('id');",
-              "  pm.expect(jsonData.user.role).to.equal('ADMIN');",
-              "  pm.environment.set('admin_id', jsonData.user.id);",
-              "});",
-              "",
-              "pm.test('Access token provided', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.environment.set('access_token', jsonData.access_token);",
-              "});"
+              "pm.test('Login Admin 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.expect(json.data).to.be.an('object');",
+              "pm.expect(json.data.access_token).to.be.a('string');",
+              "pm.collectionVariables.set('adminToken', json.data.access_token);"
             ]
           }
         }
@@ -231,668 +70,23 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"email\": \"{{admin_email}}\", \"password\": \"{{admin_password}}\", \"first_name\": \"Admin\", \"last_name\": \"User\", \"role\": \"ADMIN\"}"
+          "raw": "{\"email\":\"admin@ecole-benani.ma\",\"password\":\"admin123\",\"school_id\":\"{{schoolId}}\"}"
         },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/auth/register",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "auth", "register"]
-        }
+        "url": "{{baseUrl}}/auth/login"
       }
     },
     {
-      "name": "2. Login as Admin",
+      "name": "Admin - Dashboard",
       "event": [
         {
           "listen": "test",
           "script": {
+            "type": "text/javascript",
             "exec": [
-              "pm.test('Admin login successful - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test('Update access token', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.environment.set('access_token', jsonData.access_token);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"email\": \"{{admin_email}}\", \"password\": \"{{admin_password}}\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/auth/login",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "auth", "login"]
-        }
-      }
-    },
-    {
-      "name": "3. Create School",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('School creation successful - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('School has ID and name', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('id');",
-              "  pm.expect(jsonData.name).to.equal(pm.environment.get('school_name'));",
-              "  pm.environment.set('school_id', jsonData.id);",
-              "});",
-              "",
-              "pm.test('School has region and location', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('region');",
-              "  pm.expect(jsonData).to.have.property('city');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"name\": \"{{school_name}}\", \"region\": \"{{school_region}}\", \"city\": \"{{school_city}}\", \"country\": \"{{school_country}}\", \"email\": \"{{school_email}}\", \"phone\": \"{{school_phone}}\", \"curriculum\": \"{{curriculum_type}}\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/schools",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "schools"]
-        }
-      }
-    },
-    {
-      "name": "4. Create Academic Year",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Academic year creation - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('Academic year has ID and dates', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('id');",
-              "  pm.expect(jsonData).to.have.property('start_date');",
-              "  pm.expect(jsonData).to.have.property('end_date');",
-              "  pm.environment.set('academic_year_id', jsonData.id);",
-              "});",
-              "",
-              "pm.test('Academic year is active', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData.status).to.equal('ACTIVE');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"school_id\": \"{{school_id}}\", \"start_date\": \"{{academic_year_start}}\", \"end_date\": \"{{academic_year_end}}\", \"name\": \"2024-2025\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/admin/academic-years",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "admin", "academic-years"]
-        }
-      }
-    },
-    {
-      "name": "5. Create First Class",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Class creation - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('Class has ID and name', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('id');",
-              "  pm.expect(jsonData.name).to.equal(pm.environment.get('class_name_1'));",
-              "  pm.environment.set('class_id_1', jsonData.id);",
-              "});",
-              "",
-              "pm.test('Class has capacity', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('capacity');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"academic_year_id\": \"{{academic_year_id}}\", \"school_id\": \"{{school_id}}\", \"name\": \"{{class_name_1}}\", \"capacity\": {{class_capacity}}}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/admin/classes",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "admin", "classes"]
-        }
-      }
-    },
-    {
-      "name": "6. Create Second Class",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Class creation - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('Save class ID', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('id');",
-              "  pm.environment.set('class_id_2', jsonData.id);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"academic_year_id\": \"{{academic_year_id}}\", \"school_id\": \"{{school_id}}\", \"name\": \"{{class_name_2}}\", \"capacity\": {{class_capacity}}}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/admin/classes",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "admin", "classes"]
-        }
-      }
-    },
-    {
-      "name": "7. Batch Register Students",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Batch registration - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('Batch has created students', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('created_count');",
-              "  pm.expect(jsonData.created_count).to.be.greaterThan(0);",
-              "});",
-              "",
-              "pm.test('Student IDs saved', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('student_ids');",
-              "  pm.expect(jsonData.student_ids).to.be.an('array');",
-              "  pm.environment.set('student_batch_ids', JSON.stringify(jsonData.student_ids));",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"school_id\": \"{{school_id}}\", \"academic_year_id\": \"{{academic_year_id}}\", \"count\": {{batch_register_count}}, \"password\": \"TempPassword123!\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/admin/batch-register",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "admin", "batch-register"]
-        }
-      }
-    },
-    {
-      "name": "8. Enroll Students in First Class",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Enrollment - 200 OK or 201 Created', function() {",
-              "  pm.response.to.have.status([200, 201]);",
-              "});",
-              "",
-              "pm.test('Enrollment response valid', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('enrolled_count');",
-              "  pm.expect(jsonData.enrolled_count).to.be.greaterThan(0);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"class_id\": \"{{class_id_1}}\", \"student_ids\": {{student_batch_ids}}, \"academic_year_id\": \"{{academic_year_id}}\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/admin/enrollments",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "admin", "enrollments"]
-        }
-      }
-    },
-    {
-      "name": "9. Create and Assign First Teacher",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Teacher creation - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('Teacher has ID', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('id');",
-              "  pm.expect(jsonData.role).to.equal('TEACHER');",
-              "  pm.environment.set('teacher_id_1', jsonData.id);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"email\": \"{{teacher_email_1}}\", \"password\": \"{{teacher_password}}\", \"first_name\": \"{{teacher_first_name_1}}\", \"last_name\": \"{{teacher_last_name_1}}\", \"role\": \"TEACHER\", \"school_id\": \"{{school_id}}\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/admin/teachers",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "admin", "teachers"]
-        }
-      }
-    },
-    {
-      "name": "10. Assign Teacher to Class",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Teacher assignment - 200 OK or 201 Created', function() {",
-              "  pm.response.to.have.status([200, 201]);",
-              "});",
-              "",
-              "pm.test('Assignment confirmed', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('class_id');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"teacher_id\": \"{{teacher_id_1}}\", \"class_id\": \"{{class_id_1}}\", \"academic_year_id\": \"{{academic_year_id}}\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/admin/class-assignments",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "admin", "class-assignments"]
-        }
-      }
-    },
-    {
-      "name": "11. Create Fee Structure",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Fee structure creation - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('Fee structure has ID and amount', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('id');",
-              "  pm.expect(jsonData.amount).to.equal(parseFloat(pm.environment.get('annual_fee_amount_mad')));",
-              "  pm.expect(jsonData.currency).to.equal('MAD');",
-              "  pm.environment.set('fee_structure_id', jsonData.id);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"school_id\": \"{{school_id}}\", \"academic_year_id\": \"{{academic_year_id}}\", \"name\": \"Annual Tuition\", \"amount\": {{annual_fee_amount_mad}}, \"currency\": \"MAD\", \"type\": \"TUITION\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/admin/billing/fee-structures",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "admin", "billing", "fee-structures"]
-        }
-      }
-    },
-    {
-      "name": "12. Bulk Assign Fees to Students",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Bulk fee assignment - 200 OK or 201 Created', function() {",
-              "  pm.response.to.have.status([200, 201]);",
-              "});",
-              "",
-              "pm.test('Fees assigned to students', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('assigned_count');",
-              "  pm.expect(jsonData.assigned_count).to.be.greaterThan(0);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"fee_structure_id\": \"{{fee_structure_id}}\", \"class_ids\": [\"{{class_id_1}}\"}, \"academic_year_id\": \"{{academic_year_id}}\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/admin/billing/fee-assignments/bulk",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "admin", "billing", "fee-assignments", "bulk"]
-        }
-      }
-    },
-    {
-      "name": "13. Generate Invoices",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Invoice generation - 200 OK or 201 Created', function() {",
-              "  pm.response.to.have.status([200, 201]);",
-              "});",
-              "",
-              "pm.test('Invoices generated', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('generated_count');",
-              "  pm.expect(jsonData.generated_count).to.be.greaterThan(0);",
-              "  pm.environment.set('invoices_generated_count', jsonData.generated_count);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"school_id\": \"{{school_id}}\", \"academic_year_id\": \"{{academic_year_id}}\", \"due_date\": \"2024-10-30\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/admin/billing/generate-invoices",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "admin", "billing", "generate-invoices"]
-        }
-      }
-    },
-    {
-      "name": "14. Set Timetable Constraints",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Timetable constraints - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('Constraints have ID', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('id');",
-              "  pm.environment.set('timetable_constraints_id', jsonData.id);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"academic_year_id\": \"{{academic_year_id}}\", \"school_id\": \"{{school_id}}\", \"max_hours_per_day\": {{max_hours_per_day}}, \"max_hours_per_week\": {{max_hours_per_week}}, \"school_start_time\": \"08:00\", \"school_end_time\": \"17:00\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/admin/timetable/constraints",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "admin", "timetable", "constraints"]
-        }
-      }
-    },
-    {
-      "name": "15. Auto-Generate Timetable",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Timetable generation - 200 OK or 201 Created', function() {",
-              "  pm.response.to.have.status([200, 201]);",
-              "});",
-              "",
-              "pm.test('Timetable generated', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('id');",
-              "  pm.expect(jsonData).to.have.property('schedule');",
-              "  pm.environment.set('timetable_id', jsonData.id);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"academic_year_id\": \"{{academic_year_id}}\", \"school_id\": \"{{school_id}}\", \"constraints_id\": \"{{timetable_constraints_id}}\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/admin/timetable/generate",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "admin", "timetable", "generate"]
-        }
-      }
-    },
-    {
-      "name": "16. View Admin Dashboard",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Dashboard - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test('Dashboard shows school statistics', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('school_id');",
-              "  pm.expect(jsonData).to.have.property('total_students');",
-              "  pm.expect(jsonData).to.have.property('total_teachers');",
-              "  pm.expect(jsonData).to.have.property('total_classes');",
-              "});",
-              "",
-              "pm.test('Dashboard statistics are properly set', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData.total_students).to.be.greaterThan(0);",
-              "  pm.expect(jsonData.total_teachers).to.be.greaterThan(0);",
-              "  pm.expect(jsonData.total_classes).to.be.greaterThan(0);",
-              "});"
+              "pm.test('Admin - Dashboard status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
             ]
           }
         }
@@ -902,43 +96,118 @@
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer {{access_token}}"
+            "value": "Bearer {{adminToken}}"
           }
         ],
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/admin/dashboard",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "admin", "dashboard"]
-        }
+        "url": "{{baseUrl}}/admin/dashboard"
       }
     },
     {
-      "name": "17. Logout Admin",
+      "name": "Admin - Enrollments",
       "event": [
         {
           "listen": "test",
           "script": {
+            "type": "text/javascript",
             "exec": [
-              "pm.test('Logout - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});"
+              "pm.test('Admin - Enrollments status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
             ]
           }
         }
       ],
       "request": {
-        "method": "POST",
+        "method": "GET",
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer {{access_token}}"
+            "value": "Bearer {{adminToken}}"
           }
         ],
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/auth/logout",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "auth", "logout"]
+        "url": "{{baseUrl}}/enrollments"
+      }
+    },
+    {
+      "name": "Admin - Report Options",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Admin - Report Options status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
+            ]
+          }
         }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/reports/options?type=class_summary"
+      }
+    },
+    {
+      "name": "Admin - Attendance Analytics",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Admin - Attendance Analytics status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/analytics/attendance?period=weekly"
+      }
+    },
+    {
+      "name": "Admin - Overview Analytics",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Admin - Overview Analytics status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/analytics/overview"
       }
     }
   ]

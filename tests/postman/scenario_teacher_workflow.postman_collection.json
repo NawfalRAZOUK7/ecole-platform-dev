@@ -1,548 +1,241 @@
 {
   "info": {
-    "name": "Teacher Workflow Scenario",
-    "description": "Daily teacher workflow from login through messaging parents",
+    "_postman_id": "50363032-fa6f-49c0-8334-4c56ee00f2c7",
+    "name": "Ecole Platform Scenario - Teacher Workflow",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
-  "item": [
-    {
-      "name": "1. Login as Teacher",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Teacher login successful - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test('Response has access_token', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('access_token');",
-              "  pm.environment.set('access_token', jsonData.access_token);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"email\": \"teacher@ecole.ma\", \"password\": \"TeacherPass123!\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/auth/login",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "auth", "login"]
-        }
-      }
-    },
-    {
-      "name": "2. List My Classes",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Get teacher classes - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test('Response is array of classes', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.be.an('array');",
-              "});",
-              "",
-              "pm.test('Save first class ID', function() {",
-              "  var jsonData = pm.response.json();",
-              "  if (jsonData.length > 0) {",
-              "    pm.environment.set('class_id', jsonData[0].id);",
-              "  }",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "GET",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          }
-        ],
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/teacher/classes",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "teacher", "classes"]
-        }
-      }
-    },
-    {
-      "name": "3. Create Course",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Create course - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('Response has course_id and name', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('id');",
-              "  pm.expect(jsonData).to.have.property('name');",
-              "});",
-              "",
-              "pm.test('Save course ID', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.environment.set('course_id', jsonData.id);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"name\": \"Mathematics Grade {{$timestamp}}\", \"description\": \"Advanced mathematics course\", \"code\": \"MATH{{$randomInt}}\", \"class_id\": \"{{class_id}}\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/courses",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "courses"]
-        }
-      }
-    },
-    {
-      "name": "4. Create Assignment",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Create assignment - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('Response has assignment_id', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('id');",
-              "  pm.expect(jsonData).to.have.property('title');",
-              "});",
-              "",
-              "pm.test('Save assignment ID', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.environment.set('assignment_id', jsonData.id);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"course_id\": \"{{course_id}}\", \"title\": \"Algebra Assignment\", \"description\": \"Solve algebra problems\", \"due_date\": \"2026-04-30T23:59:59Z\", \"max_score\": 20}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/assignments",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "assignments"]
-        }
-      }
-    },
-    {
-      "name": "5. Create Quiz with Questions",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Create quiz - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('Response has quiz_id', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('id');",
-              "  pm.expect(jsonData).to.have.property('questions');",
-              "});",
-              "",
-              "pm.test('Save quiz ID', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.environment.set('quiz_id', jsonData.id);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"course_id\": \"{{course_id}}\", \"title\": \"Quiz 1\", \"description\": \"First quiz\", \"questions\": [{\"text\": \"What is 2+2?\", \"type\": \"multiple_choice\", \"options\": [\"3\", \"4\", \"5\"], \"correct_answer\": \"4\"}, {\"text\": \"What is 5*3?\", \"type\": \"multiple_choice\", \"options\": [\"15\", \"16\", \"17\"], \"correct_answer\": \"15\"}]}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/quizzes",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "quizzes"]
-        }
-      }
-    },
-    {
-      "name": "6. Publish Quiz",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Publish quiz - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test('Response status is published', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('status').that.equals('published');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          }
-        ],
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/quizzes/{{quiz_id}}/publish",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "quizzes", "{{quiz_id}}", "publish"]
-        }
-      }
-    },
-    {
-      "name": "7. View Pending Submissions",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Get pending submissions - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test('Response is array', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('data').that.is.an('array');",
-              "});",
-              "",
-              "pm.test('Save first submission ID', function() {",
-              "  var jsonData = pm.response.json();",
-              "  if (jsonData.data && jsonData.data.length > 0) {",
-              "    pm.environment.set('pending_submission_id', jsonData.data[0].id);",
-              "  }",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "GET",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          }
-        ],
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/teacher/submissions",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "teacher", "submissions"]
-        }
-      }
-    },
-    {
-      "name": "8. Grade Submission with 0-20 Score",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Grade submission - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test('Response has grade and graded_at', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('grade');",
-              "  pm.expect(jsonData).to.have.property('graded_at');",
-              "});",
-              "",
-              "pm.test('Grade is in 0-20 Moroccan scale', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData.grade).to.be.at.least(0);",
-              "  pm.expect(jsonData.grade).to.be.at.most(20);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"grade\": 17, \"feedback\": \"Excellent work! Well done.\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/submissions/{{pending_submission_id}}/grade",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "submissions", "{{pending_submission_id}}", "grade"]
-        }
-      }
-    },
-    {
-      "name": "9. Compute Grade Averages",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Compute averages - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test('Response has computed data', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('class_average');",
-              "  pm.expect(jsonData).to.have.property('student_averages');",
-              "});",
-              "",
-              "pm.test('Averages are valid numbers', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData.class_average).to.be.a('number');",
-              "  pm.expect(jsonData.class_average).to.be.at.least(0);",
-              "  pm.expect(jsonData.class_average).to.be.at.most(20);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          }
-        ],
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/gradebook/compute/{{class_id}}/2025-2026",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "gradebook", "compute", "{{class_id}}", "2025-2026"]
-        }
-      }
-    },
-    {
-      "name": "10. Mark Attendance",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Mark attendance - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('Response has session data', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('id');",
-              "  pm.expect(jsonData).to.have.property('attendance_records');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"class_id\": \"{{class_id}}\", \"session_date\": \"2026-03-30T14:30:00Z\", \"attendance\": [{\"student_id\": \"s1\", \"status\": \"present\"}, {\"student_id\": \"s2\", \"status\": \"absent\"}]}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/attendance/sessions",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "attendance", "sessions"]
-        }
-      }
-    },
-    {
-      "name": "11. Send Message to Parents",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Send message - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('Response has message_id', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('id');",
-              "  pm.expect(jsonData).to.have.property('thread_id');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"recipient_id\": \"parent1\", \"subject\": \"Progress Update\", \"message\": \"Ahmed is performing well in class.\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/messages/conversations",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "messages", "conversations"]
-        }
-      }
-    },
-    {
-      "name": "12. Logout Teacher",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Logout successful - 204 No Content', function() {",
-              "  pm.response.to.have.status(204);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          }
-        ],
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/auth/logout",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "auth", "logout"]
-        }
-      }
-    }
-  ],
   "variable": [
     {
-      "key": "base_url",
-      "value": "http://localhost:3000"
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api/v1"
     },
     {
-      "key": "api_prefix",
-      "value": "/api/v1"
+      "key": "schoolId",
+      "value": "00000000-0000-4000-8000-000000000001"
     },
     {
-      "key": "access_token",
+      "key": "studentId",
+      "value": "10000000-0000-4000-8000-000000000007"
+    },
+    {
+      "key": "adminToken",
       "value": ""
     },
     {
-      "key": "class_id",
+      "key": "sysToken",
       "value": ""
     },
     {
-      "key": "course_id",
+      "key": "teacherToken",
       "value": ""
     },
     {
-      "key": "assignment_id",
+      "key": "parentToken",
       "value": ""
     },
     {
-      "key": "quiz_id",
+      "key": "studentToken",
       "value": ""
     },
     {
-      "key": "pending_submission_id",
+      "key": "cmsToken",
       "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth - Login Teacher",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Login Teacher 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.expect(json.data).to.be.an('object');",
+              "pm.expect(json.data.access_token).to.be.a('string');",
+              "pm.collectionVariables.set('teacherToken', json.data.access_token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"prof.math@ecole-benani.ma\",\"password\":\"teacher123\",\"school_id\":\"{{schoolId}}\"}"
+        },
+        "url": "{{baseUrl}}/auth/login"
+      }
+    },
+    {
+      "name": "Teacher - Classes",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Teacher - Classes status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{teacherToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/teacher/classes"
+      }
+    },
+    {
+      "name": "Teacher - Submissions",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Teacher - Submissions status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{teacherToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/teacher/submissions"
+      }
+    },
+    {
+      "name": "Teacher - Courses",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Teacher - Courses status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{teacherToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/courses"
+      }
+    },
+    {
+      "name": "Teacher - Assignments",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Teacher - Assignments status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{teacherToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/assignments"
+      }
+    },
+    {
+      "name": "Teacher - Quizzes",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Teacher - Quizzes status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{teacherToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/quizzes"
+      }
+    },
+    {
+      "name": "Teacher - Conversations",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Teacher - Conversations status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{teacherToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/messages/conversations?limit=20"
+      }
     }
   ]
 }

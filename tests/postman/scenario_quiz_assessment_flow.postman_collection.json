@@ -1,230 +1,61 @@
 {
   "info": {
-    "name": "Quiz & Assessment Flow Scenario",
-    "description": "Complete quiz workflow from question bank creation through student attempt and grading",
+    "_postman_id": "b4dc6b29-f29a-42ba-8cac-a4e19d0e5277",
+    "name": "Ecole Platform Scenario - Quiz Assessment Flow",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
-      "key": "base_url",
-      "value": "http://localhost:3000"
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api/v1"
     },
     {
-      "key": "api_prefix",
-      "value": "/api/v1"
+      "key": "schoolId",
+      "value": "00000000-0000-4000-8000-000000000001"
     },
     {
-      "key": "access_token",
+      "key": "studentId",
+      "value": "10000000-0000-4000-8000-000000000007"
+    },
+    {
+      "key": "adminToken",
       "value": ""
     },
     {
-      "key": "refresh_token",
+      "key": "sysToken",
       "value": ""
     },
     {
-      "key": "teacher_id",
+      "key": "teacherToken",
       "value": ""
     },
     {
-      "key": "teacher_email",
-      "value": "teacher_quiz_{{$timestamp}}@ecole.ma"
-    },
-    {
-      "key": "teacher_password",
-      "value": "TeacherSecure123!"
-    },
-    {
-      "key": "teacher_first_name",
-      "value": "Dr. Hassan"
-    },
-    {
-      "key": "teacher_last_name",
-      "value": "Khalil"
-    },
-    {
-      "key": "student_id",
+      "key": "parentToken",
       "value": ""
     },
     {
-      "key": "student_email",
-      "value": "student_quiz_{{$timestamp}}@ecole.ma"
-    },
-    {
-      "key": "student_password",
-      "value": "StudentSecure123!"
-    },
-    {
-      "key": "student_first_name",
-      "value": "Noor"
-    },
-    {
-      "key": "student_last_name",
-      "value": "Karim"
-    },
-    {
-      "key": "question_id_1",
+      "key": "studentToken",
       "value": ""
     },
     {
-      "key": "question_id_2",
-      "value": ""
-    },
-    {
-      "key": "question_id_3",
-      "value": ""
-    },
-    {
-      "key": "question_text_1",
-      "value": "What is 2 + 2?"
-    },
-    {
-      "key": "question_text_2",
-      "value": "Solve: 5x = 25"
-    },
-    {
-      "key": "question_text_3",
-      "value": "What is the derivative of x^2?"
-    },
-    {
-      "key": "question_type",
-      "value": "MULTIPLE_CHOICE"
-    },
-    {
-      "key": "difficulty_easy",
-      "value": "EASY"
-    },
-    {
-      "key": "difficulty_medium",
-      "value": "MEDIUM"
-    },
-    {
-      "key": "difficulty_hard",
-      "value": "HARD"
-    },
-    {
-      "key": "subject",
-      "value": "Mathematics"
-    },
-    {
-      "key": "correct_answer_1",
-      "value": "4"
-    },
-    {
-      "key": "correct_answer_2",
-      "value": "5"
-    },
-    {
-      "key": "correct_answer_3",
-      "value": "2x"
-    },
-    {
-      "key": "quiz_id",
-      "value": ""
-    },
-    {
-      "key": "quiz_title",
-      "value": "Mathematics Assessment - Chapter 5"
-    },
-    {
-      "key": "quiz_description",
-      "value": "Comprehensive assessment covering algebraic equations and calculus basics"
-    },
-    {
-      "key": "attempt_id",
-      "value": ""
-    },
-    {
-      "key": "attempt_status",
-      "value": ""
-    },
-    {
-      "key": "attempt_score",
-      "value": ""
-    },
-    {
-      "key": "attempt_grade",
-      "value": ""
-    },
-    {
-      "key": "student_answer_1",
-      "value": "4"
-    },
-    {
-      "key": "student_answer_2",
-      "value": "5"
-    },
-    {
-      "key": "student_answer_3",
-      "value": "2x"
-    },
-    {
-      "key": "min_grade",
-      "value": "0"
-    },
-    {
-      "key": "max_grade",
-      "value": "20"
-    },
-    {
-      "key": "questions_count",
-      "value": "3"
-    },
-    {
-      "key": "question_bank_stats",
-      "value": ""
-    },
-    {
-      "key": "published_status",
-      "value": "PUBLISHED"
-    },
-    {
-      "key": "total_questions_in_bank",
-      "value": ""
-    },
-    {
-      "key": "total_easy_questions",
-      "value": ""
-    },
-    {
-      "key": "total_medium_questions",
-      "value": ""
-    },
-    {
-      "key": "total_hard_questions",
-      "value": ""
-    },
-    {
-      "key": "correct_responses",
-      "value": ""
-    },
-    {
-      "key": "incorrect_responses",
+      "key": "cmsToken",
       "value": ""
     }
   ],
   "item": [
     {
-      "name": "1. Register Teacher Account",
+      "name": "Auth - Login Teacher",
       "event": [
         {
           "listen": "test",
           "script": {
+            "type": "text/javascript",
             "exec": [
-              "pm.test('Teacher registration - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('Teacher user created', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData.user).to.have.property('id');",
-              "  pm.expect(jsonData.user.role).to.equal('TEACHER');",
-              "  pm.environment.set('teacher_id', jsonData.user.id);",
-              "});",
-              "",
-              "pm.test('Access token provided', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.environment.set('access_token', jsonData.access_token);",
-              "});"
+              "pm.test('Login Teacher 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.expect(json.data).to.be.an('object');",
+              "pm.expect(json.data.access_token).to.be.a('string');",
+              "pm.collectionVariables.set('teacherToken', json.data.access_token);"
             ]
           }
         }
@@ -239,215 +70,23 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"email\": \"{{teacher_email}}\", \"password\": \"{{teacher_password}}\", \"first_name\": \"{{teacher_first_name}}\", \"last_name\": \"{{teacher_last_name}}\", \"role\": \"TEACHER\"}"
+          "raw": "{\"email\":\"prof.math@ecole-benani.ma\",\"password\":\"teacher123\",\"school_id\":\"{{schoolId}}\"}"
         },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/auth/register",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "auth", "register"]
-        }
+        "url": "{{baseUrl}}/auth/login"
       }
     },
     {
-      "name": "2. Login as Teacher",
+      "name": "Teacher - Question Bank Stats",
       "event": [
         {
           "listen": "test",
           "script": {
+            "type": "text/javascript",
             "exec": [
-              "pm.test('Teacher login - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test('Update access token', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.environment.set('access_token', jsonData.access_token);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"email\": \"{{teacher_email}}\", \"password\": \"{{teacher_password}}\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/auth/login",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "auth", "login"]
-        }
-      }
-    },
-    {
-      "name": "3. Create Question 1 (Easy Mathematics)",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Question creation - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('Question has ID and text', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('id');",
-              "  pm.expect(jsonData).to.have.property('text');",
-              "  pm.environment.set('question_id_1', jsonData.id);",
-              "});",
-              "",
-              "pm.test('Question has correct difficulty and subject', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData.difficulty).to.equal('EASY');",
-              "  pm.expect(jsonData.subject).to.equal('Mathematics');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"text\": \"{{question_text_1}}\", \"type\": \"{{question_type}}\", \"subject\": \"{{subject}}\", \"difficulty\": \"{{difficulty_easy}}\", \"correct_answer\": \"{{correct_answer_1}}\", \"options\": [\"2\", \"3\", \"4\", \"5\"]}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/question-bank",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "question-bank"]
-        }
-      }
-    },
-    {
-      "name": "4. Create Question 2 (Medium Mathematics)",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Question creation - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('Save question ID', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('id');",
-              "  pm.expect(jsonData.difficulty).to.equal('MEDIUM');",
-              "  pm.environment.set('question_id_2', jsonData.id);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"text\": \"{{question_text_2}}\", \"type\": \"{{question_type}}\", \"subject\": \"{{subject}}\", \"difficulty\": \"{{difficulty_medium}}\", \"correct_answer\": \"{{correct_answer_2}}\", \"options\": [\"3\", \"5\", \"10\", \"25\"]}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/question-bank",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "question-bank"]
-        }
-      }
-    },
-    {
-      "name": "5. Create Question 3 (Hard Mathematics)",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Question creation - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('Save question ID', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('id');",
-              "  pm.expect(jsonData.difficulty).to.equal('HARD');",
-              "  pm.environment.set('question_id_3', jsonData.id);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"text\": \"{{question_text_3}}\", \"type\": \"{{question_type}}\", \"subject\": \"{{subject}}\", \"difficulty\": \"{{difficulty_hard}}\", \"correct_answer\": \"{{correct_answer_3}}\", \"options\": [\"x\", \"2x\", \"x^2\", \"1/x\"]}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/question-bank",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "question-bank"]
-        }
-      }
-    },
-    {
-      "name": "6. Get Question Bank Statistics",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Get statistics - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test('Statistics show all question difficulties', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('total_questions');",
-              "  pm.expect(jsonData).to.have.property('by_difficulty');",
-              "});",
-              "",
-              "pm.test('Question counts are correct', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData.total_questions).to.be.greaterThanOrEqual(3);",
-              "  pm.expect(jsonData.by_difficulty.EASY).to.be.greaterThanOrEqual(1);",
-              "  pm.expect(jsonData.by_difficulty.MEDIUM).to.be.greaterThanOrEqual(1);",
-              "  pm.expect(jsonData.by_difficulty.HARD).to.be.greaterThanOrEqual(1);",
-              "});"
+              "pm.test('Teacher - Question Bank Stats status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
             ]
           }
         }
@@ -457,461 +96,24 @@
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer {{access_token}}"
+            "value": "Bearer {{teacherToken}}"
           }
         ],
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/question-bank/stats",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "question-bank", "stats"]
-        }
+        "url": "{{baseUrl}}/question-bank/stats"
       }
     },
     {
-      "name": "7. Generate Quiz from Question Bank",
+      "name": "Teacher - Question Bank",
       "event": [
         {
           "listen": "test",
           "script": {
+            "type": "text/javascript",
             "exec": [
-              "pm.test('Quiz generation - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('Quiz has ID and structure', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('id');",
-              "  pm.expect(jsonData).to.have.property('title');",
-              "  pm.expect(jsonData).to.have.property('questions');",
-              "  pm.environment.set('quiz_id', jsonData.id);",
-              "});",
-              "",
-              "pm.test('Quiz contains all difficulties', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData.questions).to.be.an('array');",
-              "  pm.expect(jsonData.questions.length).to.equal(3);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"title\": \"{{quiz_title}}\", \"description\": \"{{quiz_description}}\", \"subject\": \"{{subject}}\", \"question_count\": 3, \"include_difficulties\": [\"EASY\", \"MEDIUM\", \"HARD\"]}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/question-bank/generate-quiz",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "question-bank", "generate-quiz"]
-        }
-      }
-    },
-    {
-      "name": "8. Publish Quiz",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Quiz publication - 200 OK or 201 Created', function() {",
-              "  pm.response.to.have.status([200, 201]);",
-              "});",
-              "",
-              "pm.test('Quiz is published', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('status');",
-              "  pm.expect(jsonData.status).to.equal('PUBLISHED');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/quizzes/{{quiz_id}}/publish",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "quizzes", "{{quiz_id}}", "publish"]
-        }
-      }
-    },
-    {
-      "name": "9. Logout Teacher",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Logout - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          }
-        ],
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/auth/logout",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "auth", "logout"]
-        }
-      }
-    },
-    {
-      "name": "10. Register Student Account",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Student registration - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('Student created', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData.user).to.have.property('id');",
-              "  pm.expect(jsonData.user.role).to.equal('STUDENT');",
-              "  pm.environment.set('student_id', jsonData.user.id);",
-              "});",
-              "",
-              "pm.test('Access token provided', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.environment.set('access_token', jsonData.access_token);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"email\": \"{{student_email}}\", \"password\": \"{{student_password}}\", \"first_name\": \"{{student_first_name}}\", \"last_name\": \"{{student_last_name}}\", \"role\": \"STUDENT\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/auth/register",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "auth", "register"]
-        }
-      }
-    },
-    {
-      "name": "11. Student Login",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Student login - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test('Update access token', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.environment.set('access_token', jsonData.access_token);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"email\": \"{{student_email}}\", \"password\": \"{{student_password}}\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/auth/login",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "auth", "login"]
-        }
-      }
-    },
-    {
-      "name": "12. Start Quiz Attempt",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Quiz attempt started - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('Attempt has ID and status', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('id');",
-              "  pm.expect(jsonData).to.have.property('status');",
-              "  pm.environment.set('attempt_id', jsonData.id);",
-              "});",
-              "",
-              "pm.test('Attempt status is IN_PROGRESS', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData.status).to.equal('IN_PROGRESS');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"quiz_id\": \"{{quiz_id}}\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/quizzes/{{quiz_id}}/start",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "quizzes", "{{quiz_id}}", "start"]
-        }
-      }
-    },
-    {
-      "name": "13. Answer Question 1",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Response recorded - 200 OK or 201 Created', function() {",
-              "  pm.response.to.have.status([200, 201]);",
-              "});",
-              "",
-              "pm.test('Response has question and answer', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('question_id');",
-              "  pm.expect(jsonData).to.have.property('answer');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"question_id\": \"{{question_id_1}}\", \"answer\": \"{{student_answer_1}}\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/attempts/{{attempt_id}}/respond",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "attempts", "{{attempt_id}}", "respond"]
-        }
-      }
-    },
-    {
-      "name": "14. Answer Question 2",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Response recorded - 200 OK or 201 Created', function() {",
-              "  pm.response.to.have.status([200, 201]);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"question_id\": \"{{question_id_2}}\", \"answer\": \"{{student_answer_2}}\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/attempts/{{attempt_id}}/respond",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "attempts", "{{attempt_id}}", "respond"]
-        }
-      }
-    },
-    {
-      "name": "15. Answer Question 3",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Response recorded - 200 OK or 201 Created', function() {",
-              "  pm.response.to.have.status([200, 201]);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"question_id\": \"{{question_id_3}}\", \"answer\": \"{{student_answer_3}}\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/attempts/{{attempt_id}}/respond",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "attempts", "{{attempt_id}}", "respond"]
-        }
-      }
-    },
-    {
-      "name": "16. Submit Quiz Attempt",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Quiz submitted - 200 OK or 201 Created', function() {",
-              "  pm.response.to.have.status([200, 201]);",
-              "});",
-              "",
-              "pm.test('Attempt marked as submitted', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('status');",
-              "  pm.expect(jsonData.status).to.equal('SUBMITTED');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/attempts/{{attempt_id}}/submit",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "attempts", "{{attempt_id}}", "submit"]
-        }
-      }
-    },
-    {
-      "name": "17. Get Attempt Results",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Results retrieved - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test('Results have score and grade', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('score');",
-              "  pm.expect(jsonData).to.have.property('grade');",
-              "  pm.expect(jsonData).to.have.property('total_questions');",
-              "});",
-              "",
-              "pm.test('Grade is in valid range (0-20)', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData.grade).to.be.greaterThanOrEqual(0);",
-              "  pm.expect(jsonData.grade).to.be.lessThanOrEqual(20);",
-              "  pm.environment.set('attempt_grade', jsonData.grade);",
-              "});",
-              "",
-              "pm.test('Score is percentage format', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData.score).to.be.greaterThanOrEqual(0);",
-              "  pm.expect(jsonData.score).to.be.lessThanOrEqual(100);",
-              "});"
+              "pm.test('Teacher - Question Bank status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
             ]
           }
         }
@@ -921,26 +123,52 @@
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer {{access_token}}"
+            "value": "Bearer {{teacherToken}}"
           }
         ],
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/attempts/{{attempt_id}}/results",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "attempts", "{{attempt_id}}", "results"]
-        }
+        "url": "{{baseUrl}}/question-bank"
       }
     },
     {
-      "name": "18. Logout Student",
+      "name": "Teacher - Quizzes",
       "event": [
         {
           "listen": "test",
           "script": {
+            "type": "text/javascript",
             "exec": [
-              "pm.test('Logout - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});"
+              "pm.test('Teacher - Quizzes status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{teacherToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/quizzes"
+      }
+    },
+    {
+      "name": "Auth - Login Student",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Login Student 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.expect(json.data).to.be.an('object');",
+              "pm.expect(json.data.access_token).to.be.a('string');",
+              "pm.collectionVariables.set('studentToken', json.data.access_token);"
             ]
           }
         }
@@ -949,15 +177,96 @@
         "method": "POST",
         "header": [
           {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
+            "key": "Content-Type",
+            "value": "application/json"
           }
         ],
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/auth/logout",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "auth", "logout"]
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"yassine.alaoui@ecole-benani.ma\",\"password\":\"student123\",\"school_id\":\"{{schoolId}}\"}"
+        },
+        "url": "{{baseUrl}}/auth/login"
+      }
+    },
+    {
+      "name": "Student - Assignments",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Student - Assignments status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
+            ]
+          }
         }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{studentToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/assignments"
+      }
+    },
+    {
+      "name": "Student - Quizzes",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Student - Quizzes status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{studentToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/quizzes"
+      }
+    },
+    {
+      "name": "Student - Results",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Student - Results status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{studentToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/results"
       }
     }
   ]

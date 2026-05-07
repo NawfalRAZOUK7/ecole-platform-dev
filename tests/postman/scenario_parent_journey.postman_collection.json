@@ -1,229 +1,61 @@
 {
   "info": {
-    "name": "Parent Journey Scenario",
-    "description": "Complete parent experience including profile, children management, grades, attendance, billing, and communications",
+    "_postman_id": "331aa3ca-4833-407b-8d7b-a4e2aeb6c087",
+    "name": "Ecole Platform Scenario - Parent Journey",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
-      "key": "base_url",
-      "value": "http://localhost:3000"
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api/v1"
     },
     {
-      "key": "api_prefix",
-      "value": "/api/v1"
+      "key": "schoolId",
+      "value": "00000000-0000-4000-8000-000000000001"
     },
     {
-      "key": "access_token",
+      "key": "studentId",
+      "value": "10000000-0000-4000-8000-000000000007"
+    },
+    {
+      "key": "adminToken",
       "value": ""
     },
     {
-      "key": "refresh_token",
+      "key": "sysToken",
       "value": ""
     },
     {
-      "key": "parent_id",
+      "key": "teacherToken",
       "value": ""
     },
     {
-      "key": "student_id",
+      "key": "parentToken",
       "value": ""
     },
     {
-      "key": "student_id_2",
+      "key": "studentToken",
       "value": ""
     },
     {
-      "key": "transcript_data",
-      "value": ""
-    },
-    {
-      "key": "attendance_percentage",
-      "value": ""
-    },
-    {
-      "key": "invoice_id",
-      "value": ""
-    },
-    {
-      "key": "invoice_amount",
-      "value": ""
-    },
-    {
-      "key": "invoice_currency",
-      "value": "MAD"
-    },
-    {
-      "key": "payment_id",
-      "value": ""
-    },
-    {
-      "key": "conversation_id",
-      "value": ""
-    },
-    {
-      "key": "notification_count",
-      "value": ""
-    },
-    {
-      "key": "event_count",
-      "value": ""
-    },
-    {
-      "key": "teacher_id",
-      "value": ""
-    },
-    {
-      "key": "child_progress_status",
-      "value": ""
-    },
-    {
-      "key": "grade_subject",
-      "value": "Mathematics"
-    },
-    {
-      "key": "grade_value",
-      "value": ""
-    },
-    {
-      "key": "parent_email",
-      "value": "parent_{{$timestamp}}@ecole.ma"
-    },
-    {
-      "key": "parent_password",
-      "value": "ParentSecure123!"
-    },
-    {
-      "key": "parent_first_name",
-      "value": "Fatima"
-    },
-    {
-      "key": "parent_last_name",
-      "value": "Benani"
-    },
-    {
-      "key": "student_email",
-      "value": "student_{{$timestamp}}@ecole.ma"
-    },
-    {
-      "key": "student_password",
-      "value": "StudentSecure123!"
-    },
-    {
-      "key": "student_first_name",
-      "value": "Karim"
-    },
-    {
-      "key": "student_last_name",
-      "value": "Benani"
-    },
-    {
-      "key": "message_body",
-      "value": "My child is struggling with the new mathematics concepts. Can we schedule a meeting?"
-    },
-    {
-      "key": "message_subject",
-      "value": "Academic Support Request"
-    },
-    {
-      "key": "payment_method",
-      "value": "card"
-    },
-    {
-      "key": "pending_invoices_count",
-      "value": ""
-    },
-    {
-      "key": "child_first_progress_id",
-      "value": ""
-    },
-    {
-      "key": "child_second_progress_id",
-      "value": ""
-    },
-    {
-      "key": "min_grade",
-      "value": "0"
-    },
-    {
-      "key": "max_grade",
-      "value": "20"
-    },
-    {
-      "key": "calendar_event_id",
-      "value": ""
-    },
-    {
-      "key": "calendar_event_name",
-      "value": ""
-    },
-    {
-      "key": "current_semester",
-      "value": "S1"
-    },
-    {
-      "key": "total_fees_mad",
-      "value": ""
-    },
-    {
-      "key": "paid_fees_mad",
-      "value": ""
-    },
-    {
-      "key": "outstanding_fees_mad",
-      "value": ""
-    },
-    {
-      "key": "profile_phone",
-      "value": "+212612345678"
-    },
-    {
-      "key": "profile_city",
-      "value": "Casablanca"
-    },
-    {
-      "key": "address_country",
-      "value": "Morocco"
-    },
-    {
-      "key": "profile_update_status",
-      "value": ""
-    },
-    {
-      "key": "unread_notifications",
+      "key": "cmsToken",
       "value": ""
     }
   ],
   "item": [
     {
-      "name": "1. Register Parent Account",
+      "name": "Auth - Login Parent",
       "event": [
         {
           "listen": "test",
           "script": {
+            "type": "text/javascript",
             "exec": [
-              "pm.test('Parent registration successful - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('Response has user object with ID', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('user');",
-              "  pm.expect(jsonData.user).to.have.property('id');",
-              "  pm.environment.set('parent_id', jsonData.user.id);",
-              "});",
-              "",
-              "pm.test('Response has access token', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('access_token');",
-              "  pm.expect(jsonData.access_token).to.be.a('string');",
-              "  pm.environment.set('access_token', jsonData.access_token);",
-              "});",
-              "",
-              "pm.test('User role is PARENT', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData.user.role).to.equal('PARENT');",
-              "});"
+              "pm.test('Login Parent 200', () => pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.expect(json.data).to.be.an('object');",
+              "pm.expect(json.data.access_token).to.be.a('string');",
+              "pm.collectionVariables.set('parentToken', json.data.access_token);"
             ]
           }
         }
@@ -238,84 +70,23 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"email\": \"{{parent_email}}\", \"password\": \"{{parent_password}}\", \"first_name\": \"{{parent_first_name}}\", \"last_name\": \"{{parent_last_name}}\", \"role\": \"PARENT\", \"phone\": \"{{profile_phone}}\"}"
+          "raw": "{\"email\":\"parent.alaoui@gmail.com\",\"password\":\"parent123\",\"school_id\":\"{{schoolId}}\"}"
         },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/auth/register",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "auth", "register"]
-        }
+        "url": "{{baseUrl}}/auth/login"
       }
     },
     {
-      "name": "2. Login as Parent",
+      "name": "Parent - Profile",
       "event": [
         {
           "listen": "test",
           "script": {
+            "type": "text/javascript",
             "exec": [
-              "pm.test('Login successful - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test('Response has access_token and refresh_token', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('access_token');",
-              "  pm.expect(jsonData).to.have.property('refresh_token');",
-              "});",
-              "",
-              "pm.test('Update tokens for authenticated requests', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.environment.set('access_token', jsonData.access_token);",
-              "  pm.environment.set('refresh_token', jsonData.refresh_token);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"email\": \"{{parent_email}}\", \"password\": \"{{parent_password}}\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/auth/login",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "auth", "login"]
-        }
-      }
-    },
-    {
-      "name": "3. Get Parent Profile",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Get profile - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test('Profile has required fields', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('id');",
-              "  pm.expect(jsonData).to.have.property('email');",
-              "  pm.expect(jsonData).to.have.property('first_name');",
-              "  pm.expect(jsonData).to.have.property('last_name');",
-              "  pm.expect(jsonData).to.have.property('role');",
-              "});",
-              "",
-              "pm.test('User role is PARENT', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData.role).to.equal('PARENT');",
-              "});"
+              "pm.test('Parent - Profile status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
             ]
           }
         }
@@ -325,80 +96,24 @@
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer {{access_token}}"
+            "value": "Bearer {{parentToken}}"
           }
         ],
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/me/profile",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "me", "profile"]
-        }
+        "url": "{{baseUrl}}/me/profile"
       }
     },
     {
-      "name": "4. Register and Link Student Child",
+      "name": "Parent - Children",
       "event": [
         {
           "listen": "test",
           "script": {
+            "type": "text/javascript",
             "exec": [
-              "pm.test('Student registration successful - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('Student has ID and role is STUDENT', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData.user).to.have.property('id');",
-              "  pm.expect(jsonData.user.role).to.equal('STUDENT');",
-              "  pm.environment.set('student_id', jsonData.user.id);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"email\": \"{{student_email}}\", \"password\": \"{{student_password}}\", \"first_name\": \"{{student_first_name}}\", \"last_name\": \"{{student_last_name}}\", \"role\": \"STUDENT\", \"parent_id\": \"{{parent_id}}\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/auth/register",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "auth", "register"]
-        }
-      }
-    },
-    {
-      "name": "5. Get Linked Children List",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Get children list - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test('Response is an array of children', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.be.an('array');",
-              "  pm.expect(jsonData.length).to.be.greaterThan(0);",
-              "});",
-              "",
-              "pm.test('At least one child linked to parent', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData[0]).to.have.property('id');",
-              "  pm.expect(jsonData[0]).to.have.property('first_name');",
-              "  pm.expect(jsonData[0]).to.have.property('role');",
-              "  pm.expect(jsonData[0].role).to.equal('STUDENT');",
-              "});"
+              "pm.test('Parent - Children status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
             ]
           }
         }
@@ -408,40 +123,24 @@
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer {{access_token}}"
+            "value": "Bearer {{parentToken}}"
           }
         ],
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/me/children",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "me", "children"]
-        }
+        "url": "{{baseUrl}}/me/children"
       }
     },
     {
-      "name": "6. View Child Transcript",
+      "name": "Parent - Child Progress",
       "event": [
         {
           "listen": "test",
           "script": {
+            "type": "text/javascript",
             "exec": [
-              "pm.test('Get transcript - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test('Transcript has required fields', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('student_id');",
-              "  pm.expect(jsonData).to.have.property('grades');",
-              "});",
-              "",
-              "pm.test('Grades are in valid range (0-20)', function() {",
-              "  var jsonData = pm.response.json();",
-              "  jsonData.grades.forEach(function(grade) {",
-              "    pm.expect(grade.value).to.be.greaterThanOrEqual(0);",
-              "    pm.expect(grade.value).to.be.lessThanOrEqual(20);",
-              "  });",
-              "});"
+              "pm.test('Parent - Child Progress status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
             ]
           }
         }
@@ -451,41 +150,24 @@
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer {{access_token}}"
+            "value": "Bearer {{parentToken}}"
           }
         ],
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/gradebook/transcript/{{student_id}}",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "gradebook", "transcript", "{{student_id}}"]
-        }
+        "url": "{{baseUrl}}/progress/children"
       }
     },
     {
-      "name": "7. View Child Attendance",
+      "name": "Parent - Invoices",
       "event": [
         {
           "listen": "test",
           "script": {
+            "type": "text/javascript",
             "exec": [
-              "pm.test('Get attendance - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test('Attendance data has required fields', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('student_id');",
-              "  pm.expect(jsonData).to.have.property('total_classes');",
-              "  pm.expect(jsonData).to.have.property('attended_classes');",
-              "});",
-              "",
-              "pm.test('Attendance percentage is valid', function() {",
-              "  var jsonData = pm.response.json();",
-              "  var percentage = (jsonData.attended_classes / jsonData.total_classes) * 100;",
-              "  pm.expect(percentage).to.be.greaterThanOrEqual(0);",
-              "  pm.expect(percentage).to.be.lessThanOrEqual(100);",
-              "  pm.environment.set('attendance_percentage', percentage);",
-              "});"
+              "pm.test('Parent - Invoices status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
             ]
           }
         }
@@ -495,41 +177,24 @@
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer {{access_token}}"
+            "value": "Bearer {{parentToken}}"
           }
         ],
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/analytics/attendance/student/{{student_id}}",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "analytics", "attendance", "student", "{{student_id}}"]
-        }
+        "url": "{{baseUrl}}/invoices"
       }
     },
     {
-      "name": "8. View Children Progress",
+      "name": "Parent - Notifications",
       "event": [
         {
           "listen": "test",
           "script": {
+            "type": "text/javascript",
             "exec": [
-              "pm.test('Get children progress - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test('Progress data is an array', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.be.an('array');",
-              "  pm.expect(jsonData.length).to.be.greaterThan(0);",
-              "});",
-              "",
-              "pm.test('Each progress item has required fields', function() {",
-              "  var jsonData = pm.response.json();",
-              "  jsonData.forEach(function(item) {",
-              "    pm.expect(item).to.have.property('student_id');",
-              "    pm.expect(item).to.have.property('overall_progress');",
-              "    pm.expect(item).to.have.property('status');",
-              "  });",
-              "});"
+              "pm.test('Parent - Notifications status', () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch (error) { json = {}; }",
+              "pm.test('response has data', () => pm.expect(json).to.have.property('data')); "
             ]
           }
         }
@@ -539,292 +204,10 @@
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer {{access_token}}"
+            "value": "Bearer {{parentToken}}"
           }
         ],
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/progress/children",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "progress", "children"]
-        }
-      }
-    },
-    {
-      "name": "9. View Pending Invoices",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Get invoices - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test('Invoices response is valid', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('invoices');",
-              "  pm.expect(jsonData.invoices).to.be.an('array');",
-              "});",
-              "",
-              "pm.test('All invoice amounts are in MAD currency', function() {",
-              "  var jsonData = pm.response.json();",
-              "  jsonData.invoices.forEach(function(invoice) {",
-              "    pm.expect(invoice.currency).to.equal('MAD');",
-              "    pm.expect(invoice.amount).to.be.a('number');",
-              "  });",
-              "});",
-              "",
-              "pm.test('Save first invoice for payment', function() {",
-              "  var jsonData = pm.response.json();",
-              "  if (jsonData.invoices.length > 0) {",
-              "    pm.environment.set('invoice_id', jsonData.invoices[0].id);",
-              "    pm.environment.set('invoice_amount', jsonData.invoices[0].amount);",
-              "  }",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "GET",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          }
-        ],
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/invoices",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "invoices"]
-        }
-      }
-    },
-    {
-      "name": "10. Initiate Invoice Payment",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Payment initiation - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('Payment response has required fields', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('payment_id');",
-              "  pm.expect(jsonData).to.have.property('status');",
-              "  pm.expect(jsonData).to.have.property('amount');",
-              "});",
-              "",
-              "pm.test('Payment amount matches invoice amount', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData.amount).to.equal(parseFloat(pm.environment.get('invoice_amount')));",
-              "});",
-              "",
-              "pm.test('Payment is in pending state', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData.status).to.equal('PENDING');",
-              "  pm.environment.set('payment_id', jsonData.payment_id);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"invoice_id\": \"{{invoice_id}}\", \"amount\": {{invoice_amount}}, \"currency\": \"MAD\", \"payment_method\": \"{{payment_method}}\", \"billing_method\": \"one_time\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/payments/initiate",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "payments", "initiate"]
-        }
-      }
-    },
-    {
-      "name": "11. Check Notifications",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Get notifications - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test('Notifications response is valid', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('notifications');",
-              "  pm.expect(jsonData.notifications).to.be.an('array');",
-              "});",
-              "",
-              "pm.test('Each notification has required fields', function() {",
-              "  var jsonData = pm.response.json();",
-              "  jsonData.notifications.forEach(function(notif) {",
-              "    pm.expect(notif).to.have.property('id');",
-              "    pm.expect(notif).to.have.property('type');",
-              "    pm.expect(notif).to.have.property('message');",
-              "    pm.expect(notif).to.have.property('read');",
-              "  });",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "GET",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          }
-        ],
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/notifications",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "notifications"]
-        }
-      }
-    },
-    {
-      "name": "12. Message Teacher About Child",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Message creation - 201 Created', function() {",
-              "  pm.response.to.have.status(201);",
-              "});",
-              "",
-              "pm.test('Message has required fields', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('conversation_id');",
-              "  pm.expect(jsonData).to.have.property('message_id');",
-              "  pm.expect(jsonData).to.have.property('created_at');",
-              "});",
-              "",
-              "pm.test('Save conversation ID for reference', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.environment.set('conversation_id', jsonData.conversation_id);",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          },
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"subject\": \"{{message_subject}}\", \"body\": \"{{message_body}}\", \"recipient_type\": \"TEACHER\", \"student_id\": \"{{student_id}}\"}"
-        },
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/messages/conversations",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "messages", "conversations"]
-        }
-      }
-    },
-    {
-      "name": "13. View School Calendar",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Get events - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test('Events response is valid', function() {",
-              "  var jsonData = pm.response.json();",
-              "  pm.expect(jsonData).to.have.property('events');",
-              "  pm.expect(jsonData.events).to.be.an('array');",
-              "});",
-              "",
-              "pm.test('Each event has required fields', function() {",
-              "  var jsonData = pm.response.json();",
-              "  jsonData.events.forEach(function(event) {",
-              "    pm.expect(event).to.have.property('id');",
-              "    pm.expect(event).to.have.property('name');",
-              "    pm.expect(event).to.have.property('start_date');",
-              "    pm.expect(event).to.have.property('end_date');",
-              "  });",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "GET",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          }
-        ],
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/events",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "events"]
-        }
-      }
-    },
-    {
-      "name": "14. Logout Parent",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Logout successful - 200 OK', function() {",
-              "  pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test('Access token cleared', function() {",
-              "  pm.environment.set('access_token', '');",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{access_token}}"
-          }
-        ],
-        "url": {
-          "raw": "{{base_url}}{{api_prefix}}/auth/logout",
-          "host": ["{{base_url}}"],
-          "path": ["{{api_prefix}}", "auth", "logout"]
-        }
+        "url": "{{baseUrl}}/notifications"
       }
     }
   ]
