@@ -117,3 +117,68 @@ Chaque événement contient : `user_id`, `action`, `resource_type`, `resource_id
 - **Consentements** : `GET/POST /consents` — gestion des consentements utilisateur
 - **Data minimization** : seules les données nécessaires sont collectées
 - **Retention** : politique de rétention configurable par type de données
+
+---
+
+## Pipeline antivirus ClamAV (v1.1)
+
+Toute complétion d'upload (`POST /uploads/complete`) déclenche une tâche asynchrone de scan via ClamAV :
+
+```
+upload_complete ──► enqueue scan_uploaded_file(object_id)
+                              │
+                              ▼
+                       ┌──────────────┐
+                       │   ClamAV     │
+                       │   (clamd)    │
+                       └──────┬───────┘
+                              │
+              ┌───────────────┴───────────────┐
+              ▼                               ▼
+        clean → status="clean"         infected → bucket.delete + notify uploader
+                                                   audit_events.add(SECURITY_VIRUS_BLOCKED)
+```
+
+### Métriques
+
+| Métrique Prometheus | Labels | Description |
+|---------------------|--------|-------------|
+| `virus_scan_total` | `result` (clean/infected/error) | Compteur de scans par résultat |
+| `virus_scan_duration_seconds` | `result` | Histogramme de latence du scan |
+| `virus_scan_queue_size` | — | Jauge de la file d'attente du worker |
+
+### Procédure d'incident
+1. Alerte `VirusInfectedFile` (Alertmanager) → canal `#security`
+2. L'objet est déjà supprimé du bucket par le worker
+3. L'uploader reçoit une notification trilingue
+4. Investigation : `audit_events` contient l'IP, le user-agent et le hash SHA-256
+
+---
+
+## Signed-URL JWT Flow (v1.1)
+
+Les téléchargements de fichiers (contenus, factures, reçus) ne renvoient pas le binaire mais une redirection HTTP 307 vers une URL S3/MinIO présignée :
+
+```
+GET /content/123/download
+  ├── Verify Bearer token + RBAC
+  ├── Mint short-lived JWT (5 min) embedded in S3 presigned URL
+  └── HTTP 307 → https://minio.ecole-platform.local/content/123?X-Amz-Signature=...
+```
+
+Le JWT court (5 minutes) garantit que les URLs partagées par erreur ne donnent pas un accès permanent. L'extraction du token depuis les paramètres de requête (`?token=...`) est implémentée pour permettre les redirections sans header `Authorization` (cas du `<a href>` natif).
+
+---
+
+## Permissions ajoutées en v1.1
+
+| Code | Description | Rôles |
+|------|-------------|-------|
+| `PERM_LMS_ASSIGNMENT_READ` | Lire les devoirs | TCH, ADM, STD (own), PAR (own children) |
+| `PERM_LMS_ACTIVITY_READ` | Lire le flux d'activité d'un élève | PAR (own children), ADM, TCH (own classes) |
+| `PERM_SKILLS_DIMENSION_READ` | Lire les dimensions de compétence | TCH, ADM, STD (own), PAR (own children) |
+| `PERM_SKILLS_MILESTONE_WRITE` | Évaluer un milestone de compétence | TCH, ADM |
+| `PERM_PROGRAMS_MANAGE` | CRUD sur programmes / versions / équivalences | ADM, SUP |
+| `PERM_PROGRAMS_ENROLL` | Inscrire un élève à une version | DIR, ADM |
+| `PERM_REWARDS_BADGE_MANAGE` | CRUD sur le catalogue de badges | ADM |
+| `PERM_INVOICES_PDF_DOWNLOAD` | Télécharger PDF de facture | DIR, ADM, PAR (own invoices) |

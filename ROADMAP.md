@@ -2,6 +2,95 @@
 
 ## ✅ Done
 
+### v1.1 (2026-05) — Production Hardening & Compliance
+
+#### Storage & Uploads
+- [x] Unified storage abstraction (local / MinIO / S3)
+- [x] MinIO development stack in `docker-compose.dev.yml`
+- [x] Direct large-file uploads (web + mobile, up to 50 MB)
+- [x] Presigned download URLs with redirect
+- [x] ClamAV virus scanning + retry logic
+- [x] Virus scan Prometheus metrics
+- [x] Local-uploads → MinIO migration script
+- [x] MinIO observability runbook
+
+#### Academic Programs (G49–G50)
+- [x] Programs / Versions / Equivalences / Snapshots
+- [x] Eligibility rules engine
+- [x] Enrollments lifecycle
+- [x] Web admin UI (programs, versions, equivalences, eligibility, enrollments)
+- [x] Student academic history (web + mobile)
+
+#### Bilingual Invoicing & Moroccan Compliance
+- [x] Bilingual AR/FR PDF templates (WeasyPrint)
+- [x] TVA breakdown on `InvoiceItem`
+- [x] Banking + branding fields on `School`
+- [x] Payment receipt PDF + QR code
+- [x] All 7 phases shipped
+
+#### Phase A / B — Student & Parent Enrichment
+- [x] Writing Workspace (student creative writing)
+- [x] Parent Shared Review with comments
+- [x] `ParentAlertService`
+
+#### Phase D — Kubernetes-First Deployment
+- [x] Helm chart matured (15 templates, 3 values overlays)
+- [x] Local Kind cluster (`ecole-dev`)
+- [x] K8s E2E workflow + Helm validation in CI
+- [x] Blue-green compose configurations
+
+#### Phase E — Cross-Platform Kid UX
+- [x] E1 level-age mapping + auto age-filtering
+- [x] E2 longest_streak tracking
+- [x] E4 Cairo font on web (Arabic-optimized)
+- [x] E5 kid-friendly color system on web
+- [x] E6 shimmer skeletons on kid-facing screens
+- [x] E7 mobile branded splash screen
+- [x] E8 web design tokens matching mobile
+- [x] E9 kid-friendly empty states
+- [x] E10 mobile offline content caching (TTL 7d)
+
+#### Mobile Expansion
+- [x] Rubrics module (list, editor, grading)
+- [x] Question bank module (import, quiz generation)
+- [x] Quiz analytics
+- [x] Class progress
+- [x] Parent absence justification with attachments
+- [x] My Children page (parent)
+- [x] Skills passport (radar, export, analytics)
+- [x] Compliance module (curriculum mapping, reports)
+- [x] Financial health (snapshots, export)
+- [x] Micro-budgets (envelopes, allocations, MAD)
+- [x] Micro-schools CRUD
+- [x] Attendance heatmap + offline cache
+- [x] Gradebook with 0–20 Moroccan scale + transcript
+- [x] Sync v2 (status, conflicts, shell indicator)
+- [x] Recovery flows + privacy + report schedules
+- [x] Native Android + iOS platforms initialized
+- [x] Accessibility (Semantics on 30+ screens)
+- [x] 278 hardcoded colors → theme tokens (dark-mode safe)
+
+#### Backend Depth & Auth
+- [x] New permissions (LMS_ASSIGNMENT_READ, LMS_ACTIVITY_READ, skill dimensions, milestones)
+- [x] Role redirection refactor
+- [x] JWT extraction from query parameters (signed-URL flow)
+- [x] Reward badge management (CRUD + admin UI + seeding)
+- [x] Trilingual login error translations
+
+#### Timetable
+- [x] `max_consecutive_classes` constraint
+- [x] Academic year support
+- [x] Generation preview (dry-run)
+
+#### Testing
+- [x] 18 new mobile test files (30+ unit/widget + 2 integration)
+- [x] Web tests for all new features
+- [x] Backend integration tests for invoice/receipt PDFs
+- [x] Web endpoint coverage at **97.7%** (was ~95%)
+- [x] 25 missing API service methods added; 13 HTTP method mismatches fixed
+
+---
+
 ### Core Platform (v1.0)
 - [x] FastAPI backend with 57 API modules
 - [x] PostgreSQL 16 with 56 Alembic migrations
@@ -73,31 +162,34 @@
 
 ## 🔄 In Progress
 
-### Payment & Finance
-- [x] Invoice PDF generation + Moroccan compliance (WeasyPrint, TVA, bilingual) — Phase 7 complete
-
 ### Quality & Polish
-- [ ] Increase backend test coverage to 90%+
-- [ ] Add Flutter widget tests for critical screens
+- [ ] Increase backend test coverage to 90%+ (currently ~85%)
 - [ ] Performance optimization for large datasets (1000+ students)
+- [ ] Lighthouse score audit and tuning on web
+
+### Compliance v2
+- [ ] MEN curriculum referential v2 (real ministry data import)
+- [ ] DGSSI security questionnaire compliance check
 
 ---
 
 ## 📋 Planned (Next Phase)
 
 ### AI & Intelligence
+- [ ] LLM gateway with prompt templates and rate limits
+- [ ] RAG-based pedagogical assistant over course content
 - [ ] AI-powered content recommendations based on student performance
 - [ ] Predictive analytics for at-risk students
-- [ ] Automatic difficulty adaptation for quizzes and games
+- [ ] Adaptive difficulty engine v2 (currently rule-based, target ML-based)
 - [ ] Natural language processing for Arabic writing feedback
+- [ ] Voice-based interaction for young learners (maternelle)
 - [ ] Smart timetable generation with constraint solver
 
 ### Advanced Features
-- [ ] Offline-first mobile with full sync queue
-- [ ] Parent-child shared review interface (enhanced)
 - [ ] Bulk enrollment via CSV/Excel import
-- [ ] Advanced report generation (PDF bulletins)
+- [ ] Advanced report generation (PDF bulletins per period)
 - [ ] SMS/WhatsApp notification channels
+- [ ] Parent payment portal v2 (CMI, Payzone integration)
 
 ### Platform Expansion
 - [ ] Multi-tenant support (multiple schools per instance)

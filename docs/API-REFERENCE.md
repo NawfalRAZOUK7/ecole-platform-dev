@@ -166,6 +166,67 @@ Flux d'authentification :
 | `GET/POST` | `/documents` | Gestion de documents |
 | `GET/POST` | `/cms` | Gestion de contenu (CMS) |
 
+### 🎓 Programmes Académiques (v1.1)
+
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| `GET` | `/programs` | Lister les programmes |
+| `POST` | `/programs` | Créer un programme |
+| `GET` | `/programs/:id` | Détails d'un programme |
+| `PUT` | `/programs/:id` | Modifier un programme |
+| `GET` | `/programs/:id/versions` | Versions d'un programme |
+| `POST` | `/programs/:id/versions` | Créer une nouvelle version |
+| `GET` | `/program-versions/:id` | Détails d'une version |
+| `GET` | `/program-equivalences` | Lister les équivalences |
+| `POST` | `/program-equivalences` | Déclarer une équivalence entre versions |
+| `GET` | `/eligibility-rules?version_id=` | Règles d'éligibilité d'une version |
+| `POST` | `/eligibility-rules` | Créer une règle d'éligibilité |
+| `POST` | `/eligibility/check` | Évaluer l'éligibilité d'un élève (`{student_id, version_id}`) |
+| `GET` | `/enrollments` | Lister les inscriptions (filtres : élève, version, statut) |
+| `POST` | `/enrollments` | Inscrire un élève à une version (déclenche un snapshot) |
+| `DELETE` | `/enrollments/:id` | Désinscrire un élève |
+| `GET` | `/students/:id/academic-history` | Historique académique complet |
+
+### 💸 Facturation PDF & Reçus de Paiement (v1.1)
+
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| `GET` | `/invoices/:id/pdf?lang=fr\|ar` | PDF de facture bilingue (TVA + ICE + RC) |
+| `GET` | `/payments/:id/receipt?lang=fr\|ar` | PDF de reçu de paiement avec QR-code |
+| `GET` | `/reports/invoice-pdf` | Rapport PDF inter-factures |
+| `GET` | `/reports/payment-receipt` | Rapport PDF inter-reçus |
+
+Réponse : redirection HTTP 307 vers une URL S3/MinIO présignée (TTL 5 minutes), `Content-Disposition: attachment`.
+
+### ⬆️ Uploads Directs S3/MinIO (v1.1)
+
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| `POST` | `/uploads/initiate` | Demander une URL présignée d'upload (`{filename, size, content_type, scope}`) |
+| `POST` | `/uploads/complete` | Notifier la fin d'upload, déclenche le scan antivirus |
+| `GET` | `/uploads/:id/status` | Statut du scan antivirus (`scanning`, `clean`, `infected`) |
+| `GET` | `/content/:id/download` | Téléchargement signé (redirection 307) |
+
+Le client envoie ensuite les bytes directement sur l'URL présignée S3/MinIO via `PUT`. Taille maximale : 50 MB.
+
+### 🏆 Reward Badges Admin (v1.1)
+
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| `GET` | `/admin/reward-badges` | Lister les badges (admin) |
+| `POST` | `/admin/reward-badges` | Créer un badge |
+| `PUT` | `/admin/reward-badges/:id` | Modifier un badge |
+| `DELETE` | `/admin/reward-badges/:id` | Supprimer un badge |
+| `POST` | `/admin/reward-badges/seed` | Réinitialiser le catalogue par défaut |
+
+### 📅 Timetable v1.1
+
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| `POST` | `/timetable/constraints` | Ajouter une contrainte (incl. `max_consecutive_classes`) |
+| `POST` | `/timetable/generate/preview` | Génération en mode dry-run (n'enregistre pas) |
+| `POST` | `/timetable/generate/commit` | Génération réelle après prévisualisation |
+
 ---
 
 ## Pagination

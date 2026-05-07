@@ -149,6 +149,77 @@ game_configs                audit_events                feature_toggles
 └── reward_xp
 ```
 
+### G7 — Programmes Académiques (v1.1, G49–G50)
+
+```
+programs                     program_versions             program_equivalences
+├── id (UUID, PK)            ├── id                       ├── id
+├── code (unique)            ├── program_id (FK)          ├── from_version_id (FK)
+├── title                    ├── version_label            ├── to_version_id (FK)
+├── target_level             ├── effective_from           ├── equivalence_type
+├── description              ├── effective_to             ├── notes
+├── is_active                ├── status                    └── created_at
+└── created_at               ├── snapshot_jsonb
+                             └── created_at
+
+eligibility_rules            enrollments                  program_snapshots
+├── id                       ├── id                       ├── id
+├── version_id (FK)          ├── student_id (FK)          ├── enrollment_id (FK)
+├── rule_type (age/level/    ├── version_id (FK)          ├── version_id (FK)
+│   prereq/custom)           ├── status (pending/active/  ├── snapshot_jsonb (immutable)
+├── operator                 │   completed/withdrawn)     └── created_at
+├── value_jsonb              ├── enrolled_at
+├── error_message            ├── exited_at
+└── ordering                 └── snapshot_id (FK)
+```
+
+### G8 — Conformité Fiscale (v1.1)
+
+Champs ajoutés aux tables existantes :
+
+```
+schools (additions)                    invoice_items (additions)
+├── bank_name                          ├── tva_rate         (DECIMAL 5,2)
+├── bank_iban                          ├── tva_amount       (DECIMAL 12,2)
+├── bank_swift                         ├── tva_base         (DECIMAL 12,2)
+├── bank_rib                           └── tva_category
+├── brand_logo_url
+├── brand_color
+├── legal_ice          (Identifiant Commun Entreprise — Maroc)
+├── legal_rc           (Registre de Commerce)
+└── legal_patente
+
+reward_badges (longest_streak addition)
+└── student_rewards.longest_streak     INTEGER NOT NULL DEFAULT 0
+```
+
+### G9 — Stockage Objet (v1.1)
+
+```
+storage_objects                        upload_sessions
+├── id                                 ├── id
+├── key (unique, S3 path)              ├── object_id (FK, nullable)
+├── bucket                             ├── client_id (FK)
+├── content_type                       ├── filename_original
+├── size_bytes                         ├── status (initiated/uploading/
+├── checksum_sha256                    │   completed/scanning/clean/infected)
+├── scan_status                        ├── parts_metadata (JSON)
+├── scan_completed_at                  ├── started_at
+├── owner_id (FK)                      └── completed_at
+├── scope (content/invoice/...)
+└── created_at
+```
+
+### Timetable v1.1
+
+Champs ajoutés à `timetable_constraints` :
+
+```
+timetable_constraints (additions)
+├── max_consecutive_classes  INTEGER (nullable)
+└── academic_year_id         (FK)
+```
+
 ---
 
 ## Migrations Alembic
@@ -191,7 +262,7 @@ make migrate-status
 alembic current
 ```
 
-### Historique (56 fichiers)
+### Historique (60+ fichiers)
 
 Les migrations sont nommées par groupe et numérotées :
 - `9f7257bc8dd1_g1_g6_initial_schema.py` — Schéma initial complet
@@ -199,7 +270,12 @@ Les migrations sont nommées par groupe et numérotées :
 - `6d3f2a91b4c8_g42_student_rewards.py` — Système de récompenses
 - `b71f4d2c8e9a_g43_game_config.py` — Configuration jeux
 - `d4c8f1a7e2b3_g44_story_page_fields.py` — Pages d'histoires
-- ... et 51 autres couvrant l'évolution complète du schéma
+- `…_g49_academic_programs.py` — **v1.1** : programmes, versions, équivalences, snapshots
+- `…_g50_eligibility_enrollments.py` — **v1.1** : règles d'éligibilité, inscriptions
+- `…_g51_invoice_tva_school_branding.py` — **v1.1** : champs TVA, banking, branding
+- `…_g52_storage_objects.py` — **v1.1** : tables `storage_objects` et `upload_sessions`
+- `…_g53_longest_streak.py` — **v1.1** : `student_rewards.longest_streak`
+- `…_g54_timetable_constraints.py` — **v1.1** : `max_consecutive_classes`, `academic_year_id`
 
 ---
 

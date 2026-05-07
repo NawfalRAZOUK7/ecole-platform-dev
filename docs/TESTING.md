@@ -4,10 +4,11 @@
 
 | Couche | Framework | Fichiers | Couverture |
 |--------|-----------|----------|------------|
-| Backend | Pytest + pytest-asyncio | 133 | Services, repos, endpoints, sécurité, perf |
-| Web | Vitest + MSW + Testing Library | 27 | Pages, composants, services, contrats |
-| Mobile | Flutter test | Widget & unit tests | Widgets critiques |
-| E2E | Playwright | Via CI workflow | Parcours utilisateur complets |
+| Backend | Pytest + pytest-asyncio | 140+ | Services, repos, endpoints, sécurité, perf, contrats, PDF |
+| Web | Vitest + MSW + Testing Library | 50+ | Pages, composants, services, contrats — **97.7% endpoints** |
+| Mobile | Flutter test | 50+ unit/widget + 2 intégration | Widgets, providers, repositories, navigation |
+| E2E | Playwright | 17 specs | Parcours utilisateur complets |
+| K8s E2E | Kind + Helm | `.github/workflows/k8s-e2e.yml` | Validation chart + smoke tests sur cluster |
 
 ---
 
@@ -160,3 +161,38 @@ describe('StudentHomePage', () => {
 | Contrat API | ✅ Contract tests | ✅ api-contract.test | — |
 | Sécurité RBAC | ✅ Security tests | — | — |
 | Performance | ✅ Perf benchmarks | — | — |
+| **PDF facture/reçu (v1.1)** | ✅ Integration (rendu, AR/FR, TVA) | — | — |
+| **Programmes académiques (v1.1)** | ✅ Service + API + eligibility engine | ✅ ProgramsPage, ProgramVersionsPage, ProgramEquivalencesPage, EnrollmentsPage, EligibilityRulesPage, AssignProgramDialog, EligibilityCheckTile, StudentAcademicHistoryPage | ✅ Academic history screen |
+| **Storage S3/MinIO (v1.1)** | ✅ Backend abstraction + scan ClamAV | ✅ `useSignedUrl`, `directUpload` | ✅ Direct upload widget |
+| **Writing Workspace (v1.1)** | ✅ Service + API | ✅ WritingWorkspacePage | — |
+| **Shared Review (v1.1)** | ✅ Service + API + ParentAlertService | ✅ SharedReviewPage, ReviewDetailPage | — |
+| **K8s deployment (v1.1)** | — | — | — | (validation : workflow `k8s-e2e.yml`)
+
+---
+
+## Infrastructure de tests v1.1
+
+### Backend
+- Fixtures `pdf_generator`, `mock_clamav`, `signed_url_provider` ajoutées dans `conftest.py`
+- Factories `program_version_factory`, `enrollment_factory`, `eligibility_rule_factory`
+- Tests `testcontainers` pour MinIO et PostgreSQL en mode intégration
+
+### Web
+- Mocks MSW pour les nouveaux endpoints (programs, eligibility, uploads/initiate)
+- Helper `renderWithProviders()` étendu pour les pages programmes
+- 25 méthodes de service API ajoutées pour atteindre **97.7%** de couverture endpoints
+- 13 mismatches HTTP (GET/POST/PUT/DELETE) corrigés
+
+### Mobile
+- `pump_helpers.dart` : helpers pour pumper un widget avec navigation + Riverpod
+- `mock_repositories.dart` : doubles pour tous les repositories utilisés en widget tests
+- `entity_factories.dart` : factories pour entités (User, Program, Enrollment, Reward, etc.)
+- 30+ tests unitaires + widgets ajoutés sur les nouveaux modules
+
+### Workflow K8s E2E
+1. Démarre un cluster Kind dans le runner GitHub
+2. `helm lint` + `helm template` du chart
+3. `helm install` avec `values-local.yaml`
+4. Attente readiness des pods (backend, web, postgres, redis, minio)
+5. Smoke tests via `curl` sur les endpoints `/health`, `/api/v1/openapi.json`
+6. Cleanup garanti via `trap`

@@ -124,3 +124,71 @@ Le composant PlatformBridgeCard est testé sur le web avec 6 tests unitaires :
 4. Direction RTL appliquée sur le conteneur
 5. Badge plateforme correct pour mobile ("متوفر على التطبيق")
 6. Badge plateforme correct pour web ("متوفر على الويب")
+
+---
+
+## Phase E — Parité visuelle web ⇄ mobile (v1.1)
+
+La phase E établit une parité visuelle complète entre web et mobile sur les écrans destinés aux jeunes élèves. Les 10 sous-tâches ont été livrées en mai 2026.
+
+### E1 — Filtrage par âge automatique
+
+Le mapping `level → age_range` (centralisé dans `app/core/level_age_mapping.py` côté backend, et `level_age.dart` côté mobile, `levelAge.ts` côté web) filtre automatiquement les contenus présentés à un élève selon sa tranche d'âge inférée du niveau scolaire.
+
+### E2 — Suivi du record de série
+
+Le champ `student_rewards.longest_streak` (migration G53) conserve le record historique. Affichage dans `LongestStreakBadge` (web) et `LongestStreakWidget` (mobile).
+
+### E4 — Police Cairo sur le web
+
+La police arabe Cairo (déjà utilisée sur mobile) est intégrée au web. Bascule automatique sur la locale `ar` via la classe CSS `.font-arabic` injectée par `i18n.ts`.
+
+### E5 — Système de couleurs kid-friendly sur le web
+
+Réplication du `KidsContentColors` mobile en CSS variables web :
+
+| Token | Web | Mobile |
+|-------|-----|--------|
+| `--color-kids-primary` | `KidsContentColors.primary` | `#FF6B6B` |
+| `--color-kids-accent` | `KidsContentColors.accent` | `#4ECDC4` |
+| `--color-kids-warning` | `KidsContentColors.warning` | `#FFE66D` |
+| `--color-kids-success` | `KidsContentColors.success` | `#95E1D3` |
+
+### E6 — Squelettes shimmer
+
+Composants `<ShimmerSkeleton />` (web) et `ShimmerSkeleton` widget (mobile) avec animation 1.5s, utilisés sur tous les écrans kid-facing pendant le chargement.
+
+### E7 — Splash branding mobile
+
+Splash natif Android (`android/app/src/main/res/drawable/launch_background.xml`) et iOS (`ios/Runner/Base.lproj/LaunchScreen.storyboard`) avec logo et fond `#FF6B6B`.
+
+### E8 — Design tokens partagés
+
+`design-tokens/tokens.json` est consommé par :
+- Web : généré en CSS variables via `style-dictionary` au build
+- Mobile : généré en `app_colors.dart` / `app_spacing.dart` au build
+
+Garantit une parité de couleurs, espacements et rayons de bordure entre les deux plateformes.
+
+### E9 — Empty states avec mascotte
+
+Composants `<KidEmptyState />` et `KidEmptyState` widget partagent une mascotte SVG (Sami) et un message localisé. Variantes : `noContent`, `noResults`, `error`, `comingSoon`.
+
+### E10 — Cache hors-ligne du contenu (mobile)
+
+L'application mobile télécharge à la demande les contenus pédagogiques (PDF, vidéos, images) dans un cache local (`flutter_cache_manager`) avec :
+- TTL de **7 jours** pour le contenu téléchargé
+- TTL de **15 minutes** pour les métadonnées de la bibliothèque
+- Indicateur visuel `OfflineAvailableBadge` sur les contenus disponibles hors-ligne
+- Purge automatique selon LRU si dépassement du quota (200 MB par défaut)
+
+---
+
+## Sync v2 (v1.1)
+
+L'infrastructure de synchronisation mobile a été enrichie :
+
+- **Indicateur shell** : un `SyncStatusBar` s'affiche en bas de l'app quand des opérations sont en attente
+- **États** : `idle`, `syncing`, `paused`, `conflict`, `error`
+- **Résolution de conflits** : UI dédiée pour les conflits de modifications concurrentes
+- **Reprise automatique** : retry exponentiel sur les échecs réseau, déclenché à la reconnexion

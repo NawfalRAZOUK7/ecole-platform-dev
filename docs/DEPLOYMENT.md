@@ -1,13 +1,22 @@
 # 🚀 Déploiement
 
+> **Chemins de déploiement supportés**
+> - **Production / staging** → **Kubernetes via Helm** (chemin recommandé). Voir `docs/KUBERNETES_SETUP.md` et la section *Kubernetes (Helm)* ci-dessous.
+> - **Dev local sans K8s** → **Docker Compose** (chemin historique, conservé pour vélocité de développement).
+> - **Dev K8s local** → **Kind** (`scripts/k8s-local-up.sh`) pour valider le chart Helm avant push.
+> - **Rollout sans K8s** → compositions **blue-green** (`docker-compose.blue.yml` / `.green.yml`) pour les environnements sans orchestrateur.
+
 ## Environnements
 
-| Env            | Fichier Compose                       | Description                         |
-| -------------- | ------------------------------------- | ----------------------------------- |
-| **Dev**        | `infra/docker-compose.dev.yml`        | Hot reload, logs debug, DB locale   |
-| **Staging**    | `infra/docker-compose.staging.yml`    | Répliques, SSL, proche de la prod   |
-| **Prod**       | `infra/docker-compose.prod.yml`       | HA, backups, Docker Secrets         |
-| **Monitoring** | `infra/docker-compose.monitoring.yml` | Prometheus + Grafana + Loki + Tempo |
+| Env            | Mode privilégié      | Fichier de référence                                     | Description                         |
+| -------------- | -------------------- | -------------------------------------------------------- | ----------------------------------- |
+| **Dev**        | Compose              | `infra/docker-compose.dev.yml` (+ MinIO)                 | Hot reload, logs debug, DB locale   |
+| **Dev K8s**    | Kind + Helm          | `scripts/k8s-local-up.sh` + `infra/k8s/values-local.yaml` | Cluster local `ecole-dev`           |
+| **Staging**    | Helm                 | `infra/k8s/values-staging.yaml`                          | Cluster staging, SSL, proche prod   |
+| **Staging-CP** | Compose blue-green   | `infra/docker-compose.staging.yml`                       | Compose équivalent (fallback)       |
+| **Prod**       | Helm                 | `infra/k8s/values-prod.yaml`                             | HA, HPA, NetworkPolicy, backups     |
+| **Prod-CP**    | Compose blue-green   | `infra/docker-compose.{blue,green}.yml`                  | Bascule blue-green pour env. on-prem|
+| **Monitoring** | Compose              | `infra/docker-compose.monitoring.yml`                    | Prometheus + Grafana + Loki + Tempo |
 
 ---
 
@@ -101,6 +110,43 @@ helm rollback ecole-platform 1
 # Statut
 helm status ecole-platform
 ```
+
+### Kind (Kubernetes local)
+
+Pour valider le chart sur un cluster local avant push :
+
+```bash
+# Démarrage du cluster ecole-dev (1 control-plane + 2 workers)
+./scripts/k8s-local-up.sh
+
+# Déploiement du chart en mode local
+helm install ecole-platform infra/k8s/ -f infra/k8s/values-local.yaml
+
+# Démontage
+./scripts/k8s-local-down.sh
+```
+
+Le workflow CI `.github/workflows/k8s-e2e.yml` reproduit ce flux et exécute les tests E2E dans Kind à chaque PR.
+
+### Blue-green (compositions Compose)
+
+Pour les environnements on-prem sans Kubernetes, deux compositions parallèles permettent une bascule sans interruption :
+
+```bash
+# Démarrer la version "green" (nouvelle)
+docker compose -f infra/docker-compose.green.yml up -d
+
+# Smoke tests sur la nouvelle version
+make health-green
+
+# Bascule du reverse proxy
+make switch-traffic TARGET=green
+
+# Une fois validé, arrêter "blue"
+docker compose -f infra/docker-compose.blue.yml down
+```
+
+Le rollback s'opère en re-basculant le proxy vers `blue`.
 
 ### Auto-scaling
 
