@@ -1,12 +1,4 @@
-.PHONY: up down restart logs migrate seed seed-friend-content test lint shell build clean status health \
-       staging-up staging-down prod-up prod-down monitoring-up monitoring-down \
-       shell-db redis-cli backup restore backup-status docker-prune version \
-       migrate-new migrate-down migrate-status test-cov lint-fix format web-install web-lint \
-       openapi openapi-check worker worker-logs test-unit test-integration test-security \
-       test-full test-perf rotate-jwt rotate-db rotate-redis rotate-all \
-       deploy-blue-green deploy-rollback deploy-status dev-init dev-reset seed-core \
-       docs docs-schema api-test-up api-test-down api-test-status \
-       test-postman test-postman-phases test-postman-scenarios test-postman-full test-load
+.PHONY: api-test-down api-test-status api-test-up audit-export backup backup-status build build-prod clean deploy-blue-green deploy-rollback deploy-status dev-init dev-reset docker-prune docs docs-schema down format health hooks-install lint lint-fix logs migrate migrate-down migrate-new migrate-status migrate-validate monitoring-down monitoring-up openapi openapi-check prod-down prod-logs prod-up redis-cli redis-cli-staging restart restore restore-drill rotate-all rotate-db rotate-jwt rotate-redis seed seed-core seed-friend-content shell shell-db shell-db-staging staging-down staging-logs staging-up status test test-cov test-full test-integration test-load test-perf test-postman test-postman-full test-postman-phases test-postman-scenarios test-security test-unit up version web-install web-lint worker worker-logs mobile-run mobile-build mobile-test web-build web-test web-test-e2e web-format pre-rollout
 
 # ==================== Compose Files ====================
 COMPOSE_FILE = infra/docker-compose.dev.yml
@@ -22,8 +14,8 @@ DC_STAGING = docker compose -f $(COMPOSE_STAGING)
 DC_PROD = docker compose -f $(COMPOSE_PROD)
 DC_MONITORING = docker compose -f $(COMPOSE_MONITORING)
 
-# App version (from backend health endpoint or fallback)
-APP_VERSION := 0.1.0
+# App version (read from backend pyproject.toml, fallback to 1.0.0)
+APP_VERSION := $(shell grep -m1 '^version = ' backend/pyproject.toml 2>/dev/null | cut -d'"' -f2 || echo "1.0.0")
 
 # ==================== Lifecycle (Dev) ====================
 
@@ -114,9 +106,14 @@ seed:
 	@echo "══════════════════════════════════════════════════════"
 	@echo "  Step 2/2 — Friend educational content (stories, PDFs, coloring)"
 	@echo "══════════════════════════════════════════════════════"
-	$(DC) exec backend mkdir -p /ecole-platform-reference/extraction/assets
-	docker cp ../ecole-platform-reference/extraction/assets/. ecole-backend:/ecole-platform-reference/extraction/assets
-	$(DC) exec backend python -m scripts.seed_friend_content
+	@if [ -d "../ecole-platform-reference/extraction/assets" ]; then \
+		$(DC) exec backend mkdir -p /ecole-platform-reference/extraction/assets; \
+		docker cp ../ecole-platform-reference/extraction/assets/. ecole-backend:/ecole-platform-reference/extraction/assets; \
+		$(DC) exec backend python -m scripts.seed_friend_content; \
+	else \
+		echo "  Skipping friend content — ../ecole-platform-reference not found"; \
+		echo "  Run 'make seed-friend-content' manually if you have the assets."; \
+	fi
 	@docker cp ecole-backend:/app/seed-report.md ./seed-report.md 2>/dev/null || true
 	@docker cp ecole-backend:/app/seed-friend-report.md ./seed-friend-report.md 2>/dev/null || true
 	@echo ""
@@ -131,11 +128,17 @@ seed-core:
 	@echo "  Report: ./seed-report.md"
 
 seed-friend-content:
-	$(DC) exec backend mkdir -p /ecole-platform-reference/extraction/assets
-	docker cp ../ecole-platform-reference/extraction/assets/. ecole-backend:/ecole-platform-reference/extraction/assets
-	$(DC) exec backend python -m scripts.seed_friend_content
-	@docker cp ecole-backend:/app/seed-friend-report.md ./seed-friend-report.md 2>/dev/null || true
-	@echo "  Report: ./seed-friend-report.md"
+	@if [ -d "../ecole-platform-reference/extraction/assets" ]; then \
+		$(DC) exec backend mkdir -p /ecole-platform-reference/extraction/assets; \
+		docker cp ../ecole-platform-reference/extraction/assets/. ecole-backend:/ecole-platform-reference/extraction/assets; \
+		$(DC) exec backend python -m scripts.seed_friend_content; \
+		@docker cp ecole-backend:/app/seed-friend-report.md ./seed-friend-report.md 2>/dev/null || true; \
+		@echo "  Report: ./seed-friend-report.md"; \
+	else \
+		echo "ERROR: ../ecole-platform-reference/extraction/assets not found"; \
+		echo "Place friend content assets there or skip with 'make seed-core'"; \
+		exit 1; \
+	fi
 
 test:
 	$(DC) exec backend pytest -v --tb=short
@@ -241,6 +244,11 @@ rotate-all:
 	@echo "Rotating all application secrets..."
 	bash infra/scripts/rotate-secrets.sh all
 
+# ==================== Pre-Deployment Checks ====================
+
+pre-rollout:
+	$(DC) exec backend python scripts/pre_rollout_check.py
+
 # ==================== Blue-Green Deployment ====================
 
 deploy-blue-green:
@@ -290,6 +298,29 @@ web-install:
 
 web-lint:
 	$(DC) exec web npm run lint
+
+web-build:
+	cd web && npm run build
+
+web-test:
+	cd web && npm run test
+
+web-test-e2e:
+	cd web && npm run test:e2e
+
+web-format:
+	cd web && npm run format
+
+# ==================== Mobile ====================
+
+mobile-run:
+	cd mobile && flutter run
+
+mobile-build:
+	cd mobile && flutter build apk
+
+mobile-test:
+	cd mobile && flutter test
 
 # ==================== Maintenance ====================
 

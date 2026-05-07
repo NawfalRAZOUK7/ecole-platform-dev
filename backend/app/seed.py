@@ -78,6 +78,14 @@ from app.models.rewards import RewardBadge, RewardEvent, StudentReward
 from app.models.school import School
 from app.models.skill_passport import SkillDimension, SkillMilestone, SkillProgress
 from app.models.difficulty_adaptation import DifficultyAdaptation
+from app.seed_extensions import (
+    seed_ai_preferences,
+    seed_calendar,
+    seed_documents,
+    seed_notification_preferences,
+    seed_programs,
+    seed_reporting,
+)
 from app.services.compliance_service import seed_men_reference_data
 
 # ── Fixed UUIDs for deterministic seeding ──────────────────────────────────
@@ -3374,6 +3382,12 @@ async def main() -> None:
         await seed_all_roles_data(session)
         await seed_difficulty_adaptations(session)
         await seed_new_student_rewards(session)
+        await seed_calendar(session)
+        await seed_documents(session)
+        await seed_reporting(session)
+        await seed_programs(session)
+        await seed_ai_preferences(session)
+        await seed_notification_preferences(session)
 
         await session.commit()
 

@@ -203,7 +203,7 @@ services:
       dockerfile: Dockerfile
       target: production
     container_name: ecole-staging-worker
-    command: ["python", "-m", "arq", "app.worker.WorkerSettings"]
+    command: ["python", "-m", "arq", "app.core.tasks.WorkerSettings"]
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB:-ecole_platform_staging}
       REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD must be set}@redis:6379/0

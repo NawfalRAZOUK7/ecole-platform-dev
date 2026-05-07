@@ -230,7 +230,7 @@ The codebase implements a deliberate indexing strategy with **736 total constrai
 
 ### 2.5.1 Alembic Configuration
 
-57 migrations organized by groups (G1-G46+), each prefixed with a short hash and group identifier:
+65 migrations organized by groups (G1-G46+), each prefixed with a short hash and group identifier:
 - Naming convention: `{hash}_g{group_number}_{description}.py`
 - Examples: `g12_role_specific_profiles`, `g20_add_quiz_engine`, `g42_student_rewards`
 

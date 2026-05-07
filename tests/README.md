@@ -1,4 +1,4 @@
-# Top-Level Integration & E2E Tests
+# Integration & E2E Tests
 
 Manual API testing collections and load test scripts. Complements automated pytest suite with human-driven testing and realistic usage pattern validation.
 
@@ -7,346 +7,119 @@ Manual API testing collections and load test scripts. Complements automated pyte
 - **Approach**: Postman collections for API exploration, k6 scripts for load simulation
 - **Audience**: QA testers, developers, performance engineers
 - **Execution**: Manual via Postman UI or automated via CLI/CI
-- **Data**: Use the disposable API-test stack by default. Do not point these
-  collections or k6 scenarios at `localhost:8000` unless you intentionally want
-  to mutate your normal dev database.
+- **Data**: Use the disposable API-test stack by default. Do not point these collections or k6 scenarios at `localhost:8000` unless you intentionally want to mutate your normal dev database.
 
 ## Safe Execution
 
-Start an isolated backend on `localhost:8010`, run the API/load checks, then
-remove the stack and its volumes:
+Start an isolated backend on `localhost:8010`, run the API/load checks, then remove the stack and its volumes:
 
 ```bash
 make api-test-up
 make test-postman
-CI=1 make test-load SCENARIO=scenario1_logins.js
+make test-load
 make api-test-down
 ```
 
-The Postman runner and k6 config refuse `localhost:8000` by default. Override
-only for an intentional dirty-dev-DB run:
+The Postman runner and k6 config refuse `localhost:8000` by default. Override only for an intentional dirty-dev-DB run:
 
 ```bash
 tests/run_tests.sh --all --allow-dev-db
-cd tests/load && K6_ALLOW_DEV_DB=1 k6 run scenario1_logins.js
+cd tests/load && K6_ALLOW_DEV_DB=1 k6 run baseline/01_logins.js
 ```
 
-## Test Files
+## Postman Collections
 
-### Postman Collections
-Organized by feature phase, each collection contains request sequences with assertions.
+### Full Smoke Collection
 
-| Collection | Endpoints | Coverage | Last Updated |
-|------------|-----------|----------|--------------|
-| **postman_collection_phase12.json** | 28 requests | School, Classes, Staff (28,232 bytes) | Mar 27 |
-| **postman_collection_phase13.json** | 12 requests | Notifications, Messages (12,551 bytes) | Mar 27 |
-| **postman_collection_phase14.json** | 10 requests | Reports, Analytics (10,953 bytes) | Mar 27 |
-| **postman_collection_phase15.json** | 9 requests | Calendar, Events (9,677 bytes) | Mar 27 |
-| **postman_collection_phase16.json** | 6 requests | Documents, File Upload (6,030 bytes) | Mar 27 |
+| Collection | Endpoints | Purpose |
+|------------|-----------|---------|
+| `ecole_platform_full.postman_collection.json` | All major endpoints | Full platform smoke test |
 
-**Total**: 65 manual test requests across 5 phases
+### Domain Scenarios
 
-**How to Use:**
+| Collection | Purpose |
+|------------|---------|
+| `scenario_academic_year_lifecycle.json` | Academic year CRUD |
+| `scenario_student_lifecycle.json` | Enrollment, grades, progress |
+| `scenario_teacher_workflow.json` | Assignments, grading |
+| `scenario_parent_journey.json` | Feed, notifications, payments |
+| `scenario_admin_operations.json` | User management, invitations |
+| `scenario_billing_cycle.json` | Invoices, payments, fees |
+| `scenario_quiz_assessment_flow.json` | Quiz creation, attempt, results |
+| `scenario_content_management.json` | CMS content, assignments |
+| `scenario_error_handling.json` | Error paths and validation |
+| `scenario_rbac_matrix.json` | Role-based access control |
+| `scenario_abac_policies.json` | Attribute-based access control |
+| `scenario_security_hardening.json` | Security boundaries |
+| `scenario_direct_upload_flow.json` | Signed upload → scan → download |
+| `scenario_invoice_pdf_flow.json` | Invoice → PDF generation → redirect |
+| `scenario_program_enrollment_flow.json` | Program → version → eligibility → enroll |
 
-1. **Import into Postman**
-   - Open Postman
-   - File → Import → Select .json collection
-   - Click "Import"
+### run_tests.sh — Test Execution Script
 
-2. **Set Environment Variables**
-   - Base URL: `http://localhost:8010/api/v1` when using `make api-test-up`
-   - Auth Token: Obtain via POST `/auth/login`
-   - School ID: Copy from collection variable
-   - Class ID: Copy from collection variable
-
-3. **Run Collection**
-   - Click collection name
-   - Runner → Start Test
-   - Monitor responses and assertions
-
-4. **View Results**
-   - Test Summary: Pass/Fail count
-   - Failures: Detailed assertion messages
-   - Response Times: Compare to SLA targets
-
-**Example Test Request:**
-```json
-{
-  "name": "Create School",
-  "request": {
-    "method": "POST",
-    "url": "{{base_url}}/schools",
-    "body": {
-      "name": "Lycée Test {{$timestamp}}",
-      "phone": "+212612345678"
-    }
-  },
-  "tests": {
-    "Status is 201": "pm.response.code === 201",
-    "Response has school_id": "pm.response.json().id",
-    "Name matches request": "pm.response.json().name === pm.request.body.raw.name"
-  }
-}
-```
-
-### run_tests.sh - Test Execution Script
 Bash script to run Postman collections via CLI.
 
-**Usage:**
 ```bash
-POSTMAN_BASE_URL=http://localhost:8010/api/v1 tests/run_tests.sh --all-phases
+POSTMAN_BASE_URL=http://localhost:8010/api/v1 tests/run_tests.sh --all
 POSTMAN_BASE_URL=http://localhost:8010/api/v1 tests/run_tests.sh --include-scenarios
 POSTMAN_BASE_URL=http://localhost:8010/api/v1 tests/run_tests.sh --full-collection
-POSTMAN_BASE_URL=http://localhost:8010/api/v1 tests/run_tests.sh --all
-tests/run_tests.sh --phase phase12 --base-url http://localhost:8010/api/v1
-tests/run_tests.sh --list --all
 ```
 
-**Script Features:**
-- Sequential test execution
-- Safe target guard for the normal dev DB
-- Automatic base URL overrides for both Postman variable styles
-- JSON test report generation
-- Assertion guard for collections with zero test scripts
+## Load Tests (k6)
 
-**Output:**
+Location: `tests/load/`
+
+### Directory Structure
+
 ```
-Running tests/postman_collection_phase12.json...
-✓ Create School (201ms)
-✓ Get School (45ms)
-✓ Update School (78ms)
-✓ Create Class (120ms)
-...
-PASSED: 24/28
-FAILED: 4/28
-```
-
-## Load Test Scripts
-
-**Path**: `tests/load/`
-
-k6-based load testing for performance validation and stress testing.
-
-### Shared Configuration
-- **config.js** - Common settings, environment, timing constants
-  - Base URL configuration
-  - Ramp-up/down profiles
-  - Timeout settings
-  - Data generators
-
-**Example config.js:**
-```javascript
-export const options = {
-  stages: [
-    { duration: "30s", target: 20 },  // Ramp up to 20 users
-    { duration: "1m30s", target: 20 }, // Stay at 20 for 1.5min
-    { duration: "20s", target: 0 },    // Ramp down
-  ],
-  thresholds: {
-    http_req_duration: ["p(95)<200"],  // 95th percentile < 200ms
-    http_req_failed: ["rate<0.1"],     // Error rate < 10%
-  },
-};
+tests/load/
+├── config.js                 # Shared configuration
+├── smoke/
+│   └── healthcheck.js        # 1 VU, 10s — verify API alive
+├── baseline/
+│   ├── 01_logins.js          # 20 concurrent logins
+│   ├── 02_get_requests.js    # 50 concurrent read-heavy users
+│   ├── 03_file_uploads.js    # 10 concurrent uploads
+│   └── 04_websocket.js       # 20 concurrent WS connections
+├── stress/
+│   ├── peak_school_morning.js   # 500 VU peak login + dashboard
+│   └── upload_burst.js          # 50 VU concurrent 5MB uploads
+└── soak/
+    └── 24h_steady_traffic.js    # 24h low constant load
 ```
 
-### Scenario 1: Logins
-- **File**: `scenario1_logins.js` (2,124 bytes)
-- **Pattern**: Concurrent user authentication
-- **Users**: 20 concurrent students logging in
-- **Duration**: 2 minutes
-- **Target SLA**: <200ms per login
-- **Metrics**: Auth success rate, token generation time
+### Run Examples
 
-**Test Sequence:**
-1. POST `/auth/login` (email, password)
-2. Verify JWT token in response
-3. Store token for next scenario
-
-### Scenario 2: GET Requests
-- **File**: `scenario2_get_requests.js` (1,934 bytes)
-- **Pattern**: Typical user browsing (read-heavy)
-- **Requests**:
-  - GET /schools (list)
-  - GET /schools/{id} (details)
-  - GET /classes (teacher's classes)
-  - GET /grades (student's grades)
-  - GET /announcements (school-wide)
-- **Users**: 50 concurrent
-- **Duration**: 2 minutes
-- **Target SLA**: <100ms per GET
-
-### Scenario 3: File Uploads
-- **File**: `scenario3_file_uploads.js` (2,170 bytes)
-- **Pattern**: Document upload workflow
-- **Files**:
-  - PDF (1MB typical)
-  - DOCX (500KB typical)
-  - Image (2MB typical)
-- **Users**: 10 concurrent upload sessions
-- **Duration**: 1 minute per file type
-- **Target SLA**: <1000ms per upload (network bound)
-
-**Upload Test:**
-```javascript
-import http from "k6/http";
-import { check } from "k6";
-
-export default function () {
-  const file = open("sample.pdf", "b");
-  const response = http.post(
-    `${BASE_URL}/documents/upload`,
-    { file: http.file(file, "document.pdf") },
-    { headers: { Authorization: `Bearer ${TOKEN}` } }
-  );
-
-  check(response, {
-    "Upload successful": (r) => r.status === 201,
-    "Upload time < 2s": (r) => r.timings.duration < 2000,
-  });
-}
-```
-
-### Scenario 4: WebSocket
-- **File**: `scenario4_websocket.js` (2,006 bytes)
-- **Pattern**: Real-time communication (notifications, live updates)
-- **Operations**:
-  - Connect WebSocket
-  - Send/receive messages
-  - Handle disconnection/reconnection
-- **Users**: 20 concurrent WebSocket connections
-- **Duration**: 3 minutes (sustained connection)
-- **Target Metrics**:
-  - Connection time < 500ms
-  - Message round-trip < 100ms
-  - 99.5% uptime (max 1 disconnection)
-
-**WebSocket Test:**
-```javascript
-import ws from "k6/ws";
-import { check } from "k6";
-
-export default function () {
-  const url = "ws://localhost:8010/api/v1/ws/notifications";
-  const res = ws.connect(url, null, function (socket) {
-    socket.on("open", function () {
-      console.log("Connected");
-    });
-
-    socket.on("message", function (data) {
-      check(data, {
-        "Message received": (m) => m.length > 0,
-      });
-    });
-
-    socket.on("close", function () {
-      console.log("Disconnected");
-    });
-  });
-
-  check(res, {
-    "Connection successful": (r) => r.status === 101,
-  });
-}
-```
-
-## Running Load Tests
-
-### Prerequisites
 ```bash
-# Install k6
-npm install -g k6
-# or
-brew install k6  # macOS
+# Smoke
+k6 run tests/load/smoke/healthcheck.js
+
+# Baseline
+k6 run tests/load/baseline/01_logins.js
+k6 run tests/load/baseline/02_get_requests.js
+
+# Stress
+k6 run tests/load/stress/peak_school_morning.js
+
+# Soak (long duration — run intentionally)
+k6 run tests/load/soak/24h_steady_traffic.js
 ```
-
-### Run Individual Scenario
-```bash
-# Run scenario 1 (logins) against the disposable API-test stack
-CI=1 make test-load SCENARIO=scenario1_logins.js
-
-# Run WebSocket scenario
-cd tests/load && CI=1 BASE_URL=http://localhost:8010/api/v1 WS_URL=ws://localhost:8010/api/v1/ws k6 run scenario4_websocket.js
-
-# Run with output to cloud
-k6 run -o cloud tests/load/scenario1_logins.js
-```
-
-### Run All Scenarios
-```bash
-# Sequential scenarios
-k6 run tests/load/scenario1_logins.js
-k6 run tests/load/scenario2_get_requests.js
-k6 run tests/load/scenario3_file_uploads.js
-k6 run tests/load/scenario4_websocket.js
-```
-
-### Generate Report
-```bash
-# HTML report
-k6 run --out csv=results.csv tests/load/scenario1_logins.js
-
-# View metrics
-k6 stats results.csv
-```
-
-## Expected Test Results
-
-### Phase Coverage
-- **Phase 12**: School & organizational setup (28 requests)
-- **Phase 13**: Communication system (12 requests)
-- **Phase 14**: Reporting & analytics (10 requests)
-- **Phase 15**: Calendar & scheduling (9 requests)
-- **Phase 16**: Document management (6 requests)
-
-### Load Test Targets
-- **Scenario 1** (logins): 20 users, all succeed, <200ms
-- **Scenario 2** (reads): 50 users, error rate <1%, <100ms p95
-- **Scenario 3** (uploads): 10 concurrent, <2s per file
-- **Scenario 4** (WebSocket): 20 connections, 99.5% uptime
 
 ## Integration with CI/CD
 
 ```yaml
-# .github/workflows/test.yml
+# Postman smoke
 - name: Run Postman Tests
-  run: ./tests/run_tests.sh
+  run: tests/run_tests.sh --all
 
+# k6 baseline
 - name: Run Load Tests
-  run: k6 run tests/load/scenario1_logins.js --out cloud
+  run: k6 run tests/load/baseline/01_logins.js
 ```
-
-## Test Data Management
-
-- **Fixtures**: Pre-populated schools and users in test database
-- **Cleanup**: Automatic between test runs via conftest teardown
-- **Isolation**: Each test run uses fresh database state
-
-## Performance Baselines
-
-| Scenario | Metric | Baseline | Status |
-|----------|--------|----------|--------|
-| Login | p95 | 185ms | PASS |
-| GET List | p95 | 78ms | PASS |
-| GET Detail | p95 | 45ms | PASS |
-| File Upload | p95 | 1200ms | PASS |
-| WebSocket | Connection | 350ms | PASS |
-
-## Common Issues & Troubleshooting
-
-**Issue**: Postman tests fail with 401 Unauthorized
-**Solution**: Verify auth token is valid and not expired. Re-login to get fresh token.
-
-**Issue**: k6 load test shows connection refused
-**Solution**: Ensure backend server is running on configured port. Check BASE_URL environment variable.
-
-**Issue**: File upload tests timeout
-**Solution**: Network I/O is slow. Increase timeout threshold or reduce file size for initial testing.
 
 ## Related Documentation
 
-- Backend Unit Tests: `backend/tests/README.md`
-- Integration Tests: `backend/tests/integration/README.md`
-- Performance Tests: `backend/tests/performance/README.md`
-- OpenAPI Spec: `backend/docs/openapi.yaml`
-- k6 Documentation: https://k6.io/docs/
-- Postman Documentation: https://www.postman.com/resources/postman-guide/
+- Backend tests: `backend/tests/README.md`
+- Test execution guide: `TEST_GUIDE.md`
+- k6 docs: https://k6.io/docs/
+- Newman docs: https://learning.postman.com/docs/collections/using-newman-cli/command-line-integration-with-newman/

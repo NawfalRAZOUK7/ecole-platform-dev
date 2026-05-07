@@ -1,6 +1,6 @@
 # Security Tests
 
-**105 tests** validating RBAC (Role-Based Access Control) matrices and ABAC (Attribute-Based Access Control) policies. Tests enforce authorization rules across 8 roles and complex permission scenarios.
+**105 tests** validating RBAC (Role-Based Access Control) matrices and ABAC (Attribute-Based Access Control) policies. Tests enforce authorization rules across 10 roles and complex permission scenarios.
 
 ## Overview
 
@@ -52,7 +52,7 @@ async def test_teacher_permissions(teacher_user):
 ```
 
 **Coverage:**
-- All 8 roles × 166+ permissions
+- All 10 roles × 166+ permissions
 - Permission inheritance (DIRECTOR ⊃ TEACHER permissions)
 - Negative assertions (role lacks restricted permissions)
 - Cross-role comparisons

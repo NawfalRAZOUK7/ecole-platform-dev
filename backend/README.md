@@ -1,6 +1,6 @@
 # École Platform Backend
 
-FastAPI-based K-12 EdTech SaaS backend for Moroccan schools. Production-grade REST API with real-time WebSocket support, supporting 8-role RBAC+ABAC security model.
+FastAPI-based K-12 EdTech SaaS backend for Moroccan schools. Production-grade REST API with real-time WebSocket support, supporting 10-role RBAC+ABAC security model.
 
 ## Architecture
 
@@ -146,7 +146,7 @@ python scripts/export_openapi.py
 ## Security Features
 
 - **Authentication:** JWT + optional 2FA (TOTP)
-- **Authorization:** RBAC (8 roles) + ABAC (attribute-based controls)
+- **Authorization:** RBAC (10 roles) + ABAC (attribute-based controls)
 - **Data Protection:** Password hashing, password policies, GDPR compliance
 - **API Protection:** Rate limiting, idempotency keys, CORS, CSRF
 - **Audit Trail:** Immutable audit logs, domain events

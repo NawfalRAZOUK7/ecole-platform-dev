@@ -1,60 +1,42 @@
 # Postman Collections
 
-API test collections for the Ecole Platform. Import into Postman or run via Newman CLI.
+API scenario collections for manual and automated testing.
 
-## Environments
+## Files
 
-- **env_local.json** — Seeded local variables. Use it with the disposable API
-  test backend (`http://localhost:8010/api/v1`) unless you explicitly want to
-  mutate the normal dev DB on `localhost:8000`.
-- **env_staging.json** — Staging (https://staging.ecole-platform.ma)
+### Full Smoke
+- `ecole_platform_full.postman_collection.json` — Covers all major endpoints
 
-## Main Collection
+### Domain Scenarios
+- `scenario_academic_year_lifecycle.json` — Academic year CRUD
+- `scenario_student_lifecycle.json` — Student enrollment and progress
+- `scenario_teacher_workflow.json` — Teacher assignments and grading
+- `scenario_parent_journey.json` — Parent feed, notifications, billing
+- `scenario_admin_operations.json` — User and school management
+- `scenario_billing_cycle.json` — Invoices, payments, fee structures
+- `scenario_quiz_assessment_flow.json` — Quiz lifecycle
+- `scenario_content_management.json` — CMS content operations
+- `scenario_error_handling.json` — Error paths and validation
+- `scenario_rbac_matrix.json` — Role permission boundaries
+- `scenario_abac_policies.json` — Attribute-based policies
+- `scenario_security_hardening.json` — Security boundary tests
+- `scenario_direct_upload_flow.json` — Signed upload → scan → download
+- `scenario_invoice_pdf_flow.json` — Invoice → PDF → redirect
+- `scenario_program_enrollment_flow.json` — Program → eligibility → enrollment
 
-- **ecole_platform_full.postman_collection.json** — Maintained full API smoke collection across Auth, Admin, Schools, Enrollments, Billing, Reports, Analytics, Teacher, Parent, Student, CMS, and negative authorization checks.
+### Environment Files
+- `env_local.json` — Local development
+- `env_staging.json` — Staging environment
 
-## Scenario Collections
-
-Workflow-based smoke collections that assert current seeded-role behavior:
-
-- **scenario_student_lifecycle** — Student auth, assignments, quizzes, results, and forbidden admin access
-- **scenario_teacher_workflow** — Teacher auth, classes, submissions, courses, assignments, quizzes, conversations
-- **scenario_admin_operations** — Admin dashboard, users, schools, analytics, export, and parent forbidden access
-- **scenario_parent_journey** — Parent profile, children, child progress, invoices, notifications
-- **scenario_billing_cycle** — Admin billing reads plus parent invoice access
-- **scenario_academic_year_lifecycle** — Admin lifecycle reads: dashboard, enrollments, reports, attendance analytics
-- **scenario_quiz_assessment_flow** — Teacher question bank/quizzes plus student quiz/results access
-- **scenario_content_management** — CMS content/submissions and teacher submission access
-- **scenario_rbac_matrix** — Role validation across 6 roles with expected 200/403 responses
-- **scenario_abac_policies** — Attribute-based access: parent/teacher/student data boundaries
-- **scenario_error_handling** — Error paths: 401, 403, 404, 422 validation
-- **scenario_security_hardening** — Login hardening, auth/me, sessions, login history
-
-`make test-postman` runs phases, scenarios, and the full smoke collection.
-Run them only against the disposable API-test stack unless you intentionally
-want to mutate the normal dev DB.
-
-## Stats
-
-The maintained runner covers `postman_collection_phase12.json` through
-`postman_collection_phase16.json`, all `scenario_*.postman_collection.json`
-files, and `ecole_platform_full.postman_collection.json`.
+### Fixtures
+- `fixtures/sample-document.pdf` — Sample upload file
 
 ## Usage
 
-Use the repository runner so base URL variables and safety checks are applied:
-
 ```bash
-make api-test-up
-make test-postman
-make api-test-down
-```
+# Full smoke
+newman run ecole_platform_full.postman_collection.json -e env_local.json
 
-Direct Newman runs are possible, but they bypass the dev-DB guard. If you do use
-Newman directly, pass both variable styles used by the older collections:
-
-```bash
-newman run ecole_platform_full.postman_collection.json \
-  -e env_local.json \
-  --env-var baseUrl=http://localhost:8010/api/v1
+# Single scenario
+newman run scenario_billing_cycle.postman_collection.json -e env_local.json
 ```

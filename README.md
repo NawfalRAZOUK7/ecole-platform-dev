@@ -109,7 +109,7 @@ ecole-platform-dev/
 │   │   ├── repositories/       # Accès données (queries async)
 │   │   ├── domain/             # Entités métier & enums
 │   │   └── templates/          # Templates email (Jinja2)
-│   ├── alembic/versions/       # 56 migrations DB
+│   ├── alembic/versions/       # 65 migrations DB
 │   └── tests/                  # 133 fichiers de test
 │
 ├── web/                        # ⚛️ SPA React (TypeScript)

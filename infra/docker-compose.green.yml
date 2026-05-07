@@ -43,7 +43,7 @@ services:
   worker-green:
     image: ${WORKER_IMAGE:-ghcr.io/ecole-platform/backend}:${IMAGE_TAG:?IMAGE_TAG must be set — pass a specific image tag, e.g. IMAGE_TAG=v1.2.3}
     container_name: ecole-worker-green
-    command: ["python", "-m", "arq", "app.worker.WorkerSettings"]
+    command: ["python", "-m", "arq", "app.core.tasks.WorkerSettings"]
     environment:
       DATABASE_URL_FILE: /run/secrets/database_url
       REDIS_URL_FILE: /run/secrets/redis_url
