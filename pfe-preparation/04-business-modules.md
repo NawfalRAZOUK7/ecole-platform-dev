@@ -1,13 +1,13 @@
 # Step 4 — Core Business Modules Analysis
 
-> **Source**: Direct code analysis of 72 service files (~21,350 LOC), 57 API route files, and supporting domain/repository/model layers.
-> **Extraction date**: 2026-04-27
+> **Source**: Direct code analysis of 80 service files (~32,577 LOC), 64 API route files, and supporting domain/repository/model layers.
+> **Extraction date**: 2026-05-07
 
 ---
 
 ## 1. Module Index
 
-The backend organizes business logic into **9 distinct functional modules**, each following the Router → Service → Repository layering established in the architecture. Every service method participates in the transactional UnitOfWork pattern and emits structured audit events.
+The backend organizes business logic into **12 distinct functional modules**, each following the Router → Service → Repository layering established in the architecture. Every service method participates in the transactional UnitOfWork pattern and emits structured audit events.
 
 | # | Module | Primary Service Files | LOC | API Routes |
 |---|--------|----------------------|-----|------------|
@@ -19,7 +19,10 @@ The backend organizes business logic into **9 distinct functional modules**, eac
 | 6 | Gamification | `rewards_service.py`, `game_service.py`, `difficulty_adapter.py` | 706 | `rewards.py`, `games.py`, `levels.py` |
 | 7 | AI & Analytics | `ai/ai_service.py`, `analytics.py`, `kpi.py`, `dashboard_analytics.py` | 1,922 | `ai.py`, `analytics.py`, `reports.py` |
 | 8 | Admin | `admin.py`, `school.py`, `gdpr.py`, `compliance_service.py` | 1,217+ | `admin.py`, `schools.py`, `gdpr.py`, `compliance.py` |
-| 9 | Cross-Cutting | `audit.py`, `calendar.py`, `file_storage.py`, `realtime.py`, `email.py`, `sms.py` | 1,800+ | `events.py`, `documents.py`, `exports.py`, `sync.py`, `ws.py` |
+| 9 | Program Management | `eligibility_engine.py`, `program_service.py` | 800+ | `programs.py`, `eligibility.py`, `enrollments.py` |
+| 10 | Document Management | `document_service.py`, `resource_service.py`, `upload_service.py` | 1,200+ | `documents.py`, `resources.py`, `uploads.py` |
+| 11 | MEN Compliance | `compliance_service.py`, `curriculum_service.py` | 600+ | `compliance.py`, `curriculum.py` |
+| 12 | Micro-Schools | `micro_school_service.py` | 400+ | `micro_schools.py` |
 
 ---
 
@@ -406,7 +409,106 @@ Provides school administration capabilities: dashboard statistics, user manageme
 
 ---
 
-## 10. Cross-Cutting Services
+## 10. Program Management (v1.1, G49–G50)
+
+### 10.1 Purpose
+
+Manages the complete academic program lifecycle: program definition, versioning, eligibility rules, student enrollment with immutable snapshots, and inter-program equivalences. This module enables schools to define flexible pedagogical tracks (e.g., "Cycle primaire bilingue", "Filière internationale") and manage student transitions between them.
+
+### 10.2 Service Decomposition
+
+**ProgramService** — Program lifecycle:
+- `create_program()`: Defines a program with code, title, target level, description, and active status. Programs are school-scoped and versioned.
+- `create_version()`: Creates a new version of a program with effective dates and snapshot JSONB. Versions are the unit of enrollment, not programs themselves.
+- `list_programs()`: Paginated listing with filtering by level, status, and school.
+
+**EligibilityEngine** — Rule evaluation:
+- Evaluates `EligibilityRule` predicates in order: pre-filters (age, level) → heavy predicates (transcripts, equivalences).
+- Results: `eligible`, `eligible_with_conditions`, `ineligible`.
+- Cacheable by `(student_id, version_id)` since deterministic.
+
+**EnrollmentService** — Student program enrollment:
+- `enroll_student()`: Creates enrollment with immutable `ProgramSnapshot` capturing the version state at enrollment time.
+- `transfer_student()`: Creates `ProgramAssignmentEvent` audit trail (INITIAL → TRANSFER/PROMOTION).
+- Tracks enrollment status: pending → active → completed → withdrawn.
+
+### 10.3 Key Entities
+
+| Entity | Role |
+|--------|------|
+| `Program` | Pedagogical track definition |
+| `ProgramVersion` | Dated version (unit of enrollment) |
+| `ProgramEquivalence` | Cross-version credit recognition |
+| `EligibilityRule` | Declarative admission criteria |
+| `Enrollment` | Student-version link with snapshot |
+| `ProgramSnapshot` | Immutable version state at enrollment |
+| `ProgramAssignmentEvent` | Audit trail of all program changes |
+
+---
+
+## 11. Document Management
+
+### 11.1 Purpose
+
+Centralizes all document handling: uploaded files, versioning, shared resources, and direct-to-S3 upload lifecycle. Supports three storage backends (local, MinIO, AWS S3) behind a unified `StorageBackend` protocol.
+
+### 11.2 Service Decomposition
+
+**DocumentService** — File lifecycle:
+- `upload_document()`: Creates `Document` + `DocumentVersion` records, triggers async ClamAV scan via ARQ worker.
+- `get_signed_download_url()`: Returns HTTP 307 redirect to presigned S3/MinIO URL (5-minute TTL).
+- `share_resource()`: Creates `Resource` entries with visibility (school/class/private) and tags.
+
+**UploadService** — Direct-to-S3 uploads:
+- `initiate_upload()`: Returns presigned PUT URL; client uploads bytes directly to MinIO/S3.
+- `complete_upload()`: Verifies checksum, triggers virus scan, updates `UploadSession` status.
+- Three backends: `LocalStorage` (dev), `MinioStorage` (staging), `S3Storage` (production).
+
+### 11.3 Security
+
+- All file downloads via presigned URLs (no API file streaming)
+- ClamAV async scan on every upload completion
+- Infected files automatically deleted + uploader notified
+- Prometheus metrics: `virus_scan_total{result}`, `virus_scan_duration_seconds`
+
+---
+
+## 12. MEN Compliance
+
+### 12.1 Purpose
+
+Ensures alignment with Moroccan Ministry of Education (Ministère de l'Éducation Nationale — MEN) curricula and objectives. Maps platform content to official pedagogical standards and generates compliance reports for school inspections.
+
+### 12.2 Service Decomposition
+
+**ComplianceService**:
+- `generate_compliance_report()`: Analyzes content coverage against MEN curricula per level/subject.
+- `map_curriculum()`: Links `ContentItem` or `Course` to `MenObjective` via `CurriculumMapping`.
+- Tracks coverage gaps and generates actionable recommendations for school directors.
+
+**Key entities**: `MenCurriculum`, `MenObjective`, `CurriculumMapping`, `ComplianceReport`.
+
+---
+
+## 13. Micro-Schools
+
+### 13.1 Purpose
+
+Supports informal education structures (micro-écoles, centres de soutien) with lightweight enrollment, group-based organization, simplified payments, and progress tracking outside the formal academic year system.
+
+### 13.2 Service Decomposition
+
+**MicroSchoolService**:
+- `create_micro_school()`: Lightweight school record without academic year dependency.
+- `create_group()`: Student groups within a micro-school.
+- `track_payment()`: Simplified payment recording per enrollment.
+- `log_progress()`: Qualitative progress notes per student per group.
+
+**Key entities**: `MicroSchool`, `MicroGroup`, `MicroEnrollment`, `MicroPayment`, `MicroResource`, `MicroProgressLog`.
+
+---
+
+## 14. Cross-Cutting Services
 
 ### 10.1 Audit Service
 
@@ -434,7 +536,7 @@ Provides school administration capabilities: dashboard statistics, user manageme
 
 ---
 
-## 11. Inter-Module Communication Map
+## 15. Inter-Module Communication Map
 
 ```
 IAM ──────→ (auth context) ──→ ALL MODULES
@@ -460,7 +562,7 @@ Admin ──── read access ──→ ALL MODULES (dashboard aggregation)
 
 ---
 
-## 12. Business Value per Module
+## 16. Business Value per Module
 
 | Module | Business Value for Moroccan K-12 Schools |
 |--------|------------------------------------------|
@@ -472,12 +574,17 @@ Admin ──── read access ──→ ALL MODULES (dashboard aggregation)
 | **Gamification** | Engages young students (K-12) with age-appropriate game mechanics. Trilingual badges/titles for Arabic-French-English curriculum. |
 | **AI** | Writing assistance supports trilingual education. PII protection compliant with Morocco's data protection law (Loi 09-08). Parent opt-out for child AI features. |
 | **Admin** | Single dashboard for school operations. GDPR/Loi 09-08 compliance tools (data export, anonymization, erasure). |
+| **Program Management** | Enables flexible pedagogical tracks (bilingual, international). Immutable enrollment snapshots guarantee rule stability for enrolled students. |
+| **Document Management** | Centralizes all school documents with versioning, virus scanning, and S3-compatible storage. Replaces scattered file shares. |
+| **MEN Compliance** | Maps platform content to official Moroccan curricula. Generates inspection-ready compliance reports for school directors. |
+| **Micro-Schools** | Supports informal education (centres de soutien) with lightweight enrollment and simplified payment tracking. |
+| **Seed System** | ~93% table coverage with realistic demo data enables sales demos, CI testing, and rapid developer onboarding without manual data entry. |
 
 ---
 
-## 13. Key Architecture Observations
+## 17. Key Architecture Observations
 
-1. **Consistent service contract**: Every service method follows the pattern: validate input → check authorization (ABAC) → execute within UnitOfWork → audit → dispatch events. This uniformity across 72 services reduces cognitive load and makes the codebase predictable.
+1. **Consistent service contract**: Every service method follows the pattern: validate input → check authorization (ABAC) → execute within UnitOfWork → audit → dispatch events. This uniformity across 80+ service files (61+ service classes) reduces cognitive load and makes the codebase predictable.
 
 2. **Domain events as integration backbone**: The 20+ domain event types with the `EventDispatcher` + `DeliveryStrategy` pattern decouple business modules from notification logic. Adding a new event type requires only: define the event dataclass, register handlers in `EVENT_HANDLERS`, implement recipient resolution.
 

@@ -439,7 +439,7 @@ The choice of dual PDF engines allows: WeasyPrint for rich, styled reports that 
 
 ---
 
-## 17. Cross-Cutting Engineering Patterns
+## 21. Cross-Cutting Engineering Patterns
 
 Several patterns appear consistently across all technology choices:
 
@@ -452,3 +452,81 @@ Several patterns appear consistently across all technology choices:
 **Security by default.** Docker secrets instead of env vars, non-root containers, 401→404→403 deny ordering, RBAC permission catalog, ABAC school-scoping, PII redaction in logs, CSRF double-submit cookies, bcrypt hashing, rate limiting at both Nginx and application layers.
 
 **Morocco-specific engineering.** MAD currency type, 0-20 grading scale with French mentions, Africa/Casablanca timezone throughout, trilingual i18n with Arabic RTL, Moroccan phone format in test factories, France locale in Faker data generation.
+
+## 17. MinIO/S3 Object Storage
+
+### Context
+
+Need for scalable file storage (documents, uploads, invoice PDFs).
+
+### Decision
+
+Use MinIO for dev/staging, AWS S3 for production, behind a unified `StorageBackend` protocol.
+
+### Rationale
+
+S3-compatible API, presigned URLs offload API from file transfer, interchangeable backends.
+
+### Trade-off
+
+Added infrastructure complexity vs. infinite local disk scaling issues.
+
+---
+
+## 18. Seed Architecture for Demo Data
+
+### Context
+
+Need realistic demo data for sales, CI, and developer onboarding.
+
+### Decision
+
+Three-tier seed system (`seed.py` + `seed_extensions.py` + `seed_enhanced.py`) achieving ~93% table coverage.
+
+### Rationale
+
+Idempotent, fast reset, covers all personas (admin/teacher/parent/student), 2 schools for multi-tenant demos.
+
+### Trade-off
+
+Maintenance cost when schema changes vs. manual data entry overhead.
+
+---
+
+## 19. Mobile Offline-First Sync
+
+### Context
+
+Unreliable Moroccan network connectivity.
+
+### Decision
+
+SQLite local storage + sync queue with server reconciliation.
+
+### Rationale
+
+8 local stores, offline queue replays mutations when connectivity returns, conflict resolution.
+
+### Trade-off
+
+Data consistency complexity vs. user experience in low-connectivity areas.
+
+---
+
+## 20. Pydantic v2 Migration
+
+### Context
+
+Pydantic v1 deprecation, performance improvements in v2.
+
+### Decision
+
+Migrated entire codebase to Pydantic v2 with `model_validator`, `field_validator`, `computed_field`.
+
+### Rationale
+
+2-5x faster validation, better type inference, future-proof.
+
+### Trade-off
+
+Breaking changes requiring widespread code updates.

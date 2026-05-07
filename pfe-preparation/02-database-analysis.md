@@ -2,7 +2,7 @@
 
 ## 2.1 Database Overview
 
-The platform uses **PostgreSQL 16** accessed via **SQLAlchemy 2.0 async** (asyncpg driver). The schema consists of **120 tables** organized into 6 migration groups, managed by **57 Alembic migrations**. The models contain a total of **736 constraint and index declarations** across 22 model files.
+The platform uses **PostgreSQL 16** accessed via **SQLAlchemy 2.0 async** (asyncpg driver). The schema consists of **131 tables** organized into 9+ migration groups, managed by **65+ Alembic migrations**. The models contain a total of **~850 constraint and index declarations** across 24 model files.
 
 Connection configuration (from `core/database.py`):
 - Async engine with `pool_size=20`, `max_overflow=10`, `pool_pre_ping=True`
@@ -230,7 +230,7 @@ The codebase implements a deliberate indexing strategy with **736 total constrai
 
 ### 2.5.1 Alembic Configuration
 
-65 migrations organized by groups (G1-G46+), each prefixed with a short hash and group identifier:
+65+ migrations organized by groups (G1–G54+), each prefixed with a short hash and group identifier:
 - Naming convention: `{hash}_g{group_number}_{description}.py`
 - Examples: `g12_role_specific_profiles`, `g20_add_quiz_engine`, `g42_student_rewards`
 
@@ -245,7 +245,7 @@ G5-Billing (depends on G1, G2) → invoices, payments, fees
 G6-Audit (depends on G1)    → audit_logs
 ```
 
-Later groups add features incrementally: G12 (profiles), G19 (teacher rewards), G20 (quiz engine), G21 (content library), G22 (notifications center), G23 (reports), G24 (calendar), G25 (documents), G26 (content manager profiles), G27 (impersonation), G28 (rubrics), G30 (report schedules), G31 (school mixins/enums), G32 (micro-schools, budgets), G33 (skills passport), G34 (MEN compliance), G35 (offline sync), G36 (financial health), G37 (FK indexes), G42 (rewards), G46 (level-age), G48 (merge heads).
+Later groups add features incrementally: G12 (profiles), G19 (teacher rewards), G20 (quiz engine), G21 (content library), G22 (notifications center), G23 (reports), G24 (calendar), G25 (documents), G26 (content manager profiles), G27 (impersonation), G28 (rubrics), G30 (report schedules), G31 (school mixins/enums), G32 (micro-schools, budgets), G33 (skills passport), G34 (MEN compliance), G35 (offline sync), G36 (financial health), G37 (FK indexes), G42 (rewards), G46 (level-age), G48 (merge heads), G49 (academic programs), G50 (eligibility/enrollments), G51 (invoice TVA + school branding), G52 (storage objects + upload sessions), G53 (longest streak), G54 (timetable constraints).
 
 ### 2.5.3 Merge migrations
 
@@ -316,3 +316,31 @@ Read queries use `expire_on_commit=False` to avoid unnecessary lazy loads after 
 
 ### 2.7.3 Pagination
 Cursor-based pagination (not offset-based) is used throughout, avoiding the performance degradation of `OFFSET` on large tables. Cursors are based on `created_at` + `id` for stable ordering.
+
+---
+
+## 2.8 Seed & Demo Data Architecture
+
+### 2.8.1 Coverage
+
+The seed system achieves **~93% table coverage** (122 of 131 tables populated) across **two demo schools**:
+- **Ecole Benani** (premium) — full dataset with 31 users, 8 classes, 9 class levels
+- **Ecole Atlas** (trial) — minimal multi-tenant demo with 4 users, 1 class, 1 invoice
+
+### 2.8.2 Seed Architecture
+
+Three coordinated modules:
+- **`seed.py`** — Core seed orchestrator (~3,700 LOC). Clears data via `TRUNCATE CASCADE`, seeds in dependency order, generates `seed-report.md`
+- **`seed_extensions.py`** — Extended seeders for newer features (documents, AI, reporting, program management, device tokens)
+- **`seed_enhanced.py`** — High-volume demo seeders (22 functions) covering rubrics, question bank, quiz responses, micro-schools, sync queue, attendance alerts, absence justifications, budget, financial health, payment plans, billing policies, shared reviews, program assignment events
+
+### 2.8.3 Fixture System
+
+7 binary stub files in `backend/app/templates/fixtures/` provide realistic document references:
+- PDF stubs (bulletins, worksheets, submissions, coloring pages)
+- JPEG stub (national ID scan)
+- XLSX stubs (invoice template, attendance export)
+
+### 2.8.4 Idempotency
+
+The seed is fully idempotent: `clear_all()` truncates all tables in reverse dependency order with `CASCADE`, then re-seeds from scratch. This enables rapid environment reset for CI, demos, and development.

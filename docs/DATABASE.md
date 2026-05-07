@@ -4,7 +4,7 @@
 
 - **Moteur** : PostgreSQL 16
 - **ORM** : SQLAlchemy 2.0 (mode async avec asyncpg)
-- **Migrations** : Alembic (async) — 56 fichiers
+- **Migrations** : Alembic (async) — 65+ fichiers
 - **Cache** : Redis 7 (sessions, rate limiting, queue)
 
 ---
@@ -88,12 +88,12 @@ quiz_attempts               assignments                 submissions
 ### G4 — Communication
 
 ```
-threads                     messages                    notifications
+conversations               messages                    notifications
 ├── id                      ├── id                      ├── id
-├── subject                 ├── thread_id (FK)          ├── user_id (FK)
-├── participants            ├── sender_id (FK)          ├── type
-└── created_at              ├── body                    ├── title
-                            └── sent_at                 ├── body
+├── type (DIRECT/GROUP)     ├── conversation_id (FK)    ├── parent_id (FK)
+├── subject                 ├── sender_id (FK)          ├── category
+├── created_by              ├── body                    ├── title
+└── created_at              └── sent_at                 ├── body
                                                         └── read_at
 
 announcements               events

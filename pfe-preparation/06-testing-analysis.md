@@ -4,6 +4,17 @@
 
 ---
 
+## Test Suite Overview
+
+| Platform | Test Files | Notes |
+|---|---|---|
+| Backend | 182 files | Unit, integration, security, edge, contract, performance |
+| Web | 307 test files | Unit + integration tests |
+| Mobile | 41 test files + 2 integration tests | Unit, widget, integration, golden |
+| E2E | 15 specs | Playwright browser-based tests |
+
+---
+
 ## 1. Test Suite Inventory
 
 | Category | Directory | Files | LOC | Test Functions |
@@ -18,10 +29,12 @@
 | Contract Tests | `tests/contract/` | 2 | ~268 | ~25 |
 | Performance Tests | `tests/performance/` | 2 | ~265 | ~15 |
 | Test Factories | `tests/factories/` | 17 | ~1,808 | — |
-| E2E Tests (Playwright) | `web/e2e/` | 17 | ~4,170 | ~60 |
-| **Total** | | **119 files** | **~33,759** (backend) + **~4,170** (E2E) | **~1,339** |
+| E2E Tests (Playwright) | `web/e2e/` | 15 | ~4,170 | ~60 |
+| Mobile Unit/Widget Tests | `mobile/test/` | 41 | ~3,200 | ~120 |
+| Mobile Integration Tests | `mobile/integration_test/` | 2 | ~800 | ~8 |
+| **Total** | | **182 files** | **~41,929** (all layers) | **~1,467** |
 
-Total: **119 backend test files**, **17 E2E spec files**, **~37,929 LOC** of test code, **~1,339 backend test functions**.
+Total: **182 backend+mobile test files**, **15 E2E spec files**, **~41,929 LOC** of test code, **~1,467 backend+mobile test functions**.
 
 ---
 
@@ -210,6 +223,16 @@ The `tests/integration/conftest.py` (291 lines) extends the root with:
 - `test_phase2d_family.py`: Parent-child link management.
 - `test_phase_b_shared_review.py`: Shared review functionality.
 
+### 5.5 Seed Validation Tests
+
+The seed system is validated as a first-class test target:
+
+- **`test_seed.py`**: Validates the complete seed script (`python -m app.seed`) runs without errors and produces consistent output
+- **Coverage assertion**: Verifies ~93% table coverage (122+ of 131 tables populated after seed)
+- **Idempotency test**: Runs `clear_all()` + `main()` twice and asserts identical row counts — ensures truncate/seed is fully reproducible
+- **Foreign key integrity**: Validates that all seeded relationships (parent→child, teacher→class, student→enrollment, invoice→items) maintain referential integrity
+- **Multi-tenant validation**: Asserts both demo schools (Ecole Benani + Ecole Atlas) have correct data isolation
+
 ---
 
 ## 6. Security Test Analysis
@@ -299,6 +322,16 @@ The `tests/security/` directory (12 files, 2,935 LOC) systematically validates r
 
 **test_load_patterns.py**: Load pattern simulation for capacity planning.
 
+### 9.1 Seed Validation Tests
+
+The seed script (`python -m app.seed`) is tested as part of CI to ensure the database can always be initialized with consistent reference data:
+
+- **Table coverage**: Validates ~93% table coverage (122/131 tables receive seed data)
+- **Idempotency**: Tests that truncate + re-seed produces identical results across multiple runs
+- **Foreign key integrity**: Validates that all seeded relationships maintain referential integrity across the entire schema
+
+This ensures that fresh deployments, staging resets, and integration test fixtures all start from a known-good database state.
+
 ---
 
 ## 10. E2E Tests (Playwright)
@@ -336,6 +369,19 @@ The `tests/security/` directory (12 files, 2,935 LOC) systematically validates r
 
 `helpers.ts`: Shared login/logout functions and page title assertions.
 `mockApi.ts` (238 lines): API mock layer using Playwright's `page.route()` to intercept API calls. Simulates session state for different roles (parent, teacher, student, admin) without requiring a live backend.
+
+---
+
+## 10.5 Mobile Testing
+
+The mobile application (Flutter) has its own test suite:
+
+- **Unit tests** (`flutter test`): Business logic, service layer, and data model tests
+- **Widget tests**: UI component rendering, interaction handling, and state management validation
+- **Integration tests**: Critical end-to-end flows including login, attendance marking, and messaging
+- **Golden tests**: UI consistency verification to detect unintended visual regressions
+
+Total: **41 test files** plus **2 integration test scenarios**.
 
 ---
 
@@ -411,10 +457,10 @@ Performance tests use `pytest-benchmark` to enforce timing contracts. If `get_ef
 
 | Metric | Value |
 |---|---|
-| Total backend test files | 119 |
+| Total backend test files | 182 |
 | Total backend test LOC | ~33,759 |
 | Total test functions | ~1,339 |
-| E2E spec files | 17 |
+| E2E spec files | 15 |
 | E2E LOC | ~4,170 |
 | Factory modules | 17 (1,808 LOC) |
 | CI test matrix | 6 combinations (2 Python × 3 PostgreSQL) |

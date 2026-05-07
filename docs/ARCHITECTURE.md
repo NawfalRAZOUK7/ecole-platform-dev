@@ -62,18 +62,21 @@ Les repositories retournent des modèles ORM ou des tuples de résultat, jamais 
 
 ### Couche Models (`app/models/`)
 
-23 modules de modèles organisés en 6 groupes de migration :
+24 modules de modèles organisés en 9+ groupes de migration :
 
 | Groupe | Modules | Tables principales |
 |--------|---------|-------------------|
-| **G1 — IAM** | `iam.py` | users, sessions, memberships, invitations, totp_secrets |
-| **G2 — ERP** | `erp.py`, `school.py`, `levels.py` | schools, classes, enrollments, timetable_slots, levels |
-| **G3 — LMS** | `lms.py`, `skill_passport.py` | content_items, quizzes, questions, submissions, rubrics |
-| **G4 — COM** | `com.py`, `calendar.py` | messages, threads, notifications, announcements, events |
-| **G5 — Billing** | `billing.py`, `budget.py`, `financial_health.py` | invoices, payments, fee_structures, budgets |
-| **G6 — Audit** | `audit.py`, `men_compliance.py`, `reporting.py` | audit_events, feature_toggles, compliance_checks |
+| **G1 — IAM** | `iam.py` | users, sessions, memberships, invitation_codes, parent_child_links, profiles |
+| **G2 — ERP** | `erp.py`, `school.py`, `levels.py` | schools, classes, enrollments, timetable, attendance, programs |
+| **G3 — LMS** | `lms.py`, `skill_passport.py` | content_items, quizzes, questions, submissions, rubrics, gradebook |
+| **G4 — COM** | `com.py`, `calendar.py` | conversations, messages, notifications, announcements, events |
+| **G5 — Billing & Finance** | `billing.py`, `budget.py`, `financial_health.py` | invoices, payments, fee_structures, budgets, micro-budgets, financial snapshots |
+| **G6 — Audit & Gamification** | `audit.py`, `games.py`, `rewards.py`, `feature.py` | audit_logs, feature_toggles, rewards, badges, game_configs |
+| **G7 — Programmes (v1.1)** | `erp.py` (G49–G50) | programs, program_versions, program_equivalences, eligibility_rules, program_assignment_events |
+| **G8 — Conformité & Reporting** | `men_compliance.py`, `reporting.py` | compliance_reports, curriculum_mappings, report_jobs, report_schedules, data_exports |
+| **G9 — Stockage & Sync** | `documents.py`, `uploads.py`, `sync_queue.py` | documents, document_versions, resources, upload_sessions, sync_queue, sync_devices, sync_conflicts |
 
-Groupes additionnels : `games.py`, `rewards.py`, `documents.py`, `micro_school.py`, `ai.py`, `sync_queue.py`.
+Modules transversaux : `ai.py`, `difficulty_adaptation.py`, `micro_school.py`, `calendar.py`.
 
 ---
 
@@ -162,6 +165,8 @@ final rewardsProvider = FutureProvider.autoDispose<StudentRewards>((ref) async {
 | **Signed URL Redirect** | Téléchargement via redirection HTTP 307 vers URL S3 présignée (durée courte) |
 | **Snapshot d'audit** | Persistance d'instantanés (`ProgramSnapshot`) à chaque changement structurant |
 | **State Machine (Workflows)** | Cycle de vie des entités (demandes budgétaires, soumissions, paiements) modélisé explicitement |
+| **Seed Architecture** | Système de données demo idempotent (`seed.py` + `seed_extensions.py` + `seed_enhanced.py`) couvrant ~93% des tables |
+| **Offline Sync** | SQLite local + file d'attente de sync + résolution de conflits pour le mobile en connectivité limitée |
 
 ---
 

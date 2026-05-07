@@ -118,7 +118,7 @@ For recovery when authenticator is unavailable:
 
 ### 3.4.1 Role Hierarchy
 
-9 roles with a hierarchical inheritance chain:
+9 roles (ADM, DIR, TCH, EDUCATOR, PAR, STD, SUP, SYS, CONTENT_MGR) with a hierarchical inheritance chain:
 
 ```
 SYS (System) → inherits SUP
@@ -275,9 +275,29 @@ Response headers on all requests:
 
 ---
 
-## 3.8 Audit Trail (`services/audit.py` + `models/audit.py`)
+## 3.8 Object Storage Security (MinIO/S3)
 
-### 3.8.1 Audit Log Structure
+- Presigned URLs with short TTL (5 minutes) for all file downloads
+- Bucket policies restricting access by school_id scope
+- ClamAV virus scanning on upload completion
+- Infected files auto-deleted + uploader notified
+- No direct file streaming through API — only HTTP 307 redirects to S3
+
+---
+
+## 3.9 AI Security Guardrails
+
+- Input PII redaction before AI processing
+- Content safety checks on AI outputs
+- Parent opt-out for child AI features (consent_preferences)
+- Trilingual pattern matching for Moroccan context (Arabic/French/English)
+- Output validation layer before user delivery
+
+---
+
+## 3.10 Audit Trail (`services/audit.py` + `models/audit.py`)
+
+### 3.10.1 Audit Log Structure
 
 Append-only table (`audit_logs`) recording:
 - `actor_id` — who performed the action (NULL only for SYS-originated events)
@@ -289,14 +309,14 @@ Append-only table (`audit_logs`) recording:
 - `correlation_id` — links to the request for end-to-end tracing
 - `ip_address` — request origin
 
-### 3.8.2 Audit Triggers
+### 3.10.2 Audit Triggers
 
 - All **401/403/404 (scope-masked)** responses
 - Sensitive allow events: payment state changes, support access grants, AI requests
 - User lifecycle: registration, login, logout, password change, 2FA enable/disable
 - Data mutations: create, update, delete on sensitive entities
 
-### 3.8.3 Login History
+### 3.10.3 Login History
 
 Separate `login_history` table tracks:
 - All login attempts (successful and failed) with `success` boolean
@@ -307,9 +327,9 @@ Separate `login_history` table tracks:
 
 ---
 
-## 3.9 API Protection Mechanisms
+## 3.11 API Protection Mechanisms
 
-### 3.9.1 CORS Configuration
+### 3.11.1 CORS Configuration
 
 ```python
 CORSMiddleware(
@@ -321,11 +341,11 @@ CORSMiddleware(
 )
 ```
 
-### 3.9.2 Idempotency (`core/idempotency.py`)
+### 3.11.2 Idempotency (`core/idempotency.py`)
 
 `IdempotencyMiddleware` deduplicates POST/PUT/PATCH requests using `Idempotency-Key` header + Redis. This prevents duplicate payment processing, double enrollment, etc. when clients retry on network errors.
 
-### 3.9.3 Correlation ID Tracking (`core/middleware.py`)
+### 3.11.3 Correlation ID Tracking (`core/middleware.py`)
 
 Every request gets a `X-Correlation-Id` (preserved from client or generated). Stored in `contextvars` for propagation to:
 - All log messages
@@ -335,7 +355,7 @@ Every request gets a `X-Correlation-Id` (preserved from client or generated). St
 
 This enables end-to-end request tracing across the entire system.
 
-### 3.9.4 Structured Error Responses
+### 3.11.4 Structured Error Responses
 
 All errors follow a uniform structure:
 ```json
@@ -354,18 +374,18 @@ All errors follow a uniform structure:
 
 10 error categories: `validation`, `authn`, `authz`, `conflict`, `external`, `system`, `rate_limit`, `network`, `not_found`, `policy`. Three-level exception hierarchy: generic → 500, DomainException → structured response, specific (AuthenticationError, AuthorizationError, NotFoundError, ConflictError, ValidationError, RateLimitError).
 
-### 3.9.5 Input Validation
+### 3.11.5 Input Validation
 
 Pydantic v2 schemas validate all request bodies before they reach service logic. Validation errors are caught by `validation_exception_handler` and returned as structured 422 responses with per-field error details.
 
-### 3.9.6 File Upload Security
+### 3.11.6 File Upload Security
 
 - `max_file_size_mb = 25` (documents: 50MB)
 - MIME type whitelist: PDF, Office documents, images, video, audio
 - Optional virus scanning via ClamAV (`virus_scan_enabled`, `virus_scan_host`)
 - Document storage abstraction (local/S3) with download TTL
 
-### 3.9.7 Docker Secret Support
+### 3.11.7 Docker Secret Support
 
 Sensitive configuration values support Docker secret files via `_FILE` suffix pattern:
 ```python
@@ -378,9 +398,9 @@ This prevents secrets from appearing in environment variables, process listings,
 
 ---
 
-## 3.10 Client-Side Security
+## 3.12 Client-Side Security
 
-### 3.10.1 Web (`services/api/client.ts`)
+### 3.12.1 Web (`services/api/client.ts`)
 
 - Access token in memory only (never localStorage/sessionStorage)
 - Refresh token in HttpOnly cookie (JavaScript can't access)
@@ -388,7 +408,7 @@ This prevents secrets from appearing in environment variables, process listings,
 - Credentials: `include` on all requests
 - Error messages mapped to i18n keys (no raw backend errors shown to users)
 
-### 3.10.2 Mobile (`data/api/api_client.dart`)
+### 3.12.2 Mobile (`data/api/api_client.dart`)
 
 - Tokens stored in **Flutter Secure Storage** (Keychain on iOS, Keystore on Android)
 - Biometric authentication option (fingerprint/face)
@@ -397,7 +417,7 @@ This prevents secrets from appearing in environment variables, process listings,
 
 ---
 
-## 3.11 GDPR Compliance
+## 3.13 GDPR Compliance
 
 Implemented via `api/v1/gdpr.py`:
 - Data export: user can request a complete export of their personal data

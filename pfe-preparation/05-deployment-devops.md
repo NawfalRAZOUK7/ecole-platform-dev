@@ -49,11 +49,23 @@ The web Dockerfile (`web/Dockerfile`) uses 3 stages:
 
 **`production`**: Uses `nginx:alpine` as the final image. Copies the built static files from the build stage. Runs Nginx as non-root user (`USER nginx`), with custom `nginx.conf` for SPA routing. The resulting image is lightweight — only Nginx and static HTML/JS/CSS.
 
+### 2.4 Mobile CI/CD
+
+The mobile application uses a Flutter build pipeline with the following stages:
+
+- **Dart analysis** — static analysis via `dart analyze` and `flutter analyze`
+- **Widget tests** — unit-level UI tests run with `flutter test`
+- **Integration tests** — end-to-end tests on emulator/device via `integration_test`
+- **Artifact generation** — APK (Android) and IPA (iOS) builds produced as CI artifacts
+- **Distribution** — APK/IPA artifacts can be pushed to Firebase App Distribution or TestFlight for QA and beta testing
+
+> **Note:** Mobile deployment is currently manual and performed via CI-generated artifacts. There is no automated app store release pipeline at this time.
+
 ### 2.3 Service Topology per Compose File
 
-The `docker-compose.dev.yml` defines 5 services: `postgres` (16-alpine), `redis` (7-alpine), `backend` (development target), `worker` (ARQ background processor), and `web` (Node 22 Vite dev server). All services have resource limits, health checks, and JSON file logging with rotation.
+The `docker-compose.dev.yml` defines **6 services**: `postgres` (16-alpine), `redis` (7-alpine), `backend` (development target), `worker` (ARQ background processor), `web` (Node 22 Vite dev server), and `minio` (S3-compatible object storage for documents, uploads, and invoice PDFs). All services have resource limits, health checks, and JSON file logging with rotation.
 
-The `docker-compose.prod.yml` extends this to **10 services**: `backend` (production target), `postgres` (tuned with WAL archiving, pg_stat_statements, custom shared_buffers), `pgbouncer` (connection pooling), `postgres-replica` (streaming replication), `redis` (maxmemory 512MB, LRU eviction), `web` (Nginx-served static), `nginx` (TLS reverse proxy), `worker` (ARQ), `certbot` (Let's Encrypt auto-renewal), `prometheus`, and `grafana`.
+The `docker-compose.prod.yml` extends this to **11+ services**: `backend` (production target), `postgres` (tuned with WAL archiving, pg_stat_statements, custom shared_buffers), `pgbouncer` (connection pooling), `postgres-replica` (streaming replication), `redis` (maxmemory 512MB, LRU eviction), `web` (Nginx-served static), `nginx` (TLS reverse proxy), `worker` (ARQ), `certbot` (Let's Encrypt auto-renewal), `prometheus`, `grafana`, and `minio` (S3-compatible object storage for documents, uploads, and invoice PDFs).
 
 ---
 
@@ -67,7 +79,7 @@ Uses `docker-compose.dev.yml`. Backend runs in development mode with `--reload`,
 
 ### 3.2 Staging Environment
 
-Uses `docker-compose.staging.yml`. Mirrors production topology but with relaxed settings: PgBouncer present (transaction pooling, 50 pool size), WAL archiving enabled for PITR, backend runs production Docker target, `SEED_ON_STARTUP=true` for demo data, `AI_PROVIDER=mock` to avoid real API costs, TLS via Nginx, no ports exposed except 80/443 via Nginx. Named `ecole-staging-*` containers. Separate `ecole-staging-network`.
+Uses `docker-compose.staging.yml`. Mirrors production topology but with relaxed settings: PgBouncer present (transaction pooling, 50 pool size), WAL archiving enabled for PITR, backend runs production Docker target, `SEED_ON_STARTUP=true` for demo data (the seed system achieves ~93% table coverage), `AI_PROVIDER=mock` to avoid real API costs, TLS via Nginx, no ports exposed except 80/443 via Nginx. Named `ecole-staging-*` containers. Separate `ecole-staging-network`.
 
 ### 3.3 Production Environment
 

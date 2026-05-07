@@ -6,12 +6,12 @@
 
 | Layer | Technology | Files | Lines of Code |
 |-------|-----------|-------|---------------|
-| Backend API | Python 3.12 + FastAPI | 287 `.py` | ~80,900 LOC |
-| Web Frontend | React 18 + TypeScript | 338 `.ts/.tsx` | ~50,400 LOC |
-| Mobile App | Flutter 3 + Dart | 276 `.dart` | ~57,300 LOC |
-| **Total** | | **901** | **~188,600 LOC** |
+| Backend API | Python 3.12 + FastAPI | 305 `.py` | ~95,000 LOC |
+| Web Frontend | React 18 + TypeScript | 353 `.ts/.tsx` | ~55,000 LOC |
+| Mobile App | Flutter 3 + Dart | 286 `.dart` | ~62,000 LOC |
+| **Total** | | **944** | **~212,000 LOC** |
 
-Additional components: 57 Alembic migrations, 133 backend test files, 31 web test files, 9 CI/CD workflows, 15 Kubernetes templates, 8 Grafana dashboards.
+Additional components: 65+ Alembic migrations, 182 backend test files, 307 web test files, 41 mobile test files, 9 CI/CD workflows, 15 Kubernetes templates, 8 Grafana dashboards.
 
 The monorepo approach was chosen deliberately: all three applications evolve against the same API contract, share the same deployment pipeline, and are maintained by a single developer (PFE context). This avoids the overhead of multi-repo synchronization while keeping clear separation between concerns.
 
@@ -34,7 +34,7 @@ The backend follows a strict **4-layer architecture** enforced by import directi
 │  Repository Layer (repositories/)           │  ← 38 repository files
 │  Data access, async queries, school-scoping │
 ├─────────────────────────────────────────────┤
-│  Domain Layer (domain/ + models/)           │  ← 22 models + 19 domain files
+│  Domain Layer (domain/ + models/)           │  ← 24 models + 19 domain files
 │  SQLAlchemy ORM, domain events, value objs  │
 └─────────────────────────────────────────────┘
 ```
@@ -95,7 +95,7 @@ The `core/` package contains 26 modules providing cross-cutting infrastructure:
 | `response.py` | Standardized response envelope builders |
 | `password_policy.py` | Password complexity rules |
 | `totp.py` | TOTP/2FA implementation |
-| `storage.py` | File storage abstraction (local/S3) |
+| `storage.py` | File storage abstraction (local/MinIO/S3) |
 | `db_routing.py` | Read replica routing logic |
 | `business_metrics.py` | Business KPI computation |
 | `request_utils.py` | Request parsing utilities |
