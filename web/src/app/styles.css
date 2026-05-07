@@ -262,7 +262,7 @@ button {
   justify-content: center;
   width: 46px;
   height: 46px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   border: 1px solid var(--color-border);
   background: var(--color-surface);
   cursor: pointer;
@@ -284,10 +284,12 @@ button {
   top: calc(100% + 12px);
   inset-inline-end: 0;
   width: min(380px, 88vw);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 14px;
-  box-shadow: var(--shadow-md);
+  background: color-mix(in srgb, var(--color-surface) 95%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
   z-index: 20;
   overflow: hidden;
 }
@@ -418,7 +420,7 @@ button {
 .language-switcher__button {
   padding-block: 0.25rem;
   padding-inline: 0.625rem;
-  border-radius: 0.5rem;
+  border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
   background: transparent;
   color: var(--color-text);
@@ -437,7 +439,7 @@ button {
   border: none;
   cursor: pointer;
   padding: 0.5rem;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
 }
 
 .theme-toggle:hover {
@@ -717,7 +719,7 @@ button {
   flex-direction: column;
   gap: 1rem;
   padding: 1.5rem;
-  border-radius: 1rem;
+  border-radius: var(--radius-xl);
   background: var(--color-surface);
   box-shadow: var(--shadow-md);
 }
@@ -767,7 +769,7 @@ button {
 .skeleton--circle {
   inline-size: 3rem;
   block-size: 3rem;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
 }
 
 @keyframes skeleton-pulse {
@@ -784,7 +786,7 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   font-weight: 700;
   white-space: nowrap;
 }
@@ -913,7 +915,7 @@ button {
   gap: 0.75rem;
   padding: 1rem 1.1rem;
   border: 1px solid var(--color-border);
-  border-radius: 1rem;
+  border-radius: var(--radius-xl);
   background: var(--color-surface);
   box-shadow: var(--shadow-sm);
 }
@@ -974,6 +976,60 @@ button {
   }
 }
 
+/* ── Tablet Breakpoint (1024px) ── */
+@media (max-width: 1024px) {
+  :root {
+    --sidebar-width: 72px;
+  }
+
+  .app-sidebar {
+    width: var(--sidebar-width);
+  }
+
+  .sidebar-title,
+  .sidebar-footer .user-info,
+  .logout-btn span {
+    display: none;
+  }
+
+  .sidebar-footer {
+    padding: 8px;
+  }
+
+  .logout-btn {
+    padding: 8px;
+    justify-content: center;
+  }
+
+  .nav-label {
+    display: none;
+  }
+
+  .nav-link {
+    justify-content: center;
+    padding: 10px;
+  }
+
+  .app-main {
+    margin-inline-start: var(--sidebar-width);
+    padding: 20px;
+  }
+
+  .analytics-grid,
+  .progress-charts-grid,
+  .reports-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .timetable-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 .skip-link {
   position: absolute;
   inset-block-start: -100%;
@@ -1017,7 +1073,7 @@ button {
   width: min(100%, 34rem);
   padding: 2rem;
   border: 1px solid var(--color-border);
-  border-radius: 1rem;
+  border-radius: var(--radius-xl);
   background: var(--color-surface);
   box-shadow: var(--shadow-md);
   text-align: center;
@@ -1133,7 +1189,7 @@ button {
   background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
   color: var(--color-primary);
   padding: 2px 8px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
@@ -1168,7 +1224,7 @@ button {
   display: inline-flex;
   align-items: center;
   padding: 3px 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: color-mix(in srgb, var(--color-info) 16%, var(--color-surface));
   color: var(--color-info);
   font-size: 12px;
@@ -1180,7 +1236,7 @@ button {
   background: color-mix(in srgb, var(--color-info) 16%, var(--color-surface));
   color: var(--color-info);
   padding: 2px 8px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   font-size: 12px;
   font-weight: 600;
 }
@@ -1208,7 +1264,7 @@ button {
 
 .notification-card--unread {
   border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
-  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.08);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary) 8%, transparent);
 }
 
 .notification-card__click {
@@ -1242,7 +1298,7 @@ button {
   display: inline-flex;
   align-items: center;
   padding: 3px 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   font-size: 12px;
   font-weight: 700;
 }
@@ -1294,7 +1350,7 @@ button {
   align-items: center;
   gap: 16px;
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 16px;
 }
 
@@ -1330,7 +1386,7 @@ button {
   background: color-mix(in srgb, var(--color-success) 16%, var(--color-surface));
   color: var(--color-success);
   padding: 2px 8px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   font-size: 12px;
   font-weight: 600;
 }
@@ -1339,7 +1395,7 @@ button {
   background: color-mix(in srgb, var(--color-warning) 16%, var(--color-surface));
   color: var(--color-warning);
   padding: 2px 8px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   font-size: 12px;
   font-weight: 600;
 }
@@ -1368,7 +1424,7 @@ button {
   background: color-mix(in srgb, var(--color-accent) 15%, var(--color-surface));
   color: var(--color-accent);
   padding: 2px 8px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   font-size: 12px;
   font-weight: 600;
 }
@@ -1377,7 +1433,7 @@ button {
   background: color-mix(in srgb, var(--color-info) 16%, var(--color-surface));
   color: var(--color-info);
   padding: 2px 8px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   font-size: 12px;
   font-weight: 600;
 }
@@ -1453,7 +1509,7 @@ button {
 .status-badge {
   display: inline-block;
   padding: 2px 8px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   font-size: 12px;
   font-weight: 600;
   border: 1px solid;
@@ -1547,7 +1603,7 @@ button {
   background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
   color: var(--color-primary);
   padding: 2px 12px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   font-weight: 600;
 }
 
@@ -1561,7 +1617,7 @@ button {
   background: var(--color-bg);
   border: 1px solid var(--color-border);
   padding: 2px 8px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 11px;
   font-family: monospace;
 }
@@ -1670,7 +1726,7 @@ button {
   position: absolute;
   width: 600px;
   height: 600px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   background: radial-gradient(
     circle,
     color-mix(in srgb, var(--color-primary) 8%, transparent) 0%,
@@ -1686,7 +1742,7 @@ button {
   position: absolute;
   width: 400px;
   height: 400px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   background: radial-gradient(
     circle,
     color-mix(in srgb, var(--color-secondary) 8%, transparent) 0%,
@@ -1762,7 +1818,7 @@ button {
 .form-field input:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 10%, transparent);
 }
 
 .form-field input:disabled {
@@ -1823,7 +1879,7 @@ button {
 
 .report-highlight {
   margin-bottom: 16px;
-  background: linear-gradient(135deg, #eff6ff, #eef2ff);
+  background: linear-gradient(135deg, var(--color-surface-primary), var(--color-surface-secondary));
 }
 
 .report-highlight p {
@@ -1948,7 +2004,7 @@ button {
   height: 32px;
   border: 3px solid var(--color-border);
   border-top-color: var(--color-primary);
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   animation: spin 0.8s linear infinite;
 }
 
@@ -2027,7 +2083,7 @@ button {
 .filter-input:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 10%, transparent);
 }
 
 /* ── Small buttons ── */
@@ -2040,7 +2096,7 @@ button {
 .code-display {
   margin-top: 12px;
   padding: 12px;
-  background: #eff6ff;
+  background: var(--color-surface-primary);
   border: 2px dashed var(--color-primary);
   border-radius: var(--radius);
   text-align: center;
@@ -2103,10 +2159,10 @@ button {
 
 .teacher-class-code {
   display: inline-block;
-  background: #eff6ff;
+  background: var(--color-surface-primary);
   color: var(--color-primary);
   padding: 2px 10px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   font-size: 13px;
   font-weight: 600;
   margin-inline-end: 8px;
@@ -2165,12 +2221,12 @@ button {
 
 .file-drop-zone:hover {
   border-color: var(--color-primary);
-  background: #eff6ff;
+  background: var(--color-surface-primary);
 }
 
 .file-drop-zone--active {
   border-color: var(--color-primary);
-  background: #eff6ff;
+  background: var(--color-surface-primary);
 }
 
 .file-drop-zone--disabled {
@@ -2196,7 +2252,7 @@ button {
   font-size: 10px;
   font-weight: 700;
   padding: 1px 6px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   margin-inline-start: auto;
   min-width: 18px;
   text-align: center;
@@ -2213,6 +2269,14 @@ button {
   flex-direction: column;
   gap: 8px;
   max-width: 360px;
+}
+
+.toast {
+  background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+  box-shadow: var(--shadow-lg);
 }
 
 .toast {
@@ -2274,7 +2338,7 @@ textarea.filter-input {
 
 .modal-card {
   background: var(--color-surface);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 32px;
   width: 100%;
   max-width: 520px;
@@ -2328,7 +2392,7 @@ textarea.filter-input {
 }
 
 .timetable-slot-card {
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 8px;
   font-size: 12px;
   border: 1px solid rgba(0, 0, 0, 0.06);
@@ -2378,7 +2442,7 @@ textarea.filter-input {
 .timetable-exception-badge {
   display: inline-block;
   padding: 1px 6px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 10px;
   font-weight: 600;
   margin-top: 4px;
@@ -2395,7 +2459,7 @@ textarea.filter-input {
 }
 
 .timetable-exception--room {
-  background: #eff6ff;
+  background: var(--color-surface-primary);
   color: var(--color-primary);
 }
 
@@ -2407,7 +2471,7 @@ textarea.filter-input {
 .chat-bubble {
   max-width: 75%;
   padding: 10px 14px;
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   font-size: 14px;
   line-height: 1.5;
 }
@@ -2470,7 +2534,7 @@ textarea.filter-input {
   flex: 1;
   padding: 10px 14px;
   border: 1px solid var(--color-border);
-  border-radius: 20px;
+  border-radius: var(--radius-full);
   font-size: 14px;
   font-family: inherit;
   resize: none;
@@ -2481,13 +2545,13 @@ textarea.filter-input {
 .chat-input:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 10%, transparent);
 }
 
 /* ── Invoice Overdue ── */
 .invoice-overdue-banner {
   padding: 12px 16px;
-  background: #fef2f2;
+  background: var(--color-surface-error);
   border: 1px solid #fecaca;
   border-radius: var(--radius);
   color: var(--color-danger);
@@ -2570,7 +2634,7 @@ textarea.filter-input {
 .filter-pill {
   padding: 6px 14px;
   border: 1px solid var(--color-border);
-  border-radius: 20px;
+  border-radius: var(--radius-full);
   background: var(--color-surface);
   font-size: 13px;
   cursor: pointer;
@@ -2703,7 +2767,7 @@ textarea.filter-input {
 .child-avatar {
   width: 40px;
   height: 40px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   background: var(--color-primary);
   color: white;
   display: flex;
@@ -2918,7 +2982,7 @@ textarea.filter-input {
 .calendar-event-dot {
   width: 10px;
   height: 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   border: none;
 }
 
@@ -2985,7 +3049,7 @@ textarea.filter-input {
 .calendar-type-pill {
   display: inline-flex;
   align-items: center;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   padding: 6px 10px;
   font-size: 12px;
   font-weight: 700;
@@ -3152,14 +3216,14 @@ textarea.filter-input {
   justify-content: space-between;
   gap: 12px;
   padding: 14px 16px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
   background: #f8fafc;
 }
 
 .documents-upload-dropzone {
   border: 1px dashed #93c5fd;
-  border-radius: 14px;
+  border-radius: var(--radius-xl);
   padding: 18px;
   background: linear-gradient(135deg, #eff6ff, #f8fafc);
   display: grid;
@@ -3169,7 +3233,7 @@ textarea.filter-input {
 .documents-upload-progress {
   width: 100%;
   height: 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   overflow: hidden;
   background: #dbeafe;
 }
@@ -3184,7 +3248,7 @@ textarea.filter-input {
   justify-content: space-between;
   gap: 12px;
   padding: 10px 12px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.7);
 }
 
@@ -3204,7 +3268,7 @@ textarea.filter-input {
   display: grid;
   gap: 12px;
   padding: 14px;
-  border-radius: 14px;
+  border-radius: var(--radius-xl);
   border: 1px solid var(--color-border);
   background: var(--color-surface);
   box-shadow: var(--shadow-sm);
@@ -3222,7 +3286,7 @@ textarea.filter-input {
 .documents-card__preview {
   width: 92px;
   height: 92px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
   background: #f8fafc;
   display: inline-flex;
@@ -3262,14 +3326,14 @@ textarea.filter-input {
 .documents-resource-modal__frame {
   width: 100%;
   min-height: 360px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
   background: #fff;
 }
 
 .documents-preview-card__fallback {
   min-height: 180px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   border: 1px dashed var(--color-border);
   display: flex;
   align-items: center;
@@ -3289,7 +3353,7 @@ textarea.filter-input {
 
 .documents-resource-card__thumb {
   height: 150px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   background: #f8fafc;
 }
 
@@ -3409,7 +3473,7 @@ textarea.filter-input {
 .attendance-status-pill {
   padding: 6px 10px;
   border: 1px solid var(--color-border);
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: var(--color-surface);
   color: var(--color-text);
   cursor: pointer;
@@ -3475,7 +3539,7 @@ textarea.filter-input {
 
 .attendance-heatmap__cell {
   min-height: 82px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -3504,7 +3568,7 @@ textarea.filter-input {
 .attendance-heatmap__legend-swatch {
   width: 12px;
   height: 12px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
 }
 
 .attendance-analytics-page__chart {
@@ -3606,7 +3670,7 @@ textarea.filter-input {
   width: 88px;
   padding: 8px 10px;
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: var(--color-surface);
   color: var(--color-text);
 }
@@ -3684,7 +3748,7 @@ textarea.filter-input {
   gap: 12px;
   padding: 16px;
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   background: var(--color-surface);
   text-align: start;
   cursor: pointer;
@@ -3699,7 +3763,7 @@ textarea.filter-input {
 
 .micro-school-card__capacity {
   height: 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: var(--color-border);
   overflow: hidden;
 }

@@ -7,8 +7,33 @@ import { useCmsSubmissions, useReviewCmsSubmission } from './useCms';
 import type { CmsSubmission } from './cms.service';
 
 const STATUS_OPTIONS = ['PENDING', 'UNDER_REVIEW', 'APPROVED', 'REJECTED'];
-const SUBJECTS = ['math', 'french', 'arabic', 'science', 'history', 'geography', 'english', 'islamic_studies', 'art', 'sport'];
-const LEVELS = ['maternelle', 'cp', 'ce1', 'ce2', 'cm1', 'cm2', '6eme', '5eme', '4eme', '3eme', '2nde', '1ere', 'terminale'];
+const SUBJECTS = [
+  'math',
+  'french',
+  'arabic',
+  'science',
+  'history',
+  'geography',
+  'english',
+  'islamic_studies',
+  'art',
+  'sport',
+];
+const LEVELS = [
+  'maternelle',
+  'cp',
+  'ce1',
+  'ce2',
+  'cm1',
+  'cm2',
+  '6eme',
+  '5eme',
+  '4eme',
+  '3eme',
+  '2nde',
+  '1ere',
+  'terminale',
+];
 
 export function CmsReviewQueuePage() {
   const { t } = useTranslation();
@@ -30,7 +55,7 @@ export function CmsReviewQueuePage() {
 
   const items = useMemo(
     () => submissionsQuery.data?.pages.flatMap((page) => page.data) ?? [],
-    [submissionsQuery.data]
+    [submissionsQuery.data],
   );
 
   if (submissionsQuery.isLoading && items.length === 0) {
@@ -77,27 +102,52 @@ export function CmsReviewQueuePage() {
     <div className="page">
       <h1 className="page-title">{t('cms.review.title')}</h1>
       <ErrorBanner
-        error={error || (submissionsQuery.error instanceof Error ? submissionsQuery.error.message : null)}
+        error={
+          error || (submissionsQuery.error instanceof Error ? submissionsQuery.error.message : null)
+        }
         onDismiss={() => setError(null)}
         onRetry={() => void submissionsQuery.refetch()}
       />
 
-      <div className="filter-bar" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
-        <select className="filter-select" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+      <div
+        className="filter-bar"
+        style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}
+      >
+        <select
+          className="filter-select"
+          value={statusFilter}
+          onChange={(event) => setStatusFilter(event.target.value)}
+        >
           <option value="">{t('cms.review.allStatuses')}</option>
           {STATUS_OPTIONS.map((status) => (
-            <option key={status} value={status}>{t(`cms.reviewStatuses.${status}`, status)}</option>
+            <option key={status} value={status}>
+              {t(`cms.reviewStatuses.${status}`, status)}
+            </option>
           ))}
         </select>
-        <select className="filter-select" value={subjectFilter} onChange={(event) => setSubjectFilter(event.target.value)}>
+        <select
+          className="filter-select"
+          value={subjectFilter}
+          onChange={(event) => setSubjectFilter(event.target.value)}
+        >
           <option value="">{t('cms.content.allSubjects')}</option>
           {SUBJECTS.map((subject) => (
-            <option key={subject} value={subject}>{t(`cms.subjects.${subject}`, subject)}</option>
+            <option key={subject} value={subject}>
+              {t(`cms.subjects.${subject}`, subject)}
+            </option>
           ))}
         </select>
-        <select className="filter-select" value={levelFilter} onChange={(event) => setLevelFilter(event.target.value)}>
+        <select
+          className="filter-select"
+          value={levelFilter}
+          onChange={(event) => setLevelFilter(event.target.value)}
+        >
           <option value="">{t('cms.content.allLevels')}</option>
-          {LEVELS.map((level) => <option key={level} value={level}>{level}</option>)}
+          {LEVELS.map((level) => (
+            <option key={level} value={level}>
+              {level}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -110,9 +160,18 @@ export function CmsReviewQueuePage() {
 
             return (
               <div key={item.id} className="card" style={{ padding: 16 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                    marginBottom: 8,
+                  }}
+                >
                   <div>
-                    <h3 style={{ margin: '0 0 4px' }}>{item.content_title || t('cms.review.untitled')}</h3>
+                    <h3 style={{ margin: '0 0 4px' }}>
+                      {item.content_title || t('cms.review.untitled')}
+                    </h3>
                     <div style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
                       {item.submitter_name || item.submitted_by} • {item.school_id}
                     </div>
@@ -122,7 +181,9 @@ export function CmsReviewQueuePage() {
                   </span>
                 </div>
 
-                <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 12 }}>
+                <div
+                  style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 12 }}
+                >
                   {formatDate(item.submitted_at)}
                 </div>
 
@@ -131,7 +192,10 @@ export function CmsReviewQueuePage() {
                 ) : null}
 
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <button className="btn btn-sm btn-secondary" onClick={() => setSelectedItem(item)}>
+                  <button
+                    className="btn btn-sm btn-secondary"
+                    onClick={() => setSelectedItem(item)}
+                  >
                     {t('cms.review.view')}
                   </button>
                   {displayStatus === 'PENDING' ? (
@@ -168,7 +232,11 @@ export function CmsReviewQueuePage() {
 
       {submissionsQuery.hasNextPage ? (
         <div style={{ textAlign: 'center', marginTop: 16 }}>
-          <button className="btn" onClick={() => void submissionsQuery.fetchNextPage()} disabled={submissionsQuery.isFetchingNextPage}>
+          <button
+            className="btn"
+            onClick={() => void submissionsQuery.fetchNextPage()}
+            disabled={submissionsQuery.isFetchingNextPage}
+          >
             {submissionsQuery.isFetchingNextPage ? t('app.loading') : t('cms.content.loadMore')}
           </button>
         </div>
@@ -180,7 +248,7 @@ export function CmsReviewQueuePage() {
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(0,0,0,0.5)',
+            background: 'rgba(15, 23, 42, 0.55)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -188,9 +256,27 @@ export function CmsReviewQueuePage() {
             padding: 24,
           }}
         >
-          <div className="card" style={{ padding: 24, maxWidth: 600, width: '100%', maxHeight: '80vh', overflow: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h2 style={{ margin: 0 }}>{selectedItem.content_title || t('cms.review.untitled')}</h2>
+          <div
+            className="card"
+            style={{
+              padding: 24,
+              maxWidth: 600,
+              width: '100%',
+              maxHeight: '80vh',
+              overflow: 'auto',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: 16,
+              }}
+            >
+              <h2 style={{ margin: 0 }}>
+                {selectedItem.content_title || t('cms.review.untitled')}
+              </h2>
               <button
                 className="btn btn-sm"
                 onClick={() => {
@@ -205,16 +291,22 @@ export function CmsReviewQueuePage() {
 
             <div style={{ marginBottom: 16 }}>
               <div style={{ fontSize: 13, marginBottom: 4 }}>
-                <strong>{t('cms.review.teacher')}:</strong> {selectedItem.submitter_name || selectedItem.submitted_by}
+                <strong>{t('cms.review.teacher')}:</strong>{' '}
+                {selectedItem.submitter_name || selectedItem.submitted_by}
               </div>
               <div style={{ fontSize: 13, marginBottom: 4 }}>
                 <strong>{t('cms.review.school')}:</strong> {selectedItem.school_id}
               </div>
               <div style={{ fontSize: 13, marginBottom: 4 }}>
-                <strong>{t('cms.review.submittedAt')}:</strong> {formatDate(selectedItem.submitted_at)}
+                <strong>{t('cms.review.submittedAt')}:</strong>{' '}
+                {formatDate(selectedItem.submitted_at)}
               </div>
               <div style={{ fontSize: 13 }}>
-                <strong>{t('cms.review.status')}:</strong> {t(`cms.reviewStatuses.${statusOverrides[selectedItem.id] || selectedItem.status}`, statusOverrides[selectedItem.id] || selectedItem.status)}
+                <strong>{t('cms.review.status')}:</strong>{' '}
+                {t(
+                  `cms.reviewStatuses.${statusOverrides[selectedItem.id] || selectedItem.status}`,
+                  statusOverrides[selectedItem.id] || selectedItem.status,
+                )}
               </div>
             </div>
 
@@ -244,7 +336,11 @@ export function CmsReviewQueuePage() {
                 ) : null}
 
                 <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
-                  <button className="btn btn-primary" onClick={() => void handleReview()} disabled={reviewSubmissionMutation.isPending}>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => void handleReview()}
+                    disabled={reviewSubmissionMutation.isPending}
+                  >
                     {reviewSubmissionMutation.isPending ? t('app.loading') : t('app.confirm')}
                   </button>
                   <button className="btn btn-secondary" onClick={() => setReviewAction(null)}>
@@ -252,18 +348,16 @@ export function CmsReviewQueuePage() {
                   </button>
                 </div>
               </>
-            ) : (
-              selectedItem.status === 'PENDING' ? (
-                <div style={{ display: 'flex', gap: 12 }}>
-                  <button className="btn btn-primary" onClick={() => setReviewAction('APPROVED')}>
-                    {t('cms.review.approve')}
-                  </button>
-                  <button className="btn btn-danger" onClick={() => setReviewAction('REJECTED')}>
-                    {t('cms.review.reject')}
-                  </button>
-                </div>
-              ) : null
-            )}
+            ) : selectedItem.status === 'PENDING' ? (
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button className="btn btn-primary" onClick={() => setReviewAction('APPROVED')}>
+                  {t('cms.review.approve')}
+                </button>
+                <button className="btn btn-danger" onClick={() => setReviewAction('REJECTED')}>
+                  {t('cms.review.reject')}
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       ) : null}

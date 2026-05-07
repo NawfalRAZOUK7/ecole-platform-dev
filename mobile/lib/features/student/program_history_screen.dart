@@ -319,7 +319,7 @@ class _TranscriptActionsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Card(
-      elevation: 0,
+      elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
         side: BorderSide(color: theme.colorScheme.outlineVariant),
@@ -487,7 +487,7 @@ class _TimelineRow extends StatelessWidget {
     final program = entry.program;
     final isActive = entry.status == 'active';
     return Card(
-      elevation: 0,
+      elevation: 1,
       margin: const EdgeInsets.only(bottom: AppSpacing.xs),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
@@ -598,7 +598,7 @@ class _HistoryRow extends StatelessWidget {
     final theme = Theme.of(context);
     final reasonKey = 'academicHistory.reason.${event.reasonCodeWire}';
     return Card(
-      elevation: 0,
+      elevation: 1,
       margin: const EdgeInsets.only(bottom: AppSpacing.xs),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
@@ -681,7 +681,7 @@ class _SnapshotsSection extends StatelessWidget {
       children: [
         for (final snapshot in state.snapshots)
           Card(
-            elevation: 0,
+            elevation: 1,
             margin: const EdgeInsets.only(bottom: AppSpacing.xs),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),

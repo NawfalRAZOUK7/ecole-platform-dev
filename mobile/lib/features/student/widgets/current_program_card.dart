@@ -33,7 +33,7 @@ class CurrentProgramCard extends ConsumerWidget {
     final state = ref.watch(currentProgramProvider(studentId));
 
     final card = Card(
-      elevation: 0,
+      elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(color: theme.colorScheme.outlineVariant),

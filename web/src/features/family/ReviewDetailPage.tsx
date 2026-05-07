@@ -296,7 +296,7 @@ export function ReviewDetailPage() {
                 borderRadius: 12,
                 border: 'none',
                 background: canSubmitComment ? 'var(--color-primary)' : 'var(--color-border)',
-                color: '#fff',
+                color: 'var(--color-inverse-text)',
                 fontWeight: 600,
                 fontSize: '0.9rem',
                 cursor: canSubmitComment ? 'pointer' : 'not-allowed',

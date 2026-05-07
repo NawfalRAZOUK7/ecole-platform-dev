@@ -79,7 +79,7 @@ export function DocumentVersionsPage() {
                           marginLeft: 8,
                           fontSize: 11,
                           background: 'var(--color-primary)',
-                          color: '#fff',
+                          color: 'var(--color-inverse-text)',
                           borderRadius: 4,
                           padding: '1px 6px',
                         }}

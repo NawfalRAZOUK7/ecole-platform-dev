@@ -83,6 +83,26 @@ final ThemeData appLightTheme = ThemeData(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadii.md),
       ),
+    ).copyWith(
+      backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+        if (states.contains(WidgetState.disabled)) {
+          return AppColors.primary.withOpacity(0.38);
+        }
+        return AppColors.primary;
+      }),
+      foregroundColor: WidgetStateProperty.all(Colors.white),
+      elevation: WidgetStateProperty.resolveWith<double>((states) {
+        if (states.contains(WidgetState.pressed)) {
+          return 2;
+        }
+        if (states.contains(WidgetState.hovered)) {
+          return 4;
+        }
+        return 3;
+      }),
+      shadowColor: WidgetStateProperty.all(
+        AppColors.primary.withOpacity(0.35),
+      ),
     ),
   ),
   chipTheme: ChipThemeData(

@@ -593,7 +593,7 @@ function TranscriptPreviewModal({
             width: '100%',
             minHeight: '75vh',
             border: '1px solid var(--color-border)',
-            background: '#fff',
+            background: 'var(--color-surface)',
           }}
         />
       </div>
