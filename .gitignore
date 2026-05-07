@@ -35,6 +35,7 @@ dist/
 .pnp
 .pnp.js
 coverage/
+tests/reports/
 .next/
 out/
 .nuxt/

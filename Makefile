@@ -5,16 +5,19 @@
        openapi openapi-check worker worker-logs test-unit test-integration test-security \
        test-full test-perf rotate-jwt rotate-db rotate-redis rotate-all \
        deploy-blue-green deploy-rollback deploy-status dev-init dev-reset seed-core \
-       docs docs-schema
+       docs docs-schema api-test-up api-test-down api-test-status \
+       test-postman test-postman-phases test-postman-scenarios test-postman-full test-load
 
 # ==================== Compose Files ====================
 COMPOSE_FILE = infra/docker-compose.dev.yml
 COMPOSE_STAGING = infra/docker-compose.staging.yml
 COMPOSE_PROD = infra/docker-compose.prod.yml
 COMPOSE_MONITORING = infra/docker-compose.monitoring.yml
+COMPOSE_API_TEST = infra/docker-compose.api-test.yml
 COMPOSE_ENV_FILE = .env
 
 DC = docker compose --env-file $(COMPOSE_ENV_FILE) -f $(COMPOSE_FILE)
+DC_API_TEST = docker compose --env-file $(COMPOSE_ENV_FILE) -p ecole-api-test -f $(COMPOSE_API_TEST)
 DC_STAGING = docker compose -f $(COMPOSE_STAGING)
 DC_PROD = docker compose -f $(COMPOSE_PROD)
 DC_MONITORING = docker compose -f $(COMPOSE_MONITORING)
@@ -330,3 +333,32 @@ test-full:
 
 test-perf:
 	cd backend && .venv/bin/python -m pytest tests/performance --timeout=300 --benchmark-enable
+
+# ==================== Disposable API Test Stack ====================
+
+api-test-up:
+	$(DC_API_TEST) up -d --build postgres redis backend
+	$(DC_API_TEST) exec backend alembic upgrade head
+	$(DC_API_TEST) exec backend python -m app.seed
+	@echo "Disposable API test backend: http://localhost:8010/api/v1"
+
+api-test-down:
+	$(DC_API_TEST) down -v --remove-orphans
+
+api-test-status:
+	$(DC_API_TEST) ps
+
+test-postman:
+	POSTMAN_BASE_URL=$${POSTMAN_BASE_URL:-http://localhost:8010/api/v1} bash tests/run_tests.sh --all
+
+test-postman-phases:
+	POSTMAN_BASE_URL=$${POSTMAN_BASE_URL:-http://localhost:8010/api/v1} bash tests/run_tests.sh --all-phases
+
+test-postman-scenarios:
+	POSTMAN_BASE_URL=$${POSTMAN_BASE_URL:-http://localhost:8010/api/v1} bash tests/run_tests.sh --include-scenarios
+
+test-postman-full:
+	POSTMAN_BASE_URL=$${POSTMAN_BASE_URL:-http://localhost:8010/api/v1} bash tests/run_tests.sh --full-collection
+
+test-load:
+	cd tests/load && BASE_URL=$${BASE_URL:-http://localhost:8010/api/v1} k6 run $${SCENARIO:-scenario1_logins.js}
