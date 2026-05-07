@@ -26,6 +26,19 @@
 
 ---
 
+## ✨ Nouveautés v1.1 (2026-05)
+
+- **Stockage objet S3/MinIO** avec uploads directs jusqu'à 50 MB et scan antivirus ClamAV
+- **Programmes académiques** (versions, équivalences, règles d'éligibilité, snapshots immuables)
+- **Facturation bilingue AR/FR** conforme aux exigences fiscales marocaines (TVA, ICE, RC)
+- **Phase E** : parité visuelle complète web ⇄ mobile sur les écrans destinés aux jeunes élèves
+- **Déploiement Kubernetes** matures (Helm chart 15 templates, Kind local, K8s E2E en CI)
+- **Mobile** étendu de 35 à 50+ modules : rubriques, banque de questions, passeport compétences, conformité, micro-budgets, micro-écoles, et plus
+
+Détail complet : [`CHANGELOG.md`](CHANGELOG.md#110--2026-05-06)
+
+---
+
 ## 📋 À propos
 
 École Platform est une plateforme complète de gestion scolaire et d'apprentissage en ligne, conçue pour les écoles K-12 au Maroc. Elle couvre l'ensemble du cycle éducatif à travers une expérience web et mobile unifiée, avec support trilingue (العربية · Français · English).
@@ -71,11 +84,13 @@
 | Backend API | **FastAPI** + Python 3.12 | SQLAlchemy 2.0 async, Pydantic v2, Alembic |
 | Frontend Web | **React 18** + TypeScript | Vite 5, React Query v5, React Router v6, i18n |
 | Mobile | **Flutter 3** + Dart | Riverpod, GoRouter, Dio, Clean Architecture |
-| Base de données | **PostgreSQL 16** | 56 migrations, replicas lecture |
+| Base de données | **PostgreSQL 16** | 60+ migrations, replicas lecture |
 | Cache/Queue | **Redis 7** | Sessions, rate limiting, tâches async |
-| Infra | **Docker** + **Kubernetes** | Helm chart (15 templates), blue-green deploy |
-| CI/CD | **GitHub Actions** | 9 workflows (lint, test, build, deploy) |
-| Monitoring | **Grafana** stack | 8 dashboards, Prometheus, Loki, Tempo |
+| Stockage objet | **MinIO / S3** | Uploads directs, URLs présignées, scan ClamAV |
+| PDF | **WeasyPrint** | Factures et reçus bilingues AR/FR conformes MEN/TVA |
+| Infra | **Docker** + **Kubernetes (Helm)** | Helm chart (15 templates), Kind local, blue-green |
+| CI/CD | **GitHub Actions** | 10 workflows (lint, test, build, deploy, K8s E2E) |
+| Monitoring | **Grafana** stack | 8 dashboards, Prometheus, Loki, Tempo, Alertmanager |
 
 ---
 
