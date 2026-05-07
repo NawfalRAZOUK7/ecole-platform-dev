@@ -5,6 +5,26 @@
 export const BASE_URL = __ENV.BASE_URL || 'http://localhost:8000/api/v1';
 export const IS_CI = __ENV.CI === 'true' || __ENV.CI === '1';
 export const SCHOOL_ID = '00000000-0000-4000-8000-000000000001';
+export const STUDENT_ID = '10000000-0000-4000-8000-000000000007';
+
+const LOCAL_DEV_TARGET_RE = /^(https?|wss?):\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\]):8000(?:\/|$)/i;
+
+function allowsDirtyDevDb() {
+  const value = String(__ENV.K6_ALLOW_DEV_DB || '').toLowerCase();
+  return value === '1' || value === 'true' || value === 'yes';
+}
+
+export function assertSafeLoadTarget(url, label = 'target') {
+  if (LOCAL_DEV_TARGET_RE.test(url) && !allowsDirtyDevDb()) {
+    throw new Error(
+      `${label} points at ${url}. Refusing to run k6 against the normal dev DB. ` +
+        'Use BASE_URL=http://localhost:8010/api/v1 after make api-test-up, ' +
+        'or set K6_ALLOW_DEV_DB=1 for an intentional destructive run.',
+    );
+  }
+}
+
+assertSafeLoadTarget(BASE_URL, 'BASE_URL');
 
 function getSeedPassword(role) {
   const override = __ENV[`${role.toUpperCase()}_PASSWORD`];

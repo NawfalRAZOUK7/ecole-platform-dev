@@ -26,6 +26,21 @@ choco install k6
 docker run -i grafana/k6 run -o cloud - < script.js
 ```
 
+## Safety
+
+k6 scenarios create sessions/login history and some scenarios perform writes.
+Run them against the disposable API-test stack unless you intentionally want to
+dirty the normal dev DB:
+
+```bash
+make api-test-up
+CI=1 make test-load SCENARIO=scenario1_logins.js
+make api-test-down
+```
+
+`BASE_URL=http://localhost:8000/api/v1` is refused by default. Use
+`K6_ALLOW_DEV_DB=1` only for an intentional destructive dev run.
+
 ## File Structure
 
 ```
@@ -44,8 +59,8 @@ Central configuration imported by all scenarios.
 
 **Key Settings:**
 ```javascript
-export const BASE_URL = __ENV.BASE_URL || "http://localhost:8000/api";
-export const WS_URL = __ENV.WS_URL || "ws://localhost:8000/ws";
+export const BASE_URL = __ENV.BASE_URL || "http://localhost:8000/api/v1";
+// scenario4_websocket.js also accepts WS_URL, e.g. ws://localhost:8010/api/v1/ws
 
 export const RAMP_UP = 30;     // 30s to ramp up
 export const RAMP_DOWN = 20;   // 20s to ramp down
@@ -85,8 +100,8 @@ Authentication throughput and JWT token generation under load.
 - **SLA**: <200ms per login, <1% error rate
 
 **User Flow:**
-1. Generate unique email (user{timestamp}@school.ma)
-2. POST `/auth/login` with email + password
+1. Rotate through seeded users from `tests/load/config.js`
+2. POST `/auth/login` with email, password, and school ID
 3. Verify JWT token received
 4. Store token for subsequent requests
 
@@ -167,16 +182,10 @@ Document upload handling and network I/O performance.
 **Upload Sequence:**
 ```javascript
 // For each file type:
-// 1. Create document metadata
-POST /documents with { name, type }
+// Upload a valid PDF payload against the current document endpoint.
+POST /documents/upload with { category, linked_student_id, file }
 
-// 2. Upload file
-POST /documents/{id}/upload with file
-
-// 3. Verify upload
-GET /documents/{id}
-
-// Repeat for 10 concurrent users
+// Repeat with concurrent admin users against the disposable API-test stack.
 ```
 
 **Key Metrics:**
@@ -223,7 +232,7 @@ Real-time communication with sustained connections.
 **Connection Flow:**
 ```javascript
 // 1. Connect WebSocket
-ws://localhost:8000/ws/notifications?token={jwt}
+ws://localhost:8010/api/v1/ws/notifications?token={jwt}
 
 // 2. Receive notification messages
   - School announcements
@@ -332,7 +341,7 @@ k6 run -o cloud scenario1_logins.js
 **Pre-requisites:**
 1. Backend server running on configured BASE_URL
 2. Test database with fixtures populated:
-   - 10+ test users (student@school.ma, teacher@school.ma, etc.)
+   - Seed users from `backend/app/seed.py`
    - 3+ test schools
    - 10+ test classes
    - Sample documents for upload tests

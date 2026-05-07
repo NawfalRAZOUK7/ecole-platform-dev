@@ -6,12 +6,13 @@ import ws from 'k6/ws';
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Rate, Counter } from 'k6/metrics';
-import { IS_CI, getToken, selectProfile } from './config.js';
+import { IS_CI, assertSafeLoadTarget, getToken, selectProfile } from './config.js';
 
 const wsFailRate = new Rate('ws_failures');
 const wsConnections = new Counter('ws_connections');
 
 const WS_URL = __ENV.WS_URL || 'ws://localhost:8000/api/v1/ws';
+assertSafeLoadTarget(WS_URL, 'WS_URL');
 
 export const options = {
   scenarios: {
