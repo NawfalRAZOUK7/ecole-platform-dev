@@ -1,6 +1,6 @@
 # Promtail configuration — log shipper for Docker containers
 #
-# Reference: S-131 — Loki log aggregation, F2 Ch04 — Logging Standard
+# Reference: Loki log aggregation, logging standard
 # Ships Docker container logs to Loki with structured labels.
 # Supports correlation_id search via label extraction.
 

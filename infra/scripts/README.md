@@ -1,6 +1,6 @@
 # Deployment & Operations Scripts
 
-Bash scripts for deploying, maintaining, and recovering the Ecole Platform. Automates critical operational tasks with safety checks and logging.
+Bash scripts for deploying, maintaining, and recovering the École Platform. Automates critical operational tasks with safety checks and logging.
 
 ## Scripts Overview
 
@@ -198,9 +198,9 @@ docker-compose up -d
 
 ## Logging & Debugging
 
-All scripts log to:
+All scripts log to `infra/` directory:
 ```
-logs/
+infra/
 ├── deploy.log
 ├── backup.log
 ├── restore-drill.log
@@ -221,9 +221,12 @@ Scripts require:
 - NGINX reload capability
 - SSH access to all hosts (if multi-server setup)
 
-Install dependencies:
+Ensure dependencies are installed:
 ```bash
-./scripts/install-dependencies.sh
+# Docker and Docker Compose
+# AWS CLI (for S3 operations)
+# PostgreSQL client tools
+# NGINX reload capability
 ```
 
 ## Emergency Procedures

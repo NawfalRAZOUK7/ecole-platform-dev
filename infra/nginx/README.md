@@ -16,7 +16,7 @@ NGINX serves as:
 - **TLS Terminator** - Handles HTTPS encryption/decryption
 - **Load Balancer** - Distributes traffic across backend instances
 - **API Gateway** - Rate limiting, request validation, authentication
-- **Web Application Firewall** - Protects against common attacks
+- **Web Application Firewall** - Lightweight regex-based WAF rules protecting against common attacks
 - **Static Content Server** - Serves frontend assets
 
 ## Environment Configurations
@@ -36,7 +36,7 @@ NGINX serves as:
 ### Production (nginx-prod.conf)
 - HTTPS with production certificate
 - Load balancing across multiple backend instances
-- WAF ModSecurity rules enabled
+- Lightweight regex-based WAF rules enabled
 - Rate limiting per IP and API key
 - Comprehensive security headers
 - DDoS protection
@@ -59,6 +59,7 @@ add_header X-XSS-Protection "1; mode=block" always;
 ```
 
 ### WAF Rules (production)
+Lightweight regex-based WAF rules:
 - SQL injection prevention
 - XSS protection
 - Path traversal blocking

@@ -1,6 +1,6 @@
 # Production Environment — École Platform
 #
-# Reference: Phase 0A + Phase 7A — Infrastructure Production Hardening
+# Reference: Infrastructure Production Hardening
 #
 # Prerequisites:
 #   1. Create .env.prod with all required vars (see .env.example)
@@ -25,7 +25,7 @@
 # Health check:
 #   ./infra/scripts/healthcheck.sh
 #
-# URLs (per F1):
+# URLs:
 #   API: https://api.ecole-platform.example/api/v1
 #   Web: https://ecole-platform.example
 #
@@ -67,7 +67,7 @@ services:
       SMTP_USER: ${SMTP_USER}
       SMTP_PASSWORD_FILE: /run/secrets/smtp_password
       # S3 / Object storage
-      # Activate after Phase 2: set STORAGE_BACKEND=s3 and
+      # Activate after storage backend migration: set STORAGE_BACKEND=s3 and
       # DOCUMENT_STORAGE_BACKEND=s3 in your .env.prod file.
       # Credentials must be injected via Docker secrets or IAM roles —
       # never committed as plain-text values.
@@ -412,7 +412,7 @@ services:
       dockerfile: Dockerfile
       target: production
     container_name: ecole-prod-worker
-    command: ["python", "-m", "arq", "app.worker.WorkerSettings"]
+    command: ["python", "-m", "arq", "app.core.tasks.WorkerSettings"]
     environment:
       DATABASE_URL_FILE: /run/secrets/database_url
       REDIS_URL_FILE: /run/secrets/redis_url
@@ -569,7 +569,7 @@ volumes:
   prod_postgres_replica_data:
   prod_redis_data:
   prod_wal_archive:
-  # backend_uploads volume removed — Phase 5 cleanup complete (grace period elapsed).
+  # backend_uploads volume removed — cleanup complete (grace period elapsed).
   # The Docker volume may still exist on the host; remove it only after confirming
   # the archive is intact:  docker volume rm ecole-platform-dev_backend_uploads
   certbot_webroot:

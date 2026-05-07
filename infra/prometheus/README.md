@@ -21,11 +21,10 @@ Prometheus provides:
 
 Configured in `prometheus.yml`:
 - **Application Backend** - Custom metrics from application code
-- **PostgreSQL** - Database metrics via postgres_exporter
-- **Redis** - Cache metrics via redis_exporter
-- **NGINX** - Web server metrics via nginx-prometheus-exporter
-- **Node** - Host/container metrics via node_exporter
-- **Docker** - Container metrics via cadvisor
+- **Prometheus Self** - Prometheus own metrics
+
+> Note: Additional exporters (PostgreSQL, Redis, NGINX, Node, Docker/cadvisor)
+> can be added to `docker-compose.monitoring.yml` as needed.
 
 ## Key Metrics
 
@@ -36,7 +35,7 @@ Configured in `prometheus.yml`:
 - Database query latency
 - Cache hit/miss ratios
 
-### System Metrics
+### System Metrics (when exporters are deployed)
 - CPU usage by container
 - Memory usage and pressure
 - Disk I/O and available space

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ssl-renew.sh — Let's Encrypt certificate management
 #
-# Reference: Phase 7A — TLS certificate management
+# Reference: TLS certificate management
 #
 # Usage:
 #   ./infra/scripts/ssl-renew.sh obtain <domain>     # First-time cert

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Migration validation script — naming convention + integrity checks.
 
-Reference: Phase 1A — Migration Hardening
+Reference: Database Migration Hardening
 
 This script validates that:
   1. Migration filenames follow the naming convention: {hash}_{group}_{description}.py
@@ -36,13 +36,22 @@ VERSIONS_DIR = os.path.join(os.path.dirname(__file__), "..", "alembic", "version
 
 # Expected filename pattern: {12-char-hex}_{group}_{description}.py
 # Examples:
-#   9f7257bc8dd1_g1_g6_initial_schema_iam_erp_lms_com_.py
+#   9f7257bc8dd1_g1_g6_initial_schema_iam_erp_lms_com.py
 #   a2f8b3c4d5e6_g7_ai_writing_attempts_preferences.py
 #   b3c4d5e6f7a8_g8_parent_child_links_views_kpi.py
-FILENAME_PATTERN = re.compile(r"^[0-9a-f]{12}_[a-z0-9][a-z0-9_]+\.py$")
+FILENAME_PATTERN = re.compile(r"^[0-9a-f]{12}_[a-z0-9][a-z0-9_]*\.py$")
 
-# Known migration groups
-VALID_GROUPS = {"g1", "g2", "g3", "g4", "g5", "g6", "g7", "g8", "g9", "g10"}
+# Known migration groups (auto-generated from existing files)
+def _get_valid_groups() -> set[str]:
+    groups = set()
+    for fname in os.listdir(VERSIONS_DIR):
+        if fname.endswith(".py") and not fname.startswith("__"):
+            parts = fname.split("_")
+            if len(parts) >= 2:
+                groups.add(parts[1])
+    return groups
+
+VALID_GROUPS = _get_valid_groups()
 
 
 # ---------------------------------------------------------------------------
@@ -108,16 +117,22 @@ def validate_revision_chain(files: list[str]) -> list[str]:
             source = f.read()
 
         # Extract revision and down_revision
-        rev_match = re.search(r'revision:\s*str\s*=\s*["\']([^"\']+)["\']', source)
+        # Handles both `revision = "..."` and `revision: str = "..."`
+        rev_match = re.search(r'revision\s*(?::\s*str)?\s*=\s*["\']([^"\']+)["\']', source)
+        # Handles single down_revision and tuple down_revision for merges
         down_match = re.search(
-            r'down_revision:\s*str\s*=\s*["\']([^"\']+)["\']', source
+            r'down_revision\s*(?::\s*(?:str|Optional\[str\]|tuple\[str,\s*str\]|Tuple\[str,\s*str\]))?\s*=\s*(?:\(\s*["\']([^"\']+)["\']\s*,\s*["\']([^"\']+)["\']\s*\)|["\']([^"\']+)["\'])', source
         )
         if not rev_match:
             errors.append(f"Cannot find 'revision' in '{filename}'")
             continue
 
         revision = rev_match.group(1)
-        down_revision = down_match.group(1) if down_match else None
+        if down_match:
+            # For tuples (merge migrations), pick the first parent as the canonical down_revision
+            down_revision = down_match.group(1) or down_match.group(3)
+        else:
+            down_revision = None
 
         if revision in revisions:
             errors.append(
@@ -234,12 +249,15 @@ def main() -> int:
             filepath = os.path.join(VERSIONS_DIR, filename)
             with open(filepath, "r") as f:
                 source = f.read()
-            rev_match = re.search(r'revision:\s*str\s*=\s*["\']([^"\']+)["\']', source)
+            rev_match = re.search(r'revision\s*(?::\s*str)?\s*=\s*["\']([^"\']+)["\']', source)
             down_match = re.search(
-                r'down_revision:\s*str\s*=\s*["\']([^"\']+)["\']', source
+                r'down_revision\s*(?::\s*(?:str|Optional\[str\]|tuple\[str,\s*str\]|Tuple\[str,\s*str\]))?\s*=\s*(?:\(\s*["\']([^"\']+)["\']\s*,\s*["\']([^"\']+)["\']\s*\)|["\']([^"\']+)["\'])', source
             )
             rev = rev_match.group(1) if rev_match else "?"
-            down = down_match.group(1) if down_match else "None"
+            if down_match:
+                down = down_match.group(1) or down_match.group(3)
+            else:
+                down = "None"
             print(f"  {down} -> {rev}  ({filename})")
 
     if all_errors:

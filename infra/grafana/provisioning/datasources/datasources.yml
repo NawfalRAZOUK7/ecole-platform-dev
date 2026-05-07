@@ -1,6 +1,6 @@
 # Grafana datasource provisioning — auto-configure Prometheus + Loki
 #
-# Reference: S-129 — Grafana dashboards, F2 — Observability stack
+# Reference: Grafana dashboards, observability stack
 
 apiVersion: 1
 

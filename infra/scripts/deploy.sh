@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # deploy.sh — Zero-downtime deployment with rollback
 #
-# Reference: Phase 7A — Production deployment
+# Reference: Production deployment
 #
 # Usage:
 #   ./infra/scripts/deploy.sh [--skip-migrations] [--rollback]

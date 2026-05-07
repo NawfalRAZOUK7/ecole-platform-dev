@@ -1,6 +1,6 @@
 # Deployment Guide — École Platform
 
-> Reference: Phase 7A — Production Environment & TLS
+> Reference: Production Environment & TLS
 
 ## Table of Contents
 

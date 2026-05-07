@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Restore Drill — École Platform
 #
-# Reference: S-134 — Restore runbook and drill, F3 Ch05 — Restore Procedures
+# Reference: Restore runbook and drill, restore procedures
 # Automated restore drill to validate backup integrity and restore procedures.
 #
 # This script:
@@ -200,7 +200,7 @@ if [[ "${BACKUP_FILE}" == *.enc ]] && [ -f "/tmp/drill_restore_$$.sql.gz" ]; the
     rm -f "/tmp/drill_restore_$$.sql.gz"
 fi
 
-# ── Step 4: Schema conformance (F3 Ch05 checklist) ──
+# ── Step 4: Schema conformance (checklist) ──
 log ""
 log "Step 4: Schema conformance checks"
 
@@ -404,8 +404,8 @@ cat > "${DRILL_REPORT}" <<REPORT
     "users_match": $([ "${USER_COUNT}" = "${SOURCE_USERS}" ] && echo "true" || echo "false")
   },
   "references": {
-    "story": "S-134",
-    "spec": "F3 Ch05 — Restore Procedures",
+    "story": "restore-drill",
+    "spec": "Restore Procedures",
     "runbook": "infra/backup/pg_restore.sh"
   }
 }

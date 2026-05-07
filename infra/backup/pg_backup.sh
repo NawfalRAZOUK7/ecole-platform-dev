@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # PostgreSQL daily backup script — École Platform
 #
-# Reference: S-132 — PostgreSQL backups, F3 Ch04 — Backup Strategy Matrix
+# Reference: PostgreSQL backups, backup strategy matrix
 # Strategy: Daily full backup + continuous WAL archiving (PITR-ready)
 # Encryption: AES-256 at rest
 # Retention: 30 days

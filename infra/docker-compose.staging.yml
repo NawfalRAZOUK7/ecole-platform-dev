@@ -1,9 +1,9 @@
 # Staging Environment — École Platform
 #
-# Reference: S-127 — Staging environment, F1 Ch03 — Environment Topology
+# Reference: Staging environment, environment topology
 # Stage deployment with managed-like services, anonymized data, TLS.
 #
-# URLs (per F1):
+# URLs:
 #   API: https://staging-api.ecole-platform.example/api/v1
 #   Web: https://staging.ecole-platform.example
 #
@@ -24,7 +24,7 @@ services:
     volumes:
       - staging_postgres_data:/var/lib/postgresql/data
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
-      # WAL archiving for PITR (F3)
+      # WAL archiving for PITR
       - staging_wal_archive:/var/lib/postgresql/wal_archive
     command:
       - "postgres"
@@ -143,7 +143,7 @@ services:
       TZ: ${TZ:-Africa/Casablanca}
       # ---- Object Storage (staging uses managed S3 / MinIO instance) -----
       # Set STORAGE_BACKEND=s3 and DOCUMENT_STORAGE_BACKEND=s3 once
-      # the Phase 2 backend code is deployed.  Secrets must be injected
+      # the storage backend code is deployed.  Secrets must be injected
       # via CI/CD environment or a secrets manager — never committed here.
       STORAGE_BACKEND: ${STORAGE_BACKEND:-local}
       S3_ENDPOINT: ${S3_ENDPOINT}
@@ -312,7 +312,7 @@ volumes:
   staging_postgres_data:
   staging_redis_data:
   staging_wal_archive:
-  # staging_uploads volume removed — Phase 5 cleanup complete (grace period elapsed).
+  # staging_uploads volume removed — cleanup complete (grace period elapsed).
   # The Docker volume may still exist on the host; remove it only after confirming
   # the archive is intact:  docker volume rm ecole-platform-dev_staging_uploads
 

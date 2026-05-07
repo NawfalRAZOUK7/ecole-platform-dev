@@ -2,8 +2,8 @@ apiVersion: v2
 name: ecole-platform
 description: Helm chart for École Platform — EdTech SaaS for K-12 schools in Morocco
 type: application
-version: 0.1.0
-appVersion: "0.1.0"
+version: 1.0.0
+appVersion: "1.0.0"
 keywords:
   - edtech
   - education

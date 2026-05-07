@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # healthcheck.sh — Comprehensive health check for all production services
 #
-# Reference: Phase 7A — Health monitoring
+# Reference: Health monitoring
 #
 # Usage:
 #   ./infra/scripts/healthcheck.sh           # Full check (exit 0 = healthy)

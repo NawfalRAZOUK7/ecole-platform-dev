@@ -98,8 +98,8 @@ services:
       SMTP_USE_TLS: ${SMTP_USE_TLS:-false}
       SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-noreply@ecole-platform.ma}
       SMTP_FROM_NAME: ${SMTP_FROM_NAME:-École Platform}
-      # ---- MinIO / Object Storage (Phase 1) -------------------------
-      # Backend still uses local storage until Phase 2 flips these.
+      # ---- MinIO / Object Storage -------------------------
+      # Backend still uses local storage until S3 migration flips these.
       # To activate S3: set STORAGE_BACKEND=s3 and
       # DOCUMENT_STORAGE_BACKEND=s3 in your .env file.
       STORAGE_BACKEND: ${STORAGE_BACKEND:-local}
@@ -167,7 +167,7 @@ services:
       SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-noreply@ecole-platform.ma}
       SMTP_FROM_NAME: ${SMTP_FROM_NAME:-École Platform}
       UPLOAD_DIR: /app/uploads
-      # ---- MinIO / Object Storage (Phase 1) -------------------------
+      # ---- MinIO / Object Storage -------------------------
       STORAGE_BACKEND: ${STORAGE_BACKEND:-local}
       S3_ENDPOINT: http://minio:9000
       S3_BUCKET: ${S3_BUCKET:-ecole-dev-private}
@@ -311,7 +311,7 @@ volumes:
   postgres_data:
   redis_data:
   web_node_modules:
-  # upload_data volume removed — Phase 5 cleanup complete (grace period elapsed).
+  # upload_data volume removed — cleanup complete (grace period elapsed).
   # The Docker volume may still exist on disk; remove it manually only after
   # confirming the archive in backups/ is intact:
   #   docker volume rm ecole-platform-dev_upload_data

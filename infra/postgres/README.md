@@ -14,10 +14,8 @@ PostgreSQL database initialization scripts for the Ecole Platform. Creates datab
 
 ### Extensions
 - `uuid-ossp` - UUID generation functions
-- `pg_trgm` - Text search and trigram support
+- `pgcrypto` - Cryptographic functions
 - `plpgsql` - Procedural language (default)
-- `postgis` - Geospatial data support (if needed)
-- `hstore` - Key-value store extension
 - `json` and `jsonb` - JSON support (built-in for modern PostgreSQL)
 
 ### Roles and Permissions
@@ -45,8 +43,9 @@ PostgreSQL mounts `init.sql` at `/docker-entrypoint-initdb.d/` and executes on s
 ## Development Database
 
 For development, the init script creates:
-- User `ecole_app` with application permissions
-- User `ecole_backup` with read-only access
+- Role `app_user` with application permissions (read/write)
+- Role `app_readonly` with read-only access
+- Role `replicator` with replication privileges
 - User `postgres` (admin)
 
 ## Modifying Schema

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # PostgreSQL restore script — École Platform
 #
-# Reference: S-134 — Restore runbook and drill, F3 Ch05 — Restore Procedures
+# Reference: Restore runbook and drill, restore procedures
 # Supports: full restore from backup, PITR to specific timestamp
 #
 # Usage:
@@ -10,7 +10,7 @@
 #   ./pg_restore.sh --verify-only /path/to/backup      # Verify without restoring
 #
 # CRITICAL: This script will DROP and recreate the target database.
-# Requires 4-eyes approval for production (F3 Ch07).
+# Requires 4-eyes approval for production.
 
 set -euo pipefail
 
@@ -154,7 +154,7 @@ log "Step 4: Applying pending migrations (Alembic)"
 cd "$(dirname "$0")/../../backend" || die "Cannot find backend directory"
 alembic upgrade head 2>&1 || log "WARNING: Migration failed — may need manual intervention"
 
-# ── Step 5: Post-restore validation (F3 Ch05 checklist) ──
+# ── Step 5: Post-restore validation (checklist) ──
 log "Step 5: Post-restore validation"
 
 # 5a. Schema conformance

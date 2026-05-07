@@ -1,6 +1,6 @@
 # Grafana dashboard provisioning — auto-load dashboard JSON files
 #
-# Reference: S-129 — Grafana dashboards
+# Reference: Grafana dashboards
 
 apiVersion: 1
 

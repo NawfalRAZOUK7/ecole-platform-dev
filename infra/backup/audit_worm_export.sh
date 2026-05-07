@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Audit log WORM export — École Platform
 #
-# Reference: S-133 — Configure audit log WORM export, F3 Ch04 — Backup Strategy Matrix
+# Reference: Configure audit log WORM export, backup strategy matrix
 # Daily append-only export of audit_logs to immutable storage.
-# Retention: 180 days per F3. AES-256 encryption + SHA-256 integrity.
+# Retention: 180 days. AES-256 encryption + SHA-256 integrity.
 #
 # Usage:
 #   ./audit_worm_export.sh                      # Export today's audit logs
@@ -271,7 +271,7 @@ cat > "${MANIFEST_FILE}" <<MANIFEST
   "checksum_file": "$(basename "${CHECKSUM_FILE}")",
   "export_file": "$(basename "${EXPORT_FILE}")",
   "worm_policy": "append-only, immutable once written",
-  "compliance_ref": "F3 Ch04 — Backup Strategy Matrix"
+  "compliance_ref": "Backup Strategy Matrix"
 }
 MANIFEST
 

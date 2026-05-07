@@ -1,0 +1,41 @@
+{{- if .Values.ingress.enabled }}
+1. Get the application URL by running:
+   kubectl get ingress {{ include "ecole-platform.fullname" . }} -n {{ .Release.Namespace }}
+
+2. The backend API is available at:
+   http{{ if .Values.ingress.tls }}s{{ end }}://{{ .Values.ingress.host }}/api/v1/
+
+3. Health check endpoint:
+   http{{ if .Values.ingress.tls }}s{{ end }}://{{ .Values.ingress.host }}/api/v1/health
+{{- else }}
+1. Port-forward to access the backend:
+   kubectl port-forward svc/{{ include "ecole-platform.fullname" . }}-backend 8000:8000 -n {{ .Release.Namespace }}
+
+2. Health check:
+   curl http://localhost:8000/api/v1/health
+{{- end }}
+
+{{- if not .Values.backend.secrets.databaseUrl }}
+
+⚠️  WARNING: Database URL secret is not configured.
+   Create the secret before the backend starts:
+   kubectl create secret generic {{ include "ecole-platform.fullname" . }}-database-url \
+     --from-literal=DATABASE_URL='postgresql+asyncpg://user:pass@host:5432/ecole' \
+     -n {{ .Release.Namespace }}
+{{- end }}
+
+{{- if not .Values.backend.secrets.jwtSecretKey }}
+
+⚠️  WARNING: JWT secret key is not configured.
+   Create the secret:
+   kubectl create secret generic {{ include "ecole-platform.fullname" . }}-jwt-secret \
+     --from-literal=JWT_SECRET_KEY='your-256-bit-secret' \
+     -n {{ .Release.Namespace }}
+{{- end }}
+
+Post-install checklist:
+  [ ] Verify database migrations ran successfully (check init container logs)
+  [ ] Confirm Redis connection is healthy
+  [ ] Check that all secrets are mounted correctly
+  [ ] Validate ingress TLS certificate
+  [ ] Run healthcheck: ./infra/scripts/healthcheck.sh

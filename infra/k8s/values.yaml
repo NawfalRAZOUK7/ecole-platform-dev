@@ -119,6 +119,13 @@ pdb:
   minAvailable: 1
 
 # ---------------------------------------------------------------------------
+# Network Policy
+# ---------------------------------------------------------------------------
+networkPolicy:
+  enabled: false
+  ingressNamespace: ingress-nginx
+
+# ---------------------------------------------------------------------------
 # External services (managed — not deployed in k8s)
 # ---------------------------------------------------------------------------
 # PostgreSQL: connection via DATABASE_URL secret

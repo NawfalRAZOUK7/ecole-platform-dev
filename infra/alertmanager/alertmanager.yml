@@ -13,7 +13,7 @@
 #
 # Alertmanager configuration — École Platform
 #
-# Reference: S-130 — Alertmanager rules, F2 Ch08 — Alerting & Severity Model
+# Reference: Alertmanager rules, alerting & severity model
 # Anti-noise: deduplication, grouping, cooldown intervals
 
 global:

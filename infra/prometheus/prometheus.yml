@@ -1,6 +1,6 @@
 # Prometheus configuration — École Platform
 #
-# Reference: S-128 — Prometheus metrics exporter, F2 — Observability & SLO
+# Reference: Prometheus metrics exporter, observability & SLO
 # Scrapes the FastAPI /metrics endpoint for golden signal metrics.
 
 global:

@@ -1,6 +1,6 @@
 # Monitoring Stack — Prometheus, Grafana, Alertmanager, Loki
 #
-# Reference: S-128/S-129/S-130/S-131 — Observability stack per F2
+# Reference: Observability stack
 # Stack: Prometheus (metrics) + Grafana (dashboards) + Alertmanager (alerts) + Loki (logs)
 #
 # Usage: docker compose -f infra/docker-compose.dev.yml -f infra/docker-compose.monitoring.yml up -d

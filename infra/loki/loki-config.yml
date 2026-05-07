@@ -1,6 +1,6 @@
 # Loki configuration — École Platform log aggregation
 #
-# Reference: S-131 — Loki log aggregation, F2 Ch04 — Logging Standard
+# Reference: Loki log aggregation, logging standard
 # Structured log ingestion with correlation_id search capability.
 
 auth_enabled: false
@@ -46,7 +46,7 @@ limits_config:
   max_query_series: 500
   max_query_parallelism: 2
 
-# Retention: 30 days for runtime logs (per F2 Ch09)
+# Retention: 30 days for runtime logs
 compactor:
   working_directory: /loki/compactor
   compaction_interval: 10m

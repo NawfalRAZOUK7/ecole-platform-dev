@@ -1,6 +1,6 @@
 # Alertmanager rules — École Platform SLO thresholds
 #
-# Reference: S-130 — Alertmanager rules, F2 Ch07/Ch08 — SLI/SLO & Alerting
+# Reference: Alertmanager rules, SLI/SLO & alerting
 # Severity model: SEV-1 (critical), SEV-2 (major), SEV-3 (warning)
 
 groups:
@@ -25,7 +25,7 @@ groups:
         annotations:
           summary: "API availability below 99.5% (SEV-1)"
           description: "Server error rate is {{ $value | humanizePercentage }} over the last 1h. SLO target: 99.5% availability."
-          runbook: "RBK-F4-001"
+          runbook: "RUNBOOK-001"
 
       # Database pool saturation >= 90% for 10 minutes
       - alert: DbPoolSaturationCritical
@@ -39,7 +39,7 @@ groups:
         annotations:
           summary: "Database pool saturation >= 90% (SEV-1)"
           description: "DB pool utilization at {{ $value | humanizePercentage }}. Risk of connection exhaustion."
-          runbook: "RBK-F4-004"
+          runbook: "RUNBOOK-004"
 
       # Webhook signature failures (any occurrence)
       - alert: WebhookSignatureFailure
@@ -53,7 +53,7 @@ groups:
         annotations:
           summary: "Webhook signature verification failure (SEV-1)"
           description: "{{ $value }} webhook signature failures in last 5 minutes. Possible compromise."
-          runbook: "RBK-F4-003"
+          runbook: "RUNBOOK-003"
 
   # ══════════════════════════════════════════════════════
   # SEV-2: Major — Urgent attention required
@@ -74,7 +74,7 @@ groups:
         annotations:
           summary: "API p95 latency > 500ms (SEV-2)"
           description: "API p95 latency is {{ $value | humanizeDuration }}. SLO target: 350ms p95."
-          runbook: "RBK-F4-004"
+          runbook: "RUNBOOK-004"
 
       # API error rate > 2% for 5 minutes
       - alert: ApiErrorRateHigh
@@ -92,7 +92,7 @@ groups:
         annotations:
           summary: "API error rate > 2% (SEV-2)"
           description: "Error rate at {{ $value | humanizePercentage }}. SLO target: < 1%."
-          runbook: "RBK-F4-001"
+          runbook: "RUNBOOK-001"
 
       # Auth login success rate < 90% over 10 minutes
       - alert: AuthLoginSuccessLow
@@ -110,7 +110,7 @@ groups:
         annotations:
           summary: "Login success rate below 90% (SEV-2)"
           description: "Login success rate at {{ $value | humanizePercentage }}. Possible auth infrastructure issue."
-          runbook: "RBK-F4-002"
+          runbook: "RUNBOOK-002"
 
       # Database pool wait warning >= 85%
       - alert: DbPoolSaturationWarning
@@ -124,7 +124,7 @@ groups:
         annotations:
           summary: "Database pool saturation >= 85% (SEV-2)"
           description: "DB pool utilization at {{ $value | humanizePercentage }}."
-          runbook: "RBK-F4-004"
+          runbook: "RUNBOOK-004"
 
       # Provider timeout count > 30 in 5 minutes
       - alert: ProviderTimeoutHigh
@@ -138,7 +138,7 @@ groups:
         annotations:
           summary: "External provider timeouts > 30 in 5m (SEV-2)"
           description: "{{ $value }} provider timeouts detected."
-          runbook: "RBK-F4-003"
+          runbook: "RUNBOOK-003"
 
       # MinIO / S3 storage operation failures
       - alert: StorageOperationErrorsHigh
@@ -166,7 +166,7 @@ groups:
         annotations:
           summary: "Backup job failed (SEV-2)"
           description: "A backup job has failed in the last hour. Investigate immediately."
-          runbook: "RBK-F4-006"
+          runbook: "RUNBOOK-006"
 
   # ══════════════════════════════════════════════════════
   # SEV-3: Warning — Monitor closely
@@ -202,7 +202,7 @@ groups:
         annotations:
           summary: "Payment failure rate > 10% (SEV-3)"
           description: "Payment failure rate at {{ $value | humanizePercentage }}."
-          runbook: "RBK-F4-003"
+          runbook: "RUNBOOK-003"
 
       # No backup in 25 hours (missed daily backup)
       - alert: BackupMissed
