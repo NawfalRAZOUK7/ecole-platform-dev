@@ -102,3 +102,9 @@ secrets/
 # ==================== Local Media Artifacts ====================
 backend/uploads/content/videos/intro_video.mp4
 backend/uploads/content/videos/zay_video.mp4
+
+# ==================== Legacy AI Assistant Files ====================
+CLAUDE.md
+CODEX_TRACEABILITY.md
+Conversation_Claude_Cowork.txt
+History_claude.md
