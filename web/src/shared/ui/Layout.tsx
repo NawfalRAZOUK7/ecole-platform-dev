@@ -4,6 +4,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { api } from '@/services/api/client';
@@ -19,6 +20,8 @@ import { useSyncDevices, useSyncHealth, useSyncStatus } from '@/features/sync/us
 import { useFocusManagement } from '@/shared/hooks/useFocusManagement';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { LanguageSwitcher } from '@/shared/ui/LanguageSwitcher';
+import { getNavIcon } from '@/shared/ui/navIcons';
+import { X, LogOut } from 'lucide-react';
 import { formatDate } from '@/shared/i18n';
 import { useMyRewards } from '@/features/rewards/useRewards';
 import '@/shared/ui/kids-theme.css';
@@ -511,7 +514,12 @@ export function Layout() {
                 if (item.to === '/messages') setMsgCount(0);
               }}
             >
-              <span className="nav-icon">{item.icon}</span>
+              <span className="nav-icon">
+                {(() => {
+                  const Icon = getNavIcon(item.labelKey);
+                  return <Icon size={18} strokeWidth={2} />;
+                })()}
+              </span>
               <span className="nav-label">{t(item.labelKey)}</span>
               {item.to === '/notifications' && notifCount > 0 && (
                 <span className="notif-badge">{notifCount > 99 ? '99+' : notifCount}</span>
@@ -534,6 +542,7 @@ export function Layout() {
             <span className="user-role">{t(`roles.${userRole}`, userRole)}</span>
           </div>
           <button className="logout-btn" onClick={handleLogout}>
+            <LogOut size={14} strokeWidth={2} />
             {t('nav.logout')}
           </button>
         </div>
@@ -667,7 +676,18 @@ export function Layout() {
           </div>
         </div>
 
-        <Outlet />
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            style={{ minHeight: '100%' }}
+          >
+            <Outlet />
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       {toasts.length > 0 && (
@@ -678,8 +698,9 @@ export function Layout() {
               <button
                 className="toast-close"
                 onClick={() => setToasts((prev) => prev.filter((item) => item.id !== toast.id))}
+                aria-label={t('app.close')}
               >
-                &times;
+                <X size={14} strokeWidth={2} />
               </button>
             </div>
           ))}

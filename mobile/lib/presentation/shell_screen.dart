@@ -6,6 +6,7 @@
 /// Shows tabs based on user role.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -241,10 +242,25 @@ class ShellScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: child,
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 250),
+        switchInCurve: Curves.easeInOutCubic,
+        switchOutCurve: Curves.easeInOutCubic,
+        transitionBuilder: (child, animation) {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        },
+        child: KeyedSubtree(
+          key: ValueKey<String>(currentLocation),
+          child: child,
+        ),
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: currentIndex >= 0 ? currentIndex : 0,
         onDestinationSelected: (index) {
+          HapticFeedback.lightImpact();
           context.go(visibleItems[index].route);
         },
         destinations: visibleItems

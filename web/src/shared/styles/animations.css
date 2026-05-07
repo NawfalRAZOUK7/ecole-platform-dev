@@ -1,0 +1,197 @@
+/**
+ * École Platform — Animation & Micro-interaction Enhancements
+ *
+ * Shimmer skeletons, toast animations, card hover effects,
+ * and page transition helpers.
+ */
+
+/* ── Shimmer Skeleton ── */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton--shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-border) 25%,
+    color-mix(in srgb, var(--color-surface) 60%, var(--color-border)) 50%,
+    var(--color-border) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+[data-theme='dark'] .skeleton--shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface) 25%,
+    color-mix(in srgb, var(--color-bg) 60%, var(--color-surface)) 50%,
+    var(--color-surface) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* ── Toast Slide-In Animation ── */
+@keyframes toast-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes toast-slide-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+.toast {
+  animation: toast-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.toast--exiting {
+  animation: toast-slide-out 0.2s ease-in forwards;
+}
+
+/* ── Stat Card Hover ── */
+.stat-card {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.stat-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+}
+
+[data-theme='dark'] .stat-card__icon {
+  background: color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+
+/* ── Nav Link Active Indicator ── */
+.nav-link {
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.nav-link--active {
+  position: relative;
+}
+
+.nav-link--active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  background: var(--color-primary);
+  border-radius: 0 4px 4px 0;
+}
+
+[dir='rtl'] .nav-link--active::before {
+  left: auto;
+  right: 0;
+  border-radius: 4px 0 0 4px;
+}
+
+/* ── Empty State Animation ── */
+@keyframes empty-state-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.empty-state__icon {
+  animation: empty-state-float 3s ease-in-out infinite;
+}
+
+/* ── Button Micro-interactions ── */
+.btn,
+button[class*='btn'],
+.nav-link,
+.logout-btn {
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.15s ease;
+}
+
+.btn:active,
+button[class*='btn']:active,
+.nav-link:active,
+.logout-btn:active {
+  transform: scale(0.98);
+}
+
+/* ── Card Entrance Stagger ── */
+@keyframes card-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card-entrance {
+  animation: card-fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+/* ── Page Transition Base ── */
+.page-transition-enter {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.page-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.page-transition-exit {
+  opacity: 1;
+}
+
+.page-transition-exit-active {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}

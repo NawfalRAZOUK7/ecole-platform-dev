@@ -7,12 +7,7 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import {
-  MutationCache,
-  QueryCache,
-  QueryClient,
-  QueryClientProvider,
-} from '@tanstack/react-query';
+import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '@/services/auth/AuthContext';
 import App from '@/app/App';
@@ -22,6 +17,7 @@ import '@/shared/i18n';
 
 // Global styles
 import '@/app/styles.css';
+import '@/shared/styles/animations.css';
 
 const queryClient = new QueryClient({
   queryCache: new QueryCache({

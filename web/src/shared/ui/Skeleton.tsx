@@ -5,6 +5,7 @@ interface SkeletonProps {
   width?: string;
   height?: string;
   count?: number;
+  shimmer?: boolean;
 }
 
 export const Skeleton = memo(function Skeleton({
@@ -12,6 +13,7 @@ export const Skeleton = memo(function Skeleton({
   width,
   height,
   count = 1,
+  shimmer = true,
 }: SkeletonProps) {
   const items = Array.from({ length: count }, (_, index) => index);
 
@@ -20,7 +22,7 @@ export const Skeleton = memo(function Skeleton({
       {items.map((item) => (
         <Fragment key={`${variant}-${item}`}>
           <div
-            className={`skeleton skeleton--${variant}`}
+            className={`skeleton skeleton--${variant} ${shimmer ? 'skeleton--shimmer' : ''}`}
             style={{
               width,
               height,

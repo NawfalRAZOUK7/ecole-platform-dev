@@ -5,6 +5,7 @@ import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
 
 enum SkeletonVariant { line, card, tableRow, circle }
 
+/// Enhanced skeleton loader with shimmer gradient animation.
 class AppSkeleton extends StatefulWidget {
   final SkeletonVariant variant;
   final double? width;
@@ -27,8 +28,8 @@ class _AppSkeletonState extends State<AppSkeleton>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 1200),
-  )..repeat(reverse: true);
+    duration: const Duration(milliseconds: 1500),
+  )..repeat();
 
   @override
   void dispose() {
@@ -38,6 +39,10 @@ class _AppSkeletonState extends State<AppSkeleton>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final baseColor = theme.colorScheme.surfaceContainerHighest;
+    final highlightColor = theme.colorScheme.surfaceContainer;
+
     return Semantics(
       container: true,
       liveRegion: true,
@@ -46,24 +51,37 @@ class _AppSkeletonState extends State<AppSkeleton>
         child: AnimatedBuilder(
           animation: _controller,
           builder: (context, _) {
-            final theme = Theme.of(context);
-            final base = theme.colorScheme.surfaceContainerHighest;
-            final highlight = theme.colorScheme.surfaceContainer;
-            final color = Color.lerp(base, highlight, _controller.value)!;
-
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: List.generate(
-                widget.count,
-                (index) => Padding(
-                  padding: EdgeInsets.only(
-                    bottom: index == widget.count - 1 ? 0 : AppSpacing.sm,
+            return ShaderMask(
+              shaderCallback: (bounds) {
+                return LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [
+                    baseColor,
+                    highlightColor,
+                    baseColor,
+                  ],
+                  stops: const [0.0, 0.5, 1.0],
+                  transform: _ShimmerGradientTransform(
+                    percent: _controller.value,
                   ),
-                  child: _SkeletonShape(
-                    variant: widget.variant,
-                    width: widget.width,
-                    height: widget.height,
-                    color: color,
+                ).createShader(bounds);
+              },
+              blendMode: BlendMode.srcATop,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(
+                  widget.count,
+                  (index) => Padding(
+                    padding: EdgeInsets.only(
+                      bottom: index == widget.count - 1 ? 0 : AppSpacing.sm,
+                    ),
+                    child: _SkeletonShape(
+                      variant: widget.variant,
+                      width: widget.width,
+                      height: widget.height,
+                      color: baseColor,
+                    ),
                   ),
                 ),
               ),
@@ -75,6 +93,20 @@ class _AppSkeletonState extends State<AppSkeleton>
   }
 }
 
+/// Gradient transform that slides the shimmer across the widget.
+class _ShimmerGradientTransform extends GradientTransform {
+  final double percent;
+
+  const _ShimmerGradientTransform({required this.percent});
+
+  @override
+  Matrix4? transform(Rect bounds, {TextDirection? textDirection}) {
+    final slideWidth = bounds.width * 2;
+    final offset = slideWidth * percent - slideWidth * 0.5;
+    return Matrix4.translationValues(offset, 0, 0);
+  }
+}
+
 class _SkeletonShape extends StatelessWidget {
   final SkeletonVariant variant;
   final double? width;
@@ -83,35 +115,40 @@ class _SkeletonShape extends StatelessWidget {
 
   const _SkeletonShape({
     required this.variant,
-    required this.width,
-    required this.height,
+    this.width,
+    this.height,
     required this.color,
   });
 
   @override
   Widget build(BuildContext context) {
-    final resolvedWidth = switch (variant) {
-      SkeletonVariant.line => width ?? double.infinity,
-      SkeletonVariant.card => width ?? double.infinity,
-      SkeletonVariant.tableRow => width ?? double.infinity,
-      SkeletonVariant.circle => width ?? 40,
+    final borderRadius = switch (variant) {
+      SkeletonVariant.circle => BorderRadius.circular(999),
+      SkeletonVariant.card => BorderRadius.circular(AppRadii.lg),
+      SkeletonVariant.tableRow => BorderRadius.circular(AppRadii.sm),
+      SkeletonVariant.line => BorderRadius.circular(AppRadii.sm),
     };
-    final resolvedHeight = switch (variant) {
-      SkeletonVariant.line => height ?? 14,
-      SkeletonVariant.card => height ?? 88,
-      SkeletonVariant.tableRow => height ?? 52,
-      SkeletonVariant.circle => height ?? 40,
+
+    final defaultHeight = switch (variant) {
+      SkeletonVariant.line => 16.0,
+      SkeletonVariant.card => 120.0,
+      SkeletonVariant.tableRow => 48.0,
+      SkeletonVariant.circle => 40.0,
     };
-    final radius = variant == SkeletonVariant.circle
-        ? BorderRadius.circular(AppRadii.full)
-        : BorderRadius.circular(AppRadii.md);
+
+    final defaultWidth = switch (variant) {
+      SkeletonVariant.line => double.infinity,
+      SkeletonVariant.card => double.infinity,
+      SkeletonVariant.tableRow => double.infinity,
+      SkeletonVariant.circle => 40.0,
+    };
 
     return Container(
-      width: resolvedWidth,
-      height: resolvedHeight,
+      width: width ?? defaultWidth,
+      height: height ?? defaultHeight,
       decoration: BoxDecoration(
         color: color,
-        borderRadius: radius,
+        borderRadius: borderRadius,
       ),
     );
   }
