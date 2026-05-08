@@ -89,6 +89,7 @@ class _EcolePlatformAppState extends ConsumerState<EcolePlatformApp>
 
   Future<void> _initServices() async {
     try {
+      await widget.initFuture;
       final push = ref.read(pushNotificationProvider);
       push.onForegroundMessage = (message) {
         final t = AppLocalizations.of(ref);

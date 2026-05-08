@@ -17,8 +17,17 @@ import 'package:ecole_platform/data/api/api_client.dart';
 /// Background message handler — must be top-level function.
 @pragma('vm:entry-point')
 Future<void> _firebaseBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
-  dev.log('BG push: ${message.messageId}', name: 'PushNotifications');
+  try {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp();
+    }
+    dev.log('BG push: ${message.messageId}', name: 'PushNotifications');
+  } catch (e) {
+    dev.log(
+      'BG push skipped; Firebase unavailable: $e',
+      name: 'PushNotifications',
+    );
+  }
 }
 
 /// Deep-link data extracted from a push notification.
@@ -30,9 +39,9 @@ class PushDeepLink {
 }
 
 class PushNotificationService {
-  final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin _localNotifications;
   final ApiClient _apiClient;
+  FirebaseMessaging? _messaging;
 
   /// Route extracted from the latest push notification (deep-link).
   PushDeepLink? _pendingDeepLink;
@@ -52,8 +61,24 @@ class PushNotificationService {
 
   void clearDeepLink() => _pendingDeepLink = null;
 
+  FirebaseMessaging? get _firebaseMessaging {
+    if (Firebase.apps.isEmpty) {
+      return null;
+    }
+    return _messaging ??= FirebaseMessaging.instance;
+  }
+
   Future<void> syncTokenRegistration() async {
-    final token = await _messaging.getToken();
+    final messaging = _firebaseMessaging;
+    if (messaging == null) {
+      dev.log(
+        'Push token sync skipped; Firebase unavailable',
+        name: 'PushNotifications',
+      );
+      return;
+    }
+
+    final token = await messaging.getToken();
     if (token != null) {
       await _registerTokenWithBackend(token);
     }
@@ -66,11 +91,20 @@ class PushNotificationService {
 
   /// Initialize push notifications — call after Firebase.initializeApp().
   Future<void> initialize() async {
+    final messaging = _firebaseMessaging;
+    if (messaging == null) {
+      dev.log(
+        'Push notifications disabled; Firebase unavailable',
+        name: 'PushNotifications',
+      );
+      return;
+    }
+
     // Register background handler
     FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundHandler);
 
     // Request permissions (iOS + Android 13+)
-    final settings = await _requestPermission();
+    final settings = await _requestPermission(messaging);
     if (settings.authorizationStatus == AuthorizationStatus.denied) {
       dev.log('Push permission denied', name: 'PushNotifications');
       return;
@@ -80,14 +114,14 @@ class PushNotificationService {
     await _initLocalNotifications();
 
     // Get FCM token
-    final token = await _messaging.getToken();
+    final token = await messaging.getToken();
     dev.log('FCM token: $token', name: 'PushNotifications');
     if (token != null) {
       await _registerTokenWithBackend(token);
     }
 
     // Listen for token refresh
-    _messaging.onTokenRefresh.listen((newToken) async {
+    messaging.onTokenRefresh.listen((newToken) async {
       dev.log('FCM token refreshed: $newToken', name: 'PushNotifications');
       await _registerTokenWithBackend(newToken);
     });
@@ -99,15 +133,17 @@ class PushNotificationService {
     FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
 
     // Check if app was opened from a terminated state via notification
-    final initialMessage = await _messaging.getInitialMessage();
+    final initialMessage = await messaging.getInitialMessage();
     if (initialMessage != null) {
       _extractDeepLink(initialMessage);
     }
   }
 
   /// Request notification permissions with retry logic.
-  Future<NotificationSettings> _requestPermission() async {
-    final settings = await _messaging.requestPermission(
+  Future<NotificationSettings> _requestPermission(
+    FirebaseMessaging messaging,
+  ) async {
+    final settings = await messaging.requestPermission(
       alert: true,
       badge: true,
       sound: true,
@@ -215,8 +251,10 @@ class PushNotificationService {
         },
       );
     } catch (e) {
-      dev.log('Device token registration failed: $e',
-          name: 'PushNotifications');
+      dev.log(
+        'Device token registration failed: $e',
+        name: 'PushNotifications',
+      );
     }
   }
 

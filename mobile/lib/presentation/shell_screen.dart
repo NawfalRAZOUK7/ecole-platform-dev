@@ -242,21 +242,7 @@ class ShellScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 250),
-        switchInCurve: Curves.easeInOutCubic,
-        switchOutCurve: Curves.easeInOutCubic,
-        transitionBuilder: (child, animation) {
-          return FadeTransition(
-            opacity: animation,
-            child: child,
-          );
-        },
-        child: KeyedSubtree(
-          key: ValueKey<String>(currentLocation),
-          child: child,
-        ),
-      ),
+      body: child,
       bottomNavigationBar: NavigationBar(
         selectedIndex: currentIndex >= 0 ? currentIndex : 0,
         onDestinationSelected: (index) {

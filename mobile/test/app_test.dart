@@ -56,4 +56,42 @@ void main() {
     await tester.pump();
     expect(find.byType(MaterialApp), findsOneWidget);
   });
+
+  testWidgets('App starts when Firebase is not configured', (tester) async {
+    final connectivityService = TestConnectivityService();
+    final secureStorage = TestSecureTokenStorage();
+    final biometricService = TestBiometricService();
+    final wsClient = TestWsClient();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          connectivityServiceProvider.overrideWithValue(
+            connectivityService as ConnectivityService,
+          ),
+          secureStorageProvider.overrideWithValue(
+            secureStorage as SecureTokenStorage,
+          ),
+          apiClientProvider.overrideWithValue(
+            ApiClient(
+              tokenStorage: secureStorage,
+              baseUrl: 'http://localhost:8000',
+            ),
+          ),
+          biometricServiceProvider.overrideWithValue(
+            biometricService as BiometricService,
+          ),
+          wsClientProvider.overrideWithValue(
+            wsClient as WsClient,
+          ),
+        ],
+        child: EcolePlatformApp(initFuture: Future.value()),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pump();
+    expect(find.byType(MaterialApp), findsOneWidget);
+  });
 }
