@@ -7,10 +7,14 @@ with a single seeded row. Run against testcontainers or in-memory SQLite.
 from __future__ import annotations
 
 import uuid
+from datetime import datetime, timezone
 
 import pytest
 
+from app.models.iam import LinkStatus, MembershipStatus, RoleCode
 from app.repositories.auth import AuthRepository
+from tests.factories.iam import UserFactory
+from tests.factories.school import SchoolFactory
 
 
 def _uuid(n: int) -> uuid.UUID:
@@ -48,13 +52,13 @@ class TestAuthRepositorySmoke:
 
     async def test_create_and_save_user(self, db_session) -> None:
         repo = AuthRepository(db_session)
+        school = await SchoolFactory.create(session=db_session)
         user = await repo.create_user(
             id=uuid.uuid4(),
+            school_id=school.id,
             email="smoke@example.com",
-            hashed_password="hash",
+            password_hash="hash",
             full_name="Smoke Test",
-            role="teacher",
-            school_id=uuid.uuid4(),
         )
         assert user.email == "smoke@example.com"
         saved = await repo.save_user(user)
@@ -62,26 +66,28 @@ class TestAuthRepositorySmoke:
 
     async def test_update_user(self, db_session) -> None:
         repo = AuthRepository(db_session)
+        school = await SchoolFactory.create(session=db_session)
         user = await repo.create_user(
             id=uuid.uuid4(),
+            school_id=school.id,
             email="update@example.com",
-            hashed_password="hash",
+            password_hash="hash",
             full_name="Before",
-            role="teacher",
-            school_id=uuid.uuid4(),
         )
         updated = await repo.update_user(user.id, full_name="After")
         assert updated is None or updated.full_name == "After"
 
     async def test_create_membership(self, db_session) -> None:
         repo = AuthRepository(db_session)
+        school = await SchoolFactory.create(session=db_session)
+        user = await UserFactory.create(session=db_session, school=school)
         membership = await repo.create_membership(
-            user_id=uuid.uuid4(),
-            school_id=uuid.uuid4(),
-            role="teacher",
-            status="active",
+            user_id=user.id,
+            school_id=school.id,
+            role_code=RoleCode.TCH.value,
+            status=MembershipStatus.ACTIVE.value,
         )
-        assert membership.role == "teacher"
+        assert membership.role_code == RoleCode.TCH.value
 
     async def test_list_memberships(self, db_session) -> None:
         repo = AuthRepository(db_session)
@@ -90,9 +96,16 @@ class TestAuthRepositorySmoke:
 
     async def test_create_parent_child_link(self, db_session) -> None:
         repo = AuthRepository(db_session)
+        school = await SchoolFactory.create(session=db_session)
+        parent = await UserFactory.create(session=db_session, school=school)
+        child = await UserFactory.create(session=db_session, school=school)
         link = await repo.create_parent_child_link(
-            parent_id=uuid.uuid4(),
-            child_id=uuid.uuid4(),
-            relationship="father",
+            school_id=school.id,
+            parent_user_id=parent.id,
+            child_user_id=child.id,
+            status=LinkStatus.ACTIVE.value,
+            linked_at=datetime.now(timezone.utc),
+            linked_by=parent.id,
         )
-        assert link.relationship == "father"
+        assert link.parent_user_id == parent.id
+        assert link.child_user_id == child.id

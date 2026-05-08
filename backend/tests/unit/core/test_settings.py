@@ -60,7 +60,7 @@ def _make(monkeypatch: pytest.MonkeyPatch, **env: str) -> Settings:
     for key, val in env.items():
         monkeypatch.setenv(key, val)
     # Pass required fields as init kwargs so we don't need a live DB/Redis.
-    return Settings(**_REQUIRED)  # type: ignore[call-arg]
+    return Settings(_env_file=None, **_REQUIRED)  # type: ignore[call-arg]
 
 
 # ---------------------------------------------------------------------------
@@ -75,11 +75,10 @@ class TestDefaults:
 
     def test_s3_connection_defaults_are_empty(self, monkeypatch):
         s = _make(monkeypatch)
-        # .env sets these values for local development
-        assert s.s3_endpoint == "http://localhost:9000"
-        assert s.s3_access_key == "minioadmin"
-        assert s.s3_secret_key == "minioadmin123"
-        assert s.s3_bucket == "ecole-dev-private"
+        assert s.s3_endpoint == ""
+        assert s.s3_access_key == ""
+        assert s.s3_secret_key == ""
+        assert s.s3_bucket == ""
 
     def test_s3_region_default(self, monkeypatch):
         s = _make(monkeypatch)
@@ -87,13 +86,11 @@ class TestDefaults:
 
     def test_s3_force_path_style_default_is_false(self, monkeypatch):
         s = _make(monkeypatch)
-        # .env sets true for MinIO compatibility
-        assert s.s3_force_path_style is True
+        assert s.s3_force_path_style is False
 
     def test_s3_sse_enabled_default_is_false(self, monkeypatch):
         s = _make(monkeypatch)
-        # .env enables SSE for local development
-        assert s.s3_sse_enabled is True
+        assert s.s3_sse_enabled is False
 
     def test_presign_get_ttl_default(self, monkeypatch):
         s = _make(monkeypatch)
@@ -109,8 +106,7 @@ class TestDefaults:
 
     def test_document_storage_bucket_placeholder_default(self, monkeypatch):
         s = _make(monkeypatch)
-        # .env sets the actual bucket name for local development
-        assert s.document_storage_bucket == "ecole-dev-private"
+        assert s.document_storage_bucket == "ecole-platform"
 
 
 # ---------------------------------------------------------------------------
@@ -130,7 +126,7 @@ class TestStorageBackendValidation:
     def test_invalid_value_raises_validation_error(self, monkeypatch):
         monkeypatch.setenv("STORAGE_BACKEND", "gcs")
         with pytest.raises(ValidationError):
-            Settings(**_REQUIRED)  # type: ignore[call-arg]
+            Settings(_env_file=None, **_REQUIRED)  # type: ignore[call-arg]
 
 
 # ---------------------------------------------------------------------------

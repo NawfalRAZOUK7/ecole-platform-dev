@@ -6,10 +6,14 @@ Lightweight tests verifying each public method returns expected shapes.
 from __future__ import annotations
 
 import uuid
+from datetime import datetime, timezone
 
 import pytest
 
+from app.models.com import NotificationPreference
 from app.repositories.notifications import NotificationRepository
+from tests.factories.iam import UserFactory
+from tests.factories.school import SchoolFactory
 
 
 def _uuid(n: int) -> uuid.UUID:
@@ -22,8 +26,15 @@ class TestNotificationRepositorySmoke:
 
     async def test_list_notifications(self, db_session) -> None:
         repo = NotificationRepository(db_session)
-        notifications = await repo.list_notifications(user_id=_uuid(1), limit=20)
+        notifications, next_cursor, has_more = await repo.list_notifications(
+            school_id=_uuid(1),
+            user_id=_uuid(2),
+            role="PAR",
+            limit=20,
+        )
         assert isinstance(notifications, list)
+        assert next_cursor is None or isinstance(next_cursor, str)
+        assert isinstance(has_more, bool)
 
     async def test_get_notification(self, db_session) -> None:
         repo = NotificationRepository(db_session)
@@ -37,37 +48,57 @@ class TestNotificationRepositorySmoke:
 
     async def test_count_unread(self, db_session) -> None:
         repo = NotificationRepository(db_session)
-        count = await repo.count_unread(user_id=_uuid(1))
+        count = await repo.count_unread(
+            school_id=_uuid(1),
+            user_id=_uuid(2),
+            role="PAR",
+        )
         assert isinstance(count, int)
         assert count >= 0
 
     async def test_mark_all_read(self, db_session) -> None:
         repo = NotificationRepository(db_session)
-        result = await repo.mark_all_read(user_id=_uuid(1))
-        assert result is None or isinstance(result, int)
+        result = await repo.mark_all_read(
+            school_id=_uuid(1),
+            user_id=_uuid(2),
+            read_at=datetime.now(timezone.utc),
+        )
+        assert isinstance(result, int)
 
     async def test_list_preferences(self, db_session) -> None:
         repo = NotificationRepository(db_session)
-        prefs = await repo.list_preferences(user_id=_uuid(1))
+        prefs = await repo.list_preferences(school_id=_uuid(1), user_id=_uuid(2))
         assert isinstance(prefs, list)
 
     async def test_upsert_and_find_preference(self, db_session) -> None:
         repo = NotificationRepository(db_session)
-        pref = await repo.upsert_preferences(
-            user_id=_uuid(1),
+        school = await SchoolFactory.create(session=db_session)
+        user = await UserFactory.create(session=db_session, school=school)
+        prefs = await repo.upsert_preferences(
+            school_id=school.id,
+            user_id=user.id,
+            preferences=[
+                NotificationPreference(
+                    school_id=school.id,
+                    user_id=user.id,
+                    channel="email",
+                    category="billing",
+                    enabled=True,
+                )
+            ],
+        )
+        assert prefs
+        found = await repo.find_preference(
+            school_id=school.id,
+            user_id=user.id,
             channel="email",
             category="billing",
-            enabled=True,
-        )
-        assert pref is not None
-        found = await repo.find_preference(
-            user_id=_uuid(1), channel="email", category="billing"
         )
         assert found is None or found.enabled is True
 
     async def test_list_devices(self, db_session) -> None:
         repo = NotificationRepository(db_session)
-        devices = await repo.list_devices(user_id=_uuid(1))
+        devices = await repo.list_devices(school_id=_uuid(1), user_id=_uuid(2))
         assert isinstance(devices, list)
 
     async def test_find_device_by_token(self, db_session) -> None:

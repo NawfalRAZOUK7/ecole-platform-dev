@@ -108,7 +108,7 @@ jobs:
           helm upgrade --install ecole-platform ./infra/k8s \
             -n ecole-test \
             -f ./infra/k8s/values-staging.yaml \
-            --set namespace.create=true \
+            --set namespace.create=false \
             --set namespace.name=ecole-test \
             --set images.backend.repository=ecole-backend \
             --set images.backend.tag=test \
