@@ -93,7 +93,7 @@ jobs:
 
       - name: Set up kubectl
         if: steps.deployment-credentials.outputs.enabled == 'true'
-        uses: azure/setup-kubectl@v3
+        uses: azure/setup-kubectl@v5
 
       - name: Configure kubeconfig
         if: steps.deployment-credentials.outputs.enabled == 'true'
