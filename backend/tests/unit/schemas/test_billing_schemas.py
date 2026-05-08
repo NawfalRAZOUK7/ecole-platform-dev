@@ -12,15 +12,13 @@ import pytest
 from pydantic import ValidationError
 
 from app.schemas.billing import (
+    FeeStructureCreateRequest,
+    FeeStructureResponse,
     InvoiceItemResponse,
     InvoiceResponse,
     PaymentInitiateRequest,
     PaymentAttemptResponse,
     WebhookEventRequest,
-)
-from app.schemas.billing_enhancements import (
-    FeeStructureCreateRequest,
-    FeeStructureResponse,
 )
 
 

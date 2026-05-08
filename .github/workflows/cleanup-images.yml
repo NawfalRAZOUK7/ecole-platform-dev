@@ -14,7 +14,7 @@ jobs:
       - name: Delete old untagged backend images
         uses: actions/delete-package-versions@v5
         with:
-          package-name: backend
+          package-name: ${{ github.event.repository.name }}/backend
           package-type: container
           min-versions-to-keep: 10
           delete-only-untagged-versions: true
@@ -22,7 +22,7 @@ jobs:
       - name: Delete old untagged web images
         uses: actions/delete-package-versions@v5
         with:
-          package-name: web
+          package-name: ${{ github.event.repository.name }}/web
           package-type: container
           min-versions-to-keep: 10
           delete-only-untagged-versions: true

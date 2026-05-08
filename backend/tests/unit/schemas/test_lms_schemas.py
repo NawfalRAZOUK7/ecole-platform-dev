@@ -34,14 +34,14 @@ class TestContentItemSchemas:
     def test_content_item_response(self) -> None:
         item = ContentItemResponse(
             id="content-1",
+            school_id="sch-1",
             title="Math Basics",
-            type="video",
+            content_type="video",
             subject="mathematics",
-            grade_level="CP",
-            url="https://cdn.example.com/video.mp4",
-            duration_seconds=300,
+            level_band="CP",
+            status="published",
         )
-        assert item.type == "video"
+        assert item.content_type == "video"
 
 
 # ---------------------------------------------------------------------------
@@ -53,14 +53,14 @@ class TestCourseSchemas:
     def test_course_response(self) -> None:
         course = CourseResponse(
             id="course-1",
+            school_id="sch-1",
+            class_id=str(uuid.uuid4()),
             title="Mathematics CP",
             description="Basic math for CP",
-            subject="mathematics",
-            grade_level="CP",
             teacher_id=str(uuid.uuid4()),
-            content_items=[],
+            status="published",
         )
-        assert course.grade_level == "CP"
+        assert course.status == "published"
 
 
 # ---------------------------------------------------------------------------
@@ -73,31 +73,30 @@ class TestAssignmentSchemas:
         assignment = AssignmentResponse(
             id="assign-1",
             course_id="course-1",
+            teacher_id="teacher-1",
             title="Homework 1",
             description="Solve exercises 1-10",
-            due_date=datetime.utcnow(),
-            max_score=20.0,
+            due_at=datetime.utcnow().isoformat(),
+            total_points=20,
         )
-        assert assignment.max_score == 20.0
+        assert assignment.total_points == 20
 
     def test_submission_create_request(self) -> None:
+        assignment_id = uuid.uuid4()
         req = SubmissionCreateRequest(
-            assignment_id="assign-1",
-            content={"answers": ["a", "b", "c"]},
+            assignment_id=assignment_id,
         )
-        assert req.assignment_id == "assign-1"
+        assert req.assignment_id == assignment_id
 
     def test_submission_response(self) -> None:
         resp = SubmissionResponse(
             id="sub-1",
             assignment_id="assign-1",
             student_id="stu-1",
-            content={"answers": ["a"]},
-            submitted_at=datetime.utcnow(),
-            score=None,
-            feedback=None,
+            status="submitted",
+            submitted_at=datetime.utcnow().isoformat(),
         )
-        assert resp.score is None
+        assert resp.status == "submitted"
 
 
 # ---------------------------------------------------------------------------
@@ -108,35 +107,43 @@ class TestProgramSchemas:
 
     def test_program_create_request(self) -> None:
         req = ProgramCreateRequest(
-            school_id=uuid.uuid4(),
+            code="BILINGUAL",
             name="Bilingual Program",
             description="English-French bilingual track",
-            levels=["CP", "CE1", "CE2"],
+            level="CP",
         )
-        assert "CE1" in req.levels
+        assert req.code == "BILINGUAL"
 
     def test_program_response(self) -> None:
         resp = ProgramResponse(
             id="prog-1",
             school_id="sch-1",
+            code="BILINGUAL",
             name="Bilingual Program",
+            level="CP",
             description="English-French bilingual track",
-            levels=["CP", "CE1", "CE2"],
             is_active=True,
+            version_label="1.0",
+            effective_from=date.today(),
             created_at=datetime.utcnow(),
+            updated_at=None,
         )
         assert resp.is_active is True
 
     def test_program_version_response(self) -> None:
         ver = ProgramVersionResponse(
             id="ver-1",
+            school_id="sch-1",
             program_id="prog-1",
-            version_number=1,
-            effective_date=date.today(),
-            rules={},
+            version_label="1.0",
+            description=None,
+            effective_from=date.today(),
+            retired_at=None,
+            is_active=True,
             created_at=datetime.utcnow(),
+            updated_at=None,
         )
-        assert ver.version_number == 1
+        assert ver.version_label == "1.0"
 
 
 # ---------------------------------------------------------------------------
@@ -145,13 +152,11 @@ class TestProgramSchemas:
 class TestSchemaEdgeCases:
     """Boundary and error-path tests for LMS schemas."""
 
-    def test_empty_levels_list(self) -> None:
-        """Programs should require at least one level."""
+    def test_missing_program_code(self) -> None:
+        """Programs require a stable code."""
         with pytest.raises(ValidationError):
             ProgramCreateRequest(
-                school_id=uuid.uuid4(),
                 name="Empty Program",
-                levels=[],
             )
 
     def test_missing_required_fields(self) -> None:

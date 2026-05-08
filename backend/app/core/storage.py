@@ -307,7 +307,9 @@ class LocalStorageBackend:
             content_type, _ = mimetypes.guess_type(str(abs_path))
             return ObjectStat(
                 size_bytes=stat_result.st_size,
-                etag=hashlib.md5(abs_path.read_bytes()).hexdigest(),  # noqa: S324
+                etag=hashlib.md5(
+                    abs_path.read_bytes(), usedforsecurity=False
+                ).hexdigest(),
                 content_type=content_type or "application/octet-stream",
                 last_modified=datetime.fromtimestamp(stat_result.st_mtime),
             )

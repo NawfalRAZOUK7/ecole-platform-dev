@@ -43,14 +43,17 @@ jobs:
         run: echo "GitHub Pages is not enabled for this repository; skipping docs deployment."
 
       - name: Install backend dependencies
+        if: steps.pages.outcome == 'success'
         run: pip install -r backend/requirements.txt
 
       - name: Export OpenAPI spec
+        if: steps.pages.outcome == 'success'
         run: |
           cd backend
           python scripts/export_openapi.py
 
       - name: Generate Redoc static site
+        if: steps.pages.outcome == 'success'
         run: |
           mkdir -p docs/site
           cp backend/docs/openapi.json docs/openapi.json

@@ -22,8 +22,12 @@ weasyprint==68.0
 reportlab==4.2.*
 openpyxl==3.1.*
 Pillow==12.2.0
-# aioboto3 pins the compatible boto3/botocore family through aiobotocore[boto3].
-aioboto3==13.3.*
+# Keep the async S3 dependency family pinned to avoid pip resolver backtracking.
+aioboto3==13.3.0
+aiobotocore==2.16.0
+boto3==1.35.81
+botocore==1.35.81
+s3transfer==0.10.4
 opentelemetry-api==1.40.0
 opentelemetry-sdk==1.40.0
 opentelemetry-instrumentation-fastapi==0.61b0

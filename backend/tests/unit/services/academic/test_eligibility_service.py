@@ -159,8 +159,7 @@ class TestEvaluateMinAttendanceRate:
 
         # Mock attendance count
         count_result = MagicMock()
-        count_result.total = 100
-        count_result.present = 90
+        count_result.first.return_value = MagicMock(total=100, present=90)
 
         service.db.execute = AsyncMock(side_effect=[ay_result, count_result])
 
@@ -182,8 +181,7 @@ class TestEvaluateMinAttendanceRate:
         )
 
         count_result = MagicMock()
-        count_result.total = 100
-        count_result.present = 70
+        count_result.first.return_value = MagicMock(total=100, present=70)
 
         service.db.execute = AsyncMock(side_effect=[ay_result, count_result])
 
@@ -219,8 +217,7 @@ class TestEvaluateMinAttendanceRate:
         )
 
         count_result = MagicMock()
-        count_result.total = 0
-        count_result.present = 0
+        count_result.first.return_value = MagicMock(total=0, present=0)
 
         service.db.execute = AsyncMock(side_effect=[ay_result, count_result])
 

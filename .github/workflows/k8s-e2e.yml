@@ -77,7 +77,6 @@ jobs:
 
       - name: Install Postgres and Redis in Kind
         run: |
-          kubectl apply -f https://raw.githubusercontent.com/bitnami/charts/main/bitnami/postgresql/values.yaml
           helm repo add bitnami https://charts.bitnami.com/bitnami
           helm repo update
           helm install postgres bitnami/postgresql -n ecole-test --create-namespace --set auth.password=ecole --set auth.database=ecole_platform --set primary.service.ports.postgresql=5432

@@ -9,9 +9,9 @@ describe('EmptyState', () => {
     expect(screen.getByText('There is nothing to display.')).toBeInTheDocument();
   });
 
-  it('renders default icon 📭', () => {
-    renderWithProviders(<EmptyState />);
-    expect(screen.getByText('📭')).toBeInTheDocument();
+  it('renders default inbox icon', () => {
+    const { container } = renderWithProviders(<EmptyState />);
+    expect(container.querySelector('.lucide-inbox')).toBeInTheDocument();
   });
 
   it('renders custom icon when provided', () => {
