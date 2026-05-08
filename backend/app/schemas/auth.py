@@ -26,7 +26,7 @@ class LoginRequest(BaseModel):
 class LoginData(BaseModel):
     access_token: str
     token_type: str = "bearer"
-    expires_in: int = Field(..., description="Token lifetime in seconds")
+    expires_in: int = Field(3600, description="Token lifetime in seconds")
 
 
 # ---------------------------------------------------------------------------

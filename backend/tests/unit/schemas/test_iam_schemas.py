@@ -109,16 +109,14 @@ class TestInviteCreateRequest:
 
     def test_valid_invite(self) -> None:
         model = InviteCreateRequest(
-            email="new@school.ma",
-            role="teacher",
-            school_id=uuid.uuid4(),
+            role_target="teacher",
             expires_in_hours=48,
         )
-        assert model.role == "teacher"
+        assert model.role_target == "teacher"
 
     def test_missing_required(self) -> None:
         with pytest.raises(ValidationError):
-            InviteCreateRequest(role="teacher")
+            InviteCreateRequest(expires_in_hours=48)
 
 
 # ---------------------------------------------------------------------------

@@ -67,6 +67,8 @@ class ClaudeProvider:
             "You are a pedagogical writing assistant for a K-12 school in Morocco. "
             "Respond with strict JSON only."
         )
+        words = [word for word in text.split() if word.strip()]
+        word_count = len(words)
         try:
             result = await self.complete(prompt, system, max_tokens=500)
             parsed = json.loads(result)
@@ -76,6 +78,7 @@ class ClaudeProvider:
                 return {
                     "suggestion": suggestion,
                     "hints": [str(item) for item in hints[:3]],
+                    "word_count": word_count,
                 }
         except Exception:
             logger.exception("Claude analyze_writing() failed, using mock fallback")
@@ -84,6 +87,7 @@ class ClaudeProvider:
     async def generate_recommendations(
         self,
         student_data: dict[str, Any],
+        language: str | None = None,
     ) -> list[Recommendation]:
         prompt = (
             "Generate up to 3 student recommendations as JSON array. "
@@ -122,7 +126,7 @@ class ClaudeProvider:
             logger.exception(
                 "Claude generate_recommendations() failed, using mock fallback"
             )
-        return await self._fallback.generate_recommendations(student_data)
+        return await self._fallback.generate_recommendations(student_data, language=language)
 
     async def compute_kpi_insights(self, metrics: dict[str, Any]) -> list[str]:
         prompt = (

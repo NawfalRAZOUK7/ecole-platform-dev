@@ -12,6 +12,28 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 
+class ProfileUpdateRequest(BaseModel):
+    full_name: str | None = None
+    phone: str | None = Field(None, max_length=20)
+    avatar_url: str | None = None
+
+
+class ProfileResponse(BaseModel):
+    id: UUID
+    email: str
+    full_name: str
+    role: str
+    school_id: UUID
+    phone: str | None = None
+    created_at: datetime
+    updated_at: datetime | None = None
+
+
+class ProfileAvatarResponse(BaseModel):
+    avatar_url: str
+    updated_at: datetime
+
+
 # ---------------------------------------------------------------------------
 # Student Profile
 # ---------------------------------------------------------------------------

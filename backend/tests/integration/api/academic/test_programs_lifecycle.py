@@ -731,18 +731,6 @@ async def test_gradebook_accepts_program_id_filter(client, api_context):
 # MERGED FROM test_program_g50_phase3.py
 # ============================================================================
 
-"""Phase 3 integration tests — program versions, equivalences, snapshots,
-and eligibility rules. Smoke-level coverage that exercises each new
-endpoint's happy path + the most important error paths.
-
-Run with:
-    pytest tests/integration/test_program_g50_phase3.py
-"""
-
-from __future__ import annotations
-
-import pytest
-
 from tests.integration.api.helpers import auth_header
 
 

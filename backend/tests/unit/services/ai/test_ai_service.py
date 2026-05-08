@@ -108,16 +108,15 @@ class TestMockProvider:
             text="Short text.",
             language="en",
         )
-        assert isinstance(feedback, WritingFeedback)
-        assert feedback.word_count < 20
-        assert len(feedback.suggestions) > 0
+        assert feedback["word_count"] < 20
+        assert isinstance(feedback["hints"], list)
+        assert len(feedback["hints"]) > 0
 
     @pytest.mark.asyncio
     async def test_analyze_writing_long_text(self, provider: MockProvider) -> None:
         text = " ".join(["word"] * 100)
         feedback = await provider.analyze_writing(text=text, language="en")
-        assert isinstance(feedback, WritingFeedback)
-        assert feedback.word_count == 100
+        assert feedback["word_count"] == 100
 
     @pytest.mark.asyncio
     async def test_generate_recommendations(self, provider: MockProvider) -> None:
@@ -127,7 +126,7 @@ class TestMockProvider:
         )
         assert isinstance(recs, list)
         assert len(recs) > 0
-        assert all(hasattr(r, "title") for r in recs)
+        assert all("title" in r for r in recs)
 
     def test_resolve_language_explicit(self, provider: MockProvider) -> None:
         assert provider._resolve_language("fr", "hello") == "fr"

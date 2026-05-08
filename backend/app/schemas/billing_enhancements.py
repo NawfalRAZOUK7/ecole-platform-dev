@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 
+from app.schemas.billing import FeeStructureCreateRequest, FeeStructureResponse
 from pydantic import BaseModel, Field
 
 

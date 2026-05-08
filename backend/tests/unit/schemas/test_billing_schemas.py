@@ -116,8 +116,10 @@ class TestWebhookSchemas:
 
     def test_webhook_event_request(self) -> None:
         req = WebhookEventRequest(
+            provider_event_id="evt-123",
+            payment_attempt_id=uuid.uuid4(),
             event_type="invoice.paid",
-            payload={"invoice_id": "inv-1"},
+            status="paid",
             signature="sha256=abc123",
         )
         assert req.event_type == "invoice.paid"
@@ -131,24 +133,26 @@ class TestFeeStructureSchemas:
 
     def test_fee_structure_create_request(self) -> None:
         req = FeeStructureCreateRequest(
-            school_id=uuid.uuid4(),
+            academic_year_id=uuid.uuid4(),
             name="Standard Tuition",
             amount=1500.0,
             currency="MAD",
-            frequency="monthly",
-            academic_year="2024-2025",
+            frequency="MONTHLY",
+            due_day=15,
         )
-        assert req.frequency == "monthly"
+        assert req.frequency == "MONTHLY"
 
     def test_fee_structure_response(self) -> None:
         resp = FeeStructureResponse(
             id="fee-1",
             school_id="sch-1",
+            academic_year_id="ay-1",
             name="Standard Tuition",
             amount=1500.0,
             currency="MAD",
-            frequency="monthly",
-            academic_year="2024-2025",
-            created_at=date.today(),
+            frequency="MONTHLY",
+            due_day=15,
+            status="ACTIVE",
+            created_at=date.today().isoformat(),
         )
         assert resp.name == "Standard Tuition"

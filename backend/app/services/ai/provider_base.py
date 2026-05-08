@@ -8,6 +8,7 @@ from typing import Any, Protocol, TypedDict
 class WritingFeedback(TypedDict):
     suggestion: str | None
     hints: list[str]
+    word_count: int
 
 
 class Recommendation(TypedDict, total=False):
@@ -29,6 +30,7 @@ class AIProvider(Protocol):
     async def generate_recommendations(
         self,
         student_data: dict[str, Any],
+        language: str | None = None,
     ) -> list[Recommendation]:
         """Return structured learning recommendations."""
 

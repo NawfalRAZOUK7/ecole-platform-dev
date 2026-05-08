@@ -105,6 +105,12 @@ _PII_FIELD_NAMES = frozenset(
     }
 )
 
+_API_KEY_PATTERN = re.compile(r"sk-[A-Za-z0-9_-]{10,}")
+
+
+def _sanitize_for_logging(text: str) -> str:
+    return _API_KEY_PATTERN.sub("***", text)
+
 
 def detect_pii_in_text(text: str) -> list[str]:
     detected: list[str] = []

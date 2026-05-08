@@ -133,11 +133,13 @@ class MockProvider:
         return {
             "suggestion": suggestions[resolved_language],
             "hints": hints_map[resolved_language][:3],
+            "word_count": word_count,
         }
 
     async def generate_recommendations(
         self,
         student_data: dict[str, Any],
+        language: str | None = None,
     ) -> list[Recommendation]:
         completed_count = int(student_data.get("completed_count") or 0)
         average_grade = float(student_data.get("average_grade") or 0)
