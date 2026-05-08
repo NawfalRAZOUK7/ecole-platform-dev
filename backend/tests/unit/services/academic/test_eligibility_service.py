@@ -8,12 +8,12 @@ from __future__ import annotations
 
 import uuid
 from datetime import date
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from app.services.eligibility_service import EligibilityService, KNOWN_CONDITION_TYPES
-from app.core.exceptions import NotFoundError, ValidationError
+from app.core.exceptions import NotFoundError
 from app.models.erp import EligibilityRule
 
 

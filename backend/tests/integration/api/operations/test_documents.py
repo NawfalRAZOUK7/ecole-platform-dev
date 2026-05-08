@@ -9,7 +9,6 @@ Run:
 
 from __future__ import annotations
 
-import io
 import uuid
 from pathlib import Path
 
@@ -19,7 +18,7 @@ from sqlalchemy import select
 
 from app.core.database import async_session
 from app.models.documents import Document
-from app.services.file_storage import LocalFileStorageBackend, S3FileStorageBackend
+from app.services.file_storage import LocalFileStorageBackend
 
 
 def _auth_headers(token: str) -> dict[str, str]:

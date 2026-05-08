@@ -6,7 +6,7 @@ Validates content, course, assignment, quiz, and progress schemas.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 
 import pytest
 from pydantic import ValidationError

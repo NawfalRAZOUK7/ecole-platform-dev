@@ -5,12 +5,11 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
 from app.core.dependencies import AuthContext
-from app.core.exceptions import NotFoundError
 from app.services import notification_hub as notif_module
 from app.services.notification_hub import NotificationHubService
 

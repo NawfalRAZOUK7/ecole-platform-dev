@@ -6,8 +6,7 @@ and metrics emission without network calls.
 
 from __future__ import annotations
 
-import uuid
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -18,7 +17,6 @@ from app.services.ai.ai_service import (
 )
 from app.services.ai.provider_factory import create_ai_provider
 from app.services.ai.mock_provider import MockProvider
-from app.services.ai.provider_base import WritingFeedback
 
 
 # ---------------------------------------------------------------------------

@@ -481,8 +481,6 @@ async def seed_programs(session: AsyncSession) -> None:
         return
 
     school = schools[0]
-    users = (await session.execute(select(User).where(User.school_id == school.id).limit(2))).scalars().all()
-    creator_id = users[0].id if users else None
 
     program1 = Program(
         id=uuid.uuid4(),

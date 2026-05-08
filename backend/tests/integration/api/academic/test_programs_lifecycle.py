@@ -731,8 +731,6 @@ async def test_gradebook_accepts_program_id_filter(client, api_context):
 # MERGED FROM test_program_g50_phase3.py
 # ============================================================================
 
-from tests.integration.api.helpers import auth_header
-
 
 # ---------------------------------------------------------------------------
 # 3.1 — program_versions

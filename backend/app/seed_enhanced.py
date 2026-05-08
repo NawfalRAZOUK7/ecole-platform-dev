@@ -116,7 +116,6 @@ from app.models.billing import (
     Installment,
     Invoice,
     InvoiceItem,
-    InvoiceStatus,
     LateFeePolicy,
     PaymentAttempt,
     PaymentAttemptStatus,
@@ -136,7 +135,6 @@ from app.models.com import (
     MessageReadReceipt,
     Notification,
     NotificationDelivery,
-    ParentFeedItem,
     SharedReviewComment,
 )
 
@@ -154,7 +152,6 @@ from app.models.iam import (
     TeacherProfile,
     User,
 )
-from app.models.school import School
 
 # ── Shared constants from seed.py (duplicated to avoid circular import) ──
 SCHOOL_ID = uuid.UUID("00000000-0000-4000-8000-000000000001")
@@ -726,7 +723,6 @@ async def seed_grade_categories_and_averages(session: AsyncSession) -> None:
     await session.flush()
 
     # Student period averages for 6A students
-    student_ids = [STUDENT_1_ID, STUDENT_2_ID, STUDENT_4_ID, STUDENT_5_ID]
     averages = [
         (STUDENT_1_ID, 16.5, "Tres bien", 1),
         (STUDENT_2_ID, 14.0, "Bien", 2),
@@ -775,7 +771,6 @@ async def seed_grade_categories_and_averages(session: AsyncSession) -> None:
 
 async def seed_enhanced_attendance(session: AsyncSession) -> None:
     """Add 15 more attendance sessions across 3 weeks with alerts."""
-    from app.models.erp import AttendanceStatus
 
     # 3 weeks of school days (Mon-Fri)
     school_days = []

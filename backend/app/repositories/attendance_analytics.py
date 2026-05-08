@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, timedelta
+from datetime import date
 from typing import Any
 
 from sqlalchemy import Date, DateTime, case, cast, func, select

@@ -19,8 +19,6 @@ from app.models.iam import Membership, ParentChildLink, Session, User
 from app.models.lms import Assignment, Course, GradeCategory, Submission
 from tests.integration.api.conftest import (  # noqa: F401
     isolated_legacy_api_db,
-    legacy_api_seed,
-    session_factory,
 )
 
 SCHOOL_ID = "00000000-0000-4000-8000-000000000001"
