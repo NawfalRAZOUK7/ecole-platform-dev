@@ -2,7 +2,7 @@
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: {{ include "ecole.fullname" . }}-backend
+  name: {{ include "ecole-platform.fullname" . }}-backend
   labels:
     {{- include "ecole.labels" . | nindent 4 }}
     app.kubernetes.io/component: backend
@@ -17,7 +17,7 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: {{ include "ecole.fullname" . }}-web
+  name: {{ include "ecole-platform.fullname" . }}-web
   labels:
     {{- include "ecole.labels" . | nindent 4 }}
     app.kubernetes.io/component: web

@@ -2,7 +2,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "ecole.fullname" . }}
+  name: {{ include "ecole-platform.fullname" . }}
   labels:
     {{- include "ecole.labels" . | nindent 4 }}
   annotations:
@@ -24,7 +24,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: {{ include "ecole.fullname" . }}-backend
+                name: {{ include "ecole-platform.fullname" . }}-backend
                 port:
                   name: http
           # WebSocket traffic → backend
@@ -32,7 +32,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: {{ include "ecole.fullname" . }}-backend
+                name: {{ include "ecole-platform.fullname" . }}-backend
                 port:
                   name: http
           # Everything else → web SPA
@@ -40,7 +40,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: {{ include "ecole.fullname" . }}-web
+                name: {{ include "ecole-platform.fullname" . }}-web
                 port:
                   name: http
 {{- end }}

@@ -22,7 +22,7 @@ app.kubernetes.io/component: {{ .component }}
 Full name prefix. If the release name already contains the chart name, use
 the release name alone to avoid duplication (e.g. "ecole-platform-ecole-platform").
 */}}
-{{- define "ecole.fullname" -}}
+{{- define "ecole-platform.fullname" -}}
 {{- if contains .Chart.Name .Release.Name }}
 {{- .Release.Name | trunc 63 | trimSuffix "-" }}
 {{- else }}

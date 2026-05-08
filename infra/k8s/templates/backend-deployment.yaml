@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "ecole.fullname" . }}-backend
+  name: {{ include "ecole-platform.fullname" . }}-backend
   labels:
     {{- include "ecole.labels" . | nindent 4 }}
     app.kubernetes.io/component: backend
@@ -53,7 +53,7 @@ spec:
               alembic upgrade head
           envFrom:
             - configMapRef:
-                name: {{ include "ecole.fullname" . }}-config
+                name: {{ include "ecole-platform.fullname" . }}-config
           env:
             - name: DATABASE_URL
               valueFrom:
@@ -82,7 +82,7 @@ spec:
               name: http
           envFrom:
             - configMapRef:
-                name: {{ include "ecole.fullname" . }}-config
+                name: {{ include "ecole-platform.fullname" . }}-config
           env:
             - name: DATABASE_URL
               valueFrom:

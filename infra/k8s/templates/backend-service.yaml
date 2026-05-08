@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "ecole.fullname" . }}-backend
+  name: {{ include "ecole-platform.fullname" . }}-backend
   labels:
     {{- include "ecole.labels" . | nindent 4 }}
     app.kubernetes.io/component: backend

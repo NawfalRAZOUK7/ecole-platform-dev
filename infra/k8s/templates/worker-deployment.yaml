@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "ecole.fullname" . }}-worker
+  name: {{ include "ecole-platform.fullname" . }}-worker
   labels:
     {{- include "ecole.labels" . | nindent 4 }}
     app.kubernetes.io/component: worker
@@ -42,7 +42,7 @@ spec:
           command: ["python", "-m", "arq", "app.core.tasks.WorkerSettings"]
           envFrom:
             - configMapRef:
-                name: {{ include "ecole.fullname" . }}-config
+                name: {{ include "ecole-platform.fullname" . }}-config
           env:
             - name: DATABASE_URL
               valueFrom:
