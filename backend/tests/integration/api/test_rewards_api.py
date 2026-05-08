@@ -28,7 +28,9 @@ class TestRewardsApi:
     @pytest.mark.asyncio
     async def test_anyone_can_list_badges(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
 
         response = await client.get("/rewards/badges", headers=auth_header(token))
         assert response.status_code == 200
@@ -51,7 +53,9 @@ class TestRewardsApi:
     @pytest.mark.asyncio
     async def test_teacher_cannot_create_badge(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
 
         response = await client.post(
             "/rewards/badges",
@@ -63,7 +67,9 @@ class TestRewardsApi:
     @pytest.mark.asyncio
     async def test_teacher_can_award_points(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
 
         response = await client.post(
             "/rewards/award",
@@ -82,7 +88,9 @@ class TestRewardsApi:
     @pytest.mark.asyncio
     async def test_student_can_view_own_rewards(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
 
         response = await client.get("/rewards/me", headers=auth_header(token))
         assert response.status_code == 200

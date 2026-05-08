@@ -161,9 +161,8 @@ async def create_justification(
     """
     content_type = request.headers.get("content-type", "").lower()
     attachment = None
-    if (
-        content_type.startswith("multipart/form-data")
-        or content_type.startswith("application/x-www-form-urlencoded")
+    if content_type.startswith("multipart/form-data") or content_type.startswith(
+        "application/x-www-form-urlencoded"
     ):
         form = await request.form()
         payload = {

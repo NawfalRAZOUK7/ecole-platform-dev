@@ -60,7 +60,9 @@ class TestNotificationRepositorySmoke:
             enabled=True,
         )
         assert pref is not None
-        found = await repo.find_preference(user_id=_uuid(1), channel="email", category="billing")
+        found = await repo.find_preference(
+            user_id=_uuid(1), channel="email", category="billing"
+        )
         assert found is None or found.enabled is True
 
     async def test_list_devices(self, db_session) -> None:

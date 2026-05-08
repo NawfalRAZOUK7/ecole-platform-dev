@@ -130,7 +130,17 @@ class TestInvoicePdfContext:
 
         ctx = await service._invoice_pdf_context(_make_job())
 
-        required = {"lang", "is_rtl", "school", "invoice", "items", "parent", "totals", "generated_at", "report_title"}
+        required = {
+            "lang",
+            "is_rtl",
+            "school",
+            "invoice",
+            "items",
+            "parent",
+            "totals",
+            "generated_at",
+            "report_title",
+        }
         assert required.issubset(ctx.keys())
 
     @pytest.mark.asyncio
@@ -211,21 +221,27 @@ class TestInvoicePdfContext:
 
     @pytest.mark.asyncio
     async def test_raises_not_found_when_invoice_missing(self) -> None:
-        service = _setup_service(invoice=None, school=_make_school(), parent=_make_parent())
+        service = _setup_service(
+            invoice=None, school=_make_school(), parent=_make_parent()
+        )
 
         with pytest.raises(NotFoundError):
             await service._invoice_pdf_context(_make_job())
 
     @pytest.mark.asyncio
     async def test_raises_not_found_when_school_missing(self) -> None:
-        service = _setup_service(invoice=_make_invoice(), school=None, parent=_make_parent())
+        service = _setup_service(
+            invoice=_make_invoice(), school=None, parent=_make_parent()
+        )
 
         with pytest.raises(NotFoundError):
             await service._invoice_pdf_context(_make_job())
 
     @pytest.mark.asyncio
     async def test_raises_not_found_when_parent_missing(self) -> None:
-        service = _setup_service(invoice=_make_invoice(), school=_make_school(), parent=None)
+        service = _setup_service(
+            invoice=_make_invoice(), school=_make_school(), parent=None
+        )
 
         with pytest.raises(NotFoundError):
             await service._invoice_pdf_context(_make_job())

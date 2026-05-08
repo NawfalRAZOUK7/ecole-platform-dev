@@ -111,7 +111,16 @@ class TestPaymentReceiptContext:
 
         ctx = await service._payment_receipt_context(_make_job())
 
-        required = {"lang", "is_rtl", "school", "payment", "invoice", "parent", "generated_at", "report_title"}
+        required = {
+            "lang",
+            "is_rtl",
+            "school",
+            "payment",
+            "invoice",
+            "parent",
+            "generated_at",
+            "report_title",
+        }
         assert required.issubset(ctx.keys())
 
     @pytest.mark.asyncio
@@ -174,7 +183,9 @@ class TestPaymentReceiptContext:
         ctx = await service._payment_receipt_context(_make_job())
 
         assert ctx["invoice"]["id"] == str(invoice.id)
-        assert ctx["invoice"]["total_amount"] == pytest.approx(float(invoice.total_amount))
+        assert ctx["invoice"]["total_amount"] == pytest.approx(
+            float(invoice.total_amount)
+        )
         assert ctx["invoice"]["currency"] == invoice.currency
 
     @pytest.mark.asyncio

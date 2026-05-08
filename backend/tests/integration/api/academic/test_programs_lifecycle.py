@@ -727,6 +727,7 @@ async def test_gradebook_accepts_program_id_filter(client, api_context):
     # 422 would mean the new query param was rejected — that's the regression.
     assert response.status_code in (200, 404), response.text
 
+
 # ============================================================================
 # MERGED FROM test_program_g50_phase3.py
 # ============================================================================

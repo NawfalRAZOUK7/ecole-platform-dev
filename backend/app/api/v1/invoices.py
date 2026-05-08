@@ -138,7 +138,11 @@ async def generate_invoice_pdf(
         target_type="report_job",
         target_id=uuid.UUID(payload["id"]),
         outcome="success",
-        entity_after={"invoice_id": str(invoice_id), "language": language, "job": payload},
+        entity_after={
+            "invoice_id": str(invoice_id),
+            "language": language,
+            "job": payload,
+        },
         ip_address=get_client_ip(request),
     )
     await db.commit()

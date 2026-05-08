@@ -27,7 +27,9 @@ async def _create_payment(client, parent_token: str) -> str:
 
 class TestPaymentReceiptApi:
     @pytest.mark.asyncio
-    async def test_admin_can_request_receipt_fr(self, client, admin_token, parent_token):
+    async def test_admin_can_request_receipt_fr(
+        self, client, admin_token, parent_token
+    ):
         payment_id = await _create_payment(client, parent_token)
 
         response = await client.post(
@@ -43,7 +45,9 @@ class TestPaymentReceiptApi:
         assert data["status"] in ("pending", "processing", "ready")
 
     @pytest.mark.asyncio
-    async def test_admin_can_request_receipt_ar(self, client, admin_token, parent_token):
+    async def test_admin_can_request_receipt_ar(
+        self, client, admin_token, parent_token
+    ):
         payment_id = await _create_payment(client, parent_token)
 
         response = await client.post(
@@ -71,7 +75,9 @@ class TestPaymentReceiptApi:
         assert data["type"] == "payment_receipt"
 
     @pytest.mark.asyncio
-    async def test_student_cannot_request_receipt(self, client, student_token, parent_token):
+    async def test_student_cannot_request_receipt(
+        self, client, student_token, parent_token
+    ):
         payment_id = await _create_payment(client, parent_token)
 
         response = await client.post(
@@ -94,7 +100,9 @@ class TestPaymentReceiptApi:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_invalid_language_returns_422(self, client, admin_token, parent_token):
+    async def test_invalid_language_returns_422(
+        self, client, admin_token, parent_token
+    ):
         payment_id = await _create_payment(client, parent_token)
 
         response = await client.post(

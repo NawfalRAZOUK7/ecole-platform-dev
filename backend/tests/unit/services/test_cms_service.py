@@ -109,9 +109,7 @@ class TestCMSServiceCreateAnnouncement:
             target_roles=["INVALID_ROLE"],
         )
         with pytest.raises(ValidationError):
-            await service.create_announcement(
-                body=body, auth=auth, ip_address=None
-            )
+            await service.create_announcement(body=body, auth=auth, ip_address=None)
 
 
 class TestCMSServiceUpdateAnnouncement:

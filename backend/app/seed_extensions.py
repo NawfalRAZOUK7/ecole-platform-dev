@@ -21,7 +21,14 @@ from app.models.calendar import (
     EventType,
     EventVisibility,
 )
-from app.models.documents import Document, DocumentCategory, DocumentVersion, Resource, ResourceType, ResourceVisibility
+from app.models.documents import (
+    Document,
+    DocumentCategory,
+    DocumentVersion,
+    Resource,
+    ResourceType,
+    ResourceVisibility,
+)
 from app.models.erp import (
     EligibilityRule,
     EligibilityRuleKind,
@@ -44,7 +51,11 @@ async def seed_calendar(session: AsyncSession) -> None:
         return
 
     school = schools[0]
-    users = (await session.execute(select(User).where(User.school_id == school.id))).scalars().all()
+    users = (
+        (await session.execute(select(User).where(User.school_id == school.id)))
+        .scalars()
+        .all()
+    )
     creator_id = users[0].id if users else None
     now = datetime.now(timezone.utc)
 
@@ -164,27 +175,58 @@ async def seed_calendar(session: AsyncSession) -> None:
         rsvps = []
         for evt in events[:3]:
             for u in users[1:4]:
-                rsvps.append(EventRSVP(
-                    id=uuid.uuid4(),
-                    event_id=evt.id,
-                    user_id=u.id,
-                    status=EventRsvpStatus.ATTENDING.value if u.id == users[1].id else EventRsvpStatus.MAYBE.value,
-                    responded_at=now,
-                ))
+                rsvps.append(
+                    EventRSVP(
+                        id=uuid.uuid4(),
+                        event_id=evt.id,
+                        user_id=u.id,
+                        status=EventRsvpStatus.ATTENDING.value
+                        if u.id == users[1].id
+                        else EventRsvpStatus.MAYBE.value,
+                        responded_at=now,
+                    )
+                )
         session.add_all(rsvps)
         rsvp_count = len(rsvps)
 
     # Reminders for multiple events
     reminders = [
-        EventReminder(id=uuid.uuid4(), event_id=events[0].id, remind_at=events[0].start_at - timedelta(days=1), channel=EventReminderChannel.IN_APP.value),
-        EventReminder(id=uuid.uuid4(), event_id=events[1].id, remind_at=events[1].start_at - timedelta(hours=2), channel=EventReminderChannel.PUSH.value),
-        EventReminder(id=uuid.uuid4(), event_id=events[2].id, remind_at=events[2].start_at - timedelta(days=2), channel=EventReminderChannel.IN_APP.value),
-        EventReminder(id=uuid.uuid4(), event_id=events[3].id, remind_at=events[3].start_at - timedelta(days=1), channel=EventReminderChannel.IN_APP.value),
-        EventReminder(id=uuid.uuid4(), event_id=events[6].id, remind_at=events[6].start_at - timedelta(days=7), channel=EventReminderChannel.PUSH.value),
+        EventReminder(
+            id=uuid.uuid4(),
+            event_id=events[0].id,
+            remind_at=events[0].start_at - timedelta(days=1),
+            channel=EventReminderChannel.IN_APP.value,
+        ),
+        EventReminder(
+            id=uuid.uuid4(),
+            event_id=events[1].id,
+            remind_at=events[1].start_at - timedelta(hours=2),
+            channel=EventReminderChannel.PUSH.value,
+        ),
+        EventReminder(
+            id=uuid.uuid4(),
+            event_id=events[2].id,
+            remind_at=events[2].start_at - timedelta(days=2),
+            channel=EventReminderChannel.IN_APP.value,
+        ),
+        EventReminder(
+            id=uuid.uuid4(),
+            event_id=events[3].id,
+            remind_at=events[3].start_at - timedelta(days=1),
+            channel=EventReminderChannel.IN_APP.value,
+        ),
+        EventReminder(
+            id=uuid.uuid4(),
+            event_id=events[6].id,
+            remind_at=events[6].start_at - timedelta(days=7),
+            channel=EventReminderChannel.PUSH.value,
+        ),
     ]
     session.add_all(reminders)
 
-    print(f"    Calendar: {len(events)} events, {rsvp_count} RSVPs, {len(reminders)} reminders")
+    print(
+        f"    Calendar: {len(events)} events, {rsvp_count} RSVPs, {len(reminders)} reminders"
+    )
 
 
 async def seed_documents(session: AsyncSession) -> None:
@@ -194,7 +236,15 @@ async def seed_documents(session: AsyncSession) -> None:
         return
 
     school = schools[0]
-    users = (await session.execute(select(User).where(User.school_id == school.id).limit(3))).scalars().all()
+    users = (
+        (
+            await session.execute(
+                select(User).where(User.school_id == school.id).limit(3)
+            )
+        )
+        .scalars()
+        .all()
+    )
     owner_id = users[0].id if users else None
 
     docs = [
@@ -251,31 +301,35 @@ async def seed_documents(session: AsyncSession) -> None:
     await session.flush()
 
     # Document versions (2 versions for first doc)
-    session.add(DocumentVersion(
-        id=uuid.uuid4(),
-        document_id=docs[0].id,
-        version_number=1,
-        uploader_id=owner_id,
-        filename="bulletin_yassine_t1.pdf",
-        original_filename="Bulletin Trimestriel — Yassine Alaoui.pdf",
-        mime_type="application/pdf",
-        storage_path="documents/report_cards/bulletin_yassine_t1.pdf",
-        size_bytes=245_760,
-        sha256="a" * 64,
-    ))
-    session.add(DocumentVersion(
-        id=uuid.uuid4(),
-        document_id=docs[0].id,
-        version_number=2,
-        uploader_id=owner_id,
-        filename="bulletin_yassine_t1_v2.pdf",
-        original_filename="Bulletin Trimestriel — Yassine Alaoui (v2).pdf",
-        mime_type="application/pdf",
-        storage_path="documents/report_cards/bulletin_yassine_t1_v2.pdf",
-        size_bytes=248_000,
-        sha256="e" * 64,
-        change_note="Correction de la moyenne generale",
-    ))
+    session.add(
+        DocumentVersion(
+            id=uuid.uuid4(),
+            document_id=docs[0].id,
+            version_number=1,
+            uploader_id=owner_id,
+            filename="bulletin_yassine_t1.pdf",
+            original_filename="Bulletin Trimestriel — Yassine Alaoui.pdf",
+            mime_type="application/pdf",
+            storage_path="documents/report_cards/bulletin_yassine_t1.pdf",
+            size_bytes=245_760,
+            sha256="a" * 64,
+        )
+    )
+    session.add(
+        DocumentVersion(
+            id=uuid.uuid4(),
+            document_id=docs[0].id,
+            version_number=2,
+            uploader_id=owner_id,
+            filename="bulletin_yassine_t1_v2.pdf",
+            original_filename="Bulletin Trimestriel — Yassine Alaoui (v2).pdf",
+            mime_type="application/pdf",
+            storage_path="documents/report_cards/bulletin_yassine_t1_v2.pdf",
+            size_bytes=248_000,
+            sha256="e" * 64,
+            change_note="Correction de la moyenne generale",
+        )
+    )
 
     # Shared resources — each resource needs a file_id pointing to a document
     resources = [
@@ -347,7 +401,9 @@ async def seed_documents(session: AsyncSession) -> None:
     ]
     session.add_all(resources)
 
-    print(f"    Documents: {len(docs)} documents + 2 versions, {len(resources)} shared resources")
+    print(
+        f"    Documents: {len(docs)} documents + 2 versions, {len(resources)} shared resources"
+    )
 
 
 async def seed_reporting(session: AsyncSession) -> None:
@@ -357,7 +413,15 @@ async def seed_reporting(session: AsyncSession) -> None:
         return
 
     school = schools[0]
-    users = (await session.execute(select(User).where(User.school_id == school.id).limit(2))).scalars().all()
+    users = (
+        (
+            await session.execute(
+                select(User).where(User.school_id == school.id).limit(2)
+            )
+        )
+        .scalars()
+        .all()
+    )
     creator_id = users[0].id if users else None
 
     schedules = [
@@ -471,7 +535,9 @@ async def seed_reporting(session: AsyncSession) -> None:
     ]
     session.add_all(jobs)
 
-    print(f"    Reporting: {len(schedules)} schedules, {len(jobs)} jobs (completed, pending, running, failed)")
+    print(
+        f"    Reporting: {len(schedules)} schedules, {len(jobs)} jobs (completed, pending, running, failed)"
+    )
 
 
 async def seed_programs(session: AsyncSession) -> None:
@@ -529,50 +595,54 @@ async def seed_programs(session: AsyncSession) -> None:
     await session.flush()
 
     # Eligibility rules
-    session.add_all([
-        EligibilityRule(
-            id=uuid.uuid4(),
-            school_id=school.id,
-            kind=EligibilityRuleKind.ADMISSION.value,
-            target_program_id=program1.id,
-            condition_type="min_grade_average",
-            condition_params={"min_average": 10.0},
-            message_key="min_average_required",
-            is_active=True,
-        ),
-        EligibilityRule(
-            id=uuid.uuid4(),
-            school_id=school.id,
-            kind=EligibilityRuleKind.ADMISSION.value,
-            target_program_id=program2.id,
-            condition_type="min_grade_average",
-            condition_params={"min_average": 12.0},
-            message_key="min_average_science_required",
-            is_active=True,
-        ),
-    ])
+    session.add_all(
+        [
+            EligibilityRule(
+                id=uuid.uuid4(),
+                school_id=school.id,
+                kind=EligibilityRuleKind.ADMISSION.value,
+                target_program_id=program1.id,
+                condition_type="min_grade_average",
+                condition_params={"min_average": 10.0},
+                message_key="min_average_required",
+                is_active=True,
+            ),
+            EligibilityRule(
+                id=uuid.uuid4(),
+                school_id=school.id,
+                kind=EligibilityRuleKind.ADMISSION.value,
+                target_program_id=program2.id,
+                condition_type="min_grade_average",
+                condition_params={"min_average": 12.0},
+                message_key="min_average_science_required",
+                is_active=True,
+            ),
+        ]
+    )
 
     # Program equivalences
-    session.add_all([
-        ProgramEquivalence(
-            id=uuid.uuid4(),
-            school_id=school.id,
-            from_program_id=program1.id,
-            to_program_id=program2.id,
-            kind=ProgramEquivalenceKind.EQUIVALENT.value,
-            note="Transfert de credits vers le programme scientifique.",
-            ratified_at=date(2025, 1, 15),
-        ),
-        ProgramEquivalence(
-            id=uuid.uuid4(),
-            school_id=school.id,
-            from_program_id=program2.id,
-            to_program_id=program1.id,
-            kind=ProgramEquivalenceKind.PARTIAL.value,
-            note="Equivalence partielle pour les matieres communes.",
-            ratified_at=date(2025, 2, 1),
-        ),
-    ])
+    session.add_all(
+        [
+            ProgramEquivalence(
+                id=uuid.uuid4(),
+                school_id=school.id,
+                from_program_id=program1.id,
+                to_program_id=program2.id,
+                kind=ProgramEquivalenceKind.EQUIVALENT.value,
+                note="Transfert de credits vers le programme scientifique.",
+                ratified_at=date(2025, 1, 15),
+            ),
+            ProgramEquivalence(
+                id=uuid.uuid4(),
+                school_id=school.id,
+                from_program_id=program2.id,
+                to_program_id=program1.id,
+                kind=ProgramEquivalenceKind.PARTIAL.value,
+                note="Equivalence partielle pour les matieres communes.",
+                ratified_at=date(2025, 2, 1),
+            ),
+        ]
+    )
 
     print("    Programs: 2 programs + 2 versions, 2 eligibility rules, 2 equivalences")
 
@@ -584,35 +654,41 @@ async def seed_ai_preferences(session: AsyncSession) -> None:
         return
 
     school = schools[0]
-    users = (await session.execute(select(User).where(User.school_id == school.id))).scalars().all()
+    users = (
+        (await session.execute(select(User).where(User.school_id == school.id)))
+        .scalars()
+        .all()
+    )
     if len(users) < 3:
         print("    AI: skipped (need 3 users)")
         return
 
     # AI preferences for 3 users (parent sets preference for child)
-    session.add_all([
-        AIPreference(
-            id=uuid.uuid4(),
-            school_id=school.id,
-            user_id=users[0].id,
-            target_user_id=users[1].id,
-            opt_out=False,
-        ),
-        AIPreference(
-            id=uuid.uuid4(),
-            school_id=school.id,
-            user_id=users[1].id,
-            target_user_id=users[2].id,
-            opt_out=False,
-        ),
-        AIPreference(
-            id=uuid.uuid4(),
-            school_id=school.id,
-            user_id=users[2].id,
-            target_user_id=users[0].id,
-            opt_out=True,
-        ),
-    ])
+    session.add_all(
+        [
+            AIPreference(
+                id=uuid.uuid4(),
+                school_id=school.id,
+                user_id=users[0].id,
+                target_user_id=users[1].id,
+                opt_out=False,
+            ),
+            AIPreference(
+                id=uuid.uuid4(),
+                school_id=school.id,
+                user_id=users[1].id,
+                target_user_id=users[2].id,
+                opt_out=False,
+            ),
+            AIPreference(
+                id=uuid.uuid4(),
+                school_id=school.id,
+                user_id=users[2].id,
+                target_user_id=users[0].id,
+                opt_out=True,
+            ),
+        ]
+    )
 
     # Writing attempts (4)
     attempts = [
@@ -675,50 +751,62 @@ async def seed_notification_preferences(session: AsyncSession) -> None:
         return
 
     school = schools[0]
-    users = (await session.execute(select(User).where(User.school_id == school.id).limit(5))).scalars().all()
+    users = (
+        (
+            await session.execute(
+                select(User).where(User.school_id == school.id).limit(5)
+            )
+        )
+        .scalars()
+        .all()
+    )
 
     categories = ["billing", "academic", "attendance", "announcement", "system"]
     for user in users[:3]:
         for category in categories:
-            session.add(NotificationPreference(
-                id=uuid.uuid4(),
-                school_id=school.id,
-                user_id=user.id,
-                channel="email",
-                category=category,
-                enabled=category != "system" or user.id == users[0].id,
-            ))
+            session.add(
+                NotificationPreference(
+                    id=uuid.uuid4(),
+                    school_id=school.id,
+                    user_id=user.id,
+                    channel="email",
+                    category=category,
+                    enabled=category != "system" or user.id == users[0].id,
+                )
+            )
 
     # Device tokens
     if users:
-        session.add_all([
-            DeviceToken(
-                id=uuid.uuid4(),
-                school_id=school.id,
-                user_id=users[0].id,
-                token="fcm-demo-token-android-001",
-                platform="android",
-                device_name="Samsung Galaxy A54",
-                last_active_at=datetime.now(timezone.utc),
-            ),
-            DeviceToken(
-                id=uuid.uuid4(),
-                school_id=school.id,
-                user_id=users[1].id if len(users) > 1 else users[0].id,
-                token="fcm-demo-token-ios-002",
-                platform="ios",
-                device_name="iPhone 14 Pro",
-                last_active_at=datetime.now(timezone.utc) - timedelta(hours=2),
-            ),
-            DeviceToken(
-                id=uuid.uuid4(),
-                school_id=school.id,
-                user_id=users[2].id if len(users) > 2 else users[0].id,
-                token="fcm-demo-token-web-003",
-                platform="web",
-                device_name="Chrome Desktop",
-                last_active_at=datetime.now(timezone.utc) - timedelta(days=1),
-            ),
-        ])
+        session.add_all(
+            [
+                DeviceToken(
+                    id=uuid.uuid4(),
+                    school_id=school.id,
+                    user_id=users[0].id,
+                    token="fcm-demo-token-android-001",
+                    platform="android",
+                    device_name="Samsung Galaxy A54",
+                    last_active_at=datetime.now(timezone.utc),
+                ),
+                DeviceToken(
+                    id=uuid.uuid4(),
+                    school_id=school.id,
+                    user_id=users[1].id if len(users) > 1 else users[0].id,
+                    token="fcm-demo-token-ios-002",
+                    platform="ios",
+                    device_name="iPhone 14 Pro",
+                    last_active_at=datetime.now(timezone.utc) - timedelta(hours=2),
+                ),
+                DeviceToken(
+                    id=uuid.uuid4(),
+                    school_id=school.id,
+                    user_id=users[2].id if len(users) > 2 else users[0].id,
+                    token="fcm-demo-token-web-003",
+                    platform="web",
+                    device_name="Chrome Desktop",
+                    last_active_at=datetime.now(timezone.utc) - timedelta(days=1),
+                ),
+            ]
+        )
 
     print("    Notifications: 9 preference records, 3 device tokens")

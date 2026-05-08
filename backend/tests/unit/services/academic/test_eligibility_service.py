@@ -68,7 +68,9 @@ class TestKnownConditionTypes:
 class TestToResponse:
     """Tests for the internal _to_response helper."""
 
-    def test_response_shape(self, service: EligibilityService, sample_rule: EligibilityRule) -> None:
+    def test_response_shape(
+        self, service: EligibilityService, sample_rule: EligibilityRule
+    ) -> None:
         resp = service._to_response(sample_rule)
         assert resp["id"] == str(sample_rule.id)
         assert resp["school_id"] == str(sample_rule.school_id)
@@ -139,7 +141,10 @@ class TestEvaluateMinAttendanceRate:
     @pytest.fixture
     def attendance_rule(self, sample_rule: EligibilityRule) -> EligibilityRule:
         sample_rule.condition_type = "min_attendance_rate"
-        sample_rule.condition_params = {"min_rate": 0.8, "academic_year_id": str(_uuid(40))}
+        sample_rule.condition_params = {
+            "min_rate": 0.8,
+            "academic_year_id": str(_uuid(40)),
+        }
         return sample_rule
 
     @pytest.mark.asyncio
@@ -148,7 +153,9 @@ class TestEvaluateMinAttendanceRate:
     ) -> None:
         # Mock academic year lookup
         ay_result = MagicMock()
-        ay_result.first.return_value = MagicMock(date_start=date(2024, 1, 1), date_end=date(2024, 12, 31))
+        ay_result.first.return_value = MagicMock(
+            date_start=date(2024, 1, 1), date_end=date(2024, 12, 31)
+        )
 
         # Mock attendance count
         count_result = MagicMock()
@@ -170,7 +177,9 @@ class TestEvaluateMinAttendanceRate:
         self, service: EligibilityService, attendance_rule: EligibilityRule
     ) -> None:
         ay_result = MagicMock()
-        ay_result.first.return_value = MagicMock(date_start=date(2024, 1, 1), date_end=date(2024, 12, 31))
+        ay_result.first.return_value = MagicMock(
+            date_start=date(2024, 1, 1), date_end=date(2024, 12, 31)
+        )
 
         count_result = MagicMock()
         count_result.total = 100
@@ -205,7 +214,9 @@ class TestEvaluateMinAttendanceRate:
         self, service: EligibilityService, attendance_rule: EligibilityRule
     ) -> None:
         ay_result = MagicMock()
-        ay_result.first.return_value = MagicMock(date_start=date(2024, 1, 1), date_end=date(2024, 12, 31))
+        ay_result.first.return_value = MagicMock(
+            date_start=date(2024, 1, 1), date_end=date(2024, 12, 31)
+        )
 
         count_result = MagicMock()
         count_result.total = 0
@@ -313,11 +324,15 @@ class TestCheckEligibility:
 
         # Mock student lookup
         student_result = MagicMock()
-        student_result.scalar_one_or_none.return_value = MagicMock(school_id=sample_rule.school_id)
+        student_result.scalar_one_or_none.return_value = MagicMock(
+            school_id=sample_rule.school_id
+        )
 
         # Mock program lookup
         program_result = MagicMock()
-        program_result.scalar_one_or_none.return_value = MagicMock(school_id=sample_rule.school_id)
+        program_result.scalar_one_or_none.return_value = MagicMock(
+            school_id=sample_rule.school_id
+        )
 
         # Mock rules lookup
         rules_result = MagicMock()
@@ -327,12 +342,14 @@ class TestCheckEligibility:
         eval_result = MagicMock()
         eval_result.first.return_value = ("enrollment-id",)
 
-        service.db.execute = AsyncMock(side_effect=[
-            student_result,
-            program_result,
-            rules_result,
-            eval_result,
-        ])
+        service.db.execute = AsyncMock(
+            side_effect=[
+                student_result,
+                program_result,
+                rules_result,
+                eval_result,
+            ]
+        )
 
         result = await service.check_eligibility(
             student_id=_uuid(5),
@@ -352,10 +369,14 @@ class TestCheckEligibility:
         auth.school_id = sample_rule.school_id
 
         student_result = MagicMock()
-        student_result.scalar_one_or_none.return_value = MagicMock(school_id=sample_rule.school_id)
+        student_result.scalar_one_or_none.return_value = MagicMock(
+            school_id=sample_rule.school_id
+        )
 
         program_result = MagicMock()
-        program_result.scalar_one_or_none.return_value = MagicMock(school_id=sample_rule.school_id)
+        program_result.scalar_one_or_none.return_value = MagicMock(
+            school_id=sample_rule.school_id
+        )
 
         rules_result = MagicMock()
         rules_result.scalars.return_value.all.return_value = [sample_rule]
@@ -363,12 +384,14 @@ class TestCheckEligibility:
         eval_result = MagicMock()
         eval_result.first.return_value = None
 
-        service.db.execute = AsyncMock(side_effect=[
-            student_result,
-            program_result,
-            rules_result,
-            eval_result,
-        ])
+        service.db.execute = AsyncMock(
+            side_effect=[
+                student_result,
+                program_result,
+                rules_result,
+                eval_result,
+            ]
+        )
 
         result = await service.check_eligibility(
             student_id=_uuid(5),
@@ -406,7 +429,9 @@ class TestCheckEligibility:
         auth.school_id = sample_rule.school_id
 
         student_result = MagicMock()
-        student_result.scalar_one_or_none.return_value = MagicMock(school_id=sample_rule.school_id)
+        student_result.scalar_one_or_none.return_value = MagicMock(
+            school_id=sample_rule.school_id
+        )
 
         program_result = MagicMock()
         program_result.scalar_one_or_none.return_value = None
@@ -429,20 +454,26 @@ class TestCheckEligibility:
         auth.school_id = sample_rule.school_id
 
         student_result = MagicMock()
-        student_result.scalar_one_or_none.return_value = MagicMock(school_id=sample_rule.school_id)
+        student_result.scalar_one_or_none.return_value = MagicMock(
+            school_id=sample_rule.school_id
+        )
 
         program_result = MagicMock()
-        program_result.scalar_one_or_none.return_value = MagicMock(school_id=sample_rule.school_id)
+        program_result.scalar_one_or_none.return_value = MagicMock(
+            school_id=sample_rule.school_id
+        )
 
         rules_result = MagicMock()
         rules_result.scalars.return_value.all.return_value = [sample_rule]
 
-        service.db.execute = AsyncMock(side_effect=[
-            student_result,
-            program_result,
-            rules_result,
-            Exception("DB connection lost"),
-        ])
+        service.db.execute = AsyncMock(
+            side_effect=[
+                student_result,
+                program_result,
+                rules_result,
+                Exception("DB connection lost"),
+            ]
+        )
 
         result = await service.check_eligibility(
             student_id=_uuid(5),

@@ -126,7 +126,9 @@ class ClaudeProvider:
             logger.exception(
                 "Claude generate_recommendations() failed, using mock fallback"
             )
-        return await self._fallback.generate_recommendations(student_data, language=language)
+        return await self._fallback.generate_recommendations(
+            student_data, language=language
+        )
 
     async def compute_kpi_insights(self, metrics: dict[str, Any]) -> list[str]:
         prompt = (

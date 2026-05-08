@@ -45,8 +45,18 @@ class TestLoginRequest:
     @pytest.mark.parametrize(
         "payload,expected_error",
         [
-            ({"email": "invalid", "password": "pass", "school_id": str(uuid.uuid4())}, "value is not a valid email address"),
-            ({"email": "a@b.c", "password": "", "school_id": str(uuid.uuid4())}, "String should have at least 1 character"),
+            (
+                {
+                    "email": "invalid",
+                    "password": "pass",
+                    "school_id": str(uuid.uuid4()),
+                },
+                "value is not a valid email address",
+            ),
+            (
+                {"email": "a@b.c", "password": "", "school_id": str(uuid.uuid4())},
+                "String should have at least 1 character",
+            ),
             ({"password": "pass", "school_id": str(uuid.uuid4())}, "Field required"),
             ({"email": "a@b.c", "password": "pass"}, "Field required"),
         ],
@@ -95,7 +105,9 @@ class TestMeData:
             role="teacher",
             school_id=sid,
             permissions=["read:students"],
-            memberships=[MembershipInfo(school_id=sid, role="teacher", status="active")],
+            memberships=[
+                MembershipInfo(school_id=sid, role="teacher", status="active")
+            ],
         )
         assert me.full_name == "Test User"
         assert len(me.permissions) == 1

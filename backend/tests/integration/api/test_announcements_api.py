@@ -39,7 +39,9 @@ class TestAnnouncementsApi:
     @pytest.mark.asyncio
     async def test_teacher_cannot_create_announcement(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             "/announcements",
             headers=auth_header(token),

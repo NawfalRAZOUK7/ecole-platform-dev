@@ -16,7 +16,9 @@ class TestNotificationsApi:
     @pytest.mark.asyncio
     async def test_user_can_list_own_notifications(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
 
         response = await client.get("/notifications", headers=auth_header(token))
         assert response.status_code == 200
@@ -27,9 +29,13 @@ class TestNotificationsApi:
     @pytest.mark.asyncio
     async def test_unread_count_returns_integer(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
 
-        response = await client.get("/notifications/unread-count", headers=auth_header(token))
+        response = await client.get(
+            "/notifications/unread-count", headers=auth_header(token)
+        )
         assert response.status_code == 200
         data = response.json()["data"]
         assert isinstance(data, (int, dict))

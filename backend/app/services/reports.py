@@ -1226,15 +1226,15 @@ class ReportsService:
             )
 
         # Generate QR code
-        qr_code_base64 = self._generate_qr_code(
-            str(invoice.id), settings.api_base_url
-        )
+        qr_code_base64 = self._generate_qr_code(str(invoice.id), settings.api_base_url)
 
         return {
             "lang": job.parameters.get("locale", "fr"),
             "is_rtl": job.parameters.get("locale") == "ar",
             "generated_at": _utc_now().isoformat(),
-            "report_title": self._report_title(job.type, job.parameters.get("locale", "fr")),
+            "report_title": self._report_title(
+                job.type, job.parameters.get("locale", "fr")
+            ),
             "school": {
                 "id": str(school.id),
                 "name": school.name,
@@ -1311,7 +1311,9 @@ class ReportsService:
             "lang": job.parameters.get("locale", "fr"),
             "is_rtl": job.parameters.get("locale") == "ar",
             "generated_at": _utc_now().isoformat(),
-            "report_title": self._report_title(job.type, job.parameters.get("locale", "fr")),
+            "report_title": self._report_title(
+                job.type, job.parameters.get("locale", "fr")
+            ),
             "school": {
                 "id": str(school.id),
                 "name": school.name,
@@ -1327,9 +1329,13 @@ class ReportsService:
                 "id": str(payment.id),
                 "amount": float(payment.amount) if hasattr(payment, "amount") else 0.0,
                 "method": getattr(payment, "method", "unknown"),
-                "transaction_reference": getattr(payment, "transaction_reference", None),
+                "transaction_reference": getattr(
+                    payment, "transaction_reference", None
+                ),
                 "status": payment.status,
-                "finalized_at": payment.finalized_at.isoformat() if payment.finalized_at else None,
+                "finalized_at": payment.finalized_at.isoformat()
+                if payment.finalized_at
+                else None,
                 "receipt_number": f"RCP-{str(payment.id)[:8].upper()}",
             },
             "invoice": {

@@ -23,7 +23,9 @@ class TestAttendanceApi:
     @pytest.mark.asyncio
     async def test_teacher_can_create_attendance_session(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
 
         response = await client.post(
             "/attendance/sessions",
@@ -44,9 +46,13 @@ class TestAttendanceApi:
         assert len(data["records"]) == 1
 
     @pytest.mark.asyncio
-    async def test_student_cannot_create_attendance_session(self, client, legacy_api_seed):
+    async def test_student_cannot_create_attendance_session(
+        self, client, legacy_api_seed
+    ):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
 
         response = await client.post(
             "/attendance/sessions",
@@ -84,7 +90,9 @@ class TestAttendanceApi:
     @pytest.mark.asyncio
     async def test_duplicate_session_rejected(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
 
         payload = {
             "class_id": CLASS_ID,

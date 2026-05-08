@@ -419,4 +419,6 @@ class TestDocumentStorageBackends:
         # Skipped: S3FileStorageBackend no longer accepts client parameter
         # The current implementation creates its own aioboto3 client internally
         # This test needs to be rewritten to mock aioboto3 instead
-        pytest.skip("Test needs rewrite for current S3FileStorageBackend implementation")
+        pytest.skip(
+            "Test needs rewrite for current S3FileStorageBackend implementation"
+        )

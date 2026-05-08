@@ -82,7 +82,9 @@ def setup_service(monkeypatch: pytest.MonkeyPatch) -> tuple[RewardsService, Asyn
 
     inner_repo = AsyncMock()
     monkeypatch.setattr(rewards_module, "UnitOfWork", lambda _db: uow)
-    monkeypatch.setattr(rewards_module, "RewardsRepository", lambda _session: inner_repo)
+    monkeypatch.setattr(
+        rewards_module, "RewardsRepository", lambda _session: inner_repo
+    )
 
     return service, mock_repo, inner_repo
 

@@ -148,7 +148,11 @@ async def generate_payment_receipt(
         target_type="report_job",
         target_id=uuid.UUID(payload["id"]),
         outcome="success",
-        entity_after={"payment_id": str(payment_id), "language": language, "job": payload},
+        entity_after={
+            "payment_id": str(payment_id),
+            "language": language,
+            "job": payload,
+        },
         ip_address=get_client_ip(request),
     )
     await db.commit()
