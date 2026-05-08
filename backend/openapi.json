@@ -27183,13 +27183,13 @@
           "expires_in": {
             "type": "integer",
             "title": "Expires In",
-            "description": "Token lifetime in seconds"
+            "description": "Token lifetime in seconds",
+            "default": 3600
           }
         },
         "type": "object",
         "required": [
-          "access_token",
-          "expires_in"
+          "access_token"
         ],
         "title": "LoginData"
       },
