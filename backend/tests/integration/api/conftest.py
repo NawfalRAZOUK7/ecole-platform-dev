@@ -8,7 +8,7 @@ shared API client is used.
 from __future__ import annotations
 
 import uuid
-from datetime import date
+from datetime import date, datetime, timezone
 from decimal import Decimal
 
 import httpx
@@ -31,6 +31,17 @@ from app.models.erp import (
     TeacherAssignment,
 )
 from app.models.iam import ParentChildLink, RoleCode, User
+from app.models.com import ParentFeedItem
+from app.models.lms import (
+    Activity,
+    Assessment,
+    AssessmentResult,
+    Assignment,
+    ContentItem,
+    Course,
+    Grade,
+    Submission,
+)
 from app.models.school import School
 from tests.factories.erp import (
     AcademicYearFactory,
@@ -54,6 +65,15 @@ ATTENDANCE_SESSION_ID = uuid.UUID("74000000-0000-4000-8000-000000000001")
 ATTENDANCE_RECORD_ID = uuid.UUID("75000000-0000-4000-8000-000000000001")
 INVOICE_ID = uuid.UUID("40000000-0000-4000-8000-000000000001")
 INVOICE_ITEM_ID = uuid.UUID("41000000-0000-4000-8000-000000000001")
+COURSE_ID = uuid.UUID("30000000-0000-4000-8000-000000000001")
+SUBMISSION_ID = uuid.UUID("30000000-0000-4000-8000-000000000002")
+ASSIGNMENT_ID = uuid.UUID("30000000-0000-4000-8000-000000000003")
+ASSESSMENT_ID = uuid.UUID("30000000-0000-4000-8000-000000000004")
+CONTENT_ITEM_ID = uuid.UUID("30000000-0000-4000-8000-000000000005")
+ACTIVITY_ID = uuid.UUID("30000000-0000-4000-8000-000000000006")
+GRADE_ID = uuid.UUID("30000000-0000-4000-8000-000000000007")
+ASSESSMENT_RESULT_ID = uuid.UUID("30000000-0000-4000-8000-000000000008")
+PARENT_FEED_ITEM_ID = uuid.UUID("30000000-0000-4000-8000-000000000009")
 
 ADMIN_ID = uuid.UUID("10000000-0000-4000-8000-000000000001")
 TEACHER_ID = uuid.UUID("10000000-0000-4000-8000-000000000003")
@@ -299,6 +319,120 @@ async def legacy_api_seed(isolated_legacy_api_db, session_factory):
                     tva_amount=Decimal("0.00"),
                     amount_ht=Decimal("3500.00"),
                     amount_ttc=Decimal("3500.00"),
+                )
+            )
+        if await session.get(Course, COURSE_ID) is None:
+            session.add(
+                Course(
+                    id=COURSE_ID,
+                    school_id=school.id,
+                    class_id=school_class.id,
+                    teacher_id=teacher.id,
+                    title="Mathematiques 6eme",
+                    description="Cours de mathematiques de reference",
+                    status="published",
+                )
+            )
+        if await session.get(Assignment, ASSIGNMENT_ID) is None:
+            session.add(
+                Assignment(
+                    id=ASSIGNMENT_ID,
+                    course_id=COURSE_ID,
+                    teacher_id=teacher.id,
+                    title="Devoir de fractions",
+                    description="Exercices de fractions",
+                    total_points=20,
+                    grace_period_hours=0,
+                    late_penalty_per_day=0.0,
+                    max_late_days=3,
+                    allow_late=True,
+                    exercise_type="STANDARD",
+                )
+            )
+        if await session.get(Submission, SUBMISSION_ID) is None:
+            session.add(
+                Submission(
+                    id=SUBMISSION_ID,
+                    assignment_id=ASSIGNMENT_ID,
+                    student_id=student.id,
+                    status="submitted",
+                    submitted_at=datetime.now(timezone.utc),
+                )
+            )
+        if await session.get(Grade, GRADE_ID) is None:
+            session.add(
+                Grade(
+                    id=GRADE_ID,
+                    submission_id=SUBMISSION_ID,
+                    teacher_id=teacher.id,
+                    score=Decimal("16.00"),
+                    original_score=Decimal("16.00"),
+                    late_penalty=0.0,
+                    late_days=0,
+                    penalty_overridden=False,
+                    feedback_text="Bon travail",
+                    published_at=datetime.now(timezone.utc),
+                )
+            )
+        if await session.get(ContentItem, CONTENT_ITEM_ID) is None:
+            session.add(
+                ContentItem(
+                    id=CONTENT_ITEM_ID,
+                    school_id=school.id,
+                    title="Lecture guidee",
+                    content_type="document",
+                    level_band="6eme",
+                    language="fr",
+                    status="published",
+                    subject="Francais",
+                    created_by=teacher.id,
+                    description="Support de lecture pour les eleves",
+                    origin="PLATFORM",
+                )
+            )
+        if await session.get(Activity, ACTIVITY_ID) is None:
+            session.add(
+                Activity(
+                    id=ACTIVITY_ID,
+                    school_id=school.id,
+                    type="quiz",
+                    difficulty="easy",
+                    title="Activite fractions",
+                    pedagogical_objective="Reviser les fractions",
+                )
+            )
+        if await session.get(Assessment, ASSESSMENT_ID) is None:
+            session.add(
+                Assessment(
+                    id=ASSESSMENT_ID,
+                    class_id=school_class.id,
+                    teacher_id=teacher.id,
+                    title="Evaluation diagnostique",
+                    total_points=100,
+                    status="published",
+                )
+            )
+        if await session.get(AssessmentResult, ASSESSMENT_RESULT_ID) is None:
+            session.add(
+                AssessmentResult(
+                    id=ASSESSMENT_RESULT_ID,
+                    assessment_id=ASSESSMENT_ID,
+                    student_id=student.id,
+                    score=Decimal("15.00"),
+                    status="submitted",
+                )
+            )
+        if await session.get(ParentFeedItem, PARENT_FEED_ITEM_ID) is None:
+            session.add(
+                ParentFeedItem(
+                    id=PARENT_FEED_ITEM_ID,
+                    school_id=school.id,
+                    parent_id=parent.id,
+                    student_id=student.id,
+                    source_type="grade_published",
+                    source_ref=str(GRADE_ID),
+                    title="Nouvelle note publiee",
+                    body="Yassine a recu une nouvelle note en mathematiques.",
                 )
             )
         await session.commit()
