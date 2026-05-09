@@ -79,7 +79,7 @@ jobs:
         run: |
           helm repo add bitnami https://charts.bitnami.com/bitnami
           helm repo update
-          helm install postgres bitnami/postgresql -n ecole-test --create-namespace --set auth.password=ecole --set auth.database=ecole_platform --set primary.service.ports.postgresql=5432
+          helm install postgres bitnami/postgresql -n ecole-test --create-namespace --set auth.username=ecole --set auth.password=ecole --set auth.database=ecole_platform --set primary.service.ports.postgresql=5432
           helm install redis bitnami/redis -n ecole-test --set auth.enabled=false
 
       - name: Wait for Postgres and Redis
@@ -98,10 +98,10 @@ jobs:
 
       - name: Create Kubernetes secrets
         run: |
-          kubectl create secret generic ecole-database-url -n ecole-test --from-literal=database-url="${DATABASE_URL}"
-          kubectl create secret generic ecole-redis-url -n ecole-test --from-literal=redis-url="${REDIS_URL}"
-          kubectl create secret generic ecole-jwt-secret -n ecole-test --from-literal=jwt-secret="test-secret-key-ci-only"
-          kubectl create secret generic ecole-smtp-password -n ecole-test --from-literal=smtp-password=""
+          kubectl create secret generic ecole-database-url -n ecole-test --from-literal=DATABASE_URL="${DATABASE_URL}"
+          kubectl create secret generic ecole-redis-url -n ecole-test --from-literal=REDIS_URL="${REDIS_URL}"
+          kubectl create secret generic ecole-jwt-secret -n ecole-test --from-literal=JWT_SECRET_KEY="test-secret-key-ci-only"
+          kubectl create secret generic ecole-smtp-password -n ecole-test --from-literal=SMTP_PASSWORD=""
 
       - name: Deploy with Helm
         run: |
@@ -155,14 +155,19 @@ jobs:
       - name: Get pod logs on failure
         if: failure()
         run: |
+          echo "=== Pod Status ==="
+          kubectl get pods -n ecole-test -o wide || true
+          echo "=== Pod Descriptions ==="
+          kubectl describe pods -n ecole-test || true
           echo "=== Backend Pod Logs ==="
-          kubectl logs -n ecole-test -l app.kubernetes.io/component=backend --tail=100
+          kubectl logs -n ecole-test -l app.kubernetes.io/component=backend -c migrate --tail=100 || true
+          kubectl logs -n ecole-test -l app.kubernetes.io/component=backend -c backend --tail=100 || true
           echo "=== Web Pod Logs ==="
-          kubectl logs -n ecole-test -l app.kubernetes.io/component=web --tail=100
+          kubectl logs -n ecole-test -l app.kubernetes.io/component=web --tail=100 || true
           echo "=== Postgres Logs ==="
-          kubectl logs -n ecole-test -l app.kubernetes.io/name=postgresql --tail=50
+          kubectl logs -n ecole-test -l app.kubernetes.io/name=postgresql --tail=50 || true
           echo "=== Redis Logs ==="
-          kubectl logs -n ecole-test -l app.kubernetes.io/name=redis --tail=50
+          kubectl logs -n ecole-test -l app.kubernetes.io/name=redis --tail=50 || true
 
       - name: Cleanup Kind cluster
         if: always()
