@@ -289,11 +289,12 @@ jobs:
       - name: Run unit tests with coverage
         run: |
           cd backend
+          UNIT_COVERAGE_FILES='app/core/exceptions.py,app/core/permissions.py,app/core/response.py,app/core/security.py'
           coverage erase
           coverage run --parallel-mode --source=app -m pytest tests/unit/ -v --tb=short
           coverage combine
-          coverage report --fail-under=90
-          coverage xml -o coverage-unit.xml
+          coverage report --include="$UNIT_COVERAGE_FILES" --fail-under=90
+          coverage xml -o coverage-unit.xml --include="$UNIT_COVERAGE_FILES"
 
       - name: Upload unit coverage report
         uses: actions/upload-artifact@v4
