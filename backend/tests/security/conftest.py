@@ -17,11 +17,9 @@ from app.main import app
 from app.models.erp import AttendanceRecord, AttendanceSession
 from app.models.iam import Membership, ParentChildLink, Session, User
 from app.models.lms import Assignment, Course, GradeCategory, Submission
-from tests.integration.api.conftest import (  # noqa: F401
-    isolated_legacy_api_db,
-    legacy_api_seed,
-    session_factory,
-)
+
+# Register legacy API DB fixtures without importing names (avoids Ruff F811 vs fixture params).
+pytest_plugins = ("tests.integration.api.conftest",)
 
 SCHOOL_ID = "00000000-0000-4000-8000-000000000001"
 YEAR_ID = "20000000-0000-4000-8000-000000000001"
