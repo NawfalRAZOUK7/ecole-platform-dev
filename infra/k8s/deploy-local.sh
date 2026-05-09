@@ -135,8 +135,8 @@ helm upgrade --install ecole-platform ./infra/k8s \
 
 # Verify deployment
 echo -e "${GREEN}Verifying deployment...${NC}"
-kubectl rollout status deployment/ecole-platform-ecole-platform-backend -n "$NAMESPACE" --timeout=120s
-kubectl rollout status deployment/ecole-platform-ecole-platform-web -n "$NAMESPACE" --timeout=60s
+kubectl rollout status deployment/ecole-platform-backend -n "$NAMESPACE" --timeout=120s
+kubectl rollout status deployment/ecole-platform-web -n "$NAMESPACE" --timeout=60s
 
 # Get pods
 echo -e "${GREEN}Pods in $NAMESPACE namespace:${NC}"
@@ -147,11 +147,11 @@ echo -e "${GREEN}=== Deployment Complete ===${NC}"
 echo -e "${YELLOW}Access the application via port-forwarding:${NC}"
 echo ""
 echo "Backend:"
-echo "  kubectl port-forward -n $NAMESPACE svc/ecole-platform-ecole-platform-backend 8000:8000"
+echo "  kubectl port-forward -n $NAMESPACE svc/ecole-platform-backend 8000:8000"
 echo "  http://localhost:8000/api/v1/health"
 echo ""
 echo "Web:"
-echo "  kubectl port-forward -n $NAMESPACE svc/ecole-platform-ecole-platform-web 3000:80"
+echo "  kubectl port-forward -n $NAMESPACE svc/ecole-platform-web 3000:80"
 echo "  http://localhost:3000"
 echo ""
 echo -e "${YELLOW}To view logs:${NC}"

@@ -143,14 +143,14 @@ jobs:
       - name: Verify rollout — backend
         if: steps.deployment-credentials.outputs.enabled == 'true'
         run: |
-          kubectl rollout status deployment/ecole-platform-ecole-platform-backend \
+          kubectl rollout status deployment/ecole-platform-backend \
             -n ${{ steps.env.outputs.namespace }} \
             --timeout=180s
 
       - name: Verify rollout — web
         if: steps.deployment-credentials.outputs.enabled == 'true'
         run: |
-          kubectl rollout status deployment/ecole-platform-ecole-platform-web \
+          kubectl rollout status deployment/ecole-platform-web \
             -n ${{ steps.env.outputs.namespace }} \
             --timeout=120s
 
@@ -159,7 +159,7 @@ jobs:
         run: |
           kubectl port-forward \
             -n ${{ steps.env.outputs.namespace }} \
-            deploy/ecole-platform-ecole-platform-backend \
+            deploy/ecole-platform-backend \
             18000:8000 &
           PF_PID=$!
           sleep 3

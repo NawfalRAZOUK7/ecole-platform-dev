@@ -123,13 +123,14 @@ jobs:
 
       - name: Verify deployment
         run: |
-          kubectl rollout status deployment/ecole-platform-ecole-platform-backend -n ecole-test --timeout=180s
-          kubectl rollout status deployment/ecole-platform-ecole-platform-web -n ecole-test --timeout=120s
+          # Release name "ecole-platform" equals chart name → fullname is ecole-platform (see _helpers.tpl)
+          kubectl rollout status deployment/ecole-platform-backend -n ecole-test --timeout=180s
+          kubectl rollout status deployment/ecole-platform-web -n ecole-test --timeout=120s
 
       - name: Run backend health check
         run: |
           for i in $(seq 1 30); do
-            STATUS=$(kubectl exec -n ecole-test deploy/ecole-platform-ecole-platform-backend -- python -c "import httpx; print(httpx.get('http://localhost:8000/api/v1/health').status_code)" 2>/dev/null || echo "0")
+            STATUS=$(kubectl exec -n ecole-test deploy/ecole-platform-backend -- python -c "import httpx; print(httpx.get('http://localhost:8000/api/v1/health').status_code)" 2>/dev/null || echo "0")
             if [ "$STATUS" = "200" ]; then
               echo "Backend health check passed"
               exit 0
@@ -144,7 +145,7 @@ jobs:
         run: |
           cd backend
           # Port-forward to backend
-          kubectl port-forward -n ecole-test svc/ecole-platform-ecole-platform-backend 8000:8000 &
+          kubectl port-forward -n ecole-test svc/ecole-platform-backend 8000:8000 &
           PF_PID=$!
           trap "kill $PF_PID" EXIT
           sleep 5
