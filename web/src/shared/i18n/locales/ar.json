@@ -48,9 +48,11 @@
     "adminFamilyLinks": "الروابط العائلية",
     "teacherContentLibrary": "مكتبة المحتويات",
     "teacherQuizzes": "الاختبارات",
+    "studentHome": "الرئيسية",
     "studentContent": "محتوياتي",
     "studentQuizzes": "الاختبارات",
     "studentGames": "الألعاب",
+    "studentWriting": "الكتابة",
     "timetable": "الجدول الزمني",
     "messages": "الرسائل",
     "announcements": "الإعلانات",
@@ -1846,6 +1848,40 @@
     "type_mcq": "اختيار من متعدد",
     "type_true_false": "صح / خطأ",
     "type_fill_in_blank": "ملء الفراغ"
+  },
+  "writing": {
+    "title": "مساحة الكتابة",
+    "subtitle": "اكتب نصك واحصل على ملاحظات مفيدة.",
+    "typeLabel": "ما نوع النص الذي تكتبه؟",
+    "types": {
+      "story": "قصة",
+      "essay": "موضوع",
+      "letter": "رسالة",
+      "description": "وصف",
+      "free": "حر"
+    },
+    "placeholder": "ابدأ الكتابة هنا...",
+    "minChars": "({{count}} حرفاً متبقياً)",
+    "submit": "تحقق من كتابتي",
+    "checking": "جارٍ التحقق...",
+    "error": "حدث خطأ. حاول مرة أخرى.",
+    "greatJob": "عمل رائع!",
+    "score": "النتيجة: {{score}}/100",
+    "correctedVersion": "النسخة المصححة",
+    "suggestions": "نصائح للتحسن",
+    "tryAgain": "اكتب مرة أخرى",
+    "goHome": "العودة للرئيسية"
+  },
+  "studentHome": {
+    "greeting": "مرحباً، {{name}}! 👋",
+    "greetingYoung": "مرحباً {{name}}! 🌟🎉",
+    "mascotMessage": "لنتعلم معاً اليوم!",
+    "readyToLearn": "هل أنت مستعد للتعلم؟",
+    "startLearning": "ابدأ التعلم",
+    "takeQuiz": "ابدأ اختباراً",
+    "writeStory": "اكتب قصة",
+    "myBadges": "شاراتي",
+    "quickLinks": "روابط سريعة"
   },
   "studentContent": {
     "title": "محتوياتي",

@@ -51,9 +51,11 @@
     "adminFamilyLinks": "Liens familiaux",
     "teacherContentLibrary": "Bibliotheque de contenus",
     "teacherQuizzes": "Quiz",
+    "studentHome": "Accueil eleve",
     "studentContent": "Mon contenu",
     "studentQuizzes": "Quiz",
     "studentGames": "Jeux",
+    "studentWriting": "Ecriture",
     "timetable": "Emploi du temps",
     "messages": "Messages",
     "announcements": "Annonces",
@@ -2012,6 +2014,40 @@
     "type_mcq": "Choix multiple",
     "type_true_false": "Vrai / Faux",
     "type_fill_in_blank": "Texte a trous"
+  },
+  "writing": {
+    "title": "Espace d'ecriture",
+    "subtitle": "Redigez votre texte puis recevez un retour personnalise.",
+    "typeLabel": "Quel type de texte redigez-vous ?",
+    "types": {
+      "story": "histoire",
+      "essay": "redaction",
+      "letter": "lettre",
+      "description": "description",
+      "free": "libre"
+    },
+    "placeholder": "Commencez a ecrire ici...",
+    "minChars": "({{count}} caracteres restants)",
+    "submit": "Verifier mon texte",
+    "checking": "Verification...",
+    "error": "Une erreur est survenue. Veuillez reessayer.",
+    "greatJob": "Tres bon travail !",
+    "score": "Score : {{score}}/100",
+    "correctedVersion": "Version corrigee",
+    "suggestions": "Conseils pour progresser",
+    "tryAgain": "Ecrire encore",
+    "goHome": "Retour a l'accueil"
+  },
+  "studentHome": {
+    "greeting": "Bonjour, {{name}} ! 👋",
+    "greetingYoung": "Bonjour {{name}} ! 🌟🎉",
+    "mascotMessage": "Apprenons ensemble aujourd'hui !",
+    "readyToLearn": "Pret a apprendre ?",
+    "startLearning": "Commencer a apprendre",
+    "takeQuiz": "Faire un quiz",
+    "writeStory": "Ecrire une histoire",
+    "myBadges": "Mes badges",
+    "quickLinks": "Raccourcis"
   },
   "studentContent": {
     "title": "Mon contenu",

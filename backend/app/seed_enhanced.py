@@ -182,6 +182,12 @@ COURSE_FR_ID = uuid.UUID("30000000-0000-4000-8000-000000000002")
 ASSIGN_1_ID = uuid.UUID("30000000-0000-4000-8000-000000000003")
 QUIZ_MATH_ID = uuid.UUID("30000000-0000-4000-8000-000000000020")
 QUIZ_FR_ID = uuid.UUID("30000000-0000-4000-8000-000000000021")
+PLATFORM_CONTENT_FRACTIONS_VIDEO_ID = uuid.UUID(
+    "30000000-0000-4000-8000-000000000010"
+)
+PLATFORM_CONTENT_TRIANGLES_PDF_ID = uuid.UUID(
+    "30000000-0000-4000-8000-000000000012"
+)
 
 # New IDs for enhanced seed
 STUDENT_4_ID = uuid.UUID("10000000-0000-4000-8000-000000000020")
@@ -779,35 +785,47 @@ async def seed_submission_files(session: AsyncSession) -> None:
             )
         )
 
-    # Content item assets
-    contents = await session.execute(select(ContentItem).limit(2))
-    for i, content in enumerate(contents.scalars()):
-        if i == 0:
-            session.add(
-                ContentItemAsset(
-                    content_item_id=content.id,
-                    file_path="content_assets/coloring_page_animaux.pdf",
-                    mime_type="application/pdf",
-                    file_size=128_000,
-                    page_number=1,
-                    has_activity=True,
-                    asset_type="worksheet",
-                )
+    # Content item assets used by the student content player.
+    # These paths exist under backend/uploads and are mounted into /app/uploads
+    # by the development compose file.
+    content_assets = [
+        ContentItemAsset(
+            content_item_id=PLATFORM_CONTENT_FRACTIONS_VIDEO_ID,
+            file_path="content/videos/zay_video.mp4",
+            mime_type="video/mp4",
+            file_size=100_861_906,
+            asset_type="video",
+        ),
+        ContentItemAsset(
+            content_item_id=PLATFORM_CONTENT_TRIANGLES_PDF_ID,
+            file_path="content/pdfs/intro.pdf",
+            mime_type="application/pdf",
+            file_size=10_040_524,
+            asset_type="document",
+        ),
+    ]
+
+    teacher_pdf = await session.execute(
+        select(ContentItem).where(
+            ContentItem.title == "Exercices supplementaires - Fractions"
+        )
+    )
+    teacher_content = teacher_pdf.scalar_one_or_none()
+    if teacher_content is not None:
+        content_assets.append(
+            ContentItemAsset(
+                content_item_id=teacher_content.id,
+                file_path="content/pdfs/coloring_animal_letters.pdf",
+                mime_type="application/pdf",
+                file_size=13_239_385,
+                asset_type="document",
             )
-        else:
-            session.add(
-                ContentItemAsset(
-                    content_item_id=content.id,
-                    file_path="content_assets/video_thumbnail.jpg",
-                    mime_type="image/jpeg",
-                    file_size=64_000,
-                    narration_text="Apercu visuel de la video",
-                    asset_type="thumbnail",
-                )
-            )
+        )
+
+    session.add_all(content_assets)
 
     await session.flush()
-    print("    Enhanced: 3 submission files, 2 content assets")
+    print(f"    Enhanced: 3 submission files, {len(content_assets)} content assets")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

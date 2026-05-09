@@ -6,7 +6,7 @@ Coverage:
     - S3 mode + as_="metadata" → 200 JSONResponse with DownloadMetadata shape.
     - Local mode (presign_get returns relative path) dispatched via read().
     - Local mode dispatched via local_path() when read() is absent.
-    - Local mode ignores as_="metadata" and always returns FileResponse.
+    - Local mode + as_="metadata" returns local static download metadata.
     - Backend with neither read() nor local_path() raises RuntimeError.
 
   LocalFileStorageBackend.presign_get:
@@ -235,7 +235,7 @@ class TestServeFileLocalModeRead:
         assert isinstance(response, FileResponse)
 
     @pytest.mark.asyncio
-    async def test_metadata_param_ignored_returns_file_response(
+    async def test_metadata_param_returns_local_static_metadata(
         self, backend: _LocalBackendWithRead
     ) -> None:
         response = await serve_file(
@@ -245,7 +245,12 @@ class TestServeFileLocalModeRead:
             mime_type="application/pdf",
             as_="metadata",
         )
-        assert isinstance(response, FileResponse)
+        assert isinstance(response, JSONResponse)
+        assert response.status_code == 200
+        body = json.loads(response.body)
+        assert body["download_url"].endswith("/api/v1/local-storage/schools/1/doc.pdf")
+        assert body["mime_type"] == "application/pdf"
+        assert body["filename"] == "doc.pdf"
 
 
 # ---------------------------------------------------------------------------

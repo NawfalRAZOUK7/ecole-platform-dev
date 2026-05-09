@@ -61,17 +61,17 @@ export function StudentHomePage() {
         <div className="kids-stat-card kids-stat-card--stars">
           <span className="kids-stat-card__icon">⭐</span>
           <span className="kids-stat-card__value">{rewards?.stars ?? 0}</span>
-          <span className="kids-stat-card__label">{t('rewards.stars', 'Stars')}</span>
+          <span className="kids-stat-card__label">{t('rewards.stats.stars', 'Stars')}</span>
         </div>
         <div className="kids-stat-card kids-stat-card--streak">
           <span className="kids-stat-card__icon">🔥</span>
           <span className="kids-stat-card__value">{rewards?.streakDays ?? 0}</span>
-          <span className="kids-stat-card__label">{t('rewards.streak', 'Day streak')}</span>
+          <span className="kids-stat-card__label">{t('rewards.stats.streak', 'Day streak')}</span>
         </div>
         <div className="kids-stat-card kids-stat-card--level">
           <span className="kids-stat-card__icon">🏅</span>
           <span className="kids-stat-card__value">{rewards?.level ?? 1}</span>
-          <span className="kids-stat-card__label">{t('rewards.level', 'Level')}</span>
+          <span className="kids-stat-card__label">{t('rewards.stats.level', 'Level')}</span>
           {rewards && (
             <div className="kids-xp-bar-wrap" style={{ marginTop: 6 }}>
               <div

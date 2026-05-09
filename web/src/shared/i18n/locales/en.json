@@ -48,9 +48,11 @@
     "adminFamilyLinks": "Family Links",
     "teacherContentLibrary": "Content Library",
     "teacherQuizzes": "Quizzes",
+    "studentHome": "Student Home",
     "studentContent": "My Content",
     "studentQuizzes": "Quizzes",
     "studentGames": "Games",
+    "studentWriting": "Writing",
     "timetable": "Timetable",
     "messages": "Messages",
     "announcements": "Announcements",
@@ -1826,6 +1828,40 @@
     "type_mcq": "Multiple Choice",
     "type_true_false": "True / False",
     "type_fill_in_blank": "Fill in the Blank"
+  },
+  "writing": {
+    "title": "Writing workspace",
+    "subtitle": "Write your text below and get helpful feedback!",
+    "typeLabel": "What are you writing?",
+    "types": {
+      "story": "story",
+      "essay": "essay",
+      "letter": "letter",
+      "description": "description",
+      "free": "free"
+    },
+    "placeholder": "Start writing here...",
+    "minChars": "({{count}} more needed)",
+    "submit": "Check my writing",
+    "checking": "Checking...",
+    "error": "Something went wrong. Please try again.",
+    "greatJob": "Great job!",
+    "score": "Score: {{score}}/100",
+    "correctedVersion": "Corrected version",
+    "suggestions": "Tips to improve",
+    "tryAgain": "Write again",
+    "goHome": "Back home"
+  },
+  "studentHome": {
+    "greeting": "Hello, {{name}}! 👋",
+    "greetingYoung": "Hello {{name}}! 🌟🎉",
+    "mascotMessage": "Let's learn together today!",
+    "readyToLearn": "Ready to learn?",
+    "startLearning": "Start Learning",
+    "takeQuiz": "Take a Quiz",
+    "writeStory": "Write a Story",
+    "myBadges": "My Badges",
+    "quickLinks": "Quick Links"
   },
   "studentContent": {
     "title": "My Content",

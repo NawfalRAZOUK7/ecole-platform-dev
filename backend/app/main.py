@@ -8,9 +8,11 @@ Phase 3C: WebSocket real-time notifications with Redis Pub/Sub.
 """
 
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.router import router as v1_router
 from app.core.config import settings
@@ -221,6 +223,16 @@ app.add_middleware(
         "X-RateLimit-Reset",
     ],
 )
+
+# Local development storage: browser media tags cannot attach Bearer headers,
+# so metadata endpoints return this static URL when STORAGE_BACKEND=local.
+if settings.storage_backend == "local":
+    Path(settings.upload_dir).mkdir(parents=True, exist_ok=True)
+    app.mount(
+        "/api/v1/local-storage",
+        StaticFiles(directory=settings.upload_dir),
+        name="local-storage",
+    )
 
 # Mount API v1 router
 app.include_router(v1_router, prefix="/api/v1")

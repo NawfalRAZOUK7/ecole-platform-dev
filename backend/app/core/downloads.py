@@ -45,6 +45,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 from typing import Protocol, runtime_checkable
+from urllib.parse import quote
 
 from fastapi import Query
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
@@ -185,8 +186,9 @@ async def serve_file(
 
     For local backend (``presign_get`` returns a relative path, not an HTTP
     URL):
-        - Falls back to ``FileResponse`` served directly from disk.
-        - ``as_`` is ignored in local mode.
+        - Default: falls back to ``FileResponse`` served directly from disk.
+        - ``as_='metadata'``: returns a URL under the local static storage
+          mount, so browser media elements can load videos and PDFs.
 
     Authorization MUST be enforced by the caller before this function is called.
     The ``storage_path`` must come from an ACL-checked DB row.
@@ -200,6 +202,28 @@ async def serve_file(
             mime_type=mime_type,
             size=size,
             as_=as_,
+        )
+
+    # Local backend: expose an already-authorized, static dev URL to browser
+    # media elements. The /api/v1/local-storage mount is enabled only when the
+    # configured storage backend is local.
+    if as_ == "metadata":
+        ttl = settings.s3_presign_get_ttl_seconds
+        expires_at = datetime.now(timezone.utc) + timedelta(seconds=ttl)
+        encoded_path = quote(url, safe="/")
+        payload = DownloadMetadata(
+            download_url=(
+                f"{settings.api_base_url.rstrip('/')}/local-storage/{encoded_path}"
+            ),
+            expires_at=expires_at,
+            mime_type=mime_type,
+            size=size,
+            filename=filename,
+            etag=None,
+        )
+        return JSONResponse(
+            content=payload.model_dump(mode="json"),
+            status_code=200,
         )
 
     # Local backend: presign_get returned the relative path — serve directly.
