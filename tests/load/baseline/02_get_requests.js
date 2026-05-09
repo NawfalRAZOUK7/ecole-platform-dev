@@ -5,7 +5,7 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Rate, Trend } from 'k6/metrics';
-import { BASE_URL, getToken, authHeaders, selectProfile } from './config.js';
+import { BASE_URL, getToken, authHeaders, selectProfile } from '../config.js';
 
 const getDuration = new Trend('get_duration', true);
 const getFailRate = new Rate('get_failures');

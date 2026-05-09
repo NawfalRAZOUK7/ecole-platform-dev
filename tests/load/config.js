@@ -15,7 +15,7 @@ function allowsDirtyDevDb() {
 }
 
 export function assertSafeLoadTarget(url, label = 'target') {
-  if (LOCAL_DEV_TARGET_RE.test(url) && !allowsDirtyDevDb()) {
+  if (LOCAL_DEV_TARGET_RE.test(url) && !allowsDirtyDevDb() && !IS_CI) {
     throw new Error(
       `${label} points at ${url}. Refusing to run k6 against the normal dev DB. ` +
         'Use BASE_URL=http://localhost:8010/api/v1 after make api-test-up, ' +

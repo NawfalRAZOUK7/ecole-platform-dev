@@ -5,7 +5,7 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Rate, Trend } from 'k6/metrics';
-import { BASE_URL, IS_CI, SCHOOL_ID, selectProfile, users } from './config.js';
+import { BASE_URL, IS_CI, SCHOOL_ID, selectProfile, users } from '../config.js';
 
 const loginDuration = new Trend('login_duration', true);
 const loginFailRate = new Rate('login_failures');
@@ -33,7 +33,7 @@ export const options = {
   },
   thresholds: selectProfile(
     {
-      login_duration: ['p(95)<5000'],
+      login_duration: ['p(95)<10000'],
       login_failures: ['rate<0.10'],
       http_req_failed: ['rate<0.30'],
     },

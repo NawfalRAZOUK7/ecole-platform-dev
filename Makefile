@@ -392,4 +392,4 @@ test-postman-full:
 	POSTMAN_BASE_URL=$${POSTMAN_BASE_URL:-http://localhost:8010/api/v1} bash tests/run_tests.sh --full-collection
 
 test-load:
-	cd tests/load && BASE_URL=$${BASE_URL:-http://localhost:8010/api/v1} k6 run $${SCENARIO:-scenario1_logins.js}
+	cd tests/load && BASE_URL=$${BASE_URL:-http://localhost:8010/api/v1} k6 run $${SCENARIO:-baseline/01_logins.js}

@@ -1000,28 +1000,28 @@ jobs:
 
       - name: Run k6 login scenario
         run: |
-          k6 run tests/load/scenario1_logins.js \
+          k6 run tests/load/baseline/01_logins.js \
             --env BASE_URL=http://localhost:8000/api/v1 \
             --out json=k6-results-scenario1.json \
             --summary-trend-stats="avg,p(90),p(95),p(99)"
 
       - name: Run k6 GET requests scenario
         run: |
-          k6 run tests/load/scenario2_get_requests.js \
+          k6 run tests/load/baseline/02_get_requests.js \
             --env BASE_URL=http://localhost:8000/api/v1 \
             --out json=k6-results-scenario2.json \
             --summary-trend-stats="avg,p(90),p(95),p(99)"
 
       - name: Run k6 file upload scenario
         run: |
-          k6 run tests/load/scenario3_file_uploads.js \
+          k6 run tests/load/baseline/03_file_uploads.js \
             --env BASE_URL=http://localhost:8000/api/v1 \
             --out json=k6-results-scenario3.json \
             --summary-trend-stats="avg,p(90),p(95),p(99)"
 
       - name: Run k6 WebSocket scenario
         run: |
-          k6 run tests/load/scenario4_websocket.js \
+          k6 run tests/load/baseline/04_websocket.js \
             --env BASE_URL=http://localhost:8000/api/v1 \
             --env WS_URL=ws://localhost:8000/api/v1/ws \
             --out json=k6-results-scenario4.json \

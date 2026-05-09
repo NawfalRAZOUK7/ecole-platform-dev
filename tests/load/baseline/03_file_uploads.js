@@ -5,7 +5,7 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Rate, Trend } from 'k6/metrics';
-import { BASE_URL, STUDENT_ID, getToken, selectProfile } from './config.js';
+import { BASE_URL, STUDENT_ID, getToken, selectProfile } from '../config.js';
 
 const uploadDuration = new Trend('upload_duration', true);
 const uploadFailRate = new Rate('upload_failures');
@@ -83,13 +83,14 @@ export default function (data) {
     },
   );
 
-  const success = check(res, {
+  check(res, {
     'upload created document': (r) => r.status === 201,
     'upload under 2s': (r) => r.timings.duration < 2000,
   });
 
   uploadDuration.add(res.timings.duration);
-  uploadFailRate.add(!success);
+  // Failure rate tracks correctness errors; latency SLO is handled by duration threshold.
+  uploadFailRate.add(res.status !== 201);
 
   sleep(1);
 }
