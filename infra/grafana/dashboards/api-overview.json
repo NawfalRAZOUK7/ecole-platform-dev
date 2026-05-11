@@ -11,7 +11,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
       "targets": [
         {
-          "expr": "sum(rate(api_request_count[5m])) by (method)",
+          "expr": "sum(rate(api_request_count_total[5m])) by (method)",
           "legendFormat": "{{ method }}",
           "refId": "A"
         }
@@ -26,7 +26,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
       "targets": [
         {
-          "expr": "sum(rate(api_error_count[5m])) / sum(rate(api_request_count[5m])) * 100",
+          "expr": "sum(rate(api_error_count_total[5m])) / sum(rate(api_request_count_total[5m])) * 100",
           "legendFormat": "Error Rate",
           "refId": "A"
         }
@@ -81,7 +81,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
       "targets": [
         {
-          "expr": "sum(rate(api_request_count[5m])) by (status)",
+          "expr": "sum(rate(api_request_count_total[5m])) by (status)",
           "legendFormat": "{{ status }}",
           "refId": "A"
         }
@@ -109,7 +109,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
       "targets": [
         {
-          "expr": "(1 - (sum(rate(api_request_count{status=~\"5..\"}[1h])) / sum(rate(api_request_count[1h])))) * 100",
+          "expr": "(sum(rate(api_request_count_total{status!~\"5..\"}[1h])) / sum(rate(api_request_count_total[1h]))) * 100",
           "legendFormat": "Availability",
           "refId": "A"
         }

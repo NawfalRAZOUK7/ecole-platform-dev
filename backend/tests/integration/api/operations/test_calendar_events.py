@@ -16,7 +16,6 @@ import httpx
 import pytest
 from sqlalchemy import select
 
-from app.core.database import async_session
 from app.models.calendar import EventReminder
 from app.services.reminders import ReminderService
 
@@ -179,6 +178,7 @@ class TestCalendarEventsIntegration:
         client: httpx.AsyncClient,
         admin_token: str,
         student_token: str,
+        session_factory,
     ):
         start_at = datetime.now(timezone.utc).replace(microsecond=0) + timedelta(
             hours=2
@@ -199,7 +199,7 @@ class TestCalendarEventsIntegration:
         )
 
         try:
-            async with async_session() as session:
+            async with session_factory() as session:
                 result = await session.execute(
                     select(EventReminder).where(
                         EventReminder.event_id == uuid.UUID(created["id"])
@@ -213,7 +213,7 @@ class TestCalendarEventsIntegration:
                     )
                 await session.commit()
 
-            async with async_session() as session:
+            async with session_factory() as session:
                 service = ReminderService(session)
                 sent = await service.send_due_reminders()
                 await session.commit()

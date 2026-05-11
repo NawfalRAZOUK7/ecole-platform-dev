@@ -16,7 +16,6 @@ import httpx
 import pytest
 from sqlalchemy import select
 
-from app.core.database import async_session
 from app.models.documents import Document
 from app.services.file_storage import LocalFileStorageBackend
 
@@ -198,6 +197,7 @@ class TestDocumentManagementIntegration:
         client: httpx.AsyncClient,
         parent_token: str,
         admin_token: str,
+        session_factory,
     ):
         student_id = await _parent_student_id(client, parent_token)
         first = await _upload_document(
@@ -223,7 +223,7 @@ class TestDocumentManagementIntegration:
             assert second["deduplicated"] is True
             assert first["sha256"] == second["sha256"]
 
-            async with async_session() as session:
+            async with session_factory() as session:
                 documents = (
                     (
                         await session.execute(

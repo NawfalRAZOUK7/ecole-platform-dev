@@ -21,7 +21,6 @@ import pytest
 from openpyxl import load_workbook
 from sqlalchemy import func, select
 
-from app.core.database import async_session
 from app.models.billing import Invoice
 from app.models.erp import AttendanceRecord, AttendanceSession
 from app.models.iam import Session
@@ -194,10 +193,11 @@ class TestReportsAndAnalyticsIntegration:
         self,
         client: httpx.AsyncClient,
         admin_token: str,
+        session_factory,
     ):
         filters = {"from_date": "2020-01-01", "to_date": date.today().isoformat()}
 
-        async with async_session() as session:
+        async with session_factory() as session:
             before_count = await session.scalar(select(func.count(DataExport.id)))
 
         csv_response = await client.get(
@@ -237,7 +237,7 @@ class TestReportsAndAnalyticsIntegration:
             "published_at",
         ]
 
-        async with async_session() as session:
+        async with session_factory() as session:
             after_count = await session.scalar(select(func.count(DataExport.id)))
             latest_logs = (
                 (
@@ -260,6 +260,7 @@ class TestReportsAndAnalyticsIntegration:
         self,
         client: httpx.AsyncClient,
         admin_token: str,
+        session_factory,
     ):
         from_date = date(2020, 1, 1)
         to_date = date.today()
@@ -276,7 +277,7 @@ class TestReportsAndAnalyticsIntegration:
         )
         assert response.status_code == 200
 
-        async with async_session() as session:
+        async with session_factory() as session:
             active_users = await session.scalar(
                 select(func.count(func.distinct(Session.user_id))).where(
                     Session.school_id == uuid.UUID(SCHOOL_ID),
