@@ -1,25 +1,28 @@
 name: Web CI
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   workflow_dispatch:
   push:
     branches: [main, develop]
     paths:
-      - 'web/**'
-      - 'backend/docs/openapi.json'
-      - 'backend/openapi.json'
-      - 'backend/scripts/export_openapi.py'
-      - 'scripts/generate-openapi.sh'
-      - '.github/workflows/web-ci.yml'
+      - "web/**"
+      - "backend/docs/openapi.json"
+      - "backend/openapi.json"
+      - "backend/scripts/export_openapi.py"
+      - "scripts/generate-openapi.sh"
+      - ".github/workflows/web-ci.yml"
   pull_request:
     branches: [main]
     paths:
-      - 'web/**'
-      - 'backend/docs/openapi.json'
-      - 'backend/openapi.json'
-      - 'backend/scripts/export_openapi.py'
-      - 'scripts/generate-openapi.sh'
-      - '.github/workflows/web-ci.yml'
+      - "web/**"
+      - "backend/docs/openapi.json"
+      - "backend/openapi.json"
+      - "backend/scripts/export_openapi.py"
+      - "scripts/generate-openapi.sh"
+      - ".github/workflows/web-ci.yml"
 
 jobs:
   lint-and-typecheck:
