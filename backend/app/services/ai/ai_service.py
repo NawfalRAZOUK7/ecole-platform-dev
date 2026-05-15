@@ -19,14 +19,14 @@ from app.core.unit_of_work import UnitOfWork
 from app.models.ai import AIPreference, WritingAttempt
 from app.repositories.ai import AIRepository
 from app.services.ai.provider_factory import create_ai_provider
-from app.services.analytics import (
+from app.services.reports.analytics import (
     SCHEMA_VERSION,
     _EVENT_PROPERTY_WHITELIST,
     emit_event,
     pseudonymize_actor_id,
 )
-from app.services.audit import AuditService
-from app.services.kpi import compute_all_kpis
+from app.services.platform.audit import AuditService
+from app.services.reports.kpi import compute_all_kpis
 
 logger = logging.getLogger(__name__)
 

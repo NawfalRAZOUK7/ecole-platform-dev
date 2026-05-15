@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import 'package:ecole_platform/app/providers.dart';
-import 'package:ecole_platform/domain/entities/admin.dart';
+import 'package:ecole_platform/domain/entities/admin/admin.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 
 // ── State ──
@@ -151,8 +151,10 @@ class JustificationReviewScreen extends ConsumerWidget {
                     return Padding(
                       padding: const EdgeInsets.only(right: 6),
                       child: FilterChip(
-                        label: Text(_statusLabel(s),
-                            style: const TextStyle(fontSize: 12)),
+                        label: Text(
+                          _statusLabel(s),
+                          style: const TextStyle(fontSize: 12),
+                        ),
                         selected: selected,
                         onSelected: (v) => ref
                             .read(_justificationsProvider.notifier)
@@ -176,9 +178,10 @@ class JustificationReviewScreen extends ConsumerWidget {
                     color: theme.colorScheme.errorContainer,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(state.error!,
-                      style:
-                          TextStyle(color: theme.colorScheme.onErrorContainer)),
+                  child: Text(
+                    state.error!,
+                    style: TextStyle(color: theme.colorScheme.onErrorContainer),
+                  ),
                 ),
               ),
 
@@ -189,8 +192,12 @@ class JustificationReviewScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildList(BuildContext context, WidgetRef ref,
-      _JustificationsState state, ThemeData theme) {
+  Widget _buildList(
+    BuildContext context,
+    WidgetRef ref,
+    _JustificationsState state,
+    ThemeData theme,
+  ) {
     final colors = theme.colorScheme;
 
     if (state.isLoading) {
@@ -202,8 +209,8 @@ class JustificationReviewScreen extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.check_circle_outline, size: 48, color: colors.outline),
-            SizedBox(height: 16),
-            Text('Aucune justification'),
+            const SizedBox(height: 16),
+            const Text('Aucune justification'),
           ],
         ),
       );
@@ -242,20 +249,27 @@ class JustificationReviewScreen extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Text('Motif :',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant)),
+                  Text(
+                    'Motif :',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                   const SizedBox(height: 4),
                   Text(j.reason, style: theme.textTheme.bodyMedium),
                   if (j.rejectionReason != null) ...[
                     const SizedBox(height: 8),
-                    Text('Raison du rejet :',
-                        style: theme.textTheme.labelSmall
-                            ?.copyWith(color: colors.error)),
+                    Text(
+                      'Raison du rejet :',
+                      style: theme.textTheme.labelSmall
+                          ?.copyWith(color: colors.error),
+                    ),
                     const SizedBox(height: 4),
-                    Text(j.rejectionReason!,
-                        style: theme.textTheme.bodySmall
-                            ?.copyWith(color: colors.error)),
+                    Text(
+                      j.rejectionReason!,
+                      style: theme.textTheme.bodySmall
+                          ?.copyWith(color: colors.error),
+                    ),
                   ],
                   if (j.status == 'pending') ...[
                     const SizedBox(height: 16),
@@ -284,10 +298,15 @@ class JustificationReviewScreen extends ConsumerWidget {
                             child: OutlinedButton.icon(
                               onPressed: () =>
                                   _showRejectDialog(context, ref, j.id),
-                              icon: Icon(Icons.close,
-                                  size: 18, color: colors.error),
-                              label: Text('Rejeter',
-                                  style: TextStyle(color: colors.error)),
+                              icon: Icon(
+                                Icons.close,
+                                size: 18,
+                                color: colors.error,
+                              ),
+                              label: Text(
+                                'Rejeter',
+                                style: TextStyle(color: colors.error),
+                              ),
                               style: OutlinedButton.styleFrom(
                                 side: BorderSide(color: colors.error),
                               ),
@@ -333,7 +352,8 @@ class JustificationReviewScreen extends ConsumerWidget {
               }
             },
             style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.error),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
             child: const Text('Rejeter'),
           ),
         ],
@@ -425,9 +445,14 @@ class _JustStatusBadge extends StatelessWidget {
         border: Border.all(color: color),
         borderRadius: BorderRadius.circular(10),
       ),
-      child: Text(label,
-          style: TextStyle(
-              fontSize: 10, color: color, fontWeight: FontWeight.w600)),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }

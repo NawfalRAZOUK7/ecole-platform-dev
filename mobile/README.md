@@ -14,6 +14,28 @@ lib/
         └── tokens/  # Design tokens from E5
 ```
 
+Feature code is grouped by backend bounded context under `lib/features/<domain>/...`:
+
+```
+features/
+├── academic/       # attendance, gradebook, progress, skills, timetable, academic student/teacher flows
+├── admin/          # dashboard, users, invitations, feature toggles, compliance
+├── ai/             # games and rewards
+├── auth/
+├── billing/        # billing policies, budgets, invoices
+├── communication/  # calendar, messages, notifications
+├── content/        # content catalog, coloring, documents, feed, teacher/student content
+├── lms/            # quizzes, question bank, rubrics, submissions, LMS student/teacher flows
+├── reports/        # analytics, reports, financial health
+├── school/         # micro-schools and school settings
+├── sync/
+└── user/           # profile, family, student home
+```
+
+Domain entities, repository interfaces, and repository implementations use the same context folders under `domain/entities/`, `domain/repositories/`, and `data/repositories_impl/`. Shared infrastructure remains flat in `data/api/`, `data/local_store/`, `data/dto/`, `data/services/`, `app/`, `presentation/`, `shared/`, and `l10n/`.
+
+`third_party/` contains vendored Flutter packages required by the current mobile build. Prefer normal `pub.dev` dependencies for new packages; only vendor when the package is intentionally patched or unavailable through the public registry, and document the upgrade path with the dependency change.
+
 ## Setup
 
 ```bash

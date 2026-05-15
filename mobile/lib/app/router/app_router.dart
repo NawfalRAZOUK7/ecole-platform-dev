@@ -1,0 +1,627 @@
+/// App router — go_router with auth guards and deep-link support.
+///
+/// Reference: DEC-E2-010 — Declarative routing with auth guards
+/// Routes redirect to /login if not authenticated.
+/// Role-based home redirect (PAR→/feed, STD→/content, etc.)
+
+import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:ecole_platform/features/auth/auth_provider.dart';
+import 'package:ecole_platform/features/auth/forgot_password_screen.dart';
+import 'package:ecole_platform/features/auth/login_screen.dart';
+import 'package:ecole_platform/features/auth/register_screen.dart';
+import 'package:ecole_platform/features/auth/reset_password_screen.dart';
+import 'package:ecole_platform/features/content/coloring/coloring_list_screen.dart';
+import 'package:ecole_platform/features/content/coloring/coloring_screen.dart';
+import 'package:ecole_platform/features/content/feed/feed_screen.dart';
+import 'package:ecole_platform/features/ai/games/screens/memory_match_screen.dart';
+import 'package:ecole_platform/features/ai/games/screens/sorting_game_screen.dart';
+import 'package:ecole_platform/features/ai/games/screens/vocabulary_cards_screen.dart';
+import 'package:ecole_platform/features/communication/notifications/notifications_screen.dart';
+import 'package:ecole_platform/features/communication/notifications/notification_preferences_screen.dart';
+import 'package:ecole_platform/features/communication/calendar/calendar_screen.dart';
+import 'package:ecole_platform/features/communication/calendar/event_detail_screen.dart';
+import 'package:ecole_platform/features/communication/calendar/create_event_screen.dart';
+import 'package:ecole_platform/features/content/catalog/content_screen.dart';
+import 'package:ecole_platform/features/academic/results/results_screen.dart';
+import 'package:ecole_platform/features/billing/invoices/invoices_screen.dart';
+import 'package:ecole_platform/features/user/profile/profile_screen.dart';
+import 'package:ecole_platform/features/user/profile/two_factor_setup_screen.dart';
+import 'package:ecole_platform/features/user/profile/change_password_screen.dart';
+import 'package:ecole_platform/features/lms/submissions/submission_upload_screen.dart';
+import 'package:ecole_platform/features/admin/admin_dashboard_screen.dart';
+import 'package:ecole_platform/features/admin/users_screen.dart';
+import 'package:ecole_platform/features/admin/invitations_screen.dart';
+import 'package:ecole_platform/features/admin/justification_review_screen.dart';
+import 'package:ecole_platform/features/academic/attendance/attendance_analytics_screen.dart';
+import 'package:ecole_platform/features/academic/attendance/attendance_history_screen.dart';
+import 'package:ecole_platform/features/billing/budgets/budget_detail_screen.dart';
+import 'package:ecole_platform/features/billing/budgets/budget_list_screen.dart';
+import 'package:ecole_platform/features/billing/budgets/budget_request_screen.dart';
+import 'package:ecole_platform/features/school/micro_schools/micro_school_detail_screen.dart';
+import 'package:ecole_platform/features/school/micro_schools/micro_school_enroll_screen.dart';
+import 'package:ecole_platform/features/school/micro_schools/micro_school_list_screen.dart';
+import 'package:ecole_platform/features/academic/teacher/classes_screen.dart';
+import 'package:ecole_platform/features/lms/teacher/assignment_form_screen.dart';
+import 'package:ecole_platform/features/lms/teacher/submissions_screen.dart';
+import 'package:ecole_platform/features/academic/teacher/attendance_screen.dart';
+import 'package:ecole_platform/features/content/teacher_library/content_library_screen.dart';
+import 'package:ecole_platform/features/academic/teacher/class_progress_screen.dart';
+import 'package:ecole_platform/features/content/student/student_content_screen.dart';
+import 'package:ecole_platform/features/user/student/student_home_screen.dart';
+import 'package:ecole_platform/features/lms/student/quiz_player_screen.dart';
+import 'package:ecole_platform/features/content/student/story_reader_screen.dart';
+import 'package:ecole_platform/features/lms/student/writing_workspace_screen.dart';
+import 'package:ecole_platform/features/academic/student/program_history_screen.dart';
+import 'package:ecole_platform/features/user/family/my_children_screen.dart';
+import 'package:ecole_platform/features/user/family/shared_review_screen.dart';
+import 'package:ecole_platform/features/academic/timetable/timetable_screen.dart';
+import 'package:ecole_platform/features/communication/messages/conversations_screen.dart';
+import 'package:ecole_platform/features/communication/messages/chat_screen.dart';
+import 'package:ecole_platform/features/communication/messages/announcements_screen.dart';
+import 'package:ecole_platform/features/academic/progress/progress_screen.dart';
+import 'package:ecole_platform/features/academic/progress/parent_progress_screen.dart';
+import 'package:ecole_platform/features/reports/core/reports_screen.dart';
+import 'package:ecole_platform/features/reports/analytics/analytics_summary_screen.dart';
+import 'package:ecole_platform/features/content/documents/documents_screen.dart';
+import 'package:ecole_platform/features/academic/gradebook/grade_detail_screen.dart';
+import 'package:ecole_platform/features/academic/gradebook/gradebook_screen.dart';
+import 'package:ecole_platform/features/academic/gradebook/transcript_screen.dart';
+import 'package:ecole_platform/features/billing/invoices/invoice_detail_screen.dart';
+import 'package:ecole_platform/features/academic/skills/skill_analytics_screen.dart';
+import 'package:ecole_platform/features/academic/skills/skill_evaluation_screen.dart';
+import 'package:ecole_platform/features/academic/skills/skill_passport_screen.dart';
+import 'package:ecole_platform/features/academic/skills/skills_overview_screen.dart';
+import 'package:ecole_platform/features/admin/compliance/compliance_dashboard_screen.dart';
+import 'package:ecole_platform/features/admin/compliance/curriculum_mapping_screen.dart';
+import 'package:ecole_platform/features/admin/compliance/compliance_report_screen.dart';
+import 'package:ecole_platform/features/sync/sync_conflicts_screen.dart';
+import 'package:ecole_platform/features/sync/sync_status_screen.dart';
+import 'package:ecole_platform/features/reports/financial_health/financial_dashboard_screen.dart';
+import 'package:ecole_platform/features/reports/financial_health/financial_snapshots_screen.dart';
+import 'package:ecole_platform/features/admin/feature_toggles_screen.dart';
+import 'package:ecole_platform/features/school/settings/school_settings_screen.dart';
+import 'package:ecole_platform/features/billing/late_fee_policy_screen.dart';
+import 'package:ecole_platform/features/billing/payment_plan_detail_screen.dart';
+import 'package:ecole_platform/features/billing/payment_plans_screen.dart';
+import 'package:ecole_platform/features/billing/sibling_policy_screen.dart';
+import 'package:ecole_platform/features/user/profile/gdpr_screen.dart';
+import 'package:ecole_platform/features/lms/question_bank/generate_quiz_screen.dart';
+import 'package:ecole_platform/features/lms/question_bank/question_bank_import_screen.dart';
+import 'package:ecole_platform/features/lms/question_bank/question_bank_screen.dart';
+import 'package:ecole_platform/features/academic/attendance/parent_justification_screen.dart';
+import 'package:ecole_platform/features/lms/quizzes/quiz_analytics_screen.dart';
+import 'package:ecole_platform/features/lms/quizzes/teacher_quiz_list_screen.dart';
+import 'package:ecole_platform/features/ai/rewards/leaderboard_screen.dart';
+import 'package:ecole_platform/features/ai/rewards/rewards_screen.dart';
+import 'package:ecole_platform/features/lms/rubrics/rubric_editor_screen.dart';
+import 'package:ecole_platform/features/lms/rubrics/rubric_grading_screen.dart';
+import 'package:ecole_platform/features/lms/rubrics/rubrics_list_screen.dart';
+import 'package:ecole_platform/features/academic/timetable/timetable_constraints_screen.dart';
+import 'package:ecole_platform/features/academic/timetable/timetable_generate_screen.dart';
+import 'package:ecole_platform/presentation/shell_screen.dart';
+
+/// Role-based redirect targets.
+const _roleRedirects = <String, String>{
+  'PAR': '/feed',
+  'STD': '/student/home',
+  'TCH': '/teacher/classes',
+  'ADM': '/admin/dashboard',
+  'DIR': '/admin/dashboard',
+  'SUP': '/notifications',
+};
+
+final routerProvider = Provider<GoRouter>((ref) {
+  final authState = ref.watch(authProvider);
+
+  return GoRouter(
+    initialLocation: '/login',
+    redirect: (context, state) {
+      final isAuthenticated = authState.isAuthenticated;
+      final isLoading = authState.isLoading;
+      final loc = state.matchedLocation;
+      final isPublicPage = loc == '/login' ||
+          loc == '/register' ||
+          loc == '/forgot-password' ||
+          loc == '/reset-password';
+
+      // Still loading — don't redirect
+      if (isLoading) return null;
+
+      // Not authenticated + not on public page → go to login
+      if (!isAuthenticated && !isPublicPage) return '/login';
+
+      // Authenticated + on public page → redirect to role home
+      if (isAuthenticated && isPublicPage) {
+        final role = authState.user?.role ?? '';
+        return _roleRedirects[role] ?? '/profile';
+      }
+
+      return null; // no redirect needed
+    },
+    routes: [
+      // Login (no shell)
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const LoginScreen(),
+      ),
+      // OAuth callback deep link
+      GoRoute(
+        path: '/auth/callback',
+        builder: (context, state) {
+          final code = state.uri.queryParameters['code'];
+          final provider = state.uri.queryParameters['provider'];
+          final returnedState = state.uri.queryParameters['state'];
+          if (code != null && provider != null && returnedState != null) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              final container = ProviderScope.containerOf(context);
+              container
+                  .read(authProvider.notifier)
+                  .completeOAuthLogin(provider, code, returnedState);
+            });
+          }
+          return const LoginScreen();
+        },
+      ),
+
+      // Register (no shell) — Phase 5C
+      GoRoute(
+        path: '/register',
+        builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/reset-password',
+        builder: (context, state) => ResetPasswordScreen(
+          token: state.uri.queryParameters['token'],
+        ),
+      ),
+      GoRoute(
+        path: '/student/content/:id/read',
+        builder: (context, state) => StoryReaderScreen(
+          contentItemId: state.pathParameters['id']!,
+          initialProgressStatus: state.uri.queryParameters['progress'],
+        ),
+      ),
+
+      // Shell with bottom navigation
+      ShellRoute(
+        builder: (context, state, child) => ShellScreen(child: child),
+        routes: [
+          // ── Admin routes ──
+          GoRoute(
+            path: '/admin/dashboard',
+            builder: (context, state) => const AdminDashboardScreen(),
+          ),
+          GoRoute(
+            path: '/admin/users',
+            builder: (context, state) => const UsersScreen(),
+          ),
+          GoRoute(
+            path: '/admin/invitations',
+            builder: (context, state) => const InvitationsScreen(),
+          ),
+          GoRoute(
+            path: '/admin/justifications',
+            builder: (context, state) => const JustificationReviewScreen(),
+          ),
+          GoRoute(
+            path: '/admin/features',
+            builder: (context, state) => const FeatureTogglesScreen(),
+          ),
+          GoRoute(
+            path: '/admin/school',
+            builder: (context, state) => const SchoolSettingsScreen(),
+          ),
+          GoRoute(
+            path: '/analytics',
+            builder: (context, state) => const AnalyticsSummaryScreen(),
+          ),
+          GoRoute(
+            path: '/budgets',
+            builder: (context, state) => const BudgetListScreen(),
+          ),
+          GoRoute(
+            path: '/budgets/requests',
+            builder: (context, state) => const BudgetRequestScreen(),
+          ),
+          GoRoute(
+            path: '/budgets/:id',
+            builder: (context, state) => BudgetDetailScreen(
+              budgetId: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/micro-schools',
+            builder: (context, state) => const MicroSchoolListScreen(),
+          ),
+          GoRoute(
+            path: '/micro-schools/:id/enroll',
+            builder: (context, state) => MicroSchoolEnrollScreen(
+              schoolId: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/micro-schools/:id',
+            builder: (context, state) => MicroSchoolDetailScreen(
+              schoolId: state.pathParameters['id']!,
+            ),
+          ),
+
+          // ── Teacher routes ──
+          GoRoute(
+            path: '/teacher/classes',
+            builder: (context, state) => const ClassesScreen(),
+          ),
+          GoRoute(
+            path: '/teacher/assignments',
+            builder: (context, state) => const AssignmentFormScreen(),
+          ),
+          GoRoute(
+            path: '/teacher/submissions',
+            builder: (context, state) => const SubmissionsScreen(),
+          ),
+          GoRoute(
+            path: '/teacher/attendance',
+            builder: (context, state) => const AttendanceScreen(),
+          ),
+          GoRoute(
+            path: '/attendance/history',
+            builder: (context, state) => AttendanceHistoryScreen(
+              initialClassId: state.uri.queryParameters['classId'],
+              initialStudentId: state.uri.queryParameters['studentId'],
+            ),
+          ),
+          GoRoute(
+            path: '/attendance/analytics',
+            builder: (context, state) => AttendanceAnalyticsScreen(
+              initialClassId: state.uri.queryParameters['classId'],
+            ),
+          ),
+          // Phase 10C: Teacher content library
+          GoRoute(
+            path: '/teacher/content-library',
+            builder: (context, state) => const ContentLibraryScreen(),
+          ),
+          GoRoute(
+            path: '/gradebook',
+            builder: (context, state) => const GradebookScreen(),
+          ),
+          GoRoute(
+            path: '/gradebook/student/:id',
+            builder: (context, state) => GradeDetailScreen(
+              studentId: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/gradebook/transcript/:id',
+            builder: (context, state) => TranscriptScreen(
+              studentId: state.pathParameters['id']!,
+            ),
+          ),
+
+          // ── Parent routes ──
+          GoRoute(
+            path: '/family',
+            builder: (context, state) => const MyChildrenScreen(),
+          ),
+          GoRoute(
+            path: '/family/review/:childId',
+            builder: (context, state) => SharedReviewScreen(
+              childId: state.pathParameters['childId']!,
+            ),
+          ),
+          GoRoute(
+            path: '/family/review/:childId/sessions/:sessionId',
+            builder: (context, state) => SharedReviewDetailScreen(
+              childId: state.pathParameters['childId']!,
+              sessionId: state.pathParameters['sessionId']!,
+            ),
+          ),
+
+          // ── Student routes ──
+          GoRoute(
+            path: '/student/home',
+            builder: (context, state) => const StudentHomeScreen(),
+          ),
+          GoRoute(
+            path: '/students/:studentId/academic-history',
+            builder: (context, state) => AcademicHistoryScreen(
+              studentId: state.pathParameters['studentId']!,
+            ),
+          ),
+          GoRoute(
+            path: '/student/content',
+            builder: (context, state) => const StudentContentScreen(),
+          ),
+          GoRoute(
+            path: '/student/quizzes',
+            builder: (context, state) => const QuizPlayerScreen(),
+          ),
+          GoRoute(
+            path: '/student/writing',
+            builder: (context, state) => const WritingWorkspaceScreen(),
+          ),
+          GoRoute(
+            path: '/games/memory',
+            builder: (context, state) => const MemoryMatchScreen(),
+          ),
+          GoRoute(
+            path: '/games/sorting',
+            builder: (context, state) => const SortingGameScreen(),
+          ),
+          GoRoute(
+            path: '/games/vocabulary',
+            builder: (context, state) => const VocabularyCardsScreen(),
+          ),
+          GoRoute(
+            path: '/rewards',
+            builder: (context, state) => const RewardsScreen(),
+          ),
+          GoRoute(
+            path: '/leaderboard',
+            builder: (context, state) => const LeaderboardScreen(),
+          ),
+          GoRoute(
+            path: '/justification',
+            builder: (context, state) => const ParentJustificationScreen(),
+          ),
+          GoRoute(
+            path: '/quizzes/:id/analytics',
+            builder: (context, state) => QuizAnalyticsScreen(
+              quizId: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/teacher/quizzes',
+            builder: (context, state) => const TeacherQuizListScreen(),
+          ),
+          GoRoute(
+            path: '/teacher/class-progress',
+            builder: (context, state) => const ClassProgressScreen(),
+          ),
+          GoRoute(
+            path: '/coloring',
+            builder: (context, state) => const ColoringListScreen(),
+          ),
+          GoRoute(
+            path: '/coloring/:id',
+            builder: (context, state) => ColoringScreen(
+              pageId: state.pathParameters['id']!,
+            ),
+          ),
+
+          // ── Phase 12B routes ──
+          GoRoute(
+            path: '/timetable',
+            builder: (context, state) => const TimetableScreen(),
+          ),
+          GoRoute(
+            path: '/messages',
+            builder: (context, state) => const ConversationsScreen(),
+          ),
+          GoRoute(
+            path: '/messages/:id',
+            builder: (context, state) => ChatScreen(
+              conversationId: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/announcements',
+            builder: (context, state) => const AnnouncementsScreen(),
+          ),
+
+          // ── Phase 12C routes ──
+          GoRoute(
+            path: '/progress',
+            builder: (context, state) => const ProgressScreen(),
+          ),
+          GoRoute(
+            path: '/progress/:studentId',
+            builder: (context, state) => ProgressScreen(
+              studentId: state.pathParameters['studentId'],
+            ),
+          ),
+          GoRoute(
+            path: '/parent/progress',
+            builder: (context, state) => const ParentProgressScreen(),
+          ),
+
+          // ── Common routes ──
+          GoRoute(
+            path: '/feed',
+            builder: (context, state) => const FeedScreen(),
+          ),
+          GoRoute(
+            path: '/notifications',
+            builder: (context, state) => const NotificationsScreen(),
+          ),
+          GoRoute(
+            path: '/calendar',
+            builder: (context, state) => const CalendarScreen(),
+          ),
+          GoRoute(
+            path: '/events/:id',
+            builder: (context, state) => EventDetailScreen(
+              eventId: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/events/create',
+            builder: (context, state) => CreateEventScreen(
+              initialEvent: state.extra as dynamic,
+            ),
+          ),
+          GoRoute(
+            path: '/reports',
+            builder: (context, state) => const ReportsScreen(),
+          ),
+          GoRoute(
+            path: '/documents',
+            builder: (context, state) => const DocumentsScreen(),
+          ),
+          GoRoute(
+            path: '/invoices/:id',
+            builder: (context, state) => InvoiceDetailScreen(
+              invoiceId: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/skills',
+            builder: (context, state) => const SkillsOverviewScreen(),
+          ),
+          GoRoute(
+            path: '/skills/passport/:id',
+            builder: (context, state) => SkillPassportScreen(
+              studentId: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/skills/evaluate',
+            builder: (context, state) => const SkillEvaluationScreen(),
+          ),
+          GoRoute(
+            path: '/skills/analytics',
+            builder: (context, state) => const SkillAnalyticsScreen(),
+          ),
+          GoRoute(
+            path: '/compliance',
+            builder: (context, state) => const ComplianceDashboardScreen(),
+          ),
+          GoRoute(
+            path: '/compliance/mapping',
+            builder: (context, state) => const CurriculumMappingScreen(),
+          ),
+          GoRoute(
+            path: '/compliance/reports',
+            builder: (context, state) => const ComplianceReportScreen(),
+          ),
+          GoRoute(
+            path: '/sync',
+            builder: (context, state) => const SyncStatusScreen(),
+          ),
+          GoRoute(
+            path: '/sync/conflicts',
+            builder: (context, state) => const SyncConflictsScreen(),
+          ),
+          GoRoute(
+            path: '/financial-health',
+            builder: (context, state) => const FinancialDashboardScreen(),
+          ),
+          GoRoute(
+            path: '/financial-health/snapshots',
+            builder: (context, state) => const FinancialSnapshotsScreen(),
+          ),
+          GoRoute(
+            path: '/billing/sibling-policy',
+            builder: (context, state) => const SiblingPolicyScreen(),
+          ),
+          GoRoute(
+            path: '/billing/late-fees',
+            builder: (context, state) => const LateFeePolicyScreen(),
+          ),
+          GoRoute(
+            path: '/billing/payment-plans',
+            builder: (context, state) => const PaymentPlansScreen(),
+          ),
+          GoRoute(
+            path: '/billing/payment-plans/:id',
+            builder: (context, state) => PaymentPlanDetailScreen(
+              planId: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/question-bank',
+            builder: (context, state) => const QuestionBankScreen(),
+          ),
+          GoRoute(
+            path: '/question-bank/import',
+            builder: (context, state) => const QuestionBankImportScreen(),
+          ),
+          GoRoute(
+            path: '/question-bank/generate',
+            builder: (context, state) => const GenerateQuizScreen(),
+          ),
+          GoRoute(
+            path: '/rubrics',
+            builder: (context, state) => const RubricsListScreen(),
+          ),
+          GoRoute(
+            path: '/rubrics/:id/edit',
+            builder: (context, state) => RubricEditorScreen(
+              rubricId: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/rubrics/:id/grade',
+            builder: (context, state) => RubricGradingScreen(
+              rubricId: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/timetable/constraints',
+            builder: (context, state) => const TimetableConstraintsScreen(),
+          ),
+          GoRoute(
+            path: '/timetable/generate',
+            builder: (context, state) => const TimetableGenerateScreen(),
+          ),
+          GoRoute(
+            path: '/settings/notifications',
+            builder: (context, state) => const NotificationPreferencesScreen(),
+          ),
+          GoRoute(
+            path: '/settings/privacy',
+            builder: (context, state) => const GdprScreen(),
+          ),
+          GoRoute(
+            path: '/content',
+            builder: (context, state) => const ContentScreen(),
+          ),
+          GoRoute(
+            path: '/results',
+            builder: (context, state) => const ResultsScreen(),
+          ),
+          GoRoute(
+            path: '/invoices',
+            builder: (context, state) => const InvoicesScreen(),
+          ),
+          GoRoute(
+            path: '/profile',
+            builder: (context, state) => const ProfileScreen(),
+            routes: [
+              GoRoute(
+                path: '2fa',
+                builder: (context, state) => const TwoFactorSetupScreen(),
+              ),
+              GoRoute(
+                path: 'password',
+                builder: (context, state) => const ChangePasswordScreen(),
+              ),
+            ],
+          ),
+        ],
+      ),
+
+      // Submission upload (outside shell — full screen)
+      // Phase 10C: extended with exercise_type + has_exercise_pdf
+      GoRoute(
+        path: '/submissions/upload',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, String>?;
+          return SubmissionUploadScreen(
+            assignmentId: extra?['assignment_id'],
+            assignmentTitle: extra?['assignment_title'],
+            exerciseType: extra?['exercise_type'],
+            hasExercisePdf: extra?['has_exercise_pdf'] == 'true',
+          );
+        },
+      ),
+    ],
+  );
+});

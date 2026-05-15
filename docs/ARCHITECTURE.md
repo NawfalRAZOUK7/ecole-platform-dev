@@ -64,17 +64,17 @@ Les repositories retournent des modèles ORM ou des tuples de résultat, jamais 
 
 24 modules de modèles organisés en 9+ groupes de migration :
 
-| Groupe | Modules | Tables principales |
-|--------|---------|-------------------|
-| **G1 — IAM** | `iam.py` | users, sessions, memberships, invitation_codes, parent_child_links, profiles |
-| **G2 — ERP** | `erp.py`, `school.py`, `levels.py` | schools, classes, enrollments, timetable, attendance, programs |
-| **G3 — LMS** | `lms.py`, `skill_passport.py` | content_items, quizzes, questions, submissions, rubrics, gradebook |
-| **G4 — COM** | `com.py`, `calendar.py` | conversations, messages, notifications, announcements, events |
-| **G5 — Billing & Finance** | `billing.py`, `budget.py`, `financial_health.py` | invoices, payments, fee_structures, budgets, micro-budgets, financial snapshots |
-| **G6 — Audit & Gamification** | `audit.py`, `games.py`, `rewards.py`, `feature.py` | audit_logs, feature_toggles, rewards, badges, game_configs |
-| **G7 — Programmes (v1.1)** | `erp.py` (G49–G50) | programs, program_versions, program_equivalences, eligibility_rules, program_assignment_events |
-| **G8 — Conformité & Reporting** | `men_compliance.py`, `reporting.py` | compliance_reports, curriculum_mappings, report_jobs, report_schedules, data_exports |
-| **G9 — Stockage & Sync** | `documents.py`, `uploads.py`, `sync_queue.py` | documents, document_versions, resources, upload_sessions, sync_queue, sync_devices, sync_conflicts |
+| Groupe                          | Modules                                            | Tables principales                                                                                 |
+| ------------------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| **G1 — IAM**                    | `iam.py`                                           | users, sessions, memberships, invitation_codes, parent_child_links, profiles                       |
+| **G2 — ERP**                    | `erp.py`, `school.py`, `levels.py`                 | schools, classes, enrollments, timetable, attendance, programs                                     |
+| **G3 — LMS**                    | `lms.py`, `skill_passport.py`                      | content_items, quizzes, questions, submissions, rubrics, gradebook                                 |
+| **G4 — COM**                    | `com.py`, `calendar.py`                            | conversations, messages, notifications, announcements, events                                      |
+| **G5 — Billing & Finance**      | `billing.py`, `budget.py`, `financial_health.py`   | invoices, payments, fee_structures, budgets, micro-budgets, financial snapshots                    |
+| **G6 — Audit & Gamification**   | `audit.py`, `games.py`, `rewards.py`, `feature.py` | audit_logs, feature_toggles, rewards, badges, game_configs                                         |
+| **G7 — Programmes (v1.1)**      | `erp.py` (G49–G50)                                 | programs, program_versions, program_equivalences, eligibility_rules, program_assignment_events     |
+| **G8 — Conformité & Reporting** | `men_compliance.py`, `reporting.py`                | compliance_reports, curriculum_mappings, report_jobs, report_schedules, data_exports               |
+| **G9 — Stockage & Sync**        | `documents.py`, `uploads.py`, `sync_queue.py`      | documents, document_versions, resources, upload_sessions, sync_queue, sync_devices, sync_conflicts |
 
 Modules transversaux : `difficulty_adaptation.py`, `micro_school.py`, `calendar.py`.
 
@@ -149,24 +149,24 @@ final rewardsProvider = FutureProvider.autoDispose<StudentRewards>((ref) async {
 
 ## Patterns transversaux
 
-| Pattern | Usage |
-|---------|-------|
-| **Repository** | Séparation accès données / logique métier |
-| **Service Layer** | Orchestration et règles de gestion |
-| **AuthContext + RequiresPermission** | RBAC transversal sur chaque endpoint |
-| **Feature-based Organization** | Modules autonomes (composants + hooks + services + types) |
-| **Factory Pattern (Tests)** | Fonctions `createUser()`, `createStudent()` pour les données de test |
-| **MSW Mock Server** | Interception HTTP dans les tests web sans serveur réel |
-| **Cursor-based Pagination** | `next_cursor` + `has_more` pour les grandes listes |
-| **Normalizer Pattern** | Transformation snake_case → camelCase dans les services frontend |
-| **Bridge Card Pattern** | Informer les utilisateurs des fonctionnalités sur l'autre plateforme |
-| **StateNotifier (Mobile)** | Gestion d'état Riverpod avec états loading/error/data |
-| **Storage Abstraction** | Backend `local` / `minio` / `s3` interchangeable derrière une interface commune |
-| **Signed URL Redirect** | Téléchargement via redirection HTTP 307 vers URL S3 présignée (durée courte) |
-| **Snapshot d'audit** | Persistance d'instantanés (`ProgramSnapshot`) à chaque changement structurant |
-| **State Machine (Workflows)** | Cycle de vie des entités (demandes budgétaires, soumissions, paiements) modélisé explicitement |
-| **Seed Architecture** | Système de données demo idempotent (`seed.py` + `seed_extensions.py` + `seed_enhanced.py`) couvrant ~93% des tables |
-| **Offline Sync** | SQLite local + file d'attente de sync + résolution de conflits pour le mobile en connectivité limitée |
+| Pattern                              | Usage                                                                                                               |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| **Repository**                       | Séparation accès données / logique métier                                                                           |
+| **Service Layer**                    | Orchestration et règles de gestion                                                                                  |
+| **AuthContext + RequiresPermission** | RBAC transversal sur chaque endpoint                                                                                |
+| **Feature-based Organization**       | Modules autonomes (composants + hooks + services + types)                                                           |
+| **Factory Pattern (Tests)**          | Fonctions `createUser()`, `createStudent()` pour les données de test                                                |
+| **MSW Mock Server**                  | Interception HTTP dans les tests web sans serveur réel                                                              |
+| **Cursor-based Pagination**          | `next_cursor` + `has_more` pour les grandes listes                                                                  |
+| **Normalizer Pattern**               | Transformation snake_case → camelCase dans les services frontend                                                    |
+| **Bridge Card Pattern**              | Informer les utilisateurs des fonctionnalités sur l'autre plateforme                                                |
+| **StateNotifier (Mobile)**           | Gestion d'état Riverpod avec états loading/error/data                                                               |
+| **Storage Abstraction**              | Backend `local` / `minio` / `s3` interchangeable derrière une interface commune                                     |
+| **Signed URL Redirect**              | Téléchargement via redirection HTTP 307 vers URL S3 présignée (durée courte)                                        |
+| **Snapshot d'audit**                 | Persistance d'instantanés (`ProgramSnapshot`) à chaque changement structurant                                       |
+| **State Machine (Workflows)**        | Cycle de vie des entités (demandes budgétaires, soumissions, paiements) modélisé explicitement                      |
+| **Seed Architecture**                | Système de données demo idempotent (`seed.py` + `seed_extensions.py` + `seed_enhanced.py`) couvrant ~93% des tables |
+| **Offline Sync**                     | SQLite local + file d'attente de sync + résolution de conflits pour le mobile en connectivité limitée               |
 
 ---
 
@@ -204,6 +204,7 @@ class StorageBackend(Protocol):
 ```
 
 Trois implémentations interchangeables :
+
 - `LocalStorage` — système de fichiers (dev sans MinIO)
 - `MinioStorage` — MinIO (dev complet, staging on-prem)
 - `S3Storage` — AWS S3 ou compatible (production)
@@ -231,14 +232,14 @@ Program ─┬─► ProgramVersion ─┬─► EligibilityRule
 
 ### Entités principales
 
-| Entité | Rôle |
-|--------|------|
-| `Program` | Programme pédagogique (ex. « Cycle primaire », « Filière internationale ») avec niveau cible et matières |
-| `ProgramVersion` | Version datée d'un programme (la version est l'unité d'inscription, pas le programme lui-même) |
-| `ProgramEquivalence` | Correspondance entre deux versions (ex. v2024 ↔ v2025 pour reconnaître les acquis) |
-| `EligibilityRule` | Règle déclarative (âge minimum, niveau prérequis, validation de modules) évaluée par un moteur de règles |
-| `Enrollment` | Inscription d'un élève à une `ProgramVersion`, avec snapshot immuable au moment de l'inscription |
-| `ProgramSnapshot` | Cliché complet de la version au moment de l'inscription (matières, coefficients, règles) — garantit que les règles ne changent pas pour un élève déjà inscrit |
+| Entité               | Rôle                                                                                                                                                          |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Program`            | Programme pédagogique (ex. « Cycle primaire », « Filière internationale ») avec niveau cible et matières                                                      |
+| `ProgramVersion`     | Version datée d'un programme (la version est l'unité d'inscription, pas le programme lui-même)                                                                |
+| `ProgramEquivalence` | Correspondance entre deux versions (ex. v2024 ↔ v2025 pour reconnaître les acquis)                                                                            |
+| `EligibilityRule`    | Règle déclarative (âge minimum, niveau prérequis, validation de modules) évaluée par un moteur de règles                                                      |
+| `Enrollment`         | Inscription d'un élève à une `ProgramVersion`, avec snapshot immuable au moment de l'inscription                                                              |
+| `ProgramSnapshot`    | Cliché complet de la version au moment de l'inscription (matières, coefficients, règles) — garantit que les règles ne changent pas pour un élève déjà inscrit |
 
 ### Moteur d'éligibilité
 
@@ -271,3 +272,40 @@ Le service `eligibility_engine.py` évalue les règles dans l'ordre : préfiltre
 Le chart Helm `infra/k8s/` expose 15 templates : `backend-deployment`, `backend-service`, `backend-hpa`, `web-deployment`, `web-service`, `worker-deployment`, `ingress`, `configmap`, `secrets`, `namespace`, `pdb`, `pvc-uploads`, `cronjob-backups`, `job-migrations`, `networkpolicy`. Trois fichiers de valeurs (`values-local.yaml`, `values-staging.yaml`, `values-prod.yaml`) paramètrent les ressources, replicas et secrets selon l'environnement.
 
 Le déploiement local `Kind` (cluster `ecole-dev`) sert à valider le chart en CI (`.github/workflows/k8s-e2e.yml`) avant tout push vers staging.
+
+---
+
+## Décisions d'architecture (ADR)
+
+### DEC-IAM-CLERK-REJECTED — 2026-05-12
+
+**Contexte.** Le GitHub Student Pack inclut Clerk (Authentication-as-a-Service). La question s'est posée d'abandonner notre stack auth maison au profit de Clerk pour bénéficier de leurs composants UI, du 2FA, et du SSO clé en main.
+
+**Décision.** **Conserver l'authentification maison.** Clerk n'est pas adopté.
+
+**Justification.**
+
+| Capacité Clerk            | Implémentation existante                                                                                                  |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| UI sign-in/sign-up        | `web/src/services/auth/AuthContext.tsx` + écrans i18n FR/AR + design system glassmorphism                                 |
+| 2FA / TOTP                | `backend/app/core/totp.py` (`pyotp` + `bcrypt`, drift tolerance, codes de secours, QR provisioning)                       |
+| Vérification email        | `backend/app/services/auth.py` + templates `backend/app/templates/email/`                                                 |
+| Récupération mot de passe | `/recovery/*` — OTP via Testmail/SMTP                                                                                     |
+| Sessions                  | JWT access (mémoire) + refresh HttpOnly + CSRF double-submit (S-076)                                                      |
+| RBAC / ABAC               | Pipeline complet Pack D6 — modèle `school × role × school_membership` qui ne se transpose pas en métadonnées Clerk plates |
+| Audit                     | Pack D6 — `AuthN → Context → RBAC → ABAC → INV → Audit → Events`                                                          |
+| Mobile                    | `mobile/lib/main.dart` + `flutter_secure_storage` — Clerk Flutter SDK encore en bêta                                      |
+
+**Coût d'opportunité d'une migration.**
+
+- Refonte UI complète (perte du design system, RTL arabe, animations).
+- Réingénierie RBAC : Clerk ne modélise pas nativement `école × rôle × adhésion`.
+- Risque tarifaire : palier gratuit 10 k MAU → un EdTech multi-école (parents + élèves + enseignants) le dépasse rapidement.
+- Conformité : Clerk héberge aux États-Unis ; revue ANRT/CNDP nécessaire pour les écoles marocaines.
+- Deux stacks auth (web Clerk + mobile maison) au lieu d'une.
+
+**Consequences.**
+
+- `Clerk.md` archivé dans `docs/archive/Clerk.md`.
+- Pas d'ajout de `@clerk/react` ni de `<ClerkProvider>` dans `web/src/main.tsx`.
+- Si un besoin auth-as-a-service apparaît plus tard, alternatives à évaluer dans cet ordre : **Supabase Auth** (50 k MAU gratuit, RLS-friendly), **Keycloak** (self-hosted, RBAC scolaire mappable), **Firebase Auth** (déjà présent côté mobile via `firebase_core`).

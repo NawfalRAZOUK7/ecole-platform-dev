@@ -11,12 +11,12 @@ import pytest
 
 from app.core.dependencies import AuthContext
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
-from app.schemas.timetable_generation import (
+from app.schemas.academic.timetable_generation import (
     TimetableConstraintInput,
     TimetableConstraintSetRequest,
 )
-from app.services import timetable_generator as timetable_module
-from app.services.timetable_generator import TimetableGeneratorService
+import app.services.academic.timetable_generator as timetable_module
+from app.services.academic.timetable_generator import TimetableGeneratorService
 
 
 def make_auth(role: str = "ADM") -> AuthContext:

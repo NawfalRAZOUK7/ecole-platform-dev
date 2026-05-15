@@ -1,14 +1,13 @@
 /**
  * Age-based theme hook — adapts the UI for maternelle (3-5), primaire (6-9), college (10-13+).
  *
- * Reads `date_of_birth` from the student profile and computes an age tier.
- * Sets `data-age-tier` attribute on <html> for CSS targeting.
+ * Computes an age tier from a date_of_birth string and sets `data-age-tier`
+ * attribute on <html> for CSS targeting.
  *
- * Usage: call once in Layout when role === STD.
+ * Usage: call once in Layout when role === STD, or in any student page.
  */
 
 import { useEffect, useMemo } from 'react';
-import { useProfileData } from '@/features/profile/useProfile';
 
 export type AgeTier = 'maternelle' | 'primaire' | 'college';
 
@@ -39,18 +38,15 @@ function ageToTier(age: number): AgeTier {
 }
 
 /**
- * Hook: reads the student profile, computes age tier, applies `data-age-tier` to <html>.
+ * Hook: computes age tier from the provided date_of_birth, applies `data-age-tier` to <html>.
  * Returns the current tier for conditional rendering in components.
  */
-export function useAgeTheme(): AgeTier {
-  const profileQuery = useProfileData();
-
+export function useAgeTheme(dateOfBirth?: string | null): AgeTier {
   const tier = useMemo<AgeTier>(() => {
-    const dob = profileQuery.data?.student_profile?.date_of_birth;
-    if (!dob) return 'primaire'; // default fallback
-    const age = computeAge(dob);
+    if (!dateOfBirth) return 'primaire'; // default fallback
+    const age = computeAge(dateOfBirth);
     return ageToTier(age);
-  }, [profileQuery.data]);
+  }, [dateOfBirth]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-age-tier', tier);

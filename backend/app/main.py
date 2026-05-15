@@ -21,8 +21,27 @@ from app.core.idempotency import IdempotencyMiddleware
 from app.core.metrics import register_metrics
 from app.core.middleware import register_middleware
 from app.core.rate_limit import RateLimitMiddleware
+from app.core.security_headers import SecurityHeadersMiddleware
 from app.core.tasks import close_arq_pool
 from app.core.ws_manager import ws_manager
+
+# ---------------------------------------------------------------------------
+# Sentry — error tracking & performance monitoring
+# ---------------------------------------------------------------------------
+if settings.sentry_dsn:
+    import sentry_sdk
+
+    _is_prod = settings.app_env == "production"
+    sentry_sdk.init(
+        dsn=settings.sentry_dsn,
+        environment=settings.app_env,
+        # Don't ship PII (IPs, emails) to Sentry in production.
+        send_default_pii=not _is_prod,
+        enable_logs=True,
+        traces_sample_rate=settings.sentry_traces_sample_rate,
+        profile_session_sample_rate=settings.sentry_profiles_sample_rate,
+        profile_lifecycle="trace",
+    )
 
 # ---------------------------------------------------------------------------
 # OpenAPI tag metadata — groups endpoints by domain (Phase 3A)
@@ -197,6 +216,9 @@ app.add_middleware(IdempotencyMiddleware)
 # Rate limiting middleware — X-RateLimit headers + per-endpoint categories (Phase 2A)
 app.add_middleware(RateLimitMiddleware)
 
+# Security headers middleware (Phase 12)
+app.add_middleware(SecurityHeadersMiddleware)
+
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -221,6 +243,7 @@ app.add_middleware(
         "X-RateLimit-Limit",
         "X-RateLimit-Remaining",
         "X-RateLimit-Reset",
+        "Access-Control-Max-Age",
     ],
 )
 

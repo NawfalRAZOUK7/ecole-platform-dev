@@ -10,8 +10,8 @@ from unittest.mock import AsyncMock
 import pytest
 
 from app.core.dependencies import AuthContext
-from app.services import notification_hub as notif_module
-from app.services.notification_hub import NotificationHubService
+import app.services.communication.notification_hub as notif_module
+from app.services.communication.notification_hub import NotificationHubService
 
 
 def make_auth(role: str = "ADM") -> AuthContext:

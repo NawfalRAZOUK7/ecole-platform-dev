@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { ApiError } from '@/services/api/client';
+import type { ApiError } from '@/core/api/client';
 
 export function useDismissibleError(error: ApiError | string | null) {
   const [dismissed, setDismissed] = useState(false);

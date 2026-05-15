@@ -72,6 +72,14 @@ jobs:
           name: coverage-report
           path: web/coverage/
 
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: web/coverage
+          flags: web
+          fail_ci_if_error: false
+
   build:
     runs-on: ubuntu-latest
     needs: lint-and-typecheck

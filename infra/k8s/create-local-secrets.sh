@@ -22,16 +22,19 @@ if ! command -v kubectl &> /dev/null; then
     exit 1
 fi
 
-# Check if .env file exists
-if [ ! -f .env ]; then
-    echo -e "${YELLOW}Warning: .env file not found${NC}"
-    echo "Using default values for secrets..."
-fi
-
-# Load environment variables from .env if exists
-if [ -f .env ]; then
+# Load environment variables — prefer Doppler, fallback to .env
+if command -v doppler &> /dev/null && doppler me &> /dev/null; then
+    echo -e "${GREEN}Loading environment variables from Doppler (config: dev)${NC}"
+    DOPPLER_TMP=$(mktemp)
+    doppler secrets download --config dev --no-file --format env > "$DOPPLER_TMP"
+    export $(grep -v '^#' "$DOPPLER_TMP" | xargs)
+    rm -f "$DOPPLER_TMP"
+elif [ -f .env ]; then
     echo -e "${GREEN}Loading environment variables from .env${NC}"
     export $(grep -v '^#' .env | xargs)
+else
+    echo -e "${YELLOW}Warning: No .env file found and Doppler not configured${NC}"
+    echo "Using default values for secrets..."
 fi
 
 # Set default values if not set

@@ -22,8 +22,11 @@ Root infrastructure and DevOps configuration for the Ecole Platform—a K-12 EdT
 | **alertmanager/** | Prometheus AlertManager routing rules (email, Slack) |
 | **backup/** | Database backup and restore scripts with WORM compliance |
 | **certs/** | TLS/SSL certificates (excluded from git) |
+| **doppler/** | Doppler environment bootstrap helpers for staging/production secrets |
 | **grafana/** | Monitoring dashboards and auto-provisioning config |
+| **k8s/** | Helm chart, values files, and local Kubernetes helpers |
 | **loki/** | Log aggregation with Promtail collectors and alerting rules |
+| **minio/** | Object storage notes for local/dev S3-compatible storage |
 | **nginx/** | Reverse proxy configs with WAF, rate limiting, security headers |
 | **postgres/** | PostgreSQL initialization scripts |
 | **prometheus/** | Prometheus scrape targets and alerting rules |
@@ -36,17 +39,41 @@ Root infrastructure and DevOps configuration for the Ecole Platform—a K-12 EdT
 
 ### Development
 ```bash
-docker-compose -f docker-compose.dev.yml up
+docker compose -f infra/docker-compose.dev.yml up
 ```
+
+### Docker Compose matrix
+
+| File | Purpose |
+|------|---------|
+| `docker-compose.dev.yml` | Full stack for local development (API, web, DB, Redis, supporting services as defined in the file). |
+| `docker-compose.staging.yml` | Pre-production parity checks. |
+| `docker-compose.prod.yml` | Production-oriented compose (often used with external secrets). |
+| `docker-compose.monitoring.yml` | Observability only: Prometheus, Grafana, Loki, Tempo (and related collectors). |
+| `docker-compose.tests.yml` | Disposable Docker test matrix for backend pytest, Postman/Newman, k6 smoke, and infra validation. |
+| `docker-compose.blue.yml` / `docker-compose.green.yml` | Blue/green app instances for zero-downtime cutover. |
+| `docker-compose.api-test.yml` | Lean stack for API / contract testing in CI or locally. |
+| `docker-compose.override.yml.example` | Copy to `docker-compose.override.yml` (gitignored) for machine-specific ports and env. |
+
+Secrets and environment-specific values are typically injected via **Doppler** or env files — see [`DEPLOYMENT.md`](DEPLOYMENT.md) and [`doppler/`](doppler/) scripts.
+
+## Structure Conventions
+
+- Compose files stay at the `infra/` root. Use `docker-compose.dev.yml` for local development, `docker-compose.tests.yml` for the Dockerized test matrix, `docker-compose.api-test.yml` for lean backend API/system-test support, `docker-compose.monitoring.yml` for observability-only work, and the staging/prod/blue/green files for deployment flows.
+- Kubernetes assets stay under `infra/k8s/`. Shared defaults live in `values.yaml`; environment overrides live in `values-local.yaml`, `values-staging.yaml`, and `values-prod.yaml`.
+- Secrets are owned by Doppler or ignored local files under `infra/secrets/`. Do not commit rendered secret values.
+- Database bootstrap is split deliberately: `infra/postgres/init.sql` owns roles, extensions, and privileges only; application tables, indexes, constraints, and enums are owned by Alembic migrations under `backend/alembic/`.
+- Backend tooling lives in `backend/scripts/`; repo-wide automation remains under root `scripts/`; cross-service Postman/k6/chaos assets live under `system-tests/`.
+- Observability names should use backend bounded contexts where possible: `auth`, `user`, `school`, `academic`, `lms`, `billing`, `content`, `communication`, `reports`, `admin`, `sync`, `ai`, and `operations`.
 
 ### Monitoring Stack
 ```bash
-docker-compose -f docker-compose.monitoring.yml up
+docker compose -f infra/docker-compose.monitoring.yml up
 ```
 
 ### Production Blue-Green Deployment
 ```bash
-./scripts/blue-green-deploy.sh <image-version>
+./infra/scripts/blue-green-deploy.sh <image-version>
 ```
 
 ## Key Features
@@ -62,44 +89,44 @@ docker-compose -f docker-compose.monitoring.yml up
 
 ### Check Service Health
 ```bash
-./scripts/healthcheck.sh
+./infra/scripts/healthcheck.sh
 ```
 
 ### Database Backup
 ```bash
-./backup/pg_backup.sh
+./infra/backup/pg_backup.sh
 ```
 
 ### Restore from Backup
 ```bash
-./backup/pg_restore.sh <dump-file>
+./infra/backup/pg_restore.sh <dump-file>
 ```
 
 ### Rotate JWT Secrets
 ```bash
-./scripts/rotate-secrets.sh
+./infra/scripts/rotate-secrets.sh
 ```
 
 ### Run Disaster Recovery Drill
 ```bash
-./scripts/restore-drill.sh
+./infra/scripts/restore-drill.sh
 ```
 
 ### Upload Backups to S3
 ```bash
-./scripts/backup-s3.sh <backup-file>
+./infra/scripts/backup-s3.sh <backup-file>
 ```
 
 ### Renew TLS Certificates
 ```bash
-./scripts/ssl-renew.sh
+./infra/scripts/ssl-renew.sh
 ```
 
 ## Environment Configuration
 
 Copy and customize the override template:
 ```bash
-cp docker-compose.override.yml.example docker-compose.override.yml
+cp infra/docker-compose.override.yml.example infra/docker-compose.override.yml
 ```
 
 ## Documentation

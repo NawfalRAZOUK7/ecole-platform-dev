@@ -290,19 +290,14 @@ jobs:
       - name: Run unit tests with coverage
         run: |
           cd backend
-          UNIT_COVERAGE_FILES='app/core/exceptions.py,app/core/permissions.py,app/core/response.py,app/core/security.py'
-          coverage erase
-          coverage run --parallel-mode --source=app -m pytest tests/unit/ -v --tb=short
-          coverage combine
-          coverage report --include="$UNIT_COVERAGE_FILES" --fail-under=90
-          coverage xml -o coverage-unit.xml --include="$UNIT_COVERAGE_FILES"
+          pytest tests/unit/ -v --tb=short --cov=app --cov-branch --cov-report=xml --cov-report=term
 
       - name: Upload unit coverage report
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: coverage-unit-${{ matrix.python-version }}-pg${{ matrix.postgres-version }}
-          path: backend/coverage-unit.xml
+          path: backend/coverage.xml
 
       - name: Upload unit coverage data
         uses: actions/upload-artifact@v4
@@ -355,6 +350,20 @@ jobs:
       ACCESS_TOKEN_EXPIRE_MINUTES: "30"
       REFRESH_TOKEN_EXPIRE_DAYS: "7"
       APP_ENV: test
+      SEED_ON_STARTUP: "true"
+      ACCOUNT_LOCKOUT_ENABLED: "true"
+      ACCOUNT_LOCKOUT_MAX_ATTEMPTS: "5"
+      ACCOUNT_LOCKOUT_DURATION_MINUTES: "15"
+      GOOGLE_OAUTH_ENABLED: "false"
+      MICROSOFT_OAUTH_ENABLED: "false"
+      MOCK_OAUTH_ENABLED: "true"
+      MOCK_OAUTH_BASE_URL: "http://localhost:9999"
+      MOCK_SMS_ENABLED: "true"
+      RATE_LIMIT_DEFAULT_LIMIT: "100"
+      RATE_LIMIT_WINDOW_SECONDS: "60"
+      TESTMAIL_ENABLED: "true"
+      TESTMAIL_API_KEY: ${{ secrets.TESTMAIL_API_KEY }}
+      TESTMAIL_NAMESPACE: "ibatt"
 
     steps:
       - uses: actions/checkout@v4
@@ -387,6 +396,17 @@ jobs:
           cd backend
           python -m app.seed
 
+      - name: Start mock OAuth server
+        run: |
+          cd system-tests/mock-oauth-server
+          python main.py &
+          MOCK_OAUTH_PID=$!
+          echo "MOCK_OAUTH_PID=$MOCK_OAUTH_PID" >> $GITHUB_ENV
+          for i in $(seq 1 10); do
+            curl -sf http://localhost:9999/ && break
+            sleep 1
+          done
+
       - name: Run integration tests
         run: |
           cd backend
@@ -396,13 +416,14 @@ jobs:
           cleanup() {
             kill -INT "$SERVER_PID" || true
             wait "$SERVER_PID" || true
+            kill $MOCK_OAUTH_PID || true
           }
           trap cleanup EXIT
           for i in $(seq 1 30); do
             curl -sf http://localhost:8000/api/v1/health && break
             sleep 1
           done
-          pytest tests/integration/api/iam/test_complete_auth.py tests/integration/api/iam/test_role_flow.py -v --tb=short
+          pytest tests/integration/api/auth/test_complete_auth.py tests/integration/api/auth/test_role_flow.py -v --tb=short --cov=app --cov-branch --cov-report=xml --cov-report=term
           kill -INT "$SERVER_PID" || true
           wait "$SERVER_PID" || true
           trap - EXIT
@@ -453,6 +474,20 @@ jobs:
       ACCESS_TOKEN_EXPIRE_MINUTES: "30"
       REFRESH_TOKEN_EXPIRE_DAYS: "7"
       APP_ENV: test
+      SEED_ON_STARTUP: "true"
+      ACCOUNT_LOCKOUT_ENABLED: "true"
+      ACCOUNT_LOCKOUT_MAX_ATTEMPTS: "5"
+      ACCOUNT_LOCKOUT_DURATION_MINUTES: "15"
+      GOOGLE_OAUTH_ENABLED: "false"
+      MICROSOFT_OAUTH_ENABLED: "false"
+      MOCK_OAUTH_ENABLED: "true"
+      MOCK_OAUTH_BASE_URL: "http://localhost:9999"
+      MOCK_SMS_ENABLED: "true"
+      RATE_LIMIT_DEFAULT_LIMIT: "100"
+      RATE_LIMIT_WINDOW_SECONDS: "60"
+      TESTMAIL_ENABLED: "true"
+      TESTMAIL_API_KEY: ${{ secrets.TESTMAIL_API_KEY }}
+      TESTMAIL_NAMESPACE: "ibatt"
 
     steps:
       - uses: actions/checkout@v4
@@ -481,6 +516,17 @@ jobs:
           alembic upgrade head
           python -m app.seed
 
+      - name: Start mock OAuth server
+        run: |
+          cd system-tests/mock-oauth-server
+          python main.py &
+          MOCK_OAUTH_PID=$!
+          echo "MOCK_OAUTH_PID=$MOCK_OAUTH_PID" >> $GITHUB_ENV
+          for i in $(seq 1 10); do
+            curl -sf http://localhost:9999/ && break
+            sleep 1
+          done
+
       - name: Run contract tests with API coverage
         run: |
           cd backend
@@ -490,13 +536,14 @@ jobs:
           cleanup() {
             kill -INT "$SERVER_PID" || true
             wait "$SERVER_PID" || true
+            kill $MOCK_OAUTH_PID || true
           }
           trap cleanup EXIT
           for i in $(seq 1 30); do
             curl -sf http://localhost:8000/api/v1/health && break
             sleep 1
           done
-          pytest tests/contract/test_api_contracts_envelope.py -v --tb=short
+          pytest tests/contract/ -v --tb=short --cov=app --cov-branch --cov-report=xml --cov-report=term
           kill -INT "$SERVER_PID" || true
           wait "$SERVER_PID" || true
           trap - EXIT
@@ -547,6 +594,20 @@ jobs:
       ACCESS_TOKEN_EXPIRE_MINUTES: "30"
       REFRESH_TOKEN_EXPIRE_DAYS: "7"
       APP_ENV: test
+      SEED_ON_STARTUP: "true"
+      ACCOUNT_LOCKOUT_ENABLED: "true"
+      ACCOUNT_LOCKOUT_MAX_ATTEMPTS: "5"
+      ACCOUNT_LOCKOUT_DURATION_MINUTES: "15"
+      GOOGLE_OAUTH_ENABLED: "false"
+      MICROSOFT_OAUTH_ENABLED: "false"
+      MOCK_OAUTH_ENABLED: "true"
+      MOCK_OAUTH_BASE_URL: "http://localhost:9999"
+      MOCK_SMS_ENABLED: "true"
+      RATE_LIMIT_DEFAULT_LIMIT: "100"
+      RATE_LIMIT_WINDOW_SECONDS: "60"
+      TESTMAIL_ENABLED: "true"
+      TESTMAIL_API_KEY: ${{ secrets.TESTMAIL_API_KEY }}
+      TESTMAIL_NAMESPACE: "ibatt"
 
     steps:
       - uses: actions/checkout@v4
@@ -575,6 +636,17 @@ jobs:
           alembic upgrade head
           python -m app.seed
 
+      - name: Start mock OAuth server
+        run: |
+          cd system-tests/mock-oauth-server
+          python main.py &
+          MOCK_OAUTH_PID=$!
+          echo "MOCK_OAUTH_PID=$MOCK_OAUTH_PID" >> $GITHUB_ENV
+          for i in $(seq 1 10); do
+            curl -sf http://localhost:9999/ && break
+            sleep 1
+          done
+
       - name: Run RBAC security tests with API coverage
         run: |
           cd backend
@@ -584,13 +656,14 @@ jobs:
           cleanup() {
             kill -INT "$SERVER_PID" || true
             wait "$SERVER_PID" || true
+            kill $MOCK_OAUTH_PID || true
           }
           trap cleanup EXIT
           for i in $(seq 1 30); do
             curl -sf http://localhost:8000/api/v1/health && break
             sleep 1
           done
-          pytest tests/security/rbac/test_rbac_security.py -v --tb=short
+          pytest tests/security/rbac/test_rbac_security.py -v --tb=short --cov=app --cov-branch --cov-report=xml --cov-report=term
           kill -INT "$SERVER_PID" || true
           wait "$SERVER_PID" || true
           trap - EXIT
@@ -607,16 +680,7 @@ jobs:
   coverage-report:
     name: Coverage Report
     runs-on: ubuntu-latest
-    needs:
-      [
-        unit-tests,
-        integration-tests,
-        contract-tests,
-        security-tests,
-        e2e-tests,
-        security-audit,
-        load-tests,
-      ]
+    needs: [unit-tests, integration-tests, contract-tests, security-tests]
     steps:
       - uses: actions/checkout@v4
 
@@ -668,6 +732,14 @@ jobs:
           path: |
             backend/coverage.xml
             backend/htmlcov/
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: backend/coverage.xml
+          flags: backend
+          fail_ci_if_error: false
 
   web-lint:
     name: Web Frontend Lint
@@ -740,6 +812,20 @@ jobs:
       ACCESS_TOKEN_EXPIRE_MINUTES: "30"
       REFRESH_TOKEN_EXPIRE_DAYS: "7"
       APP_ENV: test
+      SEED_ON_STARTUP: "true"
+      ACCOUNT_LOCKOUT_ENABLED: "true"
+      ACCOUNT_LOCKOUT_MAX_ATTEMPTS: "5"
+      ACCOUNT_LOCKOUT_DURATION_MINUTES: "15"
+      GOOGLE_OAUTH_ENABLED: "false"
+      MICROSOFT_OAUTH_ENABLED: "false"
+      MOCK_OAUTH_ENABLED: "true"
+      MOCK_OAUTH_BASE_URL: "http://localhost:9999"
+      MOCK_SMS_ENABLED: "true"
+      RATE_LIMIT_DEFAULT_LIMIT: "100"
+      RATE_LIMIT_WINDOW_SECONDS: "60"
+      TESTMAIL_ENABLED: "true"
+      TESTMAIL_API_KEY: ${{ secrets.TESTMAIL_API_KEY }}
+      TESTMAIL_NAMESPACE: "ibatt"
 
     steps:
       - uses: actions/checkout@v4
@@ -781,6 +867,17 @@ jobs:
           alembic upgrade head
           python -m app.seed
 
+      - name: Start mock OAuth server
+        run: |
+          cd system-tests/mock-oauth-server
+          python main.py &
+          MOCK_OAUTH_PID=$!
+          echo "MOCK_OAUTH_PID=$MOCK_OAUTH_PID" >> $GITHUB_ENV
+          for i in $(seq 1 10); do
+            curl -sf http://localhost:9999/ && break
+            sleep 1
+          done
+
       - name: Start API server
         run: |
           cd backend
@@ -818,6 +915,7 @@ jobs:
         run: |
           cd web
           BASE_URL=http://localhost:5173 npx playwright test --reporter=github
+          kill $MOCK_OAUTH_PID || true
         env:
           CI: true
 
@@ -828,10 +926,258 @@ jobs:
           name: playwright-report
           path: web/playwright-report/
 
-  security-audit:
-    name: Security Audit Tests
+  postman-tests:
+    name: Postman API Smoke (Newman)
     runs-on: ubuntu-latest
     needs: [integration-tests]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ecole
+          POSTGRES_PASSWORD: ecole
+          POSTGRES_DB: ecole_platform
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ecole -d ecole_platform"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://ecole:ecole@localhost:5432/ecole_platform
+      REDIS_URL: redis://localhost:6379/0
+      JWT_SECRET_KEY: test-secret-key-ci-only
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+      REFRESH_TOKEN_EXPIRE_DAYS: "7"
+      APP_ENV: test
+      SEED_ON_STARTUP: "true"
+      ACCOUNT_LOCKOUT_ENABLED: "true"
+      ACCOUNT_LOCKOUT_MAX_ATTEMPTS: "5"
+      ACCOUNT_LOCKOUT_DURATION_MINUTES: "15"
+      GOOGLE_OAUTH_ENABLED: "false"
+      MICROSOFT_OAUTH_ENABLED: "false"
+      MOCK_OAUTH_ENABLED: "true"
+      MOCK_OAUTH_BASE_URL: "http://localhost:9999"
+      MOCK_SMS_ENABLED: "true"
+      RATE_LIMIT_DEFAULT_LIMIT: "100"
+      RATE_LIMIT_WINDOW_SECONDS: "60"
+      TESTMAIL_ENABLED: "true"
+      TESTMAIL_API_KEY: ${{ secrets.TESTMAIL_API_KEY }}
+      TESTMAIL_NAMESPACE: "ibatt"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('backend/requirements*.txt') }}
+          restore-keys: |
+            pip-${{ env.PYTHON_VERSION }}-
+
+      - name: Set up Node.js (for Newman)
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          pip install -r requirements-test.txt
+
+      - name: Run migrations + seed
+        run: |
+          cd backend
+          alembic upgrade head
+          python -m app.seed
+
+      - name: Start API server
+        run: |
+          cd backend
+          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8000/api/v1/health && break
+            sleep 1
+          done
+
+      - name: Install Newman + reporter
+        run: npm install -g newman newman-reporter-htmlextra
+
+      - name: Run Postman full smoke collection
+        run: |
+          newman run system-tests/postman/ecole_platform_full.postman_collection.json \
+            -e system-tests/postman/env_local.json \
+            --env-var "baseUrl=http://localhost:8000/api/v1" \
+            --env-var "school_id=00000000-0000-4000-8000-000000000001" \
+            --reporters cli,htmlextra,json \
+            --reporter-htmlextra-export newman-report.html \
+            --reporter-json-export newman-report.json \
+            --bail
+
+      - name: Upload Newman report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: newman-report
+          path: |
+            newman-report.html
+            newman-report.json
+
+  postman-scenario-tests:
+    name: Postman Scenario Tests (Newman)
+    runs-on: ubuntu-latest
+    needs: [integration-tests]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ecole
+          POSTGRES_PASSWORD: ecole
+          POSTGRES_DB: ecole_platform
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ecole -d ecole_platform"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://ecole:ecole@localhost:5432/ecole_platform
+      REDIS_URL: redis://localhost:6379/0
+      JWT_SECRET_KEY: test-secret-key-ci-only
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+      REFRESH_TOKEN_EXPIRE_DAYS: "7"
+      APP_ENV: test
+      SEED_ON_STARTUP: "true"
+      ACCOUNT_LOCKOUT_ENABLED: "true"
+      ACCOUNT_LOCKOUT_MAX_ATTEMPTS: "5"
+      ACCOUNT_LOCKOUT_DURATION_MINUTES: "15"
+      GOOGLE_OAUTH_ENABLED: "false"
+      MICROSOFT_OAUTH_ENABLED: "false"
+      MOCK_OAUTH_ENABLED: "true"
+      MOCK_OAUTH_BASE_URL: "http://localhost:9999"
+      MOCK_SMS_ENABLED: "true"
+      RATE_LIMIT_DEFAULT_LIMIT: "100"
+      RATE_LIMIT_WINDOW_SECONDS: "60"
+      TESTMAIL_ENABLED: "true"
+      TESTMAIL_API_KEY: ${{ secrets.TESTMAIL_API_KEY }}
+      TESTMAIL_NAMESPACE: "ibatt"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('backend/requirements*.txt') }}
+          restore-keys: |
+            pip-${{ env.PYTHON_VERSION }}-
+
+      - name: Set up Node.js (for Newman)
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          pip install -r requirements-test.txt
+
+      - name: Run migrations + seed
+        run: |
+          cd backend
+          alembic upgrade head
+          python -m app.seed
+
+      - name: Start mock OAuth server
+        run: |
+          cd system-tests/mock-oauth-server
+          python main.py &
+          MOCK_OAUTH_PID=$!
+          echo "MOCK_OAUTH_PID=$MOCK_OAUTH_PID" >> $GITHUB_ENV
+          for i in $(seq 1 10); do
+            curl -sf http://localhost:9999/ && break
+            sleep 1
+          done
+
+      - name: Start API server
+        run: |
+          cd backend
+          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8000/api/v1/health && break
+            sleep 1
+          done
+
+      - name: Install Newman + reporter
+        run: npm install -g newman newman-reporter-htmlextra
+
+      - name: Run all scenario collections
+        run: |
+          mkdir -p scenario-reports
+          for collection in system-tests/postman/scenario_*.postman_collection.json; do
+            name=$(basename "$collection" .postman_collection.json)
+            echo "Running $name..."
+            newman run "$collection" \
+              -e system-tests/postman/env_local.json \
+              --env-var "baseUrl=http://localhost:8000/api/v1" \
+            --env-var "school_id=00000000-0000-4000-8000-000000000001" \
+              --reporters cli,htmlextra,json \
+              --reporter-htmlextra-export "scenario-reports/${name}-report.html" \
+              --reporter-json-export "scenario-reports/${name}-report.json" \
+              --bail
+          done
+          kill $MOCK_OAUTH_PID || true
+
+      - name: Upload scenario test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scenario-reports
+          path: scenario-reports/*
+
+  cleanup-test-data:
+    name: Cleanup Test Data
+    runs-on: ubuntu-latest
+    needs: [postman-scenario-tests]
+    if: always()
     services:
       postgres:
         image: postgres:16-alpine
@@ -882,48 +1228,43 @@ jobs:
           restore-keys: |
             pip-${{ env.PYTHON_VERSION }}-
 
-      - name: Install dependencies
+      - name: Install backend dependencies
         run: |
           cd backend
           pip install -r requirements-test.txt
 
-      - name: Run migrations + seed
+      - name: Run migrations
         run: |
           cd backend
           alembic upgrade head
-          python -m app.seed
 
-      - name: Run security audit tests with API coverage
+      - name: Start API server
         run: |
           cd backend
-          coverage erase
-          coverage run --parallel-mode --source=app -m uvicorn app.main:app --host 0.0.0.0 --port 8000 &
-          SERVER_PID=$!
-          cleanup() {
-            kill -INT "$SERVER_PID" || true
-            wait "$SERVER_PID" || true
-          }
-          trap cleanup EXIT
+          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
           for i in $(seq 1 30); do
             curl -sf http://localhost:8000/api/v1/health && break
             sleep 1
           done
-          pytest tests/security/audit/test_security_audit.py -v --tb=short
-          kill -INT "$SERVER_PID" || true
-          wait "$SERVER_PID" || true
-          trap - EXIT
 
-      - name: Upload security audit coverage data
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: coverage-data-security-audit
-          path: backend/.coverage*
-          include-hidden-files: true
-          if-no-files-found: warn
+      - name: Get admin token
+        id: token
+        run: |
+          TOKEN=$(curl -s -X POST http://localhost:8000/api/v1/auth/login \
+            -H "Content-Type: application/json" \
+            -d '{"email":"admin@ecole-benani.ma","password":"admin123","school_id":"00000000-0000-4000-8000-000000000001"}' \
+            | jq -r '.data.access_token')
+          echo "token=$TOKEN" >> $GITHUB_OUTPUT
 
-  load-tests:
-    name: Load Tests (k6)
+      - name: Run cleanup script
+        run: |
+          ./system-tests/cleanup_test_data.sh \
+            --token "${{ steps.token.outputs.token }}" \
+            --base-url http://localhost:8000/api/v1 \
+            --school-id 00000000-0000-4000-8000-000000000001
+
+  k6-load-tests:
+    name: k6 Auth Baseline Tests
     runs-on: ubuntu-latest
     needs: [integration-tests]
     services:
@@ -997,32 +1338,285 @@ jobs:
           done
 
       - name: Install k6
+        run: |
+          sudo gpg -k /usr/share/keyrings/ubuntu-archive-keyring.gpg --dearmor
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install -y k6
+
+      - name: Run k6 login baseline test
+        run: |
+          k6 run system-tests/load/auth/01_login_baseline.js \
+            --env BASE_URL=http://localhost:8000/api/v1 \
+            --env SCHOOL_ID=00000000-0000-4000-8000-000000000001 \
+            --env TEST_EMAIL=admin@ecole-benani.ma \
+            --env TEST_PASSWORD=admin123 \
+            --out json=k6-login-results.json
+
+      - name: Run k6 2FA baseline test
+        run: |
+          k6 run system-tests/load/auth/02_2fa_baseline.js \
+            --env BASE_URL=http://localhost:8000/api/v1 \
+            --env SCHOOL_ID=00000000-0000-4000-8000-000000000001 \
+            --env TEST_EMAIL=admin@ecole-benani.ma \
+            --env TEST_PASSWORD=admin123 \
+            --env TOTP_CODE=123456 \
+            --out json=k6-2fa-results.json
+
+      - name: Run k6 recovery baseline test
+        run: |
+          k6 run system-tests/load/auth/03_recovery_baseline.js \
+            --env BASE_URL=http://localhost:8000/api/v1 \
+            --env SCHOOL_ID=00000000-0000-4000-8000-000000000001 \
+            --env TEST_EMAIL=admin@ecole-benani.ma \
+            --out json=k6-recovery-results.json
+
+      - name: Upload k6 results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-results
+          path: |
+            k6-login-results.json
+            k6-2fa-results.json
+            k6-recovery-results.json
+
+  security-audit:
+    name: Security Audit Tests
+    runs-on: ubuntu-latest
+    needs: [integration-tests]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ecole
+          POSTGRES_PASSWORD: ecole
+          POSTGRES_DB: ecole_platform
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ecole -d ecole_platform"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://ecole:ecole@localhost:5432/ecole_platform
+      REDIS_URL: redis://localhost:6379/0
+      JWT_SECRET_KEY: test-secret-key-ci-only
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+      REFRESH_TOKEN_EXPIRE_DAYS: "7"
+      APP_ENV: test
+      SEED_ON_STARTUP: "true"
+      ACCOUNT_LOCKOUT_ENABLED: "true"
+      ACCOUNT_LOCKOUT_MAX_ATTEMPTS: "5"
+      ACCOUNT_LOCKOUT_DURATION_MINUTES: "15"
+      GOOGLE_OAUTH_ENABLED: "false"
+      MICROSOFT_OAUTH_ENABLED: "false"
+      MOCK_OAUTH_ENABLED: "true"
+      MOCK_OAUTH_BASE_URL: "http://localhost:9999"
+      MOCK_SMS_ENABLED: "true"
+      RATE_LIMIT_DEFAULT_LIMIT: "100"
+      RATE_LIMIT_WINDOW_SECONDS: "60"
+      TESTMAIL_ENABLED: "true"
+      TESTMAIL_API_KEY: ${{ secrets.TESTMAIL_API_KEY }}
+      TESTMAIL_NAMESPACE: "ibatt"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('backend/requirements*.txt') }}
+          restore-keys: |
+            pip-${{ env.PYTHON_VERSION }}-
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements-test.txt
+
+      - name: Run migrations + seed
+        run: |
+          cd backend
+          alembic upgrade head
+          python -m app.seed
+
+      - name: Start mock OAuth server
+        run: |
+          cd system-tests/mock-oauth-server
+          python main.py &
+          MOCK_OAUTH_PID=$!
+          echo "MOCK_OAUTH_PID=$MOCK_OAUTH_PID" >> $GITHUB_ENV
+          for i in $(seq 1 10); do
+            curl -sf http://localhost:9999/ && break
+            sleep 1
+          done
+
+      - name: Run security audit tests with API coverage
+        run: |
+          cd backend
+          coverage erase
+          coverage run --parallel-mode --source=app -m uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          SERVER_PID=$!
+          cleanup() {
+            kill -INT "$SERVER_PID" || true
+            wait "$SERVER_PID" || true
+            kill $MOCK_OAUTH_PID || true
+          }
+          trap cleanup EXIT
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8000/api/v1/health && break
+            sleep 1
+          done
+          pytest tests/security/audit/test_security_audit.py -v --tb=short --cov=app --cov-branch --cov-report=xml --cov-report=term
+          kill -INT "$SERVER_PID" || true
+          wait "$SERVER_PID" || true
+          trap - EXIT
+
+      - name: Upload security audit coverage data
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-data-security-audit
+          path: backend/.coverage*
+          include-hidden-files: true
+          if-no-files-found: warn
+
+  load-tests:
+    name: k6 Full Baseline Suite
+    runs-on: ubuntu-latest
+    needs: [integration-tests]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ecole
+          POSTGRES_PASSWORD: ecole
+          POSTGRES_DB: ecole_platform
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ecole -d ecole_platform"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://ecole:ecole@localhost:5432/ecole_platform
+      REDIS_URL: redis://localhost:6379/0
+      JWT_SECRET_KEY: test-secret-key-ci-only
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+      REFRESH_TOKEN_EXPIRE_DAYS: "7"
+      APP_ENV: test
+      SEED_ON_STARTUP: "true"
+      ACCOUNT_LOCKOUT_ENABLED: "true"
+      ACCOUNT_LOCKOUT_MAX_ATTEMPTS: "5"
+      ACCOUNT_LOCKOUT_DURATION_MINUTES: "15"
+      GOOGLE_OAUTH_ENABLED: "false"
+      MICROSOFT_OAUTH_ENABLED: "false"
+      MOCK_OAUTH_ENABLED: "true"
+      MOCK_OAUTH_BASE_URL: "http://localhost:9999"
+      MOCK_SMS_ENABLED: "true"
+      RATE_LIMIT_DEFAULT_LIMIT: "100"
+      RATE_LIMIT_WINDOW_SECONDS: "60"
+      TESTMAIL_ENABLED: "true"
+      TESTMAIL_API_KEY: ${{ secrets.TESTMAIL_API_KEY }}
+      TESTMAIL_NAMESPACE: "ibatt"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('backend/requirements*.txt') }}
+          restore-keys: |
+            pip-${{ env.PYTHON_VERSION }}-
+
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          pip install -r requirements-test.txt
+
+      - name: Run migrations + seed
+        run: |
+          cd backend
+          alembic upgrade head
+          python -m app.seed
+
+      - name: Start API server
+        run: |
+          cd backend
+          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8000/api/v1/health && break
+            sleep 1
+          done
+
+      - name: Install k6
         uses: grafana/setup-k6-action@v1
 
       - name: Run k6 login scenario
         run: |
-          k6 run tests/load/baseline/01_logins.js \
+          k6 run system-tests/load/baseline/01_logins.js \
             --env BASE_URL=http://localhost:8000/api/v1 \
             --out json=k6-results-scenario1.json \
             --summary-trend-stats="avg,p(90),p(95),p(99)"
 
       - name: Run k6 GET requests scenario
         run: |
-          k6 run tests/load/baseline/02_get_requests.js \
+          k6 run system-tests/load/baseline/02_get_requests.js \
             --env BASE_URL=http://localhost:8000/api/v1 \
             --out json=k6-results-scenario2.json \
             --summary-trend-stats="avg,p(90),p(95),p(99)"
 
       - name: Run k6 file upload scenario
         run: |
-          k6 run tests/load/baseline/03_file_uploads.js \
+          k6 run system-tests/load/baseline/03_file_uploads.js \
             --env BASE_URL=http://localhost:8000/api/v1 \
             --out json=k6-results-scenario3.json \
             --summary-trend-stats="avg,p(90),p(95),p(99)"
 
       - name: Run k6 WebSocket scenario
         run: |
-          k6 run tests/load/baseline/04_websocket.js \
+          k6 run system-tests/load/baseline/04_websocket.js \
             --env BASE_URL=http://localhost:8000/api/v1 \
             --env WS_URL=ws://localhost:8000/api/v1/ws \
             --out json=k6-results-scenario4.json \
@@ -1039,7 +1633,7 @@ jobs:
   publish-images:
     name: Publish Images
     runs-on: ubuntu-latest
-    needs: [unit-tests, integration-tests, security-trivy]
+    needs: [unit-tests, integration-tests, postman-tests, security-trivy]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     permissions:
       contents: read

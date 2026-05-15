@@ -11,7 +11,7 @@ import pytest
 
 from app.core.dependencies import AuthContext
 from app.core.exceptions import NotFoundError, ValidationError
-from app.schemas.quiz import QuizCreateRequest, QuizQuestionInput, QuizRespondRequest
+from app.schemas.lms.quiz import QuizCreateRequest, QuizQuestionInput, QuizRespondRequest
 from app.services.lms.quiz_service import QuizService
 from app.services.lms import quiz_service as quiz_module
 

@@ -71,6 +71,8 @@ Alerts defined in `alert_rules.yml` for:
 
 Rules are evaluated continuously and fire alerts to AlertManager.
 
+For application-specific alerts, use the same bounded context names as backend packages in the `category`, `service`, or dashboard documentation: `auth`, `user`, `school`, `academic`, `lms`, `billing`, `content`, `communication`, `reports`, `admin`, `sync`, `ai`, and `operations`. Infrastructure-only alerts should use `operations`.
+
 ## Querying Metrics
 
 Via Prometheus UI:

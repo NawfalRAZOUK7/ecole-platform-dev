@@ -14,12 +14,20 @@ from app.core.database import async_session as app_async_session
 from app.core.database import get_db
 from app.core.security import create_access_token, hash_password
 from app.main import app
+
+# Pull in integration API fixtures (legacy API DB setup for security tests).
+# Using direct import because pytest 8+ no longer allows pytest_plugins in
+# non-top-level conftest files.
+from tests.integration.api.conftest import (  # noqa: F401
+    client,
+    isolated_legacy_api_db,
+    legacy_api_seed,
+    session_factory,
+)
 from app.models.erp import AttendanceRecord, AttendanceSession
 from app.models.iam import Membership, ParentChildLink, Session, User
 from app.models.lms import Assignment, Course, GradeCategory, Submission
 
-# Register legacy API DB fixtures without importing names (avoids Ruff F811 vs fixture params).
-pytest_plugins = ("tests.integration.api.conftest",)
 
 SCHOOL_ID = "00000000-0000-4000-8000-000000000001"
 YEAR_ID = "20000000-0000-4000-8000-000000000001"

@@ -56,13 +56,15 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.tap(
-          find.widgetWithText(DropdownButtonFormField<String>, 'Classe *'));
+        find.widgetWithText(DropdownButtonFormField<String>, 'Classe *'),
+      );
       await tester.pumpAndSettle();
       await tester.tap(find.text('Class 6A').last);
       await tester.pumpAndSettle();
 
       await tester.tap(
-          find.widgetWithText(DropdownButtonFormField<String>, 'Période *'));
+        find.widgetWithText(DropdownButtonFormField<String>, 'Période *'),
+      );
       await tester.pumpAndSettle();
       await tester.tap(find.text('Morning').last);
       await tester.pumpAndSettle();
@@ -159,7 +161,10 @@ void main() {
 Future<void> _loginAs(WidgetTester tester, String email) async {
   await tester.enterText(find.byType(TextFormField).at(0), email);
   await tester.enterText(find.byType(TextFormField).at(1), 'password123');
-  await tester.tap(find.text('Se connecter'));
+  final loginButton = find.widgetWithText(FilledButton, 'Se connecter');
+  await tester.ensureVisible(loginButton);
+  await tester.pumpAndSettle();
+  await tester.tap(loginButton);
   await tester.pumpAndSettle();
 }
 

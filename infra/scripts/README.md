@@ -2,25 +2,32 @@
 
 Bash scripts for deploying, maintaining, and recovering the École Platform. Automates critical operational tasks with safety checks and logging.
 
+## Boundaries
+
+- `infra/scripts/` is for deployment, backup, restore, secret rotation, certificates, and health checks.
+- Backend developer/CI utilities such as OpenAPI export and migration validation live in `backend/scripts/`.
+- Cross-service Postman, k6, and chaos workflows live in `system-tests/`.
+- Operational notes should use the backend bounded context names when a check is domain-specific: `auth`, `user`, `school`, `academic`, `lms`, `billing`, `content`, `communication`, `reports`, `admin`, `sync`, `ai`, and `operations`.
+
 ## Scripts Overview
 
 ### Deployment
 
 #### deploy.sh
 - **Purpose** - Standard production deployment
-- **Usage** - `./deploy.sh <service> <version>`
+- **Usage** - `./deploy.sh [--skip-migrations] [--rollback]`
 - **Actions**
-  - Pull specified Docker image version
-  - Validate image integrity
-  - Update docker-compose configuration
-  - Restart affected services with health checks
+  - Build/pull production images through `docker-compose.prod.yml`
+  - Run Alembic migrations unless skipped
+  - Restart backend, worker, web, and nginx with health checks
   - Verify deployment success
 - **Safety** - Automatic rollback on health check failure
 - **Output** - Deployment log with timestamps
 
 Example:
 ```bash
-./deploy.sh ecole-backend v1.2.3
+./deploy.sh
+./deploy.sh --skip-migrations
 ```
 
 #### blue-green-deploy.sh
@@ -28,7 +35,8 @@ Example:
 - **Usage** - `./blue-green-deploy.sh <version>`
 - **Actions**
   - Deploy new version to "green" environment
-  - Run smoke tests against green environment
+  - Health-check the green environment before traffic switch
+  - Keep `system-tests/` available for manual smoke checks when needed
   - Switch traffic from "blue" to "green"
   - Keep blue environment as rollback target
   - Monitor for issues during and after switch
@@ -209,7 +217,7 @@ infra/
 
 Enable debug mode:
 ```bash
-DEBUG=1 ./deploy.sh ecole-backend v1.2.3
+DEBUG=1 ./deploy.sh
 ```
 
 ## Prerequisites

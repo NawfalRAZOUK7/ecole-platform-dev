@@ -21,7 +21,8 @@ class ContentListSkeleton extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.base),
       child: Column(
-        children: List.generate(5, (index) => _ContentRowSkeleton(index: index)),
+        children:
+            List.generate(5, (index) => _ContentRowSkeleton(index: index)),
       ),
     );
   }
@@ -35,20 +36,20 @@ class _ContentRowSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(bottom: index == 4 ? 0 : AppSpacing.sm),
-      child: Row(
+      child: const Row(
         children: [
           AppSkeleton(
             variant: SkeletonVariant.circle,
             width: 48,
             height: 48,
           ),
-          const SizedBox(width: AppSpacing.sm),
+          SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 AppSkeleton(variant: SkeletonVariant.line, height: 14),
-                const SizedBox(height: AppSpacing.xs),
+                SizedBox(height: AppSpacing.xs),
                 AppSkeleton(
                   variant: SkeletonVariant.line,
                   height: 12,
@@ -71,8 +72,8 @@ class RewardsSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.base),
+    return const Padding(
+      padding: EdgeInsets.all(AppSpacing.base),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -81,7 +82,7 @@ class RewardsSkeleton extends StatelessWidget {
             variant: SkeletonVariant.card,
             height: 120,
           ),
-          const SizedBox(height: AppSpacing.base),
+          SizedBox(height: AppSpacing.base),
 
           // Level badge row
           Row(
@@ -91,23 +92,23 @@ class RewardsSkeleton extends StatelessWidget {
                 width: 56,
                 height: 56,
               ),
-              const SizedBox(width: AppSpacing.md),
+              SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   children: [
                     AppSkeleton(variant: SkeletonVariant.line, height: 14),
-                    const SizedBox(height: AppSpacing.xs),
+                    SizedBox(height: AppSpacing.xs),
                     AppSkeleton(variant: SkeletonVariant.line, height: 10),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.base),
+          SizedBox(height: AppSpacing.base),
 
           // Streak bar
           AppSkeleton(variant: SkeletonVariant.line, height: 60),
-          const SizedBox(height: AppSpacing.base),
+          SizedBox(height: AppSpacing.base),
 
           // 2×2 stats grid
           Row(
@@ -115,19 +116,19 @@ class RewardsSkeleton extends StatelessWidget {
               Expanded(
                 child: AppSkeleton(variant: SkeletonVariant.card, height: 80),
               ),
-              const SizedBox(width: AppSpacing.md),
+              SizedBox(width: AppSpacing.md),
               Expanded(
                 child: AppSkeleton(variant: SkeletonVariant.card, height: 80),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: AppSpacing.md),
           Row(
             children: [
               Expanded(
                 child: AppSkeleton(variant: SkeletonVariant.card, height: 80),
               ),
-              const SizedBox(width: AppSpacing.md),
+              SizedBox(width: AppSpacing.md),
               Expanded(
                 child: AppSkeleton(variant: SkeletonVariant.card, height: 80),
               ),
@@ -147,8 +148,8 @@ class GamesGridSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.base),
+    return const Padding(
+      padding: EdgeInsets.all(AppSpacing.base),
       child: Column(
         children: [
           Row(
@@ -156,19 +157,19 @@ class GamesGridSkeleton extends StatelessWidget {
               Expanded(
                 child: AppSkeleton(variant: SkeletonVariant.card, height: 140),
               ),
-              const SizedBox(width: AppSpacing.md),
+              SizedBox(width: AppSpacing.md),
               Expanded(
                 child: AppSkeleton(variant: SkeletonVariant.card, height: 140),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: AppSpacing.md),
           Row(
             children: [
               Expanded(
                 child: AppSkeleton(variant: SkeletonVariant.card, height: 140),
               ),
-              const SizedBox(width: AppSpacing.md),
+              SizedBox(width: AppSpacing.md),
               Expanded(
                 child: AppSkeleton(variant: SkeletonVariant.card, height: 140),
               ),
@@ -194,7 +195,7 @@ class ColoringGridSkeleton extends StatelessWidget {
         children: List.generate(3, (row) {
           return Padding(
             padding: EdgeInsets.only(bottom: row == 2 ? 0 : AppSpacing.md),
-            child: Row(
+            child: const Row(
               children: [
                 Expanded(
                   child: AppSkeleton(
@@ -202,7 +203,7 @@ class ColoringGridSkeleton extends StatelessWidget {
                     height: 180,
                   ),
                 ),
-                const SizedBox(width: AppSpacing.md),
+                SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: AppSkeleton(
                     variant: SkeletonVariant.card,

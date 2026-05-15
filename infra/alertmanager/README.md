@@ -19,3 +19,5 @@ curl -X POST http://localhost:9093/api/v1/alerts \
 
 Alert rules are defined in `../prometheus/alert_rules.yml` and evaluated by Prometheus.
 Alertmanager handles routing, grouping, and notification delivery.
+
+Application alerts should use the backend bounded context names in labels such as `service` or `category`: `auth`, `user`, `school`, `academic`, `lms`, `billing`, `content`, `communication`, `reports`, `admin`, `sync`, `ai`, and `operations`.

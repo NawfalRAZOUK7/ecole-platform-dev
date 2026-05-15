@@ -55,6 +55,8 @@ Standard labels applied to all logs:
 - `pod` - Container/pod name
 - `stream` - stdout or stderr
 
+When application logs include a domain or category field, use the backend bounded context names: `auth`, `user`, `school`, `academic`, `lms`, `billing`, `content`, `communication`, `reports`, `admin`, `sync`, `ai`, and `operations`. Avoid creating one-off labels for the same concept.
+
 ## Alerting Rules
 
 Log-based alerts configured in `rules/` directory:
@@ -77,7 +79,7 @@ Log-based alerts configured in `rules/` directory:
 
 ### Authentication failures
 ```
-{job="ecole-backend"} | json | level="error" | pattern="auth"
+{job="ecole-backend"} | json | domain="auth" | level="error"
 ```
 
 ### Database connection errors

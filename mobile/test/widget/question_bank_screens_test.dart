@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:ecole_platform/domain/entities/question_bank.dart';
-import 'package:ecole_platform/features/question-bank/generate_quiz_screen.dart';
-import 'package:ecole_platform/features/question-bank/question_bank_import_screen.dart';
-import 'package:ecole_platform/features/question-bank/question_bank_screen.dart';
+import 'package:ecole_platform/domain/entities/lms/question_bank.dart';
+import 'package:ecole_platform/features/lms/question_bank/generate_quiz_screen.dart';
+import 'package:ecole_platform/features/lms/question_bank/question_bank_import_screen.dart';
+import 'package:ecole_platform/features/lms/question_bank/question_bank_screen.dart';
 
 import '../helpers/mock_repositories.dart';
 import '../helpers/pump_app.dart';

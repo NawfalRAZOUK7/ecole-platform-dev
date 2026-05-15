@@ -53,12 +53,18 @@ else
     fi
 fi
 
-# Load environment variables from .env if exists
-if [ -f .env ]; then
+# Load environment variables — prefer Doppler, fallback to .env
+if command -v doppler &> /dev/null && doppler me &> /dev/null; then
+    echo -e "${GREEN}Loading environment variables from Doppler (config: dev)${NC}"
+    DOPPLER_TMP=$(mktemp)
+    doppler secrets download --config dev --no-file --format env > "$DOPPLER_TMP"
+    export $(grep -v '^#' "$DOPPLER_TMP" | xargs)
+    rm -f "$DOPPLER_TMP"
+elif [ -f .env ]; then
     echo -e "${GREEN}Loading environment variables from .env${NC}"
     export $(grep -v '^#' .env | xargs)
 else
-    echo -e "${YELLOW}Warning: .env file not found${NC}"
+    echo -e "${YELLOW}Warning: No .env file found and Doppler not configured${NC}"
 fi
 
 # Build local Docker images
@@ -98,6 +104,15 @@ echo -e "${GREEN}Using namespace: $NAMESPACE${NC}"
 # Create namespace
 echo -e "${GREEN}Creating namespace: $NAMESPACE${NC}"
 kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
+
+# Fail fast if using Kind with unreachable host.docker.internal
+if [ "$USE_KIND" = true ]; then
+    if echo "${DATABASE_URL}${REDIS_URL}" | grep -q "host.docker.internal"; then
+        echo -e "${RED}Error: DATABASE_URL or REDIS_URL contains 'host.docker.internal' which is unreachable from Kind.${NC}"
+        echo -e "${RED}Use the Docker bridge IP (e.g., 172.17.0.1) or a public IP instead.${NC}"
+        exit 1
+    fi
+fi
 
 # Create secrets from environment variables
 echo -e "${GREEN}Creating secrets...${NC}"

@@ -3,22 +3,28 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import func, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.orm import selectinload
 
 from app.models.iam import (
     AccountRecoveryRequest,
+    FailedLoginAttempt,
     InvitationCode,
+    KnownDevice,
+    KnownLocation,
     Membership,
+    OAuthAccount,
     ParentChildLink,
     ParentProfile,
+    PasswordHistory,
     Session,
     StudentProfile,
     TeacherProfile,
     User,
+    WebAuthnCredential,
 )
 from app.models.school import School
 from app.repositories.base import BaseRepository
@@ -347,6 +353,263 @@ class AuthRepository(BaseRepository):
         self,
         recovery: AccountRecoveryRequest,
     ) -> AccountRecoveryRequest:
-        self.db.add(recovery)
+        await self.db.merge(recovery)
         await self.db.flush()
         return recovery
+
+    # ---------------------------------------------------------------------------
+    # WebAuthn / Passkeys (Phase 10)
+    # ---------------------------------------------------------------------------
+    async def create_webauthn_credential(self, **kwargs: Any) -> WebAuthnCredential:
+        credential = WebAuthnCredential(**kwargs)
+        self.db.add(credential)
+        await self.db.flush()
+        return credential
+
+    async def get_webauthn_credentials_by_user(
+        self,
+        user_id: uuid.UUID,
+    ) -> list[WebAuthnCredential]:
+        result = await self.db.execute(
+            select(WebAuthnCredential)
+            .where(WebAuthnCredential.user_id == user_id)
+            .where(WebAuthnCredential.is_active == True)
+        )
+        return result.scalars().all()
+
+    async def get_webauthn_credential_by_id(
+        self,
+        credential_id: str,
+    ) -> WebAuthnCredential | None:
+        result = await self.db.execute(
+            select(WebAuthnCredential).where(
+                WebAuthnCredential.credential_id == credential_id
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def update_webauthn_credential(
+        self,
+        credential: WebAuthnCredential,
+    ) -> WebAuthnCredential:
+        await self.db.merge(credential)
+        await self.db.flush()
+        return credential
+
+    async def delete_webauthn_credential(
+        self,
+        credential_id: str,
+    ) -> bool:
+        result = await self.db.execute(
+            delete(WebAuthnCredential).where(
+                WebAuthnCredential.credential_id == credential_id
+            )
+        )
+        await self.db.commit()
+        return result.rowcount > 0
+
+    # ---------------------------------------------------------------------------
+    # OAuth / Social Login (Phase 10)
+    # ---------------------------------------------------------------------------
+    async def create_oauth_account(self, **kwargs: Any) -> OAuthAccount:
+        oauth_account = OAuthAccount(**kwargs)
+        self.db.add(oauth_account)
+        await self.db.flush()
+        return oauth_account
+
+    async def get_oauth_account_by_provider_user_id(
+        self,
+        provider: str,
+        provider_user_id: str,
+    ) -> OAuthAccount | None:
+        result = await self.db.execute(
+            select(OAuthAccount).where(
+                OAuthAccount.provider == provider,
+                OAuthAccount.provider_user_id == provider_user_id,
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def get_oauth_accounts_by_user(
+        self,
+        user_id: uuid.UUID,
+    ) -> list[OAuthAccount]:
+        result = await self.db.execute(
+            select(OAuthAccount).where(OAuthAccount.user_id == user_id)
+        )
+        return result.scalars().all()
+
+    async def update_oauth_account(
+        self,
+        oauth_account: OAuthAccount,
+    ) -> OAuthAccount:
+        await self.db.merge(oauth_account)
+        await self.db.flush()
+        return oauth_account
+
+    async def delete_oauth_account(
+        self,
+        oauth_account_id: uuid.UUID,
+    ) -> bool:
+        result = await self.db.execute(
+            delete(OAuthAccount).where(OAuthAccount.id == oauth_account_id)
+        )
+        await self.db.commit()
+        return result.rowcount > 0
+
+    # ---------------------------------------------------------------------------
+    # Password History (Phase 11)
+    # ---------------------------------------------------------------------------
+    async def create_password_history(self, **kwargs: Any) -> PasswordHistory:
+        password_history = PasswordHistory(**kwargs)
+        self.db.add(password_history)
+        await self.db.flush()
+        return password_history
+
+    async def get_password_history_by_user(
+        self,
+        user_id: uuid.UUID,
+        limit: int = 5,
+    ) -> list[PasswordHistory]:
+        result = await self.db.execute(
+            select(PasswordHistory)
+            .where(PasswordHistory.user_id == user_id)
+            .order_by(PasswordHistory.created_at.desc())
+            .limit(limit)
+        )
+        return result.scalars().all()
+
+    async def delete_old_password_history(
+        self,
+        user_id: uuid.UUID,
+        keep_count: int,
+    ) -> None:
+        """Delete old password history entries beyond the keep count."""
+        cte = (
+            select(PasswordHistory.id)
+            .where(PasswordHistory.user_id == user_id)
+            .order_by(PasswordHistory.created_at.desc())
+            .offset(keep_count)
+            .cte()
+        )
+        await self.db.execute(delete(PasswordHistory).where(PasswordHistory.id.in_(cte)))
+        await self.db.commit()
+
+    # ---------------------------------------------------------------------------
+    # Failed Login Attempts (Phase 11)
+    # ---------------------------------------------------------------------------
+    async def create_failed_login_attempt(self, **kwargs: Any) -> FailedLoginAttempt:
+        failed_attempt = FailedLoginAttempt(**kwargs)
+        self.db.add(failed_attempt)
+        await self.db.flush()
+        return failed_attempt
+
+    async def count_failed_login_attempts(
+        self,
+        email: str,
+        user_id: uuid.UUID | None = None,
+        minutes: int = 15,
+    ) -> int:
+        """Count failed login attempts in the last N minutes."""
+        from datetime import timedelta
+
+        cutoff_time = datetime.now(timezone.utc) - timedelta(minutes=minutes)
+        
+        query = select(func.count(FailedLoginAttempt.id)).where(
+            FailedLoginAttempt.email == email,
+            FailedLoginAttempt.created_at >= cutoff_time,
+        )
+        
+        if user_id is not None:
+            query = query.where(FailedLoginAttempt.user_id == user_id)
+        
+        result = await self.db.execute(query)
+        return result.scalar() or 0
+
+    async def delete_old_failed_login_attempts(
+        self,
+        days: int = 7,
+    ) -> None:
+        """Delete old failed login attempts older than N days."""
+        from datetime import timedelta
+
+        cutoff_time = datetime.now(timezone.utc) - timedelta(days=days)
+        await self.db.execute(
+            delete(FailedLoginAttempt).where(FailedLoginAttempt.created_at < cutoff_time)
+        )
+        await self.db.commit()
+
+    # ---------------------------------------------------------------------------
+    # Suspicious Activity Detection (Phase 11)
+    # ---------------------------------------------------------------------------
+    async def create_known_location(self, **kwargs: Any) -> KnownLocation:
+        location = KnownLocation(**kwargs)
+        self.db.add(location)
+        await self.db.flush()
+        return location
+
+    async def get_known_location_by_user_ip(
+        self,
+        user_id: uuid.UUID,
+        ip_address: str,
+    ) -> KnownLocation | None:
+        result = await self.db.execute(
+            select(KnownLocation).where(
+                KnownLocation.user_id == user_id,
+                KnownLocation.ip_address == ip_address,
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def get_known_locations_by_user(
+        self,
+        user_id: uuid.UUID,
+    ) -> list[KnownLocation]:
+        result = await self.db.execute(
+            select(KnownLocation).where(KnownLocation.user_id == user_id)
+        )
+        return result.scalars().all()
+
+    async def update_known_location(
+        self,
+        location: KnownLocation,
+    ) -> KnownLocation:
+        await self.db.merge(location)
+        await self.db.flush()
+        return location
+
+    async def create_known_device(self, **kwargs: Any) -> KnownDevice:
+        device = KnownDevice(**kwargs)
+        self.db.add(device)
+        await self.db.flush()
+        return device
+
+    async def get_known_device_by_user_fingerprint(
+        self,
+        user_id: uuid.UUID,
+        device_fingerprint: str,
+    ) -> KnownDevice | None:
+        result = await self.db.execute(
+            select(KnownDevice).where(
+                KnownDevice.user_id == user_id,
+                KnownDevice.device_fingerprint == device_fingerprint,
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def get_known_devices_by_user(
+        self,
+        user_id: uuid.UUID,
+    ) -> list[KnownDevice]:
+        result = await self.db.execute(
+            select(KnownDevice).where(KnownDevice.user_id == user_id)
+        )
+        return result.scalars().all()
+
+    async def update_known_device(
+        self,
+        device: KnownDevice,
+    ) -> KnownDevice:
+        await self.db.merge(device)
+        await self.db.flush()
+        return device

@@ -7,7 +7,7 @@
  */
 
 import { useTranslation } from 'react-i18next';
-import type { ApiError } from '@/services/api/client';
+import type { ApiError } from '@/core/api/client';
 
 interface ErrorBannerProps {
   error: ApiError | string | null;

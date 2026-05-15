@@ -19,7 +19,7 @@ from app.schemas.auth import (
     MeData,
     InviteCreateRequest,
 )
-from app.schemas.profile import (
+from app.schemas.user.profile import (
     ProfileUpdateRequest,
     ProfileResponse,
     ProfileAvatarResponse,

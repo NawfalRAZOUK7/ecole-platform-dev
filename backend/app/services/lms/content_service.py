@@ -19,14 +19,14 @@ from app.core.storage import storage, validate_mime_type
 from app.core.unit_of_work import UnitOfWork
 from app.models.documents import Document, DocumentCategory
 from app.models.lms import ContentProgressStatus
-from app.repositories.documents import DocumentsRepository
+from app.repositories.content_documents import DocumentsRepository
 from app.repositories.lms import LMSRepository
-from app.schemas.cms import ContentAssignRequest, ContentSubmitForReviewRequest
+from app.schemas.content.cms import ContentAssignRequest, ContentSubmitForReviewRequest
 from app.schemas.lms import ContentCompleteRequest, ContentProgressRequest
-from app.services.audit import AuditService
-from app.services.file_storage import file_storage_service
+from app.services.platform.audit import AuditService
+from app.services.content.file_storage import file_storage_service
 from app.services.lms._helpers import LMSServiceBase, _utc_now
-from app.services.rewards_service import RewardsService
+from app.services.ai.rewards_service import RewardsService
 
 
 class ContentService(LMSServiceBase):

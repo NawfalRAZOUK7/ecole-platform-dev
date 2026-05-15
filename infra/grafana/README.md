@@ -18,6 +18,8 @@ Deployed automatically via provisioning:
 - **billing-providers.json** - Billing system and payment provider metrics
 - **db-redis-health.json** - PostgreSQL and Redis health, connection counts, memory usage
 
+Domain-specific dashboards and panels should use the backend bounded context names as tags or panel labels when possible: `auth`, `user`, `school`, `academic`, `lms`, `billing`, `content`, `communication`, `reports`, `admin`, `sync`, `ai`, and `operations`.
+
 ### Infrastructure Dashboards
 - Node/container metrics
 - Network I/O and throughput

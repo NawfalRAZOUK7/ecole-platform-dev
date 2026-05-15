@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:ecole_platform/domain/entities/program.dart';
-import 'package:ecole_platform/features/student/program_history_screen.dart';
+import 'package:ecole_platform/domain/entities/academic/program.dart';
+import 'package:ecole_platform/features/academic/student/program_history_screen.dart';
 
 import '../helpers/mock_repositories.dart';
 import '../helpers/pump_app.dart';

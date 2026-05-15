@@ -4,6 +4,7 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   resolve: {
+    conditions: ['development'],
     alias: {
       '@': resolve(__dirname, 'src'),
     },
@@ -18,6 +19,11 @@ export default defineConfig({
       provider: 'v8',
       include: ['src/**/*.{ts,tsx}'],
       exclude: ['src/**/*.d.ts', 'src/main.tsx'],
+    },
+  },
+  server: {
+    deps: {
+      inline: ['msw'],
     },
   },
 });

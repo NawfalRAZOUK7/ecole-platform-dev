@@ -18,7 +18,7 @@ from app.core.storage import storage
 from app.main import app
 from app.models.erp import TeacherAssignment
 from app.models.iam import RoleCode
-from app.services.file_storage import LocalFileStorageBackend, file_storage_service
+from app.services.content.file_storage import LocalFileStorageBackend, file_storage_service
 from tests.factories.erp import (
     AcademicYearFactory,
     ClassFactory,

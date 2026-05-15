@@ -9,6 +9,18 @@
 
 ---
 
+## Autorité du schéma (source de vérité)
+
+| Artefact | Rôle | À modifier quand… |
+|----------|------|-------------------|
+| **Migrations Alembic** ([`backend/alembic/versions/`](../backend/alembic/versions/)) | **Seule source de vérité** pour les tables, colonnes, index, contraintes et enums applicatifs. | Toute évolution de schéma livrée en production ou partagée entre devs. |
+| **`infra/postgres/init.sql`** | Rôles PostgreSQL, extensions (`uuid-ossp`, etc.), privilèges par défaut — **pas** le modèle métier. | Changement de stratégie d’accès DB, nouveaux rôles de lecture seule, extensions. |
+| **ORM [`backend/app/models/`](../backend/app/models/)** | Définition Python alignée sur les tables ; `alembic revision --autogenerate` s’en sert comme référence. | Nouvelle entité ou colonne : mettre à jour les modèles **puis** générer / écrire la migration Alembic correspondante. |
+
+**Environnement neuf (dev / CI)** : appliquer `init.sql` (ou image Docker équivalente) pour rôles + extensions, puis **`alembic upgrade head`** pour créer toutes les tables. Ne pas dupliquer le DDL des tables dans `init.sql` — cela divergerait d’Alembic.
+
+---
+
 ## Schéma — Groupes de migration
 
 Les modèles sont organisés en 6 groupes principaux, migrés dans l'ordre :

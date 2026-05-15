@@ -90,6 +90,32 @@ services:
       APP_ENV: development
       LOG_LEVEL: DEBUG
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:3000}
+      # Seed data on startup for testing
+      SEED_ON_STARTUP: ${SEED_ON_STARTUP:-true}
+      # OAuth social login (Phase 10)
+      GOOGLE_OAUTH_ENABLED: ${GOOGLE_OAUTH_ENABLED:-true}
+      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-mock-client-id}
+      GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-mock-client-secret}
+      MICROSOFT_OAUTH_ENABLED: ${MICROSOFT_OAUTH_ENABLED:-true}
+      MICROSOFT_OAUTH_CLIENT_ID: ${MICROSOFT_OAUTH_CLIENT_ID:-mock-client-id}
+      MICROSOFT_OAUTH_CLIENT_SECRET: ${MICROSOFT_OAUTH_CLIENT_SECRET:-mock-client-secret}
+      # Mock OAuth / SMS (Phase 10 — Testing)
+      MOCK_OAUTH_ENABLED: ${MOCK_OAUTH_ENABLED:-true}
+      MOCK_OAUTH_BASE_URL: ${MOCK_OAUTH_BASE_URL:-http://mock-oauth:9999}
+      MOCK_SMS_ENABLED: ${MOCK_SMS_ENABLED:-true}
+      # SMS / Phone Verification (Phase 10)
+      SMS_ENABLED: ${SMS_ENABLED:-true}
+      SMS_PROVIDER: ${SMS_PROVIDER:-twilio}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-mock-account-sid}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-mock-auth-token}
+      TWILIO_FROM_NUMBER: ${TWILIO_FROM_NUMBER:-+1234567890}
+      # Account lockout configuration (Phase 11)
+      ACCOUNT_LOCKOUT_ENABLED: ${ACCOUNT_LOCKOUT_ENABLED:-true}
+      ACCOUNT_LOCKOUT_MAX_ATTEMPTS: ${ACCOUNT_LOCKOUT_MAX_ATTEMPTS:-5}
+      ACCOUNT_LOCKOUT_DURATION_MINUTES: ${ACCOUNT_LOCKOUT_DURATION_MINUTES:-15}
+      # Rate limiting configuration
+      RATE_LIMIT_DEFAULT_LIMIT: ${RATE_LIMIT_DEFAULT_LIMIT:-100}
+      RATE_LIMIT_WINDOW_SECONDS: ${RATE_LIMIT_WINDOW_SECONDS:-60}
       UPLOAD_DIR: /app/uploads
       SMTP_HOST: ${SMTP_HOST:-localhost}
       SMTP_PORT: ${SMTP_PORT:-1025}
@@ -98,6 +124,10 @@ services:
       SMTP_USE_TLS: ${SMTP_USE_TLS:-false}
       SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-noreply@ecole-platform.ma}
       SMTP_FROM_NAME: ${SMTP_FROM_NAME:-École Platform}
+      # TestMail API (for email testing)
+      TESTMAIL_ENABLED: ${TESTMAIL_ENABLED:-true}
+      TESTMAIL_API_KEY: ${TESTMAIL_API_KEY:-}
+      TESTMAIL_NAMESPACE: ${TESTMAIL_NAMESPACE:-ibatt}
       # ---- MinIO / Object Storage -------------------------
       # Backend still uses local storage until S3 migration flips these.
       # To activate S3: set STORAGE_BACKEND=s3 and
@@ -166,6 +196,10 @@ services:
       SMTP_USE_TLS: ${SMTP_USE_TLS:-false}
       SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-noreply@ecole-platform.ma}
       SMTP_FROM_NAME: ${SMTP_FROM_NAME:-École Platform}
+      # TestMail API (for email testing)
+      TESTMAIL_ENABLED: ${TESTMAIL_ENABLED:-true}
+      TESTMAIL_API_KEY: ${TESTMAIL_API_KEY:-}
+      TESTMAIL_NAMESPACE: ${TESTMAIL_NAMESPACE:-ibatt}
       UPLOAD_DIR: /app/uploads
       # ---- MinIO / Object Storage -------------------------
       STORAGE_BACKEND: ${STORAGE_BACKEND:-local}
@@ -182,6 +216,23 @@ services:
       DOCUMENT_STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
       DOCUMENT_STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin123}
       DOCUMENT_STORAGE_FORCE_PATH_STYLE: "true"
+      # OAuth social login (Phase 10)
+      GOOGLE_OAUTH_ENABLED: ${GOOGLE_OAUTH_ENABLED:-true}
+      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-mock-client-id}
+      GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-mock-client-secret}
+      MICROSOFT_OAUTH_ENABLED: ${MICROSOFT_OAUTH_ENABLED:-true}
+      MICROSOFT_OAUTH_CLIENT_ID: ${MICROSOFT_OAUTH_CLIENT_ID:-mock-client-id}
+      MICROSOFT_OAUTH_CLIENT_SECRET: ${MICROSOFT_OAUTH_CLIENT_SECRET:-mock-client-secret}
+      # Mock OAuth / SMS (Phase 10 — Testing)
+      MOCK_OAUTH_ENABLED: ${MOCK_OAUTH_ENABLED:-true}
+      MOCK_OAUTH_BASE_URL: ${MOCK_OAUTH_BASE_URL:-http://mock-oauth:9999}
+      MOCK_SMS_ENABLED: ${MOCK_SMS_ENABLED:-true}
+      # SMS / Phone Verification (Phase 10)
+      SMS_ENABLED: ${SMS_ENABLED:-true}
+      SMS_PROVIDER: ${SMS_PROVIDER:-twilio}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-mock-account-sid}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-mock-auth-token}
+      TWILIO_FROM_NUMBER: ${TWILIO_FROM_NUMBER:-+1234567890}
     command: ["arq", "app.core.tasks.WorkerSettings"]
     volumes:
       - ../backend/app:/app/app
@@ -215,7 +266,9 @@ services:
     working_dir: /app
     environment:
       VITE_API_PROXY_TARGET: http://backend:8000
-    command: sh -c "npm ci && npm run dev -- --host 0.0.0.0"
+      VITE_GOOGLE_OAUTH_ENABLED: "true"
+      VITE_MICROSOFT_OAUTH_ENABLED: "true"
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
     ports:
       - "5173:5173"
     volumes:
@@ -306,6 +359,32 @@ services:
     networks:
       - ecole-network
     restart: "no"
+
+  # ==================== Mock OAuth Server (Testing) ====================
+  mock-oauth:
+    build:
+      context: ../system-tests/mock-oauth-server
+      dockerfile: Dockerfile
+    container_name: ecole-mock-oauth
+    ports:
+      - "127.0.0.1:9999:9999"
+    environment:
+      PORT: 9999
+      MOCK_USERS_FILE: /app/fixtures/oauth-users.json
+    networks:
+      - ecole-network
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.25"
+        reservations:
+          memory: 64M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   postgres_data:

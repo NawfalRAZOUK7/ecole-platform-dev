@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:ecole_platform/domain/entities/skills.dart';
-import 'package:ecole_platform/features/skills/skill_analytics_screen.dart';
-import 'package:ecole_platform/features/skills/skill_evaluation_screen.dart';
-import 'package:ecole_platform/features/skills/skill_passport_screen.dart';
-import 'package:ecole_platform/features/skills/skills_overview_screen.dart';
+import 'package:ecole_platform/domain/entities/academic/skills.dart';
+import 'package:ecole_platform/features/academic/skills/skill_analytics_screen.dart';
+import 'package:ecole_platform/features/academic/skills/skill_evaluation_screen.dart';
+import 'package:ecole_platform/features/academic/skills/skill_passport_screen.dart';
+import 'package:ecole_platform/features/academic/skills/skills_overview_screen.dart';
 import 'package:ecole_platform/shared/widgets/widgets.dart';
 
 import '../helpers/factories.dart';

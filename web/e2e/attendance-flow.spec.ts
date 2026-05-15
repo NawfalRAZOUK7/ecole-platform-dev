@@ -77,7 +77,18 @@ test.describe('Attendance flow', () => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify(apiResponse(records)),
+        body: JSON.stringify(
+          apiResponse({
+            class_id: 'class-1',
+            stats: {
+              total_students: records.length,
+              attendance_rate: 1.0,
+              absent_count: 0,
+              late_count: 0,
+            },
+            records,
+          }),
+        ),
       });
     });
 
@@ -88,6 +99,15 @@ test.describe('Attendance flow', () => {
         body: JSON.stringify(
           apiResponse(records.filter((record) => record.student_id === 'student-1')),
         ),
+      });
+    });
+
+    // Mock the liveness endpoint called by some layouts
+    await page.route(/\/api\/v1\/health(?:\?.*)?$/, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(apiResponse({ status: 'ok' })),
       });
     });
 

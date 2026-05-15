@@ -8,7 +8,7 @@ import pytest
 from pydantic import TypeAdapter
 
 from app.schemas.billing import FeeStructureResponse, InvoiceResponse
-from app.schemas.billing_enhancements import PaymentPlanSummaryResponse
+from app.schemas.billing.enhancements import PaymentPlanSummaryResponse
 from app.schemas.school import SchoolResponse
 from tests.integration.api.helpers import (
     INVOICE_ID,

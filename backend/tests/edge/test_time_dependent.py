@@ -14,7 +14,7 @@ from app.models.iam import AccountRecoveryRequest, InvitationCode, Session
 from app.models.lms import Assignment
 from app.models.reporting import ReportJob
 from app.models.school import School
-from app.repositories.calendar import CalendarRepository
+from app.repositories.communication_calendar import CalendarRepository
 from app.services.lms._helpers import calculate_late_penalty
 from tests.factories.erp import AcademicYearFactory
 from tests.factories.school import SchoolFactory

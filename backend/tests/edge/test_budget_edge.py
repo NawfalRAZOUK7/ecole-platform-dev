@@ -8,13 +8,13 @@ import pytest
 import pytest_asyncio
 from pydantic import ValidationError as PydanticValidationError
 
-from app.schemas.budget import (
+from app.schemas.billing.budget import (
     BudgetAllocationCreateRequest,
     BudgetRequestCreateRequest,
     BudgetTransactionCreateRequest,
     MicroBudgetCreateRequest,
 )
-from app.services.budget_service import BudgetService
+from app.services.billing.budget_service import BudgetService
 
 
 @pytest_asyncio.fixture(autouse=True)

@@ -333,5 +333,5 @@ Performance tests run on:
 
 - Parent: `backend/tests/README.md`
 - Integration: `backend/tests/integration/README.md` for database performance
-- Load: `tests/load/` for k6 load testing scripts
+- Load: `system-tests/load/` for k6 load testing scripts
 - Operations: Production performance monitoring and alerting

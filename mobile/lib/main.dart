@@ -17,12 +17,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'package:ecole_platform/app/providers.dart';
-import 'package:ecole_platform/app/router.dart';
-import 'package:ecole_platform/data/local_store/cache_store.dart';
+import 'package:ecole_platform/app/router/app_router.dart';
+import 'package:ecole_platform/core/storage/cache_store.dart';
 import 'package:ecole_platform/features/auth/auth_provider.dart';
-import 'package:ecole_platform/features/notifications/notifications_provider.dart';
+import 'package:ecole_platform/features/communication/notifications/notifications_provider.dart';
 import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/shared/ui/app_theme.dart';
 import 'package:ecole_platform/shared/ui/app_theme_dark.dart';
@@ -32,13 +33,41 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
 
-  // Run heavy init work in parallel with the splash screen.
-  final initFuture = _runStartupInit();
+  // Mobile uses MOBILE_SENTRY_DSN (separate from backend SENTRY_DSN in Doppler).
+  // Falls back to legacy SENTRY_DSN env var for backward compatibility.
+  final sentryDsn =
+      dotenv.env['MOBILE_SENTRY_DSN'] ?? dotenv.env['SENTRY_DSN'] ?? '';
+  final appEnv = dotenv.env['APP_ENV'] ?? 'development';
+  final isProd = appEnv == 'production';
 
-  runApp(
-    ProviderScope(
-      child: EcolePlatformApp(initFuture: initFuture),
-    ),
+  if (sentryDsn.isEmpty) {
+    // No Sentry DSN configured — start app without Sentry instrumentation.
+    runApp(
+      ProviderScope(
+        child: EcolePlatformApp(initFuture: _runStartupInit()),
+      ),
+    );
+    return;
+  }
+
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = sentryDsn;
+      options.environment = appEnv;
+      options.tracesSampleRate = isProd ? 0.1 : 1.0;
+      options.profilesSampleRate = isProd ? 0.1 : 1.0;
+      options.sendDefaultPii = !isProd;
+    },
+    appRunner: () async {
+      // Run heavy init work in parallel with the splash screen.
+      final initFuture = _runStartupInit();
+
+      runApp(
+        ProviderScope(
+          child: EcolePlatformApp(initFuture: initFuture),
+        ),
+      );
+    },
   );
 }
 
@@ -73,16 +102,24 @@ class _EcolePlatformAppState extends ConsumerState<EcolePlatformApp>
   bool _biometricLocked = false;
   String? _connectedAccessToken;
   bool _splashDone = false;
+  late final ProviderSubscription<AuthState> _authSubscription;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _initServices();
+    // Listen to auth state changes to force WS reconnect with fresh token
+    _authSubscription = ref.listenManual<AuthState>(authProvider, (prev, next) {
+      if (next.isAuthenticated && (prev == null || !prev.isAuthenticated)) {
+        _connectedAccessToken = null;
+      }
+    });
   }
 
   @override
   void dispose() {
+    _authSubscription.close();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -148,7 +185,8 @@ class _EcolePlatformAppState extends ConsumerState<EcolePlatformApp>
       _biometricLocked = false;
 
       if (!success) {
-        dev.log('Biometric unlock failed or skipped', name: 'Main');
+        dev.log('Biometric unlock failed — forcing logout', name: 'Main');
+        await ref.read(authProvider.notifier).logout();
       }
     }
 

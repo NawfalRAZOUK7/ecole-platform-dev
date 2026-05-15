@@ -4,14 +4,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:ecole_platform/app/providers.dart';
-import 'package:ecole_platform/domain/entities/compliance.dart';
-import 'package:ecole_platform/domain/entities/question_bank.dart';
-import 'package:ecole_platform/domain/repositories/feed_repository.dart';
+import 'package:ecole_platform/domain/entities/admin/compliance.dart';
+import 'package:ecole_platform/domain/entities/lms/question_bank.dart';
+import 'package:ecole_platform/domain/common/pagination.dart';
 import 'package:ecole_platform/features/auth/forgot_password_screen.dart';
 import 'package:ecole_platform/features/auth/login_screen.dart';
-import 'package:ecole_platform/features/compliance/compliance_dashboard_screen.dart';
-import 'package:ecole_platform/features/invoices/invoices_screen.dart';
-import 'package:ecole_platform/features/question-bank/question_bank_screen.dart';
+import 'package:ecole_platform/features/admin/compliance/compliance_dashboard_screen.dart';
+import 'package:ecole_platform/features/billing/invoices/invoices_screen.dart';
+import 'package:ecole_platform/features/lms/question_bank/question_bank_screen.dart';
 
 import '../helpers/factories.dart';
 import '../helpers/mock_repositories.dart';

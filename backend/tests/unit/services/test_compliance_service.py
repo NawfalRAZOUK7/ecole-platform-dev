@@ -12,8 +12,8 @@ import pytest_asyncio
 
 from app.core.dependencies import AuthContext
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
-from app.services import compliance_service as compliance_module
-from app.services.compliance_service import ComplianceService
+import app.services.admin.compliance as compliance_module
+from app.services.admin.compliance import ComplianceService
 
 
 @pytest_asyncio.fixture(autouse=True)

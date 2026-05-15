@@ -109,6 +109,15 @@ docker compose -f infra/docker-compose.prod.yml --env-file .env.prod \
   run --rm backend python -m app.seed
 ```
 
+## Infrastructure Conventions
+
+- Compose entrypoints remain in `infra/`: dev, staging, production, monitoring, api-test, and blue/green variants are separate on purpose.
+- Helm/Kubernetes configuration lives in `infra/k8s/`. Change global defaults in `values.yaml`; keep environment-specific settings in the matching values file.
+- Secrets are supplied by Doppler or ignored files under `infra/secrets/`. The `infra/doppler/` scripts may set safe placeholders, but real values stay outside git.
+- `infra/postgres/init.sql` only prepares roles, extensions, and privileges. Run `alembic upgrade head` for application schema creation and changes.
+- Backend utility scripts are under `backend/scripts/`. Cross-service validation assets are under `system-tests/`.
+- Dashboards, alerts, logs, and traces should label domain-specific signals with the backend bounded context names: `auth`, `user`, `school`, `academic`, `lms`, `billing`, `content`, `communication`, `reports`, `admin`, `sync`, `ai`, and `operations`.
+
 ## TLS Certificates
 
 ### Option A: Let's Encrypt (recommended)

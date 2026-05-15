@@ -5,12 +5,12 @@ import 'package:flutter/foundation.dart';
 import 'package:connectivity_plus_platform_interface/connectivity_plus_platform_interface.dart';
 import 'package:local_auth/local_auth.dart';
 
-import 'package:ecole_platform/data/api/ws_client.dart';
-import 'package:ecole_platform/domain/entities/sync.dart';
+import 'package:ecole_platform/core/network/ws_client.dart';
+import 'package:ecole_platform/domain/entities/sync/sync.dart';
 import 'package:ecole_platform/features/auth/biometric_service.dart';
-import 'package:ecole_platform/shared/connectivity_service.dart';
-import 'package:ecole_platform/shared/push_notifications.dart';
-import 'package:ecole_platform/shared/secure_storage.dart';
+import 'package:ecole_platform/core/network/connectivity.dart';
+import 'package:ecole_platform/core/notifications/push_notifications.dart';
+import 'package:ecole_platform/core/storage/secure_storage.dart';
 
 class TestPushNotificationService implements PushNotificationService {
   @override
@@ -108,7 +108,7 @@ class TestConnectivityService implements ConnectivityService {
 
   @override
   Stream<SyncIndicatorState> get indicatorStream =>
-      Stream<SyncIndicatorState>.empty();
+      const Stream<SyncIndicatorState>.empty();
 
   @override
   bool get isOnline => true;
@@ -177,8 +177,9 @@ class TestBiometricService implements BiometricService {
   bool _enabled = false;
 
   @override
-  Future<bool> authenticate(
-      {String reason = 'Veuillez vous authentifier'}) async {
+  Future<bool> authenticate({
+    String reason = 'Veuillez vous authentifier',
+  }) async {
     return false;
   }
 

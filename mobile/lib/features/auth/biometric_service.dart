@@ -33,8 +33,10 @@ class BiometricService {
       final isSupported = await _auth.isDeviceSupported();
       return canCheck && isSupported;
     } on PlatformException catch (e) {
-      dev.log('Biometric availability check failed: $e',
-          name: 'BiometricService');
+      dev.log(
+        'Biometric availability check failed: $e',
+        name: 'BiometricService',
+      );
       return false;
     }
   }
@@ -70,8 +72,9 @@ class BiometricService {
 
   /// Authenticate with biometric. Returns true on success.
   /// Increments failure counter on failure.
-  Future<bool> authenticate(
-      {String reason = 'Veuillez vous authentifier'}) async {
+  Future<bool> authenticate({
+    String reason = 'Veuillez vous authentifier',
+  }) async {
     if (shouldFallbackToPassword) return false;
 
     try {
@@ -97,8 +100,10 @@ class BiometricService {
       return success;
     } on PlatformException catch (e) {
       _failedAttempts++;
-      dev.log('Biometric auth error: $e (attempt $_failedAttempts)',
-          name: 'BiometricService');
+      dev.log(
+        'Biometric auth error: $e (attempt $_failedAttempts)',
+        name: 'BiometricService',
+      );
       return false;
     }
   }

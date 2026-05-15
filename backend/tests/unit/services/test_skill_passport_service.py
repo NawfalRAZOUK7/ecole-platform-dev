@@ -12,8 +12,8 @@ import pytest_asyncio
 
 from app.core.dependencies import AuthContext
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
-from app.services import skill_passport_service as skill_module
-from app.services.skill_passport_service import SkillPassportService
+import app.services.academic.skill_passport_service as skill_module
+from app.services.academic.skill_passport_service import SkillPassportService
 
 
 @pytest_asyncio.fixture(autouse=True)

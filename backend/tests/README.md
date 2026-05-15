@@ -45,15 +45,18 @@ tests/
 │
 ├── integration/                         # Real DB via testcontainers
 │   ├── api/                             # API endpoint tests grouped by domain
-│   │   ├── iam/                         # Auth, profiles, family, websocket, filters
+│   │   ├── auth/                        # Auth flows, RBAC, background auth tasks
+│   │   ├── user/                        # Profiles, family relationships
 │   │   ├── lms/                         # Content, uploads, story, levels, difficulty
 │   │   ├── communication/               # Notifications, announcements, shared review
-│   │   ├── billing/                     # Invoices, payments, budgets, financial health
-│   │   ├── academic/                    # Programs, attendance, gradebook, skills
-│   │   ├── content/                     # Games, rewards
-│   │   ├── storage/                     # Signed uploads/downloads, ClamAV
-│   │   ├── micro_school/                # Micro-school operations
-│   │   ├── operations/                  # Calendar, documents, reports, readiness
+│   │   ├── billing/                     # Invoices, payments, budgets
+│   │   ├── reports/                     # Financial health, attendance analytics, reports analytics
+│   │   ├── academic/                    # Programs, attendance, gradebook, timetable, skills
+│   │   ├── content/                     # Documents, signed uploads/downloads
+│   │   ├── school/                      # Schools + micro-school HTTP tests
+│   │   ├── ai/                          # Rewards and games HTTP tests
+│   │   ├── admin/                       # Compliance and calendar event HTTP tests
+│   │   ├── operations/                  # Readiness, filters, websocket
 │   │   └── sync/                        # Data sync endpoints
 │   └── repositories/                    # Repository integration tests (was db/)
 │
@@ -76,7 +79,7 @@ pytest
 
 # By category
 pytest tests/unit/ -m unit
-pytest tests/integration/api/iam/ -m integration
+pytest tests/integration/api/auth/ -m integration
 pytest tests/security/ -m security
 pytest tests/edge/
 pytest tests/performance/ -m performance

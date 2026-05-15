@@ -3,23 +3,24 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/app/providers.dart';
-import 'package:ecole_platform/data/api/api_client.dart';
-import 'package:ecole_platform/data/local_store/cache_store.dart';
-import 'package:ecole_platform/data/local_store/offline_queue.dart';
-import 'package:ecole_platform/domain/entities/attendance.dart';
-import 'package:ecole_platform/domain/entities/child_link.dart';
-import 'package:ecole_platform/domain/entities/feed_item.dart';
-import 'package:ecole_platform/domain/entities/notification_item.dart';
-import 'package:ecole_platform/domain/entities/notification_settings.dart';
-import 'package:ecole_platform/domain/entities/teacher.dart';
-import 'package:ecole_platform/domain/entities/user.dart';
-import 'package:ecole_platform/domain/repositories/attendance_repository.dart';
-import 'package:ecole_platform/domain/repositories/auth_repository.dart';
-import 'package:ecole_platform/domain/repositories/feed_repository.dart';
-import 'package:ecole_platform/domain/repositories/notification_repository.dart';
-import 'package:ecole_platform/domain/repositories/teacher_repository.dart';
+import 'package:ecole_platform/core/network/api_client.dart';
+import 'package:ecole_platform/core/storage/cache_store.dart';
+import 'package:ecole_platform/core/storage/offline_queue.dart';
+import 'package:ecole_platform/domain/common/pagination.dart';
+import 'package:ecole_platform/domain/entities/academic/attendance.dart';
+import 'package:ecole_platform/domain/entities/user/child_link.dart';
+import 'package:ecole_platform/domain/entities/content/feed_item.dart';
+import 'package:ecole_platform/domain/entities/communication/notification_item.dart';
+import 'package:ecole_platform/domain/entities/communication/notification_settings.dart';
+import 'package:ecole_platform/domain/entities/lms/teacher.dart';
+import 'package:ecole_platform/domain/entities/user/user.dart';
+import 'package:ecole_platform/domain/repositories/academic/attendance_repository.dart';
+import 'package:ecole_platform/domain/repositories/auth/auth_repository.dart';
+import 'package:ecole_platform/domain/repositories/content/feed_repository.dart';
+import 'package:ecole_platform/domain/repositories/communication/notification_repository.dart';
+import 'package:ecole_platform/domain/repositories/lms/teacher_repository.dart';
 import 'package:ecole_platform/features/auth/biometric_service.dart';
-import 'package:ecole_platform/shared/secure_storage.dart';
+import 'package:ecole_platform/core/storage/secure_storage.dart';
 
 class FakeAppEnvironment {
   FakeAppEnvironment()
@@ -100,7 +101,7 @@ class FakeAppEnvironment {
   User? currentUser;
 
   final List<FeedItem> feedItems = [
-    FeedItem(
+    const FeedItem(
       id: 'feed-1',
       schoolId: _schoolId,
       parentId: 'parent-1',
@@ -380,8 +381,9 @@ class FakeBiometricService extends BiometricService {
   }
 
   @override
-  Future<bool> authenticate(
-      {String reason = 'Veuillez vous authentifier'}) async {
+  Future<bool> authenticate({
+    String reason = 'Veuillez vous authentifier',
+  }) async {
     return false;
   }
 
@@ -482,7 +484,9 @@ class FakeAuthRepository implements AuthRepository {
 
   @override
   Future<void> changePassword(
-      String currentPassword, String newPassword) async {}
+    String currentPassword,
+    String newPassword,
+  ) async {}
 
   @override
   Future<List<ChildLink>> getChildren() async {
@@ -513,6 +517,30 @@ class FakeAuthRepository implements AuthRepository {
     required String schoolId,
     required String otp,
   }) async {}
+
+  @override
+  Future<Map<String, String>> getOAuthUrl(
+    String provider,
+    String redirectUri,
+  ) async {
+    return {
+      'auth_url': 'https://auth.example.test/$provider',
+      'state': 'oauth-state',
+    };
+  }
+
+  @override
+  Future<LoginResult> oauthLogin(
+    String provider,
+    String code,
+    String redirectUri,
+    String schoolId,
+  ) async {
+    environment.currentUser = environment.parentUser;
+    await environment.storage
+        .saveRefreshToken('refresh-${environment.currentUser!.id}');
+    return const LoginResult(accessToken: 'access-token');
+  }
 }
 
 class FakeFeedRepository implements FeedRepository {

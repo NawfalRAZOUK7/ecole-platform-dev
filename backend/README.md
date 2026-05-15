@@ -5,9 +5,9 @@ FastAPI-based K-12 EdTech SaaS backend for Moroccan schools. Production-grade RE
 ## Architecture
 
 **3-tier modular monolith pattern:**
-- **Router Layer** (`api/v1/*.py`) — HTTP request handlers, input validation, OpenAPI documentation
-- **Service Layer** (`services/*.py`) — Business logic, domain rules, orchestration, integrations
-- **Repository Layer** (`repositories/*.py`) — Async SQLAlchemy data access, query optimization
+- **Router Layer** (`api/v1/<domain>/`) — HTTP handlers, validation, OpenAPI
+- **Service Layer** (`services/<domain>/`) — Business logic and orchestration (domain packages; see [`app/README.md`](app/README.md))
+- **Repository Layer** (`repositories/*.py`) — Async SQLAlchemy access (flat modules, domain-prefixed names)
 
 **Cross-cutting Infrastructure:**
 - Security pipeline: AuthN → Context → RBAC → ABAC → Audit → Events
@@ -45,10 +45,20 @@ backend/
 │   └── templates/        # Jinja2 HTML templates
 │
 ├── docs/                 # Backend documentation
-├── scripts/              # Utility scripts (OpenAPI export, validation)
 ├── tests/                # Test suite (unit, integration)
 └── uploads/              # File storage for courses & submissions
 ```
+
+**Scripts — two places, two purposes**
+
+| Location | Use for |
+|----------|---------|
+| [`app/scripts/`](app/scripts/) | Runtime-adjacent helpers shipped with the app (seeding, one-off maintenance run inside the same Python env as the API). |
+| [`scripts/`](scripts/) | Backend developer/CI tooling (e.g. OpenAPI export, migration validation) — run from the backend directory or inside the backend container. |
+
+**Schéma base de données** — Autorité et flux : voir [Documentation base de données](../docs/DATABASE.md#autorité-du-schéma-source-de-vérité) (Alembic vs `infra/postgres/init.sql`).
+
+**Workers / tâches async** — modules sous [`app/workers/`](app/workers/) ; enregistrement des jobs dans [`app/core/tasks.py`](app/core/tasks.py). Nommer les modules par **domaine métier** ou par **famille de job** (choisir un axe et s’y tenir dans les PRs futures).
 
 ## Key Files
 

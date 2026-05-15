@@ -18,12 +18,23 @@
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "audit:endpoints": "node ./scripts/audit-endpoints.mjs",
+    "architecture:lint": "ARCHITECTURE_LINT=true eslint .",
+    "architecture:lint:strict": "ARCHITECTURE_STRICT=true eslint . --max-warnings 0",
+    "architecture:deps": "depcruise src --config .dependency-cruiser.cjs --ignore-known",
+    "architecture:deps:baseline": "depcruise-baseline src --config .dependency-cruiser.cjs",
+    "architecture:barrels": "node scripts/verify-barrels.mjs --strict",
+    "architecture:check": "npm run architecture:lint && npm run architecture:deps && npm run architecture:barrels",
+    "architecture:report": "npm run architecture:lint && depcruise src --config .dependency-cruiser.cjs --no-ignore-known || true",
+    "create:module": "node scripts/create-module.mjs",
+    "knip": "knip",
+    "knip:production": "knip --production",
     "prepare": "sh -c 'if [ -d ../.git ] && [ -x ./node_modules/.bin/husky ]; then cd .. && ./web/node_modules/.bin/husky web/.husky; fi'",
     "format": "prettier --write src/",
     "format:check": "prettier --check src/"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
+    "@sentry/react": "^9.15.0",
     "@tanstack/react-query": "^5.95.2",
     "framer-motion": "^12.38.0",
     "i18next": "^25.8.18",
@@ -40,6 +51,7 @@
   "devDependencies": {
     "@eslint/js": "^9.13.0",
     "@playwright/test": "^1.49.0",
+    "@sentry/vite-plugin": "^4.0.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
@@ -48,12 +60,15 @@
     "@types/testing-library__jest-dom": "^5.14.9",
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-v8": "^2.1.9",
+    "dependency-cruiser": "^17.4.0",
     "eslint": "^9.13.0",
+    "eslint-plugin-boundaries": "^6.0.2",
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.14",
     "globals": "^15.11.0",
     "husky": "^9.1.7",
     "jsdom": "^26.1.0",
+    "knip": "^6.13.1",
     "lint-staged": "^16.4.0",
     "msw": "^2.13.1",
     "prettier": "^3.8.1",
@@ -61,6 +76,7 @@
     "typescript": "~5.6.2",
     "typescript-eslint": "^8.11.0",
     "vite": "^6.0.0",
-    "vitest": "^2.1.8"
+    "vitest": "^2.1.8",
+    "web-streams-polyfill": "^4.2.0"
   }
 }

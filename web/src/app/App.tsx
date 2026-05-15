@@ -8,73 +8,141 @@
 
 import { Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from '@/services/auth/AuthContext';
+import { useAuth } from '@/app/providers/AuthContext';
 import { ErrorBoundary } from '@/shared/ui/ErrorBoundary';
-import { Layout } from '@/shared/ui/Layout';
+import { Layout } from '@/widgets/layout/Layout';
 import { OfflineIndicator } from '@/shared/ui/OfflineIndicator';
-import { ROLE_REDIRECT } from '@/features/auth/roleRedirects';
-import { ProtectedRoute } from '@/features/auth/ProtectedRoute';
-import { FeatureTogglesPage } from '@/features/admin/FeatureTogglesPage';
-import { CmsLayout } from '@/features/cms/CmsLayout';
-import { QuizAnalyticsPage } from '@/features/quizzes/QuizAnalyticsPage';
-import { QuizResultsPage } from '@/features/quizzes/QuizResultsPage';
-import { GDPRPage } from '@/features/settings/GDPRPage';
+import { ROLE_REDIRECT } from '@/app/roleRedirects';
+import { ProtectedRoute } from '@/app/ProtectedRoute';
+import { FeatureTogglesPage } from '@/pages/admin/FeatureTogglesPage';
+import { CmsLayout } from '@/features/content/cms/ui/CmsLayout';
+import { QuizAnalyticsPage } from '@/features/lms/quizzes/ui/QuizAnalyticsPage';
+import { QuizResultsPage } from '@/features/lms/quizzes/ui/QuizResultsPage';
+import { GDPRPage } from '@/pages/user/GDPRPage';
 import { LoadingState } from '@/shared/ui/LoadingState';
 
+// Feature-level lazy exports (replaces centralized LazyPages.ts)
 import {
   LoginPage,
   RegisterPage,
+  ForgotPasswordPage,
+  ResetPasswordPage,
+} from '@/features/auth/lazy';
+import {
   DashboardPage,
   UsersPage,
   InvitationsPage,
   AuditLogPage,
-  SchoolSettingsPage,
   JustificationReviewPage,
   BatchRegisterPage,
-  ParentChildLinksPage,
-  BadgesPage,
+  ComplianceDashboardPage,
+  CurriculumMappingPage,
+  ComplianceReportPage,
+} from '@/features/admin/lazy';
+import {
   ProgramsPage,
   EnrollmentsPage,
   ProgramEquivalencesPage,
   ProgramVersionsPage,
   EligibilityRulesPage,
   StudentAcademicHistoryPage,
-  AnalyticsDashboardPage,
-  TeacherClassesPage,
-  TeacherCoursesPage,
-  AssignmentFormPage,
-  TeacherSubmissionsPage,
-  TeacherAttendancePage,
-  AssessmentFormPage,
-  ContentLibraryPage,
-  QuizManagerPage,
-  ClassProgressPage,
-  StudentHomePage,
-  StudentContentPage,
-  StoryViewerPage,
-  ColoringViewerPage,
-  QuizPlayerPage,
   AttendanceModulePage,
   AttendanceHistoryPage,
   AttendanceAnalyticsPage,
   ParentJustificationPage,
   GradebookPage,
   GradeDetailPage,
+  TimetablePage,
+  TimetableConstraintsPage,
+  TimetableGeneratePage,
+  ProgressDashboardPage,
+  ParentProgressPage,
+  ResultsPage,
+  SkillsOverviewPage,
+  SkillPassportPage,
+  SkillEvaluationPage,
+  SkillAnalyticsPage,
+  TeacherClassesPage,
+  TeacherAttendancePage,
+  ClassProgressPage,
+} from '@/features/academic/lazy';
+import {
   BudgetListPage,
   BudgetRequestPage,
   BudgetAnalyticsPage,
   BudgetDetailPage,
+  InvoicesPage,
+  InvoiceDetailPage,
+  FeeStructuresPage,
+  FeeAssignmentsPage,
+  GenerateInvoicesPage,
+  SiblingPolicyPage,
+  LateFeePolicyPage,
+  PaymentPlansPage,
+  PaymentPlanDetailPage,
+} from '@/features/billing/lazy';
+import {
+  NotificationsPage,
+  NotificationSettingsPage,
+  CalendarPage,
+  EventDetailPage,
+  HolidayManagerPage,
+  ConversationsPage,
+  ChatPage,
+  AnnouncementsPage,
+} from '@/features/communication/lazy';
+import {
+  FeedPage,
+  ContentPage,
+  ContentDetailPage,
+  ContentPlayerPage,
+  StudentContentPage,
+  StoryViewerPage,
+  ColoringViewerPage,
+  DocumentsPage,
+  ResourcesPage,
+  DocumentVersionsPage,
+  DocumentPreviewPage,
+  StudentDocumentsPage,
+  ContentLibraryPage,
+  CmsContentListPage,
+  CmsContentUploadPage,
+  CmsContentEditPage,
+  CmsReviewQueuePage,
+  CmsQuizBuilderPage,
+  CmsAnalyticsPage,
+} from '@/features/content/lazy';
+import {
+  TeacherCoursesPage,
+  AssignmentFormPage,
+  TeacherSubmissionsPage,
+  AssessmentFormPage,
+  QuizManagerPage,
+  QuizPlayerPage,
+  WritingWorkspacePage,
+  StudentSubmissionPage,
+  RubricsListPage,
+  RubricEditorPage,
+  RubricGradingPage,
+  QuestionBankPage,
+  QuestionBankImportPage,
+  GenerateQuizPage,
+} from '@/features/lms/lazy';
+import {
+  ReportsPage,
+  AnalyticsDashboardPage,
+  FinancialDashboardPage,
+  FinancialSnapshotsPage,
+  FinancialExportPage,
+} from '@/features/reports/lazy';
+import {
+  SchoolSettingsPage,
   MicroSchoolListPage,
   MicroSchoolDetailPage,
   MicroSchoolEnrollPage,
-  TimetablePage,
-  ConversationsPage,
-  ChatPage,
-  ProgressDashboardPage,
-  ParentProgressPage,
-  MyChildrenPage,
-  AnnouncementsPage,
-  FeedPage,
+} from '@/features/school/lazy';
+import {
+  BadgesPage,
   RewardsPage,
   StudentRewardsPage,
   LeaderboardPage,
@@ -83,70 +151,21 @@ import {
   GameConfigEditor,
   StudentGamesPage,
   GamePlayerPage,
-  NotificationsPage,
-  NotificationSettingsPage,
-  CalendarPage,
-  EventDetailPage,
-  HolidayManagerPage,
-  ReportsPage,
-  DocumentsPage,
-  ResourcesPage,
-  DocumentVersionsPage,
-  DocumentPreviewPage,
-  StudentDocumentsPage,
-  ContentPage,
-  ContentDetailPage,
-  ContentPlayerPage,
-  ResultsPage,
-  InvoicesPage,
-  InvoiceDetailPage,
   ActivitiesPage,
   ActivityDetailPage,
+} from '@/features/ai/lazy';
+import { SyncStatusPage, SyncConflictsPage, SyncSettingsPage } from '@/features/sync/lazy';
+import {
   ProfilePage,
   SessionsPage,
   TwoFactorPage,
   LoginHistoryPage,
-  ForgotPasswordPage,
-  ResetPasswordPage,
-  StudentSubmissionPage,
-  SkillsOverviewPage,
-  SkillPassportPage,
-  SkillEvaluationPage,
-  SkillAnalyticsPage,
-  ComplianceDashboardPage,
-  CurriculumMappingPage,
-  ComplianceReportPage,
-  SyncStatusPage,
-  SyncConflictsPage,
-  SyncSettingsPage,
-  FinancialDashboardPage,
-  FinancialSnapshotsPage,
-  FinancialExportPage,
-  FeeStructuresPage,
-  FeeAssignmentsPage,
-  GenerateInvoicesPage,
-  SiblingPolicyPage,
-  LateFeePolicyPage,
-  PaymentPlansPage,
-  PaymentPlanDetailPage,
-  CmsContentListPage,
-  CmsContentUploadPage,
-  CmsContentEditPage,
-  CmsReviewQueuePage,
-  CmsQuizBuilderPage,
-  CmsAnalyticsPage,
-  QuestionBankPage,
-  QuestionBankImportPage,
-  GenerateQuizPage,
-  RubricsListPage,
-  RubricEditorPage,
-  RubricGradingPage,
-  TimetableConstraintsPage,
-  TimetableGeneratePage,
-  WritingWorkspacePage,
+  MyChildrenPage,
   SharedReviewPage,
   ReviewDetailPage,
-} from './LazyPages';
+  ParentChildLinksPage,
+  StudentHomePage,
+} from '@/features/user/lazy';
 
 /** Redirect based on user role */
 function RoleRedirect() {

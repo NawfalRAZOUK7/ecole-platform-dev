@@ -16,8 +16,8 @@ from app.core.exceptions import (
     NotFoundError,
     RateLimitError,
 )
-from app.services import auth as auth_module
-from app.services.auth import AuthService
+import app.services.auth.auth as auth_module
+from app.services.auth.auth import AuthService
 
 
 def make_auth(role: str = "ADM") -> AuthContext:

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:ecole_platform/data/local_store/cache_store.dart';
-import 'package:ecole_platform/data/local_store/database.dart';
+import 'package:ecole_platform/core/storage/cache_store.dart';
+import 'package:ecole_platform/core/storage/database.dart';
 
 import '../helpers/test_database.dart';
 
@@ -16,7 +16,7 @@ void main() {
     await store.put(
       'grades:first',
       const [
-        {'id': 'grade-1', 'score': 18}
+        {'id': 'grade-1', 'score': 18},
       ],
       CacheTtl.gradebook,
     );
@@ -33,7 +33,7 @@ void main() {
     await store.put(
       'results:first',
       const [
-        {'id': 'result-1'}
+        {'id': 'result-1'},
       ],
       CacheTtl.results,
     );
@@ -49,7 +49,7 @@ void main() {
     await store.put(
       'feed:stale',
       const [
-        {'id': 'feed-1'}
+        {'id': 'feed-1'},
       ],
       1,
     );

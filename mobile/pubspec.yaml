@@ -1,6 +1,6 @@
 name: ecole_platform
 description: "École Platform — Mobile app for K-12 schools"
-publish_to: 'none'
+publish_to: "none"
 version: 0.1.0+1
 
 environment:
@@ -45,6 +45,8 @@ dependencies:
   flutter_dotenv: ^5.2.1
   video_player: ^2.10.1
   just_audio: ^0.10.5
+  sentry_flutter: ^8.14.0
+  url_launcher: ^6.3.1
 
 dev_dependencies:
   flutter_test:

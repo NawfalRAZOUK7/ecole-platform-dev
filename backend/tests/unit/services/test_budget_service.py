@@ -12,7 +12,7 @@ import pytest_asyncio
 
 from app.core.dependencies import AuthContext
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
-from app.schemas.budget import (
+from app.schemas.billing.budget import (
     BudgetAllocationCreateRequest,
     BudgetRequestCreateRequest,
     BudgetRequestReviewRequest,
@@ -20,8 +20,8 @@ from app.schemas.budget import (
     MicroBudgetCreateRequest,
     MicroBudgetUpdateRequest,
 )
-from app.services import budget_service as budget_module
-from app.services.budget_service import BudgetService
+import app.services.billing.budget_service as budget_module
+from app.services.billing.budget_service import BudgetService
 
 
 @pytest_asyncio.fixture(autouse=True)

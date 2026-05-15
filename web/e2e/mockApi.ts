@@ -228,6 +228,47 @@ export async function installMockSession(page: Page, initialRole: MockRole = 'pa
     await fulfillJson(route, apiResponse([]));
   });
 
+  await page.route(/\/api\/v1\/me\/profile(?:\?.*)?$/, async (route) => {
+    await fulfillJson(route, apiResponse(USERS[currentRole]));
+  });
+
+  await page.route(/\/api\/v1\/me\/children(?:\?.*)?$/, async (route) => {
+    await fulfillJson(route, apiListResponse([]));
+  });
+
+  await page.route(/\/api\/v1\/rewards\/me(?:\?.*)?$/, async (route) => {
+    await fulfillJson(
+      route,
+      apiResponse({
+        xp: 0,
+        level: 1,
+        current_streak: 0,
+        longest_streak: 0,
+        last_activity_at: null,
+      }),
+    );
+  });
+
+  await page.route(/\/api\/v1\/lms\/levels\/mappings(?:\?.*)?$/, async (route) => {
+    await fulfillJson(route, apiListResponse([]));
+  });
+
+  await page.route(/\/api\/v1\/admin\/dashboard(?:\?.*)?$/, async (route) => {
+    await fulfillJson(
+      route,
+      apiResponse({
+        user_count: 0,
+        student_count: 0,
+        teacher_count: 0,
+        pending_invitations: 0,
+      }),
+    );
+  });
+
+  await page.route(/\/api\/v1\/programs(?:\?.*)?$/, async (route) => {
+    await fulfillJson(route, apiListResponse([]));
+  });
+
   return {
     getCurrentUser: () => USERS[currentRole],
     getUser: (role: MockRole) => USERS[role],

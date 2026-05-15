@@ -11,7 +11,7 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ecole_platform/app/providers.dart';
-import 'package:ecole_platform/shared/secure_storage.dart';
+import 'package:ecole_platform/core/storage/secure_storage.dart';
 
 /// Current locale provider.
 class LocaleNotifier extends StateNotifier<String> {

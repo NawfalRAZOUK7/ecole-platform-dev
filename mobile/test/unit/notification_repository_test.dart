@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:ecole_platform/data/repositories_impl/notification_repository_impl.dart';
+import 'package:ecole_platform/data/repositories_impl/communication/notification_repository_impl.dart';
 
 import '../helpers/api_responses.dart';
 import '../helpers/test_mocks.dart';

@@ -20,7 +20,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from app.core.exceptions import NotFoundError, ValidationError
-from app.services.file_storage import (
+from app.services.content.file_storage import (
     FileStorageBackend,
     FileStorageService,
     LocalFileStorageBackend,
@@ -54,7 +54,7 @@ def local_backend(tmp_path: Path) -> LocalFileStorageBackend:
 
 @pytest.fixture()
 def s3_backend() -> S3FileStorageBackend:
-    with patch("app.services.file_storage.settings") as mock_settings:
+    with patch("app.services.content.file_storage.settings") as mock_settings:
         mock_settings.document_storage_bucket = "test-bucket"
         mock_settings.document_storage_endpoint = "http://fake:9000"
         mock_settings.document_storage_region = "us-east-1"
@@ -69,7 +69,7 @@ def s3_backend() -> S3FileStorageBackend:
 def local_service(local_backend: LocalFileStorageBackend) -> FileStorageService:
     svc = FileStorageService(backend=local_backend)
     with (
-        patch("app.services.file_storage.settings") as ms,
+        patch("app.services.content.file_storage.settings") as ms,
     ):
         ms.allowed_document_mime_types = "application/pdf,image/png,image/jpeg"
         ms.max_document_size_mb = 10
@@ -99,17 +99,17 @@ class TestSafeFilename:
 
 class TestValidateDocumentUpload:
     def test_raises_on_disallowed_mime(self):
-        with patch("app.services.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}):
+        with patch("app.services.content.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}):
             with pytest.raises(ValidationError) as exc_info:
                 validate_document_upload(mime_type="text/html", size_bytes=100)
         assert exc_info.value.error_code == "ERR-DOC-415"
 
     def test_raises_on_oversized(self):
-        with patch("app.services.file_storage.settings") as ms:
+        with patch("app.services.content.file_storage.settings") as ms:
             ms.max_document_size_mb = 1
             ms.allowed_document_mime_types = "application/pdf"
             with patch(
-                "app.services.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}
+                "app.services.content.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}
             ):
                 with pytest.raises(ValidationError) as exc_info:
                     validate_document_upload(
@@ -237,7 +237,7 @@ class TestS3BackendSaveBytes:
         assert kw["ContentType"] == "application/pdf"
 
     async def test_no_sse_when_disabled(self):
-        with patch("app.services.file_storage.settings") as ms:
+        with patch("app.services.content.file_storage.settings") as ms:
             ms.document_storage_bucket = "b"
             ms.document_storage_endpoint = "http://fake:9000"
             ms.document_storage_region = "us-east-1"
@@ -323,14 +323,14 @@ class TestFileStorageServiceStoreUpload:
     async def test_returns_storage_and_thumbnail_paths(self, tmp_path):
         backend = LocalFileStorageBackend(base_dir=str(tmp_path))
         svc = FileStorageService(backend=backend)
-        with patch("app.services.file_storage.settings") as ms:
+        with patch("app.services.content.file_storage.settings") as ms:
             ms.allowed_document_mime_types = "application/pdf"
             ms.max_document_size_mb = 10
             ms.virus_scan_enabled = False
             ms.document_storage_subdirectory = "docs"
             ms.document_preview_subdirectory = "previews"
             with patch(
-                "app.services.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}
+                "app.services.content.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}
             ):
                 path, thumb = await svc.store_upload(
                     content=b"%PDF-1.4 content",
@@ -345,14 +345,14 @@ class TestFileStorageServiceStoreUpload:
         svc = FileStorageService(backend=backend)
         content = b"dedup content"
         sha = hashlib.sha256(content).hexdigest()
-        with patch("app.services.file_storage.settings") as ms:
+        with patch("app.services.content.file_storage.settings") as ms:
             ms.allowed_document_mime_types = "application/pdf"
             ms.max_document_size_mb = 10
             ms.virus_scan_enabled = False
             ms.document_storage_subdirectory = "docs"
             ms.document_preview_subdirectory = "previews"
             with patch(
-                "app.services.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}
+                "app.services.content.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}
             ):
                 path, _ = await svc.store_upload(
                     content=content,
@@ -365,14 +365,14 @@ class TestFileStorageServiceStoreUpload:
         backend = LocalFileStorageBackend(base_dir=str(tmp_path))
         svc = FileStorageService(backend=backend)
         content = b"same file"
-        with patch("app.services.file_storage.settings") as ms:
+        with patch("app.services.content.file_storage.settings") as ms:
             ms.allowed_document_mime_types = "application/pdf"
             ms.max_document_size_mb = 10
             ms.virus_scan_enabled = False
             ms.document_storage_subdirectory = "docs"
             ms.document_preview_subdirectory = "previews"
             with patch(
-                "app.services.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}
+                "app.services.content.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}
             ):
                 path1, _ = await svc.store_upload(
                     content=content,
@@ -392,14 +392,14 @@ class TestFileStorageServiceReuseUpload:
         backend = LocalFileStorageBackend(base_dir=str(tmp_path))
         svc = FileStorageService(backend=backend)
         content = b"reuse me"
-        with patch("app.services.file_storage.settings") as ms:
+        with patch("app.services.content.file_storage.settings") as ms:
             ms.allowed_document_mime_types = "application/pdf"
             ms.max_document_size_mb = 10
             ms.virus_scan_enabled = False
             ms.document_storage_subdirectory = "docs"
             ms.document_preview_subdirectory = "previews"
             with patch(
-                "app.services.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}
+                "app.services.content.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}
             ):
                 path, _ = await svc.store_upload(
                     content=content,
@@ -423,14 +423,14 @@ class TestFileStorageServiceStoreUploadCopy:
         backend = LocalFileStorageBackend(base_dir=str(tmp_path))
         svc = FileStorageService(backend=backend)
         content = b"copy content"
-        with patch("app.services.file_storage.settings") as ms:
+        with patch("app.services.content.file_storage.settings") as ms:
             ms.allowed_document_mime_types = "application/pdf"
             ms.max_document_size_mb = 10
             ms.virus_scan_enabled = False
             ms.document_storage_subdirectory = "docs"
             ms.document_preview_subdirectory = "previews"
             with patch(
-                "app.services.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}
+                "app.services.content.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}
             ):
                 path1, _ = await svc.store_upload_copy(
                     content=content,
@@ -473,14 +473,14 @@ class TestFileStorageServiceS3Backend:
         mock_backend.exists = AsyncMock(return_value=False)
         svc = FileStorageService(backend=mock_backend)
         content = b"hello"
-        with patch("app.services.file_storage.settings") as ms:
+        with patch("app.services.content.file_storage.settings") as ms:
             ms.allowed_document_mime_types = "application/pdf"
             ms.max_document_size_mb = 10
             ms.virus_scan_enabled = False
             ms.document_storage_subdirectory = "docs"
             ms.document_preview_subdirectory = "previews"
             with patch(
-                "app.services.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}
+                "app.services.content.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}
             ):
                 path, _ = await svc.store_upload(
                     content=content,
@@ -507,14 +507,14 @@ class TestFileStorageServiceS3Backend:
 
 class TestBuildBackend:
     def test_returns_local_by_default(self, tmp_path):
-        with patch("app.services.file_storage.settings") as ms:
+        with patch("app.services.content.file_storage.settings") as ms:
             ms.document_storage_backend = "local"
             ms.upload_dir = str(tmp_path)
             svc = FileStorageService()
         assert isinstance(svc.backend, LocalFileStorageBackend)
 
     def test_returns_s3_when_configured(self, tmp_path):
-        with patch("app.services.file_storage.settings") as ms:
+        with patch("app.services.content.file_storage.settings") as ms:
             ms.document_storage_backend = "s3"
             ms.document_storage_bucket = "b"
             ms.document_storage_endpoint = "http://fake:9000"

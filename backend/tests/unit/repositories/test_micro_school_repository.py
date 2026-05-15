@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 import pytest_asyncio
 
-from app.repositories.micro_school import MicroSchoolRepository
+from app.repositories.school_micro_school import MicroSchoolRepository
 
 
 class _FakeExecuteResult:

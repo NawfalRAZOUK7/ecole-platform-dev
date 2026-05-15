@@ -27,10 +27,10 @@ from app.models.lms import (
     Submission,
 )
 from app.repositories.lms import LMSRepository
-from app.repositories.quiz import QuizRepository
-from app.services.event_dispatcher import EventDispatcher
+from app.repositories.lms_quiz import QuizRepository
+from app.services.communication.event_dispatcher import EventDispatcher
 from app.services.lms._serializers import LMSSerializerMixin
-from app.services.realtime import publish_grade_published
+from app.services.communication.realtime import publish_grade_published
 
 MAX_FILES_PER_SUBMISSION = 5
 logger = logging.getLogger(__name__)

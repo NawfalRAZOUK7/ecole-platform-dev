@@ -38,7 +38,7 @@ final ThemeData appLightTheme = ThemeData(
     elevation: 1,
     color: AppColors.background,
     surfaceTintColor: Colors.transparent,
-    shadowColor: Colors.black.withOpacity(0.08),
+    shadowColor: Colors.black.withValues(alpha: 0.08),
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(AppRadii.lg),
       side: const BorderSide(color: AppColors.border),
@@ -86,7 +86,7 @@ final ThemeData appLightTheme = ThemeData(
     ).copyWith(
       backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
         if (states.contains(WidgetState.disabled)) {
-          return AppColors.primary.withOpacity(0.38);
+          return AppColors.primary.withValues(alpha: 0.38);
         }
         return AppColors.primary;
       }),
@@ -101,7 +101,7 @@ final ThemeData appLightTheme = ThemeData(
         return 3;
       }),
       shadowColor: WidgetStateProperty.all(
-        AppColors.primary.withOpacity(0.35),
+        AppColors.primary.withValues(alpha: 0.35),
       ),
     ),
   ),

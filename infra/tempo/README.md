@@ -92,6 +92,8 @@ Each span includes:
 - Logs (structured error information)
 - Status (success, error, etc.)
 
+Application spans should include a domain attribute when available. Use the backend bounded context names: `auth`, `user`, `school`, `academic`, `lms`, `billing`, `content`, `communication`, `reports`, `admin`, `sync`, `ai`, and `operations`.
+
 ## Querying Traces
 
 ### Via Tempo UI

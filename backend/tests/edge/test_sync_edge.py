@@ -11,13 +11,13 @@ from pydantic import ValidationError as PydanticValidationError
 
 from app.core.dependencies import AuthContext
 from app.core.exceptions import NotFoundError, ValidationError
-from app.schemas.sync_queue import (
+from app.schemas.sync.sync_queue import (
     PushPayload,
     RegisterDeviceRequest,
     ResolveConflictRequest,
     SyncCheckpointCreateRequest,
 )
-from app.services.sync_queue_service import SyncService
+from app.services.sync.sync_queue_service import SyncService
 
 
 @pytest_asyncio.fixture(autouse=True)

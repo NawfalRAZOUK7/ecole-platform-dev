@@ -112,7 +112,7 @@ from app.seed_enhanced import (
     seed_timetable_extras,
     seed_upload_sessions,
 )
-from app.services.compliance_service import seed_men_reference_data
+from app.services.admin.compliance import seed_men_reference_data
 
 # ── Fixed UUIDs for deterministic seeding ──────────────────────────────────
 

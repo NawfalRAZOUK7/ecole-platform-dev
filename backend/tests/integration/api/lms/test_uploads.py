@@ -14,7 +14,6 @@ import pytest
 import pytest_asyncio
 from sqlalchemy import delete, select
 
-from app.core.database import async_session
 from app.models.lms import Submission, SubmissionFile
 
 
@@ -34,12 +33,12 @@ def make_pdf_bytes(content: bytes = b"fake-pdf-content") -> tuple[bytes, str]:
     return content, sha256
 
 
-@pytest_asyncio.fixture(autouse=True)
-async def reset_submission_upload_state():
+@pytest_asyncio.fixture(loop_scope="function", autouse=True)
+async def reset_submission_upload_state(session_factory):
     """Keep submission file tests deterministic across repeated suite reruns."""
     assignment_id = uuid.UUID(ASSIGNMENT_ID)
     student_id = uuid.UUID(STUDENT_ID)
-    async with async_session() as session:
+    async with session_factory() as session:
         submission_ids = list(
             (
                 await session.execute(

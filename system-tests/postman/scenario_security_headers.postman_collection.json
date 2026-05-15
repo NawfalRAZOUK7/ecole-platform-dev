@@ -1,0 +1,124 @@
+{
+  "info": {
+    "name": "École Platform - Security Headers Tests",
+    "description": "Security headers validation tests for CSP, HSTS, CORS, and other security headers.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Security Headers Check",
+      "item": [
+        {
+          "name": "GET /auth/login - Check security headers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 405 (Method Not Allowed)\", function () {",
+                  "    pm.response.to.have.status(405);",
+                  "});",
+                  "",
+                  "// Check for security headers (headers are case-insensitive)",
+                  "const headers = pm.response.headers.toObject();",
+                  "",
+                  "pm.test(\"X-Content-Type-Options header is set\", function () {",
+                  "    pm.expect(headers[\"x-content-type-options\"]).to.eql(\"nosniff\");",
+                  "});",
+                  "",
+                  "pm.test(\"X-Frame-Options header is set\", function () {",
+                  "    pm.expect(headers[\"x-frame-options\"]).to.eql(\"DENY\");",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Security-Policy header is set\", function () {",
+                  "    pm.expect(headers[\"content-security-policy\"]).to.exist;",
+                  "});",
+                  "",
+                  "pm.test(\"X-XSS-Protection header is set\", function () {",
+                  "    pm.expect(headers[\"x-xss-protection\"]).to.exist;",
+                  "});",
+                  "",
+                  "pm.test(\"Referrer-Policy header is set\", function () {",
+                  "    pm.expect(headers[\"referrer-policy\"]).to.exist;",
+                  "});",
+                  "",
+                  "pm.test(\"Permissions-Policy header is set\", function () {",
+                  "    pm.expect(headers[\"permissions-policy\"]).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CORS Configuration Check",
+      "item": [
+        {
+          "name": "OPTIONS /auth/me - Check CORS headers",
+          "request": {
+            "method": "OPTIONS",
+            "header": [
+              {
+                "key": "Origin",
+                "value": "http://localhost:5173",
+                "type": "text"
+              },
+              {
+                "key": "Access-Control-Request-Method",
+                "value": "GET",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/me"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 or 204\", function () {",
+                  "    pm.expect([200, 204]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "const headers = pm.response.headers.toObject();",
+                  "",
+                  "pm.test(\"Access-Control-Allow-Origin header is set\", function () {",
+                  "    pm.expect(headers[\"access-control-allow-origin\"]).to.exist;",
+                  "});",
+                  "",
+                  "pm.test(\"Access-Control-Allow-Methods header is set\", function () {",
+                  "    pm.expect(headers[\"access-control-allow-methods\"]).to.exist;",
+                  "});",
+                  "",
+                  "pm.test(\"Access-Control-Allow-Headers header is set\", function () {",
+                  "    pm.expect(headers[\"access-control-allow-headers\"]).to.exist;",
+                  "});",
+                  "",
+                  "pm.test(\"Access-Control-Max-Age header is set\", function () {",
+                  "    pm.expect(headers[\"access-control-max-age\"]).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

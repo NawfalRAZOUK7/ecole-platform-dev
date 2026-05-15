@@ -33,7 +33,7 @@ import os
 # Add backend to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from app.services.analytics import (
+from app.services.reports.analytics import (
     SCHEMA_VERSION,
     _EVENT_PROPERTY_WHITELIST,
     _PII_FIELD_BLOCKLIST,

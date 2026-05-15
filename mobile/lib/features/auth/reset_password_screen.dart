@@ -56,7 +56,8 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text(AppLocalizations.of(ref).t('auth.resetPassword'))),
+          content: Text(AppLocalizations.of(ref).t('auth.resetPassword')),
+        ),
       );
       context.go('/login');
     } finally {

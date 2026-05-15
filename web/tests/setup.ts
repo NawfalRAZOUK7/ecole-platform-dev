@@ -1,6 +1,8 @@
+process.env.NODE_ENV = 'test';
+
 import '@testing-library/jest-dom';
-import { ReadableStream, TransformStream, WritableStream } from 'node:stream/web';
 import { afterAll, afterEach, beforeAll } from 'vitest';
+import { ReadableStream, TransformStream, WritableStream } from 'web-streams-polyfill';
 
 class ResizeObserverMock {
   observe() {}
@@ -11,15 +13,19 @@ class ResizeObserverMock {
 }
 
 if (!globalThis.ReadableStream) {
-  globalThis.ReadableStream = ReadableStream;
+  globalThis.ReadableStream = ReadableStream as unknown as typeof globalThis.ReadableStream;
 }
 
 if (!globalThis.WritableStream) {
-  globalThis.WritableStream = WritableStream;
+  globalThis.WritableStream = WritableStream as unknown as typeof globalThis.WritableStream;
 }
 
 if (!globalThis.TransformStream) {
-  globalThis.TransformStream = TransformStream;
+  globalThis.TransformStream = TransformStream as unknown as typeof globalThis.TransformStream;
+}
+
+if (!globalThis.ResizeObserver) {
+  globalThis.ResizeObserver = ResizeObserverMock as typeof ResizeObserver;
 }
 
 if (!globalThis.ResizeObserver) {

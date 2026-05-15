@@ -1,4 +1,4 @@
-import 'package:ecole_platform/data/api/api_client.dart';
+import 'package:ecole_platform/core/network/api_client.dart';
 
 ApiResponse<Map<String, dynamic>> response(Map<String, dynamic> data) {
   return ApiResponse<Map<String, dynamic>>(data: data);

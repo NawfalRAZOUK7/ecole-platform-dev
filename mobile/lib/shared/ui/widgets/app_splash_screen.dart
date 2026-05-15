@@ -65,7 +65,9 @@ class _AppSplashScreenState extends State<AppSplashScreen>
     Future.delayed(const Duration(seconds: 2), _markMinTimeDone);
 
     // Wait for actual init work
-    widget.initFuture.then((_) => _markInitDone()).catchError((_) => _markInitDone());
+    widget.initFuture
+        .then((_) => _markInitDone())
+        .catchError((_) => _markInitDone());
   }
 
   void _markMinTimeDone() {

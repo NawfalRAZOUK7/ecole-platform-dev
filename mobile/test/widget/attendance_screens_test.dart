@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:ecole_platform/domain/entities/attendance.dart';
-import 'package:ecole_platform/features/attendance/attendance_history_screen.dart';
+import 'package:ecole_platform/domain/entities/academic/attendance.dart';
+import 'package:ecole_platform/features/academic/attendance/attendance_history_screen.dart';
 import 'package:ecole_platform/shared/widgets/widgets.dart';
 
 import '../helpers/factories.dart';

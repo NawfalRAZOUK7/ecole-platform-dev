@@ -12,8 +12,8 @@ import pytest_asyncio
 
 from app.core.dependencies import AuthContext
 from app.core.exceptions import AuthorizationError, NotFoundError, ValidationError
-from app.services import micro_school_service as micro_module
-from app.services.micro_school_service import (
+import app.services.school.micro_school_service as micro_module
+from app.services.school.micro_school_service import (
     MicroGroupService,
     MicroPaymentService,
     MicroProgressService,

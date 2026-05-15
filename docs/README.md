@@ -1,5 +1,7 @@
 # 📖 Documentation — École Platform
 
+**Démarrage rapide** — Lire dans cet ordre : [Architecture](ARCHITECTURE.md) → [Base de données](DATABASE.md) (autorité Alembic vs `init.sql`) → [Tests](TESTING.md) → [Déploiement](DEPLOYMENT.md). OpenAPI : spec exportée / servie par le backend (`/openapi.json`) ; le fichier [`openapi.yaml`](openapi.yaml) sert de **référence** — régénérer depuis l’API lors des grosses évolutions pour limiter la dérive.
+
 ## Documentation technique
 
 | Document | Description |

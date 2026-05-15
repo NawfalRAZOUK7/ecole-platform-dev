@@ -2,6 +2,19 @@
 
 Object-relational mapping (ORM) layer using SQLAlchemy 2.0 with modern `Mapped[]` type annotations. Models define database schema and relationships.
 
+## Packaging roadmap (hybrid “A3”)
+
+Today, modules are **flat files** (`lms.py`, `erp.py`, …) while routers/services/schemas are already grouped by **bounded context** (same names as `api/v1/`).
+
+| Phase | Action |
+|-------|--------|
+| **Now** | Keep flat layout; treat this README + [`docs/DATABASE.md`](../../../docs/DATABASE.md) as the logical map (G1–G9 style groupings). |
+| **Next** | When a domain is heavily touched, introduce a **subpackage** (e.g. `models/lms/`) and re-export from `models/__init__.py` in a **dedicated PR** with a codemod (no behavior change). |
+| **Avoid** | Big-bang move of all models in one PR (merge pain, Alembic autogenerate noise). |
+
+**Rename / split (only when justified)**  
+Split oversized files (e.g. many unrelated tables in one module) only together with a clear migration story. Prefer **documentation** of legacy names (`com.py` = communication) over mass file renames that do not change tables.
+
 ## Directory Structure
 
 ```

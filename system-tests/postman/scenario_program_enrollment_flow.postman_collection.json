@@ -1,0 +1,407 @@
+{
+  "info": {
+    "name": "Program Enrollment Flow",
+    "description": "Create program/version, check eligibility, enroll an isolated student, and verify program history.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "school_id",
+      "value": "00000000-0000-4000-8000-000000000001",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "program_student_email",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "program_student_password",
+      "value": "Xk9#mP2vL7@qR4z",
+      "type": "string"
+    },
+    {
+      "key": "program_invite_code",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "program_student_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "program_code",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "program_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "version_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "enrollment_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "class_id",
+      "value": "20000000-0000-4000-8000-000000000004",
+      "type": "string"
+    },
+    {
+      "key": "period_id",
+      "value": "20000000-0000-4000-8000-000000000003",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Login Admin",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"school_id\": \"{{school_id}}\"\n}"
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.environment.get(\"program_student_email\")) {",
+              "  var runId = Date.now() + \"-\" + Math.random().toString(36).slice(2, 8);",
+              "  pm.environment.set(\"program_student_email\", \"program.flow+\" + runId + \"@example.com\");",
+              "  pm.environment.set(\"program_student_password\", \"Xk9#mP2vL7@qR4z\");",
+              "  pm.environment.set(\"program_code\", \"PF\" + Date.now());",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Response has access_token\", function () { pm.expect(responseBody.data).to.have.property(\"access_token\"); });",
+              "pm.environment.set(\"token\", responseBody.data.access_token);",
+              "pm.environment.set(\"access_token\", responseBody.data.access_token);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Create Student Invite",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/invites/create",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"role_target\": \"STD\",\n  \"expires_in_hours\": 1\n}"
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () { pm.response.to.have.status(201); });",
+              "var json = pm.response.json();",
+              "pm.environment.set(\"program_invite_code\", json.data.code);",
+              "pm.test(\"Invite code returned\", function () { pm.expect(json.data).to.have.property(\"code\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Register Student",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/register",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"{{program_invite_code}}\",\n  \"email\": \"{{program_student_email}}\",\n  \"full_name\": \"Test User\",\n  \"password\": \"{{program_student_password}}\",\n  \"profile_data\": {}\n}"
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () { pm.response.to.have.status(201); });",
+              "var json = pm.response.json();",
+              "pm.environment.set(\"program_student_id\", json.data.user_id);",
+              "pm.test(\"Student registered\", function () { pm.expect(json.data).to.have.property(\"user_id\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Create Program",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/programs",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"{{program_code}}\",\n  \"name\": \"Bilingual Track Test\",\n  \"level\": \"CP\",\n  \"description\": \"English-French bilingual program\",\n  \"version_label\": \"1.0\",\n  \"effective_from\": \"2025-09-01\"\n}"
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () { pm.response.to.have.status(201); });",
+              "var json = pm.response.json();",
+              "pm.test(\"Program created\", function () { pm.expect(json.data).to.have.property(\"id\"); pm.expect(json.data).to.have.property(\"code\", pm.environment.get(\"program_code\")); });",
+              "pm.environment.set(\"program_id\", json.data.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Create Program Version",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/programs/{{program_id}}/versions",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"version_label\": \"2.0\",\n  \"description\": \"Scenario test version\",\n  \"effective_from\": \"2026-09-01\",\n  \"is_active\": true\n}"
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () { pm.response.to.have.status(201); });",
+              "var json = pm.response.json();",
+              "pm.test(\"Version created\", function () { pm.expect(json.data).to.have.property(\"id\"); pm.expect(json.data).to.have.property(\"version_label\", \"2.0\"); });",
+              "pm.environment.set(\"version_id\", json.data.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - Check Eligibility",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/students/{{program_student_id}}/eligibility?kind=ADMISSION&target_program_id={{program_id}}"
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+              "var json = pm.response.json();",
+              "pm.test(\"Eligibility response shape\", function () { pm.expect(json.data).to.have.property(\"eligible\"); pm.expect(json.data).to.have.property(\"rules\"); pm.expect(json.data.rules).to.be.an(\"array\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - Enroll Student Without Program",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/enrollments",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"student_id\": \"{{program_student_id}}\",\n  \"class_id\": \"{{class_id}}\",\n  \"period_id\": \"{{period_id}}\"\n}"
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () { pm.response.to.have.status(201); });",
+              "var json = pm.response.json();",
+              "pm.test(\"Enrollment created\", function () { pm.expect(json.data).to.have.property(\"id\"); });",
+              "pm.environment.set(\"enrollment_id\", json.data.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 - Assign Program Version",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/enrollments/{{enrollment_id}}/program",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"program_id\": \"{{program_id}}\",\n  \"program_version_id\": \"{{version_id}}\",\n  \"reason_code\": \"INITIAL\",\n  \"reason_note\": \"Postman scenario assignment\"\n}"
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () { pm.response.to.have.status(201); });",
+              "var json = pm.response.json();",
+              "pm.test(\"Assignment event created\", function () { pm.expect(json.data).to.have.property(\"to_program_id\", pm.environment.get(\"program_id\")); pm.expect(json.data).to.have.property(\"to_enrollment_id\", pm.environment.get(\"enrollment_id\")); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 - Verify Program History",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/students/{{program_student_id}}/program-history"
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+              "var json = pm.response.json();",
+              "pm.test(\"Program history includes assignment\", function () { pm.expect(json.data).to.be.an(\"array\"); pm.expect(json.data.length).to.be.at.least(1); pm.expect(json.data[0].to_program_id).to.eql(pm.environment.get(\"program_id\")); });"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
