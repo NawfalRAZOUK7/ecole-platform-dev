@@ -4,7 +4,6 @@ Reference: Phase 10 — WebAuthn/Passkeys Support
 """
 
 import json
-import uuid
 from typing import Optional
 
 from webauthn import (
@@ -30,9 +29,9 @@ class WebAuthnService:
     """Service for WebAuthn/Passkeys operations."""
 
     def __init__(self):
-        self.rp_id = getattr(settings, 'webauthn_rp_id', 'localhost')
-        self.rp_name = getattr(settings, 'webauthn_rp_name', 'École Platform')
-        self.origin = getattr(settings, 'webauthn_origin', 'http://localhost:8000')
+        self.rp_id = getattr(settings, "webauthn_rp_id", "localhost")
+        self.rp_name = getattr(settings, "webauthn_rp_name", "École Platform")
+        self.origin = getattr(settings, "webauthn_origin", "http://localhost:8000")
 
     def generate_registration_options(
         self,
@@ -71,9 +70,15 @@ class WebAuthnService:
             id=base64url_to_bytes(registration_response["id"]),
             raw_id=base64url_to_bytes(registration_response["id"]),
             response=registration_response["response"],
-            authenticator_data=base64url_to_bytes(registration_response["response"]["authenticatorData"]),
-            client_data_json=base64url_to_bytes(registration_response["response"]["clientDataJSON"]),
-            attestation_object=base64url_to_bytes(registration_response["response"]["attestationObject"]),
+            authenticator_data=base64url_to_bytes(
+                registration_response["response"]["authenticatorData"]
+            ),
+            client_data_json=base64url_to_bytes(
+                registration_response["response"]["clientDataJSON"]
+            ),
+            attestation_object=base64url_to_bytes(
+                registration_response["response"]["attestationObject"]
+            ),
         )
 
         verification = verify_registration_response(
@@ -87,7 +92,9 @@ class WebAuthnService:
             "credential_id": bytes_to_base64url(verification.credential_id),
             "public_key": bytes_to_base64url(verification.public_key),
             "sign_count": verification.sign_count,
-            "aaguid": bytes_to_base64url(verification.aaguid) if verification.aaguid else None,
+            "aaguid": bytes_to_base64url(verification.aaguid)
+            if verification.aaguid
+            else None,
         }
 
     def generate_authentication_options(
@@ -119,10 +126,18 @@ class WebAuthnService:
             id=base64url_to_bytes(authentication_response["id"]),
             raw_id=base64url_to_bytes(authentication_response["id"]),
             response=authentication_response["response"],
-            authenticator_data=base64url_to_bytes(authentication_response["response"]["authenticatorData"]),
-            client_data_json=base64url_to_bytes(authentication_response["response"]["clientDataJSON"]),
-            signature=base64url_to_bytes(authentication_response["response"]["signature"]),
-            user_handle=base64url_to_bytes(authentication_response["response"].get("userHandle", "")),
+            authenticator_data=base64url_to_bytes(
+                authentication_response["response"]["authenticatorData"]
+            ),
+            client_data_json=base64url_to_bytes(
+                authentication_response["response"]["clientDataJSON"]
+            ),
+            signature=base64url_to_bytes(
+                authentication_response["response"]["signature"]
+            ),
+            user_handle=base64url_to_bytes(
+                authentication_response["response"].get("userHandle", "")
+            ),
         )
 
         verification = verify_authentication_response(

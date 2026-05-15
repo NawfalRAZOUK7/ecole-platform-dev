@@ -224,7 +224,9 @@ class Settings(BaseSettings):
     account_lockout_enabled: bool = False
     account_lockout_max_attempts: int = 5  # Lockout after this many attempts
     account_lockout_duration_minutes: int = 15  # Lockout duration
-    account_lockout_progressive_enabled: bool = False  # Enable progressive lockout (5=15min, 10=1hour)
+    account_lockout_progressive_enabled: bool = (
+        False  # Enable progressive lockout (5=15min, 10=1hour)
+    )
 
     # Suspicious Activity Detection (Phase 11)
     suspicious_activity_enabled: bool = False

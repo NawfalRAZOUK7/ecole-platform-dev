@@ -40,7 +40,9 @@ def _server_available() -> bool:
 
 
 pytestmark = [
-    pytest.mark.skipif(not _server_available(), reason="Requires running API server + Redis"),
+    pytest.mark.skipif(
+        not _server_available(), reason="Requires running API server + Redis"
+    ),
     pytest.mark.slow,
 ]
 

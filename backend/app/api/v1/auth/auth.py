@@ -33,7 +33,11 @@ from app.schemas.auth import (
     TwoFactorVerifyLoginRequest,
     TwoFactorVerifySetupRequest,
 )
-from app.services.auth.auth import AuthService, EmailVerificationService, TwoFactorService
+from app.services.auth.auth import (
+    AuthService,
+    EmailVerificationService,
+    TwoFactorService,
+)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 

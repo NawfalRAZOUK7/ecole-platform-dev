@@ -121,7 +121,7 @@ class EmailService:
                 "X-API-Key": settings.testmail_api_key,
                 "Content-Type": "application/json",
             }
-            
+
             # Extract namespace from the 'to' address if it's a TestMail address
             # Otherwise use the configured namespace
             if "@" in to and ".testmail.app" in to:
@@ -130,7 +130,9 @@ class EmailService:
             else:
                 # Convert to TestMail format: namespace.user@inbox.testmail.app
                 local_part = to.split("@")[0]
-                recipient = f"{settings.testmail_namespace}.{local_part}@inbox.testmail.app"
+                recipient = (
+                    f"{settings.testmail_namespace}.{local_part}@inbox.testmail.app"
+                )
 
             payload = {
                 "to": [recipient],
@@ -140,7 +142,9 @@ class EmailService:
             }
 
             async with httpx.AsyncClient() as client:
-                response = await client.post(url, json=payload, headers=headers, timeout=30)
+                response = await client.post(
+                    url, json=payload, headers=headers, timeout=30
+                )
                 response.raise_for_status()
 
             logger.info("Email sent via TestMail API to %s: %s", recipient, subject)

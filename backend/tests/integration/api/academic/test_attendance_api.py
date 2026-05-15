@@ -4,7 +4,13 @@ from __future__ import annotations
 
 import pytest
 
-from tests.integration.api.helpers import CLASS_ID, PERIOD_ID, STUDENT_ID, auth_header, login_token
+from tests.integration.api.helpers import (
+    CLASS_ID,
+    PERIOD_ID,
+    STUDENT_ID,
+    auth_header,
+    login_token,
+)
 
 ADMIN_EMAIL = "admin@ecole-benani.ma"
 ADMIN_PASSWORD = "admin123"

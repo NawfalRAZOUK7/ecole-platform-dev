@@ -4,7 +4,6 @@ Reference: Phase 10 — SMS 2FA Support
 """
 
 import secrets
-from typing import Optional
 
 from twilio.rest import Client as TwilioClient
 
@@ -38,7 +37,9 @@ class Sms2FAService:
             return True
 
         try:
-            message = f"Your École Platform verification code is: {otp}. Valid for 5 minutes."
+            message = (
+                f"Your École Platform verification code is: {otp}. Valid for 5 minutes."
+            )
             self.twilio_client.messages.create(
                 body=message,
                 from_=settings.twilio_from_number,

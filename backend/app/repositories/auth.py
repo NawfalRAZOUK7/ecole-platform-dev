@@ -373,7 +373,7 @@ class AuthRepository(BaseRepository):
         result = await self.db.execute(
             select(WebAuthnCredential)
             .where(WebAuthnCredential.user_id == user_id)
-            .where(WebAuthnCredential.is_active == True)
+            .where(WebAuthnCredential.is_active)
         )
         return result.scalars().all()
 
@@ -492,7 +492,9 @@ class AuthRepository(BaseRepository):
             .offset(keep_count)
             .cte()
         )
-        await self.db.execute(delete(PasswordHistory).where(PasswordHistory.id.in_(cte)))
+        await self.db.execute(
+            delete(PasswordHistory).where(PasswordHistory.id.in_(cte))
+        )
         await self.db.commit()
 
     # ---------------------------------------------------------------------------
@@ -514,15 +516,15 @@ class AuthRepository(BaseRepository):
         from datetime import timedelta
 
         cutoff_time = datetime.now(timezone.utc) - timedelta(minutes=minutes)
-        
+
         query = select(func.count(FailedLoginAttempt.id)).where(
             FailedLoginAttempt.email == email,
             FailedLoginAttempt.created_at >= cutoff_time,
         )
-        
+
         if user_id is not None:
             query = query.where(FailedLoginAttempt.user_id == user_id)
-        
+
         result = await self.db.execute(query)
         return result.scalar() or 0
 
@@ -535,7 +537,9 @@ class AuthRepository(BaseRepository):
 
         cutoff_time = datetime.now(timezone.utc) - timedelta(days=days)
         await self.db.execute(
-            delete(FailedLoginAttempt).where(FailedLoginAttempt.created_at < cutoff_time)
+            delete(FailedLoginAttempt).where(
+                FailedLoginAttempt.created_at < cutoff_time
+            )
         )
         await self.db.commit()
 

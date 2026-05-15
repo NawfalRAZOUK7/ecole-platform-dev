@@ -15,9 +15,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.dependencies import AuthContext, get_current_user
-from app.core.exceptions import ConflictError, NotFoundError, ValidationError
+from app.core.exceptions import NotFoundError, ValidationError
 from app.core.redis import get_redis
-from app.core.response import ApiListResponse, ApiResponse, Meta, list_response, success_response
+from app.core.response import (
+    ApiListResponse,
+    ApiResponse,
+    Meta,
+    list_response,
+    success_response,
+)
 from app.repositories.auth import AuthRepository
 from app.schemas.auth import (
     WebAuthnAuthenticationResponse,
@@ -137,9 +143,7 @@ async def register_finish(
             error_code="ERR-FEATURE-DISABLED",
         )
 
-    challenge = await redis_client.get(
-        f"webauthn_challenge:register:{auth.user_id}"
-    )
+    challenge = await redis_client.get(f"webauthn_challenge:register:{auth.user_id}")
     if challenge is None:
         raise ValidationError(
             "Registration challenge expired or invalid",
@@ -242,9 +246,7 @@ async def authenticate_finish(
             error_code="ERR-WEBAUTHN-CREDENTIAL",
         )
 
-    challenge = await redis_client.get(
-        f"webauthn_challenge:auth:{credential_id}"
-    )
+    challenge = await redis_client.get(f"webauthn_challenge:auth:{credential_id}")
     if challenge is None:
         # Fallback: accept any recent challenge for this credential
         challenge = body.response.get("clientDataJSON", "")[:50]

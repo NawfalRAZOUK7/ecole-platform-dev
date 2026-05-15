@@ -11,7 +11,7 @@ import { useAuth } from '@/app/providers/AuthContext';
 import { LoadingState } from '@/shared/ui/LoadingState';
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   roles?: string[];
 }
 

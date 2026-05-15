@@ -3,12 +3,9 @@
 Reference: Phase 10 — Social Login Support
 """
 
-import uuid
 from typing import Any, Optional
 
-from authlib.integrations.base_client import OAuthError
 from authlib.integrations.httpx_client import AsyncOAuth2Client
-from authlib.oauth2.rfc6749 import OAuth2Token
 
 from app.core.config import settings
 
@@ -80,7 +77,7 @@ class OAuthService:
     ) -> dict[str, Any]:
         """Get user information from OAuth provider using access token."""
         user_info_url = self._get_user_info_url(provider)
-        
+
         async with AsyncOAuth2Client() as client:
             response = await client.get(
                 user_info_url,
@@ -137,7 +134,9 @@ class OAuthService:
             return {
                 "provider_user_id": user_info.get("sub"),
                 "email": user_info.get("email"),
-                "name": user_info.get("name", {}).get("firstName", "") + " " + user_info.get("name", {}).get("lastName", ""),
+                "name": user_info.get("name", {}).get("firstName", "")
+                + " "
+                + user_info.get("name", {}).get("lastName", ""),
                 "picture": None,
             }
         else:

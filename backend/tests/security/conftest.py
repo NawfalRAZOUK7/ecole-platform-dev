@@ -60,7 +60,7 @@ def _security_session():
 
 
 @pytest_asyncio.fixture(loop_scope="function", autouse=True)
-async def security_database(legacy_api_seed, session_factory):
+async def security_database(legacy_api_seed, session_factory):  # noqa: F811
     """Run security tests against the disposable seeded database."""
     global _security_session_factory
     _ = legacy_api_seed
@@ -72,7 +72,7 @@ async def security_database(legacy_api_seed, session_factory):
 
 
 @pytest_asyncio.fixture(loop_scope="function")
-async def client(security_database, session_factory):
+async def client(security_database, session_factory):  # noqa: F811
     _ = security_database
 
     async def override_get_db():

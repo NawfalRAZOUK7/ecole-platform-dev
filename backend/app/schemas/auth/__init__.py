@@ -135,9 +135,7 @@ class TwoFactorVerifySetupRequest(BaseModel):
 
 
 class TwoFactorDisableRequest(BaseModel):
-    code: str = Field(
-        ..., min_length=6, description="TOTP code or backup code"
-    )
+    code: str = Field(..., min_length=6, description="TOTP code or backup code")
 
 
 class TwoFactorVerifyLoginRequest(BaseModel):
@@ -197,7 +195,9 @@ class BatchRegisterItem(BaseModel):
 # ---------------------------------------------------------------------------
 class WebAuthnRegistrationRequest(BaseModel):
     device_name: str = Field(..., max_length=100)
-    device_type: str = Field(default="single_device", description="single_device or multi_device")
+    device_type: str = Field(
+        default="single_device", description="single_device or multi_device"
+    )
 
 
 class WebAuthnRegistrationResponse(BaseModel):

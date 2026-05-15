@@ -14,9 +14,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.database import get_db
-from app.core.exceptions import ConflictError, NotFoundError, ValidationError
+from app.core.exceptions import NotFoundError, ValidationError
 from app.core.redis import get_redis
-from app.core.response import ApiResponse, Meta, success_response
+from app.core.response import ApiResponse, success_response
 from app.repositories.auth import AuthRepository
 from app.schemas.auth import OAuthLoginRequest
 from app.services.auth.oauth import OAuthService

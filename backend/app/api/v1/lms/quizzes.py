@@ -20,7 +20,11 @@ from app.core.permissions import (
 from app.core.permissions import STD
 from app.core.request_utils import get_client_ip
 from app.core.response import clamp_page_size, list_response, success_response
-from app.schemas.lms.quiz import QuizCreateRequest, QuizRespondRequest, QuizUpdateRequest
+from app.schemas.lms.quiz import (
+    QuizCreateRequest,
+    QuizRespondRequest,
+    QuizUpdateRequest,
+)
 from app.services.lms.difficulty_adapter import DifficultyAdapter
 from app.services.lms import QuizService
 

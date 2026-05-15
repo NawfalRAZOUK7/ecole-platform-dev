@@ -34,9 +34,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
         # Strict-Transport-Security: Enforces HTTPS (only on HTTPS connections)
         if request.url.scheme == "https":
-            response.headers[
-                "Strict-Transport-Security"
-            ] = "max-age=31536000; includeSubDomains"
+            response.headers["Strict-Transport-Security"] = (
+                "max-age=31536000; includeSubDomains"
+            )
 
         # Content-Security-Policy: Controls resource loading
         # Hardened for production; relaxed for local development
@@ -53,8 +53,8 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
 
         # Permissions-Policy: Controls browser features
-        response.headers[
-            "Permissions-Policy"
-        ] = "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()"
+        response.headers["Permissions-Policy"] = (
+            "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()"
+        )
 
         return response

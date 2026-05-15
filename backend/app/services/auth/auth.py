@@ -583,13 +583,15 @@ class AuthService:
         # Suspicious activity detection (Phase 11)
         is_new_location = False
         if settings.suspicious_activity_enabled and ip_address:
-            from app.services.platform.suspicious_activity import SuspiciousActivityService
+            from app.services.platform.suspicious_activity import (
+                SuspiciousActivityService,
+            )
 
             suspicious_service = SuspiciousActivityService()
-            
+
             # Get location info
             location_info = suspicious_service.get_ip_location(ip_address)
-            
+
             # Check if new location
             known_locations = await self.repo.get_known_locations_by_user(user.id)
             is_new_location = suspicious_service.is_new_location(
@@ -597,9 +599,11 @@ class AuthService:
                 location_info["country_code"],
                 location_info["city"],
             )
-            
+
             # Record or update known location
-            known_location = await self.repo.get_known_location_by_user_ip(user.id, ip_address)
+            known_location = await self.repo.get_known_location_by_user_ip(
+                user.id, ip_address
+            )
             if known_location:
                 known_location.last_seen_at = datetime.now(timezone.utc)
                 known_location.country_code = location_info["country_code"]
@@ -617,16 +621,18 @@ class AuthService:
                     last_seen_at=datetime.now(timezone.utc),
                     is_suspicious=is_new_location,
                 )
-            
+
             # Check if new device
             known_devices = await self.repo.get_known_devices_by_user(user.id)
             is_new_device = suspicious_service.is_new_device(
                 known_devices,
                 device_fingerprint,
             )
-            
+
             # Record or update known device
-            known_device = await self.repo.get_known_device_by_user_fingerprint(user.id, device_fingerprint)
+            known_device = await self.repo.get_known_device_by_user_fingerprint(
+                user.id, device_fingerprint
+            )
             if known_device:
                 known_device.last_seen_at = datetime.now(timezone.utc)
                 known_device.device_name = device_name
@@ -1359,7 +1365,7 @@ class AuthService:
         for history in password_history:
             if verify_password(new_password, history.password_hash):
                 raise ValidationError(
-                    f"Password has been used recently. Please choose a different password.",
+                    "Password has been used recently. Please choose a different password.",
                     error_code="ERR-IAM-409",
                 )
 
@@ -1669,7 +1675,7 @@ class RecoveryService:
             recovery.id,
             otp,
         )
-        
+
         # In dev/test mode, return OTP in response for local automation only.
         result = {
             "request_id": recovery.id,
@@ -1679,7 +1685,7 @@ class RecoveryService:
             settings, "debug_reveal_otp", False
         ):
             result["otp"] = otp  # Only when explicitly enabled for testing
-        
+
         try:
             from app.core.tasks import enqueue_email
 
@@ -1825,7 +1831,7 @@ class RecoveryService:
         for history in password_history:
             if verify_password(new_password, history.password_hash):
                 raise ValidationError(
-                    f"Password has been used recently. Please choose a different password.",
+                    "Password has been used recently. Please choose a different password.",
                     error_code="ERR-IAM-409",
                 )
 

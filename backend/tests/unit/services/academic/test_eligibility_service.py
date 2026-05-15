@@ -12,7 +12,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from app.services.lms.eligibility_service import EligibilityService, KNOWN_CONDITION_TYPES
+from app.services.lms.eligibility_service import (
+    EligibilityService,
+    KNOWN_CONDITION_TYPES,
+)
 from app.core.exceptions import NotFoundError
 from app.models.erp import EligibilityRule
 

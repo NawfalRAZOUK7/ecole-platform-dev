@@ -66,7 +66,9 @@ class TestEmailServiceToTestmail:
         pytest.importorskip("aiosmtplib")
 
         if not _smtp_is_real_relay():
-            pytest.skip("SMTP is not configured with an internet relay (still localhost/Mailhog)")
+            pytest.skip(
+                "SMTP is not configured with an internet relay (still localhost/Mailhog)"
+            )
 
         from app.services.auth.email import email_service
 
@@ -90,7 +92,9 @@ class TestEmailServiceToTestmail:
         pytest.importorskip("aiosmtplib")
 
         if not _smtp_is_real_relay():
-            pytest.skip("SMTP is not configured with an internet relay (still localhost/Mailhog)")
+            pytest.skip(
+                "SMTP is not configured with an internet relay (still localhost/Mailhog)"
+            )
 
         from app.services.auth.email import email_service
 
@@ -117,7 +121,7 @@ class TestRecoveryEmailFlow:
 
     async def test_recovery_endpoint_enqueues_email(self, client, api_context):
         """POST /recovery/request returns 200 and enqueues an OTP email."""
-        from unittest.mock import AsyncMock, patch
+        from unittest.mock import AsyncMock
 
         # Use an existing user email so RecoveryService finds the user
         # and actually calls enqueue_email (random emails hit the
@@ -127,7 +131,9 @@ class TestRecoveryEmailFlow:
 
         # Patch enqueue_email so it fires synchronously inside the test
         # (avoids needing a running ARQ worker)
-        with patch("app.core.tasks.enqueue_email", new_callable=AsyncMock) as mock_enqueue:
+        with patch(
+            "app.core.tasks.enqueue_email", new_callable=AsyncMock
+        ) as mock_enqueue:
             resp = await client.post(
                 "/recovery/request",
                 json={"email": to, "school_id": str(school_id)},

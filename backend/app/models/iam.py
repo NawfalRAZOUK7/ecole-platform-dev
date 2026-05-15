@@ -132,7 +132,9 @@ class User(TimestampMixin, SchoolScopedMixin, Base):
         DateTime(timezone=True), nullable=True
     )
     phone_otp_secret: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    phone_otp_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    phone_otp_enabled: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False
+    )
 
     # Relationships
     memberships: Mapped[list["Membership"]] = relationship(
@@ -691,9 +693,13 @@ class WebAuthnCredential(TimestampMixin, SchoolScopedMixin, Base):
     credential_id: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     public_key: Mapped[str] = mapped_column(Text, nullable=False)
     sign_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    device_type: Mapped[str] = mapped_column(String(50), nullable=True)  # "single_device", "multi_device"
+    device_type: Mapped[str] = mapped_column(
+        String(50), nullable=True
+    )  # "single_device", "multi_device"
     device_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    transports: Mapped[str | None] = mapped_column(String(100), nullable=True)  # "internal", "usb", "ble", "nfc"
+    transports: Mapped[str | None] = mapped_column(
+        String(100), nullable=True
+    )  # "internal", "usb", "ble", "nfc"
     is_backup: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
@@ -717,12 +723,18 @@ class OAuthAccount(TimestampMixin, SchoolScopedMixin, Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    provider: Mapped[str] = mapped_column(String(50), nullable=False)  # "google", "microsoft", "apple"
-    provider_user_id: Mapped[str] = mapped_column(String(255), nullable=False)  # ID from OAuth provider
+    provider: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # "google", "microsoft", "apple"
+    provider_user_id: Mapped[str] = mapped_column(
+        String(255), nullable=False
+    )  # ID from OAuth provider
     provider_email: Mapped[str] = mapped_column(String(255), nullable=True)
     access_token: Mapped[str | None] = mapped_column(Text, nullable=True)
     refresh_token: Mapped[str | None] = mapped_column(Text, nullable=True)
-    token_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    token_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     user: Mapped["User"] = relationship(foreign_keys=[user_id])
 
@@ -730,7 +742,9 @@ class OAuthAccount(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_oauth_accounts_user", "user_id"),
         Index("idx_oauth_accounts_school", "school_id"),
         Index("idx_oauth_accounts_provider", "provider"),
-        UniqueConstraint("provider", "provider_user_id", name="uq_oauth_provider_user_id"),
+        UniqueConstraint(
+            "provider", "provider_user_id", name="uq_oauth_provider_user_id"
+        ),
     )
 
     def __repr__(self) -> str:
@@ -796,7 +810,9 @@ class KnownLocation(TimestampMixin, SchoolScopedMixin, Base):
     country_code: Mapped[str] = mapped_column(String(2), nullable=True)
     city: Mapped[str | None] = mapped_column(String(100), nullable=True)
     region: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    last_seen_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     is_suspicious: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     user: Mapped["User"] = relationship(foreign_keys=[user_id])
@@ -823,7 +839,9 @@ class KnownDevice(TimestampMixin, SchoolScopedMixin, Base):
     device_fingerprint: Mapped[str] = mapped_column(String(255), nullable=False)
     device_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
     user_agent: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    last_seen_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     is_suspicious: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     user: Mapped["User"] = relationship(foreign_keys=[user_id])
@@ -832,7 +850,9 @@ class KnownDevice(TimestampMixin, SchoolScopedMixin, Base):
         Index("idx_known_devices_user", "user_id"),
         Index("idx_known_devices_school", "school_id"),
         Index("idx_known_devices_fingerprint", "device_fingerprint"),
-        UniqueConstraint("user_id", "device_fingerprint", name="uq_known_device_user_fingerprint"),
+        UniqueConstraint(
+            "user_id", "device_fingerprint", name="uq_known_device_user_fingerprint"
+        ),
     )
 
     def __repr__(self) -> str:

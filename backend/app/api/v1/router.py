@@ -69,7 +69,9 @@ from app.api.v1.school.schools import router as schools_router
 # Phase 3 — ERP routers
 from app.api.v1.lms.class_assignments import router as class_assignments_router
 from app.api.v1.academic.attendance import router as attendance_router
-from app.api.v1.reports.attendance_analytics import router as attendance_analytics_router
+from app.api.v1.reports.attendance_analytics import (
+    router as attendance_analytics_router,
+)
 
 # Phase 3 — LMS routers
 from app.api.v1.lms.courses import router as courses_router
@@ -122,7 +124,9 @@ from app.api.v1.lms.quizzes import router as quizzes_router
 
 # Phase 11A — Timetable
 from app.api.v1.academic.timetable import router as timetable_router
-from app.api.v1.academic.timetable_generation import router as timetable_generation_router
+from app.api.v1.academic.timetable_generation import (
+    router as timetable_generation_router,
+)
 
 # Phase 11B — Billing Enhancements
 from app.api.v1.billing.billing import router as billing_router
@@ -278,6 +282,7 @@ async def readiness_check(
 async def sentry_debug():
     """Trigger a ZeroDivisionError to verify Sentry error reporting."""
     from app.core.config import settings
+
     if settings.is_production:
         return {"error": "Debug endpoint disabled in production"}
     division_by_zero = 1 / 0  # noqa: F841

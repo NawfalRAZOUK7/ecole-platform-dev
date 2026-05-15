@@ -99,7 +99,9 @@ class TestSafeFilename:
 
 class TestValidateDocumentUpload:
     def test_raises_on_disallowed_mime(self):
-        with patch("app.services.content.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}):
+        with patch(
+            "app.services.content.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}
+        ):
             with pytest.raises(ValidationError) as exc_info:
                 validate_document_upload(mime_type="text/html", size_bytes=100)
         assert exc_info.value.error_code == "ERR-DOC-415"
@@ -109,7 +111,8 @@ class TestValidateDocumentUpload:
             ms.max_document_size_mb = 1
             ms.allowed_document_mime_types = "application/pdf"
             with patch(
-                "app.services.content.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}
+                "app.services.content.file_storage.ALLOWED_MIME_TYPES",
+                {"application/pdf"},
             ):
                 with pytest.raises(ValidationError) as exc_info:
                     validate_document_upload(
@@ -330,7 +333,8 @@ class TestFileStorageServiceStoreUpload:
             ms.document_storage_subdirectory = "docs"
             ms.document_preview_subdirectory = "previews"
             with patch(
-                "app.services.content.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}
+                "app.services.content.file_storage.ALLOWED_MIME_TYPES",
+                {"application/pdf"},
             ):
                 path, thumb = await svc.store_upload(
                     content=b"%PDF-1.4 content",
@@ -352,7 +356,8 @@ class TestFileStorageServiceStoreUpload:
             ms.document_storage_subdirectory = "docs"
             ms.document_preview_subdirectory = "previews"
             with patch(
-                "app.services.content.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}
+                "app.services.content.file_storage.ALLOWED_MIME_TYPES",
+                {"application/pdf"},
             ):
                 path, _ = await svc.store_upload(
                     content=content,
@@ -372,7 +377,8 @@ class TestFileStorageServiceStoreUpload:
             ms.document_storage_subdirectory = "docs"
             ms.document_preview_subdirectory = "previews"
             with patch(
-                "app.services.content.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}
+                "app.services.content.file_storage.ALLOWED_MIME_TYPES",
+                {"application/pdf"},
             ):
                 path1, _ = await svc.store_upload(
                     content=content,
@@ -399,7 +405,8 @@ class TestFileStorageServiceReuseUpload:
             ms.document_storage_subdirectory = "docs"
             ms.document_preview_subdirectory = "previews"
             with patch(
-                "app.services.content.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}
+                "app.services.content.file_storage.ALLOWED_MIME_TYPES",
+                {"application/pdf"},
             ):
                 path, _ = await svc.store_upload(
                     content=content,
@@ -430,7 +437,8 @@ class TestFileStorageServiceStoreUploadCopy:
             ms.document_storage_subdirectory = "docs"
             ms.document_preview_subdirectory = "previews"
             with patch(
-                "app.services.content.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}
+                "app.services.content.file_storage.ALLOWED_MIME_TYPES",
+                {"application/pdf"},
             ):
                 path1, _ = await svc.store_upload_copy(
                     content=content,
@@ -480,7 +488,8 @@ class TestFileStorageServiceS3Backend:
             ms.document_storage_subdirectory = "docs"
             ms.document_preview_subdirectory = "previews"
             with patch(
-                "app.services.content.file_storage.ALLOWED_MIME_TYPES", {"application/pdf"}
+                "app.services.content.file_storage.ALLOWED_MIME_TYPES",
+                {"application/pdf"},
             ):
                 path, _ = await svc.store_upload(
                     content=content,

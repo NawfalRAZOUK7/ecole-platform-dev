@@ -1,4 +1,5 @@
 """SMS 2FA API endpoints (Phase 10)."""
+
 from __future__ import annotations
 
 import hashlib
@@ -15,7 +16,11 @@ from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.core.redis import get_redis
 from app.core.response import ApiResponse, success_response
 from app.repositories.auth import AuthRepository
-from app.schemas.auth import Sms2FADisableRequest, Sms2FASetupRequest, Sms2FAVerifyRequest
+from app.schemas.auth import (
+    Sms2FADisableRequest,
+    Sms2FASetupRequest,
+    Sms2FAVerifyRequest,
+)
 from app.services.auth.sms_2fa import Sms2FAService
 
 router = APIRouter(prefix="/auth/sms-2fa", tags=["auth"])
@@ -29,7 +34,9 @@ async def setup_sms_2fa(
     redis_client: aioredis.Redis = Depends(get_redis),
 ):
     if not settings.sms_enabled:
-        raise ValidationError("SMS 2FA is not enabled", error_code="ERR-FEATURE-DISABLED")
+        raise ValidationError(
+            "SMS 2FA is not enabled", error_code="ERR-FEATURE-DISABLED"
+        )
 
     repo = AuthRepository(db)
     user = await repo.get_user_by_id(auth.user_id)
@@ -46,7 +53,12 @@ async def setup_sms_2fa(
     await redis_client.setex(f"sms_2fa_phone:{auth.user_id}", 600, body.phone)
     await service.send_otp(body.phone, otp)
 
-    return success_response({"message": "OTP sent to your phone. Please verify to complete setup.", "phone": body.phone})
+    return success_response(
+        {
+            "message": "OTP sent to your phone. Please verify to complete setup.",
+            "phone": body.phone,
+        }
+    )
 
 
 @router.post("/verify-setup", response_model=ApiResponse[dict])
@@ -57,7 +69,9 @@ async def verify_setup_sms_2fa(
     redis_client: aioredis.Redis = Depends(get_redis),
 ):
     if not settings.sms_enabled:
-        raise ValidationError("SMS 2FA is not enabled", error_code="ERR-FEATURE-DISABLED")
+        raise ValidationError(
+            "SMS 2FA is not enabled", error_code="ERR-FEATURE-DISABLED"
+        )
 
     stored_hash = await redis_client.get(f"sms_2fa_setup:{auth.user_id}")
     if stored_hash is None:
@@ -94,7 +108,9 @@ async def disable_sms_2fa(
     db: AsyncSession = Depends(get_db),
 ):
     if not settings.sms_enabled:
-        raise ValidationError("SMS 2FA is not enabled", error_code="ERR-FEATURE-DISABLED")
+        raise ValidationError(
+            "SMS 2FA is not enabled", error_code="ERR-FEATURE-DISABLED"
+        )
 
     repo = AuthRepository(db)
     user = await repo.get_user_by_id(auth.user_id)

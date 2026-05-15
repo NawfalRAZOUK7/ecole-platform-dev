@@ -55,16 +55,10 @@ def wait_email(
     key = api_key or API_KEY
     if not key:
         raise RuntimeError(
-            "TESTMAIL_API_KEY is not set. "
-            "Add it to your .env or Doppler secrets."
+            "TESTMAIL_API_KEY is not set. " "Add it to your .env or Doppler secrets."
         )
 
-    url = (
-        f"{BASE_URL}?"
-        f"apikey={key}&"
-        f"namespace={NAMESPACE}&"
-        f"tag={tag}"
-    )
+    url = f"{BASE_URL}?" f"apikey={key}&" f"namespace={NAMESPACE}&" f"tag={tag}"
 
     for _ in range(timeout):
         resp = httpx.get(url, timeout=10)

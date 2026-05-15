@@ -16,7 +16,10 @@ from app.core.permissions import (
 )
 from app.core.request_utils import get_client_ip
 from app.core.response import clamp_page_size, list_response, success_response
-from app.schemas.communication import AnnouncementCreateRequest, AnnouncementUpdateRequest
+from app.schemas.communication import (
+    AnnouncementCreateRequest,
+    AnnouncementUpdateRequest,
+)
 from app.services.content.cms import CMSService
 
 router = APIRouter(prefix="/announcements", tags=["announcements"])

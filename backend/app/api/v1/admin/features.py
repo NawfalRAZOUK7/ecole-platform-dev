@@ -11,7 +11,10 @@ from app.core.database import get_db
 from app.core.dependencies import AuthContext, get_current_user, requires_permission
 from app.core.permissions import PERM_SYS_FEATURE_MANAGE
 from app.core.response import list_response, success_response
-from app.schemas.admin.feature import FeatureToggleCreateRequest, FeatureToggleUpdateRequest
+from app.schemas.admin.feature import (
+    FeatureToggleCreateRequest,
+    FeatureToggleUpdateRequest,
+)
 from app.services.admin.features import FeatureService
 
 router = APIRouter(prefix="/features", tags=["features"])

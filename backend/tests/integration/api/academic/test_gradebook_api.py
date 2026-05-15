@@ -4,7 +4,13 @@ from __future__ import annotations
 
 import pytest
 
-from tests.integration.api.helpers import CLASS_ID, PERIOD_ID, STUDENT_ID, YEAR_ID, auth_header
+from tests.integration.api.helpers import (
+    CLASS_ID,
+    PERIOD_ID,
+    STUDENT_ID,
+    YEAR_ID,
+    auth_header,
+)
 
 
 def categories_payload() -> dict:

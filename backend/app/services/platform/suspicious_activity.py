@@ -33,7 +33,9 @@ class SuspiciousActivityService:
             return {
                 "country_code": response.country.iso_code,
                 "city": response.city.name,
-                "region": response.subdivisions.most_specific.name if response.subdivisions else None,
+                "region": response.subdivisions.most_specific.name
+                if response.subdivisions
+                else None,
             }
         except AddressNotFoundError:
             return {"country_code": None, "city": None, "region": None}
@@ -52,7 +54,10 @@ class SuspiciousActivityService:
             return True
 
         for location in known_locations:
-            if location.country_code == current_country_code and location.city == current_city:
+            if (
+                location.country_code == current_country_code
+                and location.city == current_city
+            ):
                 return False
 
         return True
