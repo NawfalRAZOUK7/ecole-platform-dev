@@ -39,7 +39,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Validate
-if [[ -z "$TOKEN" ]]; then
+if [[ -z "$TOKEN" || "$TOKEN" == "null" ]]; then
   echo "Error: --token required (admin token)"
   echo "Usage: $0 --token <jwt> [--base-url <url>] [--school-id <uuid>] [--dry-run]"
   exit 1

@@ -57,9 +57,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 # Register MIME types that may be missing in slim containers (e.g. python:3.12-slim)
-mimetypes.add_type("application/vnd.openxmlformats-officedocument.wordprocessingml.document", ".docx")
-mimetypes.add_type("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", ".xlsx")
-mimetypes.add_type("application/vnd.openxmlformats-officedocument.presentationml.presentation", ".pptx")
+mimetypes.add_type(
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document", ".docx"
+)
+mimetypes.add_type(
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", ".xlsx"
+)
+mimetypes.add_type(
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation", ".pptx"
+)
 
 
 # ---------------------------------------------------------------------------
