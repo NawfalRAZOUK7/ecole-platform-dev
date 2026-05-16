@@ -31,7 +31,7 @@ import 'package:ecole_platform/shared/ui/widgets/app_splash_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: '.env');
+  await dotenv.load(fileName: '.env', isOptional: true);
 
   // Mobile uses MOBILE_SENTRY_DSN (separate from backend SENTRY_DSN in Doppler).
   // Falls back to legacy SENTRY_DSN env var for backward compatibility.

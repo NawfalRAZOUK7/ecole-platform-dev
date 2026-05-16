@@ -318,11 +318,11 @@ def postgres_url() -> str:
     (ecole-postgres) instead of spinning up a new container per session.
     This cuts ~2-3 minutes off every test run.
     """
-    dev_url = os.getenv(
-        "TEST_DATABASE_URL",
-        "postgresql+asyncpg://ecole:change-me@localhost:5432/ecole_platform_test",
+    return (
+        os.getenv("TEST_DATABASE_URL")
+        or os.getenv("DATABASE_URL")
+        or "postgresql+asyncpg://ecole:change-me@localhost:5432/ecole_platform_test"
     )
-    return dev_url
 
 
 @pytest_asyncio.fixture(loop_scope="function")

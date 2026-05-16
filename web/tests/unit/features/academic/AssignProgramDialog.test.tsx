@@ -10,7 +10,7 @@ const hookMocks = vi.hoisted(() => ({
   useProgramVersionsQuery: vi.fn(),
 }));
 
-vi.mock('@/features/academic/programs/usePrograms', () => ({
+vi.mock('@/features/academic/programs/model/usePrograms', () => ({
   useProgramsQuery: hookMocks.useProgramsQuery,
   useAssignProgramMutation: hookMocks.useAssignProgramMutation,
   useProgramVersionsQuery: hookMocks.useProgramVersionsQuery,
