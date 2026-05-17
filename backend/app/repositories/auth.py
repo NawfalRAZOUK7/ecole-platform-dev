@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import and_, delete, distinct, or_, select, func, update
+from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
 from app.models.iam import (
@@ -500,10 +502,15 @@ class AuthRepository(BaseRepository):
     # ---------------------------------------------------------------------------
     # Failed Login Attempts (Phase 11)
     # ---------------------------------------------------------------------------
-    async def create_failed_login_attempt(self, **kwargs: Any) -> FailedLoginAttempt:
+    async def create_failed_login_attempt(self, **kwargs: Any) -> FailedLoginAttempt | None:
+        """Record a failed login attempt; return None if the school_id FK is invalid."""
         failed_attempt = FailedLoginAttempt(**kwargs)
         self.db.add(failed_attempt)
-        await self.db.flush()
+        try:
+            await self.db.flush()
+        except IntegrityError:
+            await self.db.rollback()
+            return None
         return failed_attempt
 
     async def count_failed_login_attempts(

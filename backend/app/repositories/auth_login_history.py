@@ -6,6 +6,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import and_, distinct, or_, select
+from sqlalchemy.exc import IntegrityError
 
 from app.core.response import clamp_page_size, decode_cursor, encode_cursor
 from app.models.iam import LoginHistory
@@ -15,10 +16,15 @@ from app.repositories.base import BaseRepository
 class LoginHistoryRepository(BaseRepository):
     """Data access for login history and device recognition."""
 
-    async def create_login_record(self, **kwargs) -> LoginHistory:
+    async def create_login_record(self, **kwargs) -> LoginHistory | None:
+        """Record a login history entry; return None if the school_id FK is invalid."""
         record = LoginHistory(**kwargs)
         self.db.add(record)
-        await self.db.flush()
+        try:
+            await self.db.flush()
+        except IntegrityError:
+            await self.db.rollback()
+            return None
         return record
 
     async def list_user_login_history(

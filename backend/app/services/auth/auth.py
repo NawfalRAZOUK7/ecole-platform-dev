@@ -235,20 +235,29 @@ class AuthService:
     ) -> None:
         if user_id is None:
             return
-        async with UnitOfWork(self.db) as uow:
-            repo = LoginHistoryRepository(uow.session)
-            await repo.create_login_record(
-                user_id=user_id,
-                school_id=school_id,
-                ip_address=self._trim_text(ip_address, 45),
-                user_agent=self._trim_text(user_agent, 500),
-                device_name=self._trim_text(device_name, 200),
-                device_fingerprint=device_fingerprint,
-                success=success,
-                failure_reason=failure_reason,
-                is_new_device=is_new_device,
+        try:
+            async with UnitOfWork(self.db) as uow:
+                repo = LoginHistoryRepository(uow.session)
+                record = await repo.create_login_record(
+                    user_id=user_id,
+                    school_id=school_id,
+                    ip_address=self._trim_text(ip_address, 45),
+                    user_agent=self._trim_text(user_agent, 500),
+                    device_name=self._trim_text(device_name, 200),
+                    device_fingerprint=device_fingerprint,
+                    success=success,
+                    failure_reason=failure_reason,
+                    is_new_device=is_new_device,
+                )
+                if record is not None:
+                    await uow.commit()
+        except Exception:
+            logger.warning(
+                "Failed to record login history for user_id=%s school_id=%s",
+                user_id,
+                school_id,
+                exc_info=True,
             )
-            await uow.commit()
 
     async def _dispatch_event(self, event) -> None:
         try:
@@ -281,14 +290,23 @@ class AuthService:
                 )
                 return
 
-        await self.audit.log_event(
-            school_id=school_id,
-            actor_id=actor_id,
-            action_type=action_type,
-            outcome="denied",
-            error_code=error_code,
-            ip_address=ip_address,
-        )
+        try:
+            await self.audit.log_event(
+                school_id=school_id,
+                actor_id=actor_id,
+                action_type=action_type,
+                outcome="denied",
+                error_code=error_code,
+                ip_address=ip_address,
+            )
+        except Exception:
+            logger.warning(
+                "Failed to audit denied login for user_id=%s school_id=%s action=%s",
+                actor_id,
+                school_id,
+                action_type,
+                exc_info=True,
+            )
 
     # ------------------------------------------------------------------
     # Login (S-030, Phase 2A: device info)
@@ -420,14 +438,22 @@ class AuthService:
                 success=False,
                 failure_reason="inactive",
             )
-            await self.audit.log_event(
-                school_id=school_id,
-                actor_id=user.id,
-                action_type="AUTH_LOGIN_INACTIVE",
-                outcome="denied",
-                error_code="ERR-IAM-403",
-                ip_address=ip_address,
-            )
+            try:
+                await self.audit.log_event(
+                    school_id=school_id,
+                    actor_id=user.id,
+                    action_type="AUTH_LOGIN_INACTIVE",
+                    outcome="denied",
+                    error_code="ERR-IAM-403",
+                    ip_address=ip_address,
+                )
+            except Exception:
+                logger.warning(
+                    "Failed to audit inactive login for user_id=%s school_id=%s",
+                    user.id,
+                    school_id,
+                    exc_info=True,
+                )
             raise AuthorizationError(
                 "Account is not active",
                 error_code="ERR-IAM-403",
@@ -446,14 +472,22 @@ class AuthService:
                 success=False,
                 failure_reason="no_membership",
             )
-            await self.audit.log_event(
-                school_id=school_id,
-                actor_id=user.id,
-                action_type="AUTH_LOGIN_NO_MEMBERSHIP",
-                outcome="denied",
-                error_code="ERR-IAM-404",
-                ip_address=ip_address,
-            )
+            try:
+                await self.audit.log_event(
+                    school_id=school_id,
+                    actor_id=user.id,
+                    action_type="AUTH_LOGIN_NO_MEMBERSHIP",
+                    outcome="denied",
+                    error_code="ERR-IAM-404",
+                    ip_address=ip_address,
+                )
+            except Exception:
+                logger.warning(
+                    "Failed to audit no-membership login for user_id=%s school_id=%s",
+                    user.id,
+                    school_id,
+                    exc_info=True,
+                )
             raise NotFoundError(
                 "No active membership for this school",
                 error_code="ERR-IAM-404",
