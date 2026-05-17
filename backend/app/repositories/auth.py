@@ -501,7 +501,9 @@ class AuthRepository(BaseRepository):
     # ---------------------------------------------------------------------------
     # Failed Login Attempts (Phase 11)
     # ---------------------------------------------------------------------------
-    async def create_failed_login_attempt(self, **kwargs: Any) -> FailedLoginAttempt | None:
+    async def create_failed_login_attempt(
+        self, **kwargs: Any
+    ) -> FailedLoginAttempt | None:
         """Record a failed login attempt; return None if the school_id FK is invalid."""
         failed_attempt = FailedLoginAttempt(**kwargs)
         self.db.add(failed_attempt)
