@@ -747,6 +747,7 @@ jobs:
 
       - name: Run diff-cover on PRs
         if: github.event_name == 'pull_request'
+        continue-on-error: ${{ github.event.pull_request.draft }}
         run: |
           cd backend
           diff-cover coverage.xml --compare-branch=origin/${{ github.base_ref }} --fail-under=95
@@ -1179,9 +1180,21 @@ jobs:
       - name: Run all scenario collections
         run: |
           mkdir -p scenario-reports
+
+          clear_auth_state() {
+            python - <<'PY'
+          import redis
+
+          r = redis.Redis(host="localhost", port=6379, db=0)
+          r.delete("login_attempts:admin@ecole-benani.ma:00000000-0000-4000-8000-000000000001")
+          PY
+            PGPASSWORD=ecole psql -h localhost -U ecole -d ecole_platform -c "DELETE FROM failed_login_attempts WHERE email='admin@ecole-benani.ma';" 2>/dev/null || true
+          }
+
           for collection in system-tests/postman/scenario_*.postman_collection.json; do
             name=$(basename "$collection" .postman_collection.json)
             echo "Running $name..."
+            clear_auth_state
             newman run "$collection" \
               -e system-tests/postman/env_local.json \
               --env-var "baseUrl=http://localhost:8000/api/v1" \
@@ -1191,8 +1204,7 @@ jobs:
               --reporter-json-export "scenario-reports/${name}-report.json" \
               --bail || exit 1
             # Clear account-lockout state so later collections aren't blocked
-            redis-cli -h localhost DEL "login_attempts:admin@ecole-benani.ma:00000000-0000-4000-8000-000000000001" 2>/dev/null || true
-            PGPASSWORD=ecole psql -h localhost -U ecole -d ecole_platform -c "DELETE FROM failed_login_attempts WHERE email='admin@ecole-benani.ma';" 2>/dev/null || true
+            clear_auth_state
           done
           kill $MOCK_OAUTH_PID || true
 
@@ -1281,7 +1293,12 @@ jobs:
 
       - name: Clear account lockout state
         run: |
-          redis-cli -h localhost DEL "login_attempts:admin@ecole-benani.ma:00000000-0000-4000-8000-000000000001" 2>/dev/null || true
+          python - <<'PY'
+          import redis
+
+          r = redis.Redis(host="localhost", port=6379, db=0)
+          r.delete("login_attempts:admin@ecole-benani.ma:00000000-0000-4000-8000-000000000001")
+          PY
           PGPASSWORD=ecole psql -h localhost -U ecole -d ecole_platform -c "DELETE FROM failed_login_attempts WHERE email='admin@ecole-benani.ma';" 2>/dev/null || true
 
       - name: Get admin token
@@ -1341,6 +1358,7 @@ jobs:
       ACCESS_TOKEN_EXPIRE_MINUTES: "30"
       REFRESH_TOKEN_EXPIRE_DAYS: "7"
       APP_ENV: test
+      DEBUG_REVEAL_OTP: "true"
 
     steps:
       - uses: actions/checkout@v4
@@ -1385,6 +1403,7 @@ jobs:
         run: |
           k6 run system-tests/load/auth/01_login_baseline.js \
             --env BASE_URL=http://localhost:8000/api/v1 \
+            --env CI=true \
             --env SCHOOL_ID=00000000-0000-4000-8000-000000000001 \
             --env TEST_EMAIL=admin@ecole-benani.ma \
             --env TEST_PASSWORD=admin123 \
@@ -1394,6 +1413,7 @@ jobs:
         run: |
           k6 run system-tests/load/auth/02_2fa_baseline.js \
             --env BASE_URL=http://localhost:8000/api/v1 \
+            --env CI=true \
             --env SCHOOL_ID=00000000-0000-4000-8000-000000000001 \
             --env TEST_EMAIL=admin@ecole-benani.ma \
             --env TEST_PASSWORD=admin123 \
@@ -1404,6 +1424,7 @@ jobs:
         run: |
           k6 run system-tests/load/auth/03_recovery_baseline.js \
             --env BASE_URL=http://localhost:8000/api/v1 \
+            --env CI=true \
             --env SCHOOL_ID=00000000-0000-4000-8000-000000000001 \
             --env TEST_EMAIL=admin@ecole-benani.ma \
             --out json=k6-recovery-results.json

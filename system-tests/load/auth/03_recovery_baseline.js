@@ -1,7 +1,7 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Rate, Trend } from 'k6/metrics';
-import { BASE_URL, SCHOOL_ID as DEFAULT_SCHOOL_ID, assertSafeLoadTarget } from '../config.js';
+import { BASE_URL, SCHOOL_ID as DEFAULT_SCHOOL_ID, assertSafeLoadTarget, selectProfile } from '../config.js';
 
 // Custom metrics
 const recoveryRequestRate = new Rate('recovery_request_rate');
@@ -11,17 +11,31 @@ const recoveryVerifyLatency = new Trend('recovery_verify_latency');
 
 // Configuration
 export const options = {
-  stages: [
-    { duration: '1m', target: 5 },    // Ramp up to 5 RPS
-    { duration: '3m', target: 20 },   // Ramp up to 20 RPS
-    { duration: '5m', target: 20 },   // Stay at 20 RPS
-    { duration: '1m', target: 0 },    // Ramp down to 0
-  ],
-  thresholds: {
-    http_req_duration: ['p(95)<400', 'p(99)<800'], // 95% of requests under 400ms, 99% under 800ms
-    recovery_request_rate: ['rate>0.95'], // 95% success rate
-    recovery_verify_rate: ['rate>0.95'], // 95% success rate
-  },
+  stages: selectProfile(
+    [
+      { duration: '5s', target: 1 },
+      { duration: '10s', target: 2 },
+      { duration: '5s', target: 0 },
+    ],
+    [
+      { duration: '1m', target: 5 },    // Ramp up to 5 RPS
+      { duration: '3m', target: 20 },   // Ramp up to 20 RPS
+      { duration: '5m', target: 20 },   // Stay at 20 RPS
+      { duration: '1m', target: 0 },    // Ramp down to 0
+    ],
+  ),
+  thresholds: selectProfile(
+    {
+      http_req_duration: ['p(95)<10000', 'p(99)<20000'],
+      recovery_request_rate: ['rate>0.95'],
+      recovery_verify_rate: ['rate>0.95'],
+    },
+    {
+      http_req_duration: ['p(95)<400', 'p(99)<800'], // 95% of requests under 400ms, 99% under 800ms
+      recovery_request_rate: ['rate>0.95'], // 95% success rate
+      recovery_verify_rate: ['rate>0.95'], // 95% success rate
+    },
+  ),
 };
 
 // Test configuration

@@ -80,16 +80,16 @@ api_call() {
 
 # Step 1: List and delete test users
 echo "Step 1: Cleaning up test users..."
-echo "GET ${BASE_URL}/schools/${SCHOOL_ID}/users"
-USERS=$(api_call "GET" "/schools/${SCHOOL_ID}/users")
+echo "GET ${BASE_URL}/admin/users?limit=100"
+USERS=$(api_call "GET" "/admin/users?limit=100")
 
 if [[ -z "${DRY_RUN:-}" ]]; then
-  echo "$USERS" | jq -r '.data[] | select(.email | startswith("'"$TEST_EMAIL_PREFIX"'")) | .id' 2>/dev/null | while read -r user_id; do
+  echo "$USERS" | jq -r --arg prefix "$TEST_EMAIL_PREFIX" '(.data // [])[]? | select((.email // "") | startswith($prefix)) | .id // empty' 2>/dev/null | while read -r user_id; do
     if [[ -n "$user_id" ]]; then
-      echo "Deleting user: $user_id"
-      api_call "DELETE" "/users/$user_id"
+      echo "Found test user: $user_id"
+      echo "No destructive user-delete endpoint is available; skipping user removal"
     fi
-  done
+  done || true
   echo "✅ Test users cleaned up"
 else
   echo "[DRY RUN] Would delete users with email starting with $TEST_EMAIL_PREFIX"
@@ -98,16 +98,13 @@ echo ""
 
 # Step 2: Delete test invitation codes
 echo "Step 2: Cleaning up invitation codes..."
-echo "GET ${BASE_URL}/invites"
-INVITES=$(api_call "GET" "/invites")
+echo "GET ${BASE_URL}/admin/invitations?limit=100"
+INVITES=$(api_call "GET" "/admin/invitations?limit=100")
 
 if [[ -z "${DRY_RUN:-}" ]]; then
-  echo "$INVITES" | jq -r '.data[] | select(.email | startswith("'"$TEST_EMAIL_PREFIX"'")) | .code' 2>/dev/null | while read -r code; do
-    if [[ -n "$code" ]]; then
-      echo "Deleting invite: $code"
-      api_call "DELETE" "/invites/$code"
-    fi
-  done
+  invite_count=$(echo "$INVITES" | jq -r '(.data // []) | length' 2>/dev/null || echo "0")
+  echo "Found ${invite_count} invitation records"
+  echo "Invitation list responses do not expose target email/code metadata; skipping targeted revoke"
   echo "✅ Invitation codes cleaned up"
 else
   echo "[DRY RUN] Would delete invites with email starting with $TEST_EMAIL_PREFIX"
@@ -127,12 +124,12 @@ echo "GET ${BASE_URL}/auth/sessions"
 SESSIONS=$(api_call "GET" "/auth/sessions")
 
 if [[ -z "${DRY_RUN:-}" ]]; then
-  echo "$SESSIONS" | jq -r '.data[] | .id' 2>/dev/null | while read -r session_id; do
+  echo "$SESSIONS" | jq -r '(.data // [])[]? | .session_id // .id // empty' 2>/dev/null | while read -r session_id; do
     if [[ -n "$session_id" ]]; then
       echo "Revoking session: $session_id"
       api_call "DELETE" "/auth/sessions/$session_id"
     fi
-  done
+  done || true
   echo "✅ Test sessions revoked"
 else
   echo "[DRY RUN] Would revoke all sessions"

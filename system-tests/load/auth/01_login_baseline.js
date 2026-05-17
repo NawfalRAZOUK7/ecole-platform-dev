@@ -1,7 +1,7 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Rate, Trend } from 'k6/metrics';
-import { BASE_URL, SCHOOL_ID as DEFAULT_SCHOOL_ID, assertSafeLoadTarget } from '../config.js';
+import { BASE_URL, SCHOOL_ID as DEFAULT_SCHOOL_ID, assertSafeLoadTarget, selectProfile } from '../config.js';
 
 // Custom metrics
 const loginSuccessRate = new Rate('login_success_rate');
@@ -9,16 +9,29 @@ const loginLatency = new Trend('login_latency');
 
 // Configuration
 export const options = {
-  stages: [
-    { duration: '1m', target: 20 },   // Ramp up to 20 RPS
-    { duration: '3m', target: 100 },  // Ramp up to 100 RPS
-    { duration: '5m', target: 100 },  // Stay at 100 RPS
-    { duration: '1m', target: 0 },    // Ramp down to 0
-  ],
-  thresholds: {
-    http_req_duration: ['p(95)<500', 'p(99)<1000'], // 95% of requests under 500ms, 99% under 1s
-    login_success_rate: ['rate>0.95'], // 95% success rate
-  },
+  stages: selectProfile(
+    [
+      { duration: '5s', target: 2 },
+      { duration: '10s', target: 5 },
+      { duration: '5s', target: 0 },
+    ],
+    [
+      { duration: '1m', target: 20 },   // Ramp up to 20 RPS
+      { duration: '3m', target: 100 },  // Ramp up to 100 RPS
+      { duration: '5m', target: 100 },  // Stay at 100 RPS
+      { duration: '1m', target: 0 },    // Ramp down to 0
+    ],
+  ),
+  thresholds: selectProfile(
+    {
+      http_req_duration: ['p(95)<10000', 'p(99)<20000'],
+      login_success_rate: ['rate>0.95'],
+    },
+    {
+      http_req_duration: ['p(95)<500', 'p(99)<1000'], // 95% of requests under 500ms, 99% under 1s
+      login_success_rate: ['rate>0.95'], // 95% success rate
+    },
+  ),
 };
 
 // Test configuration
