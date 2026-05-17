@@ -367,19 +367,6 @@ jobs:
           --health-timeout 5s
           --health-retries 10
 
-      minio:
-        image: minio/minio:RELEASE.2024-11-07T00-52-20Z
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin123
-        ports:
-          - 9000:9000
-        options: >-
-          --health-cmd "curl -sf http://localhost:9000/minio/health/live || exit 1"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-
     env:
       DATABASE_URL: postgresql+asyncpg://ecole:ecole@localhost:5432/ecole_platform
       REDIS_URL: redis://localhost:6379/0
@@ -442,8 +429,17 @@ jobs:
           cd backend
           python -m app.seed
 
-      - name: Create MinIO bucket
+      - name: Start MinIO and create bucket
         run: |
+          docker run -d --name minio \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin123 \
+            -p 9000:9000 \
+            minio/minio:RELEASE.2024-11-07T00-52-20Z server /data
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:9000/minio/health/live && break
+            sleep 1
+          done
           wget -q https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc
           chmod +x /usr/local/bin/mc
           mc alias set local http://localhost:9000 minioadmin minioadmin123
@@ -519,19 +515,6 @@ jobs:
           --health-timeout 5s
           --health-retries 10
 
-      minio:
-        image: minio/minio:RELEASE.2024-11-07T00-52-20Z
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin123
-        ports:
-          - 9000:9000
-        options: >-
-          --health-cmd "curl -sf http://localhost:9000/minio/health/live || exit 1"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-
     env:
       DATABASE_URL: postgresql+asyncpg://ecole:ecole@localhost:5432/ecole_platform
       REDIS_URL: redis://localhost:6379/0
@@ -601,8 +584,17 @@ jobs:
             sleep 1
           done
 
-      - name: Create MinIO bucket
+      - name: Start MinIO and create bucket
         run: |
+          docker run -d --name minio \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin123 \
+            -p 9000:9000 \
+            minio/minio:RELEASE.2024-11-07T00-52-20Z server /data
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:9000/minio/health/live && break
+            sleep 1
+          done
           wget -q https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc
           chmod +x /usr/local/bin/mc
           mc alias set local http://localhost:9000 minioadmin minioadmin123
@@ -667,19 +659,6 @@ jobs:
           --health-timeout 5s
           --health-retries 10
 
-      minio:
-        image: minio/minio:RELEASE.2024-11-07T00-52-20Z
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin123
-        ports:
-          - 9000:9000
-        options: >-
-          --health-cmd "curl -sf http://localhost:9000/minio/health/live || exit 1"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-
     env:
       DATABASE_URL: postgresql+asyncpg://ecole:ecole@localhost:5432/ecole_platform
       REDIS_URL: redis://localhost:6379/0
@@ -749,8 +728,17 @@ jobs:
             sleep 1
           done
 
-      - name: Create MinIO bucket
+      - name: Start MinIO and create bucket
         run: |
+          docker run -d --name minio \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin123 \
+            -p 9000:9000 \
+            minio/minio:RELEASE.2024-11-07T00-52-20Z server /data
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:9000/minio/health/live && break
+            sleep 1
+          done
           wget -q https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc
           chmod +x /usr/local/bin/mc
           mc alias set local http://localhost:9000 minioadmin minioadmin123
@@ -916,19 +904,6 @@ jobs:
           --health-timeout 5s
           --health-retries 10
 
-      minio:
-        image: minio/minio:RELEASE.2024-11-07T00-52-20Z
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin123
-        ports:
-          - 9000:9000
-        options: >-
-          --health-cmd "curl -sf http://localhost:9000/minio/health/live || exit 1"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-
     env:
       DATABASE_URL: postgresql+asyncpg://ecole:ecole@localhost:5432/ecole_platform
       REDIS_URL: redis://localhost:6379/0
@@ -1011,8 +986,17 @@ jobs:
             sleep 1
           done
 
-      - name: Create MinIO bucket
+      - name: Start MinIO and create bucket
         run: |
+          docker run -d --name minio \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin123 \
+            -p 9000:9000 \
+            minio/minio:RELEASE.2024-11-07T00-52-20Z server /data
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:9000/minio/health/live && break
+            sleep 1
+          done
           wget -q https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc
           chmod +x /usr/local/bin/mc
           mc alias set local http://localhost:9000 minioadmin minioadmin123
@@ -1095,19 +1079,6 @@ jobs:
           --health-timeout 5s
           --health-retries 10
 
-      minio:
-        image: minio/minio:RELEASE.2024-11-07T00-52-20Z
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin123
-        ports:
-          - 9000:9000
-        options: >-
-          --health-cmd "curl -sf http://localhost:9000/minio/health/live || exit 1"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-
     env:
       DATABASE_URL: postgresql+asyncpg://ecole:ecole@localhost:5432/ecole_platform
       REDIS_URL: redis://localhost:6379/0
@@ -1171,8 +1142,17 @@ jobs:
           alembic upgrade head
           python -m app.seed
 
-      - name: Create MinIO bucket
+      - name: Start MinIO and create bucket
         run: |
+          docker run -d --name minio \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin123 \
+            -p 9000:9000 \
+            minio/minio:RELEASE.2024-11-07T00-52-20Z server /data
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:9000/minio/health/live && break
+            sleep 1
+          done
           wget -q https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc
           chmod +x /usr/local/bin/mc
           mc alias set local http://localhost:9000 minioadmin minioadmin123
@@ -1235,19 +1215,6 @@ jobs:
           - 6379:6379
         options: >-
           --health-cmd "redis-cli ping"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-
-      minio:
-        image: minio/minio:RELEASE.2024-11-07T00-52-20Z
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin123
-        ports:
-          - 9000:9000
-        options: >-
-          --health-cmd "curl -sf http://localhost:9000/minio/health/live || exit 1"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
@@ -1326,8 +1293,17 @@ jobs:
             sleep 1
           done
 
-      - name: Create MinIO bucket
+      - name: Start MinIO and create bucket
         run: |
+          docker run -d --name minio \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin123 \
+            -p 9000:9000 \
+            minio/minio:RELEASE.2024-11-07T00-52-20Z server /data
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:9000/minio/health/live && break
+            sleep 1
+          done
           wget -q https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc
           chmod +x /usr/local/bin/mc
           mc alias set local http://localhost:9000 minioadmin minioadmin123
@@ -1413,19 +1389,6 @@ jobs:
           --health-timeout 5s
           --health-retries 10
 
-      minio:
-        image: minio/minio:RELEASE.2024-11-07T00-52-20Z
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin123
-        ports:
-          - 9000:9000
-        options: >-
-          --health-cmd "curl -sf http://localhost:9000/minio/health/live || exit 1"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-
     env:
       DATABASE_URL: postgresql+asyncpg://ecole:ecole@localhost:5432/ecole_platform
       REDIS_URL: redis://localhost:6379/0
@@ -1471,8 +1434,17 @@ jobs:
           alembic upgrade head
           python -m app.seed
 
-      - name: Create MinIO bucket
+      - name: Start MinIO and create bucket
         run: |
+          docker run -d --name minio \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin123 \
+            -p 9000:9000 \
+            minio/minio:RELEASE.2024-11-07T00-52-20Z server /data
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:9000/minio/health/live && break
+            sleep 1
+          done
           wget -q https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc
           chmod +x /usr/local/bin/mc
           mc alias set local http://localhost:9000 minioadmin minioadmin123
@@ -1546,19 +1518,6 @@ jobs:
           --health-timeout 5s
           --health-retries 10
 
-      minio:
-        image: minio/minio:RELEASE.2024-11-07T00-52-20Z
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin123
-        ports:
-          - 9000:9000
-        options: >-
-          --health-cmd "curl -sf http://localhost:9000/minio/health/live || exit 1"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-
     env:
       DATABASE_URL: postgresql+asyncpg://ecole:ecole@localhost:5432/ecole_platform
       REDIS_URL: redis://localhost:6379/0
@@ -1596,8 +1555,17 @@ jobs:
           alembic upgrade head
           python -m app.seed
 
-      - name: Create MinIO bucket
+      - name: Start MinIO and create bucket
         run: |
+          docker run -d --name minio \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin123 \
+            -p 9000:9000 \
+            minio/minio:RELEASE.2024-11-07T00-52-20Z server /data
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:9000/minio/health/live && break
+            sleep 1
+          done
           wget -q https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc
           chmod +x /usr/local/bin/mc
           mc alias set local http://localhost:9000 minioadmin minioadmin123
@@ -1684,19 +1652,6 @@ jobs:
           --health-timeout 5s
           --health-retries 10
 
-      minio:
-        image: minio/minio:RELEASE.2024-11-07T00-52-20Z
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin123
-        ports:
-          - 9000:9000
-        options: >-
-          --health-cmd "curl -sf http://localhost:9000/minio/health/live || exit 1"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-
     env:
       DATABASE_URL: postgresql+asyncpg://ecole:ecole@localhost:5432/ecole_platform
       REDIS_URL: redis://localhost:6379/0
@@ -1766,8 +1721,17 @@ jobs:
             sleep 1
           done
 
-      - name: Create MinIO bucket
+      - name: Start MinIO and create bucket
         run: |
+          docker run -d --name minio \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin123 \
+            -p 9000:9000 \
+            minio/minio:RELEASE.2024-11-07T00-52-20Z server /data
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:9000/minio/health/live && break
+            sleep 1
+          done
           wget -q https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc
           chmod +x /usr/local/bin/mc
           mc alias set local http://localhost:9000 minioadmin minioadmin123
@@ -1832,19 +1796,6 @@ jobs:
           --health-timeout 5s
           --health-retries 10
 
-      minio:
-        image: minio/minio:RELEASE.2024-11-07T00-52-20Z
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin123
-        ports:
-          - 9000:9000
-        options: >-
-          --health-cmd "curl -sf http://localhost:9000/minio/health/live || exit 1"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-
     env:
       DATABASE_URL: postgresql+asyncpg://ecole:ecole@localhost:5432/ecole_platform
       REDIS_URL: redis://localhost:6379/0
@@ -1903,8 +1854,17 @@ jobs:
           alembic upgrade head
           python -m app.seed
 
-      - name: Create MinIO bucket
+      - name: Start MinIO and create bucket
         run: |
+          docker run -d --name minio \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin123 \
+            -p 9000:9000 \
+            minio/minio:RELEASE.2024-11-07T00-52-20Z server /data
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:9000/minio/health/live && break
+            sleep 1
+          done
           wget -q https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc
           chmod +x /usr/local/bin/mc
           mc alias set local http://localhost:9000 minioadmin minioadmin123
