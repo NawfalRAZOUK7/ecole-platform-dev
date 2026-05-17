@@ -708,6 +708,8 @@ jobs:
     needs: [unit-tests, integration-tests, contract-tests, security-tests]
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -1183,11 +1185,14 @@ jobs:
             newman run "$collection" \
               -e system-tests/postman/env_local.json \
               --env-var "baseUrl=http://localhost:8000/api/v1" \
-            --env-var "school_id=00000000-0000-4000-8000-000000000001" \
+              --env-var "school_id=00000000-0000-4000-8000-000000000001" \
               --reporters cli,htmlextra,json \
               --reporter-htmlextra-export "scenario-reports/${name}-report.html" \
               --reporter-json-export "scenario-reports/${name}-report.json" \
-              --bail
+              --bail || exit 1
+            # Clear account-lockout state so later collections aren't blocked
+            redis-cli -h localhost DEL "login_attempts:admin@ecole-benani.ma:00000000-0000-4000-8000-000000000001" 2>/dev/null || true
+            PGPASSWORD=ecole psql -h localhost -U ecole -d ecole_platform -c "DELETE FROM failed_login_attempts WHERE email='admin@ecole-benani.ma';" 2>/dev/null || true
           done
           kill $MOCK_OAUTH_PID || true
 
@@ -1273,6 +1278,11 @@ jobs:
             curl -sf http://localhost:8000/api/v1/health && break
             sleep 1
           done
+
+      - name: Clear account lockout state
+        run: |
+          redis-cli -h localhost DEL "login_attempts:admin@ecole-benani.ma:00000000-0000-4000-8000-000000000001" 2>/dev/null || true
+          PGPASSWORD=ecole psql -h localhost -U ecole -d ecole_platform -c "DELETE FROM failed_login_attempts WHERE email='admin@ecole-benani.ma';" 2>/dev/null || true
 
       - name: Get admin token
         id: token
@@ -1369,12 +1379,7 @@ jobs:
           done
 
       - name: Install k6
-        run: |
-          sudo gpg -k /usr/share/keyrings/ubuntu-archive-keyring.gpg --dearmor
-          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
-          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
-          sudo apt-get update
-          sudo apt-get install -y k6
+        uses: grafana/setup-k6-action@v1
 
       - name: Run k6 login baseline test
         run: |
