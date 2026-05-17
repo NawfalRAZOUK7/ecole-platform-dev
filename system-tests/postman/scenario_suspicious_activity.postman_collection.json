@@ -53,8 +53,7 @@
                   "});",
                   "",
                   "// Save token for subsequent requests",
-                  "pm.environment.set(\"token\", responseBody.data.access_token);",
-                  "pm.environment.set(\"user_id\", responseBody.data.user.id);"
+                  "pm.environment.set(\"token\", responseBody.data.access_token);"
                 ]
               }
             }
