@@ -375,7 +375,7 @@ jobs:
         ports:
           - 9000:9000
         options: >-
-          --health-cmd "wget -qO- http://localhost:9000/minio/health/live || exit 1"
+          --health-cmd "curl -sf http://localhost:9000/minio/health/live || exit 1"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
@@ -527,7 +527,7 @@ jobs:
         ports:
           - 9000:9000
         options: >-
-          --health-cmd "wget -qO- http://localhost:9000/minio/health/live || exit 1"
+          --health-cmd "curl -sf http://localhost:9000/minio/health/live || exit 1"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
@@ -675,7 +675,7 @@ jobs:
         ports:
           - 9000:9000
         options: >-
-          --health-cmd "wget -qO- http://localhost:9000/minio/health/live || exit 1"
+          --health-cmd "curl -sf http://localhost:9000/minio/health/live || exit 1"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
@@ -924,7 +924,7 @@ jobs:
         ports:
           - 9000:9000
         options: >-
-          --health-cmd "wget -qO- http://localhost:9000/minio/health/live || exit 1"
+          --health-cmd "curl -sf http://localhost:9000/minio/health/live || exit 1"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
@@ -1103,7 +1103,7 @@ jobs:
         ports:
           - 9000:9000
         options: >-
-          --health-cmd "wget -qO- http://localhost:9000/minio/health/live || exit 1"
+          --health-cmd "curl -sf http://localhost:9000/minio/health/live || exit 1"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
@@ -1247,7 +1247,7 @@ jobs:
         ports:
           - 9000:9000
         options: >-
-          --health-cmd "wget -qO- http://localhost:9000/minio/health/live || exit 1"
+          --health-cmd "curl -sf http://localhost:9000/minio/health/live || exit 1"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
@@ -1421,7 +1421,7 @@ jobs:
         ports:
           - 9000:9000
         options: >-
-          --health-cmd "wget -qO- http://localhost:9000/minio/health/live || exit 1"
+          --health-cmd "curl -sf http://localhost:9000/minio/health/live || exit 1"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
@@ -1554,7 +1554,7 @@ jobs:
         ports:
           - 9000:9000
         options: >-
-          --health-cmd "wget -qO- http://localhost:9000/minio/health/live || exit 1"
+          --health-cmd "curl -sf http://localhost:9000/minio/health/live || exit 1"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
@@ -1692,7 +1692,7 @@ jobs:
         ports:
           - 9000:9000
         options: >-
-          --health-cmd "wget -qO- http://localhost:9000/minio/health/live || exit 1"
+          --health-cmd "curl -sf http://localhost:9000/minio/health/live || exit 1"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
@@ -1840,7 +1840,7 @@ jobs:
         ports:
           - 9000:9000
         options: >-
-          --health-cmd "wget -qO- http://localhost:9000/minio/health/live || exit 1"
+          --health-cmd "curl -sf http://localhost:9000/minio/health/live || exit 1"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
