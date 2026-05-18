@@ -1,8 +1,8 @@
 fastapi==0.120.4
 uvicorn[standard]==0.34.*
 sqlalchemy[asyncio]==2.0.*
-asyncpg==0.30.*
-alembic==1.14.*
+asyncpg==0.31.*
+alembic==1.18.*
 pydantic-settings==2.7.*
 redis[hiredis]==5.2.*
 python-jose[cryptography]==3.5.0
