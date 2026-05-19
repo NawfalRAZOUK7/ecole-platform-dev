@@ -34,10 +34,6 @@ class _FakeHttpClient:
         self.calls.append({"url": url, "data": data})
         return _FakeResponse()
 
-    async def post(self, url, data):
-        self.calls.append({"url": url, "data": data})
-        return _FakeResponse()
-
 
 @pytest.mark.asyncio
 async def test_mock_oauth_url_uses_public_authorize_url(monkeypatch):
