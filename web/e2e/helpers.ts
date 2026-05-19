@@ -20,7 +20,9 @@ export async function login(page: Page, role: keyof typeof credentials): Promise
   const cred = credentials[role];
 
   await page.goto('/login');
-  await page.locator('#email').fill(cred.email);
+  const emailInput = page.locator('#email');
+  await expect(emailInput).toBeEnabled({ timeout: 10_000 });
+  await emailInput.fill(cred.email);
   await page.locator('#password').fill(cred.password);
 
   // School ID should have the default value; overwrite to be safe

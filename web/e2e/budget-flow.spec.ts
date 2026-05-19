@@ -4,7 +4,9 @@ import { apiListResponse, apiResponse, installMockSession } from './mockApi';
 
 async function loginWithCredentials(page: Page, email: string, password: string) {
   await page.goto('/login');
-  await page.locator('#email').fill(email);
+  const emailInput = page.locator('#email');
+  await expect(emailInput).toBeEnabled({ timeout: 10_000 });
+  await emailInput.fill(email);
   await page.locator('#password').fill(password);
   await page.locator('#schoolId').fill(SCHOOL_ID);
   await page.locator('.login-submit').click();
