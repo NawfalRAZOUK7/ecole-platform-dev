@@ -126,12 +126,14 @@ function getRoleFromLoginEmail(email: string | undefined, fallbackRole: MockRole
 
 export async function installMockSession(page: Page, initialRole: MockRole = 'parent') {
   let currentRole = initialRole;
+  let isLoggedIn = false;
 
   await page.route(/\/api\/v1\/auth\/login$/, async (route) => {
     const payload = route.request().postDataJSON() as
       | { email?: string; school_id?: string }
       | undefined;
     currentRole = getRoleFromLoginEmail(payload?.email, currentRole);
+    isLoggedIn = true;
 
     await fulfillJson(
       route,
@@ -149,10 +151,26 @@ export async function installMockSession(page: Page, initialRole: MockRole = 'pa
   });
 
   await page.route(/\/api\/v1\/auth\/me$/, async (route) => {
+    if (!isLoggedIn) {
+      await route.fulfill({
+        status: 401,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'Unauthorized' }),
+      });
+      return;
+    }
     await fulfillJson(route, apiResponse(USERS[currentRole]));
   });
 
   await page.route(/\/api\/v1\/auth\/refresh$/, async (route) => {
+    if (!isLoggedIn) {
+      await route.fulfill({
+        status: 401,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'Unauthorized' }),
+      });
+      return;
+    }
     await fulfillJson(
       route,
       apiResponse({
@@ -169,6 +187,7 @@ export async function installMockSession(page: Page, initialRole: MockRole = 'pa
   });
 
   await page.route(/\/api\/v1\/auth\/logout$/, async (route) => {
+    isLoggedIn = false;
     await fulfillJson(route, apiResponse({ success: true }));
   });
 
