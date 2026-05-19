@@ -6,27 +6,85 @@
  * Calls POST /auth/login with school_id. If 2FA required, shows TOTP input.
  */
 
-import { useState, type FormEvent } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Building2, LogIn } from 'lucide-react';
 import { useAuth } from '@/app/providers/AuthContext';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LanguageSwitcher } from '@/shared/ui/LanguageSwitcher';
 
 /** Default school ID from seed data */
-const DEFAULT_SCHOOL_ID = 'bd9a703c-aca8-5fb2-81d7-58e902aa2472';
+const DEFAULT_SCHOOL_ID = '00000000-0000-4000-8000-000000000001';
+type OAuthProvider = 'google' | 'microsoft';
+
+function isOAuthProvider(provider: string | null | undefined): provider is OAuthProvider {
+  return provider === 'google' || provider === 'microsoft';
+}
 
 export function LoginPage() {
   const { t } = useTranslation();
-  const { login, verify2fa, cancel2fa, isLoading, error, clearError, twoFactorPending } = useAuth();
+  const {
+    login,
+    verify2fa,
+    cancel2fa,
+    isAuthenticated,
+    isLoading,
+    error,
+    clearError,
+    twoFactorPending,
+    startOAuthLogin,
+    completeOAuthLogin,
+  } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const translatedError = error ? t(error) : null;
+  const oauthCallbackHandledRef = useRef(false);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [schoolId, setSchoolId] = useState(DEFAULT_SCHOOL_ID);
   const [totpCode, setTotpCode] = useState('');
   const [useBackupCode, setUseBackupCode] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    if (oauthCallbackHandledRef.current) return;
+
+    const params = new URLSearchParams(location.search);
+    const code = params.get('code');
+    const returnedState = params.get('state');
+    if (!code || !returnedState) return;
+
+    let pending: { provider?: string; schoolId?: string } | null = null;
+    const pendingRaw = sessionStorage.getItem('oauth_pending');
+    if (pendingRaw) {
+      try {
+        pending = JSON.parse(pendingRaw) as { provider?: string; schoolId?: string };
+      } catch {
+        pending = null;
+      }
+    }
+
+    const providerFromUrl = params.get('provider');
+    const provider = isOAuthProvider(providerFromUrl)
+      ? providerFromUrl
+      : isOAuthProvider(pending?.provider)
+        ? pending.provider
+        : null;
+    const callbackSchoolId = pending?.schoolId ?? schoolId;
+
+    if (!provider || !callbackSchoolId) return;
+
+    oauthCallbackHandledRef.current = true;
+    clearError();
+    void completeOAuthLogin(provider, code, returnedState, callbackSchoolId);
+  }, [clearError, completeOAuthLogin, location.search, schoolId]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -62,6 +120,12 @@ export function LoginPage() {
     cancel2fa();
     setTotpCode('');
     setUseBackupCode(false);
+  }
+
+  async function handleOAuthLogin(provider: OAuthProvider) {
+    if (!schoolId.trim()) return;
+    clearError();
+    await startOAuthLogin(provider, schoolId.trim());
   }
 
   // After successful login (no 2FA), navigate
@@ -175,6 +239,31 @@ export function LoginPage() {
         <h2 className="login-subtitle">{t('login.title')}</h2>
 
         <ErrorBanner error={translatedError} onDismiss={clearError} />
+
+        <div className="oauth-login" aria-label={t('login.oauth.title')}>
+          <button
+            type="button"
+            className="oauth-button oauth-button-google"
+            onClick={() => void handleOAuthLogin('google')}
+            disabled={isLoading || !schoolId.trim()}
+          >
+            <LogIn aria-hidden="true" />
+            <span>{t('login.oauth.google')}</span>
+          </button>
+          <button
+            type="button"
+            className="oauth-button oauth-button-microsoft"
+            onClick={() => void handleOAuthLogin('microsoft')}
+            disabled={isLoading || !schoolId.trim()}
+          >
+            <Building2 aria-hidden="true" />
+            <span>{t('login.oauth.microsoft')}</span>
+          </button>
+        </div>
+
+        <div className="login-separator">
+          <span>{t('login.oauth.separator')}</span>
+        </div>
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-field">

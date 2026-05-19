@@ -216,6 +216,9 @@ class Settings(BaseSettings):
     # Mock OAuth / Social Login (Phase 10 — Testing)
     mock_oauth_enabled: bool = True  # Use mock OAuth server instead of real providers
     mock_oauth_base_url: str = "http://mock-oauth:9999"  # Mock OAuth server URL
+    mock_oauth_public_base_url: str = (
+        "http://localhost:9999"  # Browser/simulator URL for mock OAuth redirects
+    )
 
     # Password Reuse Policy (Phase 11)
     password_history_limit: int = 5  # Number of passwords to remember

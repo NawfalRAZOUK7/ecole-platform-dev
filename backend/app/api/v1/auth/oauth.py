@@ -9,7 +9,7 @@ from __future__ import annotations
 import uuid
 
 import redis.asyncio as aioredis
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -17,8 +17,10 @@ from app.core.database import get_db
 from app.core.exceptions import NotFoundError, ValidationError
 from app.core.redis import get_redis
 from app.core.response import ApiResponse, success_response
+from app.core.request_utils import get_client_ip
 from app.repositories.auth import AuthRepository
 from app.schemas.auth import OAuthLoginRequest
+from app.services.auth.auth import AuthService
 from app.services.auth.oauth import OAuthService
 
 router = APIRouter(prefix="/auth/oauth", tags=["auth"])
@@ -54,12 +56,22 @@ async def get_oauth_url(
             error_code="ERR-FEATURE-DISABLED",
         )
 
-    # Standard OAuth 2.0 authorization endpoint URLs
-    auth_urls = {
-        "google": "https://accounts.google.com/o/oauth2/v2/auth",
-        "microsoft": "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
-        "apple": "https://appleid.apple.com/auth/authorize",
-    }
+    # Standard OAuth providers are used in production. In demo/dev mode, the
+    # browser must be sent to the host-exposed mock provider, while backend
+    # token/userinfo calls still use the Docker-internal mock_oauth_base_url.
+    if settings.mock_oauth_enabled:
+        mock_base_url = settings.mock_oauth_public_base_url.rstrip("/")
+        auth_urls = {
+            "google": f"{mock_base_url}/auth/google/authorize",
+            "microsoft": f"{mock_base_url}/auth/microsoft/authorize",
+            "apple": f"{mock_base_url}/auth/apple/authorize",
+        }
+    else:
+        auth_urls = {
+            "google": "https://accounts.google.com/o/oauth2/v2/auth",
+            "microsoft": "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+            "apple": "https://appleid.apple.com/auth/authorize",
+        }
 
     url = auth_urls.get(provider)
     if url is None:
@@ -119,6 +131,7 @@ async def get_oauth_url(
 )
 async def oauth_login(
     body: OAuthLoginRequest,
+    request: Request,
     db: AsyncSession = Depends(get_db),
     redis_client: aioredis.Redis = Depends(get_redis),
 ):
@@ -183,6 +196,22 @@ async def oauth_login(
         )
 
     repo = AuthRepository(db)
+    auth_service = AuthService(db, redis_client)
+
+    async def issue_oauth_tokens(user_id: uuid.UUID, role_code: str) -> dict:
+        session = await repo.create_session(
+            user_id=user_id,
+            school_id=body.school_id,
+            source=f"oauth:{provider}",
+            user_agent=request.headers.get("User-Agent"),
+            ip_address=get_client_ip(request),
+        )
+        return await auth_service._issue_token_bundle(
+            user_id=user_id,
+            role=role_code,
+            school_id=body.school_id,
+            session_id=session.id,
+        )
 
     # Look up existing OAuth account
     oauth_account = await repo.get_oauth_account_by_provider_user_id(
@@ -208,15 +237,7 @@ async def oauth_login(
                 error_code="ERR-IAM-404",
             )
 
-        from app.services.auth.auth import AuthService
-
-        auth_service = AuthService(db, redis_client)
-        token_bundle = await auth_service._issue_token_bundle(
-            user_id=user.id,
-            role=membership.role_code,
-            school_id=body.school_id,
-            session_id=uuid.uuid4(),
-        )
+        token_bundle = await issue_oauth_tokens(user.id, membership.role_code)
         return success_response(token_bundle)
 
     # New OAuth user — auto-create if email is not already used in this school
@@ -243,15 +264,7 @@ async def oauth_login(
                 error_code="ERR-IAM-404",
             )
 
-        from app.services.auth.auth import AuthService
-
-        auth_service = AuthService(db, redis_client)
-        token_bundle = await auth_service._issue_token_bundle(
-            user_id=existing_user.id,
-            role=membership.role_code,
-            school_id=body.school_id,
-            session_id=uuid.uuid4(),
-        )
+        token_bundle = await issue_oauth_tokens(existing_user.id, membership.role_code)
         return success_response(token_bundle)
 
     # Completely new user — create user + membership + OAuth link
@@ -281,15 +294,7 @@ async def oauth_login(
         access_token=access_token,
     )
 
-    from app.services.auth import AuthService
-
-    auth_service = AuthService(db, redis_client)
-    token_bundle = await auth_service._issue_token_bundle(
-        user_id=user.id,
-        role=membership.role_code,
-        school_id=body.school_id,
-        session_id=uuid.uuid4(),
-    )
+    token_bundle = await issue_oauth_tokens(user.id, membership.role_code)
     token_bundle["email_verification_required"] = True
 
     return success_response(token_bundle)

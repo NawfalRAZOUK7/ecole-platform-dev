@@ -87,7 +87,14 @@
     "error": {
       "invalid": "Invalid email or password",
       "locked": "Account locked",
-      "generic": "Login failed"
+      "generic": "Login failed",
+      "oauth": "OAuth login failed"
+    },
+    "oauth": {
+      "title": "Social login",
+      "google": "Continue with Google",
+      "microsoft": "Continue with Microsoft",
+      "separator": "or"
     },
     "twoFactor": {
       "title": "Two-Factor Authentication",

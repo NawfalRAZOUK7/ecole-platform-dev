@@ -5,6 +5,7 @@ Reference: Phase 10 — Social Login Support
 
 from typing import Any, Optional
 
+import httpx
 from authlib.integrations.httpx_client import AsyncOAuth2Client
 
 from app.core.config import settings
@@ -64,11 +65,16 @@ class OAuthService:
             "code": code,
             "redirect_uri": redirect_uri,
             "grant_type": "authorization_code",
+            "client_id": getattr(settings, f"{provider}_oauth_client_id", ""),
+            "client_secret": getattr(
+                settings, f"{provider}_oauth_client_secret", ""
+            ),
         }
 
-        response = await client.post(token_url, data=params)
-        response.raise_for_status()
-        return response.json()
+        async with httpx.AsyncClient(timeout=20.0) as http_client:
+            response = await http_client.post(token_url, data=params)
+            response.raise_for_status()
+            return response.json()
 
     async def get_user_info(
         self,
@@ -78,7 +84,7 @@ class OAuthService:
         """Get user information from OAuth provider using access token."""
         user_info_url = self._get_user_info_url(provider)
 
-        async with AsyncOAuth2Client() as client:
+        async with httpx.AsyncClient(timeout=20.0) as client:
             response = await client.get(
                 user_info_url,
                 headers={"Authorization": f"Bearer {access_token}"},
@@ -118,15 +124,17 @@ class OAuthService:
         """Normalize user info from different OAuth providers to a common format."""
         if provider == "google":
             return {
-                "provider_user_id": user_info.get("id"),
+                "provider_user_id": user_info.get("id") or user_info.get("sub"),
                 "email": user_info.get("email"),
                 "name": user_info.get("name"),
                 "picture": user_info.get("picture"),
             }
         elif provider == "microsoft":
             return {
-                "provider_user_id": user_info.get("id"),
-                "email": user_info.get("userPrincipalName"),
+                "provider_user_id": user_info.get("id") or user_info.get("sub"),
+                "email": user_info.get("userPrincipalName")
+                or user_info.get("mail")
+                or user_info.get("email"),
                 "name": user_info.get("displayName"),
                 "picture": None,
             }

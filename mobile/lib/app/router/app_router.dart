@@ -152,11 +152,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/auth/callback',
         builder: (context, state) {
           final code = state.uri.queryParameters['code'];
-          final provider = state.uri.queryParameters['provider'];
           final returnedState = state.uri.queryParameters['state'];
+          final container = ProviderScope.containerOf(context);
+          final provider = state.uri.queryParameters['provider'] ??
+              container.read(authProvider).oauthProvider;
           if (code != null && provider != null && returnedState != null) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              final container = ProviderScope.containerOf(context);
               container
                   .read(authProvider.notifier)
                   .completeOAuthLogin(provider, code, returnedState);

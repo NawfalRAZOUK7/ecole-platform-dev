@@ -17,6 +17,7 @@ import os
 import time
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
+from urllib.parse import parse_qs, urlencode
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request, Response
@@ -115,29 +116,41 @@ def authorize(provider: str, redirect_uri: str, state: str, response_type: str =
         "expires_at": time.time() + 600,  # 10 min expiry
     }
 
-    # Redirect back with code and state
-    redirect_url = f"{redirect_uri}?code={code}&state={state}"
+    # Redirect back with code, state, and provider. Real providers do not send
+    # provider, but the demo callback can use it when available.
+    query = urlencode({"code": code, "state": state, "provider": provider})
+    separator = "&" if "?" in redirect_uri else "?"
+    redirect_url = f"{redirect_uri}{separator}{query}"
     return RedirectResponse(url=redirect_url)
 
 
 @app.post("/token")
-def token(request: TokenRequest) -> TokenResponse:
+async def token(request: Request) -> TokenResponse:
     """
     Mock OAuth token endpoint.
     Exchanges authorization code for access token.
     """
-    if request.code not in AUTHORIZATION_CODES:
+    content_type = request.headers.get("content-type", "")
+    if content_type.startswith("application/json"):
+        payload = await request.json()
+    else:
+        form_body = (await request.body()).decode()
+        payload = {key: values[-1] for key, values in parse_qs(form_body).items()}
+
+    token_request = TokenRequest(**payload)
+
+    if token_request.code not in AUTHORIZATION_CODES:
         raise HTTPException(status_code=400, detail="Invalid authorization code")
 
-    code_data = AUTHORIZATION_CODES[request.code]
+    code_data = AUTHORIZATION_CODES[token_request.code]
     provider = code_data["provider"]
 
     # Validate state
-    if code_data["redirect_uri"] != request.redirect_uri:
+    if code_data["redirect_uri"] != token_request.redirect_uri:
         raise HTTPException(status_code=400, detail="Redirect URI mismatch")
 
     # Clean up used code
-    del AUTHORIZATION_CODES[request.code]
+    del AUTHORIZATION_CODES[token_request.code]
 
     # Get mock user data
     user_data = MOCK_USERS.get(provider, MOCK_USERS["google"])
@@ -169,7 +182,12 @@ def google_userinfo(request: Request):
 
     token = auth_header[7:]
     try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        payload = jwt.decode(
+            token,
+            JWT_SECRET,
+            algorithms=[JWT_ALGORITHM],
+            options={"verify_aud": False},
+        )
     except jwt.JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
@@ -195,7 +213,12 @@ def microsoft_userinfo(request: Request):
 
     token = auth_header[7:]
     try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        payload = jwt.decode(
+            token,
+            JWT_SECRET,
+            algorithms=[JWT_ALGORITHM],
+            options={"verify_aud": False},
+        )
     except jwt.JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 

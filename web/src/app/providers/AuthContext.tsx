@@ -362,7 +362,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setState((s) => ({ ...s, isLoading: false, error: 'login.error.oauth' }));
         return;
       }
-      const pending = JSON.parse(pendingRaw);
+      let pending: OAuthPending;
+      try {
+        pending = JSON.parse(pendingRaw) as OAuthPending;
+      } catch {
+        setState((s) => ({ ...s, isLoading: false, error: 'login.error.oauth' }));
+        return;
+      }
       if (pending.provider !== provider || pending.state !== returnedState) {
         setState((s) => ({ ...s, isLoading: false, error: 'login.error.oauth' }));
         return;

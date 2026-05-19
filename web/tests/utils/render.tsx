@@ -10,6 +10,7 @@ import { createUser } from './factories';
 export interface RenderWithProvidersOptions extends Omit<RenderOptions, 'wrapper'> {
   route?: string;
   user?: Partial<UserProfile> | null;
+  auth?: Partial<AuthContextValue>;
   queryClient?: QueryClient;
 }
 
@@ -26,7 +27,10 @@ function createQueryClient() {
   });
 }
 
-function createAuthValue(userOverride?: Partial<UserProfile> | null): AuthContextValue {
+function createAuthValue(
+  userOverride?: Partial<UserProfile> | null,
+  authOverride?: Partial<AuthContextValue>,
+): AuthContextValue {
   const user = userOverride === null ? null : createUser(userOverride ?? {});
   return {
     user,
@@ -34,20 +38,24 @@ function createAuthValue(userOverride?: Partial<UserProfile> | null): AuthContex
     isLoading: false,
     error: null,
     twoFactorPending: null,
+    oauthPending: null,
     login: async () => undefined,
     verify2fa: async () => undefined,
     cancel2fa: () => undefined,
     logout: async () => undefined,
     clearError: () => undefined,
+    startOAuthLogin: async () => undefined,
+    completeOAuthLogin: async () => undefined,
+    ...authOverride,
   };
 }
 
 export function renderWithProviders(
   ui: ReactElement,
-  { route = '/', user, queryClient, ...renderOptions }: RenderWithProvidersOptions = {},
+  { route = '/', user, auth, queryClient, ...renderOptions }: RenderWithProvidersOptions = {},
 ) {
   const testQueryClient = queryClient ?? createQueryClient();
-  const authValue = createAuthValue(user);
+  const authValue = createAuthValue(user, auth);
 
   void i18n.changeLanguage('en');
   applyDirection('en');
