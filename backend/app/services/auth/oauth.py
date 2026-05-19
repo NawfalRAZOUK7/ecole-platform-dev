@@ -66,9 +66,7 @@ class OAuthService:
             "redirect_uri": redirect_uri,
             "grant_type": "authorization_code",
             "client_id": getattr(settings, f"{provider}_oauth_client_id", ""),
-            "client_secret": getattr(
-                settings, f"{provider}_oauth_client_secret", ""
-            ),
+            "client_secret": getattr(settings, f"{provider}_oauth_client_secret", ""),
         }
 
         async with httpx.AsyncClient(timeout=20.0) as http_client:

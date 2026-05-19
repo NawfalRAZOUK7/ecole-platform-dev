@@ -84,7 +84,11 @@ def test_normalize_mock_google_user_info_accepts_sub_identifier():
 
     normalized = service.normalize_user_info(
         "google",
-        {"sub": "google-sub", "email": "mock.google@example.com", "name": "Mock Google"},
+        {
+            "sub": "google-sub",
+            "email": "mock.google@example.com",
+            "name": "Mock Google",
+        },
     )
 
     assert normalized["provider_user_id"] == "google-sub"
