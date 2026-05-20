@@ -11,9 +11,9 @@ import pytest
 
 from app.core.dependencies import AuthContext
 from app.core.exceptions import NotFoundError
-from app.schemas.attendance_analytics import AttendanceThresholdCheckRequest
-from app.services import attendance_analytics as attendance_module
-from app.services.attendance_analytics import AttendanceAnalyticsService
+from app.schemas.academic.attendance_analytics import AttendanceThresholdCheckRequest
+import app.services.academic.attendance_analytics as attendance_module
+from app.services.academic.attendance_analytics import AttendanceAnalyticsService
 
 
 def make_auth(role: str = "ADM") -> AuthContext:

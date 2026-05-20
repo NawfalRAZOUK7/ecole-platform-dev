@@ -1,0 +1,26 @@
+name: Architecture Compliance
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - "web/**"
+      - ".github/workflows/architecture-check.yml"
+
+jobs:
+  architecture:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run architecture:check
+      - run: npm run knip:production
+        continue-on-error: true

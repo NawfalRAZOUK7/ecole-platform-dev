@@ -11,9 +11,12 @@ import pytest
 
 from app.core.dependencies import AuthContext
 from app.core.exceptions import NotFoundError, ValidationError
-from app.schemas.com import AnnouncementCreateRequest, AnnouncementUpdateRequest
-from app.services import cms as cms_module
-from app.services.cms import CMSService
+from app.schemas.communication import (
+    AnnouncementCreateRequest,
+    AnnouncementUpdateRequest,
+)
+import app.services.content.cms as cms_module
+from app.services.content.cms import CMSService
 
 
 def make_auth(role: str = "ADM", school_id: uuid.UUID | None = None) -> AuthContext:

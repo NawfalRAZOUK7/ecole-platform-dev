@@ -308,7 +308,7 @@ class TestServeFileNoLocalAccess:
 class TestLocalFileStorageBackendPresignGet:
     @pytest.fixture()
     def backend(self, tmp_path: Path):
-        from app.services.file_storage import LocalFileStorageBackend
+        from app.services.content.file_storage import LocalFileStorageBackend
 
         return LocalFileStorageBackend(base_dir=str(tmp_path))
 
@@ -344,9 +344,9 @@ class TestS3FileStorageBackendPresignGet:
     """All aioboto3 calls are mocked — no real S3 connection."""
 
     def _make_backend(self, **overrides):
-        from app.services.file_storage import S3FileStorageBackend
+        from app.services.content.file_storage import S3FileStorageBackend
 
-        with patch("app.services.file_storage.settings") as mock_settings:
+        with patch("app.services.content.file_storage.settings") as mock_settings:
             mock_settings.document_storage_bucket = "test-bucket"
             mock_settings.document_storage_endpoint = None
             mock_settings.document_storage_region = "us-east-1"
@@ -372,7 +372,7 @@ class TestS3FileStorageBackendPresignGet:
         mock_ctx.__aexit__ = AsyncMock(return_value=False)
 
         with patch.object(backend, "_client", return_value=mock_ctx):
-            with patch("app.services.file_storage.settings") as ms:
+            with patch("app.services.content.file_storage.settings") as ms:
                 ms.s3_presign_get_ttl_seconds = 600
                 result = await backend.presign_get("schools/1/doc.pdf")
 
@@ -390,7 +390,7 @@ class TestS3FileStorageBackendPresignGet:
         mock_ctx.__aexit__ = AsyncMock(return_value=False)
 
         with patch.object(backend, "_client", return_value=mock_ctx):
-            with patch("app.services.file_storage.settings") as ms:
+            with patch("app.services.content.file_storage.settings") as ms:
                 ms.s3_presign_get_ttl_seconds = 600
                 await backend.presign_get(
                     "schools/1/doc.pdf", response_filename="my doc.pdf"
@@ -411,7 +411,7 @@ class TestS3FileStorageBackendPresignGet:
         mock_ctx.__aexit__ = AsyncMock(return_value=False)
 
         with patch.object(backend, "_client", return_value=mock_ctx):
-            with patch("app.services.file_storage.settings") as ms:
+            with patch("app.services.content.file_storage.settings") as ms:
                 ms.s3_presign_get_ttl_seconds = 999
                 await backend.presign_get("schools/1/doc.pdf")
 
@@ -428,7 +428,7 @@ class TestS3FileStorageBackendPresignGet:
         mock_ctx.__aexit__ = AsyncMock(return_value=False)
 
         with patch.object(backend, "_client", return_value=mock_ctx):
-            with patch("app.services.file_storage.settings") as ms:
+            with patch("app.services.content.file_storage.settings") as ms:
                 ms.s3_presign_get_ttl_seconds = 600
                 await backend.presign_get("schools/1/doc.pdf", expires_in=120)
 
@@ -444,7 +444,7 @@ class TestS3FileStorageBackendPresignGet:
 class TestFileStorageServicePresignGet:
     @pytest.fixture()
     def service(self, tmp_path: Path):
-        from app.services.file_storage import (
+        from app.services.content.file_storage import (
             FileStorageService,
             LocalFileStorageBackend,
         )
@@ -596,7 +596,7 @@ class TestRefactoredServiceReturnTypes:
     @pytest.mark.asyncio
     async def test_read_document_file_returns_tuple_str(self) -> None:
         """read_document_file must return (str, str, str) not a Path."""
-        from app.services.student_documents import StudentDocumentsService
+        from app.services.content.student_documents import StudentDocumentsService
 
         mock_document = MagicMock()
         mock_document.storage_path = "documents/ab/abc.pdf"
@@ -614,7 +614,7 @@ class TestRefactoredServiceReturnTypes:
         svc.db = mock_db
 
         with patch(
-            "app.services.student_documents.DocumentsRepository",
+            "app.services.content.student_documents.DocumentsRepository",
             return_value=mock_repo,
         ):
             result = await svc.read_document_file(document=mock_document)
@@ -628,7 +628,7 @@ class TestRefactoredServiceReturnTypes:
     @pytest.mark.asyncio
     async def test_get_version_returns_storage_path_str(self) -> None:
         """get_version must return (DocumentVersion, str) not (version, Path)."""
-        from app.services.student_documents import StudentDocumentsService
+        from app.services.content.student_documents import StudentDocumentsService
 
         mock_version = MagicMock()
         mock_version.storage_path = "documents/ab/v2.pdf"

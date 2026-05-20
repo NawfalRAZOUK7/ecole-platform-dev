@@ -1,0 +1,129 @@
+{
+  "info": {
+    "name": "Ecole Platform - Social Login Tests",
+    "description": "OAuth URL generation and invalid-code exchange behavior for non-browser Newman runs.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "school_id",
+      "value": "00000000-0000-4000-8000-000000000001",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Google OAuth URL",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/auth/oauth/google/url?redirect_uri=http://localhost:5173/auth/callback"
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Response has auth URL and state\", function () { pm.expect(responseBody.data).to.have.property(\"auth_url\"); pm.expect(responseBody.data).to.have.property(\"state\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Microsoft OAuth URL",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/auth/oauth/microsoft/url?redirect_uri=http://localhost:5173/auth/callback"
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Response has auth URL and state\", function () { pm.expect(responseBody.data).to.have.property(\"auth_url\"); pm.expect(responseBody.data).to.have.property(\"state\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Apple OAuth Disabled",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/auth/oauth/apple/url?redirect_uri=http://localhost:5173/auth/callback"
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 422 when Apple OAuth is disabled\", function () { pm.response.to.have.status(422); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Feature-disabled error returned\", function () { pm.expect(responseBody.error.code).to.eql(\"ERR-FEATURE-DISABLED\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Invalid Google OAuth Code Rejected",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/oauth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"provider\": \"google\",\n  \"code\": \"invalid-code\",\n  \"redirect_uri\": \"http://localhost:5173/auth/callback\",\n  \"school_id\": \"{{school_id}}\"\n}"
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 422\", function () { pm.response.to.have.status(422); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"OAuth exchange error returned\", function () { pm.expect(responseBody.error.code).to.eql(\"ERR-OAUTH-EXCHANGE\"); });"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -4,11 +4,12 @@ kind: NetworkPolicy
 metadata:
   name: {{ include "ecole-platform.fullname" . }}
   labels:
-    {{- include "ecole-platform.labels" . | nindent 4 }}
+    {{- include "ecole.labels" . | nindent 4 }}
 spec:
   podSelector:
     matchLabels:
-      {{- include "ecole-platform.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/name: {{ .Chart.Name }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
   policyTypes:
     - Ingress
     - Egress

@@ -1,9 +1,12 @@
-import type { AttendanceClassStats, AttendanceRecord } from '@/features/attendance/attendance.types';
-import type { BudgetEnvelope } from '@/features/budgets/budgets.types';
-import type { StudentGradeRow } from '@/features/gradebook/gradebook.types';
-import type { InvoiceSummary } from '@/features/invoices/invoices.service';
-import type { ClassOption, StudentItem } from '@/features/teacher/teacher.service';
-import type { UserProfile } from '@/services/auth/AuthContext';
+import type {
+  AttendanceClassStats,
+  AttendanceRecord,
+} from '@/features/academic/attendance/attendance.types';
+import type { BudgetEnvelope } from '@/features/billing/budgets/budgets.types';
+import type { StudentGradeRow } from '@/features/academic/gradebook/gradebook.types';
+import type { InvoiceSummary } from '@/features/billing/invoices/invoices.service';
+import type { ClassOption, StudentItem } from '@/features/lms/teacher/teacher.service';
+import type { UserProfile } from '@/app/providers/AuthContext';
 
 export interface TestSchool {
   id: string;
@@ -122,7 +125,9 @@ export function createBudget(overrides: Partial<BudgetEnvelope> = {}): BudgetEnv
   };
 }
 
-export function createAttendanceRecord(overrides: Partial<AttendanceRecord> = {}): AttendanceRecord {
+export function createAttendanceRecord(
+  overrides: Partial<AttendanceRecord> = {},
+): AttendanceRecord {
   const student = createStudent();
   const classItem = createClass();
   return {

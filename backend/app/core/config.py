@@ -151,6 +151,11 @@ class Settings(BaseSettings):
     smtp_from_name: str = "École Platform"
     smtp_timeout_seconds: int = 20
 
+    # TestMail API (for email testing)
+    testmail_enabled: bool = False
+    testmail_api_key: str = ""
+    testmail_namespace: str = ""
+
     # Notifications (Phase 13)
     notifications_digest_timezone: str = "Africa/Casablanca"
     notifications_digest_send_hour: int = 7
@@ -174,6 +179,63 @@ class Settings(BaseSettings):
     calendar_reminder_default_offsets: str = "1440,60"
     enable_tracing: bool = False
     otel_exporter_endpoint: str = "http://tempo:4317"
+
+    # Sentry error tracking & performance monitoring
+    sentry_dsn: str = ""
+    sentry_traces_sample_rate: float = 1.0
+    sentry_profiles_sample_rate: float = 1.0
+
+    # WebAuthn / Passkeys (Phase 10)
+    webauthn_enabled: bool = False
+    webauthn_rp_id: str = "localhost"
+    webauthn_rp_name: str = "École Platform"
+    webauthn_origin: str = "http://localhost:8000"
+
+    # OAuth / Social Login (Phase 10)
+    google_oauth_enabled: bool = True  # Enabled for dev testing with mock server
+    google_oauth_client_id: str = "mock-client-id"
+    google_oauth_client_secret: str = "mock-client-secret"
+
+    microsoft_oauth_enabled: bool = True  # Enabled for dev testing with mock server
+    microsoft_oauth_client_id: str = "mock-client-id"
+    microsoft_oauth_client_secret: str = "mock-client-secret"
+
+    apple_oauth_enabled: bool = False
+    apple_oauth_client_id: str = ""
+    apple_oauth_client_secret: str = ""
+
+    # SMS / Phone Verification (Phase 10)
+    sms_enabled: bool = True  # Enabled for dev testing with mock SMS
+    sms_provider: str = "twilio"  # twilio, etc.
+    twilio_account_sid: str = "mock-account-sid"
+    twilio_auth_token: str = "mock-auth-token"
+    twilio_from_number: str = "+1234567890"
+    mock_sms_enabled: bool = True  # Reveal OTP in logs instead of sending real SMS
+    debug_reveal_otp: bool = False  # Reveal OTPs in non-production test responses
+
+    # Mock OAuth / Social Login (Phase 10 — Testing)
+    mock_oauth_enabled: bool = True  # Use mock OAuth server instead of real providers
+    mock_oauth_base_url: str = "http://mock-oauth:9999"  # Mock OAuth server URL
+    mock_oauth_public_base_url: str = (
+        "http://localhost:9999"  # Browser/simulator URL for mock OAuth redirects
+    )
+
+    # Password Reuse Policy (Phase 11)
+    password_history_limit: int = 5  # Number of passwords to remember
+
+    # Account Lockout (Phase 11)
+    account_lockout_enabled: bool = False
+    account_lockout_max_attempts: int = 5  # Lockout after this many attempts
+    account_lockout_duration_minutes: int = 15  # Lockout duration
+    account_lockout_progressive_enabled: bool = (
+        False  # Enable progressive lockout (5=15min, 10=1hour)
+    )
+
+    # Suspicious Activity Detection (Phase 11)
+    suspicious_activity_enabled: bool = False
+    suspicious_activity_alert_on_new_location: bool = True
+    suspicious_activity_alert_on_new_device: bool = True
+    geoip_database_path: str = "/app/data/GeoLite2-City.mmdb"
 
     # Staging / seeding
     seed_on_startup: bool = False

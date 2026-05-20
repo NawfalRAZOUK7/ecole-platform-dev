@@ -11,12 +11,12 @@ import pytest
 
 from app.core.dependencies import AuthContext
 from app.core.exceptions import ValidationError
-from app.schemas.report_schedule import ReportScheduleCreateRequest
+from app.schemas.reports.report_schedule import ReportScheduleCreateRequest
 from app.schemas.reports import ReportGenerateRequest
-from app.services import report_scheduler as scheduler_module
-from app.services import reports as reports_module
-from app.services.report_scheduler import ReportSchedulerService
-from app.services.reports import ReportsService
+import app.services.reports.report_scheduler as scheduler_module
+import app.services.reports.reports as reports_module
+from app.services.reports.report_scheduler import ReportSchedulerService
+from app.services.reports.reports import ReportsService
 
 
 def make_auth(role: str = "ADM") -> AuthContext:

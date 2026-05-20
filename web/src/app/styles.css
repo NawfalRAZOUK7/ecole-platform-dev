@@ -1793,6 +1793,79 @@ button {
   gap: 16px;
 }
 
+.oauth-login {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.oauth-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    opacity 0.15s;
+}
+
+.oauth-button svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.oauth-button-google {
+  background: #fff;
+  color: var(--color-text);
+}
+
+.oauth-button-google:hover:not(:disabled) {
+  background: var(--color-bg);
+}
+
+.oauth-button-microsoft {
+  background: #0078d4;
+  border-color: #0078d4;
+  color: #fff;
+}
+
+.oauth-button-microsoft:hover:not(:disabled) {
+  background: #106ebe;
+  border-color: #106ebe;
+}
+
+.oauth-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.login-separator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0 16px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+.login-separator::before,
+.login-separator::after {
+  content: '';
+  height: 1px;
+  flex: 1;
+  background: var(--color-border);
+}
+
 .form-field {
   display: flex;
   flex-direction: column;

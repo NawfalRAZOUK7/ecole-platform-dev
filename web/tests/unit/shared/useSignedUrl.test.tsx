@@ -2,7 +2,7 @@ import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 import { getSignedUrlStaleTime, useSignedUrl } from '@/shared/hooks/useSignedUrl';
-import type { DownloadMetadata } from '@/services/api/client';
+import type { DownloadMetadata } from '@/core/api/client';
 import { renderWithProviders } from '../../utils/render';
 import { server } from '../../utils/mocks';
 

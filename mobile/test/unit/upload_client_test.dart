@@ -13,8 +13,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:ecole_platform/data/api/api_client.dart';
-import 'package:ecole_platform/data/services/upload_client.dart';
+import 'package:ecole_platform/core/network/api_client.dart';
+import 'package:ecole_platform/core/network/upload_client.dart';
 
 import '../helpers/test_services.dart';
 
@@ -205,17 +205,21 @@ void main() {
       expect(result.state, UploadState.available);
       expect(result.targetId, 'asset-abc');
       expect(putCalled, isTrue);
-      expect(putAuthHeaderPresent, isFalse,
-          reason: 'PUT to MinIO must carry no Authorization header');
+      expect(
+        putAuthHeaderPresent,
+        isFalse,
+        reason: 'PUT to MinIO must carry no Authorization header',
+      );
       expect(statusCallCount, greaterThanOrEqualTo(1));
       expect(
-          states,
-          containsAll([
-            UploadState.preparing,
-            UploadState.uploading,
-            UploadState.processing,
-            UploadState.available,
-          ]));
+        states,
+        containsAll([
+          UploadState.preparing,
+          UploadState.uploading,
+          UploadState.processing,
+          UploadState.available,
+        ]),
+      );
     });
 
     test('quarantined file: status=quarantined → throws UploadQuarantinedError',
@@ -320,8 +324,11 @@ void main() {
         throwsA(isA<ApiClientError>()),
       );
 
-      expect(putCalled, isFalse,
-          reason: 'PUT must not be attempted after init failure');
+      expect(
+        putCalled,
+        isFalse,
+        reason: 'PUT must not be attempted after init failure',
+      );
     });
 
     test('expired presigned URL: throws UploadExpiredError before PUT',
@@ -372,8 +379,11 @@ void main() {
         throwsA(isA<UploadExpiredError>()),
       );
 
-      expect(putCalled, isFalse,
-          reason: 'PUT must not be attempted when URL is already expired');
+      expect(
+        putCalled,
+        isFalse,
+        reason: 'PUT must not be attempted when URL is already expired',
+      );
     });
 
     test('PUT non-2xx: throws UploadPutError', () async {

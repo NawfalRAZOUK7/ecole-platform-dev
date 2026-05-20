@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:ecole_platform/data/local_store/offline_queue.dart';
+import 'package:ecole_platform/core/storage/offline_queue.dart';
 
 import '../helpers/test_database.dart';
 

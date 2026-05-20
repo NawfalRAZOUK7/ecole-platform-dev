@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:ecole_platform/domain/entities/compliance.dart';
-import 'package:ecole_platform/features/compliance/compliance_dashboard_screen.dart';
-import 'package:ecole_platform/features/compliance/curriculum_mapping_screen.dart';
+import 'package:ecole_platform/domain/entities/admin/compliance.dart';
+import 'package:ecole_platform/features/admin/compliance/compliance_dashboard_screen.dart';
+import 'package:ecole_platform/features/admin/compliance/curriculum_mapping_screen.dart';
 import 'package:ecole_platform/shared/widgets/widgets.dart';
 
 import '../helpers/mock_repositories.dart';

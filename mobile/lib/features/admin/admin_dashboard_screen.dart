@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ecole_platform/app/providers.dart';
-import 'package:ecole_platform/domain/entities/admin.dart';
+import 'package:ecole_platform/domain/entities/admin/admin.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/widgets/platform_bridge_card.dart';
 
@@ -41,8 +41,11 @@ class AdminDashboardScreen extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline,
-                  size: 48, color: theme.colorScheme.error),
+              Icon(
+                Icons.error_outline,
+                size: 48,
+                color: theme.colorScheme.error,
+              ),
               const SizedBox(height: 16),
               Text(error.toString(), textAlign: TextAlign.center),
               const SizedBox(height: 16),
@@ -94,9 +97,11 @@ class AdminDashboardScreen extends ConsumerWidget {
               const SizedBox(height: 24),
 
               // Users by role breakdown
-              Text('Répartition par rôle',
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold)),
+              Text(
+                'Répartition par rôle',
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 12),
               Card(
                 child: Padding(
@@ -111,9 +116,12 @@ class AdminDashboardScreen extends ConsumerWidget {
                         child: Row(
                           children: [
                             SizedBox(
-                                width: 100,
-                                child: Text(label,
-                                    style: theme.textTheme.bodySmall)),
+                              width: 100,
+                              child: Text(
+                                label,
+                                style: theme.textTheme.bodySmall,
+                              ),
+                            ),
                             Expanded(
                               child: LinearProgressIndicator(
                                 value: count / total,
@@ -122,9 +130,11 @@ class AdminDashboardScreen extends ConsumerWidget {
                               ),
                             ),
                             const SizedBox(width: 12),
-                            Text('$count',
-                                style: theme.textTheme.bodyMedium
-                                    ?.copyWith(fontWeight: FontWeight.bold)),
+                            Text(
+                              '$count',
+                              style: theme.textTheme.bodyMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                            ),
                           ],
                         ),
                       );
@@ -133,9 +143,11 @@ class AdminDashboardScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 24),
-              Text('Administration',
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold)),
+              Text(
+                'Administration',
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 12),
               Card(
                 child: ListTile(
@@ -180,7 +192,7 @@ class AdminDashboardScreen extends ConsumerWidget {
           width: 160,
           child: Card(
             elevation: 2,
-            shadowColor: card.color.withOpacity(0.15),
+            shadowColor: card.color.withValues(alpha: 0.15),
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
@@ -189,7 +201,8 @@ class AdminDashboardScreen extends ConsumerWidget {
                   end: Alignment.bottomRight,
                   colors: [
                     theme.colorScheme.surface,
-                    Color.lerp(theme.colorScheme.surface, card.color, 0.06) ?? theme.colorScheme.surface,
+                    Color.lerp(theme.colorScheme.surface, card.color, 0.06) ??
+                        theme.colorScheme.surface,
                   ],
                 ),
               ),
@@ -200,19 +213,24 @@ class AdminDashboardScreen extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: card.color.withOpacity(0.12),
+                      color: card.color.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(card.icon, color: card.color, size: 24),
                   ),
                   const SizedBox(height: 12),
-                  Text(card.value,
-                      style: theme.textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.bold)),
+                  Text(
+                    card.value,
+                    style: theme.textTheme.headlineSmall
+                        ?.copyWith(fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 4),
-                  Text(card.label,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant)),
+                  Text(
+                    card.label,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                 ],
               ),
             ),

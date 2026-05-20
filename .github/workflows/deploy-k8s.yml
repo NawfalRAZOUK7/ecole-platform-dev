@@ -128,6 +128,60 @@ jobs:
           kubectl create namespace ${{ steps.env.outputs.namespace }} \
             --dry-run=client -o yaml | kubectl apply -f -
 
+      - name: Install Doppler CLI
+        if: steps.deployment-credentials.outputs.enabled == 'true'
+        run: |
+          curl -sLf --compressed "https://cli.doppler.com/install.sh" | sh
+          doppler --version
+
+      - name: Sync Doppler secrets to Kubernetes
+        if: steps.deployment-credentials.outputs.enabled == 'true'
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+          NAMESPACE: ${{ steps.env.outputs.namespace }}
+        run: |
+          # Determine Doppler config from branch
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            DOPPLER_CONFIG="prd_main"
+          else
+            DOPPLER_CONFIG="stg_main"
+          fi
+
+          echo "Syncing secrets from Doppler config: $DOPPLER_CONFIG"
+
+          # Download as JSON and pipe directly to a Python script that creates
+          # Kubernetes secrets without writing secrets to disk or exporting to shell env.
+          doppler secrets download --token "$DOPPLER_TOKEN" \
+            --config "$DOPPLER_CONFIG" --no-file --format json | python3 -c '
+          import json, sys, subprocess, os
+          secrets = json.load(sys.stdin)
+          ns = os.environ["NAMESPACE"]
+          keys = ["DATABASE_URL", "REDIS_URL", "JWT_SECRET_KEY", "SMTP_PASSWORD"]
+          for key in keys:
+              val = secrets.get(key, {}).get("computed", "")
+              secret_name = f"ecole-{key.lower().replace("_", "-")}"
+              if key == "SMTP_PASSWORD":
+                  secret_name = "ecole-smtp-password"
+              if key == "JWT_SECRET_KEY":
+                  secret_name = "ecole-jwt-secret"
+              yaml = subprocess.run(
+                  [
+                      "kubectl", "create", "secret", "generic", secret_name,
+                      "-n", ns,
+                      f"--from-literal={key}={val}",
+                      "--dry-run=client", "-o", "yaml",
+                  ],
+                  stdout=subprocess.PIPE, check=True,
+              ).stdout
+              subprocess.run(
+                  ["kubectl", "apply", "-n", ns, "-f", "-"],
+                  input=yaml,
+                  check=True,
+              )
+              print(f"Secret {secret_name} created/updated")
+          '
+          echo "Secrets synced successfully"
+
       - name: Helm upgrade
         if: steps.deployment-credentials.outputs.enabled == 'true'
         run: |

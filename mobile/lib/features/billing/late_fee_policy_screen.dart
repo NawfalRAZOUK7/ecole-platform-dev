@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/app/providers.dart';
-import 'package:ecole_platform/domain/entities/invoice.dart';
+import 'package:ecole_platform/domain/entities/billing/invoice.dart';
 import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/shared/widgets/widgets.dart';
 

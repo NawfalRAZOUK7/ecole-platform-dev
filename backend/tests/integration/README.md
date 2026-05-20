@@ -6,30 +6,34 @@
 
 - **Database**: testcontainers PostgreSQL (real schema, real data)
 - **Approach**: Full stack testing with actual persistence
-- **Categories**: API endpoints (6 test files) + Database repositories (3 test files)
-- **Fixtures**: `async_session` fixture manages transactions and rollback
+- **Categories**: API endpoint tests under `integration/api/<domain>/` + repository integration tests
+- **Fixtures**: `async_session` / `client` from `conftest.py` manage DB and HTTP client lifecycle
 
 ## Test Categories
 
-### API Endpoint Tests (6 files)
-**Path**: `integration/api/`
+### API endpoint tests
+**Path**: `integration/api/` — one subfolder per API domain (e.g. `school/`, `billing/`, `reports/`, `academic/`, `lms/`, `auth/`, `user/`).
 
-Test HTTP endpoint contracts and response formats with real database.
+HTTP contracts against the running app with real database (testcontainers). Shared utilities: **`helpers.py`**, **`conftest.py`** at `integration/api/`.
 
-| File | Endpoints | Coverage |
-|------|-----------|----------|
-| **test_schools_api.py** | GET/POST/PUT /schools, /schools/{id} | School CRUD, pagination, search |
-| **test_billing_api.py** | POST /invoices, GET /invoices, /payments | Invoice creation, payment processing |
-| **test_gradebook_api.py** | GET/POST /gradebook | Grade entry, publication, filtering |
-| **test_rubrics_api.py** | GET/POST /rubrics, /rubrics/{id}/grades | Rubric CRUD, grade mapping |
-| **test_attendance_analytics_api.py** | GET /attendance/analytics | Attendance stats, time series |
-| **test_timetable_api.py** | POST /timetable, GET /timetable/conflicts | Schedule creation, conflict detection |
+| Domain folder | Focus |
+|---------------|--------|
+| `school/` | Schools CRUD, micro-school |
+| `billing/` | Invoices, payments, budgets |
+| `reports/` | Financial health, attendance analytics |
+| `academic/` | Programs, attendance, gradebook, timetable, skills |
+| `lms/` | Rubrics, content, uploads, levels |
+| `auth/` | Auth flows, RBAC, background auth tasks |
+| `user/` | Profiles and family relationships |
+| `communication/` | Notifications, announcements, shared review |
+| `content/` | Documents and direct uploads |
+| `ai/` | Rewards and games |
+| `admin/` | Compliance and calendar events |
+| `sync/` | Local-first sync |
+| `operations/` | Readiness plus cross-domain filters and websocket checks |
 
-**Key Files:**
-- **helpers.py** - Shared test utilities: client fixture, auth helpers, data setup
-
-### Database Repository Tests (3 files)
-**Path**: `integration/db/`
+### Database / repository integration tests
+**Path**: `integration/repositories/`
 
 Test data access layer with real database transactions.
 
@@ -47,10 +51,10 @@ pytest backend/tests/integration/
 
 # By category
 pytest backend/tests/integration/api/
-pytest backend/tests/integration/db/
+pytest backend/tests/integration/repositories/
 
 # Specific test
-pytest backend/tests/integration/api/test_schools_api.py::test_create_school_success
+pytest backend/tests/integration/api/school/test_schools_api.py::TestSchoolsApi::test_admin_can_list_schools -v
 
 # With coverage
 pytest backend/tests/integration/ --cov=backend --cov-report=html

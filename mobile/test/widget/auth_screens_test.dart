@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:ecole_platform/app/providers.dart';
-import 'package:ecole_platform/domain/repositories/auth_repository.dart';
+import 'package:ecole_platform/domain/repositories/auth/auth_repository.dart';
 import 'package:ecole_platform/features/auth/forgot_password_screen.dart';
 import 'package:ecole_platform/features/auth/login_screen.dart';
 
@@ -48,10 +48,15 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.enterText(
-        find.byType(TextFormField).at(0), 'parent@ecole.test');
+      find.byType(TextFormField).at(0),
+      'parent@ecole.test',
+    );
     await tester.enterText(find.byType(TextFormField).at(1), 'secret');
     await tester.enterText(find.byType(TextFormField).at(2), 'school-1');
-    await tester.tap(find.text('Se connecter'));
+    final loginButton = find.widgetWithText(FilledButton, 'Se connecter');
+    await tester.ensureVisible(loginButton);
+    await tester.pumpAndSettle();
+    await tester.tap(loginButton);
     await tester.pumpAndSettle();
 
     verify(

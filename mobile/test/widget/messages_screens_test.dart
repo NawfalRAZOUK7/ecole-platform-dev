@@ -4,8 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:ecole_platform/app/providers.dart';
-import 'package:ecole_platform/features/messages/chat_screen.dart';
-import 'package:ecole_platform/features/messages/conversations_screen.dart';
+import 'package:ecole_platform/features/communication/messages/chat_screen.dart';
+import 'package:ecole_platform/features/communication/messages/conversations_screen.dart';
 
 import '../helpers/api_responses.dart';
 import '../helpers/mock_repositories.dart';
@@ -143,8 +143,9 @@ Map<String, dynamic> _conversationJson() {
   };
 }
 
-Map<String, dynamic> _messageJson(
-    {String body = 'Hello from the school app.'}) {
+Map<String, dynamic> _messageJson({
+  String body = 'Hello from the school app.',
+}) {
   return {
     'id': 'message-1',
     'conversation_id': 'conversation-1',

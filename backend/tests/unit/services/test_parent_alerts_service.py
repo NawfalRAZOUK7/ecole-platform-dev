@@ -16,7 +16,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from app.services.parent_alerts import ParentAlertService
+from app.services.communication.parent_alerts import ParentAlertService
 
 
 def _utc_now():

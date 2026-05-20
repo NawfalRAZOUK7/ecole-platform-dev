@@ -18,7 +18,7 @@ from app.schemas.lms import (
     SubmissionCreateRequest,
     SubmissionResponse,
 )
-from app.schemas.programs import (
+from app.schemas.academic.programs import (
     ProgramCreateRequest,
     ProgramResponse,
     ProgramVersionResponse,

@@ -11,7 +11,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from app.core.exceptions import NotFoundError
-from app.services.reports import ReportsService
+from app.services.reports.reports import ReportsService
 
 
 # ---------------------------------------------------------------------------

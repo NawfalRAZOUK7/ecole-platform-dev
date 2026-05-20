@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { dirname, join, relative, resolve } from 'node:path';
@@ -84,29 +85,31 @@ function listServiceFiles(dir: string): string[] {
     if (entry.isDirectory()) {
       return listServiceFiles(fullPath);
     }
-    return entry.name.endsWith('.service.ts') ? [fullPath] : [];
+    return entry.name.endsWith('.api.ts') ? [fullPath] : [];
   });
 }
 
 function readOpenApiSpec(): OpenApiSpec {
-  const result = spawnSync('sh', [GENERATE_OPENAPI_SCRIPT], {
-    cwd: REPO_ROOT,
-    encoding: 'utf8',
-  });
-
-  if (result.status !== 0 && !existsSync(OPENAPI_PATH) && !existsSync(COMMITTED_OPENAPI_PATH)) {
-    throw new Error(
-      [
-        'Failed to generate backend/openapi.json for contract tests.',
-        result.stdout.trim(),
-        result.stderr.trim(),
-      ]
-        .filter(Boolean)
-        .join('\n'),
-    );
-  }
-
   const specPath = existsSync(OPENAPI_PATH) ? OPENAPI_PATH : COMMITTED_OPENAPI_PATH;
+
+  if (!existsSync(specPath)) {
+    const result = spawnSync('sh', [GENERATE_OPENAPI_SCRIPT], {
+      cwd: REPO_ROOT,
+      encoding: 'utf8',
+    });
+
+    if (result.status !== 0 && !existsSync(OPENAPI_PATH) && !existsSync(COMMITTED_OPENAPI_PATH)) {
+      throw new Error(
+        [
+          'Failed to generate backend/openapi.json for contract tests.',
+          result.stdout.trim(),
+          result.stderr.trim(),
+        ]
+          .filter(Boolean)
+          .join('\n'),
+      );
+    }
+  }
   const spec = JSON.parse(readFileSync(specPath, 'utf8')) as OpenApiSpec;
 
   if (!existsSync(OPENAPI_SUPPLEMENT_PATH)) {

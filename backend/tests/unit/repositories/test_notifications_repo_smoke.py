@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 import pytest
 
 from app.models.com import NotificationPreference
-from app.repositories.notifications import NotificationRepository
+from app.repositories.communication_notifications import NotificationRepository
 from tests.factories.iam import UserFactory
 from tests.factories.school import SchoolFactory
 

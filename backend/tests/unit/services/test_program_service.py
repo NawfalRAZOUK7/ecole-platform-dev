@@ -18,8 +18,8 @@ import pytest
 from app.core.dependencies import AuthContext
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.models.erp import EnrollmentStatus, ProgramAssignmentReason
-from app.services import program_service as program_module
-from app.services.program_service import ProgramService
+import app.services.lms.program_service as program_module
+from app.services.lms.program_service import ProgramService
 
 
 # ---------------------------------------------------------------------------

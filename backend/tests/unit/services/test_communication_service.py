@@ -11,9 +11,9 @@ import pytest
 
 from app.core.dependencies import AuthContext
 from app.core.exceptions import NotFoundError, ValidationError
-from app.schemas.com import ConversationCreateRequest, MessageCreateRequest
-from app.services import communication as communication_module
-from app.services.communication import CommunicationService
+from app.schemas.communication import ConversationCreateRequest, MessageCreateRequest
+import app.services.communication.communication as communication_module
+from app.services.communication.communication import CommunicationService
 
 
 def make_auth(role: str = "PAR") -> AuthContext:

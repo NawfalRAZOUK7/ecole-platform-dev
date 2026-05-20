@@ -1,0 +1,40 @@
+{
+  "schools": [
+    {
+      "id": "00000000-0000-4000-8000-000000000001",
+      "name": "École Benani",
+      "code": "BENANI",
+      "type": "primary",
+      "status": "active",
+      "settings": {
+        "max_students": 500,
+        "enable_parent_portal": true,
+        "enable_teacher_portal": true
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000002",
+      "name": "Test School Alpha",
+      "code": "TEST_ALPHA",
+      "type": "secondary",
+      "status": "active",
+      "settings": {
+        "max_students": 300,
+        "enable_parent_portal": true,
+        "enable_teacher_portal": true
+      }
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000003",
+      "name": "Test School Beta",
+      "code": "TEST_BETA",
+      "type": "primary",
+      "status": "active",
+      "settings": {
+        "max_students": 400,
+        "enable_parent_portal": true,
+        "enable_teacher_portal": false
+      }
+    }
+  ]
+}

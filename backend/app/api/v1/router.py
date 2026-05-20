@@ -56,127 +56,134 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
 # Phase 2 routers
-from app.api.v1.auth import router as auth_router
-from app.api.v1.classes import router as classes_router
-from app.api.v1.enrollments import router as enrollments_router
-from app.api.v1.invitations import router as invitations_router
-from app.api.v1.recovery import router as recovery_router
-from app.api.v1.schools import router as schools_router
+from app.api.v1.auth.auth import router as auth_router
+from app.api.v1.auth.webauthn import router as webauthn_router
+from app.api.v1.auth.oauth import router as oauth_router
+from app.api.v1.auth.sms_2fa import router as sms_2fa_router
+from app.api.v1.school.classes import router as classes_router
+from app.api.v1.lms.enrollments import router as enrollments_router
+from app.api.v1.admin.invitations import router as invitations_router
+from app.api.v1.user.recovery import router as recovery_router
+from app.api.v1.school.schools import router as schools_router
 
 # Phase 3 — ERP routers
-from app.api.v1.class_assignments import router as class_assignments_router
-from app.api.v1.attendance import router as attendance_router
-from app.api.v1.attendance_analytics import router as attendance_analytics_router
+from app.api.v1.lms.class_assignments import router as class_assignments_router
+from app.api.v1.academic.attendance import router as attendance_router
+from app.api.v1.reports.attendance_analytics import (
+    router as attendance_analytics_router,
+)
 
 # Phase 3 — LMS routers
-from app.api.v1.courses import router as courses_router
-from app.api.v1.assignments import router as assignments_router
-from app.api.v1.submissions import router as submissions_router
-from app.api.v1.results import router as results_router
-from app.api.v1.content import legacy_router as legacy_content_router
-from app.api.v1.content import router as content_router
-from app.api.v1.content import student_work_router
-from app.api.v1.activities import router as activities_router
-from app.api.v1.assessments import router as assessments_router
-from app.api.v1.gradebook import router as gradebook_router
-from app.api.v1.question_bank import router as question_bank_router
-from app.api.v1.rubrics import router as rubrics_router
+from app.api.v1.lms.courses import router as courses_router
+from app.api.v1.lms.assignments import router as assignments_router
+from app.api.v1.lms.submissions import router as submissions_router
+from app.api.v1.academic.results import router as results_router
+from app.api.v1.lms.content import legacy_router as legacy_content_router
+from app.api.v1.lms.content import router as content_router
+from app.api.v1.lms.content import student_work_router
+from app.api.v1.ai.activities import router as activities_router
+from app.api.v1.lms.assessments import router as assessments_router
+from app.api.v1.academic.gradebook import router as gradebook_router
+from app.api.v1.lms.question_bank import router as question_bank_router
+from app.api.v1.lms.rubrics import router as rubrics_router
 
 # Phase 3 — Billing routers
-from app.api.v1.invoices import router as invoices_router
-from app.api.v1.payments import router as payments_router
+from app.api.v1.billing.invoices import router as invoices_router
+from app.api.v1.billing.payments import router as payments_router
 
 # Phase 3 — COM routers
-from app.api.v1.devices import router as devices_router
-from app.api.v1.notifications import router as notifications_router
-from app.api.v1.consents import router as consents_router
-from app.api.v1.feed import router as feed_router
+from app.api.v1.user.devices import router as devices_router
+from app.api.v1.communication.notifications import router as notifications_router
+from app.api.v1.user.consents import router as consents_router
+from app.api.v1.content.feed import router as feed_router
 
 # Phase 3C — WebSocket
 from app.api.v1.ws import router as ws_router
 
 # Phase 4A — Admin dashboard
-from app.api.v1.admin import router as admin_router
+from app.api.v1.admin.admin import router as admin_router
 
 # Phase 4B — Teacher dashboard
-from app.api.v1.teacher import router as teacher_router
+from app.api.v1.academic.teacher import router as teacher_router
 
 # Phase 8 — AI & Data routers
-from app.api.v1.ai import router as ai_router
+from app.api.v1.ai.ai import router as ai_router
 
 # Phase 8A — GDPR compliance
-from app.api.v1.gdpr import router as gdpr_router
+from app.api.v1.user.gdpr import router as gdpr_router
 
 # Phase 1B — Role-specific profiles
-from app.api.v1.profiles import router as profiles_router
+from app.api.v1.user.profiles import router as profiles_router
 
 # Phase 9A — CMS + Content Library
-from app.api.v1.cms import router as cms_router
-from app.api.v1.content_library import router as content_library_router
+from app.api.v1.content.cms import router as cms_router
+from app.api.v1.content.content_library import router as content_library_router
 
 # Phase 9B — Quiz Engine
-from app.api.v1.quizzes import router as quizzes_router
+from app.api.v1.lms.quizzes import router as quizzes_router
 
 # Phase 11A — Timetable
-from app.api.v1.timetable import router as timetable_router
-from app.api.v1.timetable_generation import router as timetable_generation_router
+from app.api.v1.academic.timetable import router as timetable_router
+from app.api.v1.academic.timetable_generation import (
+    router as timetable_generation_router,
+)
 
 # Phase 11B — Billing Enhancements
-from app.api.v1.billing import router as billing_router
-from app.api.v1.budgets import router as budgets_router
-from app.api.v1.compliance import router as compliance_router
-from app.api.v1.financial_health import router as financial_health_router
-from app.api.v1.games import router as games_router
-from app.api.v1.micro_school import router as micro_school_router
-from app.api.v1.rewards import router as rewards_router
-from app.api.v1.skills import router as skills_router
-from app.api.v1.sync import router as sync_router
+from app.api.v1.billing.billing import router as billing_router
+from app.api.v1.billing.budgets import router as budgets_router
+from app.api.v1.admin.compliance import router as compliance_router
+from app.api.v1.reports.financial_health import router as financial_health_router
+from app.api.v1.ai.games import router as games_router
+from app.api.v1.school.micro_school import router as micro_school_router
+from app.api.v1.ai.rewards import router as rewards_router
+from app.api.v1.academic.skills import router as skills_router
+from app.api.v1.sync.sync import router as sync_router
 
 # Phase 11C — Messaging & Announcements
-from app.api.v1.messaging import router as messaging_router
-from app.api.v1.announcements import router as announcements_router
+from app.api.v1.communication.messaging import router as messaging_router
+from app.api.v1.admin.announcements import router as announcements_router
 
 # Phase 11D — Student Progress
-from app.api.v1.progress import router as progress_router
+from app.api.v1.academic.progress import router as progress_router
 
 # Phase 11E — Feature Toggles
-from app.api.v1.features import router as features_router
+from app.api.v1.admin.features import router as features_router
 
 # Phase 14 — Reports & Analytics
-from app.api.v1.analytics import router as analytics_router
-from app.api.v1.exports import router as exports_router
-from app.api.v1.reports import router as reports_router
+from app.api.v1.reports.analytics import router as analytics_router
+from app.api.v1.content.exports import router as exports_router
+from app.api.v1.reports.reports import router as reports_router
 
 # Phase 15 — Calendar & Events
-from app.api.v1.events import router as events_router
+from app.api.v1.admin.events import router as events_router
 
 # Phase 16 — Documents
-from app.api.v1.documents import router as documents_router
+from app.api.v1.content.documents import router as documents_router
 
 # Phase 8 — Direct uploads
-from app.api.v1.uploads import router as uploads_router
+from app.api.v1.content.uploads import router as uploads_router
 
 # Phase B1 — Shared Review (parent-child)
-from app.api.v1.shared_review import router as shared_review_router
+from app.api.v1.lms.shared_review import router as shared_review_router
 
 # G46 — Level-age mappings
-from app.api.v1.levels import router as levels_router
+from app.api.v1.lms.levels import router as levels_router
 
 # G49 — Academic Program Management & Student Academic History
-from app.api.v1.programs import (
+from app.api.v1.lms.programs import (
     enrollment_program_router as enrollment_program_router,
     program_equivalences_router as program_equivalences_router,
     programs_router as programs_router,
 )
-from app.api.v1.snapshots import (
+from app.api.v1.content.snapshots import (
     snapshots_router as snapshots_router,
     student_snapshots_router as student_snapshots_router,
 )
-from app.api.v1.eligibility import (
+from app.api.v1.lms.eligibility import (
     eligibility_router as eligibility_router,
     student_eligibility_router as student_eligibility_router,
 )
-from app.api.v1.student_academic import router as student_academic_router
+from app.api.v1.academic.student_academic import router as student_academic_router
 from app.core.database import get_db
 from app.core.redis import get_redis
 
@@ -266,8 +273,27 @@ async def readiness_check(
     )
 
 
+@router.get(
+    "/sentry-debug",
+    tags=["system"],
+    summary="Trigger a test error for Sentry",
+    response_description="Intentionally raises an error to verify Sentry capture",
+)
+async def sentry_debug():
+    """Trigger a ZeroDivisionError to verify Sentry error reporting."""
+    from app.core.config import settings
+
+    if settings.is_production:
+        return {"error": "Debug endpoint disabled in production"}
+    division_by_zero = 1 / 0  # noqa: F841
+    return {"ok": True}
+
+
 # Mount sub-routers — Phase 2
 router.include_router(auth_router)
+router.include_router(webauthn_router)
+router.include_router(oauth_router)
+router.include_router(sms_2fa_router)
 router.include_router(schools_router)
 router.include_router(invitations_router)
 router.include_router(recovery_router)

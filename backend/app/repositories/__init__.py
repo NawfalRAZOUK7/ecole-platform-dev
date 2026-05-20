@@ -2,44 +2,44 @@
 
 from app.repositories.admin import AdminRepository
 from app.repositories.ai import AIRepository
-from app.repositories.analytics import AnalyticsRepository
-from app.repositories.attendance_analytics import AttendanceAnalyticsRepository
+from app.repositories.reports_analytics import AnalyticsRepository
+from app.repositories.academic_attendance_analytics import AttendanceAnalyticsRepository
 from app.repositories.base import BaseRepository
 from app.repositories.audit import AuditRepository
 from app.repositories.auth import AuthRepository
 from app.repositories.billing import BillingRepository
 from app.repositories.billing_enhancements import BillingEnhancementsRepository
 from app.repositories.budget import BudgetRepository
-from app.repositories.calendar import CalendarRepository
-from app.repositories.cms import CMSRepository
-from app.repositories.men_compliance import ComplianceRepository
-from app.repositories.documents import DocumentsRepository
+from app.repositories.communication_calendar import CalendarRepository
+from app.repositories.content_cms import CMSRepository
+from app.repositories.admin_men_compliance import ComplianceRepository
+from app.repositories.content_documents import DocumentsRepository
 from app.repositories.erp import ERPRepository
-from app.repositories.feature import FeatureRepository
-from app.repositories.financial_health import FinancialHealthRepository
-from app.repositories.gdpr import GDPRRepository
-from app.repositories.gradebook import GradebookRepository
+from app.repositories.admin_feature import FeatureRepository
+from app.repositories.reports_financial_health import FinancialHealthRepository
+from app.repositories.user_gdpr import GDPRRepository
+from app.repositories.academic_gradebook import GradebookRepository
 from app.repositories.lms import (
     AssessmentRepository,
     AssignmentRepository,
     LMSRepository,
 )
-from app.repositories.login_history import LoginHistoryRepository
-from app.repositories.messaging import MessagingRepository
-from app.repositories.micro_school import MicroSchoolRepository
-from app.repositories.notifications import NotificationRepository
-from app.repositories.profile import ProfileRepository
+from app.repositories.auth_login_history import LoginHistoryRepository
+from app.repositories.communication_messaging import MessagingRepository
+from app.repositories.school_micro_school import MicroSchoolRepository
+from app.repositories.communication_notifications import NotificationRepository
+from app.repositories.user_profile import ProfileRepository
 from app.repositories.profile_loader import ProfileLoaderRepository
-from app.repositories.progress import ProgressRepository
-from app.repositories.question_bank import QuestionBankRepository
-from app.repositories.quiz import QuizRepository
+from app.repositories.academic_progress import ProgressRepository
+from app.repositories.lms_question_bank import QuestionBankRepository
+from app.repositories.lms_quiz import QuizRepository
 from app.repositories.reports import ReportsRepository
-from app.repositories.report_schedule import ReportScheduleRepository
-from app.repositories.rubric import RubricRepository
+from app.repositories.reports_schedule import ReportScheduleRepository
+from app.repositories.lms_rubric import RubricRepository
 from app.repositories.school import SchoolRepository
-from app.repositories.skill_passport import SkillPassportRepository
+from app.repositories.academic_skill_passport import SkillPassportRepository
 from app.repositories.sync_queue import SyncQueueRepository
-from app.repositories.timetable_generation import TimetableGenerationRepository
+from app.repositories.academic_timetable_generation import TimetableGenerationRepository
 
 __all__ = [
     "BaseRepository",

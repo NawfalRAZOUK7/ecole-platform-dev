@@ -1,0 +1,218 @@
+{
+  "info": {
+    "name": "Ecole Platform - Registration Flow",
+    "description": "Invitation code generation, registration, and test-mode email verification.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "school_id",
+      "value": "00000000-0000-4000-8000-000000000001",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "invite_code",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "new_user_email",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "new_user_password",
+      "value": "RegisterFlow123!",
+      "type": "string"
+    },
+    {
+      "key": "registered_user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "otp",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Login Admin",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"school_id\": \"{{school_id}}\"\n}"
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.environment.get(\"new_user_email\")) {",
+              "  var runId = Date.now() + \"-\" + Math.random().toString(36).slice(2, 8);",
+              "  pm.environment.set(\"new_user_email\", \"register.flow+\" + runId + \"@example.com\");",
+              "  pm.environment.set(\"new_user_password\", \"RegisterFlow123!\");",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Response has access_token\", function () { pm.expect(responseBody.data).to.have.property(\"access_token\"); });",
+              "pm.environment.set(\"token\", responseBody.data.access_token);",
+              "pm.environment.set(\"access_token\", responseBody.data.access_token);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Create Invitation",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/invites/create",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"role_target\": \"TCH\",\n  \"expires_in_hours\": 72\n}"
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () { pm.response.to.have.status(201); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Response has invite data\", function () {",
+              "  pm.expect(responseBody.data).to.have.property(\"invite_id\");",
+              "  pm.expect(responseBody.data).to.have.property(\"code\");",
+              "});",
+              "pm.environment.set(\"invite_code\", responseBody.data.code);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Register with Invitation",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/register",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"{{invite_code}}\",\n  \"email\": \"{{new_user_email}}\",\n  \"full_name\": \"Scenario Registrant\",\n  \"password\": \"{{new_user_password}}\",\n  \"phone\": \"+212600000000\",\n  \"profile_data\": {}\n}"
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () { pm.response.to.have.status(201); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Response has registration token and ids\", function () {",
+              "  pm.expect(responseBody.data).to.have.property(\"access_token\");",
+              "  pm.expect(responseBody.data).to.have.property(\"user_id\");",
+              "  pm.expect(responseBody.data).to.have.property(\"school_id\");",
+              "});",
+              "pm.environment.set(\"registered_user_id\", responseBody.data.user_id);",
+              "pm.environment.set(\"registration_school_id\", responseBody.data.school_id);",
+              "if (responseBody.data.email_verification_otp) { pm.environment.set(\"otp\", responseBody.data.email_verification_otp); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Verify Email",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/verify-email",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user_id\": \"{{registered_user_id}}\",\n  \"school_id\": \"{{registration_school_id}}\",\n  \"otp\": \"{{otp}}\"\n}"
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Email verification successful\", function () {",
+              "  pm.expect(responseBody.data).to.have.property(\"message\");",
+              "  pm.expect(responseBody.data.message.toLowerCase()).to.include(\"verified\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

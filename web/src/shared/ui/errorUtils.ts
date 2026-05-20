@@ -1,4 +1,4 @@
-import { ApiClientError, type ApiError } from '@/services/api/client';
+import { ApiClientError, type ApiError } from '@/core/api/client';
 
 export function toBannerError(error: unknown, fallback: string): ApiError | string | null {
   if (!error) {

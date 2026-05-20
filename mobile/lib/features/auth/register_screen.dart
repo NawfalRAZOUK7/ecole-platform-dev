@@ -9,7 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ecole_platform/app/providers.dart';
-import 'package:ecole_platform/data/api/api_client.dart';
+import 'package:ecole_platform/core/network/api_client.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 
 part 'register_steps.dart';
@@ -252,8 +252,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Header
-                  Icon(Icons.school,
-                      size: 64, color: theme.colorScheme.primary),
+                  Icon(
+                    Icons.school,
+                    size: 64,
+                    color: theme.colorScheme.primary,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'École Platform',
@@ -302,8 +305,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.error_outline,
-                              color: theme.colorScheme.error, size: 20),
+                          Icon(
+                            Icons.error_outline,
+                            color: theme.colorScheme.error,
+                            size: 20,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(

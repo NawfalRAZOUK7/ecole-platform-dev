@@ -3,19 +3,19 @@
 /// Reference: DEC-E2-001 — Data layer handles API DTOs,
 /// presentation layer only sees domain entities.
 
-import 'package:ecole_platform/domain/entities/user.dart';
-import 'package:ecole_platform/domain/entities/feed_item.dart';
-import 'package:ecole_platform/domain/entities/notification_item.dart';
-import 'package:ecole_platform/domain/entities/notification_settings.dart';
-import 'package:ecole_platform/domain/entities/content_item.dart';
-import 'package:ecole_platform/domain/entities/result.dart';
-import 'package:ecole_platform/domain/entities/invoice.dart';
-import 'package:ecole_platform/domain/entities/admin.dart';
-import 'package:ecole_platform/domain/entities/reporting.dart';
-import 'package:ecole_platform/domain/entities/teacher.dart';
-import 'package:ecole_platform/domain/entities/calendar_event.dart';
-import 'package:ecole_platform/domain/entities/document_management.dart';
-import 'package:ecole_platform/domain/entities/program.dart';
+import 'package:ecole_platform/domain/entities/user/user.dart';
+import 'package:ecole_platform/domain/entities/content/feed_item.dart';
+import 'package:ecole_platform/domain/entities/communication/notification_item.dart';
+import 'package:ecole_platform/domain/entities/communication/notification_settings.dart';
+import 'package:ecole_platform/domain/entities/content/content_item.dart';
+import 'package:ecole_platform/domain/entities/academic/result.dart';
+import 'package:ecole_platform/domain/entities/billing/invoice.dart';
+import 'package:ecole_platform/domain/entities/admin/admin.dart';
+import 'package:ecole_platform/domain/entities/reports/reporting.dart';
+import 'package:ecole_platform/domain/entities/lms/teacher.dart';
+import 'package:ecole_platform/domain/entities/communication/calendar_event.dart';
+import 'package:ecole_platform/domain/entities/content/document_management.dart';
+import 'package:ecole_platform/domain/entities/academic/program.dart';
 
 // ── User ──
 
@@ -81,7 +81,8 @@ NotificationItem notificationFromJson(Map<String, dynamic> json) {
 }
 
 NotificationPreferenceItem notificationPreferenceFromJson(
-    Map<String, dynamic> json) {
+  Map<String, dynamic> json,
+) {
   return NotificationPreferenceItem(
     channel: json['channel'] as String,
     category: json['category'] as String,
@@ -371,10 +372,12 @@ GradesAnalytics gradesAnalyticsFromJson(Map<String, dynamic> json) {
     count: summary['count'] as int? ?? 0,
     distribution: (json['distribution'] as List<dynamic>? ?? const [])
         .cast<Map<String, dynamic>>()
-        .map((item) => AnalyticsBucket(
-              label: item['label'] as String? ?? '',
-              count: item['count'] as int? ?? 0,
-            ))
+        .map(
+          (item) => AnalyticsBucket(
+            label: item['label'] as String? ?? '',
+            count: item['count'] as int? ?? 0,
+          ),
+        )
         .toList(),
   );
 }
@@ -407,18 +410,22 @@ EngagementAnalytics engagementAnalyticsFromJson(Map<String, dynamic> json) {
     engagedUsers: summary['engaged_users'] as int? ?? 0,
     funnel: (json['funnel'] as List<dynamic>? ?? const [])
         .cast<Map<String, dynamic>>()
-        .map((item) => FunnelStage(
-              label: item['label'] as String? ?? '',
-              value: item['value'] as int? ?? 0,
-            ))
+        .map(
+          (item) => FunnelStage(
+            label: item['label'] as String? ?? '',
+            value: item['value'] as int? ?? 0,
+          ),
+        )
         .toList(),
     featureAdoption: (json['feature_adoption'] as List<dynamic>? ?? const [])
         .cast<Map<String, dynamic>>()
-        .map((item) => FeatureAdoptionMetric(
-              feature: item['feature'] as String? ?? '',
-              users: item['users'] as int? ?? 0,
-              adoptionRate: (item['adoption_rate'] as num?)?.toDouble() ?? 0,
-            ))
+        .map(
+          (item) => FeatureAdoptionMetric(
+            feature: item['feature'] as String? ?? '',
+            users: item['users'] as int? ?? 0,
+            adoptionRate: (item['adoption_rate'] as num?)?.toDouble() ?? 0,
+          ),
+        )
         .toList(),
   );
 }
@@ -757,7 +764,8 @@ AcademicTimelineEntry academicTimelineEntryFromJson(Map<String, dynamic> json) {
 }
 
 ProgramAssignmentEvent programAssignmentEventFromJson(
-    Map<String, dynamic> json) {
+  Map<String, dynamic> json,
+) {
   final wire = json['reason_code'] as String;
   return ProgramAssignmentEvent(
     id: json['id'] as String,

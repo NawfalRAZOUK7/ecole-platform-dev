@@ -1,19 +1,19 @@
-import 'package:ecole_platform/domain/entities/admin.dart';
-import 'package:ecole_platform/domain/entities/calendar_event.dart';
-import 'package:ecole_platform/domain/entities/child_link.dart';
-import 'package:ecole_platform/domain/entities/content_item.dart';
-import 'package:ecole_platform/domain/entities/conversation.dart';
-import 'package:ecole_platform/domain/entities/document_management.dart';
-import 'package:ecole_platform/domain/entities/feed_item.dart';
-import 'package:ecole_platform/domain/entities/invoice.dart';
-import 'package:ecole_platform/domain/entities/notification_item.dart';
-import 'package:ecole_platform/domain/entities/notification_settings.dart';
-import 'package:ecole_platform/domain/entities/quiz.dart';
-import 'package:ecole_platform/domain/entities/reporting.dart';
-import 'package:ecole_platform/domain/entities/result.dart';
-import 'package:ecole_platform/domain/entities/teacher.dart';
-import 'package:ecole_platform/domain/entities/timetable.dart';
-import 'package:ecole_platform/domain/entities/user.dart';
+import 'package:ecole_platform/domain/entities/admin/admin.dart';
+import 'package:ecole_platform/domain/entities/communication/calendar_event.dart';
+import 'package:ecole_platform/domain/entities/user/child_link.dart';
+import 'package:ecole_platform/domain/entities/content/content_item.dart';
+import 'package:ecole_platform/domain/entities/communication/conversation.dart';
+import 'package:ecole_platform/domain/entities/content/document_management.dart';
+import 'package:ecole_platform/domain/entities/content/feed_item.dart';
+import 'package:ecole_platform/domain/entities/billing/invoice.dart';
+import 'package:ecole_platform/domain/entities/communication/notification_item.dart';
+import 'package:ecole_platform/domain/entities/communication/notification_settings.dart';
+import 'package:ecole_platform/domain/entities/lms/quiz.dart';
+import 'package:ecole_platform/domain/entities/reports/reporting.dart';
+import 'package:ecole_platform/domain/entities/academic/result.dart';
+import 'package:ecole_platform/domain/entities/lms/teacher.dart';
+import 'package:ecole_platform/domain/entities/academic/timetable.dart';
+import 'package:ecole_platform/domain/entities/user/user.dart';
 
 Membership createMembership({
   String schoolId = 'school-1',
@@ -536,7 +536,7 @@ ReportOptions createReportOptions() {
     classes: [createReportOptionItem(id: 'class-1', label: '6A')],
     periods: [createReportOptionItem(id: 'period-1', label: 'Period 1')],
     students: [
-      createReportOptionItem(id: 'student-1', label: 'Student Example')
+      createReportOptionItem(id: 'student-1', label: 'Student Example'),
     ],
     parents: [createReportOptionItem(id: 'parent-1', label: 'Parent Example')],
   );

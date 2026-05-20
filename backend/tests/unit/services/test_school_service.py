@@ -12,8 +12,8 @@ import pytest
 from app.core.dependencies import AuthContext
 from app.core.exceptions import NotFoundError
 from app.schemas.school import SchoolCreateRequest, SchoolUpdateRequest
-from app.services import school as school_module
-from app.services.school import SchoolService
+import app.services.school.school as school_module
+from app.services.school.school import SchoolService
 
 
 def make_auth(role: str = "SUP", school_id: uuid.UUID | None = None) -> AuthContext:

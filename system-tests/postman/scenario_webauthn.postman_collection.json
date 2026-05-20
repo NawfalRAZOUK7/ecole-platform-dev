@@ -1,0 +1,260 @@
+{
+  "info": {
+    "name": "Ecole Platform - WebAuthn/Passkeys Tests",
+    "description": "WebAuthn route contract checks with disabled-feature handling for Newman.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "school_id",
+      "value": "00000000-0000-4000-8000-000000000001",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"school_id\": \"{{school_id}}\"\n}"
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Response has access_token\", function () { pm.expect(responseBody.data).to.have.property(\"access_token\"); });",
+              "pm.environment.set(\"token\", responseBody.data.access_token);",
+              "pm.environment.set(\"access_token\", responseBody.data.access_token);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Begin Registration",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/webauthn/register/begin",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"device_name\": \"Newman Test Device\",\n  \"device_type\": \"single_device\"\n}"
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 or 422\", function () { pm.expect([200, 422]).to.include(pm.response.code); });",
+              "var responseBody = pm.response.json();",
+              "if (pm.response.code === 200) { pm.test(\"Registration options returned\", function () { pm.expect(responseBody.data).to.have.property(\"options\"); }); }",
+              "if (pm.response.code === 422) { pm.test(\"Disabled feature error returned\", function () { pm.expect(responseBody.error.code).to.eql(\"ERR-FEATURE-DISABLED\"); }); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Finish Registration With Placeholder",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/webauthn/register/finish",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"placeholder\",\n  \"raw_id\": \"placeholder\",\n  \"response\": {\n    \"clientDataJSON\": \"placeholder\",\n    \"attestationObject\": \"placeholder\"\n  }\n}"
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 or 422\", function () { pm.expect([200, 422]).to.include(pm.response.code); });",
+              "var responseBody = pm.response.json();",
+              "if (pm.response.code === 422) { pm.test(\"Registration rejected or disabled\", function () { pm.expect(responseBody).to.have.property(\"error\"); }); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Begin Authentication",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/webauthn/authenticate/begin",
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 or 422\", function () { pm.expect([200, 422]).to.include(pm.response.code); });",
+              "var responseBody = pm.response.json();",
+              "if (pm.response.code === 200) { pm.test(\"Authentication options returned\", function () { pm.expect(responseBody.data).to.have.property(\"options\"); }); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Finish Authentication With Placeholder",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/webauthn/authenticate/finish",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"placeholder\",\n  \"raw_id\": \"placeholder\",\n  \"response\": {\n    \"clientDataJSON\": \"placeholder\",\n    \"authenticatorData\": \"placeholder\",\n    \"signature\": \"placeholder\"\n  }\n}"
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 or 422\", function () { pm.expect([200, 422]).to.include(pm.response.code); });",
+              "var responseBody = pm.response.json();",
+              "if (pm.response.code === 422) { pm.test(\"Authentication rejected or disabled\", function () { pm.expect(responseBody).to.have.property(\"error\"); }); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - List Credentials",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/webauthn/credentials"
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 or 422\", function () { pm.expect([200, 422]).to.include(pm.response.code); });",
+              "var responseBody = pm.response.json();",
+              "if (pm.response.code === 200) { pm.test(\"Credentials list returned\", function () { pm.expect(responseBody.data).to.be.an(\"array\"); }); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - Delete Missing Credential",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/webauthn/credentials/missing-credential"
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 404 or 422\", function () { pm.expect([404, 422]).to.include(pm.response.code); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Error response returned\", function () { pm.expect(responseBody).to.have.property(\"error\"); });"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

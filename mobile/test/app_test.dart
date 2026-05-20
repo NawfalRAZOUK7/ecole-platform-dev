@@ -3,13 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:ecole_platform/app/providers.dart';
-import 'package:ecole_platform/data/api/api_client.dart';
+import 'package:ecole_platform/core/network/api_client.dart';
 import 'package:ecole_platform/features/auth/biometric_service.dart';
 import 'package:ecole_platform/main.dart';
-import 'package:ecole_platform/shared/connectivity_service.dart';
-import 'package:ecole_platform/shared/push_notifications.dart';
-import 'package:ecole_platform/shared/secure_storage.dart';
-import 'package:ecole_platform/data/api/ws_client.dart';
+import 'package:ecole_platform/core/network/connectivity.dart';
+import 'package:ecole_platform/core/notifications/push_notifications.dart';
+import 'package:ecole_platform/core/storage/secure_storage.dart';
+import 'package:ecole_platform/core/network/ws_client.dart';
 
 import 'helpers/test_services.dart';
 

@@ -40,11 +40,11 @@ void main() {
     testWidgets('AppDataTable shows a skeleton while loading', (tester) async {
       await pumpApp(
         tester,
-        AppDataTable<_TableRowData>(
-          columns: const [
+        const AppDataTable<_TableRowData>(
+          columns: [
             AppColumn(header: 'Name', cellBuilder: _cellPlaceholder),
           ],
-          rows: const [],
+          rows: [],
           isLoading: true,
         ),
       );
@@ -56,11 +56,11 @@ void main() {
         (tester) async {
       await pumpApp(
         tester,
-        AppDataTable<_TableRowData>(
-          columns: const [
+        const AppDataTable<_TableRowData>(
+          columns: [
             AppColumn(header: 'Name', cellBuilder: _cellPlaceholder),
           ],
-          rows: const [],
+          rows: [],
           emptyMessage: 'No rows yet',
         ),
       );

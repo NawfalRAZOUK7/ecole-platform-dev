@@ -12,8 +12,8 @@ import pytest_asyncio
 
 from app.core.dependencies import AuthContext
 from app.core.exceptions import NotFoundError, ValidationError
-from app.services import financial_health_service as fin_module
-from app.services.financial_health_service import FinancialHealthService
+import app.services.reports.financial_health_service as fin_module
+from app.services.reports.financial_health_service import FinancialHealthService
 
 
 @pytest_asyncio.fixture(autouse=True)

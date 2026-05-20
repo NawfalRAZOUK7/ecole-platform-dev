@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/app/providers.dart';
-import 'package:ecole_platform/domain/entities/admin.dart';
+import 'package:ecole_platform/domain/entities/admin/admin.dart';
 import 'package:ecole_platform/features/auth/auth_provider.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/widgets/search_filter_bar.dart';
@@ -157,7 +157,8 @@ class _UsersNotifier extends StateNotifier<_UsersState> {
       state = state.copyWith(error: e.toString());
     } finally {
       state = state.copyWith(
-          actionLoading: {...state.actionLoading}..remove(userId));
+        actionLoading: {...state.actionLoading}..remove(userId),
+      );
     }
   }
 
@@ -171,7 +172,8 @@ class _UsersNotifier extends StateNotifier<_UsersState> {
       state = state.copyWith(error: e.toString());
     } finally {
       state = state.copyWith(
-          actionLoading: {...state.actionLoading}..remove(userId));
+        actionLoading: {...state.actionLoading}..remove(userId),
+      );
     }
   }
 
@@ -185,7 +187,8 @@ class _UsersNotifier extends StateNotifier<_UsersState> {
       state = state.copyWith(error: e.toString());
     } finally {
       state = state.copyWith(
-          actionLoading: {...state.actionLoading}..remove(userId));
+        actionLoading: {...state.actionLoading}..remove(userId),
+      );
     }
   }
 
@@ -246,14 +249,20 @@ class UsersScreen extends ConsumerWidget {
             },
           ),
           Expanded(
-              child: _buildList(context, ref, state, theme, currentUserId)),
+            child: _buildList(context, ref, state, theme, currentUserId),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildList(BuildContext context, WidgetRef ref, _UsersState state,
-      ThemeData theme, String? currentUserId) {
+  Widget _buildList(
+    BuildContext context,
+    WidgetRef ref,
+    _UsersState state,
+    ThemeData theme,
+    String? currentUserId,
+  ) {
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -279,10 +288,13 @@ class UsersScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.people_outline,
-                size: 48, color: theme.colorScheme.outline),
-            SizedBox(height: 16),
-            Text('Aucun utilisateur trouvé'),
+            Icon(
+              Icons.people_outline,
+              size: 48,
+              color: theme.colorScheme.outline,
+            ),
+            const SizedBox(height: 16),
+            const Text('Aucun utilisateur trouvé'),
           ],
         ),
       );
@@ -343,28 +355,38 @@ class UsersScreen extends ConsumerWidget {
                             Row(
                               children: [
                                 Flexible(
-                                  child: Text(user.fullName,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.w600),
-                                      overflow: TextOverflow.ellipsis),
+                                  child: Text(
+                                    user.fullName,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                                 if (user.emailVerified) ...[
                                   const SizedBox(width: 4),
-                                  Icon(Icons.verified,
-                                      size: 14,
-                                      color: theme.colorScheme.primary),
+                                  Icon(
+                                    Icons.verified,
+                                    size: 14,
+                                    color: theme.colorScheme.primary,
+                                  ),
                                 ],
                                 if (user.totpEnabled) ...[
                                   const SizedBox(width: 4),
-                                  Icon(Icons.lock,
-                                      size: 14,
-                                      color: theme.semanticPalette.warning),
+                                  Icon(
+                                    Icons.lock,
+                                    size: 14,
+                                    color: theme.semanticPalette.warning,
+                                  ),
                                 ],
                               ],
                             ),
-                            Text(user.email,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant)),
+                            Text(
+                              user.email,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -382,15 +404,25 @@ class UsersScreen extends ConsumerWidget {
                           underline: const SizedBox.shrink(),
                           items: const [
                             DropdownMenuItem(
-                                value: 'ADM', child: Text('Admin')),
+                              value: 'ADM',
+                              child: Text('Admin'),
+                            ),
                             DropdownMenuItem(
-                                value: 'DIR', child: Text('Directeur')),
+                              value: 'DIR',
+                              child: Text('Directeur'),
+                            ),
                             DropdownMenuItem(
-                                value: 'TCH', child: Text('Enseignant')),
+                              value: 'TCH',
+                              child: Text('Enseignant'),
+                            ),
                             DropdownMenuItem(
-                                value: 'PAR', child: Text('Parent')),
+                              value: 'PAR',
+                              child: Text('Parent'),
+                            ),
                             DropdownMenuItem(
-                                value: 'STD', child: Text('Élève')),
+                              value: 'STD',
+                              child: Text('Élève'),
+                            ),
                           ],
                           onChanged: isActionLoading
                               ? null
@@ -414,9 +446,10 @@ class UsersScreen extends ConsumerWidget {
                             onPressed: () => ref
                                 .read(_usersProvider.notifier)
                                 .suspendUser(user.id),
-                            child: Text('Suspendre',
-                                style:
-                                    TextStyle(color: theme.colorScheme.error)),
+                            child: Text(
+                              'Suspendre',
+                              style: TextStyle(color: theme.colorScheme.error),
+                            ),
                           )
                         else
                           TextButton(
@@ -467,9 +500,14 @@ class _StatusBadge extends StatelessWidget {
         border: Border.all(color: color),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Text(label,
-          style: TextStyle(
-              fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }

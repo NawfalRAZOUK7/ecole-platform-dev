@@ -70,7 +70,7 @@ async def task_send_email(
 ) -> bool:
     """Background task: render template and send email via SMTP."""
     from app.core.metrics import TASK_COMPLETED_COUNT, TASK_DURATION, TASK_FAILED_COUNT
-    from app.services.email import email_service
+    from app.services.auth.email import email_service
 
     start = time.perf_counter()
     try:
@@ -206,8 +206,8 @@ async def task_send_notification_digest(ctx: dict) -> int:
     start = time.perf_counter()
     try:
         from app.core.database import async_session
-        from app.repositories.notifications import NotificationRepository
-        from app.services.email_digest import EmailDigestService
+        from app.repositories.communication_notifications import NotificationRepository
+        from app.services.communication.email_digest import EmailDigestService
 
         sent_count = 0
         now = datetime.now(timezone.utc)
@@ -398,7 +398,7 @@ async def task_retry_failed_payments(ctx: dict) -> int:
 
     start = time.perf_counter()
     try:
-        from app.services.payment_retry import retry_failed_payments
+        from app.services.billing.payment_retry import retry_failed_payments
 
         count = await retry_failed_payments()
 
@@ -437,7 +437,7 @@ async def task_send_overdue_reminders(ctx: dict) -> int:
 
     start = time.perf_counter()
     try:
-        from app.services.overdue_reminders import send_overdue_reminders
+        from app.services.communication.overdue_reminders import send_overdue_reminders
 
         count = await send_overdue_reminders()
 
@@ -598,7 +598,7 @@ async def task_process_due_report_schedules(ctx: dict) -> int:
     start = time.perf_counter()
     try:
         from app.core.database import async_session
-        from app.services.report_scheduler import ReportSchedulerService
+        from app.services.reports.report_scheduler import ReportSchedulerService
 
         async with async_session() as db:
             service = ReportSchedulerService(db)
@@ -640,7 +640,7 @@ async def task_send_event_reminders(ctx: dict) -> int:
     start = time.perf_counter()
     try:
         from app.core.database import async_session
-        from app.services.reminders import ReminderService
+        from app.services.communication.reminders import ReminderService
 
         async with async_session() as db:
             service = ReminderService(db)
@@ -678,7 +678,7 @@ async def task_notify_expiring_documents(ctx: dict) -> int:
     start = time.perf_counter()
     try:
         from app.core.database import async_session
-        from app.services.student_documents import StudentDocumentsService
+        from app.services.content.student_documents import StudentDocumentsService
 
         local_now = datetime.now(ZoneInfo("Africa/Casablanca"))
         if local_now.hour != 8:
@@ -722,7 +722,7 @@ async def task_cleanup_deleted_documents(ctx: dict) -> int:
     start = time.perf_counter()
     try:
         from app.core.database import async_session
-        from app.services.student_documents import StudentDocumentsService
+        from app.services.content.student_documents import StudentDocumentsService
 
         async with async_session() as db:
             service = StudentDocumentsService(db)
@@ -826,7 +826,7 @@ async def enqueue_task(task_name: str, **kwargs: Any) -> None:
 async def task_check_parent_alerts(ctx: dict[str, Any]) -> None:
     """Run parent alert checks: grade drops, inactivity, unjustified absences."""
     from app.core.database import async_session
-    from app.services.parent_alerts import ParentAlertService
+    from app.services.communication.parent_alerts import ParentAlertService
 
     start = time.monotonic()
     logger.info("Starting parent alerts check")

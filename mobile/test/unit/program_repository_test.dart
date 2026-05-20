@@ -8,10 +8,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:ecole_platform/data/api/api_client.dart';
+import 'package:ecole_platform/core/network/api_client.dart';
 import 'package:ecole_platform/data/dto/mappers.dart';
-import 'package:ecole_platform/data/repositories_impl/program_repository_impl.dart';
-import 'package:ecole_platform/domain/entities/program.dart';
+import 'package:ecole_platform/data/repositories_impl/academic/program_repository_impl.dart';
+import 'package:ecole_platform/domain/entities/academic/program.dart';
 
 import '../helpers/test_mocks.dart';
 

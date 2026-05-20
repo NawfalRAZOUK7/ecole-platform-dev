@@ -6,6 +6,8 @@ Tests:
   POST /shared-reviews/{child_id}/sessions/{session_id}/comments — parent adds comment
   RBAC: student cannot access shared-review endpoints
   Ownership: parent cannot view another parent's child sessions
+
+Uses the ASGI client from tests/integration/api/conftest (testcontainer DB).
 """
 
 from __future__ import annotations
@@ -14,53 +16,10 @@ import uuid
 
 import httpx
 import pytest
-import pytest_asyncio
-
-from tests.conftest import (
-    BASE_URL,
-    LOGIN_TIMEOUT,
-    PARENT_EMAIL,
-    PARENT_PASSWORD,
-    SCHOOL_ID,
-    STUDENT_EMAIL,
-    STUDENT_PASSWORD,
-    TEACHER_EMAIL,
-    TEACHER_PASSWORD,
-)
 
 # Seed student UUID from seed.py
 STUDENT_ID = "10000000-0000-4000-8000-000000000007"
 RANDOM_CHILD_ID = "00000000-dead-beef-0000-000000000099"
-
-
-@pytest_asyncio.fixture(loop_scope="function")
-async def client():
-    async with httpx.AsyncClient(base_url=BASE_URL, timeout=LOGIN_TIMEOUT) as c:
-        yield c
-
-
-async def _login(client: httpx.AsyncClient, email: str, password: str) -> str:
-    resp = await client.post(
-        "/auth/login",
-        json={"email": email, "password": password, "school_id": SCHOOL_ID},
-    )
-    assert resp.status_code == 200, f"Login failed for {email}: {resp.text}"
-    return resp.json()["data"]["access_token"]
-
-
-@pytest_asyncio.fixture(loop_scope="function")
-async def parent_token(client: httpx.AsyncClient) -> str:
-    return await _login(client, PARENT_EMAIL, PARENT_PASSWORD)
-
-
-@pytest_asyncio.fixture(loop_scope="function")
-async def student_token(client: httpx.AsyncClient) -> str:
-    return await _login(client, STUDENT_EMAIL, STUDENT_PASSWORD)
-
-
-@pytest_asyncio.fixture(loop_scope="function")
-async def teacher_token(client: httpx.AsyncClient) -> str:
-    return await _login(client, TEACHER_EMAIL, TEACHER_PASSWORD)
 
 
 # ---------------------------------------------------------------------------

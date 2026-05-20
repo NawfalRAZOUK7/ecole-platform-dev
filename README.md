@@ -6,6 +6,8 @@
   <img src="https://img.shields.io/badge/Redis_7-DC382D?style=for-the-badge&logo=redis&logoColor=white" />
   <img src="https://img.shields.io/badge/Kubernetes-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white" />
   <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
+  <br>
+  <img src="https://codecov.io/gh/NawfalRAZOUK7/ecole-platform-dev/branch/main/graph/badge.svg" alt="Codecov" />
 </p>
 
 <h1 align="center">🏫 École Platform</h1>
@@ -17,11 +19,11 @@
 
 <p align="center">
   <a href="docs/ARCHITECTURE.md">Architecture</a> ·
-  <a href="docs/API-REFERENCE.md">API Reference</a> ·
+  <a href="backend/docs/API-REFERENCE.md">API Reference</a> ·
   <a href="docs/DEPLOYMENT.md">Déploiement</a> ·
   <a href="docs/TESTING.md">Tests</a> ·
   <a href="docs/SECURITY.md">Sécurité</a> ·
-  <a href="docs/CROSS-PLATFORM.md">Cross-Platform</a>
+  <a href="mobile/docs/CROSS-PLATFORM.md">Cross-Platform</a>
 </p>
 
 ---
@@ -45,16 +47,16 @@ Détail complet : [`CHANGELOG.md`](CHANGELOG.md#110--2026-05-06)
 
 ### Fonctionnalités principales
 
-| Module | Description |
-|--------|-------------|
-| **IAM** | Authentification JWT + 2FA/TOTP, RBAC 5 rôles, invitations, gestion profils |
-| **ERP** | Écoles, classes, inscriptions, emplois du temps, niveaux scolaires |
-| **LMS** | Contenus, quiz, évaluations, soumissions, banque de questions, rubriques |
-| **Communication** | Messagerie interne, notifications push, annonces, fil d'actualité, calendrier |
-| **Facturation** | Factures, paiements, structures de frais, budgets, santé financière |
-| **Gamification** | Étoiles, XP, niveaux, badges, streaks, leaderboard, jeux éducatifs (mémoire, tri, vocabulaire) |
-| **Suivi** | Présence, carnet de notes, progression, compétences (Skill Passport), rapports |
-| **Conformité** | Audit trail, conformité MEN, GDPR, exports de données |
+| Module            | Description                                                                                    |
+| ----------------- | ---------------------------------------------------------------------------------------------- |
+| **IAM**           | Authentification JWT + 2FA/TOTP/WebAuthn/OAuth, RBAC 9 rôles, invitations, gestion profils     |
+| **ERP**           | Écoles, classes, inscriptions, emplois du temps, niveaux scolaires                             |
+| **LMS**           | Contenus, quiz, évaluations, soumissions, banque de questions, rubriques                       |
+| **Communication** | Messagerie interne, notifications push, annonces, fil d'actualité, calendrier                  |
+| **Facturation**   | Factures, paiements, structures de frais, budgets, santé financière                            |
+| **Gamification**  | Étoiles, XP, niveaux, badges, streaks, leaderboard, jeux éducatifs (mémoire, tri, vocabulaire) |
+| **Suivi**         | Présence, carnet de notes, progression, compétences (Skill Passport), rapports                 |
+| **Conformité**    | Audit trail, conformité MEN, GDPR, exports de données                                          |
 
 ---
 
@@ -79,18 +81,18 @@ Détail complet : [`CHANGELOG.md`](CHANGELOG.md#110--2026-05-06)
 └─────────────────────────────────────────────────────────┘
 ```
 
-| Couche | Technologie | Détails |
-|--------|-------------|---------|
-| Backend API | **FastAPI** + Python 3.12 | SQLAlchemy 2.0 async, Pydantic v2, Alembic |
-| Frontend Web | **React 18** + TypeScript | Vite 5, React Query v5, React Router v6, i18n |
-| Mobile | **Flutter 3** + Dart | Riverpod, GoRouter, Dio, Clean Architecture |
-| Base de données | **PostgreSQL 16** | 60+ migrations, replicas lecture |
-| Cache/Queue | **Redis 7** | Sessions, rate limiting, tâches async |
-| Stockage objet | **MinIO / S3** | Uploads directs, URLs présignées, scan ClamAV |
-| PDF | **WeasyPrint** | Factures et reçus bilingues AR/FR conformes MEN/TVA |
-| Infra | **Docker** + **Kubernetes (Helm)** | Helm chart (15 templates), Kind local, blue-green |
-| CI/CD | **GitHub Actions** | 10 workflows (lint, test, build, deploy, K8s E2E) |
-| Monitoring | **Grafana** stack | 8 dashboards, Prometheus, Loki, Tempo, Alertmanager |
+| Couche          | Technologie                        | Détails                                             |
+| --------------- | ---------------------------------- | --------------------------------------------------- |
+| Backend API     | **FastAPI** + Python 3.12          | SQLAlchemy 2.0 async, Pydantic v2, Alembic          |
+| Frontend Web    | **React 18** + TypeScript          | Vite 5, React Query v5, React Router v6, i18n       |
+| Mobile          | **Flutter 3** + Dart               | Riverpod, GoRouter, Dio, Clean Architecture         |
+| Base de données | **PostgreSQL 16**                  | 60+ migrations, replicas lecture                    |
+| Cache/Queue     | **Redis 7**                        | Sessions, rate limiting, tâches async               |
+| Stockage objet  | **MinIO / S3**                     | Uploads directs, URLs présignées, scan ClamAV       |
+| PDF             | **WeasyPrint**                     | Factures et reçus bilingues AR/FR conformes MEN/TVA |
+| Infra           | **Docker** + **Kubernetes (Helm)** | Helm chart (15 templates), Kind local, blue-green   |
+| CI/CD           | **GitHub Actions**                 | 10 workflows (lint, test, build, deploy, K8s E2E)   |
+| Monitoring      | **Grafana** stack                  | 8 dashboards, Prometheus, Loki, Tempo, Alertmanager |
 
 ---
 
@@ -101,16 +103,16 @@ ecole-platform-dev/
 │
 ├── backend/                    # 🐍 API FastAPI (Python)
 │   ├── app/
-│   │   ├── api/v1/             # 57 fichiers de routes REST
+│   │   ├── api/v1/             # 60+ fichiers de routes REST
 │   │   ├── core/               # Config, database, security, middleware
-│   │   ├── models/             # 23 modules SQLAlchemy ORM
+│   │   ├── models/             # 25+ modules SQLAlchemy ORM
 │   │   ├── schemas/            # Pydantic v2 schemas (request/response)
 │   │   ├── services/           # Logique métier
 │   │   ├── repositories/       # Accès données (queries async)
 │   │   ├── domain/             # Entités métier & enums
 │   │   └── templates/          # Templates email (Jinja2)
-│   ├── alembic/versions/       # 65 migrations DB
-│   └── tests/                  # 133 fichiers de test
+│   ├── alembic/versions/       # 65+ migrations DB
+│   └── tests/                  # 133+ fichiers de test
 │
 ├── web/                        # ⚛️ SPA React (TypeScript)
 │   ├── src/
@@ -139,6 +141,8 @@ ecole-platform-dev/
 ├── scripts/                    # Scripts d'automatisation
 └── Makefile                    # 50+ commandes make
 ```
+
+**Conventions d’arborescence** — Scripts : le dossier racine [`scripts/`](scripts/) regroupe l’automatisation **transverse** (CI, release). Les utilitaires **livrés avec l’API** (seed, maintenance) vivent sous [`backend/app/scripts/`](backend/app/scripts/) ; les scripts **backend-only dev** sous [`backend/scripts/`](backend/scripts/) (OpenAPI, validation). Schéma SQL applicatif : **uniquement Alembic** ; `infra/postgres/init.sql` ne couvre que rôles/extensions (voir [`backend/docs/DATABASE.md`](backend/docs/DATABASE.md)).
 
 ---
 
@@ -183,12 +187,12 @@ cd mobile && flutter pub get && flutter run
 
 ### Comptes de test
 
-| Rôle | Email | Mot de passe |
-|------|-------|-------------|
-| Admin | `admin@ecole.test` | `Admin123!` |
+| Rôle       | Email                | Mot de passe  |
+| ---------- | -------------------- | ------------- |
+| Admin      | `admin@ecole.test`   | `Admin123!`   |
 | Enseignant | `teacher@ecole.test` | `Teacher123!` |
-| Parent | `parent@ecole.test` | `Parent123!` |
-| Élève | `student@ecole.test` | `Student123!` |
+| Parent     | `parent@ecole.test`  | `Parent123!`  |
+| Élève      | `student@ecole.test` | `Student123!` |
 
 ---
 
@@ -207,75 +211,75 @@ Le système de gamification motive les élèves à travers :
 
 ## 🔗 Stratégie Cross-Platform
 
-| Rôle | Plateforme principale | Raison |
-|------|----------------------|--------|
-| Élève (STD) | 📱 Mobile | Interaction tactile, jeux, engagement quotidien |
-| Parent (PAR) | 📱 Mobile | Consultation rapide, notifications push |
-| Enseignant (TCH) | 💻 Web | Gestion complexe, saisie de données |
-| Admin (ADM) | 💻 Web | Tableaux de bord, configuration, audit |
+| Rôle             | Plateforme principale | Raison                                          |
+| ---------------- | --------------------- | ----------------------------------------------- |
+| Élève (STD)      | 📱 Mobile             | Interaction tactile, jeux, engagement quotidien |
+| Parent (PAR)     | 📱 Mobile             | Consultation rapide, notifications push         |
+| Enseignant (TCH) | 💻 Web                | Gestion complexe, saisie de données             |
+| Admin (ADM)      | 💻 Web                | Tableaux de bord, configuration, audit          |
 
 Quand une fonctionnalité existe sur une plateforme mais pas l'autre, un composant **PlatformBridgeCard** informe l'utilisateur avec un design attractif et une explication contextuelle (en arabe).
 
-> Voir [docs/CROSS-PLATFORM.md](docs/CROSS-PLATFORM.md) pour les détails d'implémentation.
+> Voir [mobile/docs/CROSS-PLATFORM.md](mobile/docs/CROSS-PLATFORM.md) pour les détails d'implémentation.
 
 ---
 
 ## 📊 Métriques du Projet
 
-| Métrique | Valeur |
-|----------|--------|
-| Lignes de code total | **~188 000** |
-| Backend (Python) | 80 500 LOC · 287 fichiers |
-| Frontend Web (TypeScript) | 50 500 LOC · 338 fichiers |
-| Mobile (Dart) | 57 300 LOC · 276 fichiers |
-| API Endpoints | 57 modules de routes |
-| Modèles de données | 23 modules SQLAlchemy |
-| Migrations DB | 56 fichiers Alembic |
-| Tests | 133 backend + 27 web + 1 contrat |
-| Dashboards Grafana | 8 |
-| Workflows CI/CD | 9 |
-| Templates Kubernetes | 15 |
-| Langues | 3 (العربية · Français · English) |
+| Métrique                  | Valeur                           |
+| ------------------------- | -------------------------------- |
+| Lignes de code total      | **~188 000**                     |
+| Backend (Python)          | 80 500 LOC · 287 fichiers        |
+| Frontend Web (TypeScript) | 50 500 LOC · 338 fichiers        |
+| Mobile (Dart)             | 57 300 LOC · 276 fichiers        |
+| API Endpoints             | 60+ modules de routes            |
+| Modèles de données        | 25+ modules SQLAlchemy           |
+| Migrations DB             | 65+ fichiers Alembic             |
+| Tests                     | 133 backend + 27 web + 1 contrat |
+| Dashboards Grafana        | 8                                |
+| Workflows CI/CD           | 9                                |
+| Templates Kubernetes      | 15                               |
+| Langues                   | 3 (العربية · Français · English) |
 
 ---
 
 ## 📖 Documentation
 
-| Document | Contenu |
-|----------|---------|
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Architecture globale, couches, patterns, diagrammes |
-| [`docs/API-REFERENCE.md`](docs/API-REFERENCE.md) | Endpoints API, groupes, authentification, pagination |
-| [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Docker, Kubernetes, CI/CD, environnements |
-| [`docs/TESTING.md`](docs/TESTING.md) | Stratégie de tests, infrastructure, couverture |
-| [`docs/SECURITY.md`](docs/SECURITY.md) | Auth, RBAC, sécurité API, audit, GDPR |
-| [`docs/CROSS-PLATFORM.md`](docs/CROSS-PLATFORM.md) | Stratégie mobile-first/web-first, PlatformBridgeCard |
-| [`docs/DATABASE.md`](docs/DATABASE.md) | Schéma, migrations, modèles, groupes |
-| [`CHANGELOG.md`](CHANGELOG.md) | Historique des versions et changements |
-| [`ROADMAP.md`](ROADMAP.md) | Fonctionnalités done / in progress / planned / future |
-| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Git workflow, conventions commits/branches/PRs, code style |
-| [`INSTALLATION.md`](INSTALLATION.md) | Guide d'installation complet (Docker, web, mobile, local) |
-| [`LICENSE`](LICENSE) | MIT License |
-| [`backend/README.md`](backend/README.md) | Documentation backend détaillée |
-| [`web/README.md`](web/README.md) | Documentation frontend web |
-| [`mobile/README.md`](mobile/README.md) | Documentation application mobile |
-| [`infra/README.md`](infra/README.md) | Documentation infrastructure |
+| Document                                                         | Contenu                                                    |
+| ---------------------------------------------------------------- | ---------------------------------------------------------- |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)                   | Architecture globale, couches, patterns, diagrammes        |
+| [`backend/docs/API-REFERENCE.md`](backend/docs/API-REFERENCE.md) | Endpoints API, groupes, authentification, pagination       |
+| [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)                       | Docker, Kubernetes, CI/CD, environnements                  |
+| [`docs/TESTING.md`](docs/TESTING.md)                             | Stratégie de tests, infrastructure, couverture             |
+| [`docs/SECURITY.md`](docs/SECURITY.md)                           | Auth, RBAC, sécurité API, audit, GDPR                      |
+| [`mobile/docs/CROSS-PLATFORM.md`](mobile/docs/CROSS-PLATFORM.md) | Stratégie mobile-first/web-first, PlatformBridgeCard       |
+| [`backend/docs/DATABASE.md`](backend/docs/DATABASE.md)           | Schéma, migrations, modèles, groupes                       |
+| [`CHANGELOG.md`](CHANGELOG.md)                                   | Historique des versions et changements                     |
+| [`ROADMAP.md`](ROADMAP.md)                                       | Fonctionnalités done / in progress / planned / future      |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md)                             | Git workflow, conventions commits/branches/PRs, code style |
+| [`INSTALLATION.md`](INSTALLATION.md)                             | Guide d'installation complet (Docker, web, mobile, local)  |
+| [`LICENSE`](LICENSE)                                             | MIT License                                                |
+| [`backend/README.md`](backend/README.md)                         | Documentation backend détaillée                            |
+| [`web/README.md`](web/README.md)                                 | Documentation frontend web                                 |
+| [`mobile/README.md`](mobile/README.md)                           | Documentation application mobile                           |
+| [`infra/docs/README.md`](infra/docs/README.md)                   | Documentation infrastructure                               |
 
 ---
 
 ## 🛠 Commandes Make
 
-| Commande | Description |
-|----------|-------------|
-| `make up` | Démarrer l'environnement dev |
-| `make down` | Arrêter l'environnement |
-| `make logs` | Suivre les logs en temps réel |
-| `make migrate` | Exécuter les migrations Alembic |
-| `make seed` | Charger les données de test |
-| `make test` | Lancer les tests backend |
-| `make test-cov` | Tests + rapport de couverture |
-| `make lint` | Linting (Ruff + MyPy) |
-| `make monitoring-up` | Démarrer Prometheus + Grafana + Loki |
-| `make deploy-blue-green` | Déploiement blue-green production |
+| Commande                 | Description                          |
+| ------------------------ | ------------------------------------ |
+| `make up`                | Démarrer l'environnement dev         |
+| `make down`              | Arrêter l'environnement              |
+| `make logs`              | Suivre les logs en temps réel        |
+| `make migrate`           | Exécuter les migrations Alembic      |
+| `make seed`              | Charger les données de test          |
+| `make test`              | Lancer les tests backend             |
+| `make test-cov`          | Tests + rapport de couverture        |
+| `make lint`              | Linting (Ruff + MyPy)                |
+| `make monitoring-up`     | Démarrer Prometheus + Grafana + Loki |
+| `make deploy-blue-green` | Déploiement blue-green production    |
 
 ---
 

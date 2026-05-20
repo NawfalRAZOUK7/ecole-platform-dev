@@ -88,6 +88,14 @@ class RelationshipType(str, enum.Enum):
 
 
 # ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
+
+USERS_TABLE_ID = "users.id"
+ON_DELETE_SET_NULL = "SET NULL"
+CASCADE_DELETE_ALL = "all, delete-orphan"
+
+# ---------------------------------------------------------------------------
 # Models
 # ---------------------------------------------------------------------------
 
@@ -127,18 +135,27 @@ class User(TimestampMixin, SchoolScopedMixin, Base):
         DateTime(timezone=True), nullable=True
     )
 
+    # Phase 10 — SMS 2FA
+    phone_verified_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    phone_otp_secret: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    phone_otp_enabled: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False
+    )
+
     # Relationships
     memberships: Mapped[list["Membership"]] = relationship(
-        back_populates="user", cascade="all, delete-orphan"
+        back_populates="user", cascade=CASCADE_DELETE_ALL
     )
     sessions: Mapped[list["Session"]] = relationship(
         back_populates="user",
-        cascade="all, delete-orphan",
+        cascade=CASCADE_DELETE_ALL,
         foreign_keys="Session.user_id",
     )
     login_history: Mapped[list["LoginHistory"]] = relationship(
         back_populates="user",
-        cascade="all, delete-orphan",
+        cascade=CASCADE_DELETE_ALL,
         foreign_keys="LoginHistory.user_id",
     )
 
@@ -189,7 +206,7 @@ class Membership(TimestampMixin, SchoolScopedMixin, Base):
     __tablename__ = "memberships"
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        ForeignKey(USERS_TABLE_ID, ondelete="CASCADE"), nullable=False
     )
     role_code: Mapped[str] = mapped_column(
         PgEnum(
@@ -248,7 +265,7 @@ class Session(TimestampMixin, SchoolScopedMixin, Base):
     __tablename__ = "sessions"
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        ForeignKey(USERS_TABLE_ID, ondelete="CASCADE"), nullable=False
     )
     revoke_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
@@ -261,7 +278,7 @@ class Session(TimestampMixin, SchoolScopedMixin, Base):
     ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
     device_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
     impersonator_id: Mapped[uuid.UUID | None] = mapped_column(
-        ForeignKey("users.id", ondelete="SET NULL"),
+        ForeignKey(USERS_TABLE_ID, ondelete=ON_DELETE_SET_NULL),
         nullable=True,
     )
 
@@ -322,7 +339,7 @@ class LoginHistory(TimestampMixin, SchoolScopedMixin, Base):
     __tablename__ = "login_history"
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"),
+        ForeignKey(USERS_TABLE_ID, ondelete="CASCADE"),
         nullable=False,
     )
     ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
@@ -365,12 +382,12 @@ class InvitationCode(TimestampMixin, SchoolScopedMixin, Base):
     __tablename__ = "invitation_codes"
 
     issuer_user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ForeignKey(USERS_TABLE_ID, ondelete=ON_DELETE_SET_NULL), nullable=True
     )
     code_hash: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     role_target: Mapped[str] = mapped_column(String(20), nullable=False)
     consumed_by: Mapped[uuid.UUID | None] = mapped_column(
-        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ForeignKey(USERS_TABLE_ID, ondelete=ON_DELETE_SET_NULL), nullable=True
     )
     consumed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
@@ -381,7 +398,7 @@ class InvitationCode(TimestampMixin, SchoolScopedMixin, Base):
 
     # Phase 1B — optional pre-linked student for parent invitations
     target_student_id: Mapped[uuid.UUID | None] = mapped_column(
-        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ForeignKey(USERS_TABLE_ID, ondelete=ON_DELETE_SET_NULL), nullable=True
     )
 
     # Relationships
@@ -427,7 +444,7 @@ class AccountRecoveryRequest(TimestampMixin, SchoolScopedMixin, Base):
     __tablename__ = "account_recovery_requests"
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        ForeignKey(USERS_TABLE_ID, ondelete="CASCADE"), nullable=False
     )
     status: Mapped[str] = mapped_column(
         PgEnum(
@@ -477,17 +494,17 @@ class ParentChildLink(TimestampMixin, SchoolScopedMixin, Base):
     __tablename__ = "parent_child_links"
 
     parent_user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        ForeignKey(USERS_TABLE_ID, ondelete="CASCADE"), nullable=False
     )
     child_user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        ForeignKey(USERS_TABLE_ID, ondelete="CASCADE"), nullable=False
     )
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default=LinkStatus.ACTIVE.value
     )
     linked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     linked_by: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        ForeignKey(USERS_TABLE_ID, ondelete=ON_DELETE_SET_NULL), nullable=True
     )
 
     # Relationships
@@ -529,7 +546,7 @@ class StudentProfile(TimestampMixin, SchoolScopedMixin, Base):
     __tablename__ = "student_profiles"
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True
+        ForeignKey(USERS_TABLE_ID, ondelete="CASCADE"), nullable=False, unique=True
     )
     student_number: Mapped[str | None] = mapped_column(String(50), nullable=True)
     date_of_birth: Mapped[datetime | None] = mapped_column(Date, nullable=True)
@@ -567,7 +584,7 @@ class ParentProfile(TimestampMixin, SchoolScopedMixin, Base):
     __tablename__ = "parent_profiles"
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True
+        ForeignKey(USERS_TABLE_ID, ondelete="CASCADE"), nullable=False, unique=True
     )
     relationship_type: Mapped[str | None] = mapped_column(String(20), nullable=True)
     cin_number: Mapped[str | None] = mapped_column(String(30), nullable=True)
@@ -599,7 +616,7 @@ class TeacherProfile(TimestampMixin, SchoolScopedMixin, Base):
     __tablename__ = "teacher_profiles"
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True
+        ForeignKey(USERS_TABLE_ID, ondelete="CASCADE"), nullable=False, unique=True
     )
     employee_id: Mapped[str | None] = mapped_column(String(50), nullable=True)
     subject_specialty: Mapped[str | None] = mapped_column(String(200), nullable=True)
@@ -628,7 +645,7 @@ class AdminProfile(TimestampMixin, SchoolScopedMixin, Base):
     __tablename__ = "admin_profiles"
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True
+        ForeignKey(USERS_TABLE_ID, ondelete="CASCADE"), nullable=False, unique=True
     )
     department: Mapped[str | None] = mapped_column(String(100), nullable=True)
     management_level: Mapped[str | None] = mapped_column(String(50), nullable=True)
@@ -653,7 +670,7 @@ class ContentManagerProfile(TimestampMixin, SchoolScopedMixin, Base):
     __tablename__ = "content_manager_profiles"
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True
+        ForeignKey(USERS_TABLE_ID, ondelete="CASCADE"), nullable=False, unique=True
     )
     specialization: Mapped[str | None] = mapped_column(String(200), nullable=True)
     languages_managed: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -671,3 +688,180 @@ class ContentManagerProfile(TimestampMixin, SchoolScopedMixin, Base):
             f"<ContentManagerProfile id={_short_id(self.id)} "
             f"specialization={self.specialization}>"
         )
+
+
+class WebAuthnCredential(TimestampMixin, SchoolScopedMixin, Base):
+    """WebAuthn/Passkey credentials for passwordless authentication."""
+
+    __tablename__ = "webauthn_credentials"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey(USERS_TABLE_ID, ondelete="CASCADE"), nullable=False
+    )
+    credential_id: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
+    public_key: Mapped[str] = mapped_column(Text, nullable=False)
+    sign_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    device_type: Mapped[str] = mapped_column(
+        String(50), nullable=True
+    )  # "single_device", "multi_device"
+    device_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    transports: Mapped[str | None] = mapped_column(
+        String(100), nullable=True
+    )  # "internal", "usb", "ble", "nfc"
+    is_backup: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+    user: Mapped["User"] = relationship(foreign_keys=[user_id])
+
+    __table_args__ = (
+        Index("idx_webauthn_credentials_user", "user_id"),
+        Index("idx_webauthn_credentials_school", "school_id"),
+        UniqueConstraint("user_id", "device_name", name="uq_webauthn_user_device_name"),
+    )
+
+    def __repr__(self) -> str:
+        return f"<WebAuthnCredential id={_short_id(self.id)} credential_id={self.credential_id}>"
+
+
+class OAuthAccount(TimestampMixin, SchoolScopedMixin, Base):
+    """OAuth accounts for social login (Google, Microsoft, Apple)."""
+
+    __tablename__ = "oauth_accounts"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey(USERS_TABLE_ID, ondelete="CASCADE"), nullable=False
+    )
+    provider: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # "google", "microsoft", "apple"
+    provider_user_id: Mapped[str] = mapped_column(
+        String(255), nullable=False
+    )  # ID from OAuth provider
+    provider_email: Mapped[str] = mapped_column(String(255), nullable=True)
+    access_token: Mapped[str | None] = mapped_column(Text, nullable=True)
+    refresh_token: Mapped[str | None] = mapped_column(Text, nullable=True)
+    token_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    user: Mapped["User"] = relationship(foreign_keys=[user_id])
+
+    __table_args__ = (
+        Index("idx_oauth_accounts_user", "user_id"),
+        Index("idx_oauth_accounts_school", "school_id"),
+        Index("idx_oauth_accounts_provider", "provider"),
+        UniqueConstraint(
+            "provider", "provider_user_id", name="uq_oauth_provider_user_id"
+        ),
+    )
+
+    def __repr__(self) -> str:
+        return f"<OAuthAccount id={_short_id(self.id)} provider={self.provider} provider_user_id={self.provider_user_id}>"
+
+
+class PasswordHistory(TimestampMixin, SchoolScopedMixin, Base):
+    """Password history for preventing password reuse (Phase 11)."""
+
+    __tablename__ = "password_history"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey(USERS_TABLE_ID, ondelete="CASCADE"), nullable=False
+    )
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+
+    user: Mapped["User"] = relationship(foreign_keys=[user_id])
+
+    __table_args__ = (
+        Index("idx_password_history_user", "user_id"),
+        Index("idx_password_history_school", "school_id"),
+    )
+
+    def __repr__(self) -> str:
+        return f"<PasswordHistory id={_short_id(self.id)} user_id={self.user_id}>"
+
+
+class FailedLoginAttempt(TimestampMixin, SchoolScopedMixin, Base):
+    """Track failed login attempts for account lockout (Phase 11)."""
+
+    __tablename__ = "failed_login_attempts"
+
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey(USERS_TABLE_ID, ondelete="CASCADE"), nullable=True
+    )
+    email: Mapped[str] = mapped_column(String(255), nullable=False)
+    ip_address: Mapped[str] = mapped_column(String(45), nullable=False)
+    user_agent: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    failure_reason: Mapped[str] = mapped_column(String(255), nullable=True)
+
+    user: Mapped["User"] = relationship(foreign_keys=[user_id])
+
+    __table_args__ = (
+        Index("idx_failed_login_attempts_user", "user_id"),
+        Index("idx_failed_login_attempts_school", "school_id"),
+        Index("idx_failed_login_attempts_email", "email"),
+        Index("idx_failed_login_attempts_ip", "ip_address"),
+    )
+
+    def __repr__(self) -> str:
+        return f"<FailedLoginAttempt id={_short_id(self.id)} email={self.email}>"
+
+
+class KnownLocation(TimestampMixin, SchoolScopedMixin, Base):
+    """Track known login locations for suspicious activity detection (Phase 11)."""
+
+    __tablename__ = "known_locations"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey(USERS_TABLE_ID, ondelete="CASCADE"), nullable=False
+    )
+    ip_address: Mapped[str] = mapped_column(String(45), nullable=False)
+    country_code: Mapped[str] = mapped_column(String(2), nullable=True)
+    city: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    region: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    last_seen_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    is_suspicious: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+    user: Mapped["User"] = relationship(foreign_keys=[user_id])
+
+    __table_args__ = (
+        Index("idx_known_locations_user", "user_id"),
+        Index("idx_known_locations_school", "school_id"),
+        Index("idx_known_locations_ip", "ip_address"),
+        UniqueConstraint("user_id", "ip_address", name="uq_known_location_user_ip"),
+    )
+
+    def __repr__(self) -> str:
+        return f"<KnownLocation id={_short_id(self.id)} ip={self.ip_address} country={self.country_code}>"
+
+
+class KnownDevice(TimestampMixin, SchoolScopedMixin, Base):
+    """Track known devices for suspicious activity detection (Phase 11)."""
+
+    __tablename__ = "known_devices"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey(USERS_TABLE_ID, ondelete="CASCADE"), nullable=False
+    )
+    device_fingerprint: Mapped[str] = mapped_column(String(255), nullable=False)
+    device_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    user_agent: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    last_seen_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    is_suspicious: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+    user: Mapped["User"] = relationship(foreign_keys=[user_id])
+
+    __table_args__ = (
+        Index("idx_known_devices_user", "user_id"),
+        Index("idx_known_devices_school", "school_id"),
+        Index("idx_known_devices_fingerprint", "device_fingerprint"),
+        UniqueConstraint(
+            "user_id", "device_fingerprint", name="uq_known_device_user_fingerprint"
+        ),
+    )
+
+    def __repr__(self) -> str:
+        return f"<KnownDevice id={_short_id(self.id)} fingerprint={self.device_fingerprint}>"

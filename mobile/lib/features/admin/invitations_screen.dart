@@ -8,7 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import 'package:ecole_platform/app/providers.dart';
-import 'package:ecole_platform/domain/entities/admin.dart';
+import 'package:ecole_platform/domain/entities/admin/admin.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 
 // ── State ──
@@ -98,7 +98,10 @@ class _InvitationsNotifier extends StateNotifier<_InvitationsState> {
 
   Future<void> createInvitation(String roleTarget, int expiresInHours) async {
     state = state.copyWith(
-        creating: true, clearError: true, clearCreatedCode: true);
+      creating: true,
+      clearError: true,
+      clearCreatedCode: true,
+    );
     try {
       final repo = _ref.read(adminRepositoryProvider);
       final invite = await repo.createInvitation(roleTarget, expiresInHours);
@@ -173,8 +176,10 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
                     return Padding(
                       padding: const EdgeInsets.only(right: 6),
                       child: FilterChip(
-                        label: Text(_statusLabel(s),
-                            style: const TextStyle(fontSize: 12)),
+                        label: Text(
+                          _statusLabel(s),
+                          style: const TextStyle(fontSize: 12),
+                        ),
                         selected: selected,
                         onSelected: (v) => ref
                             .read(_invitationsProvider.notifier)
@@ -197,9 +202,11 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Créer une invitation',
-                          style: theme.textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.bold)),
+                      Text(
+                        'Créer une invitation',
+                        style: theme.textTheme.titleSmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
                       const SizedBox(height: 12),
                       Row(
                         children: [
@@ -210,17 +217,27 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
                                 labelText: 'Rôle',
                                 border: OutlineInputBorder(),
                                 contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 8),
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
                               ),
                               items: const [
                                 DropdownMenuItem(
-                                    value: 'STD', child: Text('Élève')),
+                                  value: 'STD',
+                                  child: Text('Élève'),
+                                ),
                                 DropdownMenuItem(
-                                    value: 'PAR', child: Text('Parent')),
+                                  value: 'PAR',
+                                  child: Text('Parent'),
+                                ),
                                 DropdownMenuItem(
-                                    value: 'TCH', child: Text('Enseignant')),
+                                  value: 'TCH',
+                                  child: Text('Enseignant'),
+                                ),
                                 DropdownMenuItem(
-                                    value: 'DIR', child: Text('Directeur')),
+                                  value: 'DIR',
+                                  child: Text('Directeur'),
+                                ),
                               ],
                               onChanged: (v) {
                                 if (v != null) setState(() => _roleTarget = v);
@@ -235,14 +252,18 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
                                 labelText: 'Expiration',
                                 border: OutlineInputBorder(),
                                 contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 8),
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
                               ),
                               items: const [
                                 DropdownMenuItem(value: 24, child: Text('24h')),
                                 DropdownMenuItem(value: 48, child: Text('48h')),
                                 DropdownMenuItem(value: 72, child: Text('72h')),
                                 DropdownMenuItem(
-                                    value: 168, child: Text('7 jours')),
+                                  value: 168,
+                                  child: Text('7 jours'),
+                                ),
                               ],
                               onChanged: (v) {
                                 if (v != null) {
@@ -296,7 +317,8 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
                                 icon: const Icon(Icons.copy, size: 18),
                                 onPressed: () {
                                   Clipboard.setData(
-                                      ClipboardData(text: state.createdCode!));
+                                    ClipboardData(text: state.createdCode!),
+                                  );
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(content: Text('Code copié')),
                                   );
@@ -323,9 +345,10 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
                     color: theme.colorScheme.errorContainer,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(state.error!,
-                      style:
-                          TextStyle(color: theme.colorScheme.onErrorContainer)),
+                  child: Text(
+                    state.error!,
+                    style: TextStyle(color: theme.colorScheme.onErrorContainer),
+                  ),
                 ),
               ),
 
@@ -337,8 +360,12 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
     );
   }
 
-  Widget _buildList(BuildContext context, WidgetRef ref,
-      _InvitationsState state, ThemeData theme) {
+  Widget _buildList(
+    BuildContext context,
+    WidgetRef ref,
+    _InvitationsState state,
+    ThemeData theme,
+  ) {
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -347,10 +374,13 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.mail_outline,
-                size: 48, color: theme.colorScheme.outline),
-            SizedBox(height: 16),
-            Text('Aucune invitation'),
+            Icon(
+              Icons.mail_outline,
+              size: 48,
+              color: theme.colorScheme.outline,
+            ),
+            const SizedBox(height: 16),
+            const Text('Aucune invitation'),
           ],
         ),
       );
@@ -374,8 +404,10 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
               ),
               title: Row(
                 children: [
-                  Text(inv.roleTarget,
-                      style: const TextStyle(fontWeight: FontWeight.w600)),
+                  Text(
+                    inv.roleTarget,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
                   const SizedBox(width: 8),
                   _InvStatusBadge(status: inv.status),
                 ],
@@ -389,10 +421,13 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen> {
                       ? const SizedBox(
                           height: 20,
                           width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2))
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
                       : IconButton(
-                          icon: Icon(Icons.cancel_outlined,
-                              color: theme.colorScheme.error),
+                          icon: Icon(
+                            Icons.cancel_outlined,
+                            color: theme.colorScheme.error,
+                          ),
                           onPressed: () => ref
                               .read(_invitationsProvider.notifier)
                               .revoke(inv.id),
@@ -471,9 +506,14 @@ class _InvStatusBadge extends StatelessWidget {
         border: Border.all(color: color),
         borderRadius: BorderRadius.circular(10),
       ),
-      child: Text(label,
-          style: TextStyle(
-              fontSize: 10, color: color, fontWeight: FontWeight.w600)),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }

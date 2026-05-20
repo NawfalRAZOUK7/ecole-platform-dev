@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:ecole_platform/domain/entities/invoice.dart';
-import 'package:ecole_platform/domain/repositories/feed_repository.dart';
-import 'package:ecole_platform/features/invoices/invoice_detail_screen.dart';
-import 'package:ecole_platform/features/invoices/invoices_screen.dart';
+import 'package:ecole_platform/domain/entities/billing/invoice.dart';
+import 'package:ecole_platform/domain/common/pagination.dart';
+import 'package:ecole_platform/features/billing/invoices/invoice_detail_screen.dart';
+import 'package:ecole_platform/features/billing/invoices/invoices_screen.dart';
 
 import '../helpers/factories.dart';
 import '../helpers/mock_repositories.dart';

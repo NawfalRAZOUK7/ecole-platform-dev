@@ -9,11 +9,15 @@ from app.core.exceptions import NotFoundError, ValidationError
 from app.core.permissions import ADM, CONTENT_MGR, STD, TCH
 from app.core.response import encode_cursor
 from app.core.unit_of_work import UnitOfWork
-from app.repositories.quiz import QuizRepository
-from app.schemas.quiz import QuizCreateRequest, QuizRespondRequest, QuizUpdateRequest
-from app.services.audit import AuditService
+from app.repositories.lms_quiz import QuizRepository
+from app.schemas.lms.quiz import (
+    QuizCreateRequest,
+    QuizRespondRequest,
+    QuizUpdateRequest,
+)
+from app.services.platform.audit import AuditService
 from app.services.lms._helpers import LMSServiceBase, _utc_now
-from app.services.quiz_grading import grade_attempt
+from app.services.lms.quiz_grading import grade_attempt
 
 
 class QuizService(LMSServiceBase):

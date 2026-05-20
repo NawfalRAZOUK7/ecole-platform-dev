@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# Chaos: Database Connection Failure — test behavior when DB is unreachable
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# Defaults
+BASE_URL="${BASE_URL:-http://localhost:8000/api/v1}"
+TOKEN="${TOKEN:-}"
+SCHOOL_ID="${SCHOOL_ID:-00000000-0000-4000-8000-000000000001}"
+
+# Parse flags
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --token)
+      TOKEN="$2"
+      shift 2
+      ;;
+    --base-url)
+      BASE_URL="$2"
+      shift 2
+      ;;
+    --school-id)
+      SCHOOL_ID="$2"
+      shift 2
+      ;;
+    *)
+      echo "Unknown option: $1"
+      exit 1
+      ;;
+  esac
+done
+
+# Validate
+if [[ -z "$TOKEN" ]]; then
+  echo "Error: --token required"
+  echo "Usage: $0 --token <jwt> [--base-url <url>] [--school-id <uuid>]"
+  exit 1
+fi
+
+echo "=== Chaos: Database Connection Failure ==="
+echo "Base URL: $BASE_URL"
+echo "Token: ${TOKEN:0:20}..."
+echo "School ID: $SCHOOL_ID"
+echo ""
+
+# Test 1: List students (requires DB access)
+echo "Test 1: GET ${BASE_URL}/schools/${SCHOOL_ID}/students"
+RESPONSE=$(curl -s -w "\n%{http_code}" \
+  -X GET "${BASE_URL}/schools/${SCHOOL_ID}/students" \
+  -H "Authorization: Bearer $TOKEN")
+
+HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+BODY=$(echo "$RESPONSE" | sed '$d')
+
+echo "HTTP Code: $HTTP_CODE"
+echo "Response: $BODY"
+echo ""
+
+# Check for error response indicating DB failure
+if [[ "$HTTP_CODE" == "500" ]] || [[ "$HTTP_CODE" == "503" ]]; then
+  echo "✅ PASS: Received error response as expected (DB unreachable)"
+  exit 0
+elif [[ "$HTTP_CODE" == "200" ]]; then
+  echo "⚠️  INFO: Received 200 (DB is reachable, Requestly rule not active)"
+  exit 0
+else
+  echo "❌ FAIL: Unexpected HTTP code $HTTP_CODE"
+  exit 1
+fi

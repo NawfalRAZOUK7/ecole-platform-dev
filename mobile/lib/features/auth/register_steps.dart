@@ -157,7 +157,7 @@ extension _RegisterSteps on _RegisterScreenState {
         if (confirm.isNotEmpty && password != confirm) ...[
           const SizedBox(height: 4),
           Padding(
-            padding: EdgeInsets.only(left: 8),
+            padding: const EdgeInsets.only(left: 8),
             child: Text(
               'Les mots de passe ne correspondent pas',
               style: TextStyle(fontSize: 12, color: theme.colorScheme.error),

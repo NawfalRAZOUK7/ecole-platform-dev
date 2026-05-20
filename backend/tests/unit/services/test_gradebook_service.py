@@ -12,9 +12,9 @@ import pytest
 from app.core.dependencies import AuthContext
 from app.core.exceptions import ValidationError
 from app.domain.value_objects.grade import MoroccanGrade
-from app.schemas.gradebook import GradeCategorySetRequest
-from app.services import gradebook as gradebook_module
-from app.services.gradebook import GradebookService
+from app.schemas.academic.gradebook import GradeCategorySetRequest
+import app.services.academic.gradebook as gradebook_module
+from app.services.academic.gradebook import GradebookService
 
 
 def make_auth(role: str = "ADM") -> AuthContext:

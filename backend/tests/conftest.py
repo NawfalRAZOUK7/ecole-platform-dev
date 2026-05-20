@@ -6,7 +6,6 @@ Seed data must be loaded before running tests (make seed).
 
 from __future__ import annotations
 
-
 import os
 import subprocess
 import sys
@@ -21,15 +20,14 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import ENUM as PgEnum
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
-from testcontainers.postgres import PostgresContainer
 
 import app.core.feature_flags as feature_flags_module
 import app.core.idempotency as idempotency_module
 import app.core.rate_limit as rate_limit_module
 import app.core.redis as core_redis_module
-import app.services.dashboard_analytics as dashboard_analytics_module
-import app.services.notification_hub as notification_hub_module
-import app.services.progress as progress_module
+import app.services.reports.dashboard_analytics as dashboard_analytics_module
+import app.services.communication.notification_hub as notification_hub_module
+import app.services.academic.progress as progress_module
 from app.core.config import settings
 from app.core.database import Base, engine as app_engine
 from app.core.dependencies import AuthContext
@@ -314,17 +312,17 @@ async def parent_token(client: httpx.AsyncClient) -> str:
 
 @pytest.fixture(scope="session")
 def postgres_url() -> str:
-    """Disposable PostgreSQL URL for integration-style tests."""
-    with PostgresContainer("postgres:16-alpine") as pg:
-        yield (
-            pg.get_connection_url()
-            .replace(
-                "postgresql+psycopg2://",
-                "postgresql+asyncpg://",
-                1,
-            )
-            .replace("postgresql://", "postgresql+asyncpg://", 1)
-        )
+    """PostgreSQL URL for integration-style tests.
+
+    Uses the disposable test database on the shared dev postgres container
+    (ecole-postgres) instead of spinning up a new container per session.
+    This cuts ~2-3 minutes off every test run.
+    """
+    return (
+        os.getenv("TEST_DATABASE_URL")
+        or os.getenv("DATABASE_URL")
+        or "postgresql+asyncpg://ecole:change-me@localhost:5432/ecole_platform_test"
+    )
 
 
 @pytest_asyncio.fixture(loop_scope="function")

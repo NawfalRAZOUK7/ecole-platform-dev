@@ -1,4 +1,4 @@
-.PHONY: api-test-down api-test-status api-test-up audit-export backup backup-status build build-prod clean deploy-blue-green deploy-rollback deploy-status dev-init dev-reset docker-prune docs docs-schema down format health hooks-install lint lint-fix logs migrate migrate-down migrate-new migrate-status migrate-validate monitoring-down monitoring-up openapi openapi-check prod-down prod-logs prod-up redis-cli redis-cli-staging restart restore restore-drill rotate-all rotate-db rotate-jwt rotate-redis seed seed-core seed-friend-content shell shell-db shell-db-staging staging-down staging-logs staging-up status test test-cov test-full test-integration test-load test-perf test-postman test-postman-full test-postman-phases test-postman-scenarios test-security test-unit up version web-install web-lint worker worker-logs mobile-run mobile-build mobile-test web-build web-test web-test-e2e web-format pre-rollout
+.PHONY: api-test-down api-test-status api-test-up audit-export backup backup-status build build-prod clean deploy-blue-green deploy-rollback deploy-status dev-init dev-reset docker-prune docs docs-schema doppler-run down format health hooks-install lint lint-fix logs migrate migrate-down migrate-new migrate-status migrate-validate monitoring-down monitoring-up ngrok-webhook openapi openapi-check prod-down prod-logs prod-up redis-cli redis-cli-staging restart restore restore-drill rotate-all rotate-db rotate-jwt rotate-redis seed seed-core seed-friend-content shell shell-db shell-db-staging staging-down staging-logs staging-up status test test-cov test-full test-integration test-load test-perf test-postman test-postman-full test-postman-phases test-postman-scenarios test-security test-unit up up-doppler version web-install web-lint worker worker-logs mobile-run mobile-build mobile-test web-build web-test web-test-e2e web-format pre-rollout
 
 # ==================== Compose Files ====================
 COMPOSE_FILE = infra/docker-compose.dev.yml
@@ -6,13 +6,23 @@ COMPOSE_STAGING = infra/docker-compose.staging.yml
 COMPOSE_PROD = infra/docker-compose.prod.yml
 COMPOSE_MONITORING = infra/docker-compose.monitoring.yml
 COMPOSE_API_TEST = infra/docker-compose.api-test.yml
+COMPOSE_TEST = infra/docker-compose.tests.yml
 COMPOSE_ENV_FILE = .env
 
+# Standard Docker Compose (reads .env file)
 DC = docker compose --env-file $(COMPOSE_ENV_FILE) -f $(COMPOSE_FILE)
 DC_API_TEST = docker compose --env-file $(COMPOSE_ENV_FILE) -p ecole-api-test -f $(COMPOSE_API_TEST)
+DC_TEST = docker compose -p ecole-tests -f $(COMPOSE_TEST)
 DC_STAGING = docker compose -f $(COMPOSE_STAGING)
 DC_PROD = docker compose -f $(COMPOSE_PROD)
 DC_MONITORING = docker compose -f $(COMPOSE_MONITORING)
+
+# Doppler-injected Docker Compose (no .env file needed)
+# Usage: doppler run -- make up-doppler  OR  make doppler-run
+DC_DOPPLER = docker compose -f $(COMPOSE_FILE)
+
+# ngrok port for webhook testing (PSP / external integrations)
+NGROK_PORT ?= 8000
 
 # App version (read from backend pyproject.toml, fallback to 1.0.0)
 APP_VERSION := $(shell grep -m1 '^version = ' backend/pyproject.toml 2>/dev/null | cut -d'"' -f2 || echo "1.0.0")
@@ -21,6 +31,30 @@ APP_VERSION := $(shell grep -m1 '^version = ' backend/pyproject.toml 2>/dev/null
 
 up:
 	$(DC) up -d --build
+
+# Doppler-injected variant (no .env file needed)
+up-doppler:
+	$(DC_DOPPLER) up -d --build
+
+# Wraps any command with Doppler secret injection.
+# Usage:
+#   make doppler-run CMD="make up"
+#   make doppler-run CMD="pytest backend/tests/integration/test_email_e2e.py"
+doppler-run:
+	@command -v doppler >/dev/null 2>&1 || { echo "Doppler CLI not found. Install: brew install dopplerhq/cli/doppler"; exit 1; }
+	@test -n "$(CMD)" || { echo "Usage: make doppler-run CMD=\"<command>\""; exit 1; }
+	doppler run -- $(CMD)
+
+# Expose local API on a public ngrok URL for webhook / external integration testing.
+# Usage:
+#   make ngrok-webhook              # exposes port 8000
+#   make ngrok-webhook NGROK_PORT=8010
+ngrok-webhook:
+	@command -v ngrok >/dev/null 2>&1 || { echo "ngrok not found. Install: brew install ngrok"; exit 1; }
+	@echo "Exposing http://localhost:$(NGROK_PORT) to a public ngrok URL..."
+	@echo "Authentic webhooks (PSP, etc.) can now reach your local API."
+	@echo "Use the printed https://*.ngrok-free.app URL in tests/manual/requestly-scenarios.md"
+	ngrok http $(NGROK_PORT)
 
 down:
 	$(DC) down
@@ -132,8 +166,8 @@ seed-friend-content:
 		$(DC) exec backend mkdir -p /ecole-platform-reference/extraction/assets; \
 		docker cp ../ecole-platform-reference/extraction/assets/. ecole-backend:/ecole-platform-reference/extraction/assets; \
 		$(DC) exec backend python -m scripts.seed_friend_content; \
-		@docker cp ecole-backend:/app/seed-friend-report.md ./seed-friend-report.md 2>/dev/null || true; \
-		@echo "  Report: ./seed-friend-report.md"; \
+		docker cp ecole-backend:/app/seed-friend-report.md ./seed-friend-report.md 2>/dev/null || true; \
+		echo "  Report: ./seed-friend-report.md"; \
 	else \
 		echo "ERROR: ../ecole-platform-reference/extraction/assets not found"; \
 		echo "Place friend content assets there or skip with 'make seed-core'"; \
@@ -380,16 +414,113 @@ api-test-status:
 	$(DC_API_TEST) ps
 
 test-postman:
-	POSTMAN_BASE_URL=$${POSTMAN_BASE_URL:-http://localhost:8010/api/v1} bash tests/run_tests.sh --all
+	POSTMAN_BASE_URL=$${POSTMAN_BASE_URL:-http://localhost:8010/api/v1} bash system-tests/run_tests.sh --all
 
 test-postman-phases:
-	POSTMAN_BASE_URL=$${POSTMAN_BASE_URL:-http://localhost:8010/api/v1} bash tests/run_tests.sh --all-phases
+	@echo "Phase-specific Postman collections were removed; running the full collection instead."
+	POSTMAN_BASE_URL=$${POSTMAN_BASE_URL:-http://localhost:8010/api/v1} bash system-tests/run_tests.sh --full-collection
 
 test-postman-scenarios:
-	POSTMAN_BASE_URL=$${POSTMAN_BASE_URL:-http://localhost:8010/api/v1} bash tests/run_tests.sh --include-scenarios
+	POSTMAN_BASE_URL=$${POSTMAN_BASE_URL:-http://localhost:8010/api/v1} bash system-tests/run_tests.sh --include-scenarios
 
 test-postman-full:
-	POSTMAN_BASE_URL=$${POSTMAN_BASE_URL:-http://localhost:8010/api/v1} bash tests/run_tests.sh --full-collection
+	POSTMAN_BASE_URL=$${POSTMAN_BASE_URL:-http://localhost:8010/api/v1} bash system-tests/run_tests.sh --full-collection
 
 test-load:
-	cd tests/load && BASE_URL=$${BASE_URL:-http://localhost:8010/api/v1} k6 run $${SCENARIO:-baseline/01_logins.js}
+	cd system-tests/load && BASE_URL=$${BASE_URL:-http://localhost:8010/api/v1} k6 run $${SCENARIO:-baseline/01_logins.js}
+
+# ==================== Dockerized Test Matrix ====================
+
+.PHONY: docker-test test-docker docker-test-quick docker-test-unit docker-test-integration docker-test-integration-academic docker-test-integration-auth docker-test-integration-reports docker-test-integration-billing docker-test-integration-lms docker-test-integration-communication docker-test-integration-content docker-test-integration-admin docker-test-integration-school docker-test-integration-operations docker-test-integration-user docker-test-integration-repositories docker-test-integration-e2e docker-test-security docker-test-security-audit docker-test-security-rbac docker-test-contract docker-test-edge docker-test-performance docker-test-postman docker-test-load docker-test-infra docker-test-logs docker-test-down
+
+docker-test:
+	bash scripts/docker-tests.sh --all
+
+test-docker: docker-test
+
+docker-test-quick:
+	bash scripts/docker-tests.sh --quick
+
+docker-test-unit:
+	bash scripts/docker-tests.sh unit
+
+docker-test-integration:
+	bash scripts/docker-tests.sh integration
+
+docker-test-integration-academic:
+	bash scripts/docker-tests.sh integration --path tests/integration/api/academic
+
+docker-test-integration-auth:
+	bash scripts/docker-tests.sh integration --path tests/integration/api/auth
+
+docker-test-integration-reports:
+	bash scripts/docker-tests.sh integration --path tests/integration/api/reports
+
+docker-test-integration-billing:
+	bash scripts/docker-tests.sh integration --path tests/integration/api/billing
+
+docker-test-integration-lms:
+	bash scripts/docker-tests.sh integration --path tests/integration/api/lms
+
+docker-test-integration-ai:
+	bash scripts/docker-tests.sh integration --path tests/integration/api/ai
+
+docker-test-integration-sync:
+	bash scripts/docker-tests.sh integration --path tests/integration/api/sync
+
+docker-test-integration-communication:
+	bash scripts/docker-tests.sh integration --path tests/integration/api/communication
+
+docker-test-integration-content:
+	bash scripts/docker-tests.sh integration --path tests/integration/api/content
+
+docker-test-integration-admin:
+	bash scripts/docker-tests.sh integration --path tests/integration/api/admin
+
+docker-test-integration-school:
+	bash scripts/docker-tests.sh integration --path tests/integration/api/school
+
+docker-test-integration-operations:
+	bash scripts/docker-tests.sh integration --path tests/integration/api/operations
+
+docker-test-integration-user:
+	bash scripts/docker-tests.sh integration --path tests/integration/api/user
+
+docker-test-integration-repositories:
+	bash scripts/docker-tests.sh integration --path tests/integration/repositories
+
+docker-test-integration-e2e:
+	bash scripts/docker-tests.sh integration --path tests/integration/test_email_e2e.py
+
+docker-test-security:
+	bash scripts/docker-tests.sh security
+
+docker-test-security-audit:
+	bash scripts/docker-tests.sh security --path tests/security/audit
+
+docker-test-security-rbac:
+	bash scripts/docker-tests.sh security --path tests/security/rbac
+
+docker-test-contract:
+	bash scripts/docker-tests.sh contract
+
+docker-test-edge:
+	bash scripts/docker-tests.sh edge
+
+docker-test-performance:
+	bash scripts/docker-tests.sh performance
+
+docker-test-postman:
+	bash scripts/docker-tests.sh postman
+
+docker-test-load:
+	bash scripts/docker-tests.sh load
+
+docker-test-infra:
+	bash scripts/docker-tests.sh infra
+
+docker-test-logs:
+	$(DC_TEST) logs -f
+
+docker-test-down:
+	$(DC_TEST) down -v --remove-orphans

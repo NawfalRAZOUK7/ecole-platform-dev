@@ -1,0 +1,365 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ecole-tests-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ecole}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+      POSTGRES_DB: ecole_platform_test
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:-change-me-app-user}
+      APP_READONLY_PASSWORD: ${APP_READONLY_PASSWORD:-change-me-readonly}
+    ports:
+      - "127.0.0.1:5434:5432"
+    volumes:
+      - tests_postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-ecole} -d ecole_platform_test",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - ecole-tests-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: ecole-tests-redis
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-change-me-dev-redis}
+    ports:
+      - "127.0.0.1:6381:6379"
+    volumes:
+      - tests_redis_data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command:
+      - /bin/sh
+      - -c
+      - exec redis-server /usr/local/etc/redis/redis.conf --requirepass "$${REDIS_PASSWORD}"
+    healthcheck:
+      test: ["CMD-SHELL", 'redis-cli -a "$${REDIS_PASSWORD}" ping | grep PONG']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - ecole-tests-network
+
+  minio:
+    image: minio/minio:RELEASE.2024-11-07T00-52-20Z
+    container_name: ecole-tests-minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+      MINIO_KMS_SECRET_KEY: ${MINIO_KMS_SECRET_KEY:-ecole-test-key:dGhpc2lzYWRldmtleWZvcmVjb2xlcGxhdGZvcm0xMjM=}
+    command: server /data --console-address ":9001"
+    ports:
+      - "127.0.0.1:9002:9000"
+      - "127.0.0.1:9003:9001"
+    volumes:
+      - tests_minio_data:/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -sf http://localhost:9000/minio/health/live || exit 1",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - ecole-tests-network
+
+  minio-init:
+    image: minio/mc:RELEASE.2024-11-21T17-21-54Z
+    container_name: ecole-tests-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+      MINIO_BUCKET: ${S3_BUCKET:-ecole-test-private}
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        set -e
+        mc alias set local http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD
+        mc mb --ignore-existing local/$$MINIO_BUCKET
+        mc anonymous set none local/$$MINIO_BUCKET
+        mc encrypt set sse-s3 local/$$MINIO_BUCKET
+        echo 'Test MinIO initialization complete.'
+    networks:
+      - ecole-tests-network
+    restart: "no"
+
+  mock-oauth:
+    build:
+      context: ../system-tests/mock-oauth-server
+      dockerfile: Dockerfile
+    container_name: ecole-tests-mock-oauth
+    environment:
+      PORT: 9999
+      MOCK_USERS_FILE: /app/fixtures/oauth-users.json
+    networks:
+      - ecole-tests-network
+
+  backend-api:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: ecole-tests-backend-api
+    environment: &backend-test-env
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-ecole}:${POSTGRES_PASSWORD:-change-me}@postgres:5432/ecole_platform_test
+      TEST_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-ecole}:${POSTGRES_PASSWORD:-change-me}@postgres:5432/ecole_platform_test
+      REDIS_URL: redis://:${REDIS_PASSWORD:-change-me-dev-redis}@redis:6379/0
+      TEST_REDIS_URL: redis://:${REDIS_PASSWORD:-change-me-dev-redis}@redis:6379/0
+      BASE_URL: http://backend-api:8000/api/v1
+      API_BASE_URL: http://backend-api:8000/api/v1
+      APP_ENV: test
+      LOG_LEVEL: DEBUG
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-me-in-production-use-a-strong-random-secret}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-2}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:3000}
+      UPLOAD_DIR: /app/uploads
+      STORAGE_BACKEND: ${STORAGE_BACKEND:-s3}
+      DOCUMENT_STORAGE_BACKEND: ${DOCUMENT_STORAGE_BACKEND:-local}
+      S3_ENDPOINT: http://minio:9000
+      S3_BUCKET: ${S3_BUCKET:-ecole-test-private}
+      S3_REGION: ${S3_REGION:-us-east-1}
+      S3_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+      S3_FORCE_PATH_STYLE: "true"
+      DOCUMENT_STORAGE_ENDPOINT: http://minio:9000
+      DOCUMENT_STORAGE_BUCKET: ${S3_BUCKET:-ecole-test-private}
+      DOCUMENT_STORAGE_REGION: ${S3_REGION:-us-east-1}
+      DOCUMENT_STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      DOCUMENT_STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+      DOCUMENT_STORAGE_FORCE_PATH_STYLE: "true"
+      SMTP_HOST: ${SMTP_HOST:-localhost}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_USE_TLS: ${SMTP_USE_TLS:-false}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-noreply@ecole-platform.ma}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-Ecole Platform}
+      TESTMAIL_ENABLED: ${TESTMAIL_ENABLED:-false}
+      TESTMAIL_API_KEY: ${TESTMAIL_API_KEY:-}
+      TESTMAIL_NAMESPACE: ${TESTMAIL_NAMESPACE:-}
+      GOOGLE_OAUTH_ENABLED: ${GOOGLE_OAUTH_ENABLED:-true}
+      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-mock-client-id}
+      GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-mock-client-secret}
+      MICROSOFT_OAUTH_ENABLED: ${MICROSOFT_OAUTH_ENABLED:-true}
+      MICROSOFT_OAUTH_CLIENT_ID: ${MICROSOFT_OAUTH_CLIENT_ID:-mock-client-id}
+      MICROSOFT_OAUTH_CLIENT_SECRET: ${MICROSOFT_OAUTH_CLIENT_SECRET:-mock-client-secret}
+      MOCK_OAUTH_ENABLED: ${MOCK_OAUTH_ENABLED:-true}
+      MOCK_OAUTH_BASE_URL: http://mock-oauth:9999
+      SMS_ENABLED: ${SMS_ENABLED:-true}
+      SMS_PROVIDER: ${SMS_PROVIDER:-twilio}
+      MOCK_SMS_ENABLED: ${MOCK_SMS_ENABLED:-true}
+      DEBUG_REVEAL_OTP: ${DEBUG_REVEAL_OTP:-true}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-mock-account-sid}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-mock-auth-token}
+      TWILIO_FROM_NUMBER: ${TWILIO_FROM_NUMBER:-+1234567890}
+      TEST_RUN_ID: ${TEST_RUN_ID:-manual}
+      TEST_ARTIFACT_ROOT: /artifacts/test-runs/${TEST_RUN_ID:-manual}
+      PYTEST_ADDOPTS: ${PYTEST_ADDOPTS:-}
+      COV_FAIL_UNDER: ${COV_FAIL_UNDER:-0}
+      RESET_TEST_DB: ${RESET_TEST_DB:-1}
+      DOCKER_HOST: unix:///var/run/docker.sock
+      TESTCONTAINERS_HOST_OVERRIDE: host.docker.internal
+    command:
+      - /bin/sh
+      - -lc
+      - |
+        python scripts/reset_test_database.py
+        alembic upgrade head
+        python -m app.seed
+        exec uvicorn app.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "127.0.0.1:8011:8000"
+    volumes: &backend-test-volumes
+      - ../backend/app:/app/app
+      - ../backend/alembic:/app/alembic
+      - ../backend/tests:/app/tests
+      - ../backend/scripts:/app/scripts
+      - ../backend/docs:/app/docs
+      - ../backend/alembic.ini:/app/alembic.ini:ro
+      - ../backend/pytest.ini:/app/pytest.ini:ro
+      - ../backend/pyproject.toml:/app/pyproject.toml:ro
+      - ../scripts:/workspace/scripts:ro
+      - ../scripts:/scripts:ro
+      - ../artifacts/test-runs:/artifacts/test-runs
+      - /var/run/docker.sock:/var/run/docker.sock
+      - tests_uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+      mock-oauth:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import httpx; httpx.get('http://localhost:8000/api/v1/health', timeout=5).raise_for_status()\"",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    networks:
+      - ecole-tests-network
+
+  worker:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: ecole-tests-worker
+    environment:
+      <<: *backend-test-env
+    command: ["arq", "app.core.tasks.WorkerSettings"]
+    volumes:
+      - ../backend/app:/app/app
+      - ../backend/alembic:/app/alembic
+      - ../backend/scripts:/app/scripts
+      - tests_uploads:/app/uploads
+    depends_on:
+      backend-api:
+        condition: service_healthy
+    networks:
+      - ecole-tests-network
+
+  backend-unit-tests:
+    <<: &backend-test-service
+      build:
+        context: ../backend
+        dockerfile: Dockerfile
+        target: development
+      environment:
+        <<: *backend-test-env
+      working_dir: /app
+      volumes: *backend-test-volumes
+      depends_on:
+        postgres:
+          condition: service_healthy
+        redis:
+          condition: service_healthy
+        minio-init:
+          condition: service_completed_successfully
+      extra_hosts:
+        - "host.docker.internal:host-gateway"
+      networks:
+        - ecole-tests-network
+      entrypoint: ["/bin/sh", "/workspace/scripts/run-backend-test-suite.sh"]
+    command: ["unit"]
+
+  backend-integration-tests:
+    <<: *backend-test-service
+    command: ["integration"]
+
+  backend-security-tests:
+    <<: *backend-test-service
+    command: ["security"]
+
+  backend-contract-tests:
+    <<: *backend-test-service
+    command: ["contract"]
+
+  backend-edge-tests:
+    <<: *backend-test-service
+    command: ["edge"]
+
+  backend-performance-tests:
+    <<: *backend-test-service
+    command: ["performance"]
+
+  backend-full-tests:
+    <<: *backend-test-service
+    command: ["full"]
+
+  postman-tests:
+    build:
+      context: ../system-tests
+      dockerfile: Dockerfile
+    container_name: ecole-tests-postman
+    working_dir: /workspace
+    environment:
+      POSTMAN_BASE_URL: http://backend-api:8000/api/v1
+      POSTMAN_OUTPUT_DIR: /artifacts/test-runs/${TEST_RUN_ID:-manual}/postman
+      POSTMAN_ARGS: ${POSTMAN_ARGS:---full-collection}
+      POSTMAN_REPORTERS: ${POSTMAN_REPORTERS:-cli,json}
+    volumes:
+      - ..:/workspace:ro
+      - ../artifacts/test-runs:/artifacts/test-runs
+    depends_on:
+      backend-api:
+        condition: service_healthy
+      worker:
+        condition: service_started
+    entrypoint: []
+    command:
+      - /bin/sh
+      - -c
+      - |
+        mkdir -p "$$POSTMAN_OUTPUT_DIR" &&
+        system-tests/run_tests.sh $$POSTMAN_ARGS --reporters "$$POSTMAN_REPORTERS"
+    networks:
+      - ecole-tests-network
+
+  load-tests:
+    image: grafana/k6:0.56.0
+    container_name: ecole-tests-load
+    working_dir: /workspace
+    environment:
+      BASE_URL: http://backend-api:8000/api/v1
+      CI: "true"
+      K6_SCENARIO: ${K6_SCENARIO:-smoke/healthcheck.js}
+      TEST_ARTIFACT_ROOT: /artifacts/test-runs/${TEST_RUN_ID:-manual}
+    volumes:
+      - ..:/workspace:ro
+      - ../artifacts/test-runs:/artifacts/test-runs
+    depends_on:
+      backend-api:
+        condition: service_healthy
+    entrypoint: []
+    command:
+      - /bin/sh
+      - -c
+      - |
+        mkdir -p "$$TEST_ARTIFACT_ROOT/load" &&
+        k6 run --summary-export "$$TEST_ARTIFACT_ROOT/load/summary.json" "system-tests/load/$$K6_SCENARIO"
+    networks:
+      - ecole-tests-network
+
+  infra-tests:
+    image: docker:27-cli
+    container_name: ecole-tests-infra
+    working_dir: /workspace
+    environment:
+      TEST_ARTIFACT_ROOT: /artifacts/test-runs/${TEST_RUN_ID:-manual}
+    volumes:
+      - ..:/workspace:ro
+      - ../artifacts/test-runs:/artifacts/test-runs
+    entrypoint: ["/bin/sh", "/workspace/scripts/run-infra-tests.sh"]
+    networks:
+      - ecole-tests-network
+
+volumes:
+  tests_postgres_data:
+  tests_redis_data:
+  tests_minio_data:
+  tests_uploads:
+
+networks:
+  ecole-tests-network:
+    driver: bridge

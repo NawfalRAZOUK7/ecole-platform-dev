@@ -11,8 +11,8 @@ import pytest
 
 from app.core.dependencies import AuthContext
 from app.core.exceptions import NotFoundError
-from app.services import rewards_service as rewards_module
-from app.services.rewards_service import RewardsService
+import app.services.ai.rewards_service as rewards_module
+from app.services.ai.rewards_service import RewardsService
 
 
 def make_auth(role: str = "ADM") -> AuthContext:

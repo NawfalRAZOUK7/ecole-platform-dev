@@ -52,7 +52,7 @@ from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from starlette.responses import Response
 
 from app.core.config import settings
-from app.schemas.storage import DownloadMetadata
+from app.schemas.content.storage import DownloadMetadata
 
 
 # ---------------------------------------------------------------------------

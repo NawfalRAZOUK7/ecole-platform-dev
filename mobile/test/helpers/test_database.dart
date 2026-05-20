@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-import 'package:ecole_platform/data/local_store/database.dart';
+import 'package:ecole_platform/core/storage/database.dart';
 
 const _testDbName = 'ecole_platform.db';
 

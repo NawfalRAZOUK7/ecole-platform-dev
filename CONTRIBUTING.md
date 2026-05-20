@@ -8,7 +8,7 @@ Thank you for your interest in contributing! This document outlines the conventi
 
 We follow **GitHub Flow** with feature branches:
 
-```
+```text
 main (stable, deployable)
  └── feature/IAM-login-2fa        ← feature branch
  └── fix/attendance-null-check    ← bugfix branch
@@ -17,16 +17,17 @@ main (stable, deployable)
 
 ### Branch Naming
 
-| Type | Pattern | Example |
-|------|---------|---------|
-| Feature | `feature/<module>-<description>` | `feature/rewards-leaderboard` |
-| Bug fix | `fix/<module>-<description>` | `fix/auth-token-refresh` |
-| Refactor | `refactor/<module>-<description>` | `refactor/gradebook-queries` |
-| Documentation | `docs/<description>` | `docs/api-reference` |
-| Infrastructure | `infra/<description>` | `infra/k8s-hpa-config` |
-| Test | `test/<module>-<description>` | `test/rewards-service-unit` |
+| Type           | Pattern                           | Example                       |
+| -------------- | --------------------------------- | ----------------------------- |
+| Feature        | `feature/<module>-<description>`  | `feature/rewards-leaderboard` |
+| Bug fix        | `fix/<module>-<description>`      | `fix/auth-token-refresh`      |
+| Refactor       | `refactor/<module>-<description>` | `refactor/gradebook-queries`  |
+| Documentation  | `docs/<description>`              | `docs/api-reference`          |
+| Infrastructure | `infra/<description>`             | `infra/k8s-hpa-config`        |
+| Test           | `test/<module>-<description>`     | `test/rewards-service-unit`   |
 
 ### Rules
+
 - Always branch from `main`
 - Keep branches short-lived (1-3 days max)
 - Delete branch after merge
@@ -45,28 +46,28 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 ### Types
 
-| Type | Usage |
-|------|-------|
-| `feat` | New feature |
-| `fix` | Bug fix |
-| `refactor` | Code refactoring (no feature change) |
-| `test` | Adding or updating tests |
-| `docs` | Documentation changes |
-| `style` | Formatting, linting (no logic change) |
-| `perf` | Performance improvement |
-| `ci` | CI/CD pipeline changes |
-| `chore` | Maintenance tasks (deps, config) |
-| `build` | Build system changes |
+| Type       | Usage                                 |
+| ---------- | ------------------------------------- |
+| `feat`     | New feature                           |
+| `fix`      | Bug fix                               |
+| `refactor` | Code refactoring (no feature change)  |
+| `test`     | Adding or updating tests              |
+| `docs`     | Documentation changes                 |
+| `style`    | Formatting, linting (no logic change) |
+| `perf`     | Performance improvement               |
+| `ci`       | CI/CD pipeline changes                |
+| `chore`    | Maintenance tasks (deps, config)      |
+| `build`    | Build system changes                  |
 
 ### Scopes
 
-| Scope | Applies to |
-|-------|-----------|
-| `backend` | Backend API |
-| `web` | React frontend |
-| `mobile` | Flutter app |
-| `infra` | Docker, K8s, CI |
-| `db` | Database, migrations |
+| Scope       | Applies to                            |
+| ----------- | ------------------------------------- |
+| `backend`   | Backend API                           |
+| `web`       | React frontend                        |
+| `mobile`    | Flutter app                           |
+| `infra`     | Docker, K8s, CI                       |
+| `db`        | Database, migrations                  |
 | Module name | e.g., `rewards`, `auth`, `attendance` |
 
 ### Examples
@@ -86,28 +87,34 @@ chore(deps): bump FastAPI to 0.111
 ## Pull Request Convention
 
 ### Title
+
 Same format as commit: `type(scope): description`
 
 ### Description Template
 
 ```markdown
 ## Summary
+
 Brief description of what this PR does.
 
 ## Changes
+
 - Added/Modified/Removed X
 - Added/Modified/Removed Y
 
 ## Testing
+
 - [ ] Unit tests added/updated
 - [ ] Manual testing done
 - [ ] Existing tests pass
 
 ## Screenshots (if UI changes)
+
 [Attach screenshots or screen recordings]
 ```
 
 ### Rules
+
 - Keep PRs focused (one feature/fix per PR)
 - Ensure CI passes before requesting review
 - Squash merge to keep history clean
@@ -173,6 +180,7 @@ cd mobile && flutter test
 ```
 
 ### Test file naming
+
 - Backend: `test_<module>.py` in `tests/unit/` or `tests/integration/`
 - Web: `<Component>.test.tsx` in `tests/unit/features/` or `tests/unit/shared/`
 - Mobile: `<widget>_test.dart` in `test/`
@@ -192,5 +200,5 @@ cd mobile && flutter test
 ## Getting Help
 
 - Check existing [documentation](docs/README.md)
-- Review the [API Reference](docs/API-REFERENCE.md)
+- Review the [API Reference](backend/docs/API-REFERENCE.md)
 - Look at existing code for patterns and conventions

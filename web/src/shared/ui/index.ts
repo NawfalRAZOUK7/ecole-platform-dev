@@ -12,7 +12,7 @@ export { FormField } from './FormField';
 export { FormSelect } from './FormSelect';
 export { FormTextarea } from './FormTextarea';
 export { LanguageSwitcher } from './LanguageSwitcher';
-export { Layout } from './Layout';
+
 export { LoadingState } from './LoadingState';
 export { OfflineIndicator } from './OfflineIndicator';
 export { Pagination } from './Pagination';

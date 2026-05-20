@@ -1,0 +1,20 @@
+{
+  "entry": ["src/main.tsx", "vite.config.ts"],
+  "project": ["src/**/*.{ts,tsx}", "e2e/**/*.ts", "tests/**/*.ts", "tests/**/*.tsx"],
+  "ignore": ["dist/**", "coverage/**", "node_modules/**"],
+  "ignoreDependencies": [
+    "@hookform/resolvers",
+    "@testing-library/jest-dom",
+    "@testing-library/user-event",
+    "framer-motion",
+    "i18next",
+    "i18next-browser-languagedetector",
+    "lucide-react",
+    "react-hook-form",
+    "react-i18next",
+    "recharts",
+    "jsdom",
+    "msw",
+    "zod"
+  ]
+}

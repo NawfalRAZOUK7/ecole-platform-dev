@@ -16,7 +16,7 @@ import uuid
 
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 from app.core.ws_manager import HEARTBEAT_INTERVAL, ws_manager
-from app.services.realtime import authenticate_websocket_token
+from app.services.communication.realtime import authenticate_websocket_token
 
 logger = logging.getLogger(__name__)
 

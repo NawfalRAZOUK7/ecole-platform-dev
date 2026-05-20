@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/app/providers.dart';
-import 'package:ecole_platform/domain/entities/sync.dart';
+import 'package:ecole_platform/domain/entities/sync/sync.dart';
 
 final syncStatusProvider = FutureProvider<SyncStatusBundle>((ref) async {
   final service = ref.read(connectivityServiceProvider);

@@ -13,17 +13,17 @@ from sqlalchemy.exc import IntegrityError
 
 from app.core.dependencies import AuthContext
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
-from app.repositories.calendar import CalendarRepository
+from app.repositories.communication_calendar import CalendarRepository
 from app.repositories.lms import LMSRepository
 from app.schemas.billing import FeeAssignmentCreateRequest, FeeStructureUpdateRequest
-from app.schemas.billing_enhancements import PaymentPlanCreateRequest
+from app.schemas.billing.enhancements import PaymentPlanCreateRequest
 from app.schemas.school import SchoolUpdateRequest
-from app.services import billing as billing_module
-from app.services import payment_plan as payment_plan_module
-from app.services.billing import BillingService
+import app.services.billing.billing as billing_module
+import app.services.billing.payment_plan as payment_plan_module
+from app.services.billing.billing import BillingService
 from app.services.lms._helpers import LMSServiceBase, calculate_late_penalty
-from app.services.payment_plan import PaymentPlanService
-from app.services.school import SchoolService
+from app.services.billing.payment_plan import PaymentPlanService
+from app.services.school.school import SchoolService
 from tests.factories.billing import FeeStructureFactory
 from tests.factories.erp import (
     AcademicYearFactory,

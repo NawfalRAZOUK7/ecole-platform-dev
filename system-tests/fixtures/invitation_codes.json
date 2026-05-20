@@ -1,0 +1,60 @@
+{
+  "invitation_codes": [
+    {
+      "code": "INV-ADM-001",
+      "role": "ADM",
+      "school_id": "00000000-0000-4000-8000-000000000001",
+      "email": "newadmin@ecole-benani.ma",
+      "status": "pending",
+      "expires_at": "2026-12-31T23:59:59Z"
+    },
+    {
+      "code": "INV-TCH-001",
+      "role": "TCH",
+      "school_id": "00000000-0000-4000-8000-000000000001",
+      "email": "newteacher1@ecole-benani.ma",
+      "status": "pending",
+      "expires_at": "2026-12-31T23:59:59Z"
+    },
+    {
+      "code": "INV-TCH-002",
+      "role": "TCH",
+      "school_id": "00000000-0000-4000-8000-000000000001",
+      "email": "newteacher2@ecole-benani.ma",
+      "status": "pending",
+      "expires_at": "2026-12-31T23:59:59Z"
+    },
+    {
+      "code": "INV-PAR-001",
+      "role": "PAR",
+      "school_id": "00000000-0000-4000-8000-000000000001",
+      "email": "newparent1@ecole-benani.ma",
+      "status": "pending",
+      "expires_at": "2026-12-31T23:59:59Z"
+    },
+    {
+      "code": "INV-PAR-002",
+      "role": "PAR",
+      "school_id": "00000000-0000-4000-8000-000000000001",
+      "email": "newparent2@ecole-benani.ma",
+      "status": "pending",
+      "expires_at": "2026-12-31T23:59:59Z"
+    },
+    {
+      "code": "INV-STD-001",
+      "role": "STD",
+      "school_id": "00000000-0000-4000-8000-000000000001",
+      "email": "newstudent1@ecole-benani.ma",
+      "status": "pending",
+      "expires_at": "2026-12-31T23:59:59Z"
+    },
+    {
+      "code": "INV-STD-002",
+      "role": "STD",
+      "school_id": "00000000-0000-4000-8000-000000000001",
+      "email": "newstudent2@ecole-benani.ma",
+      "status": "pending",
+      "expires_at": "2026-12-31T23:59:59Z"
+    }
+  ]
+}

@@ -5,9 +5,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:ecole_platform/app/providers.dart';
-import 'package:ecole_platform/domain/entities/rewards.dart';
-import 'package:ecole_platform/domain/repositories/rewards_repository.dart';
-import 'package:ecole_platform/features/rewards/rewards_screen.dart';
+import 'package:ecole_platform/domain/entities/ai/rewards.dart';
+import 'package:ecole_platform/domain/repositories/ai/rewards_repository.dart';
+import 'package:ecole_platform/features/ai/rewards/rewards_screen.dart';
 
 import '../helpers/factories.dart';
 import '../helpers/mock_repositories.dart';
@@ -97,8 +97,7 @@ void main() {
       completer.complete(StudentRewards.empty);
     });
 
-    testWidgets(
-        'RewardsScreen renders star count and level after data loads',
+    testWidgets('RewardsScreen renders star count and level after data loads',
         (tester) async {
       final authRepository = MockAuthRepository();
       final rewardsRepository = MockRewardsRepository();

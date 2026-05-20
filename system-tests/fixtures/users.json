@@ -1,0 +1,84 @@
+{
+  "users": [
+    {
+      "id": "10000000-0000-4000-8000-000000000001",
+      "email": "admin@ecole-benani.ma",
+      "password": "admin123",
+      "full_name": "Admin User",
+      "role": "ADM",
+      "school_id": "00000000-0000-4000-8000-000000000001",
+      "status": "active",
+      "email_verified": true
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000002",
+      "email": "teacher1@ecole-benani.ma",
+      "password": "teacher123",
+      "full_name": "Teacher One",
+      "role": "TCH",
+      "school_id": "00000000-0000-4000-8000-000000000001",
+      "status": "active",
+      "email_verified": true
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000003",
+      "email": "teacher2@ecole-benani.ma",
+      "password": "teacher456",
+      "full_name": "Teacher Two",
+      "role": "TCH",
+      "school_id": "00000000-0000-4000-8000-000000000001",
+      "status": "active",
+      "email_verified": true
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000004",
+      "email": "parent1@ecole-benani.ma",
+      "password": "parent123",
+      "full_name": "Parent One",
+      "role": "PAR",
+      "school_id": "00000000-0000-4000-8000-000000000001",
+      "status": "active",
+      "email_verified": true
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000005",
+      "email": "parent2@ecole-benani.ma",
+      "password": "parent456",
+      "full_name": "Parent Two",
+      "role": "PAR",
+      "school_id": "00000000-0000-4000-8000-000000000001",
+      "status": "active",
+      "email_verified": true
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000006",
+      "email": "student1@ecole-benani.ma",
+      "password": "student123",
+      "full_name": "Student One",
+      "role": "STD",
+      "school_id": "00000000-0000-4000-8000-000000000001",
+      "status": "active",
+      "email_verified": true
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000007",
+      "email": "student2@ecole-benani.ma",
+      "password": "student456",
+      "full_name": "Student Two",
+      "role": "STD",
+      "school_id": "00000000-0000-4000-8000-000000000001",
+      "status": "active",
+      "email_verified": true
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000008",
+      "email": "student3@ecole-benani.ma",
+      "password": "student789",
+      "full_name": "Student Three",
+      "role": "STD",
+      "school_id": "00000000-0000-4000-8000-000000000001",
+      "status": "active",
+      "email_verified": true
+    }
+  ]
+}

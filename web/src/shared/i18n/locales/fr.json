@@ -99,7 +99,14 @@
     "error": {
       "invalid": "Email ou mot de passe invalide",
       "locked": "Compte verrouillé",
-      "generic": "Échec de connexion"
+      "generic": "Échec de connexion",
+      "oauth": "Échec de connexion OAuth"
+    },
+    "oauth": {
+      "title": "Connexion sociale",
+      "google": "Se connecter avec Google",
+      "microsoft": "Se connecter avec Microsoft",
+      "separator": "ou"
     },
     "twoFactor": {
       "title": "Authentification a deux facteurs",

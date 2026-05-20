@@ -38,15 +38,13 @@ class PlatformBridgeCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isWeb = targetPlatform == BridgePlatform.web;
 
-    final Color accentColor =
-        isWeb ? AppColors.primary : AppColors.secondary;
+    final Color accentColor = isWeb ? AppColors.primary : AppColors.secondary;
     final Color bgColor = accentColor.withAlpha(15);
     final Color borderColor = accentColor.withAlpha(60);
     final IconData platformIcon =
         icon ?? (isWeb ? Icons.computer_rounded : Icons.phone_android_rounded);
-    final String platformLabel = isWeb
-        ? 'متوفر على الويب'
-        : 'متوفر على التطبيق';
+    final String platformLabel =
+        isWeb ? 'متوفر على الويب' : 'متوفر على التطبيق';
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: AppSpacing.sm),

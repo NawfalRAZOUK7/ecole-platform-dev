@@ -50,6 +50,26 @@
         }
       }
     },
+    "/api/v1/sentry-debug": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Trigger a test error for Sentry",
+        "description": "Trigger a ZeroDivisionError to verify Sentry error reporting.",
+        "operationId": "sentry_debug_api_v1_sentry_debug_get",
+        "responses": {
+          "200": {
+            "description": "Intentionally raises an error to verify Sentry capture",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/login": {
       "post": {
         "tags": [
@@ -621,6 +641,471 @@
             }
           }
         }
+      }
+    },
+    "/api/v1/auth/webauthn/credentials": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "List WebAuthn credentials",
+        "description": "List the user's registered WebAuthn / passkey credentials.",
+        "operationId": "list_credentials_api_v1_auth_webauthn_credentials_get",
+        "responses": {
+          "200": {
+            "description": "Active passkeys for the current user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiListResponse_WebAuthnCredentialData_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/webauthn/register/begin": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Begin WebAuthn registration",
+        "description": "Generate a WebAuthn registration challenge for the current user.",
+        "operationId": "register_begin_api_v1_auth_webauthn_register_begin_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebAuthnRegistrationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Challenge and registration options for the authenticator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/webauthn/register/finish": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Finish WebAuthn registration",
+        "description": "Verify the authenticator response and save the new passkey credential.",
+        "operationId": "register_finish_api_v1_auth_webauthn_register_finish_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebAuthnRegistrationResponse"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Credential saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/webauthn/authenticate/begin": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Begin WebAuthn authentication",
+        "description": "Generate a WebAuthn authentication challenge for passkey login.",
+        "operationId": "authenticate_begin_api_v1_auth_webauthn_authenticate_begin_post",
+        "responses": {
+          "200": {
+            "description": "Challenge and authentication options",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/webauthn/authenticate/finish": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Finish WebAuthn authentication",
+        "description": "Verify the authenticator response and issue tokens for passkey login.",
+        "operationId": "authenticate_finish_api_v1_auth_webauthn_authenticate_finish_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebAuthnAuthenticationResponse"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication result with tokens",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/webauthn/credentials/{credential_id}": {
+      "delete": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Delete a WebAuthn credential",
+        "description": "Remove a WebAuthn / passkey credential belonging to the current user.",
+        "operationId": "delete_credential_api_v1_auth_webauthn_credentials__credential_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "credential_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Credential Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Credential removed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/oauth/{provider}/url": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Get OAuth authorization URL",
+        "description": "Generate the OAuth authorization URL for the requested provider.",
+        "operationId": "get_oauth_url_api_v1_auth_oauth__provider__url_get",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Provider"
+            }
+          },
+          {
+            "name": "redirect_uri",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Redirect Uri"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "URL to redirect the user to for OAuth consent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/oauth/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "OAuth login",
+        "description": "Exchange an OAuth authorization code for access tokens and log the user in.",
+        "operationId": "oauth_login_api_v1_auth_oauth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OAuthLoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "JWT tokens after successful OAuth exchange",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/sms-2fa/setup": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Setup Sms 2Fa",
+        "operationId": "setup_sms_2fa_api_v1_auth_sms_2fa_setup_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sms2FASetupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/sms-2fa/verify-setup": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Verify Setup Sms 2Fa",
+        "operationId": "verify_setup_sms_2fa_api_v1_auth_sms_2fa_verify_setup_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sms2FAVerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/sms-2fa/disable": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Disable Sms 2Fa",
+        "operationId": "disable_sms_2fa_api_v1_auth_sms_2fa_disable_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Sms2FADisableRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/api/v1/schools": {
@@ -23419,6 +23904,25 @@
         "title": "AnnouncementUpdateRequest",
         "description": "Update a draft announcement."
       },
+      "ApiListResponse_WebAuthnCredentialData_": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/WebAuthnCredentialData"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiListResponse[WebAuthnCredentialData]"
+      },
       "ApiResponse_ClassResponse_": {
         "properties": {
           "data": {
@@ -23448,6 +23952,23 @@
           "data"
         ],
         "title": "ApiResponse[SchoolResponse]"
+      },
+      "ApiResponse_dict_": {
+        "properties": {
+          "data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Data"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "ApiResponse[dict]"
       },
       "AssessmentCreateRequest": {
         "properties": {
@@ -28150,6 +28671,71 @@
         "type": "object",
         "title": "NotificationReadRequest"
       },
+      "OAuthLoginRequest": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "title": "Provider",
+            "description": "Provider: google, microsoft, apple"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "OAuth authorization code"
+          },
+          "redirect_uri": {
+            "type": "string",
+            "title": "Redirect Uri",
+            "description": "OAuth redirect URI"
+          },
+          "school_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "School Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider",
+          "code",
+          "redirect_uri",
+          "school_id"
+        ],
+        "title": "OAuthLoginRequest"
+      },
+      "PaginationMeta": {
+        "properties": {
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "has_more": {
+            "type": "boolean",
+            "title": "Has More",
+            "default": false
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "default": "0.1.0"
+          }
+        },
+        "type": "object",
+        "title": "PaginationMeta",
+        "description": "Metadata for paginated list responses."
+      },
       "PaymentInitiateRequest": {
         "properties": {
           "invoice_id": {
@@ -30847,6 +31433,50 @@
         "title": "SkillMilestoneCreateRequest",
         "description": "Payload for creating a skill milestone."
       },
+      "Sms2FADisableRequest": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 6,
+            "minLength": 6,
+            "title": "Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "title": "Sms2FADisableRequest"
+      },
+      "Sms2FASetupRequest": {
+        "properties": {
+          "phone": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "Phone"
+          }
+        },
+        "type": "object",
+        "required": [
+          "phone"
+        ],
+        "title": "Sms2FASetupRequest"
+      },
+      "Sms2FAVerifyRequest": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 6,
+            "minLength": 6,
+            "title": "Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "title": "Sms2FAVerifyRequest"
+      },
       "StudentWorkItem": {
         "properties": {
           "id": {
@@ -31363,7 +31993,6 @@
         "properties": {
           "code": {
             "type": "string",
-            "maxLength": 8,
             "minLength": 6,
             "title": "Code",
             "description": "TOTP code or backup code"
@@ -31507,6 +32136,131 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "WebAuthnAuthenticationResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "raw_id": {
+            "type": "string",
+            "title": "Raw Id"
+          },
+          "response": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Response"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "raw_id",
+          "response"
+        ],
+        "title": "WebAuthnAuthenticationResponse"
+      },
+      "WebAuthnCredentialData": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "credential_id": {
+            "type": "string",
+            "title": "Credential Id"
+          },
+          "device_name": {
+            "type": "string",
+            "title": "Device Name"
+          },
+          "device_type": {
+            "type": "string",
+            "title": "Device Type"
+          },
+          "transports": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transports"
+          },
+          "is_backup": {
+            "type": "boolean",
+            "title": "Is Backup"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "credential_id",
+          "device_name",
+          "device_type",
+          "transports",
+          "is_backup",
+          "is_active",
+          "created_at"
+        ],
+        "title": "WebAuthnCredentialData"
+      },
+      "WebAuthnRegistrationRequest": {
+        "properties": {
+          "device_name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Device Name"
+          },
+          "device_type": {
+            "type": "string",
+            "title": "Device Type",
+            "description": "single_device or multi_device",
+            "default": "single_device"
+          }
+        },
+        "type": "object",
+        "required": [
+          "device_name"
+        ],
+        "title": "WebAuthnRegistrationRequest"
+      },
+      "WebAuthnRegistrationResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "raw_id": {
+            "type": "string",
+            "title": "Raw Id"
+          },
+          "response": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Response"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "raw_id",
+          "response"
+        ],
+        "title": "WebAuthnRegistrationResponse"
       },
       "WebhookEventRequest": {
         "properties": {

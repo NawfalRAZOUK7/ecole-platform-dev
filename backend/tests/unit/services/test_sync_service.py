@@ -17,8 +17,8 @@ from app.models.sync_queue import (
     SyncDeviceType,
     SyncQueueStatus,
 )
-from app.services import sync_queue_service as sync_module
-from app.services.sync_queue_service import SyncService
+import app.services.sync.sync_queue_service as sync_module
+from app.services.sync.sync_queue_service import SyncService
 
 
 @pytest_asyncio.fixture(autouse=True)

@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:ecole_platform/domain/entities/notification_item.dart';
-import 'package:ecole_platform/domain/repositories/feed_repository.dart';
-import 'package:ecole_platform/domain/repositories/notification_repository.dart';
-import 'package:ecole_platform/features/notifications/notifications_screen.dart';
+import 'package:ecole_platform/domain/entities/communication/notification_item.dart';
+import 'package:ecole_platform/domain/common/pagination.dart';
+import 'package:ecole_platform/features/communication/notifications/notifications_screen.dart';
 
 import '../helpers/mock_repositories.dart';
 import '../helpers/pump_app.dart';
@@ -40,10 +39,12 @@ void main() {
         (tester) async {
       final notificationRepository = MockNotificationRepository();
 
-      when(() => notificationRepository.getNotifications(
-            cursor: any(named: 'cursor'),
-            category: any(named: 'category'),
-          )).thenAnswer(
+      when(
+        () => notificationRepository.getNotifications(
+          cursor: any(named: 'cursor'),
+          category: any(named: 'category'),
+        ),
+      ).thenAnswer(
         (_) async => PaginatedList<NotificationItem>(
           items: [_makeNotification()],
           nextCursor: null,
@@ -69,10 +70,12 @@ void main() {
         (tester) async {
       final notificationRepository = MockNotificationRepository();
 
-      when(() => notificationRepository.getNotifications(
-            cursor: any(named: 'cursor'),
-            category: any(named: 'category'),
-          )).thenAnswer(
+      when(
+        () => notificationRepository.getNotifications(
+          cursor: any(named: 'cursor'),
+          category: any(named: 'category'),
+        ),
+      ).thenAnswer(
         (_) async => const PaginatedList<NotificationItem>(
           items: [],
           nextCursor: null,
@@ -98,10 +101,12 @@ void main() {
     testWidgets('NotificationsScreen has AppBar', (tester) async {
       final notificationRepository = MockNotificationRepository();
 
-      when(() => notificationRepository.getNotifications(
-            cursor: any(named: 'cursor'),
-            category: any(named: 'category'),
-          )).thenAnswer(
+      when(
+        () => notificationRepository.getNotifications(
+          cursor: any(named: 'cursor'),
+          category: any(named: 'category'),
+        ),
+      ).thenAnswer(
         (_) async => const PaginatedList<NotificationItem>(
           items: [],
           nextCursor: null,

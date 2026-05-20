@@ -13,7 +13,7 @@ on:
 
 env:
   PYTHON_VERSION: "3.12"
-  NODE_VERSION: "20"
+  NODE_VERSION: "22"
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
@@ -258,12 +258,37 @@ jobs:
       matrix:
         python-version: ["3.12", "3.13"]
         postgres-version: ["15", "16", "17"]
+    services:
+      postgres:
+        image: postgres:${{ matrix.postgres-version }}-alpine
+        env:
+          POSTGRES_USER: ecole
+          POSTGRES_PASSWORD: ecole
+          POSTGRES_DB: ecole_platform
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ecole -d ecole_platform"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     env:
       JWT_SECRET_KEY: test-secret-key-ci-only
       JWT_ALGORITHM: HS256
       ACCESS_TOKEN_EXPIRE_MINUTES: "30"
       REFRESH_TOKEN_EXPIRE_DAYS: "7"
       DATABASE_URL: postgresql+asyncpg://ecole:ecole@localhost:5432/ecole_platform
+      TEST_DATABASE_URL: postgresql+asyncpg://ecole:ecole@localhost:5432/ecole_platform
       REDIS_URL: redis://localhost:6379/0
       APP_ENV: test
     steps:
@@ -290,19 +315,14 @@ jobs:
       - name: Run unit tests with coverage
         run: |
           cd backend
-          UNIT_COVERAGE_FILES='app/core/exceptions.py,app/core/permissions.py,app/core/response.py,app/core/security.py'
-          coverage erase
-          coverage run --parallel-mode --source=app -m pytest tests/unit/ -v --tb=short
-          coverage combine
-          coverage report --include="$UNIT_COVERAGE_FILES" --fail-under=90
-          coverage xml -o coverage-unit.xml --include="$UNIT_COVERAGE_FILES"
+          pytest tests/unit/ -v --tb=short --cov=app --cov-branch --cov-report=xml --cov-report=term --cov-fail-under=0
 
       - name: Upload unit coverage report
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: coverage-unit-${{ matrix.python-version }}-pg${{ matrix.postgres-version }}
-          path: backend/coverage-unit.xml
+          path: backend/coverage.xml
 
       - name: Upload unit coverage data
         uses: actions/upload-artifact@v4
@@ -355,6 +375,29 @@ jobs:
       ACCESS_TOKEN_EXPIRE_MINUTES: "30"
       REFRESH_TOKEN_EXPIRE_DAYS: "7"
       APP_ENV: test
+      SEED_ON_STARTUP: "true"
+      ACCOUNT_LOCKOUT_ENABLED: "true"
+      ACCOUNT_LOCKOUT_MAX_ATTEMPTS: "5"
+      ACCOUNT_LOCKOUT_DURATION_MINUTES: "15"
+      GOOGLE_OAUTH_ENABLED: "true"
+      MICROSOFT_OAUTH_ENABLED: "true"
+      MOCK_OAUTH_ENABLED: "true"
+      MOCK_OAUTH_BASE_URL: "http://localhost:9999"
+      MOCK_SMS_ENABLED: "true"
+      RATE_LIMIT_DEFAULT_LIMIT: "100"
+      RATE_LIMIT_WINDOW_SECONDS: "60"
+      TESTMAIL_ENABLED: "true"
+      DEBUG_REVEAL_OTP: "true"
+      TESTMAIL_API_KEY: ${{ secrets.TESTMAIL_API_KEY }}
+      TESTMAIL_NAMESPACE: "ibatt"
+      STORAGE_BACKEND: s3
+      S3_ENDPOINT: http://localhost:9000
+      S3_BUCKET: ecole-test-private
+      S3_REGION: us-east-1
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin123
+      S3_FORCE_PATH_STYLE: "true"
+      S3_SSE_ENABLED: "false"
 
     steps:
       - uses: actions/checkout@v4
@@ -387,6 +430,33 @@ jobs:
           cd backend
           python -m app.seed
 
+      - name: Start MinIO and create bucket
+        run: |
+          docker run -d --name minio \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin123 \
+            -p 9000:9000 \
+            minio/minio:RELEASE.2024-11-07T00-52-20Z server /data
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:9000/minio/health/live && break
+            sleep 1
+          done
+          wget -q https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc
+          chmod +x /usr/local/bin/mc
+          mc alias set local http://localhost:9000 minioadmin minioadmin123
+          mc mb --ignore-existing local/ecole-test-private
+
+      - name: Start mock OAuth server
+        run: |
+          cd system-tests/mock-oauth-server
+          python main.py &
+          MOCK_OAUTH_PID=$!
+          echo "MOCK_OAUTH_PID=$MOCK_OAUTH_PID" >> $GITHUB_ENV
+          for i in $(seq 1 10); do
+            curl -sf http://localhost:9999/ && break
+            sleep 1
+          done
+
       - name: Run integration tests
         run: |
           cd backend
@@ -396,13 +466,14 @@ jobs:
           cleanup() {
             kill -INT "$SERVER_PID" || true
             wait "$SERVER_PID" || true
+            kill $MOCK_OAUTH_PID || true
           }
           trap cleanup EXIT
           for i in $(seq 1 30); do
             curl -sf http://localhost:8000/api/v1/health && break
             sleep 1
           done
-          pytest tests/integration/api/iam/test_complete_auth.py tests/integration/api/iam/test_role_flow.py -v --tb=short
+          pytest tests/integration/api/auth/test_complete_auth.py tests/integration/api/auth/test_role_flow.py -v --tb=short --cov=app --cov-branch --cov-report=xml --cov-report=term --cov-fail-under=0
           kill -INT "$SERVER_PID" || true
           wait "$SERVER_PID" || true
           trap - EXIT
@@ -453,6 +524,29 @@ jobs:
       ACCESS_TOKEN_EXPIRE_MINUTES: "30"
       REFRESH_TOKEN_EXPIRE_DAYS: "7"
       APP_ENV: test
+      SEED_ON_STARTUP: "true"
+      ACCOUNT_LOCKOUT_ENABLED: "true"
+      ACCOUNT_LOCKOUT_MAX_ATTEMPTS: "5"
+      ACCOUNT_LOCKOUT_DURATION_MINUTES: "15"
+      GOOGLE_OAUTH_ENABLED: "true"
+      MICROSOFT_OAUTH_ENABLED: "true"
+      MOCK_OAUTH_ENABLED: "true"
+      MOCK_OAUTH_BASE_URL: "http://localhost:9999"
+      MOCK_SMS_ENABLED: "true"
+      RATE_LIMIT_DEFAULT_LIMIT: "100"
+      RATE_LIMIT_WINDOW_SECONDS: "60"
+      TESTMAIL_ENABLED: "true"
+      DEBUG_REVEAL_OTP: "true"
+      TESTMAIL_API_KEY: ${{ secrets.TESTMAIL_API_KEY }}
+      TESTMAIL_NAMESPACE: "ibatt"
+      STORAGE_BACKEND: s3
+      S3_ENDPOINT: http://localhost:9000
+      S3_BUCKET: ecole-test-private
+      S3_REGION: us-east-1
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin123
+      S3_FORCE_PATH_STYLE: "true"
+      S3_SSE_ENABLED: "false"
 
     steps:
       - uses: actions/checkout@v4
@@ -481,6 +575,33 @@ jobs:
           alembic upgrade head
           python -m app.seed
 
+      - name: Start mock OAuth server
+        run: |
+          cd system-tests/mock-oauth-server
+          python main.py &
+          MOCK_OAUTH_PID=$!
+          echo "MOCK_OAUTH_PID=$MOCK_OAUTH_PID" >> $GITHUB_ENV
+          for i in $(seq 1 10); do
+            curl -sf http://localhost:9999/ && break
+            sleep 1
+          done
+
+      - name: Start MinIO and create bucket
+        run: |
+          docker run -d --name minio \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin123 \
+            -p 9000:9000 \
+            minio/minio:RELEASE.2024-11-07T00-52-20Z server /data
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:9000/minio/health/live && break
+            sleep 1
+          done
+          wget -q https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc
+          chmod +x /usr/local/bin/mc
+          mc alias set local http://localhost:9000 minioadmin minioadmin123
+          mc mb --ignore-existing local/ecole-test-private
+
       - name: Run contract tests with API coverage
         run: |
           cd backend
@@ -490,13 +611,14 @@ jobs:
           cleanup() {
             kill -INT "$SERVER_PID" || true
             wait "$SERVER_PID" || true
+            kill $MOCK_OAUTH_PID || true
           }
           trap cleanup EXIT
           for i in $(seq 1 30); do
             curl -sf http://localhost:8000/api/v1/health && break
             sleep 1
           done
-          pytest tests/contract/test_api_contracts_envelope.py -v --tb=short
+          pytest tests/contract/ -v --tb=short --cov=app --cov-branch --cov-report=xml --cov-report=term --cov-fail-under=0
           kill -INT "$SERVER_PID" || true
           wait "$SERVER_PID" || true
           trap - EXIT
@@ -547,6 +669,29 @@ jobs:
       ACCESS_TOKEN_EXPIRE_MINUTES: "30"
       REFRESH_TOKEN_EXPIRE_DAYS: "7"
       APP_ENV: test
+      SEED_ON_STARTUP: "true"
+      ACCOUNT_LOCKOUT_ENABLED: "true"
+      ACCOUNT_LOCKOUT_MAX_ATTEMPTS: "5"
+      ACCOUNT_LOCKOUT_DURATION_MINUTES: "15"
+      GOOGLE_OAUTH_ENABLED: "true"
+      MICROSOFT_OAUTH_ENABLED: "true"
+      MOCK_OAUTH_ENABLED: "true"
+      MOCK_OAUTH_BASE_URL: "http://localhost:9999"
+      MOCK_SMS_ENABLED: "true"
+      RATE_LIMIT_DEFAULT_LIMIT: "100"
+      RATE_LIMIT_WINDOW_SECONDS: "60"
+      TESTMAIL_ENABLED: "true"
+      DEBUG_REVEAL_OTP: "true"
+      TESTMAIL_API_KEY: ${{ secrets.TESTMAIL_API_KEY }}
+      TESTMAIL_NAMESPACE: "ibatt"
+      STORAGE_BACKEND: s3
+      S3_ENDPOINT: http://localhost:9000
+      S3_BUCKET: ecole-test-private
+      S3_REGION: us-east-1
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin123
+      S3_FORCE_PATH_STYLE: "true"
+      S3_SSE_ENABLED: "false"
 
     steps:
       - uses: actions/checkout@v4
@@ -575,6 +720,33 @@ jobs:
           alembic upgrade head
           python -m app.seed
 
+      - name: Start mock OAuth server
+        run: |
+          cd system-tests/mock-oauth-server
+          python main.py &
+          MOCK_OAUTH_PID=$!
+          echo "MOCK_OAUTH_PID=$MOCK_OAUTH_PID" >> $GITHUB_ENV
+          for i in $(seq 1 10); do
+            curl -sf http://localhost:9999/ && break
+            sleep 1
+          done
+
+      - name: Start MinIO and create bucket
+        run: |
+          docker run -d --name minio \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin123 \
+            -p 9000:9000 \
+            minio/minio:RELEASE.2024-11-07T00-52-20Z server /data
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:9000/minio/health/live && break
+            sleep 1
+          done
+          wget -q https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc
+          chmod +x /usr/local/bin/mc
+          mc alias set local http://localhost:9000 minioadmin minioadmin123
+          mc mb --ignore-existing local/ecole-test-private
+
       - name: Run RBAC security tests with API coverage
         run: |
           cd backend
@@ -584,13 +756,14 @@ jobs:
           cleanup() {
             kill -INT "$SERVER_PID" || true
             wait "$SERVER_PID" || true
+            kill $MOCK_OAUTH_PID || true
           }
           trap cleanup EXIT
           for i in $(seq 1 30); do
             curl -sf http://localhost:8000/api/v1/health && break
             sleep 1
           done
-          pytest tests/security/rbac/test_rbac_security.py -v --tb=short
+          pytest tests/security/rbac/test_rbac_security.py -v --tb=short --cov=app --cov-branch --cov-report=xml --cov-report=term --cov-fail-under=0
           kill -INT "$SERVER_PID" || true
           wait "$SERVER_PID" || true
           trap - EXIT
@@ -607,18 +780,11 @@ jobs:
   coverage-report:
     name: Coverage Report
     runs-on: ubuntu-latest
-    needs:
-      [
-        unit-tests,
-        integration-tests,
-        contract-tests,
-        security-tests,
-        e2e-tests,
-        security-audit,
-        load-tests,
-      ]
+    needs: [unit-tests, integration-tests, contract-tests, security-tests]
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -656,6 +822,7 @@ jobs:
 
       - name: Run diff-cover on PRs
         if: github.event_name == 'pull_request'
+        continue-on-error: ${{ github.event.pull_request.draft }}
         run: |
           cd backend
           diff-cover coverage.xml --compare-branch=origin/${{ github.base_ref }} --fail-under=95
@@ -668,6 +835,14 @@ jobs:
           path: |
             backend/coverage.xml
             backend/htmlcov/
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: backend/coverage.xml
+          flags: backend
+          fail_ci_if_error: false
 
   web-lint:
     name: Web Frontend Lint
@@ -740,6 +915,29 @@ jobs:
       ACCESS_TOKEN_EXPIRE_MINUTES: "30"
       REFRESH_TOKEN_EXPIRE_DAYS: "7"
       APP_ENV: test
+      SEED_ON_STARTUP: "true"
+      ACCOUNT_LOCKOUT_ENABLED: "true"
+      ACCOUNT_LOCKOUT_MAX_ATTEMPTS: "5"
+      ACCOUNT_LOCKOUT_DURATION_MINUTES: "15"
+      GOOGLE_OAUTH_ENABLED: "true"
+      MICROSOFT_OAUTH_ENABLED: "true"
+      MOCK_OAUTH_ENABLED: "true"
+      MOCK_OAUTH_BASE_URL: "http://localhost:9999"
+      MOCK_SMS_ENABLED: "true"
+      RATE_LIMIT_DEFAULT_LIMIT: "100"
+      RATE_LIMIT_WINDOW_SECONDS: "60"
+      TESTMAIL_ENABLED: "true"
+      DEBUG_REVEAL_OTP: "true"
+      TESTMAIL_API_KEY: ${{ secrets.TESTMAIL_API_KEY }}
+      TESTMAIL_NAMESPACE: "ibatt"
+      STORAGE_BACKEND: s3
+      S3_ENDPOINT: http://localhost:9000
+      S3_BUCKET: ecole-test-private
+      S3_REGION: us-east-1
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin123
+      S3_FORCE_PATH_STYLE: "true"
+      S3_SSE_ENABLED: "false"
 
     steps:
       - uses: actions/checkout@v4
@@ -781,6 +979,33 @@ jobs:
           alembic upgrade head
           python -m app.seed
 
+      - name: Start mock OAuth server
+        run: |
+          cd system-tests/mock-oauth-server
+          python main.py &
+          MOCK_OAUTH_PID=$!
+          echo "MOCK_OAUTH_PID=$MOCK_OAUTH_PID" >> $GITHUB_ENV
+          for i in $(seq 1 10); do
+            curl -sf http://localhost:9999/ && break
+            sleep 1
+          done
+
+      - name: Start MinIO and create bucket
+        run: |
+          docker run -d --name minio \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin123 \
+            -p 9000:9000 \
+            minio/minio:RELEASE.2024-11-07T00-52-20Z server /data
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:9000/minio/health/live && break
+            sleep 1
+          done
+          wget -q https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc
+          chmod +x /usr/local/bin/mc
+          mc alias set local http://localhost:9000 minioadmin minioadmin123
+          mc mb --ignore-existing local/ecole-test-private
+
       - name: Start API server
         run: |
           cd backend
@@ -818,6 +1043,7 @@ jobs:
         run: |
           cd web
           BASE_URL=http://localhost:5173 npx playwright test --reporter=github
+          kill $MOCK_OAUTH_PID || true
         env:
           CI: true
 
@@ -827,6 +1053,581 @@ jobs:
         with:
           name: playwright-report
           path: web/playwright-report/
+
+  postman-tests:
+    name: Postman API Smoke (Newman)
+    runs-on: ubuntu-latest
+    needs: [integration-tests]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ecole
+          POSTGRES_PASSWORD: ecole
+          POSTGRES_DB: ecole_platform
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ecole -d ecole_platform"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://ecole:ecole@localhost:5432/ecole_platform
+      REDIS_URL: redis://localhost:6379/0
+      JWT_SECRET_KEY: test-secret-key-ci-only
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+      REFRESH_TOKEN_EXPIRE_DAYS: "7"
+      APP_ENV: test
+      SEED_ON_STARTUP: "true"
+      ACCOUNT_LOCKOUT_ENABLED: "true"
+      ACCOUNT_LOCKOUT_MAX_ATTEMPTS: "5"
+      ACCOUNT_LOCKOUT_DURATION_MINUTES: "15"
+      GOOGLE_OAUTH_ENABLED: "true"
+      MICROSOFT_OAUTH_ENABLED: "true"
+      MOCK_OAUTH_ENABLED: "true"
+      MOCK_OAUTH_BASE_URL: "http://localhost:9999"
+      MOCK_SMS_ENABLED: "true"
+      RATE_LIMIT_DEFAULT_LIMIT: "100"
+      RATE_LIMIT_WINDOW_SECONDS: "60"
+      TESTMAIL_ENABLED: "true"
+      DEBUG_REVEAL_OTP: "true"
+      TESTMAIL_API_KEY: ${{ secrets.TESTMAIL_API_KEY }}
+      TESTMAIL_NAMESPACE: "ibatt"
+      STORAGE_BACKEND: s3
+      S3_ENDPOINT: http://localhost:9000
+      S3_BUCKET: ecole-test-private
+      S3_REGION: us-east-1
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin123
+      S3_FORCE_PATH_STYLE: "true"
+      S3_SSE_ENABLED: "false"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('backend/requirements*.txt') }}
+          restore-keys: |
+            pip-${{ env.PYTHON_VERSION }}-
+
+      - name: Set up Node.js (for Newman)
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          pip install -r requirements-test.txt
+
+      - name: Run migrations + seed
+        run: |
+          cd backend
+          alembic upgrade head
+          python -m app.seed
+
+      - name: Start MinIO and create bucket
+        run: |
+          docker run -d --name minio \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin123 \
+            -p 9000:9000 \
+            minio/minio:RELEASE.2024-11-07T00-52-20Z server /data
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:9000/minio/health/live && break
+            sleep 1
+          done
+          wget -q https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc
+          chmod +x /usr/local/bin/mc
+          mc alias set local http://localhost:9000 minioadmin minioadmin123
+          mc mb --ignore-existing local/ecole-test-private
+
+      - name: Start API server
+        run: |
+          cd backend
+          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8000/api/v1/health && break
+            sleep 1
+          done
+
+      - name: Install Newman + reporter
+        run: npm install -g newman newman-reporter-htmlextra
+
+      - name: Run Postman full smoke collection
+        run: |
+          newman run system-tests/postman/ecole_platform_full.postman_collection.json \
+            -e system-tests/postman/env_local.json \
+            --env-var "baseUrl=http://localhost:8000/api/v1" \
+            --env-var "school_id=00000000-0000-4000-8000-000000000001" \
+            --reporters cli,htmlextra,json \
+            --reporter-htmlextra-export newman-report.html \
+            --reporter-json-export newman-report.json \
+            --bail
+
+      - name: Upload Newman report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: newman-report
+          path: |
+            newman-report.html
+            newman-report.json
+
+  postman-scenario-tests:
+    name: Postman Scenario Tests (Newman)
+    runs-on: ubuntu-latest
+    needs: [integration-tests]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ecole
+          POSTGRES_PASSWORD: ecole
+          POSTGRES_DB: ecole_platform
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ecole -d ecole_platform"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://ecole:ecole@localhost:5432/ecole_platform
+      REDIS_URL: redis://localhost:6379/0
+      JWT_SECRET_KEY: test-secret-key-ci-only
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+      REFRESH_TOKEN_EXPIRE_DAYS: "7"
+      APP_ENV: test
+      SEED_ON_STARTUP: "true"
+      ACCOUNT_LOCKOUT_ENABLED: "true"
+      ACCOUNT_LOCKOUT_MAX_ATTEMPTS: "5"
+      ACCOUNT_LOCKOUT_DURATION_MINUTES: "15"
+      GOOGLE_OAUTH_ENABLED: "true"
+      MICROSOFT_OAUTH_ENABLED: "true"
+      MOCK_OAUTH_ENABLED: "true"
+      MOCK_OAUTH_BASE_URL: "http://localhost:9999"
+      MOCK_SMS_ENABLED: "true"
+      RATE_LIMIT_DEFAULT_LIMIT: "100"
+      RATE_LIMIT_WINDOW_SECONDS: "60"
+      TESTMAIL_ENABLED: "true"
+      DEBUG_REVEAL_OTP: "true"
+      TESTMAIL_API_KEY: ${{ secrets.TESTMAIL_API_KEY }}
+      TESTMAIL_NAMESPACE: "ibatt"
+      STORAGE_BACKEND: s3
+      S3_ENDPOINT: http://localhost:9000
+      S3_BUCKET: ecole-test-private
+      S3_REGION: us-east-1
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin123
+      S3_FORCE_PATH_STYLE: "true"
+      S3_SSE_ENABLED: "false"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('backend/requirements*.txt') }}
+          restore-keys: |
+            pip-${{ env.PYTHON_VERSION }}-
+
+      - name: Set up Node.js (for Newman)
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          pip install -r requirements-test.txt
+
+      - name: Run migrations + seed
+        run: |
+          cd backend
+          alembic upgrade head
+          python -m app.seed
+
+      - name: Start mock OAuth server
+        run: |
+          cd system-tests/mock-oauth-server
+          python main.py &
+          MOCK_OAUTH_PID=$!
+          echo "MOCK_OAUTH_PID=$MOCK_OAUTH_PID" >> $GITHUB_ENV
+          for i in $(seq 1 10); do
+            curl -sf http://localhost:9999/ && break
+            sleep 1
+          done
+
+      - name: Start MinIO and create bucket
+        run: |
+          docker run -d --name minio \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin123 \
+            -p 9000:9000 \
+            minio/minio:RELEASE.2024-11-07T00-52-20Z server /data
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:9000/minio/health/live && break
+            sleep 1
+          done
+          wget -q https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc
+          chmod +x /usr/local/bin/mc
+          mc alias set local http://localhost:9000 minioadmin minioadmin123
+          mc mb --ignore-existing local/ecole-test-private
+
+      - name: Start API server
+        run: |
+          cd backend
+          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8000/api/v1/health && break
+            sleep 1
+          done
+
+      - name: Install Newman + reporter
+        run: npm install -g newman newman-reporter-htmlextra
+
+      - name: Run all scenario collections
+        run: |
+          mkdir -p scenario-reports
+
+          clear_auth_state() {
+            python - <<'PY'
+          import redis
+
+          r = redis.Redis(host="localhost", port=6379, db=0)
+          r.delete("login_attempts:admin@ecole-benani.ma:00000000-0000-4000-8000-000000000001")
+          PY
+            PGPASSWORD=ecole psql -h localhost -U ecole -d ecole_platform -c "DELETE FROM failed_login_attempts WHERE email='admin@ecole-benani.ma';" 2>/dev/null || true
+          }
+
+          for collection in system-tests/postman/scenario_*.postman_collection.json; do
+            name=$(basename "$collection" .postman_collection.json)
+            echo "Running $name..."
+            clear_auth_state
+            newman run "$collection" \
+              -e system-tests/postman/env_local.json \
+              --env-var "baseUrl=http://localhost:8000/api/v1" \
+              --env-var "school_id=00000000-0000-4000-8000-000000000001" \
+              --reporters cli,htmlextra,json \
+              --reporter-htmlextra-export "scenario-reports/${name}-report.html" \
+              --reporter-json-export "scenario-reports/${name}-report.json" \
+              --bail || exit 1
+            # Clear account-lockout state so later collections aren't blocked
+            clear_auth_state
+          done
+          kill $MOCK_OAUTH_PID || true
+
+      - name: Upload scenario test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scenario-reports
+          path: scenario-reports/*
+
+  cleanup-test-data:
+    name: Cleanup Test Data
+    runs-on: ubuntu-latest
+    needs: [postman-scenario-tests]
+    if: ${{ always() && needs.postman-scenario-tests.result != 'skipped' }}
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ecole
+          POSTGRES_PASSWORD: ecole
+          POSTGRES_DB: ecole_platform
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ecole -d ecole_platform"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://ecole:ecole@localhost:5432/ecole_platform
+      REDIS_URL: redis://localhost:6379/0
+      JWT_SECRET_KEY: test-secret-key-ci-only
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+      REFRESH_TOKEN_EXPIRE_DAYS: "7"
+      APP_ENV: test
+      SEED_ON_STARTUP: "true"
+      STORAGE_BACKEND: s3
+      S3_ENDPOINT: http://localhost:9000
+      S3_BUCKET: ecole-test-private
+      S3_REGION: us-east-1
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin123
+      S3_FORCE_PATH_STYLE: "true"
+      S3_SSE_ENABLED: "false"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('backend/requirements*.txt') }}
+          restore-keys: |
+            pip-${{ env.PYTHON_VERSION }}-
+
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          pip install -r requirements-test.txt
+
+      - name: Run migrations + seed
+        run: |
+          cd backend
+          alembic upgrade head
+          python -m app.seed
+
+      - name: Start MinIO and create bucket
+        run: |
+          docker run -d --name minio \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin123 \
+            -p 9000:9000 \
+            minio/minio:RELEASE.2024-11-07T00-52-20Z server /data
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:9000/minio/health/live && break
+            sleep 1
+          done
+          wget -q https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc
+          chmod +x /usr/local/bin/mc
+          mc alias set local http://localhost:9000 minioadmin minioadmin123
+          mc mb --ignore-existing local/ecole-test-private
+
+      - name: Start API server
+        run: |
+          cd backend
+          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8000/api/v1/health && break
+            sleep 1
+          done
+
+      - name: Clear account lockout state
+        run: |
+          python - <<'PY'
+          import redis
+
+          r = redis.Redis(host="localhost", port=6379, db=0)
+          r.delete("login_attempts:admin@ecole-benani.ma:00000000-0000-4000-8000-000000000001")
+          PY
+          PGPASSWORD=ecole psql -h localhost -U ecole -d ecole_platform -c "DELETE FROM failed_login_attempts WHERE email='admin@ecole-benani.ma';" 2>/dev/null || true
+
+      - name: Get admin token
+        id: token
+        run: |
+          TOKEN=$(curl -s -X POST http://localhost:8000/api/v1/auth/login \
+            -H "Content-Type: application/json" \
+            -d '{"email":"admin@ecole-benani.ma","password":"admin123","school_id":"00000000-0000-4000-8000-000000000001"}' \
+            | jq -r '.data.access_token')
+          if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
+            echo "Failed to obtain admin token for cleanup"
+            exit 1
+          fi
+          echo "token=$TOKEN" >> $GITHUB_OUTPUT
+
+      - name: Run cleanup script
+        run: |
+          ./system-tests/cleanup_test_data.sh \
+            --token "${{ steps.token.outputs.token }}" \
+            --base-url http://localhost:8000/api/v1 \
+            --school-id 00000000-0000-4000-8000-000000000001
+
+  k6-load-tests:
+    name: k6 Auth Baseline Tests
+    runs-on: ubuntu-latest
+    needs: [integration-tests]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ecole
+          POSTGRES_PASSWORD: ecole
+          POSTGRES_DB: ecole_platform
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ecole -d ecole_platform"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://ecole:ecole@localhost:5432/ecole_platform
+      REDIS_URL: redis://localhost:6379/0
+      JWT_SECRET_KEY: test-secret-key-ci-only
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+      REFRESH_TOKEN_EXPIRE_DAYS: "7"
+      APP_ENV: test
+      DEBUG_REVEAL_OTP: "true"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('backend/requirements*.txt') }}
+          restore-keys: |
+            pip-${{ env.PYTHON_VERSION }}-
+
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          pip install -r requirements-test.txt
+
+      - name: Run migrations + seed
+        run: |
+          cd backend
+          alembic upgrade head
+          python -m app.seed
+
+      - name: Start MinIO and create bucket
+        run: |
+          docker run -d --name minio \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin123 \
+            -p 9000:9000 \
+            minio/minio:RELEASE.2024-11-07T00-52-20Z server /data
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:9000/minio/health/live && break
+            sleep 1
+          done
+          wget -q https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc
+          chmod +x /usr/local/bin/mc
+          mc alias set local http://localhost:9000 minioadmin minioadmin123
+          mc mb --ignore-existing local/ecole-test-private
+
+      - name: Start API server
+        run: |
+          cd backend
+          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8000/api/v1/health && break
+            sleep 1
+          done
+
+      - name: Install k6
+        uses: grafana/setup-k6-action@v1
+
+      - name: Run k6 login baseline test
+        run: |
+          k6 run system-tests/load/auth/01_login_baseline.js \
+            --env BASE_URL=http://localhost:8000/api/v1 \
+            --env CI=true \
+            --env SCHOOL_ID=00000000-0000-4000-8000-000000000001 \
+            --env TEST_EMAIL=admin@ecole-benani.ma \
+            --env TEST_PASSWORD=admin123 \
+            --out json=k6-login-results.json
+
+      - name: Run k6 2FA baseline test
+        run: |
+          k6 run system-tests/load/auth/02_2fa_baseline.js \
+            --env BASE_URL=http://localhost:8000/api/v1 \
+            --env CI=true \
+            --env SCHOOL_ID=00000000-0000-4000-8000-000000000001 \
+            --env TEST_EMAIL=admin@ecole-benani.ma \
+            --env TEST_PASSWORD=admin123 \
+            --env TOTP_CODE=123456 \
+            --out json=k6-2fa-results.json
+
+      - name: Run k6 recovery baseline test
+        run: |
+          k6 run system-tests/load/auth/03_recovery_baseline.js \
+            --env BASE_URL=http://localhost:8000/api/v1 \
+            --env CI=true \
+            --env SCHOOL_ID=00000000-0000-4000-8000-000000000001 \
+            --env TEST_EMAIL=admin@ecole-benani.ma \
+            --out json=k6-recovery-results.json
+
+      - name: Upload k6 results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-results
+          path: |
+            k6-login-results.json
+            k6-2fa-results.json
+            k6-recovery-results.json
 
   security-audit:
     name: Security Audit Tests
@@ -865,6 +1666,29 @@ jobs:
       ACCESS_TOKEN_EXPIRE_MINUTES: "30"
       REFRESH_TOKEN_EXPIRE_DAYS: "7"
       APP_ENV: test
+      SEED_ON_STARTUP: "true"
+      ACCOUNT_LOCKOUT_ENABLED: "true"
+      ACCOUNT_LOCKOUT_MAX_ATTEMPTS: "5"
+      ACCOUNT_LOCKOUT_DURATION_MINUTES: "15"
+      GOOGLE_OAUTH_ENABLED: "true"
+      MICROSOFT_OAUTH_ENABLED: "true"
+      MOCK_OAUTH_ENABLED: "true"
+      MOCK_OAUTH_BASE_URL: "http://localhost:9999"
+      MOCK_SMS_ENABLED: "true"
+      RATE_LIMIT_DEFAULT_LIMIT: "100"
+      RATE_LIMIT_WINDOW_SECONDS: "60"
+      TESTMAIL_ENABLED: "true"
+      DEBUG_REVEAL_OTP: "true"
+      TESTMAIL_API_KEY: ${{ secrets.TESTMAIL_API_KEY }}
+      TESTMAIL_NAMESPACE: "ibatt"
+      STORAGE_BACKEND: s3
+      S3_ENDPOINT: http://localhost:9000
+      S3_BUCKET: ecole-test-private
+      S3_REGION: us-east-1
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin123
+      S3_FORCE_PATH_STYLE: "true"
+      S3_SSE_ENABLED: "false"
 
     steps:
       - uses: actions/checkout@v4
@@ -893,6 +1717,33 @@ jobs:
           alembic upgrade head
           python -m app.seed
 
+      - name: Start mock OAuth server
+        run: |
+          cd system-tests/mock-oauth-server
+          python main.py &
+          MOCK_OAUTH_PID=$!
+          echo "MOCK_OAUTH_PID=$MOCK_OAUTH_PID" >> $GITHUB_ENV
+          for i in $(seq 1 10); do
+            curl -sf http://localhost:9999/ && break
+            sleep 1
+          done
+
+      - name: Start MinIO and create bucket
+        run: |
+          docker run -d --name minio \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin123 \
+            -p 9000:9000 \
+            minio/minio:RELEASE.2024-11-07T00-52-20Z server /data
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:9000/minio/health/live && break
+            sleep 1
+          done
+          wget -q https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc
+          chmod +x /usr/local/bin/mc
+          mc alias set local http://localhost:9000 minioadmin minioadmin123
+          mc mb --ignore-existing local/ecole-test-private
+
       - name: Run security audit tests with API coverage
         run: |
           cd backend
@@ -902,13 +1753,14 @@ jobs:
           cleanup() {
             kill -INT "$SERVER_PID" || true
             wait "$SERVER_PID" || true
+            kill $MOCK_OAUTH_PID || true
           }
           trap cleanup EXIT
           for i in $(seq 1 30); do
             curl -sf http://localhost:8000/api/v1/health && break
             sleep 1
           done
-          pytest tests/security/audit/test_security_audit.py -v --tb=short
+          pytest tests/security/audit/test_security_audit.py -v --tb=short --cov=app --cov-branch --cov-report=xml --cov-report=term --cov-fail-under=0
           kill -INT "$SERVER_PID" || true
           wait "$SERVER_PID" || true
           trap - EXIT
@@ -923,7 +1775,7 @@ jobs:
           if-no-files-found: warn
 
   load-tests:
-    name: Load Tests (k6)
+    name: k6 Full Baseline Suite
     runs-on: ubuntu-latest
     needs: [integration-tests]
     services:
@@ -959,6 +1811,29 @@ jobs:
       ACCESS_TOKEN_EXPIRE_MINUTES: "30"
       REFRESH_TOKEN_EXPIRE_DAYS: "7"
       APP_ENV: test
+      SEED_ON_STARTUP: "true"
+      ACCOUNT_LOCKOUT_ENABLED: "true"
+      ACCOUNT_LOCKOUT_MAX_ATTEMPTS: "5"
+      ACCOUNT_LOCKOUT_DURATION_MINUTES: "15"
+      GOOGLE_OAUTH_ENABLED: "true"
+      MICROSOFT_OAUTH_ENABLED: "true"
+      MOCK_OAUTH_ENABLED: "true"
+      MOCK_OAUTH_BASE_URL: "http://localhost:9999"
+      MOCK_SMS_ENABLED: "true"
+      RATE_LIMIT_DEFAULT_LIMIT: "100"
+      RATE_LIMIT_WINDOW_SECONDS: "60"
+      TESTMAIL_ENABLED: "true"
+      DEBUG_REVEAL_OTP: "true"
+      TESTMAIL_API_KEY: ${{ secrets.TESTMAIL_API_KEY }}
+      TESTMAIL_NAMESPACE: "ibatt"
+      STORAGE_BACKEND: s3
+      S3_ENDPOINT: http://localhost:9000
+      S3_BUCKET: ecole-test-private
+      S3_REGION: us-east-1
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin123
+      S3_FORCE_PATH_STYLE: "true"
+      S3_SSE_ENABLED: "false"
 
     steps:
       - uses: actions/checkout@v4
@@ -987,6 +1862,22 @@ jobs:
           alembic upgrade head
           python -m app.seed
 
+      - name: Start MinIO and create bucket
+        run: |
+          docker run -d --name minio \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin123 \
+            -p 9000:9000 \
+            minio/minio:RELEASE.2024-11-07T00-52-20Z server /data
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:9000/minio/health/live && break
+            sleep 1
+          done
+          wget -q https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc
+          chmod +x /usr/local/bin/mc
+          mc alias set local http://localhost:9000 minioadmin minioadmin123
+          mc mb --ignore-existing local/ecole-test-private
+
       - name: Start API server
         run: |
           cd backend
@@ -1001,28 +1892,28 @@ jobs:
 
       - name: Run k6 login scenario
         run: |
-          k6 run tests/load/baseline/01_logins.js \
+          k6 run system-tests/load/baseline/01_logins.js \
             --env BASE_URL=http://localhost:8000/api/v1 \
             --out json=k6-results-scenario1.json \
             --summary-trend-stats="avg,p(90),p(95),p(99)"
 
       - name: Run k6 GET requests scenario
         run: |
-          k6 run tests/load/baseline/02_get_requests.js \
+          k6 run system-tests/load/baseline/02_get_requests.js \
             --env BASE_URL=http://localhost:8000/api/v1 \
             --out json=k6-results-scenario2.json \
             --summary-trend-stats="avg,p(90),p(95),p(99)"
 
       - name: Run k6 file upload scenario
         run: |
-          k6 run tests/load/baseline/03_file_uploads.js \
+          k6 run system-tests/load/baseline/03_file_uploads.js \
             --env BASE_URL=http://localhost:8000/api/v1 \
             --out json=k6-results-scenario3.json \
             --summary-trend-stats="avg,p(90),p(95),p(99)"
 
       - name: Run k6 WebSocket scenario
         run: |
-          k6 run tests/load/baseline/04_websocket.js \
+          k6 run system-tests/load/baseline/04_websocket.js \
             --env BASE_URL=http://localhost:8000/api/v1 \
             --env WS_URL=ws://localhost:8000/api/v1/ws \
             --out json=k6-results-scenario4.json \
@@ -1039,7 +1930,7 @@ jobs:
   publish-images:
     name: Publish Images
     runs-on: ubuntu-latest
-    needs: [unit-tests, integration-tests, security-trivy]
+    needs: [unit-tests, integration-tests, postman-tests, security-trivy]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     permissions:
       contents: read

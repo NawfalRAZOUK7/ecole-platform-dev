@@ -17,8 +17,8 @@ from unittest.mock import AsyncMock, call
 import httpx
 import pytest
 
-from app.services.email import _render_template
-from app.services.push_config import PushConfigService
+from app.services.auth.email import _render_template
+from app.services.communication.push_config import PushConfigService
 
 STUDENT_1_ID = "10000000-0000-4000-8000-000000000007"
 
@@ -358,7 +358,7 @@ class TestNotificationDenyOrdering:
 class TestPushDeliveryRetries:
     @pytest.mark.asyncio
     async def test_send_with_retry_retries_transient_failures(self, monkeypatch):
-        from app.services import push_config
+        import app.services.communication.push_config as push_config
 
         service = PushConfigService(db=None)  # type: ignore[arg-type]
         attempts = {"count": 0}
@@ -393,7 +393,7 @@ class TestPushDeliveryRetries:
 
     @pytest.mark.asyncio
     async def test_send_with_retry_raises_after_max_attempts(self, monkeypatch):
-        from app.services import push_config
+        import app.services.communication.push_config as push_config
 
         service = PushConfigService(db=None)  # type: ignore[arg-type]
         attempts = {"count": 0}

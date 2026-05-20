@@ -47,6 +47,88 @@ pytest -m "security" tests/
 pytest tests/unit/test_rewards_service.py -v
 ```
 
+### Dockerized Test Matrix
+
+Les tests backend et system-tests peuvent aussi tourner entièrement dans Docker,
+avec Postgres, Redis, MinIO, le mock OAuth, l'API backend et le worker sur un
+réseau Compose isolé. Web et mobile restent volontairement hors de cette matrice.
+
+```bash
+# Toute la matrice Docker non-web/non-mobile
+make docker-test
+
+# Suites séparées
+make docker-test-unit
+make docker-test-integration
+make docker-test-security
+make docker-test-contract
+make docker-test-edge
+make docker-test-performance
+make docker-test-postman
+make docker-test-load
+make docker-test-infra
+
+# Sous-ensembles d'intégration (pour itérer rapidement)
+make docker-test-integration-academic
+make docker-test-integration-auth
+make docker-test-integration-reports
+make docker-test-integration-billing
+make docker-test-integration-lms
+make docker-test-integration-communication
+make docker-test-integration-content
+make docker-test-integration-admin
+make docker-test-integration-school
+make docker-test-integration-operations
+make docker-test-integration-user
+make docker-test-integration-repositories
+make docker-test-integration-e2e
+
+# Sous-ensembles de sécurité
+make docker-test-security-audit
+make docker-test-security-rbac
+
+# Variante rapide
+make docker-test-quick
+
+# Cibler un fichier ou dossier spécifique
+bash scripts/docker-tests.sh integration --path tests/integration/api/academic
+bash scripts/docker-tests.sh security --path tests/security/audit
+```
+
+Chaque exécution écrit un dossier horodaté dans `artifacts/test-runs/` avec :
+
+- `summary.md` et `summary.json` — statut final par suite
+- `logs/*.log` — sortie complète de chaque conteneur de test et logs Compose
+- `backend/<suite>/junit.xml` — résultats pytest par suite
+- `backend/<suite>/coverage.xml` et `htmlcov/` — couverture par suite
+- `postman/*.json` — rapports Newman
+- `load/summary.json` — résumé k6
+
+La stack reste active après le run pour inspecter les logs :
+
+```bash
+make docker-test-logs
+make docker-test-down
+```
+
+Variables utiles :
+
+- `PYTEST_ADDOPTS="-k auth"` — filtrer une suite pytest Docker
+- `COV_FAIL_UNDER=90` — réactiver un seuil de couverture pour une suite
+- `POSTMAN_ARGS="--full-collection"` — changer la sélection Newman
+- `K6_SCENARIO="baseline/01_logins.js"` — changer le scénario k6
+
+**Comportement par défaut :**
+- **Fail-fast** — la matrice s'arrête à la première suite en échec. Les suites restantes sont marquées "skipped".
+- **Pas de timeout pytest** — les suites longues (intégration, performance) ne sont plus tuées par `--timeout`.
+- **Progression live** — chaque suite affiche une bannière `[N/M] Running …` et sa sortie est streamée en temps réel vers `logs/<suite>.log`.
+
+Pour forcer l'exécution de toutes les suites même en cas d'échec :
+
+```bash
+bash scripts/docker-tests.sh --all --continue-on-error
+```
+
 ### Fixtures clés
 
 - `app` — Instance FastAPI configurée pour les tests
