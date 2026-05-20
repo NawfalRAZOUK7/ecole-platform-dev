@@ -1,533 +1,345 @@
+<!-- markdownlint-disable MD036 -->
+
 # models/ — SQLAlchemy 2.0 ORM Models
 
 Object-relational mapping (ORM) layer using SQLAlchemy 2.0 with modern `Mapped[]` type annotations. Models define database schema and relationships.
 
-## Packaging roadmap (hybrid “A3”)
+## Packaging roadmap (hybrid "A3")
 
 Today, modules are **flat files** (`lms.py`, `erp.py`, …) while routers/services/schemas are already grouped by **bounded context** (same names as `api/v1/`).
 
-| Phase | Action |
-|-------|--------|
-| **Now** | Keep flat layout; treat this README + [`docs/DATABASE.md`](../../../docs/DATABASE.md) as the logical map (G1–G9 style groupings). |
-| **Next** | When a domain is heavily touched, introduce a **subpackage** (e.g. `models/lms/`) and re-export from `models/__init__.py` in a **dedicated PR** with a codemod (no behavior change). |
-| **Avoid** | Big-bang move of all models in one PR (merge pain, Alembic autogenerate noise). |
+| Phase     | Action                                                                                                                                                                               |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Now**   | Keep flat layout; treat this README + [`docs/DATABASE.md`](../../docs/DATABASE.md) as the logical map (G1–G9+ style groupings).                                                      |
+| **Next**  | When a domain is heavily touched, introduce a **subpackage** (e.g. `models/lms/`) and re-export from `models/__init__.py` in a **dedicated PR** with a codemod (no behavior change). |
+| **Avoid** | Big-bang move of all models in one PR (merge pain, Alembic autogenerate noise).                                                                                                      |
 
 **Rename / split (only when justified)**  
 Split oversized files (e.g. many unrelated tables in one module) only together with a clear migration story. Prefer **documentation** of legacy names (`com.py` = communication) over mass file renames that do not change tables.
 
 ## Directory Structure
 
-```
+```text
 models/
-├── iam.py           # Identity & Access Management
-├── school.py        # School structure & operations
-├── lms.py           # Learning Management System
-├── billing.py       # Billing & payments
-├── calendar.py      # Calendar & events
-├── com.py           # Communication (messages, notifications)
-├── documents.py     # Document management
-├── erp.py           # Enterprise Resource Planning
-├── audit.py         # Audit logging & compliance
-├── ai.py            # AI interactions & history
-├── reporting.py     # Reports & schedules
-└── feature.py       # Feature flags
+├── iam.py                    # Identity & Access Management (G1)
+├── school.py                 # School entity (G2)
+├── erp.py                    # ERP — Academic years, classes, enrollments, attendance, timetable, programs (G2/G7)
+├── lms.py                    # Learning Management System — courses, assignments, quizzes, content (G3)
+├── com.py                    # Communication — notifications, messaging, announcements, feed (G4)
+├── billing.py                # Billing, invoices, payments, fee structures (G5)
+├── budget.py                 # Class micro-budgets (G5)
+├── financial_health.py       # Retention, cashflow, cost-per-student (G5)
+├── calendar.py               # Calendar events, RSVP, reminders (G4)
+├── documents.py              # Document management with versioning (G9)
+├── uploads.py                # Upload session tracking (G9)
+├── sync_queue.py             # Offline sync devices, queue, conflicts (G9)
+├── audit.py                  # Audit logging (G6)
+├── ai.py                     # AI writing attempts, preferences (G6)
+├── reporting.py              # Report jobs, schedules, exports (G8)
+├── men_compliance.py         # MEN curriculum mapping & compliance (G8)
+├── games.py                  # Mobile game configurations (G6)
+├── rewards.py                # Student rewards, badges, XP (G6)
+├── skill_passport.py         # Life-skills dimensions & milestones (G6)
+├── micro_school.py           # Micro-schools & informal education (G6)
+├── feature.py                # Feature toggles (G6)
+├── levels.py                 # Level-age mappings (G46)
+├── difficulty_adaptation.py  # Difficulty change audit log
+└── reporting.py              # Report jobs, schedules, data exports
 ```
 
 ## ORM Patterns
 
 All models use SQLAlchemy 2.0 features:
+
 - **Mapped[]** for type-safe columns
-- **Declarative base** for inheritance
+- **Declarative base** for inheritance (`Base`, `SchoolScopedMixin`, `TimestampMixin`, `SoftDeleteMixin`, `NullableSchoolScopedMixin`)
 - **Async support** via asyncpg driver
 - **Relationships** with lazy loading strategies
+- **Enums** using PostgreSQL `ENUM` type with `create_type=False`
+- **CheckConstraints** and **UniqueConstraints** for data integrity
 
 ```python
-from typing import Mapped, Optional
-from sqlalchemy import ForeignKey
-from sqlalchemy.orm import DeclarativeBase, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from app.core.database import Base, SchoolScopedMixin, TimestampMixin
 
-class Base(DeclarativeBase):
-    pass
+class Course(TimestampMixin, SchoolScopedMixin, Base):
+    __tablename__ = "courses"
 
-class School(Base):
-    __tablename__ = "schools"
+    class_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("classes.id", ondelete="CASCADE"), nullable=False
+    )
+    teacher_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    title: Mapped[str] = mapped_column(String(300), nullable=False)
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(255), unique=True)
-    country_code: Mapped[str] = mapped_column(String(2), default="MA")
-
-    classes: Mapped[list["Class"]] = relationship(
-        back_populates="school",
-        cascade="all, delete-orphan"
+    assignments: Mapped[list["Assignment"]] = relationship(
+        back_populates="course", cascade="all, delete-orphan"
     )
 ```
 
 ## Models by Domain
 
-### iam.py — Identity & Access Management
+### G1 — IAM (`iam.py`)
 
-User authentication and authorization:
+Identity, access control, authentication, and security monitoring.
 
-**User**
-- `id` — Primary key
-- `email` — Unique email address
-- `password_hash` — bcrypt hashed password
-- `first_name`, `last_name` — Full name
-- `school_id` — School association (foreign key)
-- `is_active` — Account status
-- `is_verified` — Email verified
-- `email_verified_at` — Verification timestamp
-- `last_login` — Last authentication
-- `created_at`, `updated_at` — Timestamps
-- Relationships: `roles`, `sessions`, `audit_logs`
+| Model                    | Description                                                                                                         |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `User`                   | Platform user (one row per person). Email uniqueness scoped per school. Supports TOTP, SMS 2FA, email verification. |
+| `Membership`             | Links a user to a school with a role code (ADM, DIR, TCH, EDUCATOR, PAR, STD, SUP, SYS, CONTENT_MGR).               |
+| `Session`                | JWT refresh session with revocation, impersonation, device fingerprint.                                             |
+| `LoginHistory`           | Historical login attempts with geo/device info.                                                                     |
+| `InvitationCode`         | One-time onboarding codes with role targeting and expiration.                                                       |
+| `AccountRecoveryRequest` | Password reset flow with OTP and attempt tracking.                                                                  |
+| `ParentChildLink`        | Explicit parent-student relationship for ABAC ownership guards.                                                     |
+| `StudentProfile`         | Extended student data (student_number, DOB, gender, class_level).                                                   |
+| `ParentProfile`          | Extended parent data (CIN, address, profession, emergency_phone).                                                   |
+| `TeacherProfile`         | Extended teacher data (employee_id, subject_specialty, qualification, hire_date).                                   |
+| `AdminProfile`           | Extended admin data (department, management_level, can_approve_budgets).                                            |
+| `ContentManagerProfile`  | Extended CONTENT_MGR data (specialization, languages, approved_subjects).                                           |
+| `WebAuthnCredential`     | Passkey credentials for passwordless authentication.                                                                |
+| `OAuthAccount`           | Social login linkage (Google, Microsoft, Apple).                                                                    |
+| `PasswordHistory`        | Prevents password reuse.                                                                                            |
+| `FailedLoginAttempt`     | Tracks failed logins for account lockout.                                                                           |
+| `KnownLocation`          | Known login locations for suspicious activity detection.                                                            |
+| `KnownDevice`            | Known devices for suspicious activity detection.                                                                    |
 
-**Role**
-- `id` — Primary key
-- `code` — Role code (ADM, DIR, TCH, PAR, STD, etc.)
-- `name` — Human-readable name
-- `school_id` — School-scoped role (optional)
-- `permissions` — Many-to-many relationship
-- Relationships: `users`, `permissions`
+**Key Enums**: `UserStatus`, `RoleCode` (9 roles), `MembershipStatus`, `RecoveryStatus`, `LinkStatus`, `Gender`, `RelationshipType`
 
-**Permission**
-- `id` — Primary key
-- `code` — Permission code (PERM-LMS:course:create)
-- `name` — Description
-- `description` — Long description
-- Relationships: `roles`
+### G2 — ERP (`school.py`, `erp.py`)
 
-**Session**
-- `id` — Primary key (UUID)
-- `user_id` — User (foreign key)
-- `token_hash` — Hashed JWT
-- `expires_at` — Expiry timestamp
-- `ip_address` — Login IP
-- `user_agent` — Browser/client info
-- `created_at` — Creation timestamp
+School operations, academic structure, attendance, and timetables.
 
-### school.py — School Structure
+| Model                    | Description                                                                   |
+| ------------------------ | ----------------------------------------------------------------------------- |
+| `School`                 | Tenant root. Banking details (RIB, IBAN, BIC), TVA fields, branding for PDFs. |
+| `AcademicYear`           | School calendar boundaries with date validation.                              |
+| `Period`                 | Semester/trimester within an academic year.                                   |
+| `Class`                  | School class (e.g., 3eme A). Unique per (code, school, academic_year).        |
+| `Enrollment`             | Student enrollment in a class for a period. Optional program_id (G49).        |
+| `TeacherAssignment`      | Teacher assigned to a class for a period.                                     |
+| `AttendanceSession`      | One attendance session per class/date/slot.                                   |
+| `AttendanceRecord`       | Individual student attendance within a session.                               |
+| `AbsenceJustification`   | Parent-submitted absence justification with attachments.                      |
+| `JustificationReview`    | Teacher/admin review decision on a justification.                             |
+| `AttendanceAlert`        | Threshold-based attendance alerts.                                            |
+| `TimetableConstraint`    | Constraints for timetable generation.                                         |
+| `TimetableGenerationJob` | Stored result of a timetable generation run.                                  |
+| `TimetableSlot`          | Recurring weekly class period.                                                |
+| `TimetableException`     | Cancellation, substitution, or room change for a slot.                        |
 
-School organization and hierarchy:
+### G7 — Academic Programs (`erp.py`)
 
-**School**
-- `id` — Primary key
-- `name` — School name
-- `code` — Short code (e.g., "HSC001")
-- `country_code` — ISO code (default: "MA")
-- `region` — School region/province
-- `principal_id` — Principal user reference
-- `subscription_tier` — Billing plan (starter, pro, enterprise)
-- `is_active` — Active status
-- `founded_year` — School establishment year
-- `phone` — Contact number
-- `email` — Contact email
-- `address` — Physical address
-- `created_at`, `updated_at` — Timestamps
-- Relationships: `users`, `classes`, `courses`, `billing_profiles`
+Program management, equivalences, snapshots, and eligibility.
 
-**AcademicYear**
-- `id` — Primary key
-- `school_id` — School (foreign key)
-- `year` — Academic year (2023-2024)
-- `start_date` — Year start date
-- `end_date` — Year end date
-- `is_active` — Current year flag
-- Relationships: `classes`, `terms`
+| Model                    | Description                                                    |
+| ------------------------ | -------------------------------------------------------------- |
+| `Program`                | Academic program / filière (e.g., Sciences Maths).             |
+| `ProgramVersion`         | Specific curriculum version of a program.                      |
+| `ProgramAssignmentEvent` | Append-only audit log of student program changes.              |
+| `ProgramEquivalence`     | Declared equivalence between two programs.                     |
+| `AcademicSnapshot`       | Frozen JSONB document capturing student academic state.        |
+| `EligibilityRule`        | Declarative rule for promotion/admission/transfer eligibility. |
 
-**Class**
-- `id` — Primary key
-- `school_id` — School (foreign key)
-- `academic_year_id` — Academic year (foreign key)
-- `name` — Class name (6ème A, 1ère S)
-- `code` — Unique code
-- `level` — Education level (collège, lycée)
-- `capacity` — Maximum students
-- `main_teacher_id` — Homeroom teacher
-- `created_at`, `updated_at` — Timestamps
-- Relationships: `students`, `courses`, `teacher_assignments`
+### G3 — LMS (`lms.py`)
 
-**Enrollment**
-- `id` — Primary key
-- `student_id` — Student user (foreign key)
-- `class_id` — Class (foreign key)
-- `academic_year_id` — Academic year (foreign key)
-- `enrollment_date` — When enrolled
-- `status` — active/withdrawn/graduated
-- Relationships: `student`, `class`
+Learning management, content, quizzes, assignments, and grading.
 
-### lms.py — Learning Management
+| Model                                                        | Description                                                                                       |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| `Course`                                                     | Teacher-created course within a class.                                                            |
+| `Assignment`                                                 | Teacher-created work for students.                                                                |
+| `Submission`                                                 | Student submission for an assignment.                                                             |
+| `SubmissionFile`                                             | File attachment on a submission.                                                                  |
+| `Grade`                                                      | Teacher grade for a submission.                                                                   |
+| `GradeCategory`                                              | Weighted grade category for a class and period.                                                   |
+| `StudentPeriodAverage`                                       | Cached weighted average per student, class, and period.                                           |
+| `Assessment` / `AssessmentResult`                            | Formal exam/quiz and student results.                                                             |
+| `Rubric` / `RubricCriterion` / `RubricLevel` / `RubricScore` | Structured grading rubrics with criterion-level scoring.                                          |
+| `ContentItem`                                                | Educational content (video, document, interactive). Nullable school_id for platform-wide content. |
+| `ContentItemAsset`                                           | File/media asset attached to a content item.                                                      |
+| `ContentProgress`                                            | Student progress tracking for a content item.                                                     |
+| `ContentSubmission`                                          | School-scoped content submitted for platform promotion review.                                    |
+| `ClassContentAssignment`                                     | Teacher assigns content to a class.                                                               |
+| `Activity` / `ActivitySession`                               | Pedagogical activities and student sessions.                                                      |
+| `Quiz` / `QuizQuestion` / `QuizAttempt` / `QuizResponse`     | Quiz engine with 5 question types.                                                                |
+| `QuestionBankItem`                                           | Reusable school question bank for quiz generation.                                                |
 
-Course and assignment management:
+### G5 — Billing (`billing.py`)
 
-**Course**
-- `id` — Primary key
-- `school_id` — School (foreign key)
-- `code` — Course code
-- `name` — Course name
-- `description` — Course description
-- `teacher_id` — Instructor (foreign key)
-- `class_id` — Primary class (optional)
-- `start_date` — Course start
-- `end_date` — Course end
-- `status` — draft/published/archived
-- Relationships: `assignments`, `content_items`, `enrollments`
+Invoices, payments, fee structures, and policies.
 
-**Assignment**
-- `id` — Primary key
-- `course_id` — Course (foreign key)
-- `title` — Assignment title
-- `description` — Detailed instructions
-- `due_date` — Submission deadline
-- `max_score` — Points possible
-- `weighting` — Grade weighting (%)
-- `submission_type` — file/text/url
-- Relationships: `submissions`, `rubric`
+| Model                             | Description                                                 |
+| --------------------------------- | ----------------------------------------------------------- |
+| `Invoice` / `InvoiceItem`         | Invoices with TVA breakdown and line items.                 |
+| `PaymentAttempt` / `PaymentProof` | Payment attempts and proof of payment.                      |
+| `ProviderWebhookEvent`            | Idempotent webhook events from payment providers.           |
+| `FeeStructure` / `FeeAssignment`  | Recurring/one-time fee definitions and student assignments. |
+| `SiblingDiscountPolicy`           | School-level sibling discount tiers.                        |
+| `LateFeePolicy`                   | Overdue invoice late-fee rules.                             |
+| `PaymentPlan` / `Installment`     | Installment plans for invoices.                             |
 
-**Quiz**
-- `id` — Primary key
-- `course_id` — Course (foreign key)
-- `title` — Quiz title
-- `description` — Quiz instructions
-- `question_count` — Number of questions
-- `time_limit_minutes` — Time allowed
-- `passing_score` — Minimum passing %
-- `show_correct_answers` — Answer visibility
-- Relationships: `questions`, `attempts`
+### G5 — Budget (`budget.py`)
 
-**Grade**
-- `id` — Primary key
-- `student_id` — Student (foreign key)
-- `assignment_id` or `quiz_id` — Evaluated item
-- `score` — Earned points
-- `max_score` — Possible points
-- `percentage` — Calculated %
-- `grade_value` — Letter/0-20 grade
-- `graded_by` — Teacher (foreign key)
-- `graded_at` — When graded
-- Relationships: `feedback`, `rubric_scores`
+Class micro-budget decentralized spending.
 
-**ContentItem**
-- `id` — Primary key
-- `course_id` — Course (foreign key)
-- `title` — Content title
-- `content_type` — lesson/video/pdf/reading
-- `body` — Content (HTML or text)
-- `position` — Sequence order
-- `is_published` — Publishing status
-- Relationships: `attachments`
+| Model               | Description                                  |
+| ------------------- | -------------------------------------------- |
+| `MicroBudget`       | School budget envelope for an academic year. |
+| `BudgetAllocation`  | Allocation of budget to a class/department.  |
+| `BudgetRequest`     | Spending request with approval workflow.     |
+| `BudgetTransaction` | Recorded transaction against an allocation.  |
 
-### billing.py — Billing & Payments
+### G5 — Financial Health (`financial_health.py`)
 
-Financial management:
+| Model                  | Description                              |
+| ---------------------- | ---------------------------------------- |
+| `RetentionMetric`      | Year-over-year student retention.        |
+| `CashflowForecast`     | Projected monthly cashflow.              |
+| `FinancialSnapshot`    | Point-in-time financial health snapshot. |
+| `CostPerStudentMetric` | Computed cost per student.               |
 
-**Invoice**
-- `id` — Primary key
-- `school_id` — School (foreign key)
-- `number` — Invoice number (INV-2024-001)
-- `student_id` — Student billed (optional, for tuition)
-- `issue_date` — When issued
-- `due_date` — Payment deadline
-- `total_amount` — Total in MAD
-- `paid_amount` — Amount paid
-- `status` — draft/issued/paid/overdue/cancelled
-- Relationships: `line_items`, `payments`
+### G4 — Communication (`com.py`)
 
-**LineItem**
-- `id` — Primary key
-- `invoice_id` — Invoice (foreign key)
-- `description` — Item description
-- `quantity` — Quantity
-- `unit_price` — Price per unit
-- `amount` — Total (quantity × unit_price)
+Notifications, messaging, announcements, and parent feed.
 
-**Payment**
-- `id` — Primary key
-- `invoice_id` — Invoice (foreign key)
-- `amount` — Paid amount
-- `method` — credit_card/bank_transfer/cash
-- `reference` — Payment reference/receipt
-- `paid_at` — Payment timestamp
-- `status` — completed/pending/failed/refunded
-- Relationships: `refunds`
+| Model                                                                         | Description                                            |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `ConsentPreference`                                                           | Per-user notification consent by topic/channel.        |
+| `Notification`                                                                | Platform-generated notifications with idempotency key. |
+| `NotificationPreference`                                                      | Per-user channel/category preferences.                 |
+| `DeviceToken`                                                                 | Mobile/web push tokens.                                |
+| `NotificationDelivery`                                                        | Per-channel delivery attempts.                         |
+| `ParentFeedItem`                                                              | Aggregated parent activity feed items.                 |
+| `Conversation` / `ConversationParticipant` / `Message` / `MessageReadReceipt` | Direct and group messaging.                            |
+| `Announcement`                                                                | School-wide or targeted announcements.                 |
+| `SharedReviewComment`                                                         | Parent comments on child learning sessions.            |
 
-**Subscription**
-- `id` — Primary key
-- `school_id` — School (foreign key)
-- `plan_code` — Subscription plan
-- `status` — active/cancelled/suspended
-- `start_date` — Subscription start
-- `end_date` — Subscription end
-- `auto_renew` — Auto-renewal flag
-- Relationships: `invoices`
+### G4 — Calendar (`calendar.py`)
 
-### calendar.py — Calendar & Events
+| Model           | Description                                       |
+| --------------- | ------------------------------------------------- |
+| `Event`         | Calendar events with RSVP, reminders, recurrence. |
+| `EventRSVP`     | Per-user RSVP state.                              |
+| `EventReminder` | Scheduled reminder dispatches.                    |
 
-Calendar management:
+### G6 — Gamification (`games.py`, `rewards.py`)
 
-**Event**
-- `id` — Primary key
-- `school_id` — School (foreign key)
-- `title` — Event title
-- `description` — Event details
-- `start_datetime` — When event starts
-- `end_datetime` — When event ends
-- `location` — Physical location
-- `event_type` — meeting/holiday/exam/parent-day
-- `is_all_day` — All-day event flag
-- Relationships: `rsvps`, `reminders`
+| Model           | Description                                              |
+| --------------- | -------------------------------------------------------- |
+| `GameConfig`    | Mobile game configuration (memory, sorting, vocabulary). |
+| `RewardBadge`   | Badge definitions with trilingual titles.                |
+| `StudentReward` | Aggregate rewards state (stars, XP, level, streak).      |
+| `RewardEvent`   | Immutable record of awarded rewards.                     |
 
-**RSVP**
-- `id` — Primary key
-- `event_id` — Event (foreign key)
-- `user_id` — Attendee (foreign key)
-- `response` — accepted/declined/tentative
-- `responded_at` — When responded
+### G6 — Skill Passport (`skill_passport.py`)
 
-### com.py — Communication
+| Model            | Description                                       |
+| ---------------- | ------------------------------------------------- |
+| `SkillDimension` | Top-level behavioral skill (e.g., collaboration). |
+| `SkillMilestone` | Rule-driven milestone within a dimension.         |
+| `SkillProgress`  | Student progress on a milestone.                  |
 
-Messaging and notifications:
+### G6 — Micro-Schools (`micro_school.py`)
 
-**Message**
-- `id` — Primary key
-- `sender_id` — Sender user (foreign key)
-- `recipient_id` — Recipient user (foreign key)
-- `subject` — Message subject
-- `body` — Message content (HTML)
-- `is_read` — Read status
-- `read_at` — When marked read
-- `created_at` — Timestamp
+| Model             | Description                                   |
+| ----------------- | --------------------------------------------- |
+| `MicroSchool`     | Informal education unit owned by an educator. |
+| `MicroGroup`      | Learning group within a micro-school.         |
+| `MicroEnrollment` | Child enrollment in a micro-group.            |
+| `MicroPayment`    | Parent payment for micro-school attendance.   |
+| `MicroResource`   | Shared content resources.                     |
 
-**Notification**
-- `id` — Primary key
-- `user_id` — Recipient (foreign key)
-- `type` — grade_published/assignment_due/payment_due
-- `title` — Notification title
-- `message` — Notification text
-- `data` — JSON metadata (related IDs)
-- `is_read` — Read status
-- `read_at` — When read
-- `delivery_status` — sent/pending/failed
-- `created_at` — Timestamp
+### G8 — Compliance & Reporting (`men_compliance.py`, `reporting.py`)
 
-### documents.py — Document Management
+| Model                            | Description                                              |
+| -------------------------------- | -------------------------------------------------------- |
+| `MenCurriculum` / `MenObjective` | MEN curriculum reference with objectives.                |
+| `CurriculumMapping`              | School course mapping to MEN objectives.                 |
+| `ComplianceReport`               | Generated compliance coverage report.                    |
+| `ReportSchedule`                 | Scheduled report generation with role-targeted delivery. |
+| `ReportJob`                      | Asynchronous PDF report generation job.                  |
+| `DataExport`                     | CSV/XLSX export audit log.                               |
 
-File and document storage:
+### G9 — Storage & Sync (`documents.py`, `uploads.py`, `sync_queue.py`)
 
-**Document**
-- `id` — Primary key
-- `school_id` — School (foreign key)
-- `uploader_id` — Who uploaded (foreign key)
-- `filename` — Original filename
-- `file_path` — Storage path
-- `file_size` — Size in bytes
-- `mime_type` — Content type
-- `document_type` — course_material/syllabus/policy
-- `is_public` — Public or restricted
-- `scanned_for_viruses` — Scan status
-- `created_at`, `updated_at` — Timestamps
-- Relationships: `access_logs`
+| Model                                           | Description                                                |
+| ----------------------------------------------- | ---------------------------------------------------------- |
+| `Document`                                      | Uploaded binary asset with SHA-256 and virus scan status.  |
+| `DocumentVersion`                               | Historical version snapshot for a document.                |
+| `UploadSession`                                 | Direct-to-MinIO upload lifecycle (init → complete → scan). |
+| `SyncDevice`                                    | Offline-capable device registration.                       |
+| `SyncQueue` / `SyncCheckpoint` / `SyncConflict` | Offline sync queue, checkpoints, and conflict resolution.  |
 
-**StudentFile**
-- `id` — Primary key
-- `student_id` — Student (foreign key)
-- `assignment_id` — Associated assignment (optional)
-- `filename` — Uploaded filename
-- `file_path` — Storage path
-- `file_size` — Size in bytes
-- `uploaded_at` — Upload timestamp
-- `scanned_for_viruses` — Antivirus status
+### G6 — Feature Toggles (`feature.py`)
 
-### erp.py — Enterprise Resource Planning
+| Model           | Description                                       |
+| --------------- | ------------------------------------------------- |
+| `FeatureToggle` | Gradual feature rollout with school/role scoping. |
 
-School operations:
+### Cross-Cutting (`ai.py`, `audit.py`, `levels.py`, `difficulty_adaptation.py`)
 
-**Timetable**
-- `id` — Primary key
-- `school_id` — School (foreign key)
-- `academic_year_id` — Academic year (foreign key)
-- `name` — Schedule name
-- `is_active` — Active schedule flag
-- `created_at`, `updated_at` — Timestamps
-- Relationships: `slots`, `exceptions`
-
-**TimeSlot**
-- `id` — Primary key
-- `timetable_id` — Timetable (foreign key)
-- `day_of_week` — 0-6 (Monday-Sunday)
-- `start_time` — Class start time
-- `end_time` — Class end time
-- `class_id` — Class (foreign key)
-- `course_id` — Course (foreign key)
-- `room_id` — Room/location (optional)
-- Relationships: `class`, `course`
-
-**Resource**
-- `id` — Primary key
-- `school_id` — School (foreign key)
-- `name` — Resource name (Lab 1, Projector)
-- `resource_type` — room/equipment/material
-- `capacity` — Max capacity
-- `available_from` — Available start time
-- `available_to` — Available end time
-
-### audit.py — Audit & Compliance
-
-Audit logging for compliance:
-
-**AuditLog**
-- `id` — Primary key
-- `user_id` — User performing action (optional)
-- `action` — Action performed (create/update/delete)
-- `resource_type` — Type of resource changed
-- `resource_id` — ID of changed resource
-- `changes` — JSON diff of before/after
-- `ip_address` — Client IP address
-- `user_agent` — Browser/client info
-- `created_at` — When action occurred
-- Indexes: (user_id, created_at), (resource_type, resource_id)
-
-### ai.py — AI Interactions
-
-AI feature tracking:
-
-**AIInteraction**
-- `id` — Primary key
-- `user_id` — User (foreign key)
-- `interaction_type` — question/assignment_help/grading_suggestion
-- `prompt` — User's question/request
-- `response` — AI's response
-- `model_used` — Claude/GPT-4/etc.
-- `tokens_used` — API token consumption
-- `cost_usd` — API cost
-- `created_at` — Timestamp
-- Relationships: `feedback`
-
-### reporting.py — Reports
-
-Report generation:
-
-**Report**
-- `id` — Primary key
-- `school_id` — School (foreign key)
-- `created_by` — Creator user (foreign key)
-- `report_type` — student_report_card/attendance_summary
-- `title` — Report title
-- `filters` — JSON report parameters
-- `data` — Generated report data (JSON)
-- `status` — generating/completed/failed
-- `file_path` — PDF storage path
-- `created_at` — Generation timestamp
-
-**ReportSchedule**
-- `id` — Primary key
-- `school_id` — School (foreign key)
-- `report_type` — Type of report
-- `cron_expression` — Recurrence pattern
-- `recipients` — Email addresses
-- `is_active` — Enabled flag
-- `last_run` — When last generated
-
-### feature.py — Feature Flags
-
-Feature toggle management:
-
-**FeatureFlag**
-- `id` — Primary key
-- `code` — Feature code (ai_assistant, advanced_analytics)
-- `name` — Human-readable name
-- `is_enabled` — Global enable/disable
-- `rollout_percentage` — Percentage of users (0-100)
-- `allowed_schools` — JSON list of school IDs
-- `expires_at` — Kill switch date (optional)
-- `metadata` — JSON configuration
-- `created_at`, `updated_at` — Timestamps
+| Model                  | Description                                                                 |
+| ---------------------- | --------------------------------------------------------------------------- |
+| `WritingAttempt`       | Student writing assistance with AI response.                                |
+| `AIPreference`         | AI personalization opt-out (parent on behalf of child).                     |
+| `AuditLog`             | Append-only security-relevant event log.                                    |
+| `LevelAgeMapping`      | Academic level to default age range (platform defaults + school overrides). |
+| `DifficultyAdaptation` | Rule-based difficulty change audit log.                                     |
 
 ## Relationships Overview
 
-Core relationship patterns:
+Core relationship patterns (actual FKs in code):
 
 ```
-User (n) ──────► School (1)
-User (n) ──────► Role (n)  [many-to-many]
-Role (n) ──────► Permission (n)  [many-to-many]
+User (1) ──────► Membership (n)  [per school/role]
+User (1) ──────► Session (n)
+User (1) ──────► LoginHistory (n)
+User (1) ──────► StudentProfile / ParentProfile / TeacherProfile / AdminProfile / ContentManagerProfile
+User (1) ──────► OAuthAccount (n)
+User (1) ──────► WebAuthnCredential (n)
 
+School (1) ──────► AcademicYear (n)
 School (1) ──────► Class (n)
-School (1) ──────► Course (n)
+School (1) ──────► MicroBudget (n)
 School (1) ──────► Invoice (n)
+School (1) ──────► Event (n)
+School (1) ──────► Document (n)
+
+AcademicYear (1) ──────► Period (n)
+AcademicYear (1) ──────► Class (n)
+AcademicYear (1) ──────► MicroBudget (n)
 
 Class (1) ──────► Enrollment (n)
-Class (1) ──────► TimeSlot (n)
+Class (1) ──────► Course (n)
+Class (1) ──────► GradeCategory (n)
 
 Course (1) ──────► Assignment (n)
-Course (1) ──────► Quiz (n)
-Course (1) ──────► ContentItem (n)
+Course (1) ──────► ClassContentAssignment (n)
 
 Assignment (1) ──────► Submission (n)
 Assignment (1) ──────► Grade (n)
 
-User (1) ──────► Grade (n)  [as student]
-User (1) ──────► Grade (n)  [as grader]
+Student (1) ──────► StudentReward (1)
+Student (1) ──────► SkillProgress (n)
+Student (1) ──────► RewardEvent (n)
 
-Invoice (1) ──────► Payment (n)
-Invoice (1) ──────► LineItem (n)
+Parent (1) ──────► ParentChildLink (n) ──────► Student (1)
 ```
 
-## Indexes
+## Base Mixins
 
-Performance optimizations:
-
-```python
-# Foreign keys
-Index(['user_id'])
-Index(['school_id'])
-Index(['class_id'])
-Index(['course_id'])
-Index(['assignment_id'])
-
-# Filtering/sorting
-Index(['status', 'created_at'])
-Index(['user_id', 'created_at'])
-Index(['school_id', 'status'])
-
-# Search
-Index(['email'], postgresql_using='gin')  # FTS
-
-# Business queries
-Index(['school_id', 'academic_year_id'])
-Index(['due_date', 'status'])
-```
-
-## Constraints
-
-Data integrity:
-
-```python
-# Check constraints
-CheckConstraint('grade >= 0 AND grade <= 20')
-CheckConstraint('capacity > 0')
-
-# Unique constraints
-UniqueConstraint(['school_id', 'code'])
-UniqueConstraint(['invoice_id', 'number'])
-
-# Foreign keys
-ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE')
-```
-
-## Temporal Patterns
-
-Most models include:
-- `created_at` — Record creation timestamp
-- `updated_at` — Last modification timestamp
-- `deleted_at` — Soft delete timestamp (optional)
-
-Enables:
-- Audit trails
-- Change history
-- Soft deletes (privacy)
+| Mixin                       | Provides                                    |
+| --------------------------- | ------------------------------------------- |
+| `TimestampMixin`            | `created_at`, `updated_at`                  |
+| `SoftDeleteMixin`           | `deleted_at` (soft delete support)          |
+| `SchoolScopedMixin`         | `school_id` FK with index                   |
+| `NullableSchoolScopedMixin` | `school_id` nullable for platform-wide rows |
 
 ## Next Steps
 
 - See `repositories/` for how models are queried
-- See `schemas/` for model serialization
-- See `alembic/versions/` for schema migrations
+- See `schemas/` for Pydantic serialization models
+- See `alembic/versions/` for schema migration history
+- See `docs/DATABASE.md` for migration group authority and DDL flow

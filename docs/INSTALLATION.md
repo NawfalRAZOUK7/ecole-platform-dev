@@ -160,16 +160,16 @@ Copy `.env.example` to `.env` and configure:
 
 ### Object storage (MinIO / S3)
 
-| Variable                     | Default                 | Description                                                                                                                                           |
-| ---------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `STORAGE_BACKEND`            | `local`                 | `local` keeps files on disk; `s3` routes through MinIO. **Do not change to `s3` until the migration script has passed.** See `docs/MINIO_ROLLOUT.md`. |
-| `DOCUMENT_STORAGE_BACKEND`   | `local`                 | Same switch for the student-documents service. Must be changed together with `STORAGE_BACKEND`.                                                       |
-| `S3_ENDPOINT`                | `http://localhost:9000` | MinIO API address (internal: `http://minio:9000` in Docker)                                                                                           |
-| `S3_BUCKET`                  | `ecole-dev-private`     | Bucket name — one per env (`ecole-{dev,staging,prod}-private`)                                                                                        |
-| `S3_ACCESS_KEY`              | `minioadmin`            | Access key (dev only — use secrets manager in staging/prod)                                                                                           |
-| `S3_SECRET_KEY`              | `minioadmin123`         | Secret key (dev only — **change in all non-dev environments**)                                                                                        |
-| `S3_FORCE_PATH_STYLE`        | `true`                  | Required for MinIO; set `false` for AWS S3                                                                                                            |
-| `S3_PRESIGN_GET_TTL_SECONDS` | `600`                   | Presigned download URL lifetime (10 min)                                                                                                              |
+| Variable                     | Default                 | Description                                                                                                                                                 |
+| ---------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `STORAGE_BACKEND`            | `local`                 | `local` keeps files on disk; `s3` routes through MinIO. **Do not change to `s3` until the migration script has passed.** See `infra/docs/MINIO_ROLLOUT.md`. |
+| `DOCUMENT_STORAGE_BACKEND`   | `local`                 | Same switch for the student-documents service. Must be changed together with `STORAGE_BACKEND`.                                                             |
+| `S3_ENDPOINT`                | `http://localhost:9000` | MinIO API address (internal: `http://minio:9000` in Docker)                                                                                                 |
+| `S3_BUCKET`                  | `ecole-dev-private`     | Bucket name — one per env (`ecole-{dev,staging,prod}-private`)                                                                                              |
+| `S3_ACCESS_KEY`              | `minioadmin`            | Access key (dev only — use secrets manager in staging/prod)                                                                                                 |
+| `S3_SECRET_KEY`              | `minioadmin123`         | Secret key (dev only — **change in all non-dev environments**)                                                                                              |
+| `S3_FORCE_PATH_STYLE`        | `true`                  | Required for MinIO; set `false` for AWS S3                                                                                                                  |
+| `S3_PRESIGN_GET_TTL_SECONDS` | `600`                   | Presigned download URL lifetime (10 min)                                                                                                                    |
 
 ---
 

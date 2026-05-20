@@ -19,11 +19,11 @@
 
 <p align="center">
   <a href="docs/ARCHITECTURE.md">Architecture</a> ·
-  <a href="docs/API-REFERENCE.md">API Reference</a> ·
+  <a href="backend/docs/API-REFERENCE.md">API Reference</a> ·
   <a href="docs/DEPLOYMENT.md">Déploiement</a> ·
   <a href="docs/TESTING.md">Tests</a> ·
   <a href="docs/SECURITY.md">Sécurité</a> ·
-  <a href="docs/CROSS-PLATFORM.md">Cross-Platform</a>
+  <a href="mobile/docs/CROSS-PLATFORM.md">Cross-Platform</a>
 </p>
 
 ---
@@ -49,7 +49,7 @@ Détail complet : [`CHANGELOG.md`](CHANGELOG.md#110--2026-05-06)
 
 | Module            | Description                                                                                    |
 | ----------------- | ---------------------------------------------------------------------------------------------- |
-| **IAM**           | Authentification JWT + 2FA/TOTP, RBAC 5 rôles, invitations, gestion profils                    |
+| **IAM**           | Authentification JWT + 2FA/TOTP/WebAuthn/OAuth, RBAC 9 rôles, invitations, gestion profils     |
 | **ERP**           | Écoles, classes, inscriptions, emplois du temps, niveaux scolaires                             |
 | **LMS**           | Contenus, quiz, évaluations, soumissions, banque de questions, rubriques                       |
 | **Communication** | Messagerie interne, notifications push, annonces, fil d'actualité, calendrier                  |
@@ -103,16 +103,16 @@ ecole-platform-dev/
 │
 ├── backend/                    # 🐍 API FastAPI (Python)
 │   ├── app/
-│   │   ├── api/v1/             # 57 fichiers de routes REST
+│   │   ├── api/v1/             # 60+ fichiers de routes REST
 │   │   ├── core/               # Config, database, security, middleware
-│   │   ├── models/             # 23 modules SQLAlchemy ORM
+│   │   ├── models/             # 25+ modules SQLAlchemy ORM
 │   │   ├── schemas/            # Pydantic v2 schemas (request/response)
 │   │   ├── services/           # Logique métier
 │   │   ├── repositories/       # Accès données (queries async)
 │   │   ├── domain/             # Entités métier & enums
 │   │   └── templates/          # Templates email (Jinja2)
-│   ├── alembic/versions/       # 65 migrations DB
-│   └── tests/                  # 133 fichiers de test
+│   ├── alembic/versions/       # 65+ migrations DB
+│   └── tests/                  # 133+ fichiers de test
 │
 ├── web/                        # ⚛️ SPA React (TypeScript)
 │   ├── src/
@@ -142,7 +142,7 @@ ecole-platform-dev/
 └── Makefile                    # 50+ commandes make
 ```
 
-**Conventions d’arborescence** — Scripts : le dossier racine [`scripts/`](scripts/) regroupe l’automatisation **transverse** (CI, release). Les utilitaires **livrés avec l’API** (seed, maintenance) vivent sous [`backend/app/scripts/`](backend/app/scripts/) ; les scripts **backend-only dev** sous [`backend/scripts/`](backend/scripts/) (OpenAPI, validation). Schéma SQL applicatif : **uniquement Alembic** ; `infra/postgres/init.sql` ne couvre que rôles/extensions (voir [`docs/DATABASE.md`](docs/DATABASE.md)).
+**Conventions d’arborescence** — Scripts : le dossier racine [`scripts/`](scripts/) regroupe l’automatisation **transverse** (CI, release). Les utilitaires **livrés avec l’API** (seed, maintenance) vivent sous [`backend/app/scripts/`](backend/app/scripts/) ; les scripts **backend-only dev** sous [`backend/scripts/`](backend/scripts/) (OpenAPI, validation). Schéma SQL applicatif : **uniquement Alembic** ; `infra/postgres/init.sql` ne couvre que rôles/extensions (voir [`backend/docs/DATABASE.md`](backend/docs/DATABASE.md)).
 
 ---
 
@@ -220,7 +220,7 @@ Le système de gamification motive les élèves à travers :
 
 Quand une fonctionnalité existe sur une plateforme mais pas l'autre, un composant **PlatformBridgeCard** informe l'utilisateur avec un design attractif et une explication contextuelle (en arabe).
 
-> Voir [docs/CROSS-PLATFORM.md](docs/CROSS-PLATFORM.md) pour les détails d'implémentation.
+> Voir [mobile/docs/CROSS-PLATFORM.md](mobile/docs/CROSS-PLATFORM.md) pour les détails d'implémentation.
 
 ---
 
@@ -232,9 +232,9 @@ Quand une fonctionnalité existe sur une plateforme mais pas l'autre, un composa
 | Backend (Python)          | 80 500 LOC · 287 fichiers        |
 | Frontend Web (TypeScript) | 50 500 LOC · 338 fichiers        |
 | Mobile (Dart)             | 57 300 LOC · 276 fichiers        |
-| API Endpoints             | 57 modules de routes             |
-| Modèles de données        | 23 modules SQLAlchemy            |
-| Migrations DB             | 56 fichiers Alembic              |
+| API Endpoints             | 60+ modules de routes            |
+| Modèles de données        | 25+ modules SQLAlchemy           |
+| Migrations DB             | 65+ fichiers Alembic             |
 | Tests                     | 133 backend + 27 web + 1 contrat |
 | Dashboards Grafana        | 8                                |
 | Workflows CI/CD           | 9                                |
@@ -245,24 +245,24 @@ Quand une fonctionnalité existe sur une plateforme mais pas l'autre, un composa
 
 ## 📖 Documentation
 
-| Document                                           | Contenu                                                    |
-| -------------------------------------------------- | ---------------------------------------------------------- |
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)     | Architecture globale, couches, patterns, diagrammes        |
-| [`docs/API-REFERENCE.md`](docs/API-REFERENCE.md)   | Endpoints API, groupes, authentification, pagination       |
-| [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)         | Docker, Kubernetes, CI/CD, environnements                  |
-| [`docs/TESTING.md`](docs/TESTING.md)               | Stratégie de tests, infrastructure, couverture             |
-| [`docs/SECURITY.md`](docs/SECURITY.md)             | Auth, RBAC, sécurité API, audit, GDPR                      |
-| [`docs/CROSS-PLATFORM.md`](docs/CROSS-PLATFORM.md) | Stratégie mobile-first/web-first, PlatformBridgeCard       |
-| [`docs/DATABASE.md`](docs/DATABASE.md)             | Schéma, migrations, modèles, groupes                       |
-| [`CHANGELOG.md`](CHANGELOG.md)                     | Historique des versions et changements                     |
-| [`ROADMAP.md`](ROADMAP.md)                         | Fonctionnalités done / in progress / planned / future      |
-| [`CONTRIBUTING.md`](CONTRIBUTING.md)               | Git workflow, conventions commits/branches/PRs, code style |
-| [`INSTALLATION.md`](INSTALLATION.md)               | Guide d'installation complet (Docker, web, mobile, local)  |
-| [`LICENSE`](LICENSE)                               | MIT License                                                |
-| [`backend/README.md`](backend/README.md)           | Documentation backend détaillée                            |
-| [`web/README.md`](web/README.md)                   | Documentation frontend web                                 |
-| [`mobile/README.md`](mobile/README.md)             | Documentation application mobile                           |
-| [`infra/README.md`](infra/README.md)               | Documentation infrastructure                               |
+| Document                                                         | Contenu                                                    |
+| ---------------------------------------------------------------- | ---------------------------------------------------------- |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)                   | Architecture globale, couches, patterns, diagrammes        |
+| [`backend/docs/API-REFERENCE.md`](backend/docs/API-REFERENCE.md) | Endpoints API, groupes, authentification, pagination       |
+| [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)                       | Docker, Kubernetes, CI/CD, environnements                  |
+| [`docs/TESTING.md`](docs/TESTING.md)                             | Stratégie de tests, infrastructure, couverture             |
+| [`docs/SECURITY.md`](docs/SECURITY.md)                           | Auth, RBAC, sécurité API, audit, GDPR                      |
+| [`mobile/docs/CROSS-PLATFORM.md`](mobile/docs/CROSS-PLATFORM.md) | Stratégie mobile-first/web-first, PlatformBridgeCard       |
+| [`backend/docs/DATABASE.md`](backend/docs/DATABASE.md)           | Schéma, migrations, modèles, groupes                       |
+| [`CHANGELOG.md`](CHANGELOG.md)                                   | Historique des versions et changements                     |
+| [`ROADMAP.md`](ROADMAP.md)                                       | Fonctionnalités done / in progress / planned / future      |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md)                             | Git workflow, conventions commits/branches/PRs, code style |
+| [`INSTALLATION.md`](INSTALLATION.md)                             | Guide d'installation complet (Docker, web, mobile, local)  |
+| [`LICENSE`](LICENSE)                                             | MIT License                                                |
+| [`backend/README.md`](backend/README.md)                         | Documentation backend détaillée                            |
+| [`web/README.md`](web/README.md)                                 | Documentation frontend web                                 |
+| [`mobile/README.md`](mobile/README.md)                           | Documentation application mobile                           |
+| [`infra/docs/README.md`](infra/docs/README.md)                   | Documentation infrastructure                               |
 
 ---
 

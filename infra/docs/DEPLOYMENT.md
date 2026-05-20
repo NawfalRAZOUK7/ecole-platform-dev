@@ -174,6 +174,7 @@ docker compose -f infra/docker-compose.prod.yml exec nginx nginx -s reload
 ```
 
 The script performs:
+
 1. **Pre-flight checks** — verifies secrets, env file, Docker
 2. **Image backup** — tags current images as `previous` for rollback
 3. **Build** — pulls latest base images and rebuilds services
@@ -209,14 +210,14 @@ All deployment output is logged to `infra/deploy.log`.
 
 ### What is checked
 
-| Check | OK | Warning | Critical |
-|-------|-----|---------|----------|
-| API | HTTP 200 | Non-200 response | Unreachable |
-| PostgreSQL | pg_isready + connection count | — | Unreachable |
-| Redis | PING=PONG + memory usage | — | Unreachable |
-| Disk | < 80% usage | 80-90% usage | > 90% usage |
-| Certificates | > 30 days validity | 7-30 days | < 7 days or expired |
-| Containers | All running | — | Any container down |
+| Check        | OK                            | Warning          | Critical            |
+| ------------ | ----------------------------- | ---------------- | ------------------- |
+| API          | HTTP 200                      | Non-200 response | Unreachable         |
+| PostgreSQL   | pg_isready + connection count | —                | Unreachable         |
+| Redis        | PING=PONG + memory usage      | —                | Unreachable         |
+| Disk         | < 80% usage                   | 80-90% usage     | > 90% usage         |
+| Certificates | > 30 days validity            | 7-30 days        | < 7 days or expired |
+| Containers   | All running                   | —                | Any container down  |
 
 ### Cron monitoring
 
@@ -283,14 +284,14 @@ Nginx's `upstream api_backend` will load-balance across instances via Docker's i
 
 Current production limits (adjustable in `docker-compose.prod.yml`):
 
-| Service | Memory Limit | CPU Limit |
-|---------|-------------|-----------|
-| Backend | 1GB | 2.0 |
-| PostgreSQL | 2GB | 2.0 |
-| Redis | 512MB | 0.5 |
-| Worker | 512MB | 1.0 |
-| Web | 256MB | 0.5 |
-| Nginx | 128MB | 0.5 |
+| Service    | Memory Limit | CPU Limit |
+| ---------- | ------------ | --------- |
+| Backend    | 1GB          | 2.0       |
+| PostgreSQL | 2GB          | 2.0       |
+| Redis      | 512MB        | 0.5       |
+| Worker     | 512MB        | 1.0       |
+| Web        | 256MB        | 0.5       |
+| Nginx      | 128MB        | 0.5       |
 
 ## Maintenance
 
@@ -460,9 +461,10 @@ Internet
                     ├── /api/v1/ws ──→ Backend (WebSocket)
                     └── /*      ──→ Web (Static React SPA)
                                         │
-                    Backend ──→ PostgreSQL 16 (WAL archiving)
+                    Backend ──→ PgBouncer (connection pooler)
+                           ──→ PostgreSQL 16 (WAL archiving + replica)
                            ──→ Redis 7 (cache + sessions + queues)
-                           ──→ S3 (file uploads)
+                           ──→ S3/MinIO (file uploads)
                     Worker  ──→ ARQ (background tasks via Redis)
                     Certbot ──→ Let's Encrypt (auto-renewal)
 ```

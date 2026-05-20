@@ -1,15 +1,17 @@
 # École Platform Backend
 
-FastAPI-based K-12 EdTech SaaS backend for Moroccan schools. Production-grade REST API with real-time WebSocket support, supporting 10-role RBAC+ABAC security model.
+FastAPI-based K-12 EdTech SaaS backend for Moroccan schools. Production-grade REST API with real-time WebSocket support, supporting 9-role RBAC+ABAC security model.
 
 ## Architecture
 
 **3-tier modular monolith pattern:**
+
 - **Router Layer** (`api/v1/<domain>/`) — HTTP handlers, validation, OpenAPI
 - **Service Layer** (`services/<domain>/`) — Business logic and orchestration (domain packages; see [`app/README.md`](app/README.md))
 - **Repository Layer** (`repositories/*.py`) — Async SQLAlchemy access (flat modules, domain-prefixed names)
 
 **Cross-cutting Infrastructure:**
+
 - Security pipeline: AuthN → Context → RBAC → ABAC → Audit → Events
 - SOLID principles with dependency injection via FastAPI `Depends()`
 - Event-driven patterns for async tasks, notifications, and audit logging
@@ -17,7 +19,7 @@ FastAPI-based K-12 EdTech SaaS backend for Moroccan schools. Production-grade RE
 
 ## Directory Structure
 
-```
+```text
 backend/
 ├── Dockerfile              # Container image
 ├── pyproject.toml          # Project metadata, test config, coverage rules
@@ -28,7 +30,7 @@ backend/
 ├── alembic.ini            # Database migration config
 │
 ├── alembic/               # Database migrations
-│   └── versions/          # 35+ Alembic migration files
+│   └── versions/          # 65+ Alembic migration files
 │
 ├── app/                   # Main application package
 │   ├── main.py           # FastAPI app factory, middleware stack, OpenAPI tags
@@ -49,25 +51,25 @@ backend/
 └── uploads/              # File storage for courses & submissions
 ```
 
-**Scripts — two places, two purposes**
+## Scripts — two places, two purposes
 
-| Location | Use for |
-|----------|---------|
-| [`app/scripts/`](app/scripts/) | Runtime-adjacent helpers shipped with the app (seeding, one-off maintenance run inside the same Python env as the API). |
-| [`scripts/`](scripts/) | Backend developer/CI tooling (e.g. OpenAPI export, migration validation) — run from the backend directory or inside the backend container. |
+| Location                       | Use for                                                                                                                                    |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| [`app/scripts/`](app/scripts/) | Runtime-adjacent helpers shipped with the app (seeding, one-off maintenance run inside the same Python env as the API).                    |
+| [`scripts/`](scripts/)         | Backend developer/CI tooling (e.g. OpenAPI export, migration validation) — run from the backend directory or inside the backend container. |
 
-**Schéma base de données** — Autorité et flux : voir [Documentation base de données](../docs/DATABASE.md#autorité-du-schéma-source-de-vérité) (Alembic vs `infra/postgres/init.sql`).
+**Schéma base de données** — Autorité et flux : voir [Documentation base de données](docs/DATABASE.md#autorité-du-schéma-source-de-vérité) (Alembic vs `infra/postgres/init.sql`).
 
 **Workers / tâches async** — modules sous [`app/workers/`](app/workers/) ; enregistrement des jobs dans [`app/core/tasks.py`](app/core/tasks.py). Nommer les modules par **domaine métier** ou par **famille de job** (choisir un axe et s’y tenir dans les PRs futures).
 
 ## Key Files
 
-| File | Purpose |
-|------|---------|
-| `pyproject.toml` | Project config, pytest markers, coverage thresholds (90%) |
-| `Dockerfile` | Production container image |
-| `alembic.ini` | Database migration runner config |
-| `requirements*.txt` | Dependency specifications |
+| File                | Purpose                                                   |
+| ------------------- | --------------------------------------------------------- |
+| `pyproject.toml`    | Project config, pytest markers, coverage thresholds (90%) |
+| `Dockerfile`        | Production container image                                |
+| `alembic.ini`       | Database migration runner config                          |
+| `requirements*.txt` | Dependency specifications                                 |
 
 ## Running the Backend
 

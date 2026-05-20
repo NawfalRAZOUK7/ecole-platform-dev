@@ -62,21 +62,21 @@ Les repositories retournent des modèles ORM ou des tuples de résultat, jamais 
 
 ### Couche Models (`app/models/`)
 
-24 modules de modèles organisés en 9+ groupes de migration :
+25+ modules de modèles organisés en 9+ groupes de migration :
 
-| Groupe                          | Modules                                            | Tables principales                                                                                 |
-| ------------------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| **G1 — IAM**                    | `iam.py`                                           | users, sessions, memberships, invitation_codes, parent_child_links, profiles                       |
-| **G2 — ERP**                    | `erp.py`, `school.py`, `levels.py`                 | schools, classes, enrollments, timetable, attendance, programs                                     |
-| **G3 — LMS**                    | `lms.py`, `skill_passport.py`                      | content_items, quizzes, questions, submissions, rubrics, gradebook                                 |
-| **G4 — COM**                    | `com.py`, `calendar.py`                            | conversations, messages, notifications, announcements, events                                      |
-| **G5 — Billing & Finance**      | `billing.py`, `budget.py`, `financial_health.py`   | invoices, payments, fee_structures, budgets, micro-budgets, financial snapshots                    |
-| **G6 — Audit & Gamification**   | `audit.py`, `games.py`, `rewards.py`, `feature.py` | audit_logs, feature_toggles, rewards, badges, game_configs                                         |
-| **G7 — Programmes (v1.1)**      | `erp.py` (G49–G50)                                 | programs, program_versions, program_equivalences, eligibility_rules, program_assignment_events     |
-| **G8 — Conformité & Reporting** | `men_compliance.py`, `reporting.py`                | compliance_reports, curriculum_mappings, report_jobs, report_schedules, data_exports               |
-| **G9 — Stockage & Sync**        | `documents.py`, `uploads.py`, `sync_queue.py`      | documents, document_versions, resources, upload_sessions, sync_queue, sync_devices, sync_conflicts |
+| Groupe                            | Modules                                                     | Tables principales                                                                             |
+| --------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| **G1 — IAM**                      | `iam.py`                                                    | users, sessions, memberships, invitation_codes, parent_child_links, profiles, webauthn, oauth  |
+| **G2 — ERP**                      | `erp.py`, `school.py`                                       | schools, academic_years, periods, classes, enrollments, timetable, attendance, programs        |
+| **G3 — LMS**                      | `lms.py`, `skill_passport.py`                               | courses, assignments, submissions, rubrics, grades, quizzes, content_items, activities         |
+| **G4 — COM**                      | `com.py`, `calendar.py`                                     | conversations, messages, notifications, announcements, events, consent_preferences             |
+| **G5 — Billing & Finance**        | `billing.py`, `budget.py`, `financial_health.py`            | invoices, payments, fee_structures, budgets, micro-budgets, financial snapshots                |
+| **G6 — Audit, AI & Gamification** | `audit.py`, `ai.py`, `games.py`, `rewards.py`, `feature.py` | audit_logs, writing_attempts, ai_preferences, feature_toggles, rewards, badges, game_configs   |
+| **G7 — Programmes (v1.1+)**       | `erp.py` (G49–G50)                                          | programs, program_versions, program_equivalences, eligibility_rules, program_assignment_events |
+| **G8 — Conformité & Reporting**   | `men_compliance.py`, `reporting.py`                         | compliance_reports, curriculum_mappings, report_jobs, report_schedules, data_exports           |
+| **G9 — Stockage & Sync**          | `documents.py`, `uploads.py`, `sync_queue.py`               | documents, document_versions, upload_sessions, sync_devices, sync_queue, sync_conflicts        |
 
-Modules transversaux : `difficulty_adaptation.py`, `micro_school.py`, `calendar.py`.
+Modules transversaux : `difficulty_adaptation.py`, `levels.py`, `micro_school.py`.
 
 ---
 
@@ -269,7 +269,7 @@ Le service `eligibility_engine.py` évalue les règles dans l'ordre : préfiltre
        └────────────┘       └──────────┘       └──────────┘
 ```
 
-Le chart Helm `infra/k8s/` expose 15 templates : `backend-deployment`, `backend-service`, `backend-hpa`, `web-deployment`, `web-service`, `worker-deployment`, `ingress`, `configmap`, `secrets`, `namespace`, `pdb`, `pvc-uploads`, `cronjob-backups`, `job-migrations`, `networkpolicy`. Trois fichiers de valeurs (`values-local.yaml`, `values-staging.yaml`, `values-prod.yaml`) paramètrent les ressources, replicas et secrets selon l'environnement.
+Le chart Helm `infra/k8s/` expose 12 templates de ressources : `backend-deployment`, `backend-service`, `backend-hpa`, `web-deployment`, `web-service`, `worker-deployment`, `ingress`, `configmap`, `secrets-documentation`, `namespace`, `pdb`, `networkpolicy`. Plus 2 fichiers Helm helpers (`_helpers.tpl`, `NOTES.txt`). Trois fichiers de valeurs (`values-local.yaml`, `values-staging.yaml`, `values-prod.yaml`) paramètrent les ressources, replicas et secrets selon l'environnement.
 
 Le déploiement local `Kind` (cluster `ecole-dev`) sert à valider le chart en CI (`.github/workflows/k8s-e2e.yml`) avant tout push vers staging.
 

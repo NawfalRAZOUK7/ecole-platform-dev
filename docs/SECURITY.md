@@ -17,6 +17,23 @@
 - Codes de récupération générés à l'activation
 - Endpoint dédié : `POST /auth/verify-2fa`
 
+### WebAuthn / Passkeys
+
+- Authentification sans mot de passe via clés FIDO2/WebAuthn
+- Support multi-appareil et single-appareil
+- Endpoint : `POST /auth/webauthn/register`, `POST /auth/webauthn/authenticate`
+
+### OAuth — Social Login
+
+- Connexion via Google, Microsoft, Apple
+- Comptes liés stockés dans `oauth_accounts`
+- Endpoint : `POST /auth/oauth/{provider}`
+
+### SMS 2FA
+
+- Deuxième facteur via code OTP SMS
+- Endpoint : `POST /auth/2fa/sms/send`, `POST /auth/2fa/sms/verify`
+
 ### Flux d'authentification
 
 ```
@@ -40,13 +57,17 @@ Client                    API                    Redis
 
 ### Rôles
 
-| Code | Rôle | Niveau d'accès |
-|------|------|---------------|
-| `ADM` | Administrateur | Accès complet école |
-| `DIR` | Directeur | Lecture + rapports + gestion pédagogique |
-| `TCH` | Enseignant | Ses classes + élèves + notes + contenu |
-| `PAR` | Parent | Ses enfants + bulletins + messages + paiements |
-| `STD` | Élève | Son contenu + quiz + progression + récompenses |
+| Code          | Rôle                     | Niveau d'accès                                 |
+| ------------- | ------------------------ | ---------------------------------------------- |
+| `ADM`         | Administrateur           | Accès complet école                            |
+| `DIR`         | Directeur                | Lecture + rapports + gestion pédagogique       |
+| `TCH`         | Enseignant               | Ses classes + élèves + notes + contenu         |
+| `EDUCATOR`    | Éducateur (micro-école)  | Ses groupes + contenu + paiements              |
+| `PAR`         | Parent                   | Ses enfants + bulletins + messages + paiements |
+| `STD`         | Élève                    | Son contenu + quiz + progression + récompenses |
+| `SUP`         | Super-admin (plateforme) | Accès global multi-école                       |
+| `SYS`         | Compte système           | Automatisations, pas de login interactif       |
+| `CONTENT_MGR` | Gestionnaire de contenu  | CRUD contenu plateforme-wide                   |
 
 ### Implémentation
 
@@ -62,42 +83,42 @@ async def get_dashboard(
 
 Les permissions sont résolues via les memberships école-utilisateur. Un utilisateur peut avoir plusieurs memberships dans différentes écoles.
 
-### Matrice de permissions
+### Matrice de permissions (simplifiée)
 
-| Ressource | ADM | DIR | TCH | PAR | STD |
-|-----------|-----|-----|-----|-----|-----|
-| Dashboard admin | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Gestion utilisateurs | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Notes (lecture) | ✅ | ✅ | ✅ (ses classes) | ✅ (ses enfants) | ✅ (les siennes) |
-| Notes (écriture) | ✅ | ❌ | ✅ (ses classes) | ❌ | ❌ |
-| Présence | ✅ | ✅ | ✅ (ses classes) | ✅ (ses enfants) | ❌ |
-| Factures | ✅ | ✅ | ❌ | ✅ (les siennes) | ❌ |
-| Contenu (création) | ✅ | ❌ | ✅ | ❌ | ❌ |
-| Récompenses (attribuer) | ✅ | ❌ | ✅ | ❌ | ❌ |
-| Récompenses (consulter) | ✅ | ✅ | ✅ | ✅ (ses enfants) | ✅ (les siennes) |
-| Feature toggles | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Audit trail | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Ressource               | ADM | DIR | TCH              | EDUCATOR         | PAR              | STD              |
+| ----------------------- | --- | --- | ---------------- | ---------------- | ---------------- | ---------------- |
+| Dashboard admin         | ✅  | ✅  | ❌               | ❌               | ❌               | ❌               |
+| Gestion utilisateurs    | ✅  | ❌  | ❌               | ❌               | ❌               | ❌               |
+| Notes (lecture)         | ✅  | ✅  | ✅ (ses classes) | ❌               | ✅ (ses enfants) | ✅ (les siennes) |
+| Notes (écriture)        | ✅  | ❌  | ✅ (ses classes) | ❌               | ❌               | ❌               |
+| Présence                | ✅  | ✅  | ✅ (ses classes) | ❌               | ✅ (ses enfants) | ❌               |
+| Factures                | ✅  | ✅  | ❌               | ✅ (les siennes) | ✅ (les siennes) | ❌               |
+| Contenu (création)      | ✅  | ❌  | ✅               | ✅               | ❌               | ❌               |
+| Récompenses (attribuer) | ✅  | ❌  | ✅               | ✅               | ❌               | ❌               |
+| Récompenses (consulter) | ✅  | ✅  | ✅               | ✅               | ✅ (ses enfants) | ✅ (les siennes) |
+| Feature toggles         | ✅  | ❌  | ❌               | ❌               | ❌               | ❌               |
+| Audit trail             | ✅  | ✅  | ❌               | ❌               | ❌               | ❌               |
 
 ---
 
 ## Protection API
 
-| Mesure | Implémentation |
-|--------|---------------|
-| **Rate Limiting** | Par IP (100/min) et par utilisateur (300/min) via Redis |
-| **CORS** | Origines autorisées configurées par environnement |
-| **Input Validation** | Pydantic v2 pour toute entrée utilisateur |
-| **SQL Injection** | SQLAlchemy ORM avec requêtes paramétrées |
-| **XSS** | Pas de rendu HTML côté serveur, API JSON uniquement |
-| **CSRF** | SameSite cookies + Bearer tokens |
-| **Secrets** | Docker Secrets en production, `.env` en dev |
-| **Pre-commit** | `detect-secrets` + hooks pour empêcher les fuites |
+| Mesure               | Implémentation                                          |
+| -------------------- | ------------------------------------------------------- |
+| **Rate Limiting**    | Par IP (100/min) et par utilisateur (300/min) via Redis |
+| **CORS**             | Origines autorisées configurées par environnement       |
+| **Input Validation** | Pydantic v2 pour toute entrée utilisateur               |
+| **SQL Injection**    | SQLAlchemy ORM avec requêtes paramétrées                |
+| **XSS**              | Pas de rendu HTML côté serveur, API JSON uniquement     |
+| **CSRF**             | SameSite cookies + Bearer tokens                        |
+| **Secrets**          | Docker Secrets en production, `.env` en dev             |
+| **Pre-commit**       | `detect-secrets` + hooks pour empêcher les fuites       |
 
 ---
 
 ## Audit Trail
 
-Toutes les actions sensibles sont logguées dans la table `audit_events` :
+Toutes les actions sensibles sont logguées dans la table `audit_logs` :
 
 - Connexion / déconnexion
 - Modification de profil
@@ -106,7 +127,7 @@ Toutes les actions sensibles sont logguées dans la table `audit_events` :
 - Exports de données
 - Accès admin
 
-Chaque événement contient : `user_id`, `action`, `resource_type`, `resource_id`, `ip_address`, `user_agent`, `timestamp`, `metadata`.
+Chaque événement contient : `actor_id`, `action_type`, `target_type`, `target_id`, `entity_before`, `entity_after`, `ip_address`, `correlation_id`, `outcome`, `created_at`.
 
 ---
 
@@ -141,13 +162,14 @@ upload_complete ──► enqueue scan_uploaded_file(object_id)
 
 ### Métriques
 
-| Métrique Prometheus | Labels | Description |
-|---------------------|--------|-------------|
-| `virus_scan_total` | `result` (clean/infected/error) | Compteur de scans par résultat |
-| `virus_scan_duration_seconds` | `result` | Histogramme de latence du scan |
-| `virus_scan_queue_size` | — | Jauge de la file d'attente du worker |
+| Métrique Prometheus           | Labels                          | Description                          |
+| ----------------------------- | ------------------------------- | ------------------------------------ |
+| `virus_scan_total`            | `result` (clean/infected/error) | Compteur de scans par résultat       |
+| `virus_scan_duration_seconds` | `result`                        | Histogramme de latence du scan       |
+| `virus_scan_queue_size`       | —                               | Jauge de la file d'attente du worker |
 
 ### Procédure d'incident
+
 1. Alerte `VirusInfectedFile` (Alertmanager) → canal `#security`
 2. L'objet est déjà supprimé du bucket par le worker
 3. L'uploader reçoit une notification trilingue
@@ -172,13 +194,13 @@ Le JWT court (5 minutes) garantit que les URLs partagées par erreur ne donnent 
 
 ## Permissions ajoutées en v1.1
 
-| Code | Description | Rôles |
-|------|-------------|-------|
-| `PERM_LMS_ASSIGNMENT_READ` | Lire les devoirs | TCH, ADM, STD (own), PAR (own children) |
-| `PERM_LMS_ACTIVITY_READ` | Lire le flux d'activité d'un élève | PAR (own children), ADM, TCH (own classes) |
-| `PERM_SKILLS_DIMENSION_READ` | Lire les dimensions de compétence | TCH, ADM, STD (own), PAR (own children) |
-| `PERM_SKILLS_MILESTONE_WRITE` | Évaluer un milestone de compétence | TCH, ADM |
-| `PERM_PROGRAMS_MANAGE` | CRUD sur programmes / versions / équivalences | ADM, SUP |
-| `PERM_PROGRAMS_ENROLL` | Inscrire un élève à une version | DIR, ADM |
-| `PERM_REWARDS_BADGE_MANAGE` | CRUD sur le catalogue de badges | ADM |
-| `PERM_INVOICES_PDF_DOWNLOAD` | Télécharger PDF de facture | DIR, ADM, PAR (own invoices) |
+| Code                          | Description                                   | Rôles                                      |
+| ----------------------------- | --------------------------------------------- | ------------------------------------------ |
+| `PERM_LMS_ASSIGNMENT_READ`    | Lire les devoirs                              | TCH, ADM, STD (own), PAR (own children)    |
+| `PERM_LMS_ACTIVITY_READ`      | Lire le flux d'activité d'un élève            | PAR (own children), ADM, TCH (own classes) |
+| `PERM_SKILLS_DIMENSION_READ`  | Lire les dimensions de compétence             | TCH, ADM, STD (own), PAR (own children)    |
+| `PERM_SKILLS_MILESTONE_WRITE` | Évaluer un milestone de compétence            | TCH, ADM                                   |
+| `PERM_PROGRAMS_MANAGE`        | CRUD sur programmes / versions / équivalences | ADM, SUP                                   |
+| `PERM_PROGRAMS_ENROLL`        | Inscrire un élève à une version               | DIR, ADM                                   |
+| `PERM_REWARDS_BADGE_MANAGE`   | CRUD sur le catalogue de badges               | ADM                                        |
+| `PERM_INVOICES_PDF_DOWNLOAD`  | Télécharger PDF de facture                    | DIR, ADM, PAR (own invoices)               |
