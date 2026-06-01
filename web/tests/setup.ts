@@ -32,6 +32,34 @@ if (!globalThis.ResizeObserver) {
   globalThis.ResizeObserver = ResizeObserverMock as typeof ResizeObserver;
 }
 
+// Polyfill localStorage for forks/CI pool where jsdom may not initialize it
+if (
+  typeof globalThis.localStorage === 'undefined' ||
+  typeof globalThis.localStorage?.getItem !== 'function'
+) {
+  const _store: Record<string, string> = {};
+  const localStorageMock: Storage = {
+    getItem: (key: string) => _store[key] ?? null,
+    setItem: (key: string, value: string) => {
+      _store[key] = String(value);
+    },
+    removeItem: (key: string) => {
+      delete _store[key];
+    },
+    clear: () => {
+      Object.keys(_store).forEach((k) => delete _store[k]);
+    },
+    key: (index: number) => Object.keys(_store)[index] ?? null,
+    get length() {
+      return Object.keys(_store).length;
+    },
+  };
+  Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock, writable: true });
+  if (typeof window !== 'undefined') {
+    Object.defineProperty(window, 'localStorage', { value: localStorageMock, writable: true });
+  }
+}
+
 const { server } = await import('./utils/mocks');
 
 beforeAll(() => {

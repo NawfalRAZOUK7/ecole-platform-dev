@@ -38,4 +38,7 @@ opentelemetry-instrumentation-fastapi==0.61b0
 opentelemetry-instrumentation-sqlalchemy==0.61b0
 opentelemetry-instrumentation-redis==0.61b0
 opentelemetry-exporter-otlp==1.40.0
-sentry-sdk[fastapi]==2.25.*
+# Bumped from 2.25.* → >=2.27,<3.0 because app/main.py uses `enable_logs=True`
+# (continuous logs feature) which was added in sentry-sdk 2.27.0.
+# Staying in the 2.x major preserves API compatibility.
+sentry-sdk[fastapi]>=2.27,<3.0

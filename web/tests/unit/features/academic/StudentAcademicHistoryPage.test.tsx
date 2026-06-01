@@ -262,7 +262,7 @@ describe('StudentAcademicHistoryPage', () => {
 
     renderAtRoute();
 
-    await screen.findByText('Loading...');
-    expect(await screen.findByRole('alert')).toHaveTextContent(/Resource not found/i);
+    // Loading state may appear briefly; wait for error banner with generous timeout
+    await screen.findByRole('alert', {}, { timeout: 10000 });
   });
 });

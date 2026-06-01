@@ -132,14 +132,19 @@ async def session_factory(engine):
 
 
 @pytest_asyncio.fixture(loop_scope="function")
-async def isolated_legacy_api_db(session_factory):
+async def isolated_legacy_api_db(session_factory, engine):
+    # SETUP: truncate with short lock_timeout to fail fast on stale locks
     async with session_factory() as session:
+        await session.execute(text("SET LOCAL lock_timeout = '5s'"))
         await session.execute(TRUNCATE_ALL_TABLES_SQL)
         await session.commit()
     try:
         yield
     finally:
+        # TEARDOWN: dispose pool first to release app connections, then truncate
+        await engine.dispose()
         async with session_factory() as session:
+            await session.execute(text("SET LOCAL lock_timeout = '10s'"))
             await session.execute(TRUNCATE_ALL_TABLES_SQL)
             await session.commit()
 

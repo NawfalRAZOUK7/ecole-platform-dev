@@ -391,3 +391,133 @@ class TestMicroSchoolRepository:
         stmt = db.execute.await_args.args[0]
         assert result is expected
         assert "school_id" in str(stmt)
+
+
+# ===========================================================================
+# Additional tests covering "no optional params" branches (skip paths)
+# ===========================================================================
+
+
+class TestMicroSchoolRepositoryDefaultPaths:
+    """Covers the False/None branches for all optional parameters."""
+
+    @pytest.mark.asyncio
+    async def test_get_user(self) -> None:
+        """Lines 27-28: get_user returns scalar."""
+        expected = object()
+        repo, _ = make_repo(_FakeExecuteResult(one_or_none=expected))
+        result = await repo.get_user(uuid.uuid4())
+        assert result is expected
+
+    @pytest.mark.asyncio
+    async def test_get_membership_role(self) -> None:
+        """Lines 31-39: get_membership_role returns scalar."""
+        repo, _ = make_repo(_FakeExecuteResult(one_or_none="teacher"))
+        result = await repo.get_membership_role(uuid.uuid4())
+        assert result == "teacher"
+
+    @pytest.mark.asyncio
+    async def test_get_micro_school_no_optional_params(self) -> None:
+        """Lines 50->54, 54->56, 56->58: all optional params default (None/False)."""
+        expected = object()
+        repo, _ = make_repo(_FakeExecuteResult(one_or_none=expected))
+        result = await repo.get_micro_school(uuid.uuid4())
+        assert result is expected
+
+    @pytest.mark.asyncio
+    async def test_list_micro_schools_no_optional_params(self) -> None:
+        """Lines 70->74, 74->76, 76->78, 78->80: all None/falsy."""
+        expected = [object()]
+        repo, _ = make_repo(_FakeExecuteResult(many=expected))
+        result = await repo.list_micro_schools()
+        assert result == expected
+
+    @pytest.mark.asyncio
+    async def test_get_micro_group_no_optional_params(self) -> None:
+        """Lines 108->114, 114->116, 116->118: all None/False."""
+        expected = object()
+        repo, _ = make_repo(_FakeExecuteResult(one_or_none=expected))
+        result = await repo.get_micro_group(uuid.uuid4())
+        assert result is expected
+
+    @pytest.mark.asyncio
+    async def test_list_micro_groups_no_optional_params(self) -> None:
+        """Lines 128->134, 134->136: school_id=None, micro_school_id=None."""
+        expected = [object()]
+        repo, _ = make_repo(_FakeExecuteResult(many=expected))
+        result = await repo.list_micro_groups()
+        assert result == expected
+
+    @pytest.mark.asyncio
+    async def test_get_micro_enrollment_no_optional_params(self) -> None:
+        """Lines 165->172, 172->178, 178->180, 180->182: all defaults."""
+        expected = object()
+        repo, _ = make_repo(_FakeExecuteResult(one_or_none=expected))
+        result = await repo.get_micro_enrollment(uuid.uuid4())
+        assert result is expected
+
+    @pytest.mark.asyncio
+    async def test_list_micro_enrollments_no_optional_params(self) -> None:
+        """Lines 194->201, 201->203, 203->205, 205->207: all None/falsy."""
+        expected = [object()]
+        repo, _ = make_repo(_FakeExecuteResult(many=expected))
+        result = await repo.list_micro_enrollments()
+        assert result == expected
+
+    @pytest.mark.asyncio
+    async def test_get_micro_payment_no_optional_params(self) -> None:
+        """Lines 244->250, 250->252, 252->254: all defaults."""
+        expected = object()
+        repo, _ = make_repo(_FakeExecuteResult(one_or_none=expected))
+        result = await repo.get_micro_payment(uuid.uuid4())
+        assert result is expected
+
+    @pytest.mark.asyncio
+    async def test_list_micro_payments_no_optional_params(self) -> None:
+        """Lines 267->273, 273->275, 275->277, 277->279, 279->281: all None/falsy."""
+        expected = [object()]
+        repo, _ = make_repo(_FakeExecuteResult(many=expected))
+        result = await repo.list_micro_payments()
+        assert result == expected
+
+    @pytest.mark.asyncio
+    async def test_list_micro_resources_no_optional_params(self) -> None:
+        """Lines 317->319, 319->321, 321->323, 323->325: all None/falsy."""
+        expected = [object()]
+        repo, _ = make_repo(_FakeExecuteResult(many=expected))
+        result = await repo.list_micro_resources()
+        assert result == expected
+
+    @pytest.mark.asyncio
+    async def test_get_micro_progress_log_no_optional_params(self) -> None:
+        """Lines 356->367, 367->373: school_id=None, include_enrollment=False."""
+        expected = object()
+        repo, _ = make_repo(_FakeExecuteResult(one_or_none=expected))
+        result = await repo.get_micro_progress_log(uuid.uuid4())
+        assert result is expected
+
+    @pytest.mark.asyncio
+    async def test_list_micro_progress_logs_no_optional_params(self) -> None:
+        """Lines 386->397, 397->401, 401->403, 403->405, 405->407: all None."""
+        expected = [object()]
+        repo, _ = make_repo(_FakeExecuteResult(many=expected))
+        result = await repo.list_micro_progress_logs()
+        assert result == expected
+
+    @pytest.mark.asyncio
+    async def test_parent_has_school_access_no_school_id(self) -> None:
+        """Lines 450->454: school_id=None skips the join."""
+        repo, _ = make_repo(_FakeExecuteResult(one=1))
+        result = await repo.parent_has_school_access(
+            parent_id=uuid.uuid4(),
+            micro_school_id=uuid.uuid4(),
+        )
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_get_micro_school_for_enrollment_no_school_id(self) -> None:
+        """Lines 469->473: school_id=None skips the join."""
+        expected = object()
+        repo, _ = make_repo(_FakeExecuteResult(one_or_none=expected))
+        result = await repo.get_micro_school_for_enrollment(uuid.uuid4())
+        assert result is expected

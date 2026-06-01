@@ -1,112 +1,132 @@
-import 'dart:io';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:ecole_platform/core/network/api_client.dart';
 import 'package:ecole_platform/data/repositories_impl/billing/invoice_repository_impl.dart';
+import 'package:ecole_platform/domain/common/pagination.dart';
+import 'package:ecole_platform/domain/entities/billing/invoice.dart';
 
 import '../helpers/api_responses.dart';
 import '../helpers/test_mocks.dart';
 
+Map<String, dynamic> _invoiceJson({String id = 'inv-1', String status = 'pending'}) => {
+  'id': id, 'school_id': 'school-1', 'parent_id': 'par-1', 'period_id': 'p1',
+  'invoice_number': 'INV-2026-001', 'student_id': 'stu-1', 'student_name': 'Alice',
+  'label': 'Frais', 'status': status, 'total_amount': 3500.0, 'currency': 'MAD',
+  'issued_date': '2026-05-01', 'due_date': '2026-05-31',
+  'paid_at': null, 'pdf_url': null, 'line_items': <dynamic>[],
+};
+
+Map<String, dynamic> _paymentJson({String id = 'pay-1'}) => {
+  'id': id, 'invoice_id': 'inv-1', 'amount': 3500.0, 'method': 'bank_transfer',
+  'status': 'pending', 'created_at': '2026-05-10T09:00:00Z',
+  'finalized_at': null, 'proof_url': null,
+};
+
 void main() {
+  late MockApiClient api;
+  late MockCacheStore cache;
+  late InvoiceRepositoryImpl repo;
+
   setUpAll(registerTestFallbacks);
 
-  test('lists invoices and writes the result to cache', () async {
-    final api = MockApiClient();
-    final cache = MockCacheStore();
-    final repository = InvoiceRepositoryImpl(api: api, cache: cache);
-
-    when(() => cache.get('invoices:first')).thenAnswer((_) async => null);
-    when(() => api.list('/invoices', params: <String, dynamic>{})).thenAnswer(
-      (_) async => listResponse(
-        const [
-          {
-            'id': 'invoice-1',
-            'school_id': 'school-1',
-            'parent_id': 'parent-1',
-            'status': 'pending',
-            'total_amount': 1200,
-            'currency': 'MAD',
-            'issued_date': '2026-04-01',
-            'due_date': '2026-04-15',
-            'items': [
-              {
-                'id': 'line-1',
-                'description': 'Tuition',
-                'amount': 1200,
-                'unit_price': 1200,
-                'quantity': 1,
-              },
-            ],
-          },
-        ],
-      ),
-    );
-    when(
-      () => cache.put('invoices:first', any(), any()),
-    ).thenAnswer((_) async {});
-
-    final invoices = await repository.getInvoices();
-
-    expect(invoices.items.single.currency, 'MAD');
-    verify(() => cache.put('invoices:first', any(), any())).called(1);
+  setUp(() {
+    api = MockApiClient();
+    cache = MockCacheStore();
+    repo = InvoiceRepositoryImpl(api: api, cache: cache);
+    when(() => cache.get(any())).thenAnswer((_) async => null);
+    when(() => cache.put(any(), any(), any())).thenAnswer((_) async {});
+    when(() => cache.invalidatePrefix(any())).thenAnswer((_) async {});
+    when(() => cache.invalidate(any())).thenAnswer((_) async {});
   });
 
-  test('loads invoice detail', () async {
-    final api = MockApiClient();
-    final repository = InvoiceRepositoryImpl(
-      api: api,
-      cache: MockCacheStore(),
-    );
+  group('getInvoices', () {
+    test('returns paginated invoices from API on cache miss', () async {
+      when(() => api.list('/invoices', params: any(named: 'params')))
+          .thenAnswer((_) async => listResponse([_invoiceJson()]));
 
-    when(() => api.get('/invoices/invoice-1')).thenAnswer(
-      (_) async => response(
-        const {
-          'id': 'invoice-1',
-          'school_id': 'school-1',
-          'parent_id': 'parent-1',
-          'status': 'pending',
-          'total_amount': 1200,
-          'currency': 'MAD',
-          'issued_date': '2026-04-01',
-          'due_date': '2026-04-15',
-          'items': [
-            {
-              'id': 'line-1',
-              'description': 'Tuition',
-              'amount': 1200,
-              'unit_price': 1200,
-              'quantity': 1,
-            },
-          ],
-        },
-      ),
-    );
+      final result = await repo.getInvoices();
 
-    final invoice = await repository.getInvoiceDetail('invoice-1');
+      expect(result, isA<PaginatedList<Invoice>>());
+      expect(result.items, hasLength(1));
+      expect(result.items.first.status, 'pending');
+    });
 
-    expect(invoice.id, 'invoice-1');
-    expect(invoice.items.single.description, 'Tuition');
+    test('returns cached invoices when available', () async {
+      when(() => cache.get('invoices:first')).thenAnswer((_) async => [_invoiceJson()]);
+
+      final result = await repo.getInvoices();
+
+      expect(result.items, hasLength(1));
+      verifyNever(() => api.list(any(), params: any(named: 'params')));
+    });
+
+    test('passes cursor param when provided', () async {
+      when(() => api.list('/invoices', params: any(named: 'params')))
+          .thenAnswer((_) async => listResponse([]));
+
+      await repo.getInvoices(cursor: 'cur-1');
+
+      final params = verify(
+        () => api.list('/invoices', params: captureAny(named: 'params')),
+      ).captured.first as Map<String, dynamic>;
+      expect(params['cursor'], 'cur-1');
+    });
+
+    test('propagates API error', () async {
+      when(() => api.list(any(), params: any(named: 'params'))).thenThrow(offlineError());
+      expect(() => repo.getInvoices(), throwsA(isA<ApiClientError>()));
+    });
   });
 
-  test('uploads payment proof through the API client', () async {
-    final api = MockApiClient();
-    final repository = InvoiceRepositoryImpl(
-      api: api,
-      cache: MockCacheStore(),
-    );
-    final file = File(
-      '${Directory.systemTemp.path}/invoice-payment-proof-test.txt',
-    )..writeAsStringSync('proof');
+  group('getInvoiceDetail', () {
+    test('fetches invoice detail by id', () async {
+      when(() => api.get('/invoices/inv-1')).thenAnswer((_) async => response(_invoiceJson()));
+      final result = await repo.getInvoiceDetail('inv-1');
+      expect(result.id, 'inv-1');
+      expect(result.totalAmount, 3500.0);
+    });
+  });
 
-    when(
-      () => api.uploadFile('/payments/payment-1/proof', file: file),
-    ).thenAnswer((_) async => response(const {'ok': true}));
+  group('createPayment', () {
+    test('posts payment and invalidates invoice cache', () async {
+      when(() => api.post('/payments/initiate', body: any(named: 'body')))
+          .thenAnswer((_) async => response(_paymentJson()));
 
-    await repository.uploadPaymentProof(paymentId: 'payment-1', file: file);
+      final result = await repo.createPayment(
+        invoiceId: 'inv-1', amount: 3500.0, method: 'bank_transfer',
+      );
 
-    verify(() => api.uploadFile('/payments/payment-1/proof', file: file))
-        .called(1);
-    await file.delete();
+      expect(result.amount, 3500.0);
+      verify(() => cache.invalidatePrefix('invoices:')).called(1);
+    });
+  });
+
+  group('getInvoicePayments', () {
+    test('returns list of payments for an invoice', () async {
+      when(() => api.list('/payments/inv-1'))
+          .thenAnswer((_) async => listResponse([_paymentJson()]));
+
+      final result = await repo.getInvoicePayments('inv-1');
+
+      expect(result, hasLength(1));
+      expect(result.first.method, 'bank_transfer');
+    });
+  });
+
+  group('getSiblingPolicy', () {
+    test('fetches sibling policy', () async {
+      when(() => api.get('/billing/sibling-policy')).thenAnswer(
+        (_) async => response({
+          'max_siblings_covered': 3,
+          'discounts': <dynamic>[],
+        }),
+      );
+
+      final result = await repo.getSiblingPolicy();
+
+      expect(result, isA<SiblingPolicy>());
+      expect(result.maxSiblingsCovered, 3);
+    });
   });
 }

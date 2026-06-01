@@ -25,9 +25,9 @@ from tests.conftest import (
     ADMIN_EMAIL,
     ADMIN_PASSWORD,
     BASE_URL,
-    SCHOOL_ID,
     STUDENT_EMAIL,
     STUDENT_PASSWORD,
+    _login_with_seed_retry,
 )
 
 
@@ -53,12 +53,11 @@ WS_BASE_URL = BASE_URL.replace("http://", "ws://")
 async def _get_token(email: str, password: str) -> str:
     """Helper to get an access token via HTTP login."""
     async with httpx.AsyncClient(base_url=BASE_URL) as client:
-        resp = await client.post(
-            "/auth/login",
-            json={"email": email, "password": password, "school_id": SCHOOL_ID},
+        return await _login_with_seed_retry(
+            client,
+            email=email,
+            password=password,
         )
-        assert resp.status_code == 200, f"Login failed: {resp.text}"
-        return resp.json()["data"]["access_token"]
 
 
 class TestWebSocketConnection:

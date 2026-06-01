@@ -150,4 +150,186 @@ describe('AuthContext', () => {
     });
     expect(screen.getByTestId('user-name')).toHaveTextContent('none');
   });
+
+  it('shows error on failed login (invalid credentials)', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.post(
+        '/api/v1/auth/login',
+        () =>
+          new Response(
+            JSON.stringify({ error: { code: 'ERR-IAM-401', message: 'Invalid credentials' } }),
+            { status: 401, headers: { 'Content-Type': 'application/json' } },
+          ),
+      ),
+    );
+    renderAuthProvider();
+    await user.click(screen.getByRole('button', { name: 'Login' }));
+    await waitFor(() => {
+      expect(screen.getByTestId('error-state')).not.toHaveTextContent('none');
+    });
+  });
+
+  it('shows locked error when account is locked', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.post(
+        '/api/v1/auth/login',
+        () =>
+          new Response(
+            JSON.stringify({ error: { code: 'ERR-IAM-403', message: 'Account locked' } }),
+            { status: 403, headers: { 'Content-Type': 'application/json' } },
+          ),
+      ),
+    );
+    renderAuthProvider();
+    await user.click(screen.getByRole('button', { name: 'Login' }));
+    await waitFor(() => {
+      expect(screen.getByTestId('error-state')).not.toHaveTextContent('none');
+    });
+  });
+
+  it('cancel2fa clears twoFactorPending state', async () => {
+    const user = userEvent.setup();
+    // First trigger 2FA pending
+    server.use(
+      http.post(
+        '/api/v1/auth/login',
+        () =>
+          new Response(
+            JSON.stringify({
+              data: { requires_2fa: true, temp_token: 'tmp123', email: 'teacher@ecole.test' },
+            }),
+            { status: 200, headers: { 'Content-Type': 'application/json' } },
+          ),
+      ),
+    );
+    function AuthHarnessWith2faCancel() {
+      const { twoFactorPending, login, cancel2fa } = useAuth();
+      return (
+        <div>
+          <div data-testid="pending-email">{twoFactorPending?.email ?? 'none'}</div>
+          <button type="button" onClick={() => void login('t@test.com', 'pw', 'school-1')}>
+            Login
+          </button>
+          <button type="button" onClick={cancel2fa}>
+            Cancel 2FA
+          </button>
+        </div>
+      );
+    }
+    renderWithProviders(
+      <AuthProvider>
+        <AuthHarnessWith2faCancel />
+      </AuthProvider>,
+      { user: null },
+    );
+    await user.click(screen.getByRole('button', { name: 'Login' }));
+    await waitFor(() => {
+      expect(screen.getByTestId('pending-email')).not.toHaveTextContent('none');
+    });
+    await user.click(screen.getByRole('button', { name: 'Cancel 2FA' }));
+    await waitFor(() => {
+      expect(screen.getByTestId('pending-email')).toHaveTextContent('none');
+    });
+  });
+
+  it('clearError removes error from state', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.post(
+        '/api/v1/auth/login',
+        () =>
+          new Response(
+            JSON.stringify({ error: { code: 'ERR-GENERIC', message: 'Generic error' } }),
+            { status: 500, headers: { 'Content-Type': 'application/json' } },
+          ),
+      ),
+    );
+    function AuthHarnessWithClear() {
+      const { error, login, clearError } = useAuth();
+      return (
+        <div>
+          <div data-testid="error-state">{error ?? 'none'}</div>
+          <button type="button" onClick={() => void login('t@test.com', 'pw', 'school-1')}>
+            Login
+          </button>
+          <button type="button" onClick={clearError}>
+            Clear Error
+          </button>
+        </div>
+      );
+    }
+    renderWithProviders(
+      <AuthProvider>
+        <AuthHarnessWithClear />
+      </AuthProvider>,
+      { user: null },
+    );
+    await user.click(screen.getByRole('button', { name: 'Login' }));
+    await waitFor(() => {
+      expect(screen.getByTestId('error-state')).not.toHaveTextContent('none');
+    });
+    await user.click(screen.getByRole('button', { name: 'Clear Error' }));
+    await waitFor(() => {
+      expect(screen.getByTestId('error-state')).toHaveTextContent('none');
+    });
+  });
+
+  it('shows disabled error when account is disabled', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.post(
+        '/api/v1/auth/login',
+        () =>
+          new Response(
+            JSON.stringify({ error: { code: 'ERR-MISC', message: 'Account disabled' } }),
+            { status: 403, headers: { 'Content-Type': 'application/json' } },
+          ),
+      ),
+    );
+    renderAuthProvider();
+    await user.click(screen.getByRole('button', { name: 'Login' }));
+    await waitFor(() => {
+      expect(screen.getByTestId('error-state')).not.toHaveTextContent('none');
+    });
+  });
+
+  it('shows oauth error for ERR-OAUTH code', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.post(
+        '/api/v1/auth/login',
+        () =>
+          new Response(
+            JSON.stringify({ error: { code: 'ERR-OAUTH-001', message: 'OAuth failed' } }),
+            { status: 400, headers: { 'Content-Type': 'application/json' } },
+          ),
+      ),
+    );
+    renderAuthProvider();
+    await user.click(screen.getByRole('button', { name: 'Login' }));
+    await waitFor(() => {
+      expect(screen.getByTestId('error-state')).not.toHaveTextContent('none');
+    });
+  });
+
+  it('shows generic error for unknown error code', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.post(
+        '/api/v1/auth/login',
+        () =>
+          new Response(
+            JSON.stringify({ error: { code: 'ERR-UNKNOWN-999', message: 'Something went wrong' } }),
+            { status: 500, headers: { 'Content-Type': 'application/json' } },
+          ),
+      ),
+    );
+    renderAuthProvider();
+    await user.click(screen.getByRole('button', { name: 'Login' }));
+    await waitFor(() => {
+      expect(screen.getByTestId('error-state')).not.toHaveTextContent('none');
+    });
+  });
 });

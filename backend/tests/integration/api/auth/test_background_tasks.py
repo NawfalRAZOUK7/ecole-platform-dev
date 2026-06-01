@@ -19,6 +19,14 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def force_smtp_email_path(monkeypatch):
+    """These tests mock SMTP directly; keep live TestMail config out of scope."""
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "testmail_enabled", False)
+
+
 # ======================================================================
 # Email Template Rendering
 # ======================================================================

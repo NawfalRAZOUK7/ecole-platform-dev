@@ -141,6 +141,7 @@ async def seed_level_mappings(session_factory):
                     VALUES
                       (gen_random_uuid(), :level_code, :label_fr, :label_ar, :label_en,
                        :age_min, :age_max, :order, now())
+                    ON CONFLICT DO NOTHING
                     """
                 ),
                 {

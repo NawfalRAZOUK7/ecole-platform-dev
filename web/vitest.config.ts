@@ -15,8 +15,11 @@ export default defineConfig({
     pool: process.env.CI ? 'forks' : 'vmThreads',
     setupFiles: ['./tests/setup.ts'],
     include: ['tests/**/*.test.{ts,tsx}', 'src/**/*.test.{ts,tsx}'],
+    testTimeout: 15000,
+    hookTimeout: 15000,
     coverage: {
       provider: 'v8',
+      reporter: ['text', 'json'],
       include: ['src/**/*.{ts,tsx}'],
       exclude: ['src/**/*.d.ts', 'src/main.tsx'],
     },

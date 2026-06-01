@@ -86,7 +86,8 @@ class GDPRRepository(BaseRepository):
     ) -> list[Grade]:
         result = await self.db.execute(
             select(Grade)
-            .where(Grade.student_id == student_id)
+            .join(Submission, Grade.submission_id == Submission.id)
+            .where(Submission.student_id == student_id)
             .order_by(Grade.created_at.desc())
             .limit(limit)
         )
