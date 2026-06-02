@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ecole_platform/app/router.dart';
 import 'package:ecole_platform/l10n/app_localizations.dart';
@@ -19,7 +20,7 @@ void main() {
         overrides: environment.overrides(),
       );
 
-      await _loginAs(tester, 'parent@ecole.test');
+      await _loginAs(tester, container, 'parent@ecole.test');
 
       expect(find.text('Weekly digest'), findsOneWidget);
 
@@ -50,10 +51,11 @@ void main() {
         overrides: environment.overrides(),
       );
 
-      await _loginAs(tester, 'teacher@ecole.test');
+      await _loginAs(tester, container, 'teacher@ecole.test');
 
       container.read(routerProvider).go('/teacher/attendance');
       await tester.pumpAndSettle();
+      await _waitForWidget(tester, find.text('Classe *'));
 
       await tester.tap(
         find.widgetWithText(DropdownButtonFormField<String>, 'Classe *'),
@@ -82,7 +84,7 @@ void main() {
       await container.read(authProvider.notifier).logout();
       await tester.pumpAndSettle();
 
-      await _loginAs(tester, 'parent@ecole.test');
+      await _loginAs(tester, container, 'parent@ecole.test');
 
       container.read(routerProvider).go(
             '/attendance/history?classId=class-1&studentId=student-1',
@@ -100,13 +102,12 @@ void main() {
         overrides: environment.overrides(),
       );
 
-      await _loginAs(tester, 'parent@ecole.test');
+      await _loginAs(tester, container, 'parent@ecole.test');
       container.read(routerProvider).go('/profile');
       await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(
+      await _scrollUntilVisible(
+        tester,
         find.byKey(const Key('profile.theme.mode')),
-        300,
-        scrollable: find.byType(Scrollable).first,
       );
 
       await _selectDropdownValue(
@@ -134,13 +135,12 @@ void main() {
         overrides: environment.overrides(),
       );
 
-      await _loginAs(tester, 'parent@ecole.test');
+      await _loginAs(tester, container, 'parent@ecole.test');
       container.read(routerProvider).go('/profile');
       await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(
+      await _scrollUntilVisible(
+        tester,
         find.byKey(const Key('profile.locale.code')),
-        300,
-        scrollable: find.byType(Scrollable).first,
       );
 
       await _selectDropdownValue(
@@ -158,13 +158,16 @@ void main() {
   });
 }
 
-Future<void> _loginAs(WidgetTester tester, String email) async {
-  await tester.enterText(find.byType(TextFormField).at(0), email);
-  await tester.enterText(find.byType(TextFormField).at(1), 'password123');
-  final loginButton = find.widgetWithText(FilledButton, 'Se connecter');
-  await tester.ensureVisible(loginButton);
-  await tester.pumpAndSettle();
-  await tester.tap(loginButton);
+Future<void> _loginAs(
+  WidgetTester tester,
+  ProviderContainer container,
+  String email,
+) async {
+  await container.read(authProvider.notifier).login(
+        email,
+        'password123',
+        '00000000-0000-4000-8000-000000000001',
+      );
   await tester.pumpAndSettle();
 }
 
@@ -173,8 +176,33 @@ Future<void> _selectDropdownValue(
   required Key fieldKey,
   required String optionText,
 }) async {
+  await _scrollUntilVisible(tester, find.byKey(fieldKey));
   await tester.tap(find.byKey(fieldKey));
   await tester.pumpAndSettle();
   await tester.tap(find.text(optionText).last);
+  await tester.pumpAndSettle();
+}
+
+Future<void> _waitForWidget(
+  WidgetTester tester,
+  Finder finder, {
+  int attempts = 20,
+}) async {
+  for (var i = 0; i < attempts; i += 1) {
+    if (finder.evaluate().isNotEmpty) return;
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+  expect(finder, findsWidgets);
+}
+
+Future<void> _scrollUntilVisible(WidgetTester tester, Finder finder) async {
+  if (finder.evaluate().isNotEmpty) return;
+  final scrollables = find.byType(Scrollable);
+  expect(scrollables, findsWidgets);
+  await tester.scrollUntilVisible(
+    finder,
+    300,
+    scrollable: scrollables.first,
+  );
   await tester.pumpAndSettle();
 }

@@ -25,6 +25,7 @@ from app.services.billing.payment_retry import (
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _attempt(
     *,
     id=None,
@@ -52,6 +53,7 @@ def _attempt(
 
 def _invoice(*, status="pending", total_amount="250.00", currency="MAD", due_date=None):
     from datetime import date
+
     return SimpleNamespace(
         id=uuid.uuid4(),
         status=status,
@@ -110,6 +112,7 @@ def _session_factory():
 # retry_failed_payments — empty list
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_empty_attempts_returns_zero():
     session_cm, _ = _session_factory()
@@ -130,6 +133,7 @@ async def test_empty_attempts_returns_zero():
 # ---------------------------------------------------------------------------
 # retry_failed_payments — first retry (retry_count < MAX_RETRIES)
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_first_retry_schedules_next():
@@ -156,7 +160,9 @@ async def test_first_retry_schedules_next():
     # Backoff is RETRY_BACKOFF_HOURS[0] = 1h
     now = datetime.now(timezone.utc)
     expected_delta = timedelta(hours=RETRY_BACKOFF_HOURS[0])
-    diff = abs((att.next_retry_at - now).total_seconds() - expected_delta.total_seconds())
+    diff = abs(
+        (att.next_retry_at - now).total_seconds() - expected_delta.total_seconds()
+    )
     assert diff < 5  # within 5 seconds
 
     fake_repo.save_payment.assert_awaited_once_with(att)
@@ -180,13 +186,16 @@ async def test_second_retry_uses_second_backoff():
 
     now = datetime.now(timezone.utc)
     expected_delta = timedelta(hours=RETRY_BACKOFF_HOURS[1])
-    diff = abs((att.next_retry_at - now).total_seconds() - expected_delta.total_seconds())
+    diff = abs(
+        (att.next_retry_at - now).total_seconds() - expected_delta.total_seconds()
+    )
     assert diff < 5
 
 
 # ---------------------------------------------------------------------------
 # retry_failed_payments — backoff index out of range → uses last
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_backoff_beyond_list_uses_last_element():
@@ -228,6 +237,7 @@ async def test_backoff_beyond_list_uses_last_element():
 # ---------------------------------------------------------------------------
 # retry_failed_payments — final failure (retry_count reaches MAX_RETRIES)
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_final_failure_marks_attempt_and_invoice():
@@ -354,6 +364,7 @@ async def test_final_failure_enqueue_exception_is_swallowed():
 # retry_failed_payments — audit log
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_retry_audit_log_for_scheduled():
     att = _attempt(retry_count=0)
@@ -395,12 +406,16 @@ async def test_retry_audit_log_for_final_failure():
         await retry_failed_payments()
 
     mock_audit.log_event.assert_awaited_once()
-    assert mock_audit.log_event.call_args.kwargs["action_type"] == "payment.retry_final_failure"
+    assert (
+        mock_audit.log_event.call_args.kwargs["action_type"]
+        == "payment.retry_final_failure"
+    )
 
 
 # ---------------------------------------------------------------------------
 # retry_failed_payments — exception per attempt is caught
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_exception_in_attempt_loop_continues():
@@ -436,6 +451,7 @@ async def test_exception_in_attempt_loop_continues():
 # retry_failed_payments — uow committed
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_uow_committed():
     session_cm, _ = _session_factory()
@@ -455,6 +471,7 @@ async def test_uow_committed():
 # ---------------------------------------------------------------------------
 # schedule_retry_for_failed_payment — with UoW depth (already in transaction)
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_schedule_retry_with_uow_depth():
@@ -509,6 +526,7 @@ async def test_schedule_retry_with_uow_depth_at_max_retries_skipped():
 # schedule_retry_for_failed_payment — without UoW depth (opens own UoW)
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_schedule_retry_without_uow_depth():
     att = _attempt(retry_count=0)
@@ -554,6 +572,7 @@ async def test_schedule_retry_without_uow_depth_not_found():
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
+
 
 def test_constants():
     assert MAX_RETRIES == 3

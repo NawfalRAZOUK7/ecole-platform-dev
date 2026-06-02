@@ -1,4 +1,5 @@
 """Extended coverage tests for lms_quiz.py."""
+
 from __future__ import annotations
 
 import uuid
@@ -342,10 +343,10 @@ class TestQuizRepositoryExtended:
 
         db = _db(
             side_effects=[
-                _FR(many=[class_id]),           # list class_ids
+                _FR(many=[class_id]),  # list class_ids
                 _FR(many=[(quiz, assignment)]),  # list quizzes
-                _FR(many=[]),                    # get_question_counts
-                _FR(v=attempt),                  # scalars().first() for attempt
+                _FR(many=[]),  # get_question_counts
+                _FR(v=attempt),  # scalars().first() for attempt
             ]
         )
         result = await QuizRepository(db).list_for_student(
@@ -365,10 +366,10 @@ class TestQuizRepositoryExtended:
 
         db = _db(
             side_effects=[
-                _FR(many=[class_id]),           # list class_ids
+                _FR(many=[class_id]),  # list class_ids
                 _FR(many=[(quiz, assignment)]),  # list quizzes
-                _FR(many=[]),                    # get_question_counts
-                _FR(v=None),                     # scalars().first() returns None
+                _FR(many=[]),  # get_question_counts
+                _FR(v=None),  # scalars().first() returns None
             ]
         )
         result = await QuizRepository(db).list_for_student(
@@ -390,8 +391,8 @@ class TestQuizRepositoryExtended:
         quiz = _quiz(quiz_id=quiz_id)
         db = _db(
             side_effects=[
-                _FR(v=quiz),          # get_quiz
-                _FR(many=[]),         # get_question_counts
+                _FR(v=quiz),  # get_quiz
+                _FR(many=[]),  # get_question_counts
             ]
         )
         result = await QuizRepository(db).get_detail(quiz_id)

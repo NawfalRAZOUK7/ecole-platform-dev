@@ -246,7 +246,9 @@ async def test_dev_env_remaining_equals_limit():
         result = await mw.dispatch(request, call_next)
 
     # In non-enforcement mode, remaining == limit
-    assert result.headers["X-RateLimit-Limit"] == result.headers["X-RateLimit-Remaining"]
+    assert (
+        result.headers["X-RateLimit-Limit"] == result.headers["X-RateLimit-Remaining"]
+    )
 
 
 @pytest.mark.asyncio

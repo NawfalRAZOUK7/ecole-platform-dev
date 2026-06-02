@@ -48,7 +48,9 @@ def test_create_refresh_token_default_expire_days():
         school_id=uuid.uuid4(),
         session_id=uuid.uuid4(),
     )
-    payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+    payload = jwt.decode(
+        token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm]
+    )
     assert payload["type"] == TOKEN_TYPE_REFRESH
     assert payload["sub"] == str(user_id)
 
@@ -62,7 +64,9 @@ def test_create_refresh_token_custom_expire_days():
         session_id=uuid.uuid4(),
         expire_days=7.0,
     )
-    payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+    payload = jwt.decode(
+        token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm]
+    )
     assert payload["jti"] == jti
 
 
@@ -96,9 +100,7 @@ def test_decode_jwt_falls_back_to_previous_key():
         s.refresh_token_expire_days = 2
         s.jwt_secret_key = old_key
         s.jwt_previous_key = ""
-        token = create_access_token(
-            uuid.uuid4(), "ADM", uuid.uuid4(), uuid.uuid4()
-        )
+        token = create_access_token(uuid.uuid4(), "ADM", uuid.uuid4(), uuid.uuid4())
 
     # Now current key changed, old key moved to previous
     with patch("app.core.security.settings") as s:
@@ -170,9 +172,7 @@ def test_decode_refresh_token_success():
 
 
 def test_decode_refresh_token_wrong_type_raises():
-    token = create_access_token(
-        uuid.uuid4(), "ADM", uuid.uuid4(), uuid.uuid4()
-    )
+    token = create_access_token(uuid.uuid4(), "ADM", uuid.uuid4(), uuid.uuid4())
     with pytest.raises(AuthenticationError, match="Invalid token type"):
         decode_refresh_token(token)
 

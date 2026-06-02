@@ -6,6 +6,7 @@ Covers repositories where the primary test files had wrong signatures:
 - CalendarRepository
 - Additional calendar methods (reminders)
 """
+
 from __future__ import annotations
 
 import uuid
@@ -81,6 +82,7 @@ def _db(result=None, *, side_effects=None, flush_raises=None):
 # AuditRepository
 # ===========================================================================
 
+
 class TestAuditRepositoryCorrect:
     @pytest.mark.asyncio
     async def test_create_log(self):
@@ -124,7 +126,10 @@ class TestAuditRepositoryCorrect:
         now = _now()
         items = [SimpleNamespace(id=_uid(), created_at=now) for _ in range(6)]
         db = _db(_FR(many=items))
-        with patch("app.repositories.audit.decode_cursor", return_value=(_uid(), now.isoformat())):
+        with patch(
+            "app.repositories.audit.decode_cursor",
+            return_value=(_uid(), now.isoformat()),
+        ):
             result, cursor, has_more = await AuditRepository(db).list_logs(
                 cursor="cur", limit=5
             )
@@ -143,12 +148,15 @@ class TestAuditRepositoryCorrect:
 # LoginHistoryRepository
 # ===========================================================================
 
+
 class TestLoginHistoryRepositoryCorrect:
     @pytest.mark.asyncio
     async def test_create_login_record_success(self):
         fake = SimpleNamespace(id=_uid())
         db = _db()
-        with patch("app.repositories.auth_login_history.LoginHistory", return_value=fake):
+        with patch(
+            "app.repositories.auth_login_history.LoginHistory", return_value=fake
+        ):
             result = await LoginHistoryRepository(db).create_login_record(
                 user_id=_uid(), school_id=_uid()
             )
@@ -157,10 +165,13 @@ class TestLoginHistoryRepositoryCorrect:
     @pytest.mark.asyncio
     async def test_create_login_record_integrity_error(self):
         from sqlalchemy.exc import IntegrityError
+
         fake = SimpleNamespace(id=_uid())
         db = _db(flush_raises=IntegrityError("stmt", "params", Exception("fk")))
         db.rollback = AsyncMock()
-        with patch("app.repositories.auth_login_history.LoginHistory", return_value=fake):
+        with patch(
+            "app.repositories.auth_login_history.LoginHistory", return_value=fake
+        ):
             result = await LoginHistoryRepository(db).create_login_record(
                 user_id=_uid(), school_id=_uid()
             )
@@ -170,9 +181,9 @@ class TestLoginHistoryRepositoryCorrect:
     async def test_list_user_login_history_no_cursor(self):
         items = [object()]
         db = _db(_FR(many=items))
-        result, cursor, has_more = await LoginHistoryRepository(db).list_user_login_history(
-            _uid(), 20, None
-        )
+        result, cursor, has_more = await LoginHistoryRepository(
+            db
+        ).list_user_login_history(_uid(), 20, None)
         assert result == items
         assert has_more is False
 
@@ -181,9 +192,9 @@ class TestLoginHistoryRepositoryCorrect:
         now = _now()
         items = [SimpleNamespace(id=_uid(), created_at=now) for _ in range(21)]
         db = _db(_FR(many=items))
-        result, cursor, has_more = await LoginHistoryRepository(db).list_user_login_history(
-            _uid(), 20, None
-        )
+        result, cursor, has_more = await LoginHistoryRepository(
+            db
+        ).list_user_login_history(_uid(), 20, None)
         assert has_more is True
         assert len(result) == 20
         assert cursor is not None
@@ -193,10 +204,13 @@ class TestLoginHistoryRepositoryCorrect:
         now = _now()
         items = [object()]
         db = _db(_FR(many=items))
-        with patch("app.repositories.auth_login_history.decode_cursor", return_value=(_uid(), now.isoformat())):
-            result, cursor, has_more = await LoginHistoryRepository(db).list_user_login_history(
-                _uid(), 10, "cursor"
-            )
+        with patch(
+            "app.repositories.auth_login_history.decode_cursor",
+            return_value=(_uid(), now.isoformat()),
+        ):
+            result, cursor, has_more = await LoginHistoryRepository(
+                db
+            ).list_user_login_history(_uid(), 10, "cursor")
         assert result == items
 
     @pytest.mark.asyncio
@@ -210,13 +224,16 @@ class TestLoginHistoryRepositoryCorrect:
     async def test_get_device_fingerprints_with_days(self):
         fps = ["fp1"]
         db = _db(_FR(many=fps))
-        result = await LoginHistoryRepository(db).get_device_fingerprints(_uid(), days=60)
+        result = await LoginHistoryRepository(db).get_device_fingerprints(
+            _uid(), days=60
+        )
         assert isinstance(result, set)
 
 
 # ===========================================================================
 # CalendarRepository (correct signatures)
 # ===========================================================================
+
 
 class TestCalendarRepositoryCorrect:
     @pytest.mark.asyncio
@@ -391,11 +408,13 @@ class TestCalendarRepositoryCorrect:
         student_ids = [_uid()]
         parent_ids = [_uid()]
         teacher_ids = [_uid()]
-        db = _db(side_effects=[
-            _FR(many=student_ids),
-            _FR(many=parent_ids),
-            _FR(many=teacher_ids),
-        ])
+        db = _db(
+            side_effects=[
+                _FR(many=student_ids),
+                _FR(many=parent_ids),
+                _FR(many=teacher_ids),
+            ]
+        )
         result = await CalendarRepository(db).list_class_recipient_ids(
             school_id=_uid(), class_id=_uid()
         )
@@ -405,10 +424,12 @@ class TestCalendarRepositoryCorrect:
     async def test_list_class_recipient_ids_no_students(self):
         # When no students, parent query is skipped (2 execute calls)
         teacher_ids = [_uid()]
-        db = _db(side_effects=[
-            _FR(many=[]),         # no students
-            _FR(many=teacher_ids), # teachers
-        ])
+        db = _db(
+            side_effects=[
+                _FR(many=[]),  # no students
+                _FR(many=teacher_ids),  # teachers
+            ]
+        )
         result = await CalendarRepository(db).list_class_recipient_ids(
             school_id=_uid(), class_id=_uid()
         )

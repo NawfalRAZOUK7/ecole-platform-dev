@@ -47,7 +47,9 @@ class TestAnnouncementsExtended:
     @pytest.mark.asyncio
     async def test_student_cannot_create_announcement(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.post(
             "/announcements",
             headers=auth_header(token),
@@ -148,7 +150,9 @@ class TestAnnouncementsExtended:
         assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_student_can_list_published_announcements(self, client, legacy_api_seed):
+    async def test_student_can_list_published_announcements(
+        self, client, legacy_api_seed
+    ):
         _ = legacy_api_seed
         # Create + publish as admin
         a_token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
@@ -160,7 +164,9 @@ class TestAnnouncementsExtended:
             f"/announcements/{ann_id}/publish", headers=auth_header(a_token)
         )
         # Student can read
-        s_token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        s_token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.get("/announcements", headers=auth_header(s_token))
         assert response.status_code == 200
 
@@ -178,9 +184,7 @@ class TestAnnouncementsExtended:
     @pytest.mark.asyncio
     async def test_unauthenticated_cannot_create(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        response = await client.post(
-            "/announcements", json=_announcement_payload()
-        )
+        response = await client.post("/announcements", json=_announcement_payload())
         assert response.status_code in (401, 403)
 
     @pytest.mark.asyncio

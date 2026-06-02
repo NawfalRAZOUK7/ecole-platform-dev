@@ -1,4 +1,5 @@
 """Extended coverage tests for reports_analytics.py."""
+
 from __future__ import annotations
 
 import uuid
@@ -85,9 +86,7 @@ class TestAnalyticsRepositoryExtended:
     @pytest.mark.asyncio
     async def test_list_attendance_series_with_class_and_program(self):
         """Cover class_id and program_id filters in list_attendance_series (lines 157-172)."""
-        row = SimpleNamespace(
-            bucket=_d(), total=10, present=8, absent=1, excused=1
-        )
+        row = SimpleNamespace(bucket=_d(), total=10, present=8, absent=1, excused=1)
         db = _db(_FR(many=[row]))
         result = await AnalyticsRepository(db).list_attendance_series(
             school_id=_uid(),
@@ -242,7 +241,7 @@ class TestAnalyticsRepositoryExtended:
             side_effects=[
                 _FR(v=200),  # count_users
                 _FR(v=100),  # count_active_users
-                _FR(v=80),   # count_distinct_audit_users
+                _FR(v=80),  # count_distinct_audit_users
             ]
         )
         registered, active, engaged = await AnalyticsRepository(db).engagement_summary(

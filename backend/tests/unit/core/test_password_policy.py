@@ -56,6 +56,7 @@ def test_load_common_passwords_file_not_found(tmp_path, monkeypatch):
 def test_is_common_password_with_known_common():
     # 'password' is almost certainly in the common list
     from app.core.password_policy import _common_passwords
+
     if "password" in _common_passwords:
         assert _is_common_password("password") is True
 
@@ -67,6 +68,7 @@ def test_is_common_password_with_unique_string():
 
 def test_is_common_password_normalized_variant():
     from app.core.password_policy import _common_passwords
+
     # Add a known common password for test
     _common_passwords.add("testcommon")
     try:
@@ -253,7 +255,8 @@ def test_name_parts_break_on_first_match():
     """Break statement executes when first name part is found in password."""
     v = PasswordValidator()
     name_errors = [
-        e for e in v.check("AliceSecureP@ss123", full_name="Alice Wonderland")
+        e
+        for e in v.check("AliceSecureP@ss123", full_name="Alice Wonderland")
         if e["rule"] == "contains_name"
     ]
     assert len(name_errors) == 1  # only one failure even with multiple name parts

@@ -3,6 +3,7 @@
 - MessagingRepository (communication_messaging.py)
 - NotificationRepository (communication_notifications.py)
 """
+
 from __future__ import annotations
 
 import uuid
@@ -81,6 +82,7 @@ def _db(result=None):
 # CalendarRepository
 # ===========================================================================
 
+
 class TestCalendarRepository:
     def repo(self, result=None):
         return CalendarRepository(_db(result))
@@ -132,6 +134,7 @@ class TestCalendarRepository:
         items = [object()]
         db = _db(_FR(many=items))
         from datetime import date
+
         result = await CalendarRepository(db).list_holidays(
             from_date=date.today(), to_date=date.today()
         )
@@ -142,6 +145,7 @@ class TestCalendarRepository:
         items = [object()]
         db = _db(_FR(many=items))
         from datetime import date
+
         result = await CalendarRepository(db).list_holidays(
             from_date=date.today(), to_date=date.today()
         )
@@ -388,6 +392,7 @@ class TestCalendarRepository:
 # MessagingRepository
 # ===========================================================================
 
+
 class TestMessagingRepository:
     @pytest.mark.asyncio
     async def test_get_user(self):
@@ -398,7 +403,9 @@ class TestMessagingRepository:
     async def test_get_membership_no_role(self):
         obj = object()
         db = _db(_FR(v=obj))
-        result = await MessagingRepository(db).get_membership(user_id=_uid(), school_id=_uid())
+        result = await MessagingRepository(db).get_membership(
+            user_id=_uid(), school_id=_uid()
+        )
         assert result is obj
 
     @pytest.mark.asyncio
@@ -476,7 +483,9 @@ class TestMessagingRepository:
     async def test_create_conversation(self):
         fake = SimpleNamespace(id=_uid())
         db = _db()
-        with patch("app.repositories.communication_messaging.Conversation", return_value=fake):
+        with patch(
+            "app.repositories.communication_messaging.Conversation", return_value=fake
+        ):
             result = await MessagingRepository(db).create_conversation(school_id=_uid())
         assert result is fake
 
@@ -490,7 +499,9 @@ class TestMessagingRepository:
             return_value=fake_p,
         ):
             await MessagingRepository(db).create_conversation_participants(
-                participants_data=[{"conversation_id": str(_uid()), "user_id": str(_uid())}]
+                participants_data=[
+                    {"conversation_id": str(_uid()), "user_id": str(_uid())}
+                ]
             )
         db.flush.assert_awaited()
 
@@ -498,16 +509,16 @@ class TestMessagingRepository:
     async def test_get_conversation(self):
         obj = object()
         db = _db(_FR(v=obj))
-        result = await MessagingRepository(db).get_conversation(
-            _uid()
-        )
+        result = await MessagingRepository(db).get_conversation(_uid())
         assert result is obj
 
     @pytest.mark.asyncio
     async def test_create_message(self):
         fake = SimpleNamespace(id=_uid())
         db = _db()
-        with patch("app.repositories.communication_messaging.Message", return_value=fake):
+        with patch(
+            "app.repositories.communication_messaging.Message", return_value=fake
+        ):
             result = await MessagingRepository(db).create_message(
                 conversation_id=_uid(), sender_id=_uid(), body="Hello"
             )
@@ -544,7 +555,10 @@ class TestMessagingRepository:
     async def test_list_conversations_for_user_with_cursor(self):
         items = [(_uid(), None)]
         db = _db(_FR(many=items))
-        with patch("app.repositories.communication_messaging.decode_cursor", return_value=(_uid(), None)):
+        with patch(
+            "app.repositories.communication_messaging.decode_cursor",
+            return_value=(_uid(), None),
+        ):
             result, _ = await MessagingRepository(db).list_conversations_for_user(
                 user_id=_uid(), school_id=_uid(), cursor="cur", limit=5
             )
@@ -612,6 +626,7 @@ class TestMessagingRepository:
 # NotificationRepository
 # ===========================================================================
 
+
 class TestNotificationRepository:
     @pytest.mark.asyncio
     async def test_list_notifications_minimal(self):
@@ -640,16 +655,16 @@ class TestNotificationRepository:
     async def test_get_notification(self):
         obj = object()
         db = _db(_FR(v=obj))
-        result = await NotificationRepository(db).get_notification(
-            _uid()
-        )
+        result = await NotificationRepository(db).get_notification(_uid())
         assert result is obj
 
     @pytest.mark.asyncio
     async def test_find_notification_by_idempotency_key(self):
         obj = object()
         db = _db(_FR(v=obj))
-        result = await NotificationRepository(db).find_notification_by_idempotency_key("key")
+        result = await NotificationRepository(db).find_notification_by_idempotency_key(
+            "key"
+        )
         assert result is obj
 
     @pytest.mark.asyncio
@@ -714,9 +729,7 @@ class TestNotificationRepository:
         fake = SimpleNamespace(id=_uid())
         db = _db()
         db.add_all = Mock()
-        await NotificationRepository(db).create_deliveries(
-            deliveries=[fake]
-        )
+        await NotificationRepository(db).create_deliveries(deliveries=[fake])
         db.flush.assert_awaited()
 
     @pytest.mark.asyncio
@@ -826,9 +839,7 @@ class TestNotificationRepository:
         uid = _uid()
         user = SimpleNamespace(id=uid)
         db = _db(_FR(many=[user]))
-        result = await NotificationRepository(db).list_user_contacts(
-            user_ids=[uid]
-        )
+        result = await NotificationRepository(db).list_user_contacts(user_ids=[uid])
         assert isinstance(result, dict)
 
     @pytest.mark.asyncio
@@ -836,9 +847,7 @@ class TestNotificationRepository:
         uid = _uid()
         user = SimpleNamespace(id=uid)
         db = _db(_FR(many=[user]))
-        result = await NotificationRepository(db).list_user_contacts(
-            user_ids=[uid]
-        )
+        result = await NotificationRepository(db).list_user_contacts(user_ids=[uid])
         assert isinstance(result, dict)
 
     @pytest.mark.asyncio
@@ -854,7 +863,9 @@ class TestNotificationRepository:
     async def test_list_school_member_ids(self):
         ids = [_uid()]
         db = _db(_FR(many=ids))
-        result = await NotificationRepository(db).list_school_member_ids(school_id=_uid())
+        result = await NotificationRepository(db).list_school_member_ids(
+            school_id=_uid()
+        )
         assert result == set(ids)
 
     @pytest.mark.asyncio

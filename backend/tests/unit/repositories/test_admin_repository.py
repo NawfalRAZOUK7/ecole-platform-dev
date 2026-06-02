@@ -3,6 +3,7 @@
 - FeatureRepository (admin_feature.py)
 - ComplianceRepository (admin_men_compliance.py)
 """
+
 from __future__ import annotations
 
 import uuid
@@ -81,6 +82,7 @@ def _db(result=None):
 # AdminRepository
 # ===========================================================================
 
+
 class TestAdminRepository:
     @pytest.mark.asyncio
     async def test_count_school_users(self):
@@ -127,8 +129,12 @@ class TestAdminRepository:
         items = [object()]
         db = _db(_FR(many=items))
         result = await AdminRepository(db).list_users(
-            school_id=_uid(), search=None, role=None, status=None,
-            cursor_dt=None, limit=10
+            school_id=_uid(),
+            search=None,
+            role=None,
+            status=None,
+            cursor_dt=None,
+            limit=10,
         )
         assert result == items
 
@@ -158,16 +164,22 @@ class TestAdminRepository:
     @pytest.mark.asyncio
     async def test_get_user_in_school(self):
         obj = object()
-        assert await AdminRepository(_db(_FR(v=obj))).get_user_in_school(
-            user_id=_uid(), school_id=_uid()
-        ) is obj
+        assert (
+            await AdminRepository(_db(_FR(v=obj))).get_user_in_school(
+                user_id=_uid(), school_id=_uid()
+            )
+            is obj
+        )
 
     @pytest.mark.asyncio
     async def test_get_user_by_email_in_school(self):
         obj = object()
-        assert await AdminRepository(_db(_FR(v=obj))).get_user_by_email_in_school(
-            email="x@test.ma", school_id=_uid()
-        ) is obj
+        assert (
+            await AdminRepository(_db(_FR(v=obj))).get_user_by_email_in_school(
+                email="x@test.ma", school_id=_uid()
+            )
+            is obj
+        )
 
     @pytest.mark.asyncio
     async def test_get_user_with_role_no_role(self):
@@ -229,8 +241,13 @@ class TestAdminRepository:
         items = [object()]
         db = _db(_FR(many=items))
         result = await AdminRepository(db).list_audit_logs(
-            school_id=_uid(), action_type=None, correlation_id=None,
-            date_from=None, date_to=None, cursor_dt=None, limit=10
+            school_id=_uid(),
+            action_type=None,
+            correlation_id=None,
+            date_from=None,
+            date_to=None,
+            cursor_dt=None,
+            limit=10,
         )
         assert result == items
 
@@ -312,8 +329,12 @@ class TestAdminRepository:
         items = [object()]
         db = _db(_FR(many=items))
         result = await AdminRepository(db).list_parent_child_links(
-            school_id=_uid(), parent_id=None, student_id=None,
-            status=None, cursor_dt=None, limit=10
+            school_id=_uid(),
+            parent_id=None,
+            student_id=None,
+            status=None,
+            cursor_dt=None,
+            limit=10,
         )
         assert result == items
 
@@ -322,17 +343,24 @@ class TestAdminRepository:
         items = [object()]
         db = _db(_FR(many=items))
         result = await AdminRepository(db).list_parent_child_links(
-            school_id=_uid(), parent_id=_uid(), student_id=_uid(),
-            status="active", cursor_dt=None, limit=10
+            school_id=_uid(),
+            parent_id=_uid(),
+            student_id=_uid(),
+            status="active",
+            cursor_dt=None,
+            limit=10,
         )
         assert result == items
 
     @pytest.mark.asyncio
     async def test_get_parent_child_link(self):
         obj = object()
-        assert await AdminRepository(_db(_FR(v=obj))).get_parent_child_link(
-            link_id=_uid(), school_id=_uid()
-        ) is obj
+        assert (
+            await AdminRepository(_db(_FR(v=obj))).get_parent_child_link(
+                link_id=_uid(), school_id=_uid()
+            )
+            is obj
+        )
 
     @pytest.mark.asyncio
     async def test_revoke_parent_child_link(self):
@@ -345,6 +373,7 @@ class TestAdminRepository:
 # ===========================================================================
 # FeatureRepository
 # ===========================================================================
+
 
 class TestFeatureRepository:
     @pytest.mark.asyncio
@@ -396,6 +425,7 @@ class TestFeatureRepository:
 # ComplianceRepository
 # ===========================================================================
 
+
 class TestComplianceRepository:
     @pytest.mark.asyncio
     async def test_get_user(self):
@@ -405,7 +435,9 @@ class TestComplianceRepository:
     @pytest.mark.asyncio
     async def test_get_academic_year(self):
         obj = object()
-        assert await ComplianceRepository(_db(_FR(v=obj))).get_academic_year(_uid()) is obj
+        assert (
+            await ComplianceRepository(_db(_FR(v=obj))).get_academic_year(_uid()) is obj
+        )
 
     @pytest.mark.asyncio
     async def test_get_course(self):
@@ -415,7 +447,9 @@ class TestComplianceRepository:
     @pytest.mark.asyncio
     async def test_get_content_item(self):
         obj = object()
-        assert await ComplianceRepository(_db(_FR(v=obj))).get_content_item(_uid()) is obj
+        assert (
+            await ComplianceRepository(_db(_FR(v=obj))).get_content_item(_uid()) is obj
+        )
 
     @pytest.mark.asyncio
     async def test_get_curriculum_no_scope(self):
@@ -428,9 +462,7 @@ class TestComplianceRepository:
     async def test_get_curriculum_with_school(self):
         obj = object()
         db = _db(_FR(v=obj))
-        result = await ComplianceRepository(db).get_curriculum(
-            _uid()
-        )
+        result = await ComplianceRepository(db).get_curriculum(_uid())
         assert result is obj
 
     @pytest.mark.asyncio
@@ -438,8 +470,11 @@ class TestComplianceRepository:
         obj = object()
         db = _db(_FR(v=obj))
         result = await ComplianceRepository(db).get_curriculum_by_scope(
-            level="primary", grade="1", subject="math",
-            academic_year="2024-2025", version="1"
+            level="primary",
+            grade="1",
+            subject="math",
+            academic_year="2024-2025",
+            version="1",
         )
         assert result is obj
 
@@ -478,9 +513,7 @@ class TestComplianceRepository:
     async def test_get_objective_no_scope(self):
         obj = object()
         db = _db(_FR(v=obj))
-        result = await ComplianceRepository(db).get_objective(
-            _uid()
-        )
+        result = await ComplianceRepository(db).get_objective(_uid())
         assert result is obj
 
     @pytest.mark.asyncio
@@ -505,9 +538,7 @@ class TestComplianceRepository:
     async def test_list_objectives_no_filters(self):
         items = [object()]
         db = _db(_FR(many=items))
-        result = await ComplianceRepository(db).list_objectives(
-            curriculum_id=_uid()
-        )
+        result = await ComplianceRepository(db).list_objectives(curriculum_id=_uid())
         assert result == items
 
     @pytest.mark.asyncio
@@ -546,9 +577,7 @@ class TestComplianceRepository:
     async def test_get_mapping_with_status(self):
         obj = object()
         db = _db(_FR(v=obj))
-        result = await ComplianceRepository(db).get_mapping(
-            _uid(), school_id=_uid()
-        )
+        result = await ComplianceRepository(db).get_mapping(_uid(), school_id=_uid())
         assert result is obj
 
     @pytest.mark.asyncio

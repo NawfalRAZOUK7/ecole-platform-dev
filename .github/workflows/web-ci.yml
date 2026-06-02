@@ -46,6 +46,20 @@ jobs:
   unit-tests:
     runs-on: ubuntu-latest
     needs: lint-and-typecheck
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: api
+            target: tests/unit/api/
+          - name: features-academic-billing
+            target: tests/unit/features/academic/ tests/unit/features/billing/
+          - name: features-content-lms
+            target: tests/unit/features/content/ tests/unit/features/lms/
+          - name: features-other
+            target: tests/unit/features/admin/ tests/unit/features/ai/ tests/unit/features/auth/ tests/unit/features/communication/ tests/unit/features/reports/ tests/unit/features/school/ tests/unit/features/sync/ tests/unit/features/user/
+          - name: shared-app-core
+            target: tests/unit/app/ tests/unit/core/ tests/unit/entities/ tests/unit/pages/ tests/unit/services/ tests/unit/shared/ tests/unit/widgets/ tests/unit/auth-context.test.tsx
     defaults:
       run:
         working-directory: web
@@ -59,13 +73,30 @@ jobs:
           path: web/node_modules
           key: "node-modules-${{ hashFiles('web/package-lock.json') }}"
       - run: npm ci
-      - run: npm run test -- --reporter=default --reporter=junit --outputFile=test-results.xml
-      - run: npm run test:coverage
+      - run: npm run test -- ${{ matrix.target }} --reporter=default --reporter=junit --outputFile=test-results-${{ matrix.name }}.xml
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-results
-          path: web/test-results.xml
+          name: test-results-${{ matrix.name }}
+          path: web/test-results-${{ matrix.name }}.xml
+
+  coverage:
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/cache@v4
+        with:
+          path: web/node_modules
+          key: "node-modules-${{ hashFiles('web/package-lock.json') }}"
+      - run: npm ci
+      - run: npm run test:coverage -- tests/unit/ --maxWorkers=1 --minWorkers=1
       - uses: actions/upload-artifact@v4
         if: always()
         with:

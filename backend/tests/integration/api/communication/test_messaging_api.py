@@ -42,7 +42,9 @@ class TestConversationCreate:
     @pytest.mark.asyncio
     async def test_teacher_can_start_direct_conversation(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             "/messages/conversations",
             headers=auth_header(token),
@@ -57,7 +59,9 @@ class TestConversationCreate:
         assert data["school_id"] == SCHOOL_ID
 
     @pytest.mark.asyncio
-    async def test_parent_can_start_conversation_with_teacher(self, client, legacy_api_seed):
+    async def test_parent_can_start_conversation_with_teacher(
+        self, client, legacy_api_seed
+    ):
         _ = legacy_api_seed
         token = await login_token(client, email=PARENT_EMAIL, password=PARENT_PASSWORD)
         response = await client.post(
@@ -91,7 +95,9 @@ class TestConversationCreate:
     async def test_student_can_start_conversation(self, client, legacy_api_seed):
         """STD uses PERM_COM_STD_MESSAGE_SEND which is accepted by requires_any_permission."""
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.post(
             "/messages/conversations",
             headers=auth_header(token),
@@ -106,7 +112,9 @@ class TestConversationCreate:
     @pytest.mark.asyncio
     async def test_missing_initial_message_returns_422(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             "/messages/conversations",
             headers=auth_header(token),
@@ -117,7 +125,9 @@ class TestConversationCreate:
     @pytest.mark.asyncio
     async def test_empty_participant_list_returns_422(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             "/messages/conversations",
             headers=auth_header(token),
@@ -128,7 +138,9 @@ class TestConversationCreate:
     @pytest.mark.asyncio
     async def test_invalid_conversation_type_returns_422(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             "/messages/conversations",
             headers=auth_header(token),
@@ -154,7 +166,9 @@ class TestConversationList:
     @pytest.mark.asyncio
     async def test_teacher_can_list_conversations(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get(
             "/messages/conversations", headers=auth_header(token)
         )
@@ -164,7 +178,9 @@ class TestConversationList:
     @pytest.mark.asyncio
     async def test_student_can_list_conversations(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.get(
             "/messages/conversations", headers=auth_header(token)
         )
@@ -173,7 +189,9 @@ class TestConversationList:
     @pytest.mark.asyncio
     async def test_list_conversations_pagination(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get(
             "/messages/conversations",
             headers=auth_header(token),
@@ -182,9 +200,13 @@ class TestConversationList:
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_list_conversations_invalid_limit_returns_422(self, client, legacy_api_seed):
+    async def test_list_conversations_invalid_limit_returns_422(
+        self, client, legacy_api_seed
+    ):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get(
             "/messages/conversations",
             headers=auth_header(token),
@@ -207,9 +229,13 @@ class TestMessageSendList:
         return r.json()["data"]["id"]
 
     @pytest.mark.asyncio
-    async def test_teacher_can_list_messages_in_conversation(self, client, legacy_api_seed):
+    async def test_teacher_can_list_messages_in_conversation(
+        self, client, legacy_api_seed
+    ):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         conv_id = await self._create_conversation(client, token, PARENT_ID)
         response = await client.get(
             f"/messages/conversations/{conv_id}/messages",
@@ -223,7 +249,9 @@ class TestMessageSendList:
         self, client, legacy_api_seed
     ):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get(
             f"/messages/conversations/{uuid.uuid4()}/messages",
             headers=auth_header(token),
@@ -233,7 +261,9 @@ class TestMessageSendList:
     @pytest.mark.asyncio
     async def test_teacher_can_send_message(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         conv_id = await self._create_conversation(client, token, PARENT_ID)
         response = await client.post(
             f"/messages/conversations/{conv_id}/messages",
@@ -245,7 +275,9 @@ class TestMessageSendList:
     @pytest.mark.asyncio
     async def test_send_message_empty_body_returns_422(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             f"/messages/conversations/{uuid.uuid4()}/messages",
             headers=auth_header(token),
@@ -258,7 +290,9 @@ class TestMessageSendList:
         self, client, legacy_api_seed
     ):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             f"/messages/conversations/{uuid.uuid4()}/messages",
             headers=auth_header(token),
@@ -271,7 +305,9 @@ class TestMarkRead:
     @pytest.mark.asyncio
     async def test_mark_messages_read(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        t_token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        t_token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         # Create a conversation and get first message id
         cr = await client.post(
             "/messages/conversations",
@@ -292,7 +328,9 @@ class TestMarkRead:
             pytest.skip("No messages in conversation")
         msg_id = messages[0]["id"]
 
-        p_token = await login_token(client, email=PARENT_EMAIL, password=PARENT_PASSWORD)
+        p_token = await login_token(
+            client, email=PARENT_EMAIL, password=PARENT_PASSWORD
+        )
         response = await client.post(
             f"/messages/conversations/{conv_id}/read",
             headers=auth_header(p_token),
@@ -301,9 +339,13 @@ class TestMarkRead:
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_mark_read_missing_message_id_returns_422(self, client, legacy_api_seed):
+    async def test_mark_read_missing_message_id_returns_422(
+        self, client, legacy_api_seed
+    ):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             f"/messages/conversations/{uuid.uuid4()}/read",
             headers=auth_header(token),
@@ -316,7 +358,9 @@ class TestSearchMessages:
     @pytest.mark.asyncio
     async def test_teacher_can_search_messages(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         # Create a conversation with searchable content
         await client.post(
             "/messages/conversations",
@@ -338,10 +382,10 @@ class TestSearchMessages:
     @pytest.mark.asyncio
     async def test_search_missing_query_returns_422(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
-        response = await client.get(
-            "/messages/search", headers=auth_header(token)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
         )
+        response = await client.get("/messages/search", headers=auth_header(token))
         assert response.status_code == 422
 
 
@@ -349,7 +393,9 @@ class TestReadStatus:
     @pytest.mark.asyncio
     async def test_get_read_status_for_conversation(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        t_token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        t_token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         cr = await client.post(
             "/messages/conversations",
             headers=auth_header(t_token),
@@ -371,7 +417,9 @@ class TestReadStatus:
         self, client, legacy_api_seed
     ):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get(
             f"/messages/conversations/{uuid.uuid4()}/read-status",
             headers=auth_header(token),

@@ -9,6 +9,7 @@ Covers:
 - lms_question_bank.py  (88% → 95%+)
 - base.py               (80% → 95%+)
 """
+
 from __future__ import annotations
 
 import uuid
@@ -30,6 +31,7 @@ from app.repositories.lms_question_bank import QuestionBankRepository
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _uid():
     return uuid.uuid4()
@@ -94,9 +96,11 @@ def _db(result=None):
 # BaseRepository — _scoped_query and _scoped_exists (lines 17, 21)
 # ===========================================================================
 
+
 class TestBaseRepository:
     def test_scoped_query_returns_select(self):
         from app.models.iam import User
+
         db = _db()
         repo = BaseRepository(db)
         q = repo._scoped_query(User, _uid())
@@ -105,6 +109,7 @@ class TestBaseRepository:
 
     def test_scoped_exists_returns_select(self):
         from app.models.iam import User
+
         db = _db()
         repo = BaseRepository(db)
         q = repo._scoped_exists(User, _uid(), _uid())
@@ -115,6 +120,7 @@ class TestBaseRepository:
 # ===========================================================================
 # ProgressRepository — missing branches
 # ===========================================================================
+
 
 class TestProgressRepositoryBoost:
     @pytest.mark.asyncio
@@ -263,6 +269,7 @@ class TestProgressRepositoryBoost:
 # GradebookRepository — update branch (lines 157-163)
 # ===========================================================================
 
+
 class TestGradebookRepositoryBoost:
     @pytest.mark.asyncio
     async def test_save_student_period_average_update_existing(self):
@@ -297,6 +304,7 @@ class TestGradebookRepositoryBoost:
 # ===========================================================================
 # BudgetRepository — optional parameter branches
 # ===========================================================================
+
 
 class TestBudgetRepositoryBoost:
     @pytest.mark.asyncio
@@ -397,6 +405,7 @@ class TestBudgetRepositoryBoost:
 # BillingRepository — missing branch coverage
 # ===========================================================================
 
+
 class TestBillingRepositoryBoost:
     @pytest.mark.asyncio
     async def test_list_fee_assignments_with_all_filters(self):
@@ -438,7 +447,9 @@ class TestBillingRepositoryBoost:
         """Lines 165-167: non-empty list → add_all + flush."""
         fake_assignment = SimpleNamespace(id=_uid())
         db = _db()
-        with patch("app.repositories.billing.FeeAssignment", return_value=fake_assignment):
+        with patch(
+            "app.repositories.billing.FeeAssignment", return_value=fake_assignment
+        ):
             result = await BillingRepository(db).create_fee_assignments(
                 [{"school_id": str(_uid())}]
             )
@@ -467,9 +478,9 @@ class TestBillingRepositoryBoost:
     async def test_list_enrollment_student_ids_empty_class_ids(self):
         """Line 220-221: not class_ids → return []."""
         db = _db()
-        result = await BillingRepository(db).list_active_enrollment_student_ids_for_classes(
-            class_ids=[], school_id=_uid()
-        )
+        result = await BillingRepository(
+            db
+        ).list_active_enrollment_student_ids_for_classes(class_ids=[], school_id=_uid())
         assert result == []
         db.execute.assert_not_awaited()
 
@@ -499,6 +510,7 @@ class TestBillingRepositoryBoost:
 # GamesRepository — cursor pagination and has_more branches
 # ===========================================================================
 
+
 class TestGamesRepositoryBoost:
     @pytest.mark.asyncio
     async def test_list_configs_with_cursor_and_has_more(self):
@@ -507,14 +519,20 @@ class TestGamesRepositoryBoost:
         db = _db(_FR(many=items))
         last_id = str(_uid())
         last_ts = datetime.now(timezone.utc).isoformat()
-        with patch(
-            "app.repositories.ai_games.decode_cursor",
-            return_value=(last_id, last_ts),
-        ), patch("app.repositories.ai_games.encode_cursor", return_value="next_cur"):
+        with (
+            patch(
+                "app.repositories.ai_games.decode_cursor",
+                return_value=(last_id, last_ts),
+            ),
+            patch("app.repositories.ai_games.encode_cursor", return_value="next_cur"),
+        ):
             result, next_cursor, has_more = await GamesRepository(db).list_configs(
                 school_id=_uid(),
-                game_type=None, difficulty=None, subject=None,
-                target_age=None, is_active=None,
+                game_type=None,
+                difficulty=None,
+                subject=None,
+                target_age=None,
+                is_active=None,
                 cursor="cur",
                 limit=2,
             )
@@ -533,8 +551,11 @@ class TestGamesRepositoryBoost:
         ):
             result, _, _ = await GamesRepository(db).list_configs(
                 school_id=_uid(),
-                game_type=None, difficulty=None, subject=None,
-                target_age=None, is_active=None,
+                game_type=None,
+                difficulty=None,
+                subject=None,
+                target_age=None,
+                is_active=None,
                 cursor="cur",
                 limit=10,
             )
@@ -555,6 +576,7 @@ class TestGamesRepositoryBoost:
 # QuestionBankRepository — missing branches
 # ===========================================================================
 
+
 class TestQuestionBankRepositoryBoost:
     @pytest.mark.asyncio
     async def test_paginate_has_more_truncates(self):
@@ -563,8 +585,12 @@ class TestQuestionBankRepositoryBoost:
         db = _db(_FR(many=items))
         rows, has_more = await QuestionBankRepository(db).list_question_bank_items(
             school_id=_uid(),
-            subject=None, level=None, difficulty=None,
-            tags=None, search=None, cursor=None,
+            subject=None,
+            level=None,
+            difficulty=None,
+            tags=None,
+            search=None,
+            cursor=None,
             limit=2,
         )
         assert has_more is True
@@ -577,8 +603,12 @@ class TestQuestionBankRepositoryBoost:
         db = _db(_FR(many=items))
         rows, _ = await QuestionBankRepository(db).list_question_bank_items(
             school_id=_uid(),
-            subject=None, level=None, difficulty=None,
-            tags=None, search=None, cursor=None,
+            subject=None,
+            level=None,
+            difficulty=None,
+            tags=None,
+            search=None,
+            cursor=None,
             limit=10,
             include_archived=True,
         )
@@ -592,12 +622,17 @@ class TestQuestionBankRepositoryBoost:
         db = _db()
         repo = QuestionBankRepository(db)
         import pytest as _pytest
+
         with _pytest.raises(NotImplementedError):
             await repo.list_question_bank_items(
                 school_id=_uid(),
-                subject=None, level=None, difficulty=None,
+                subject=None,
+                level=None,
+                difficulty=None,
                 tags=["algebra"],
-                search=None, cursor=None, limit=10,
+                search=None,
+                cursor=None,
+                limit=10,
             )
         # The branch at line 69 WAS entered (it raised during query build), confirming coverage.
 

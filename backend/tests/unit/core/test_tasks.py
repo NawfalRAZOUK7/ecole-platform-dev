@@ -77,8 +77,10 @@ class _FailingSession:
 
 def _failing_session_factory(exc: Exception | None = None):
     """Return a callable that produces a _FailingSession context manager."""
+
     def _factory():
         return _FailingSession(exc)
+
     return _factory
 
 
@@ -257,6 +259,7 @@ async def test_task_cleanup_expired_sessions_db_execute_fails():
 @pytest.mark.asyncio
 async def test_task_cleanup_expired_cache_deletes_expired_keys():
     mock_redis = AsyncMock()
+
     # Simulate scan_iter yielding one expired key
     async def _scan(match=None, count=None):
         yield "recovery_otp:abc"
@@ -361,7 +364,10 @@ async def test_task_send_notification_digest_sends_digests():
 async def test_task_send_notification_digest_exception_returns_zero():
     with (
         _patch_metrics(),
-        patch("app.core.database.async_session", _failing_session_factory(RuntimeError("DB down"))),
+        patch(
+            "app.core.database.async_session",
+            _failing_session_factory(RuntimeError("DB down")),
+        ),
     ):
         result = await task_send_notification_digest({})
 
@@ -436,7 +442,10 @@ async def test_task_refresh_kpi_views_create_fails_returns_false():
 async def test_task_refresh_kpi_views_outer_exception_returns_false():
     with (
         _patch_metrics(),
-        patch("app.core.database.async_session", _failing_session_factory(RuntimeError("cannot open session"))),
+        patch(
+            "app.core.database.async_session",
+            _failing_session_factory(RuntimeError("cannot open session")),
+        ),
     ):
         result = await task_refresh_kpi_views({})
 
@@ -571,7 +580,9 @@ async def test_task_generate_report_job_failed_status():
     mock_job = MagicMock()
     mock_job.id = uuid.UUID(job_id)
     mock_job.type = "grades"
-    mock_job.status = ReportJobStatus.FAILED.value if hasattr(ReportJobStatus, "FAILED") else "failed"
+    mock_job.status = (
+        ReportJobStatus.FAILED.value if hasattr(ReportJobStatus, "FAILED") else "failed"
+    )
 
     mock_service = AsyncMock()
     mock_service.generate_report_job = AsyncMock(return_value=mock_job)
@@ -597,7 +608,10 @@ async def test_task_generate_report_exception_returns_false():
 
     with (
         _patch_metrics(),
-        patch("app.core.database.async_session", _failing_session_factory(RuntimeError("DB error"))),
+        patch(
+            "app.core.database.async_session",
+            _failing_session_factory(RuntimeError("DB error")),
+        ),
     ):
         result = await task_generate_report({}, job_id)
 
@@ -633,7 +647,10 @@ async def test_task_cleanup_expired_reports_success():
 async def test_task_cleanup_expired_reports_exception_returns_zero():
     with (
         _patch_metrics(),
-        patch("app.core.database.async_session", _failing_session_factory(RuntimeError("storage error"))),
+        patch(
+            "app.core.database.async_session",
+            _failing_session_factory(RuntimeError("storage error")),
+        ),
     ):
         result = await task_cleanup_expired_reports({})
 
@@ -764,7 +781,10 @@ async def test_task_notify_expiring_documents_exception_returns_zero():
     with freeze_time("2024-01-15 07:00:00"):
         with (
             _patch_metrics(),
-            patch("app.core.database.async_session", _failing_session_factory(RuntimeError("storage error"))),
+            patch(
+                "app.core.database.async_session",
+                _failing_session_factory(RuntimeError("storage error")),
+            ),
         ):
             # This may or may not hit the session depending on frozen time
             result = await task_notify_expiring_documents({})
@@ -1165,7 +1185,6 @@ def test_worker_settings_cron_jobs_extended_in_staging():
     """Line 901: WorkerSettings.cron_jobs gets extra entries in staging env."""
     import app.core.tasks as tasks_module
 
-
     # Re-evaluate the class body by patching settings at import time is complex;
     # instead we verify the conditional logic directly by examining the value.
     # The class body runs at import time, so we test it by re-running the block.
@@ -1173,12 +1192,18 @@ def test_worker_settings_cron_jobs_extended_in_staging():
     from arq import cron
 
     if tasks_module.settings.app_env in ("staging", "production"):
-        cron_jobs.extend([
-            cron(tasks_module.task_send_notification_digest, minute=0),
-            cron(tasks_module.task_retry_failed_payments, minute=30),
-            cron(tasks_module.task_send_overdue_reminders, hour=9, minute=0),
-            cron(tasks_module.task_check_parent_alerts, hour={0, 6, 12, 18}, minute=15),
-        ])
+        cron_jobs.extend(
+            [
+                cron(tasks_module.task_send_notification_digest, minute=0),
+                cron(tasks_module.task_retry_failed_payments, minute=30),
+                cron(tasks_module.task_send_overdue_reminders, hour=9, minute=0),
+                cron(
+                    tasks_module.task_check_parent_alerts,
+                    hour={0, 6, 12, 18},
+                    minute=15,
+                ),
+            ]
+        )
     # In test env, the branch is not taken; verify that the module can import
     # WorkerSettings without error and has a cron_jobs attribute.
     assert hasattr(tasks_module.WorkerSettings, "cron_jobs")
@@ -1194,9 +1219,11 @@ def test_worker_settings_staging_env_branch():
     cron_jobs_extension = []
     with patch.object(tasks_module.settings, "app_env", "staging"):
         if tasks_module.settings.app_env in ("staging", "production"):
-            cron_jobs_extension.extend([
-                cron(tasks_module.task_send_notification_digest, minute=0),
-            ])
+            cron_jobs_extension.extend(
+                [
+                    cron(tasks_module.task_send_notification_digest, minute=0),
+                ]
+            )
     assert len(cron_jobs_extension) > 0
 
 
@@ -1235,6 +1262,7 @@ def test_worker_settings_staging_reload():
         with patch.object(tasks_module.settings, "app_env", "staging"):
             importlib.reload(tasks_module)
         import app.core.tasks as reloaded
+
         assert hasattr(reloaded.WorkerSettings, "cron_jobs")
         assert len(reloaded.WorkerSettings.cron_jobs) > 8
     finally:

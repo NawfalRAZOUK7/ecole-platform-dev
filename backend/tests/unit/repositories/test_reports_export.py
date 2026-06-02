@@ -1,4 +1,5 @@
 """Tests for ReportsRepository._build_export_query and AnalyticsRepository methods."""
+
 from __future__ import annotations
 
 import uuid
@@ -507,8 +508,8 @@ class TestAnalyticsRepositoryReports:
         db = _db(
             side_effects=[
                 _FR(v=100),  # count_users
-                _FR(v=60),   # count_active_users
-                _FR(v=40),   # engaged
+                _FR(v=60),  # count_active_users
+                _FR(v=40),  # engaged
             ]
         )
         registered, active, engaged = await AnalyticsRepository(db).engagement_summary(

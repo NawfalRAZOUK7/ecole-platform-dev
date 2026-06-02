@@ -1,4 +1,5 @@
 """Mock-based unit tests for billing, billing_enhancements, and budget repositories."""
+
 from __future__ import annotations
 
 import uuid
@@ -78,6 +79,7 @@ def _db(result=None):
 # ===========================================================================
 # BillingRepository
 # ===========================================================================
+
 
 class TestBillingRepository:
     def repo(self, result=None):
@@ -196,11 +198,21 @@ class TestBillingRepository:
         fake2 = SimpleNamespace(id=_uid())
         db = _db()
         db.add_all = Mock()
-        with patch("app.repositories.billing.FeeAssignment", side_effect=[fake1, fake2]):
+        with patch(
+            "app.repositories.billing.FeeAssignment", side_effect=[fake1, fake2]
+        ):
             result = await BillingRepository(db).create_fee_assignments(
                 assignments_data=[
-                    {"school_id": _uid(), "fee_structure_id": _uid(), "student_id": _uid()},
-                    {"school_id": _uid(), "fee_structure_id": _uid(), "student_id": _uid()},
+                    {
+                        "school_id": _uid(),
+                        "fee_structure_id": _uid(),
+                        "student_id": _uid(),
+                    },
+                    {
+                        "school_id": _uid(),
+                        "fee_structure_id": _uid(),
+                        "student_id": _uid(),
+                    },
                 ]
             )
         assert len(result) == 2
@@ -218,7 +230,9 @@ class TestBillingRepository:
     async def test_list_active_enrollment_student_ids_for_class(self):
         ids = [_uid()]
         db = _db(_FR(many=ids))
-        result = await BillingRepository(db).list_active_enrollment_student_ids_for_class(
+        result = await BillingRepository(
+            db
+        ).list_active_enrollment_student_ids_for_class(
             class_id=_uid(), school_id=_uid()
         )
         assert result == ids
@@ -236,7 +250,9 @@ class TestBillingRepository:
     async def test_list_active_enrollment_student_ids_for_classes(self):
         ids = [_uid()]
         db = _db(_FR(many=ids))
-        result = await BillingRepository(db).list_active_enrollment_student_ids_for_classes(
+        result = await BillingRepository(
+            db
+        ).list_active_enrollment_student_ids_for_classes(
             class_ids=[_uid()], school_id=_uid()
         )
         assert result == ids
@@ -299,22 +315,33 @@ class TestBillingRepository:
     @pytest.mark.asyncio
     async def test_get_invoice_by_id_with_school(self):
         obj = object()
-        assert await BillingRepository(_db(_FR(v=obj))).get_invoice_by_id(
-            _uid()
-        ) is obj
+        assert await BillingRepository(_db(_FR(v=obj))).get_invoice_by_id(_uid()) is obj
 
     @pytest.mark.asyncio
     async def test_list_invoices_no_filters(self):
         items = [object()]
         db = _db(_FR(many=items))
         from unittest.mock import MagicMock
+
         with (
-            patch("app.repositories.billing.apply_filters", side_effect=lambda q, *a, **kw: q),
-            patch("app.repositories.billing.apply_sort", side_effect=lambda q, *a, **kw: q),
+            patch(
+                "app.repositories.billing.apply_filters",
+                side_effect=lambda q, *a, **kw: q,
+            ),
+            patch(
+                "app.repositories.billing.apply_sort", side_effect=lambda q, *a, **kw: q
+            ),
         ):
             result, cursor, has_more = await BillingRepository(db).list_invoices(
-                school_id=_uid(), role="ADM", user_id=_uid(), status=None,
-                cursor=None, limit=10, filters=MagicMock(), sort=MagicMock(), search=None
+                school_id=_uid(),
+                role="ADM",
+                user_id=_uid(),
+                status=None,
+                cursor=None,
+                limit=10,
+                filters=MagicMock(),
+                sort=MagicMock(),
+                search=None,
             )
         assert result == items
 
@@ -324,14 +351,30 @@ class TestBillingRepository:
         items = [SimpleNamespace(id=_uid(), created_at=now) for _ in range(6)]
         db = _db(_FR(many=items))
         from unittest.mock import MagicMock
+
         with (
-            patch("app.repositories.billing.apply_filters", side_effect=lambda q, *a, **kw: q),
-            patch("app.repositories.billing.apply_sort", side_effect=lambda q, *a, **kw: q),
-            patch("app.repositories.billing.decode_cursor", return_value=(_uid(), now.isoformat())),
+            patch(
+                "app.repositories.billing.apply_filters",
+                side_effect=lambda q, *a, **kw: q,
+            ),
+            patch(
+                "app.repositories.billing.apply_sort", side_effect=lambda q, *a, **kw: q
+            ),
+            patch(
+                "app.repositories.billing.decode_cursor",
+                return_value=(_uid(), now.isoformat()),
+            ),
         ):
             result, cursor, has_more = await BillingRepository(db).list_invoices(
-                school_id=_uid(), role="ADM", user_id=_uid(), status="pending",
-                cursor="cur", limit=5, filters=MagicMock(), sort=MagicMock(), search=None
+                school_id=_uid(),
+                role="ADM",
+                user_id=_uid(),
+                status="pending",
+                cursor="cur",
+                limit=5,
+                filters=MagicMock(),
+                sort=MagicMock(),
+                search=None,
             )
         assert has_more is True
 
@@ -343,7 +386,9 @@ class TestBillingRepository:
     @pytest.mark.asyncio
     async def test_get_payment_by_idempotency_key(self):
         obj = object()
-        result = await BillingRepository(_db(_FR(v=obj))).get_payment_by_idempotency_key("key")
+        result = await BillingRepository(
+            _db(_FR(v=obj))
+        ).get_payment_by_idempotency_key("key")
         assert result is obj
 
     @pytest.mark.asyncio
@@ -378,9 +423,9 @@ class TestBillingRepository:
     @pytest.mark.asyncio
     async def test_get_webhook_event_by_provider_event_id(self):
         obj = object()
-        result = await BillingRepository(_db(_FR(v=obj))).get_webhook_event_by_provider_event_id(
-            "evt_123"
-        )
+        result = await BillingRepository(
+            _db(_FR(v=obj))
+        ).get_webhook_event_by_provider_event_id("evt_123")
         assert result is obj
 
     @pytest.mark.asyncio
@@ -388,7 +433,9 @@ class TestBillingRepository:
         fake = SimpleNamespace(id=_uid())
         db = _db()
         with patch("app.repositories.billing.ProviderWebhookEvent", return_value=fake):
-            result = await BillingRepository(db).create_webhook_event(event_id="evt_123")
+            result = await BillingRepository(db).create_webhook_event(
+                event_id="evt_123"
+            )
         assert result is fake
 
     @pytest.mark.asyncio
@@ -414,6 +461,7 @@ class TestBillingRepository:
         items = [object()]
         db = _db(_FR(many=items))
         from datetime import date as _date
+
         result = await BillingRepository(db).get_overdue_invoices(
             overdue_cutoff=_date.today(), reminder_cooldown=_now(), max_reminders=3
         )
@@ -424,6 +472,7 @@ class TestBillingRepository:
         items = [object()]
         db = _db(_FR(many=items))
         from datetime import date as _date
+
         result = await BillingRepository(db).get_overdue_invoices(
             overdue_cutoff=_date.today(), reminder_cooldown=_now(), max_reminders=3
         )
@@ -442,6 +491,7 @@ class TestBillingRepository:
 # BillingEnhancementsRepository
 # ===========================================================================
 
+
 class TestBillingEnhancementsRepository:
     @pytest.mark.asyncio
     async def test_get_sibling_discount_policy(self):
@@ -456,32 +506,43 @@ class TestBillingEnhancementsRepository:
     async def test_create_sibling_discount_policy(self):
         fake = SimpleNamespace(id=_uid())
         db = _db()
-        with patch("app.repositories.billing_enhancements.SiblingDiscountPolicy", return_value=fake):
-            result = await BillingEnhancementsRepository(db).create_sibling_discount_policy(
-                school_id=_uid()
-            )
+        with patch(
+            "app.repositories.billing_enhancements.SiblingDiscountPolicy",
+            return_value=fake,
+        ):
+            result = await BillingEnhancementsRepository(
+                db
+            ).create_sibling_discount_policy(school_id=_uid())
         assert result is fake
 
     @pytest.mark.asyncio
     async def test_save_sibling_discount_policy(self):
         policy = SimpleNamespace(id=_uid())
         db = _db()
-        result = await BillingEnhancementsRepository(db).save_sibling_discount_policy(policy)
+        result = await BillingEnhancementsRepository(db).save_sibling_discount_policy(
+            policy
+        )
         assert result is policy
 
     @pytest.mark.asyncio
     async def test_get_late_fee_policy(self):
         obj = object()
         db = _db(_FR(v=obj))
-        result = await BillingEnhancementsRepository(db).get_late_fee_policy(school_id=_uid())
+        result = await BillingEnhancementsRepository(db).get_late_fee_policy(
+            school_id=_uid()
+        )
         assert result is obj
 
     @pytest.mark.asyncio
     async def test_create_late_fee_policy(self):
         fake = SimpleNamespace(id=_uid())
         db = _db()
-        with patch("app.repositories.billing_enhancements.LateFeePolicy", return_value=fake):
-            result = await BillingEnhancementsRepository(db).create_late_fee_policy(school_id=_uid())
+        with patch(
+            "app.repositories.billing_enhancements.LateFeePolicy", return_value=fake
+        ):
+            result = await BillingEnhancementsRepository(db).create_late_fee_policy(
+                school_id=_uid()
+            )
         assert result is fake
 
     @pytest.mark.asyncio
@@ -514,7 +575,10 @@ class TestBillingEnhancementsRepository:
         items = [object()]
         db = _db(_FR(many=items))
         from datetime import date as _date
-        result = await BillingEnhancementsRepository(db).list_overdue_invoices_for_late_fees(
+
+        result = await BillingEnhancementsRepository(
+            db
+        ).list_overdue_invoices_for_late_fees(
             school_id=_uid(), overdue_before=_date.today()
         )
         assert result == items
@@ -539,9 +603,9 @@ class TestBillingEnhancementsRepository:
     async def test_get_active_payment_plan_for_invoice(self):
         obj = object()
         db = _db(_FR(v=obj))
-        result = await BillingEnhancementsRepository(db).get_active_payment_plan_for_invoice(
-            invoice_id=_uid()
-        )
+        result = await BillingEnhancementsRepository(
+            db
+        ).get_active_payment_plan_for_invoice(invoice_id=_uid())
         assert result is obj
 
     @pytest.mark.asyncio
@@ -566,8 +630,12 @@ class TestBillingEnhancementsRepository:
     async def test_create_payment_plan(self):
         fake = SimpleNamespace(id=_uid())
         db = _db()
-        with patch("app.repositories.billing_enhancements.PaymentPlan", return_value=fake):
-            result = await BillingEnhancementsRepository(db).create_payment_plan(invoice_id=_uid())
+        with patch(
+            "app.repositories.billing_enhancements.PaymentPlan", return_value=fake
+        ):
+            result = await BillingEnhancementsRepository(db).create_payment_plan(
+                invoice_id=_uid()
+            )
         assert result is fake
 
     @pytest.mark.asyncio
@@ -582,7 +650,9 @@ class TestBillingEnhancementsRepository:
         fake = SimpleNamespace(id=_uid())
         db = _db()
         db.add_all = Mock()
-        with patch("app.repositories.billing_enhancements.Installment", return_value=fake):
+        with patch(
+            "app.repositories.billing_enhancements.Installment", return_value=fake
+        ):
             await BillingEnhancementsRepository(db).create_installments(
                 installments_data=[{"plan_id": str(_uid()), "amount": 100}]
             )
@@ -592,18 +662,14 @@ class TestBillingEnhancementsRepository:
     async def test_get_installment(self):
         obj = object()
         db = _db(_FR(v=obj))
-        result = await BillingEnhancementsRepository(db).get_installment(
-            _uid()
-        )
+        result = await BillingEnhancementsRepository(db).get_installment(_uid())
         assert result is obj
 
     @pytest.mark.asyncio
     async def test_get_installment_with_plan(self):
         obj = object()
         db = _db(_FR(v=obj))
-        result = await BillingEnhancementsRepository(db).get_installment(
-            _uid()
-        )
+        result = await BillingEnhancementsRepository(db).get_installment(_uid())
         assert result is obj
 
     @pytest.mark.asyncio
@@ -617,6 +683,7 @@ class TestBillingEnhancementsRepository:
 # ===========================================================================
 # BudgetRepository
 # ===========================================================================
+
 
 class TestBudgetRepository:
     @pytest.mark.asyncio
@@ -645,7 +712,9 @@ class TestBudgetRepository:
     async def test_get_budget_with_school(self):
         obj = object()
         db = _db(_FR(v=obj))
-        result = await BudgetRepository(db).get_budget(budget_id=_uid(), school_id=_uid())
+        result = await BudgetRepository(db).get_budget(
+            budget_id=_uid(), school_id=_uid()
+        )
         assert result is obj
 
     @pytest.mark.asyncio

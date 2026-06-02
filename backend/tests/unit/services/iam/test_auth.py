@@ -43,6 +43,7 @@ from app.services.auth.auth import (
 # Fake infrastructure (mirrors test_auth_service.py helpers)
 # ---------------------------------------------------------------------------
 
+
 class FakePipeline:
     def __init__(self, redis):
         self.redis = redis
@@ -114,7 +115,9 @@ def make_auth_context(role: str = ADM, user_id=None, school_id=None) -> AuthCont
     )
 
 
-def make_user(school_id=None, *, status="active", totp_enabled=False, email_verified_at=None):
+def make_user(
+    school_id=None, *, status="active", totp_enabled=False, email_verified_at=None
+):
     return SimpleNamespace(
         id=uuid.uuid4(),
         email="user@test.example",
@@ -147,13 +150,16 @@ def patch_uow(monkeypatch):
     monkeypatch.setattr(auth_module, "UnitOfWork", lambda _db: uow)
     monkeypatch.setattr(auth_module, "AuthRepository", lambda _s: repo_in_uow)
     monkeypatch.setattr(auth_module, "AuditService", lambda _s: audit_in_uow)
-    monkeypatch.setattr(auth_module, "LoginHistoryRepository", lambda _s: login_history_in_uow)
+    monkeypatch.setattr(
+        auth_module, "LoginHistoryRepository", lambda _s: login_history_in_uow
+    )
     return repo_in_uow, audit_in_uow, login_history_in_uow, uow
 
 
 # ---------------------------------------------------------------------------
 # _normalize_profile_data
 # ---------------------------------------------------------------------------
+
 
 class TestNormalizeProfileData:
     def test_std_role_returns_empty_when_no_fields(self):
@@ -181,6 +187,7 @@ class TestNormalizeProfileData:
 # AuthService._trim_text
 # ---------------------------------------------------------------------------
 
+
 class TestTrimText:
     def test_none_returns_none(self):
         svc, _ = setup_service()
@@ -199,10 +206,13 @@ class TestTrimText:
 # AuthService._ttl_from_days
 # ---------------------------------------------------------------------------
 
+
 class TestTtlFromDays:
     def test_none_uses_settings_refresh_days(self, monkeypatch):
         svc, _ = setup_service()
-        monkeypatch.setattr(auth_module.settings, "refresh_token_expire_days", 1, raising=False)
+        monkeypatch.setattr(
+            auth_module.settings, "refresh_token_expire_days", 1, raising=False
+        )
         assert svc._ttl_from_days(None) == 86400
 
     def test_explicit_days(self):
@@ -217,6 +227,7 @@ class TestTtlFromDays:
 # ---------------------------------------------------------------------------
 # AuthService._claim_to_datetime
 # ---------------------------------------------------------------------------
+
 
 class TestClaimToDatetime:
     def test_none_returns_none(self):
@@ -251,6 +262,7 @@ class TestClaimToDatetime:
 # AuthService._refresh_window
 # ---------------------------------------------------------------------------
 
+
 class TestRefreshWindow:
     def test_none_iat_returns_defaults(self):
         svc, _ = setup_service()
@@ -269,7 +281,9 @@ class TestRefreshWindow:
 
     def test_old_token_extends_refresh(self, monkeypatch):
         svc, _ = setup_service()
-        monkeypatch.setattr(auth_module.settings, "refresh_token_expire_days", 30, raising=False)
+        monkeypatch.setattr(
+            auth_module.settings, "refresh_token_expire_days", 30, raising=False
+        )
         now = datetime.now(timezone.utc)
         issued = now - timedelta(days=25)  # 83% of 30-day window
         expires = issued + timedelta(days=30)
@@ -280,7 +294,7 @@ class TestRefreshWindow:
     def test_fresh_token_preserves_remaining_ttl(self):
         svc, _ = setup_service()
         now = datetime.now(timezone.utc)
-        issued = now - timedelta(days=1)   # 3% of 30-day window
+        issued = now - timedelta(days=1)  # 3% of 30-day window
         expires = issued + timedelta(days=30)
         payload = {"iat": issued.timestamp(), "exp": expires.timestamp()}
         expire_days, _ = svc._refresh_window(payload)
@@ -291,6 +305,7 @@ class TestRefreshWindow:
 # ---------------------------------------------------------------------------
 # AuthService._network_fingerprint_source
 # ---------------------------------------------------------------------------
+
 
 class TestNetworkFingerprintSource:
     def test_empty_string_returns_empty(self):
@@ -329,12 +344,15 @@ class TestNetworkFingerprintSource:
 # AuthService._store_tokens / _clear_session_tokens
 # ---------------------------------------------------------------------------
 
+
 class TestRedisTokenOperations:
     @pytest.mark.asyncio
     async def test_store_tokens_sets_two_redis_keys(self):
         svc, redis = setup_service()
         sid = uuid.uuid4()
-        await svc._store_tokens(session_id=sid, refresh_jti="jti-val", csrf_token="csrf-val", ttl=3600)
+        await svc._store_tokens(
+            session_id=sid, refresh_jti="jti-val", csrf_token="csrf-val", ttl=3600
+        )
         assert redis.store.get(f"refresh_jti:{sid}") == "jti-val"
         assert redis.store.get(f"csrf:{sid}") == "csrf-val"
 
@@ -353,12 +371,15 @@ class TestRedisTokenOperations:
 # AuthService._issue_token_bundle
 # ---------------------------------------------------------------------------
 
+
 class TestIssueTokenBundle:
     @pytest.mark.asyncio
     async def test_bundle_contains_expected_fields(self, monkeypatch):
         svc, redis = setup_service()
         monkeypatch.setattr(auth_module, "create_access_token", lambda *_: "acc")
-        monkeypatch.setattr(auth_module, "create_refresh_token", lambda *_: ("ref", "jti-123"))
+        monkeypatch.setattr(
+            auth_module, "create_refresh_token", lambda *_: ("ref", "jti-123")
+        )
         monkeypatch.setattr(auth_module, "create_csrf_token", lambda: "csrf-123")
         sid = uuid.uuid4()
         result = await svc._issue_token_bundle(
@@ -375,6 +396,7 @@ class TestIssueTokenBundle:
 # AuthService._record_login_history
 # ---------------------------------------------------------------------------
 
+
 class TestRecordLoginHistory:
     @pytest.mark.asyncio
     async def test_skips_when_user_id_none(self, monkeypatch):
@@ -382,9 +404,13 @@ class TestRecordLoginHistory:
         uow = FakeUnitOfWork()
         monkeypatch.setattr(auth_module, "UnitOfWork", lambda _: uow)
         await svc._record_login_history(
-            user_id=None, school_id=uuid.uuid4(),
-            ip_address=None, user_agent=None, device_name=None,
-            device_fingerprint=None, success=False,
+            user_id=None,
+            school_id=uuid.uuid4(),
+            ip_address=None,
+            user_agent=None,
+            device_name=None,
+            device_fingerprint=None,
+            success=False,
         )
         assert not uow.committed
 
@@ -396,11 +422,17 @@ class TestRecordLoginHistory:
         record = SimpleNamespace(id=uuid.uuid4())
         repo_in_uow.create_login_record.return_value = record
         monkeypatch.setattr(auth_module, "UnitOfWork", lambda _: uow)
-        monkeypatch.setattr(auth_module, "LoginHistoryRepository", lambda _: repo_in_uow)
+        monkeypatch.setattr(
+            auth_module, "LoginHistoryRepository", lambda _: repo_in_uow
+        )
         await svc._record_login_history(
-            user_id=uuid.uuid4(), school_id=uuid.uuid4(),
-            ip_address="1.2.3.4", user_agent="UA", device_name=None,
-            device_fingerprint=None, success=True,
+            user_id=uuid.uuid4(),
+            school_id=uuid.uuid4(),
+            ip_address="1.2.3.4",
+            user_agent="UA",
+            device_name=None,
+            device_fingerprint=None,
+            success=True,
         )
         assert uow.committed
 
@@ -411,18 +443,25 @@ class TestRecordLoginHistory:
         repo_in_uow = AsyncMock()
         repo_in_uow.create_login_record.side_effect = RuntimeError("db error")
         monkeypatch.setattr(auth_module, "UnitOfWork", lambda _: uow)
-        monkeypatch.setattr(auth_module, "LoginHistoryRepository", lambda _: repo_in_uow)
+        monkeypatch.setattr(
+            auth_module, "LoginHistoryRepository", lambda _: repo_in_uow
+        )
         # Should not raise
         await svc._record_login_history(
-            user_id=uuid.uuid4(), school_id=uuid.uuid4(),
-            ip_address=None, user_agent=None, device_name=None,
-            device_fingerprint=None, success=False,
+            user_id=uuid.uuid4(),
+            school_id=uuid.uuid4(),
+            ip_address=None,
+            user_agent=None,
+            device_name=None,
+            device_fingerprint=None,
+            success=False,
         )
 
 
 # ---------------------------------------------------------------------------
 # AuthService._dispatch_event
 # ---------------------------------------------------------------------------
+
 
 class TestDispatchEvent:
     @pytest.mark.asyncio
@@ -452,6 +491,7 @@ class TestDispatchEvent:
 # AuthService._audit_login_denial
 # ---------------------------------------------------------------------------
 
+
 class TestAuditLoginDenial:
     @pytest.mark.asyncio
     async def test_skips_when_actor_none_and_school_not_found(self):
@@ -459,8 +499,11 @@ class TestAuditLoginDenial:
         svc.repo.get_school_by_id.return_value = None
         # Should return without calling audit
         await svc._audit_login_denial(
-            school_id=uuid.uuid4(), actor_id=None,
-            action_type="TEST", error_code="ERR-000", ip_address=None,
+            school_id=uuid.uuid4(),
+            actor_id=None,
+            action_type="TEST",
+            error_code="ERR-000",
+            ip_address=None,
         )
         svc.audit.log_event.assert_not_awaited()
 
@@ -469,8 +512,11 @@ class TestAuditLoginDenial:
         svc, _ = setup_service()
         svc.repo.get_school_by_id.return_value = SimpleNamespace(id=uuid.uuid4())
         await svc._audit_login_denial(
-            school_id=uuid.uuid4(), actor_id=None,
-            action_type="AUTH_LOGIN_FAILED", error_code="ERR-000", ip_address=None,
+            school_id=uuid.uuid4(),
+            actor_id=None,
+            action_type="AUTH_LOGIN_FAILED",
+            error_code="ERR-000",
+            ip_address=None,
         )
         svc.audit.log_event.assert_awaited_once()
 
@@ -478,8 +524,11 @@ class TestAuditLoginDenial:
     async def test_audits_when_actor_id_set(self):
         svc, _ = setup_service()
         await svc._audit_login_denial(
-            school_id=uuid.uuid4(), actor_id=uuid.uuid4(),
-            action_type="AUTH_LOGIN_FAILED", error_code="ERR-000", ip_address=None,
+            school_id=uuid.uuid4(),
+            actor_id=uuid.uuid4(),
+            action_type="AUTH_LOGIN_FAILED",
+            error_code="ERR-000",
+            ip_address=None,
         )
         svc.audit.log_event.assert_awaited_once()
 
@@ -488,8 +537,11 @@ class TestAuditLoginDenial:
         svc, _ = setup_service()
         svc.audit.log_event.side_effect = RuntimeError("audit db error")
         await svc._audit_login_denial(
-            school_id=uuid.uuid4(), actor_id=uuid.uuid4(),
-            action_type="AUTH_LOGIN_FAILED", error_code="ERR-000", ip_address=None,
+            school_id=uuid.uuid4(),
+            actor_id=uuid.uuid4(),
+            action_type="AUTH_LOGIN_FAILED",
+            error_code="ERR-000",
+            ip_address=None,
         )  # must not raise
 
 
@@ -497,13 +549,20 @@ class TestAuditLoginDenial:
 # AuthService.login — account lockout + oldest session None
 # ---------------------------------------------------------------------------
 
+
 class TestLoginEdgeCases:
     @pytest.mark.asyncio
     async def test_account_lockout_raises_authorization_error(self, monkeypatch):
         svc, _ = setup_service()
-        monkeypatch.setattr(auth_module.settings, "account_lockout_enabled", True, raising=False)
-        monkeypatch.setattr(auth_module.settings, "account_lockout_max_attempts", 5, raising=False)
-        monkeypatch.setattr(auth_module.settings, "account_lockout_duration_minutes", 30, raising=False)
+        monkeypatch.setattr(
+            auth_module.settings, "account_lockout_enabled", True, raising=False
+        )
+        monkeypatch.setattr(
+            auth_module.settings, "account_lockout_max_attempts", 5, raising=False
+        )
+        monkeypatch.setattr(
+            auth_module.settings, "account_lockout_duration_minutes", 30, raising=False
+        )
         school_id = uuid.uuid4()
         user = make_user(school_id)
         svc.repo.get_user_by_email.return_value = user
@@ -518,9 +577,15 @@ class TestLoginEdgeCases:
         self, monkeypatch
     ):
         svc, _ = setup_service()
-        monkeypatch.setattr(auth_module.settings, "account_lockout_enabled", True, raising=False)
-        monkeypatch.setattr(auth_module.settings, "account_lockout_max_attempts", 10, raising=False)
-        monkeypatch.setattr(auth_module.settings, "account_lockout_duration_minutes", 30, raising=False)
+        monkeypatch.setattr(
+            auth_module.settings, "account_lockout_enabled", True, raising=False
+        )
+        monkeypatch.setattr(
+            auth_module.settings, "account_lockout_max_attempts", 10, raising=False
+        )
+        monkeypatch.setattr(
+            auth_module.settings, "account_lockout_duration_minutes", 30, raising=False
+        )
         monkeypatch.setattr(auth_module, "verify_password", lambda *_: False)
         school_id = uuid.uuid4()
         user = make_user(school_id)
@@ -536,7 +601,9 @@ class TestLoginEdgeCases:
     @pytest.mark.asyncio
     async def test_inactive_user_audit_exception_swallowed(self, monkeypatch):
         svc, _ = setup_service()
-        monkeypatch.setattr(auth_module.settings, "account_lockout_enabled", False, raising=False)
+        monkeypatch.setattr(
+            auth_module.settings, "account_lockout_enabled", False, raising=False
+        )
         monkeypatch.setattr(auth_module, "verify_password", lambda *_: True)
         school_id = uuid.uuid4()
         user = make_user(school_id, status="inactive")
@@ -550,7 +617,9 @@ class TestLoginEdgeCases:
     @pytest.mark.asyncio
     async def test_no_membership_audit_exception_swallowed(self, monkeypatch):
         svc, _ = setup_service()
-        monkeypatch.setattr(auth_module.settings, "account_lockout_enabled", False, raising=False)
+        monkeypatch.setattr(
+            auth_module.settings, "account_lockout_enabled", False, raising=False
+        )
         monkeypatch.setattr(auth_module, "verify_password", lambda *_: True)
         school_id = uuid.uuid4()
         user = make_user(school_id)
@@ -566,9 +635,15 @@ class TestLoginEdgeCases:
     async def test_login_oldest_session_none_skips_revoke(self, monkeypatch):
         """Covers branch where count >= max but get_oldest_active_session returns None."""
         svc, _ = setup_service()
-        monkeypatch.setattr(auth_module.settings, "account_lockout_enabled", False, raising=False)
-        monkeypatch.setattr(auth_module.settings, "suspicious_activity_enabled", False, raising=False)
-        monkeypatch.setattr(auth_module.settings, "max_sessions_per_user", 1, raising=False)
+        monkeypatch.setattr(
+            auth_module.settings, "account_lockout_enabled", False, raising=False
+        )
+        monkeypatch.setattr(
+            auth_module.settings, "suspicious_activity_enabled", False, raising=False
+        )
+        monkeypatch.setattr(
+            auth_module.settings, "max_sessions_per_user", 1, raising=False
+        )
         monkeypatch.setattr(auth_module, "verify_password", lambda *_: True)
         monkeypatch.setattr(auth_module, "get_correlation_id", lambda: None)
         school_id = uuid.uuid4()
@@ -576,14 +651,18 @@ class TestLoginEdgeCases:
         membership = SimpleNamespace(role_code=STD)
         svc.repo.get_user_by_email.return_value = user
         svc.repo.get_membership.return_value = membership
-        svc._issue_token_bundle = AsyncMock(return_value={"access_token": "tok", "session_id": uuid.uuid4()})
+        svc._issue_token_bundle = AsyncMock(
+            return_value={"access_token": "tok", "session_id": uuid.uuid4()}
+        )
         repo_in_uow, _, login_history_in_uow, uow = patch_uow(monkeypatch)
         repo_in_uow.count_active_sessions.return_value = 1
         repo_in_uow.get_oldest_active_session.return_value = None  # ← key branch
         login_history_in_uow.get_device_fingerprints.return_value = []
         repo_in_uow.create_session.return_value = SimpleNamespace(id=uuid.uuid4())
 
-        result = await svc.login(email=user.email, password="secret", school_id=school_id)
+        result = await svc.login(
+            email=user.email, password="secret", school_id=school_id
+        )
         assert result["access_token"] == "tok"
         repo_in_uow.revoke_session.assert_not_awaited()
 
@@ -591,9 +670,15 @@ class TestLoginEdgeCases:
     async def test_login_suspicious_activity_new_location(self, monkeypatch):
         """Covers suspicious_activity_enabled=True branch."""
         svc, _ = setup_service()
-        monkeypatch.setattr(auth_module.settings, "account_lockout_enabled", False, raising=False)
-        monkeypatch.setattr(auth_module.settings, "suspicious_activity_enabled", True, raising=False)
-        monkeypatch.setattr(auth_module.settings, "max_sessions_per_user", 100, raising=False)
+        monkeypatch.setattr(
+            auth_module.settings, "account_lockout_enabled", False, raising=False
+        )
+        monkeypatch.setattr(
+            auth_module.settings, "suspicious_activity_enabled", True, raising=False
+        )
+        monkeypatch.setattr(
+            auth_module.settings, "max_sessions_per_user", 100, raising=False
+        )
         monkeypatch.setattr(auth_module, "verify_password", lambda *_: True)
         monkeypatch.setattr(auth_module, "get_correlation_id", lambda: None)
         school_id = uuid.uuid4()
@@ -601,7 +686,9 @@ class TestLoginEdgeCases:
         membership = SimpleNamespace(role_code=STD)
         svc.repo.get_user_by_email.return_value = user
         svc.repo.get_membership.return_value = membership
-        svc._issue_token_bundle = AsyncMock(return_value={"access_token": "tok", "session_id": uuid.uuid4()})
+        svc._issue_token_bundle = AsyncMock(
+            return_value={"access_token": "tok", "session_id": uuid.uuid4()}
+        )
         repo_in_uow, _, login_history_in_uow, uow = patch_uow(monkeypatch)
         repo_in_uow.count_active_sessions.return_value = 0
         login_history_in_uow.get_device_fingerprints.return_value = []
@@ -611,7 +698,11 @@ class TestLoginEdgeCases:
         mock_sus_module = MagicMock()
         sus_svc = MagicMock()
         mock_sus_module.SuspiciousActivityService.return_value = sus_svc
-        sus_svc.get_ip_location.return_value = {"country_code": "MA", "city": "Casa", "region": "GC"}
+        sus_svc.get_ip_location.return_value = {
+            "country_code": "MA",
+            "city": "Casa",
+            "region": "GC",
+        }
         sus_svc.is_new_location.return_value = True
         sus_svc.is_new_device.return_value = False
         svc.repo.get_known_locations_by_user.return_value = []
@@ -619,10 +710,15 @@ class TestLoginEdgeCases:
         svc.repo.get_known_devices_by_user.return_value = []
         svc.repo.get_known_device_by_user_fingerprint.return_value = None
 
-        with patch.dict(sys.modules, {"app.services.platform.suspicious_activity": mock_sus_module}):
+        with patch.dict(
+            sys.modules, {"app.services.platform.suspicious_activity": mock_sus_module}
+        ):
             result = await svc.login(
-                email=user.email, password="secret", school_id=school_id,
-                ip_address="1.2.3.4", user_agent="UA",
+                email=user.email,
+                password="secret",
+                school_id=school_id,
+                ip_address="1.2.3.4",
+                user_agent="UA",
             )
 
         assert result["access_token"] == "tok"
@@ -632,16 +728,24 @@ class TestLoginEdgeCases:
     async def test_login_suspicious_activity_known_location_updates(self, monkeypatch):
         """Covers branch where known_location already exists (update path)."""
         svc, _ = setup_service()
-        monkeypatch.setattr(auth_module.settings, "account_lockout_enabled", False, raising=False)
-        monkeypatch.setattr(auth_module.settings, "suspicious_activity_enabled", True, raising=False)
-        monkeypatch.setattr(auth_module.settings, "max_sessions_per_user", 100, raising=False)
+        monkeypatch.setattr(
+            auth_module.settings, "account_lockout_enabled", False, raising=False
+        )
+        monkeypatch.setattr(
+            auth_module.settings, "suspicious_activity_enabled", True, raising=False
+        )
+        monkeypatch.setattr(
+            auth_module.settings, "max_sessions_per_user", 100, raising=False
+        )
         monkeypatch.setattr(auth_module, "verify_password", lambda *_: True)
         monkeypatch.setattr(auth_module, "get_correlation_id", lambda: None)
         school_id = uuid.uuid4()
         user = make_user(school_id)
         svc.repo.get_user_by_email.return_value = user
         svc.repo.get_membership.return_value = SimpleNamespace(role_code=STD)
-        svc._issue_token_bundle = AsyncMock(return_value={"access_token": "tok", "session_id": uuid.uuid4()})
+        svc._issue_token_bundle = AsyncMock(
+            return_value={"access_token": "tok", "session_id": uuid.uuid4()}
+        )
         repo_in_uow, _, login_history_in_uow, uow = patch_uow(monkeypatch)
         repo_in_uow.count_active_sessions.return_value = 0
         login_history_in_uow.get_device_fingerprints.return_value = []
@@ -650,20 +754,33 @@ class TestLoginEdgeCases:
         mock_sus_module = MagicMock()
         sus_svc = MagicMock()
         mock_sus_module.SuspiciousActivityService.return_value = sus_svc
-        sus_svc.get_ip_location.return_value = {"country_code": "MA", "city": "Rabat", "region": "RB"}
+        sus_svc.get_ip_location.return_value = {
+            "country_code": "MA",
+            "city": "Rabat",
+            "region": "RB",
+        }
         sus_svc.is_new_location.return_value = False
         sus_svc.is_new_device.return_value = False
-        known_loc = SimpleNamespace(last_seen_at=None, country_code=None, city=None, region=None)
-        known_dev = SimpleNamespace(last_seen_at=None, device_name=None, user_agent=None)
+        known_loc = SimpleNamespace(
+            last_seen_at=None, country_code=None, city=None, region=None
+        )
+        known_dev = SimpleNamespace(
+            last_seen_at=None, device_name=None, user_agent=None
+        )
         svc.repo.get_known_locations_by_user.return_value = []
         svc.repo.get_known_location_by_user_ip.return_value = known_loc
         svc.repo.get_known_devices_by_user.return_value = []
         svc.repo.get_known_device_by_user_fingerprint.return_value = known_dev
 
-        with patch.dict(sys.modules, {"app.services.platform.suspicious_activity": mock_sus_module}):
+        with patch.dict(
+            sys.modules, {"app.services.platform.suspicious_activity": mock_sus_module}
+        ):
             await svc.login(
-                email=user.email, password="secret", school_id=school_id,
-                ip_address="2.3.4.5", user_agent="UA",
+                email=user.email,
+                password="secret",
+                school_id=school_id,
+                ip_address="2.3.4.5",
+                user_agent="UA",
             )
 
         svc.repo.update_known_location.assert_awaited_once()
@@ -674,13 +791,23 @@ class TestLoginEdgeCases:
 # AuthService.register
 # ---------------------------------------------------------------------------
 
+
 class TestRegister:
-    def _make_invite(self, school_id=None, role=STD, expired=False, consumed=False, with_student=False):
+    def _make_invite(
+        self,
+        school_id=None,
+        role=STD,
+        expired=False,
+        consumed=False,
+        with_student=False,
+    ):
         inv = SimpleNamespace(
             id=uuid.uuid4(),
             school_id=school_id or uuid.uuid4(),
             role_target=role,
-            expires_at=(datetime.now(timezone.utc) - timedelta(hours=1)) if expired else None,
+            expires_at=(datetime.now(timezone.utc) - timedelta(hours=1))
+            if expired
+            else None,
             consumed_by=uuid.uuid4() if consumed else None,
             target_student_id=uuid.uuid4() if with_student else None,
             issuer_user_id=uuid.uuid4(),
@@ -692,21 +819,31 @@ class TestRegister:
         svc, _ = setup_service()
         svc.repo.get_invitation_by_code_hash.return_value = None
         with pytest.raises(NotFoundError):
-            await svc.register(code="BADCODE", email="a@b.com", full_name="A", password="P@ssw0rd!")
+            await svc.register(
+                code="BADCODE", email="a@b.com", full_name="A", password="P@ssw0rd!"
+            )
 
     @pytest.mark.asyncio
     async def test_expired_invite_raises_authentication_error(self):
         svc, _ = setup_service()
-        svc.repo.get_invitation_by_code_hash.return_value = self._make_invite(expired=True)
+        svc.repo.get_invitation_by_code_hash.return_value = self._make_invite(
+            expired=True
+        )
         with pytest.raises(AuthenticationError, match="expired"):
-            await svc.register(code="C", email="a@b.com", full_name="A", password="P@ssw0rd!")
+            await svc.register(
+                code="C", email="a@b.com", full_name="A", password="P@ssw0rd!"
+            )
 
     @pytest.mark.asyncio
     async def test_consumed_invite_raises_conflict(self):
         svc, _ = setup_service()
-        svc.repo.get_invitation_by_code_hash.return_value = self._make_invite(consumed=True)
+        svc.repo.get_invitation_by_code_hash.return_value = self._make_invite(
+            consumed=True
+        )
         with pytest.raises(ConflictError, match="already been used"):
-            await svc.register(code="C", email="a@b.com", full_name="A", password="P@ssw0rd!")
+            await svc.register(
+                code="C", email="a@b.com", full_name="A", password="P@ssw0rd!"
+            )
 
     @pytest.mark.asyncio
     async def test_existing_email_raises_conflict(self):
@@ -715,7 +852,9 @@ class TestRegister:
         svc.repo.get_invitation_by_code_hash.return_value = invite
         svc.repo.get_user_by_email.return_value = SimpleNamespace(id=uuid.uuid4())
         with pytest.raises(ConflictError, match="email already exists"):
-            await svc.register(code="C", email="a@b.com", full_name="A", password="P@ssw0rd!")
+            await svc.register(
+                code="C", email="a@b.com", full_name="A", password="P@ssw0rd!"
+            )
 
     @pytest.mark.asyncio
     async def test_success_returns_token_bundle(self, monkeypatch):
@@ -724,15 +863,22 @@ class TestRegister:
         invite = self._make_invite(school_id=school_id, role=STD)
         svc.repo.get_invitation_by_code_hash.return_value = invite
         svc.repo.get_user_by_email.return_value = None
-        monkeypatch.setattr(auth_module, "password_validator",
-                            SimpleNamespace(validate=lambda *_a, **_k: None))
+        monkeypatch.setattr(
+            auth_module,
+            "password_validator",
+            SimpleNamespace(validate=lambda *_a, **_k: None),
+        )
         monkeypatch.setattr(auth_module, "get_correlation_id", lambda: None)
         monkeypatch.setattr(auth_module, "create_access_token", lambda *_: "acc")
-        monkeypatch.setattr(auth_module, "create_refresh_token", lambda *_: ("ref", "jti"))
+        monkeypatch.setattr(
+            auth_module, "create_refresh_token", lambda *_: ("ref", "jti")
+        )
         monkeypatch.setattr(auth_module, "create_csrf_token", lambda: "csrf")
 
         user = SimpleNamespace(id=uuid.uuid4(), email="a@b.com", full_name="A")
-        session = SimpleNamespace(id=uuid.uuid4(), created_at=datetime.now(timezone.utc))
+        session = SimpleNamespace(
+            id=uuid.uuid4(), created_at=datetime.now(timezone.utc)
+        )
         repo_in_uow = AsyncMock()
         audit_in_uow = AsyncMock()
         profile_loader = AsyncMock()
@@ -767,15 +913,22 @@ class TestRegister:
         invite = self._make_invite(school_id=school_id, role=PAR, with_student=True)
         svc.repo.get_invitation_by_code_hash.return_value = invite
         svc.repo.get_user_by_email.return_value = None
-        monkeypatch.setattr(auth_module, "password_validator",
-                            SimpleNamespace(validate=lambda *_a, **_k: None))
+        monkeypatch.setattr(
+            auth_module,
+            "password_validator",
+            SimpleNamespace(validate=lambda *_a, **_k: None),
+        )
         monkeypatch.setattr(auth_module, "get_correlation_id", lambda: None)
         monkeypatch.setattr(auth_module, "create_access_token", lambda *_: "acc")
-        monkeypatch.setattr(auth_module, "create_refresh_token", lambda *_: ("ref", "jti"))
+        monkeypatch.setattr(
+            auth_module, "create_refresh_token", lambda *_: ("ref", "jti")
+        )
         monkeypatch.setattr(auth_module, "create_csrf_token", lambda: "csrf")
 
         user = SimpleNamespace(id=uuid.uuid4(), email="p@b.com", full_name="P")
-        session = SimpleNamespace(id=uuid.uuid4(), created_at=datetime.now(timezone.utc))
+        session = SimpleNamespace(
+            id=uuid.uuid4(), created_at=datetime.now(timezone.utc)
+        )
         repo_in_uow = AsyncMock()
         audit_in_uow = AsyncMock()
         profile_loader = AsyncMock()
@@ -789,7 +942,9 @@ class TestRegister:
         monkeypatch.setattr(auth_module, "AuditService", lambda _: audit_in_uow)
         monkeypatch.setattr(auth_module, "ProfileLoader", lambda _: profile_loader)
 
-        await svc.register(code="C", email="p@b.com", full_name="P", password="P@ssw0rd!1")
+        await svc.register(
+            code="C", email="p@b.com", full_name="P", password="P@ssw0rd!1"
+        )
         repo_in_uow.create_parent_child_link.assert_awaited_once()
 
 
@@ -797,17 +952,22 @@ class TestRegister:
 # AuthService.refresh — membership None
 # ---------------------------------------------------------------------------
 
+
 class TestRefreshEdgeCases:
     @pytest.mark.asyncio
     async def test_refresh_no_membership_raises(self, monkeypatch):
         svc, redis = setup_service()
         session_id = uuid.uuid4()
-        monkeypatch.setattr(auth_module, "decode_refresh_token", lambda _: {
-            "session_id": str(session_id),
-            "sub": str(uuid.uuid4()),
-            "school_id": str(uuid.uuid4()),
-            "jti": "stored-jti",
-        })
+        monkeypatch.setattr(
+            auth_module,
+            "decode_refresh_token",
+            lambda _: {
+                "session_id": str(session_id),
+                "sub": str(uuid.uuid4()),
+                "school_id": str(uuid.uuid4()),
+                "jti": "stored-jti",
+            },
+        )
         redis.store[f"csrf:{session_id}"] = "csrf-ok"
         redis.store[f"refresh_jti:{session_id}"] = "stored-jti"
         svc.repo.get_session_by_id.return_value = SimpleNamespace(id=session_id)
@@ -820,6 +980,7 @@ class TestRefreshEdgeCases:
 # ---------------------------------------------------------------------------
 # AuthService.logout
 # ---------------------------------------------------------------------------
+
 
 class TestLogout:
     @pytest.mark.asyncio
@@ -843,6 +1004,7 @@ class TestLogout:
 # AuthService.get_profile
 # ---------------------------------------------------------------------------
 
+
 class TestGetProfile:
     @pytest.mark.asyncio
     async def test_user_not_found_raises(self):
@@ -858,7 +1020,9 @@ class TestGetProfile:
         school_id = uuid.uuid4()
         user = SimpleNamespace(id=uid, email="u@e.com", full_name="U")
         svc.repo.get_user_by_id.return_value = user
-        membership = SimpleNamespace(role_code=ADM, school_id=school_id, status="active")
+        membership = SimpleNamespace(
+            role_code=ADM, school_id=school_id, status="active"
+        )
         svc.repo.list_memberships.return_value = [membership]
 
         profile_loader = AsyncMock()
@@ -876,13 +1040,18 @@ class TestGetProfile:
 # AuthService.list_sessions
 # ---------------------------------------------------------------------------
 
+
 class TestListSessions:
     @pytest.mark.asyncio
     async def test_returns_session_list(self):
         svc, _ = setup_service()
         s = SimpleNamespace(
-            id=uuid.uuid4(), source="web", user_agent="UA", ip_address="1.2.3.4",
-            device_name="PC", created_at=datetime.now(timezone.utc),
+            id=uuid.uuid4(),
+            source="web",
+            user_agent="UA",
+            ip_address="1.2.3.4",
+            device_name="PC",
+            created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
         svc.repo.list_active_sessions.return_value = [s]
@@ -902,13 +1071,22 @@ class TestListSessions:
 # AuthService.list_login_history
 # ---------------------------------------------------------------------------
 
+
 class TestListLoginHistory:
     def _make_row(self):
         return SimpleNamespace(
-            id=uuid.uuid4(), user_id=uuid.uuid4(), school_id=uuid.uuid4(),
-            ip_address="1.2.3.4", user_agent="UA", device_name="PC",
-            device_fingerprint="fp", city="Casa", country="MA",
-            success=True, failure_reason=None, is_new_device=False,
+            id=uuid.uuid4(),
+            user_id=uuid.uuid4(),
+            school_id=uuid.uuid4(),
+            ip_address="1.2.3.4",
+            user_agent="UA",
+            device_name="PC",
+            device_fingerprint="fp",
+            city="Casa",
+            country="MA",
+            success=True,
+            failure_reason=None,
+            is_new_device=False,
             created_at=datetime.now(timezone.utc),
         )
 
@@ -917,9 +1095,7 @@ class TestListLoginHistory:
         svc, _ = setup_service()
         auth = make_auth_context(STD)
         with pytest.raises(AuthorizationError):
-            await svc.list_login_history(
-                target_user_id=uuid.uuid4(), auth=auth
-            )
+            await svc.list_login_history(target_user_id=uuid.uuid4(), auth=auth)
 
     @pytest.mark.asyncio
     async def test_target_not_in_school_raises_not_found(self):
@@ -940,9 +1116,13 @@ class TestListLoginHistory:
         history_repo = AsyncMock()
         row = self._make_row()
         history_repo.list_user_login_history.return_value = ([row], None, False)
-        monkeypatch.setattr(auth_module, "LoginHistoryRepository", lambda _: history_repo)
+        monkeypatch.setattr(
+            auth_module, "LoginHistoryRepository", lambda _: history_repo
+        )
 
-        rows, cursor, has_more = await svc.list_login_history(target_user_id=uid, auth=auth)
+        rows, cursor, has_more = await svc.list_login_history(
+            target_user_id=uid, auth=auth
+        )
         assert len(rows) == 1
 
     @pytest.mark.asyncio
@@ -954,7 +1134,9 @@ class TestListLoginHistory:
 
         history_repo = AsyncMock()
         history_repo.list_user_login_history.return_value = ([], None, False)
-        monkeypatch.setattr(auth_module, "LoginHistoryRepository", lambda _: history_repo)
+        monkeypatch.setattr(
+            auth_module, "LoginHistoryRepository", lambda _: history_repo
+        )
 
         rows, _, _ = await svc.list_login_history(target_user_id=other_id, auth=auth)
         assert rows == []
@@ -963,6 +1145,7 @@ class TestListLoginHistory:
 # ---------------------------------------------------------------------------
 # AuthService.impersonate — missing branches
 # ---------------------------------------------------------------------------
+
 
 class TestImpersonateMissingBranches:
     @pytest.mark.asyncio
@@ -987,6 +1170,7 @@ class TestImpersonateMissingBranches:
 # AuthService.stop_impersonation — missing branches
 # ---------------------------------------------------------------------------
 
+
 class TestStopImpersonationEdgeCases:
     @pytest.mark.asyncio
     async def test_admin_membership_none_raises(self, monkeypatch):
@@ -995,8 +1179,11 @@ class TestStopImpersonationEdgeCases:
         impersonator_id = uuid.uuid4()
         school_id = uuid.uuid4()
         current_session = SimpleNamespace(
-            id=session_id, impersonator_id=impersonator_id,
-            correlation_id=None, user_id=uuid.uuid4(), school_id=school_id,
+            id=session_id,
+            impersonator_id=impersonator_id,
+            correlation_id=None,
+            user_id=uuid.uuid4(),
+            school_id=school_id,
         )
         svc.repo.get_session_by_id.return_value = current_session
         svc._clear_session_tokens = AsyncMock()
@@ -1020,9 +1207,11 @@ class TestStopImpersonationEdgeCases:
         impersonator_id = uuid.uuid4()
         school_id = uuid.uuid4()
         current_session = SimpleNamespace(
-            id=session_id, impersonator_id=impersonator_id,
+            id=session_id,
+            impersonator_id=impersonator_id,
             correlation_id=None,  # ← no original session
-            user_id=uuid.uuid4(), school_id=school_id,
+            user_id=uuid.uuid4(),
+            school_id=school_id,
         )
         restored = SimpleNamespace(id=uuid.uuid4())
         svc.repo.get_session_by_id.return_value = current_session
@@ -1052,9 +1241,11 @@ class TestStopImpersonationEdgeCases:
         impersonator_id = uuid.uuid4()
         school_id = uuid.uuid4()
         current_session = SimpleNamespace(
-            id=session_id, impersonator_id=impersonator_id,
+            id=session_id,
+            impersonator_id=impersonator_id,
             correlation_id=original_session_id,
-            user_id=uuid.uuid4(), school_id=school_id,
+            user_id=uuid.uuid4(),
+            school_id=school_id,
         )
         # candidate exists but has wrong user_id
         bad_candidate = SimpleNamespace(
@@ -1087,6 +1278,7 @@ class TestStopImpersonationEdgeCases:
 # AuthService.revoke_session
 # ---------------------------------------------------------------------------
 
+
 class TestRevokeSession:
     @pytest.mark.asyncio
     async def test_session_not_found_raises(self):
@@ -1099,7 +1291,9 @@ class TestRevokeSession:
     async def test_cross_school_session_raises_not_found(self):
         svc, _ = setup_service()
         school_id = uuid.uuid4()
-        session = SimpleNamespace(id=uuid.uuid4(), school_id=uuid.uuid4(), user_id=uuid.uuid4())
+        session = SimpleNamespace(
+            id=uuid.uuid4(), school_id=uuid.uuid4(), user_id=uuid.uuid4()
+        )
         svc.repo.get_session_by_id.return_value = session
         with pytest.raises(NotFoundError):
             await svc.revoke_session(session.id, uuid.uuid4(), school_id, ADM)
@@ -1109,7 +1303,9 @@ class TestRevokeSession:
         svc, _ = setup_service()
         school_id = uuid.uuid4()
         actor_id = uuid.uuid4()
-        session = SimpleNamespace(id=uuid.uuid4(), school_id=school_id, user_id=uuid.uuid4())
+        session = SimpleNamespace(
+            id=uuid.uuid4(), school_id=school_id, user_id=uuid.uuid4()
+        )
         svc.repo.get_session_by_id.return_value = session
         svc.repo.save_session = AsyncMock()
         with pytest.raises(AuthorizationError):
@@ -1121,7 +1317,9 @@ class TestRevokeSession:
         school_id = uuid.uuid4()
         actor_id = uuid.uuid4()
         target_sid = uuid.uuid4()
-        session = SimpleNamespace(id=target_sid, school_id=school_id, user_id=actor_id, revoke_at=None)
+        session = SimpleNamespace(
+            id=target_sid, school_id=school_id, user_id=actor_id, revoke_at=None
+        )
         svc.repo.get_session_by_id.return_value = session
         svc.repo.save_session = AsyncMock()
         redis.store[f"refresh_jti:{target_sid}"] = "x"
@@ -1134,7 +1332,9 @@ class TestRevokeSession:
     async def test_adm_can_revoke_any_session(self):
         svc, _ = setup_service()
         school_id = uuid.uuid4()
-        session = SimpleNamespace(id=uuid.uuid4(), school_id=school_id, user_id=uuid.uuid4(), revoke_at=None)
+        session = SimpleNamespace(
+            id=uuid.uuid4(), school_id=school_id, user_id=uuid.uuid4(), revoke_at=None
+        )
         svc.repo.get_session_by_id.return_value = session
         svc.repo.save_session = AsyncMock()
 
@@ -1146,13 +1346,16 @@ class TestRevokeSession:
 # AuthService.change_password
 # ---------------------------------------------------------------------------
 
+
 class TestChangePassword:
     @pytest.mark.asyncio
     async def test_user_not_found_raises(self):
         svc, _ = setup_service()
         svc.repo.get_user_by_id.return_value = None
         with pytest.raises(NotFoundError):
-            await svc.change_password(uuid.uuid4(), uuid.uuid4(), "old", "new", uuid.uuid4())
+            await svc.change_password(
+                uuid.uuid4(), uuid.uuid4(), "old", "new", uuid.uuid4()
+            )
 
     @pytest.mark.asyncio
     async def test_wrong_current_password_raises(self, monkeypatch):
@@ -1160,7 +1363,9 @@ class TestChangePassword:
         monkeypatch.setattr(auth_module, "verify_password", lambda *_: False)
         svc.repo.get_user_by_id.return_value = make_user()
         with pytest.raises(AuthenticationError, match="Current password"):
-            await svc.change_password(uuid.uuid4(), uuid.uuid4(), "bad", "new", uuid.uuid4())
+            await svc.change_password(
+                uuid.uuid4(), uuid.uuid4(), "bad", "new", uuid.uuid4()
+            )
 
     @pytest.mark.asyncio
     async def test_password_in_history_raises_validation(self, monkeypatch):
@@ -1171,23 +1376,31 @@ class TestChangePassword:
         svc.repo.get_password_history_by_user.return_value = [history_entry]
         user = make_user()
         svc.repo.get_user_by_id.return_value = user
-        monkeypatch.setattr("app.core.password_policy.password_validator",
-                            SimpleNamespace(validate=lambda *_a, **_k: None))
+        monkeypatch.setattr(
+            "app.core.password_policy.password_validator",
+            SimpleNamespace(validate=lambda *_a, **_k: None),
+        )
 
         with pytest.raises(ValidationError, match="used recently"):
-            await svc.change_password(uuid.uuid4(), uuid.uuid4(), "old", "NewP@ss1", uuid.uuid4())
+            await svc.change_password(
+                uuid.uuid4(), uuid.uuid4(), "old", "NewP@ss1", uuid.uuid4()
+            )
 
     @pytest.mark.asyncio
     async def test_success_updates_password_and_revokes_sessions(self, monkeypatch):
         svc, _ = setup_service()
         call_count = [0]
+
         def mock_verify(pwd, hsh):
             call_count[0] += 1
             return call_count[0] == 1  # True only first call (current password)
+
         monkeypatch.setattr(auth_module, "verify_password", mock_verify)
         monkeypatch.setattr(auth_module, "hash_password", lambda _: "new-hash")
-        monkeypatch.setattr("app.core.password_policy.password_validator",
-                            SimpleNamespace(validate=lambda *_a, **_k: None))
+        monkeypatch.setattr(
+            "app.core.password_policy.password_validator",
+            SimpleNamespace(validate=lambda *_a, **_k: None),
+        )
         user = make_user()
         svc.repo.get_user_by_id.return_value = user
         svc.repo.get_password_history_by_user.return_value = []
@@ -1204,6 +1417,7 @@ class TestChangePassword:
 # ---------------------------------------------------------------------------
 # InvitationService
 # ---------------------------------------------------------------------------
+
 
 def setup_invitation_service():
     redis = FakeRedis()
@@ -1230,8 +1444,10 @@ class TestInvitationService:
         svc, _ = setup_invitation_service()
         with pytest.raises(ValidationError, match="only valid for PAR"):
             await svc.create_invite(
-                school_id=uuid.uuid4(), issuer_user_id=uuid.uuid4(),
-                role_target=STD, target_student_id=uuid.uuid4(),
+                school_id=uuid.uuid4(),
+                issuer_user_id=uuid.uuid4(),
+                role_target=STD,
+                target_student_id=uuid.uuid4(),
             )
 
     @pytest.mark.asyncio
@@ -1240,8 +1456,10 @@ class TestInvitationService:
         svc.repo.get_student_in_school.return_value = None
         with pytest.raises(NotFoundError, match="student not found"):
             await svc.create_invite(
-                school_id=uuid.uuid4(), issuer_user_id=uuid.uuid4(),
-                role_target=PAR, target_student_id=uuid.uuid4(),
+                school_id=uuid.uuid4(),
+                issuer_user_id=uuid.uuid4(),
+                role_target=PAR,
+                target_student_id=uuid.uuid4(),
             )
 
     @pytest.mark.asyncio
@@ -1250,8 +1468,10 @@ class TestInvitationService:
         svc.repo.get_student_in_school.return_value = SimpleNamespace(id=uuid.uuid4())
         svc.repo.create_invitation.return_value = SimpleNamespace(id=uuid.uuid4())
         result = await svc.create_invite(
-            school_id=uuid.uuid4(), issuer_user_id=uuid.uuid4(),
-            role_target=PAR, target_student_id=uuid.uuid4(),
+            school_id=uuid.uuid4(),
+            issuer_user_id=uuid.uuid4(),
+            role_target=PAR,
+            target_student_id=uuid.uuid4(),
         )
         assert "code" in result
 
@@ -1266,21 +1486,28 @@ class TestInvitationService:
     async def test_consume_invite_wrong_school_raises(self):
         svc, _ = setup_invitation_service()
         inv = SimpleNamespace(
-            id=uuid.uuid4(), school_id=uuid.uuid4(), expires_at=None,
-            consumed_by=None, role_target=STD,
+            id=uuid.uuid4(),
+            school_id=uuid.uuid4(),
+            expires_at=None,
+            consumed_by=None,
+            role_target=STD,
         )
         svc.repo.get_invitation_by_code_hash.return_value = inv
         with pytest.raises(NotFoundError):
-            await svc.consume_invite("CODE", uuid.uuid4(), uuid.uuid4())  # different school_id
+            await svc.consume_invite(
+                "CODE", uuid.uuid4(), uuid.uuid4()
+            )  # different school_id
 
     @pytest.mark.asyncio
     async def test_consume_invite_expired_raises(self):
         svc, _ = setup_invitation_service()
         school_id = uuid.uuid4()
         inv = SimpleNamespace(
-            id=uuid.uuid4(), school_id=school_id,
+            id=uuid.uuid4(),
+            school_id=school_id,
             expires_at=datetime.now(timezone.utc) - timedelta(hours=1),
-            consumed_by=None, role_target=STD,
+            consumed_by=None,
+            role_target=STD,
         )
         svc.repo.get_invitation_by_code_hash.return_value = inv
         with pytest.raises(AuthenticationError, match="expired"):
@@ -1292,8 +1519,11 @@ class TestInvitationService:
         school_id = uuid.uuid4()
         user_id = uuid.uuid4()
         inv = SimpleNamespace(
-            id=uuid.uuid4(), school_id=school_id, expires_at=None,
-            consumed_by=user_id, role_target=STD,
+            id=uuid.uuid4(),
+            school_id=school_id,
+            expires_at=None,
+            consumed_by=user_id,
+            role_target=STD,
         )
         svc.repo.get_invitation_by_code_hash.return_value = inv
         result = await svc.consume_invite("CODE", user_id, school_id)
@@ -1304,8 +1534,11 @@ class TestInvitationService:
         svc, _ = setup_invitation_service()
         school_id = uuid.uuid4()
         inv = SimpleNamespace(
-            id=uuid.uuid4(), school_id=school_id, expires_at=None,
-            consumed_by=uuid.uuid4(), role_target=STD,  # consumed by someone else
+            id=uuid.uuid4(),
+            school_id=school_id,
+            expires_at=None,
+            consumed_by=uuid.uuid4(),
+            role_target=STD,  # consumed by someone else
         )
         svc.repo.get_invitation_by_code_hash.return_value = inv
         with pytest.raises(ConflictError):
@@ -1317,13 +1550,18 @@ class TestInvitationService:
         school_id = uuid.uuid4()
         user_id = uuid.uuid4()
         inv = SimpleNamespace(
-            id=uuid.uuid4(), school_id=school_id, expires_at=None,
-            consumed_by=None, role_target=STD,
+            id=uuid.uuid4(),
+            school_id=school_id,
+            expires_at=None,
+            consumed_by=None,
+            role_target=STD,
         )
         svc.repo.get_invitation_by_code_hash.return_value = inv
         membership = SimpleNamespace(id=uuid.uuid4())
         svc.repo.create_membership.return_value = membership
-        user = SimpleNamespace(id=user_id, email="u@e.com", email_verified_at=datetime.now(timezone.utc))
+        user = SimpleNamespace(
+            id=user_id, email="u@e.com", email_verified_at=datetime.now(timezone.utc)
+        )
         svc.repo.get_user_by_id.return_value = user
 
         result = await svc.consume_invite("CODE", user_id, school_id)
@@ -1336,8 +1574,11 @@ class TestInvitationService:
         school_id = uuid.uuid4()
         user_id = uuid.uuid4()
         inv = SimpleNamespace(
-            id=uuid.uuid4(), school_id=school_id, expires_at=None,
-            consumed_by=None, role_target=STD,
+            id=uuid.uuid4(),
+            school_id=school_id,
+            expires_at=None,
+            consumed_by=None,
+            role_target=STD,
         )
         svc.repo.get_invitation_by_code_hash.return_value = inv
         svc.repo.create_membership.return_value = SimpleNamespace(id=uuid.uuid4())
@@ -1357,7 +1598,9 @@ class TestInvitationService:
     @pytest.mark.asyncio
     async def test_revoke_invite_already_consumed_is_idempotent(self):
         svc, _ = setup_invitation_service()
-        inv = SimpleNamespace(id=uuid.uuid4(), consumed_by=uuid.uuid4(), expires_at=None)
+        inv = SimpleNamespace(
+            id=uuid.uuid4(), consumed_by=uuid.uuid4(), expires_at=None
+        )
         svc.repo.get_invitation_by_id.return_value = inv
         result = await svc.revoke_invite(inv.id, uuid.uuid4(), uuid.uuid4())
         assert result["message"] == "Invitation revoked"
@@ -1366,7 +1609,9 @@ class TestInvitationService:
     @pytest.mark.asyncio
     async def test_revoke_invite_success(self):
         svc, _ = setup_invitation_service()
-        inv = SimpleNamespace(id=uuid.uuid4(), consumed_by=None, expires_at=None, consumed_at=None)
+        inv = SimpleNamespace(
+            id=uuid.uuid4(), consumed_by=None, expires_at=None, consumed_at=None
+        )
         svc.repo.get_invitation_by_id.return_value = inv
         svc.repo.save_invitation = AsyncMock()
         result = await svc.revoke_invite(inv.id, uuid.uuid4(), uuid.uuid4())
@@ -1377,6 +1622,7 @@ class TestInvitationService:
 # ---------------------------------------------------------------------------
 # RecoveryService
 # ---------------------------------------------------------------------------
+
 
 def setup_recovery_service():
     redis = FakeRedis()
@@ -1395,17 +1641,23 @@ class TestRecoveryService:
         assert "request_id" in result
 
     @pytest.mark.asyncio
-    async def test_request_recovery_creates_otp_and_returns_request_id(self, monkeypatch):
+    async def test_request_recovery_creates_otp_and_returns_request_id(
+        self, monkeypatch
+    ):
         svc, redis = setup_recovery_service()
         user = make_user()
         svc.repo.get_user_by_email.return_value = user
-        recovery = SimpleNamespace(id=uuid.uuid4(), school_id=uuid.uuid4(), user_id=user.id)
+        recovery = SimpleNamespace(
+            id=uuid.uuid4(), school_id=uuid.uuid4(), user_id=user.id
+        )
         svc.repo.create_recovery_request.return_value = recovery
         # Patch email enqueue to avoid import error
         mock_tasks = MagicMock()
         mock_tasks.enqueue_email = AsyncMock()
         with patch.dict(sys.modules, {"app.core.tasks": mock_tasks}):
-            result = await svc.request_recovery(email=user.email, school_id=uuid.uuid4())
+            result = await svc.request_recovery(
+                email=user.email, school_id=uuid.uuid4()
+            )
         assert result["request_id"] == recovery.id
         assert f"recovery_otp:{recovery.id}" in redis.store
 
@@ -1414,14 +1666,22 @@ class TestRecoveryService:
         svc, redis = setup_recovery_service()
         user = make_user()
         svc.repo.get_user_by_email.return_value = user
-        recovery = SimpleNamespace(id=uuid.uuid4(), school_id=uuid.uuid4(), user_id=user.id)
+        recovery = SimpleNamespace(
+            id=uuid.uuid4(), school_id=uuid.uuid4(), user_id=user.id
+        )
         svc.repo.create_recovery_request.return_value = recovery
-        monkeypatch.setattr(auth_module.settings, "app_env", "development", raising=False)
-        monkeypatch.setattr(auth_module.settings, "debug_reveal_otp", True, raising=False)
+        monkeypatch.setattr(
+            auth_module.settings, "app_env", "development", raising=False
+        )
+        monkeypatch.setattr(
+            auth_module.settings, "debug_reveal_otp", True, raising=False
+        )
         mock_tasks = MagicMock()
         mock_tasks.enqueue_email = AsyncMock()
         with patch.dict(sys.modules, {"app.core.tasks": mock_tasks}):
-            result = await svc.request_recovery(email=user.email, school_id=uuid.uuid4())
+            result = await svc.request_recovery(
+                email=user.email, school_id=uuid.uuid4()
+            )
         assert "otp" in result
 
     @pytest.mark.asyncio
@@ -1435,8 +1695,13 @@ class TestRecoveryService:
     async def test_verify_otp_not_pending_raises_conflict(self):
         svc, _ = setup_recovery_service()
         recovery = SimpleNamespace(
-            id=uuid.uuid4(), status="verified", expires_at=None, lock_until=None,
-            school_id=uuid.uuid4(), user_id=uuid.uuid4(), attempts=0,
+            id=uuid.uuid4(),
+            status="verified",
+            expires_at=None,
+            lock_until=None,
+            school_id=uuid.uuid4(),
+            user_id=uuid.uuid4(),
+            attempts=0,
         )
         svc.repo.get_recovery_request.return_value = recovery
         with pytest.raises(ConflictError):
@@ -1446,9 +1711,13 @@ class TestRecoveryService:
     async def test_verify_otp_expired_raises(self):
         svc, _ = setup_recovery_service()
         recovery = SimpleNamespace(
-            id=uuid.uuid4(), status="pending",
+            id=uuid.uuid4(),
+            status="pending",
             expires_at=datetime.now(timezone.utc) - timedelta(hours=1),
-            lock_until=None, school_id=uuid.uuid4(), user_id=uuid.uuid4(), attempts=0,
+            lock_until=None,
+            school_id=uuid.uuid4(),
+            user_id=uuid.uuid4(),
+            attempts=0,
         )
         svc.repo.get_recovery_request.return_value = recovery
         with pytest.raises(AuthenticationError, match="expired"):
@@ -1458,9 +1727,13 @@ class TestRecoveryService:
     async def test_verify_otp_locked_raises_rate_limit(self):
         svc, _ = setup_recovery_service()
         recovery = SimpleNamespace(
-            id=uuid.uuid4(), status="pending", expires_at=None,
+            id=uuid.uuid4(),
+            status="pending",
+            expires_at=None,
             lock_until=datetime.now(timezone.utc) + timedelta(minutes=30),
-            school_id=uuid.uuid4(), user_id=uuid.uuid4(), attempts=5,
+            school_id=uuid.uuid4(),
+            user_id=uuid.uuid4(),
+            attempts=5,
         )
         svc.repo.get_recovery_request.return_value = recovery
         with pytest.raises(RateLimitError):
@@ -1471,8 +1744,13 @@ class TestRecoveryService:
         svc, _ = setup_recovery_service()
         rid = uuid.uuid4()
         recovery = SimpleNamespace(
-            id=rid, status="pending", expires_at=None, lock_until=None,
-            school_id=uuid.uuid4(), user_id=uuid.uuid4(), attempts=0,
+            id=rid,
+            status="pending",
+            expires_at=None,
+            lock_until=None,
+            school_id=uuid.uuid4(),
+            user_id=uuid.uuid4(),
+            attempts=0,
         )
         svc.repo.get_recovery_request.return_value = recovery
         # Don't put anything in redis → OTP key missing
@@ -1484,8 +1762,13 @@ class TestRecoveryService:
         svc, redis = setup_recovery_service()
         rid = uuid.uuid4()
         recovery = SimpleNamespace(
-            id=rid, status="pending", expires_at=None, lock_until=None,
-            school_id=uuid.uuid4(), user_id=uuid.uuid4(), attempts=0,
+            id=rid,
+            status="pending",
+            expires_at=None,
+            lock_until=None,
+            school_id=uuid.uuid4(),
+            user_id=uuid.uuid4(),
+            attempts=0,
         )
         svc.repo.get_recovery_request.return_value = recovery
         correct_hash = hashlib.sha256("654321".encode()).hexdigest()
@@ -1502,8 +1785,13 @@ class TestRecoveryService:
         svc, redis = setup_recovery_service()
         rid = uuid.uuid4()
         recovery = SimpleNamespace(
-            id=rid, status="pending", expires_at=None, lock_until=None,
-            school_id=uuid.uuid4(), user_id=uuid.uuid4(), attempts=4,
+            id=rid,
+            status="pending",
+            expires_at=None,
+            lock_until=None,
+            school_id=uuid.uuid4(),
+            user_id=uuid.uuid4(),
+            attempts=4,
         )
         svc.repo.get_recovery_request.return_value = recovery
         correct_hash = hashlib.sha256("000000".encode()).hexdigest()
@@ -1522,8 +1810,13 @@ class TestRecoveryService:
         correct_otp = "123456"
         correct_hash = hashlib.sha256(correct_otp.encode()).hexdigest()
         recovery = SimpleNamespace(
-            id=rid, status="pending", expires_at=None, lock_until=None,
-            school_id=uuid.uuid4(), user_id=uuid.uuid4(), attempts=0,
+            id=rid,
+            status="pending",
+            expires_at=None,
+            lock_until=None,
+            school_id=uuid.uuid4(),
+            user_id=uuid.uuid4(),
+            attempts=0,
         )
         svc.repo.get_recovery_request.return_value = recovery
         redis.store[f"recovery_otp:{rid}"] = correct_hash
@@ -1544,8 +1837,12 @@ class TestRecoveryService:
     @pytest.mark.asyncio
     async def test_reset_password_not_verified_raises_conflict(self):
         svc, _ = setup_recovery_service()
-        recovery = SimpleNamespace(id=uuid.uuid4(), status="pending",
-                                   user_id=uuid.uuid4(), school_id=uuid.uuid4())
+        recovery = SimpleNamespace(
+            id=uuid.uuid4(),
+            status="pending",
+            user_id=uuid.uuid4(),
+            school_id=uuid.uuid4(),
+        )
         svc.repo.get_recovery_request.return_value = recovery
         with pytest.raises(ConflictError, match="verified"):
             await svc.reset_password(recovery.id, "NewP@ss1!")
@@ -1553,13 +1850,19 @@ class TestRecoveryService:
     @pytest.mark.asyncio
     async def test_reset_password_in_history_raises(self, monkeypatch):
         svc, _ = setup_recovery_service()
-        recovery = SimpleNamespace(id=uuid.uuid4(), status="verified",
-                                   user_id=uuid.uuid4(), school_id=uuid.uuid4())
+        recovery = SimpleNamespace(
+            id=uuid.uuid4(),
+            status="verified",
+            user_id=uuid.uuid4(),
+            school_id=uuid.uuid4(),
+        )
         svc.repo.get_recovery_request.return_value = recovery
         user = make_user()
         svc.repo.get_user_by_id.return_value = user
-        monkeypatch.setattr("app.core.password_policy.password_validator",
-                            SimpleNamespace(validate=lambda *_a, **_k: None))
+        monkeypatch.setattr(
+            "app.core.password_policy.password_validator",
+            SimpleNamespace(validate=lambda *_a, **_k: None),
+        )
         history_entry = SimpleNamespace(password_hash="any-hash")
         # verify_password always returns True so the history check fires
         monkeypatch.setattr(auth_module, "verify_password", lambda *_: True)
@@ -1571,13 +1874,19 @@ class TestRecoveryService:
     @pytest.mark.asyncio
     async def test_reset_password_success(self, monkeypatch):
         svc, _ = setup_recovery_service()
-        recovery = SimpleNamespace(id=uuid.uuid4(), status="verified",
-                                   user_id=uuid.uuid4(), school_id=uuid.uuid4())
+        recovery = SimpleNamespace(
+            id=uuid.uuid4(),
+            status="verified",
+            user_id=uuid.uuid4(),
+            school_id=uuid.uuid4(),
+        )
         svc.repo.get_recovery_request.return_value = recovery
         user = make_user()
         svc.repo.get_user_by_id.return_value = user
-        monkeypatch.setattr("app.core.password_policy.password_validator",
-                            SimpleNamespace(validate=lambda *_a, **_k: None))
+        monkeypatch.setattr(
+            "app.core.password_policy.password_validator",
+            SimpleNamespace(validate=lambda *_a, **_k: None),
+        )
         monkeypatch.setattr(auth_module, "verify_password", lambda *_: False)
         monkeypatch.setattr(auth_module, "hash_password", lambda _: "new-hash")
         svc.repo.get_password_history_by_user.return_value = []
@@ -1593,6 +1902,7 @@ class TestRecoveryService:
 # ---------------------------------------------------------------------------
 # TwoFactorService
 # ---------------------------------------------------------------------------
+
 
 def setup_2fa_service():
     redis = FakeRedis()
@@ -1679,8 +1989,12 @@ class TestTwoFactorService:
         svc.repo.get_user_by_id.return_value = user
         svc.repo.save_user = AsyncMock()
         monkeypatch.setattr("app.core.totp.verify_totp_code", lambda *_: True)
-        monkeypatch.setattr("app.core.totp.generate_backup_codes", lambda: ["CODE1", "CODE2"])
-        monkeypatch.setattr("app.core.totp.hash_backup_codes", lambda codes: ["H1", "H2"])
+        monkeypatch.setattr(
+            "app.core.totp.generate_backup_codes", lambda: ["CODE1", "CODE2"]
+        )
+        monkeypatch.setattr(
+            "app.core.totp.hash_backup_codes", lambda codes: ["H1", "H2"]
+        )
 
         result = await svc.verify_setup(user.id, uuid.uuid4(), "123456")
         assert "backup_codes" in result
@@ -1754,11 +2068,18 @@ class TestTwoFactorService:
     async def test_verify_login_user_not_found_raises(self):
         svc, redis = setup_2fa_service()
         temp_token = "valid-temp-token"
-        temp_data = json.dumps({
-            "user_id": str(uuid.uuid4()), "school_id": str(uuid.uuid4()),
-            "role": STD, "source": "web", "ip_address": None,
-            "user_agent": None, "device_name": None, "device_fingerprint": None,
-        })
+        temp_data = json.dumps(
+            {
+                "user_id": str(uuid.uuid4()),
+                "school_id": str(uuid.uuid4()),
+                "role": STD,
+                "source": "web",
+                "ip_address": None,
+                "user_agent": None,
+                "device_name": None,
+                "device_fingerprint": None,
+            }
+        )
         redis.store[f"2fa_temp:{temp_token}"] = temp_data
         svc.repo.get_user_by_id.return_value = None
 
@@ -1771,11 +2092,18 @@ class TestTwoFactorService:
         temp_token = "tok"
         user_id = uuid.uuid4()
         school_id = uuid.uuid4()
-        temp_data = json.dumps({
-            "user_id": str(user_id), "school_id": str(school_id),
-            "role": STD, "source": "web", "ip_address": None,
-            "user_agent": None, "device_name": None, "device_fingerprint": None,
-        })
+        temp_data = json.dumps(
+            {
+                "user_id": str(user_id),
+                "school_id": str(school_id),
+                "role": STD,
+                "source": "web",
+                "ip_address": None,
+                "user_agent": None,
+                "device_name": None,
+                "device_fingerprint": None,
+            }
+        )
         redis.store[f"2fa_temp:{temp_token}"] = temp_data
         user = make_user(totp_enabled=True)
         user.id = user_id
@@ -1794,11 +2122,18 @@ class TestTwoFactorService:
         temp_token = "tok2"
         user_id = uuid.uuid4()
         school_id = uuid.uuid4()
-        temp_data = json.dumps({
-            "user_id": str(user_id), "school_id": str(school_id),
-            "role": STD, "source": "web", "ip_address": "1.2.3.4",
-            "user_agent": "UA", "device_name": None, "device_fingerprint": None,
-        })
+        temp_data = json.dumps(
+            {
+                "user_id": str(user_id),
+                "school_id": str(school_id),
+                "role": STD,
+                "source": "web",
+                "ip_address": "1.2.3.4",
+                "user_agent": "UA",
+                "device_name": None,
+                "device_fingerprint": None,
+            }
+        )
         redis.store[f"2fa_temp:{temp_token}"] = temp_data
         user = make_user(totp_enabled=True)
         user.id = user_id
@@ -1816,7 +2151,9 @@ class TestTwoFactorService:
 
         # Mock _issue_token_bundle on the AuthService created inside verify_login
         mock_bundle = {"access_token": "2fa-acc", "session_id": session.id}
-        with patch.object(AuthService, "_issue_token_bundle", AsyncMock(return_value=mock_bundle)):
+        with patch.object(
+            AuthService, "_issue_token_bundle", AsyncMock(return_value=mock_bundle)
+        ):
             result = await svc.verify_login(temp_token=temp_token, code="123456")
 
         assert result["access_token"] == "2fa-acc"
@@ -1828,11 +2165,18 @@ class TestTwoFactorService:
         temp_token = "tok3"
         user_id = uuid.uuid4()
         school_id = uuid.uuid4()
-        temp_data = json.dumps({
-            "user_id": str(user_id), "school_id": str(school_id),
-            "role": STD, "source": "web", "ip_address": None,
-            "user_agent": None, "device_name": None, "device_fingerprint": None,
-        })
+        temp_data = json.dumps(
+            {
+                "user_id": str(user_id),
+                "school_id": str(school_id),
+                "role": STD,
+                "source": "web",
+                "ip_address": None,
+                "user_agent": None,
+                "device_name": None,
+                "device_fingerprint": None,
+            }
+        )
         redis.store[f"2fa_temp:{temp_token}"] = temp_data
         user = make_user(totp_enabled=True)
         user.id = user_id
@@ -1851,7 +2195,9 @@ class TestTwoFactorService:
         svc.repo.save_user = AsyncMock()
 
         mock_bundle = {"access_token": "bk-acc", "session_id": session.id}
-        with patch.object(AuthService, "_issue_token_bundle", AsyncMock(return_value=mock_bundle)):
+        with patch.object(
+            AuthService, "_issue_token_bundle", AsyncMock(return_value=mock_bundle)
+        ):
             result = await svc.verify_login(temp_token=temp_token, code="BACKUP1")
 
         assert result["access_token"] == "bk-acc"
@@ -1863,6 +2209,7 @@ class TestTwoFactorService:
 # ---------------------------------------------------------------------------
 # EmailVerificationService
 # ---------------------------------------------------------------------------
+
 
 def setup_email_service():
     redis = FakeRedis()
@@ -1888,8 +2235,12 @@ class TestEmailVerificationService:
     @pytest.mark.asyncio
     async def test_send_verification_otp_debug_reveals_otp(self, monkeypatch):
         svc, redis = setup_email_service()
-        monkeypatch.setattr(auth_module.settings, "app_env", "development", raising=False)
-        monkeypatch.setattr(auth_module.settings, "debug_reveal_otp", True, raising=False)
+        monkeypatch.setattr(
+            auth_module.settings, "app_env", "development", raising=False
+        )
+        monkeypatch.setattr(
+            auth_module.settings, "debug_reveal_otp", True, raising=False
+        )
         uid = uuid.uuid4()
         result = await svc.send_verification_otp(
             user_id=uid, school_id=uuid.uuid4(), email="u@e.com"
@@ -1942,7 +2293,9 @@ class TestEmailVerificationService:
         svc.repo.get_user_in_school.return_value = user
         svc.repo.save_user = AsyncMock()
         correct_otp = "123456"
-        redis.store[f"email_verify_otp:{uid}:{school_id}"] = hashlib.sha256(correct_otp.encode()).hexdigest()
+        redis.store[f"email_verify_otp:{uid}:{school_id}"] = hashlib.sha256(
+            correct_otp.encode()
+        ).hexdigest()
 
         result = await svc.verify_email(uid, school_id, correct_otp)
         assert result["message"] == "Email verified successfully."
@@ -1953,6 +2306,7 @@ class TestEmailVerificationService:
 # ---------------------------------------------------------------------------
 # Security non-regression: cross-school login
 # ---------------------------------------------------------------------------
+
 
 class TestSecurityNonRegression:
     """Verify that a user from school A cannot log in with school B's ID."""
@@ -1967,7 +2321,9 @@ class TestSecurityNonRegression:
         svc.repo.get_membership.return_value = None  # no membership in school_b
         svc._record_login_history = AsyncMock()
         monkeypatch.setattr(auth_module, "verify_password", lambda *_: True)
-        monkeypatch.setattr(auth_module.settings, "account_lockout_enabled", False, raising=False)
+        monkeypatch.setattr(
+            auth_module.settings, "account_lockout_enabled", False, raising=False
+        )
 
         with pytest.raises(NotFoundError) as exc_info:
             await svc.login(email=user.email, password="correct", school_id=school_b)
@@ -1982,9 +2338,13 @@ class TestSecurityNonRegression:
         svc.repo.get_user_by_email.return_value = None  # not in school_b
         svc.repo.get_school_by_id.return_value = SimpleNamespace(id=school_b)
         svc._record_login_history = AsyncMock()
-        monkeypatch.setattr(auth_module.settings, "account_lockout_enabled", False, raising=False)
+        monkeypatch.setattr(
+            auth_module.settings, "account_lockout_enabled", False, raising=False
+        )
 
         with pytest.raises(AuthenticationError) as exc_info:
-            await svc.login(email="user@schoola.ma", password="anything", school_id=school_b)
+            await svc.login(
+                email="user@schoola.ma", password="anything", school_id=school_b
+            )
 
         assert exc_info.value.error_code == "ERR-IAM-401"

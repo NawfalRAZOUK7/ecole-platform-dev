@@ -27,6 +27,7 @@ from app.services.lms.quiz_grading import (
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _question(*, id=None, question_type="MCQ", correct_answer=None, points=10):
     return SimpleNamespace(
         id=id or uuid.uuid4(),
@@ -46,7 +47,9 @@ def _response(*, question_id=None, student_answer=None):
     return r
 
 
-def _attempt_model(*, id=None, quiz_id=None, score=0, max_score=0, status="IN_PROGRESS"):
+def _attempt_model(
+    *, id=None, quiz_id=None, score=0, max_score=0, status="IN_PROGRESS"
+):
     return SimpleNamespace(
         id=id or uuid.uuid4(),
         quiz_id=quiz_id or uuid.uuid4(),
@@ -102,6 +105,7 @@ class _FakeUoW:
 # grade_response — None student_answer
 # ---------------------------------------------------------------------------
 
+
 def test_grade_response_none_answer():
     is_correct, pts = grade_response("MCQ", None, ["a"], 10)
     assert is_correct is False
@@ -117,6 +121,7 @@ def test_grade_response_unknown_type():
 # ---------------------------------------------------------------------------
 # grade_response — MCQ
 # ---------------------------------------------------------------------------
+
 
 def test_grade_response_mcq_correct():
     is_correct, pts = grade_response("MCQ", ["a", "b"], ["a", "b"], 10)
@@ -138,6 +143,7 @@ def test_grade_response_returns_zero_pts_on_incorrect():
 # ---------------------------------------------------------------------------
 # _grade_mcq — all branches
 # ---------------------------------------------------------------------------
+
 
 def test_grade_mcq_list_match():
     assert _grade_mcq(["a", "b"], ["b", "a"]) is True
@@ -171,6 +177,7 @@ def test_grade_mcq_multi_select_incorrect():
 # _grade_true_false — all branches
 # ---------------------------------------------------------------------------
 
+
 def test_grade_true_false_both_bool():
     assert _grade_true_false(True, True) is True
     assert _grade_true_false(False, True) is False
@@ -201,6 +208,7 @@ def test_grade_true_false_string_mismatch():
 # _grade_fill_in — all branches
 # ---------------------------------------------------------------------------
 
+
 def test_grade_fill_in_correct_list():
     assert _grade_fill_in("Paris", ["paris", "PARIS"]) is True
 
@@ -228,6 +236,7 @@ def test_grade_fill_in_strips_whitespace():
 # ---------------------------------------------------------------------------
 # _grade_drag_drop — all branches
 # ---------------------------------------------------------------------------
+
 
 def test_grade_drag_drop_correct():
     assert _grade_drag_drop({"a": "z1", "b": "z2"}, {"a": "z1", "b": "z2"}) is True
@@ -258,6 +267,7 @@ def test_grade_drag_drop_string_coercion():
 # _grade_matching — all branches
 # ---------------------------------------------------------------------------
 
+
 def test_grade_matching_correct():
     assert _grade_matching({"left1": "right1"}, {"left1": "right1"}) is True
 
@@ -281,6 +291,7 @@ def test_grade_matching_string_coercion():
 # ---------------------------------------------------------------------------
 # grade_attempt — with UoW depth (direct session path)
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_grade_attempt_with_uow_depth_scores_correctly():
@@ -390,8 +401,10 @@ async def test_grade_attempt_multiple_questions_mixed():
     q2_id = uuid.uuid4()
 
     q1 = _question(id=q1_id, question_type="MCQ", correct_answer=["a"], points=10)
-    q2 = _question(id=q2_id, question_type="FILL_IN", correct_answer=["paris"], points=5)
-    r1 = _response(question_id=q1_id, student_answer=["a"])   # correct
+    q2 = _question(
+        id=q2_id, question_type="FILL_IN", correct_answer=["paris"], points=5
+    )
+    r1 = _response(question_id=q1_id, student_answer=["a"])  # correct
     r2 = _response(question_id=q2_id, student_answer="london")  # wrong
     att = _attempt_model(id=attempt_id, quiz_id=quiz_id)
 
@@ -409,6 +422,7 @@ async def test_grade_attempt_multiple_questions_mixed():
 # ---------------------------------------------------------------------------
 # grade_attempt — without UoW depth (creates own UoW)
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_grade_attempt_without_uow_depth_commits():
@@ -461,6 +475,7 @@ async def test_grade_attempt_without_uow_depth_scores():
 # grade_response — all 5 types via grade_response wrapper
 # ---------------------------------------------------------------------------
 
+
 def test_grade_response_true_false():
     is_correct, pts = grade_response("TRUE_FALSE", True, True, 3)
     assert is_correct is True
@@ -474,16 +489,12 @@ def test_grade_response_fill_in():
 
 
 def test_grade_response_drag_drop():
-    is_correct, pts = grade_response(
-        "DRAG_DROP", {"a": "z1"}, {"a": "z1"}, 5
-    )
+    is_correct, pts = grade_response("DRAG_DROP", {"a": "z1"}, {"a": "z1"}, 5)
     assert is_correct is True
     assert pts == 5.0
 
 
 def test_grade_response_matching():
-    is_correct, pts = grade_response(
-        "MATCHING", {"l1": "r1"}, {"l1": "r1"}, 4
-    )
+    is_correct, pts = grade_response("MATCHING", {"l1": "r1"}, {"l1": "r1"}, 4)
     assert is_correct is True
     assert pts == 4.0

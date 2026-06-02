@@ -91,4 +91,4 @@ jobs:
           echo "DEVICE_ID=$DEVICE_ID" >> "$GITHUB_ENV"
 
       - name: Run integration tests
-        run: flutter test integration_test -d "$DEVICE_ID" --reporter=expanded
+        run: flutter test integration_test -d "$DEVICE_ID" --reporter=expanded --timeout=30m

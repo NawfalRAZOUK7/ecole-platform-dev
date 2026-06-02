@@ -70,11 +70,14 @@ def _col(name: str = "status"):
 
 def test_apply_operator_eq():
     expr = _apply_operator(_col(), "eq", "active")
-    assert str(expr.compile(compile_kwargs={"literal_binds": True})) == "status = 'active'"
+    assert (
+        str(expr.compile(compile_kwargs={"literal_binds": True})) == "status = 'active'"
+    )
 
 
 def test_apply_operator_gt():
     from sqlalchemy import Integer
+
     col = sa_column("score", Integer)
     expr = _apply_operator(col, "gt", "10")
     assert "score" in str(expr)
@@ -109,7 +112,9 @@ def test_apply_operator_like():
 
 def test_apply_operator_unknown_defaults_to_eq():
     expr = _apply_operator(_col("status"), "unknown_op", "active")
-    assert str(expr.compile(compile_kwargs={"literal_binds": True})) == "status = 'active'"
+    assert (
+        str(expr.compile(compile_kwargs={"literal_binds": True})) == "status = 'active'"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -169,7 +174,9 @@ async def test_parse_filters_non_filter_params_ignored():
 
 @pytest.mark.asyncio
 async def test_parse_filters_multiple():
-    request = _make_request_with_params("filter[status]=active&filter[title__like]=math")
+    request = _make_request_with_params(
+        "filter[status]=active&filter[title__like]=math"
+    )
     spec = await parse_filters(request)
     assert len(spec.items) == 2
 

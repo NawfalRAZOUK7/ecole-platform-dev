@@ -25,6 +25,7 @@ from app.services.academic.progress import (
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _auth(role: str = ADM, user_id=None, school_id=None) -> AuthContext:
     return AuthContext(
         user_id=user_id or uuid.uuid4(),
@@ -46,6 +47,7 @@ def _make_service() -> tuple[ProgressService, AsyncMock]:
 # _cache_key
 # ---------------------------------------------------------------------------
 
+
 def test_cache_key_format():
     sid = uuid.uuid4()
     key = _cache_key("grades", sid, "school1")
@@ -61,6 +63,7 @@ def test_cache_key_different_prefixes():
 # ---------------------------------------------------------------------------
 # _get_cached / _set_cached
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_get_cached_hit():
@@ -113,6 +116,7 @@ async def test_set_cached_exception_swallowed():
 # ---------------------------------------------------------------------------
 # ProgressService.verify_student_access
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_verify_student_access_admin_valid():
@@ -167,7 +171,9 @@ async def test_verify_student_access_par_child_ok():
     repo.list_parent_child_ids.return_value = [child_id]
     auth = _auth(PAR, user_id=parent_id, school_id=school_id)
 
-    with patch("app.services.academic.progress.verify_parent_child_ownership") as mock_verify:
+    with patch(
+        "app.services.academic.progress.verify_parent_child_ownership"
+    ) as mock_verify:
         await svc.verify_student_access(student_id=child_id, auth=auth)
 
     mock_verify.assert_called_once_with(child_id, [child_id])
@@ -206,6 +212,7 @@ async def test_verify_student_access_unknown_role_raises():
 # ---------------------------------------------------------------------------
 # ProgressService.verify_class_access
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_verify_class_access_found_non_teacher():
@@ -250,6 +257,7 @@ async def test_verify_class_access_teacher_checks_assignment():
 # get_grade_trends
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_get_grade_trends_cache_miss_fetches_and_caches():
     svc, repo = _make_service()
@@ -287,6 +295,7 @@ async def test_get_grade_trends_cache_hit_returns_cached():
 # get_content_completion
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_get_content_completion_with_data():
     svc, repo = _make_service()
@@ -309,7 +318,9 @@ async def test_get_content_completion_with_data():
 async def test_get_content_completion_zero_total():
     svc, repo = _make_service()
     repo.get_content_completion_counts.return_value = {
-        "completed": 0, "in_progress": 0, "not_started": 0,
+        "completed": 0,
+        "in_progress": 0,
+        "not_started": 0,
     }
     mock_redis = AsyncMock()
     mock_redis.get.return_value = None
@@ -337,6 +348,7 @@ async def test_get_content_completion_cache_hit():
 # ---------------------------------------------------------------------------
 # get_activity_scores
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_get_activity_scores_cache_miss():
@@ -370,11 +382,15 @@ async def test_get_activity_scores_cache_hit():
 # get_attendance_rates
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_get_attendance_rates_with_data():
     svc, repo = _make_service()
     repo.get_attendance_overview_counts.return_value = {
-        "present": 20, "absent": 5, "excused": 2, "late": 3,
+        "present": 20,
+        "absent": 5,
+        "excused": 2,
+        "late": 3,
     }
     repo.list_attendance_monthly_rows.return_value = [
         {"month": "2024-01", "present_count": 20, "total_records": 25},
@@ -393,7 +409,10 @@ async def test_get_attendance_rates_with_data():
 async def test_get_attendance_rates_zero_total_records():
     svc, repo = _make_service()
     repo.get_attendance_overview_counts.return_value = {
-        "present": 0, "absent": 0, "excused": 0, "late": 0,
+        "present": 0,
+        "absent": 0,
+        "excused": 0,
+        "late": 0,
     }
     repo.list_attendance_monthly_rows.return_value = [
         {"month": "2024-01", "present_count": 0, "total_records": 0},
@@ -424,6 +443,7 @@ async def test_get_attendance_rates_cache_hit():
 # ---------------------------------------------------------------------------
 # get_assessment_results
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_get_assessment_results_reverses_order():
@@ -461,6 +481,7 @@ async def test_get_assessment_results_cache_hit():
 # get_student_progress
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_get_student_progress_assembles_all_data():
     svc, repo = _make_service()
@@ -470,10 +491,22 @@ async def test_get_student_progress_assembles_all_data():
 
     # Mock all sub-methods
     with patch.object(svc, "get_grade_trends", AsyncMock(return_value={"grades": []})):
-        with patch.object(svc, "get_content_completion", AsyncMock(return_value={"content": []})):
-            with patch.object(svc, "get_activity_scores", AsyncMock(return_value={"activities": []})):
-                with patch.object(svc, "get_attendance_rates", AsyncMock(return_value={"attendance": {}})):
-                    with patch.object(svc, "get_assessment_results", AsyncMock(return_value={"assessments": []})):
+        with patch.object(
+            svc, "get_content_completion", AsyncMock(return_value={"content": []})
+        ):
+            with patch.object(
+                svc, "get_activity_scores", AsyncMock(return_value={"activities": []})
+            ):
+                with patch.object(
+                    svc,
+                    "get_attendance_rates",
+                    AsyncMock(return_value={"attendance": {}}),
+                ):
+                    with patch.object(
+                        svc,
+                        "get_assessment_results",
+                        AsyncMock(return_value={"assessments": []}),
+                    ):
                         mock_redis = AsyncMock()
                         mock_redis.get.return_value = None
                         with patch.object(progress_module, "redis_client", mock_redis):
@@ -492,12 +525,18 @@ async def test_get_student_progress_default_name():
     with patch.object(svc, "get_grade_trends", AsyncMock(return_value={})):
         with patch.object(svc, "get_content_completion", AsyncMock(return_value={})):
             with patch.object(svc, "get_activity_scores", AsyncMock(return_value={})):
-                with patch.object(svc, "get_attendance_rates", AsyncMock(return_value={})):
-                    with patch.object(svc, "get_assessment_results", AsyncMock(return_value={})):
+                with patch.object(
+                    svc, "get_attendance_rates", AsyncMock(return_value={})
+                ):
+                    with patch.object(
+                        svc, "get_assessment_results", AsyncMock(return_value={})
+                    ):
                         mock_redis = AsyncMock()
                         mock_redis.get.return_value = None
                         with patch.object(progress_module, "redis_client", mock_redis):
-                            result = await svc.get_student_progress(uuid.uuid4(), uuid.uuid4())
+                            result = await svc.get_student_progress(
+                                uuid.uuid4(), uuid.uuid4()
+                            )
 
     assert result["student_name"] == "Élève"
 
@@ -518,6 +557,7 @@ async def test_get_student_progress_cache_hit():
 # ---------------------------------------------------------------------------
 # get_class_progress
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_get_class_progress_empty_class():
@@ -548,7 +588,10 @@ async def test_get_class_progress_with_students():
     repo.list_class_students.return_value = [(sid1, "Alice"), (sid2, "Bob")]
     repo.get_grade_averages_for_students.return_value = {sid1: 14.0, sid2: None}
     repo.get_attendance_rates_for_students.return_value = {sid1: 90.0, sid2: 85.0}
-    repo.get_content_completion_rates_for_students.return_value = {sid1: 60.0, sid2: 70.0}
+    repo.get_content_completion_rates_for_students.return_value = {
+        sid1: 60.0,
+        sid2: 70.0,
+    }
     mock_redis = AsyncMock()
     mock_redis.get.return_value = None
 
@@ -592,6 +635,7 @@ async def test_get_class_progress_cache_hit():
 # ---------------------------------------------------------------------------
 # get_children_progress
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_get_children_progress_no_children():
@@ -665,6 +709,7 @@ async def test_get_children_progress_cache_hit():
 # get_student_progress_for_user / get_class_progress_for_user
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_get_student_progress_for_user_calls_verify_and_get():
     svc, repo = _make_service()
@@ -703,6 +748,7 @@ async def test_get_class_progress_for_user_calls_verify_and_get():
 # get_my_progress
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_get_my_progress_std_ok():
     svc, repo = _make_service()
@@ -728,6 +774,7 @@ async def test_get_my_progress_non_std_raises():
 # ---------------------------------------------------------------------------
 # get_children_progress_for_parent
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_get_children_progress_for_parent_ok():

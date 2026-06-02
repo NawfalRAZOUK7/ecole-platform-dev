@@ -59,24 +59,32 @@ class TestAdminDashboard:
         response = await client.get("/admin/dashboard", headers=auth_header(token))
         assert response.status_code == 200
         data = response.json()["data"]
-        assert "total_students" in data or "user_count" in data or isinstance(data, dict)
+        assert (
+            "total_students" in data or "user_count" in data or isinstance(data, dict)
+        )
 
     @pytest.mark.asyncio
     async def test_teacher_cannot_access_dashboard(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get("/admin/dashboard", headers=auth_header(token))
         assert response.status_code == 403
 
     @pytest.mark.asyncio
     async def test_student_cannot_access_dashboard(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.get("/admin/dashboard", headers=auth_header(token))
         assert response.status_code == 403
 
     @pytest.mark.asyncio
-    async def test_unauthenticated_cannot_access_dashboard(self, client, legacy_api_seed):
+    async def test_unauthenticated_cannot_access_dashboard(
+        self, client, legacy_api_seed
+    ):
         _ = legacy_api_seed
         response = await client.get("/admin/dashboard")
         assert response.status_code in (401, 403)
@@ -116,7 +124,9 @@ class TestAdminUserList:
     @pytest.mark.asyncio
     async def test_teacher_cannot_list_users(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get("/admin/users", headers=auth_header(token))
         assert response.status_code == 403
 
@@ -151,7 +161,9 @@ class TestAdminEnrollments:
     @pytest.mark.asyncio
     async def test_teacher_cannot_list_enrollments(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get("/admin/enrollments", headers=auth_header(token))
         assert response.status_code == 403
 
@@ -191,7 +203,9 @@ class TestAdminUserActions:
     @pytest.mark.asyncio
     async def test_teacher_cannot_suspend_users(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.put(
             f"/admin/users/{STUDENT_ID}/suspend",
             headers=auth_header(token),
@@ -235,7 +249,9 @@ class TestAdminLoginHistory:
     @pytest.mark.asyncio
     async def test_teacher_cannot_view_login_history(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get(
             f"/admin/users/{STUDENT_ID}/login-history",
             headers=auth_header(token),
@@ -278,7 +294,9 @@ class TestAdminInvitations:
     @pytest.mark.asyncio
     async def test_teacher_cannot_list_invitations(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get("/admin/invitations", headers=auth_header(token))
         assert response.status_code == 403
 
@@ -306,7 +324,9 @@ class TestAdminAuditLogs:
     @pytest.mark.asyncio
     async def test_teacher_cannot_access_audit_logs(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get("/admin/audit-logs", headers=auth_header(token))
         assert response.status_code == 403
 
@@ -316,18 +336,16 @@ class TestAdminJustifications:
     async def test_admin_can_list_justifications(self, client, legacy_api_seed):
         _ = legacy_api_seed
         token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
-        response = await client.get(
-            "/admin/justifications", headers=auth_header(token)
-        )
+        response = await client.get("/admin/justifications", headers=auth_header(token))
         assert response.status_code == 200
 
     @pytest.mark.asyncio
     async def test_teacher_cannot_list_justifications(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
-        response = await client.get(
-            "/admin/justifications", headers=auth_header(token)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
         )
+        response = await client.get("/admin/justifications", headers=auth_header(token))
         assert response.status_code == 403
 
 
@@ -368,7 +386,9 @@ class TestAdminBatchRegister:
     @pytest.mark.asyncio
     async def test_teacher_cannot_batch_register(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             "/admin/register-batch",
             headers=auth_header(token),
@@ -400,9 +420,13 @@ class TestParentChildLinks:
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_teacher_cannot_list_parent_child_links(self, client, legacy_api_seed):
+    async def test_teacher_cannot_list_parent_child_links(
+        self, client, legacy_api_seed
+    ):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get(
             "/admin/parent-child-links", headers=auth_header(token)
         )
@@ -462,7 +486,9 @@ class TestParentChildLinks:
     @pytest.mark.asyncio
     async def test_teacher_cannot_delete_link(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.delete(
             f"/admin/parent-child-links/{PARENT_CHILD_LINK_ID}",
             headers=auth_header(token),
@@ -496,7 +522,9 @@ class TestImpersonation:
     @pytest.mark.asyncio
     async def test_teacher_cannot_impersonate(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             f"/admin/impersonate/{STUDENT_ID}",
             headers=auth_header(token),

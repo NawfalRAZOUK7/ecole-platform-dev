@@ -25,6 +25,7 @@ from app.services.communication.overdue_reminders import (
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _invoice(
     *,
     id=None,
@@ -104,6 +105,7 @@ def _session_factory(db_mock=None):
 # send_overdue_reminders — empty invoice list
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_empty_invoices_returns_zero():
     session_cm, db = _session_factory()
@@ -124,6 +126,7 @@ async def test_empty_invoices_returns_zero():
 # ---------------------------------------------------------------------------
 # send_overdue_reminders — happy path: reminder sent
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_sends_reminder_for_overdue_invoice():
@@ -159,6 +162,7 @@ async def test_sends_reminder_for_overdue_invoice():
 # send_overdue_reminders — parent not found
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_skips_when_parent_not_found():
     inv = _invoice()
@@ -182,6 +186,7 @@ async def test_skips_when_parent_not_found():
 # ---------------------------------------------------------------------------
 # send_overdue_reminders — parent has no email
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_skips_when_parent_has_no_email():
@@ -207,6 +212,7 @@ async def test_skips_when_parent_has_no_email():
 # ---------------------------------------------------------------------------
 # send_overdue_reminders — parent opted out of billing emails
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_skips_when_parent_opted_out():
@@ -234,6 +240,7 @@ async def test_skips_when_parent_opted_out():
 # send_overdue_reminders — consent exists but not opted_out → send
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_sends_when_consent_is_active():
     inv = _invoice()
@@ -260,6 +267,7 @@ async def test_sends_when_consent_is_active():
 # ---------------------------------------------------------------------------
 # send_overdue_reminders — parent.first_name is None → uses full_name
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_uses_full_name_when_first_name_none():
@@ -290,6 +298,7 @@ async def test_uses_full_name_when_first_name_none():
 # ---------------------------------------------------------------------------
 # send_overdue_reminders — exception per invoice is caught
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_exception_in_loop_continues_other_invoices():
@@ -327,6 +336,7 @@ async def test_exception_in_loop_continues_other_invoices():
 # send_overdue_reminders — audit log called correctly
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_audit_log_called_with_correct_data():
     inv = _invoice()
@@ -357,6 +367,7 @@ async def test_audit_log_called_with_correct_data():
 # send_overdue_reminders — uow committed
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_uow_committed_after_processing():
     session_cm, db = _session_factory()
@@ -376,6 +387,7 @@ async def test_uow_committed_after_processing():
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
+
 
 def test_constants():
     assert MAX_REMINDERS == 3

@@ -1,4 +1,5 @@
 """Extended coverage tests for admin_men_compliance.py."""
+
 from __future__ import annotations
 
 import uuid

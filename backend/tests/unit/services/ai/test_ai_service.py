@@ -192,6 +192,7 @@ class TestAIServiceCore:
 # PII detection & redaction
 # ---------------------------------------------------------------------------
 
+
 class TestPIIDetection:
     def test_detect_email_in_text(self):
         hits = detect_pii_in_text("Contact me at alice@example.com please")
@@ -234,6 +235,7 @@ class TestPIIDetection:
 # validate_ai_input
 # ---------------------------------------------------------------------------
 
+
 class TestValidateAIInput:
     def test_clean_text_passes_through(self):
         text, ctx, warnings = validate_ai_input("Normal text", request_type="general")
@@ -241,7 +243,9 @@ class TestValidateAIInput:
         assert warnings == []
 
     def test_pii_in_text_gets_redacted(self):
-        text, ctx, warnings = validate_ai_input("Email alice@example.com here", request_type="general")
+        text, ctx, warnings = validate_ai_input(
+            "Email alice@example.com here", request_type="general"
+        )
         assert "alice@example.com" not in text
         assert any("pii_detected" in w for w in warnings)
 
@@ -273,6 +277,7 @@ class TestValidateAIInput:
 # validate_ai_output
 # ---------------------------------------------------------------------------
 
+
 class TestValidateAIOutput:
     def test_non_dict_returns_invalid(self):
         out, valid = validate_ai_output("not a dict")
@@ -280,7 +285,9 @@ class TestValidateAIOutput:
         assert "invalid_output_type" in out["error"]
 
     def test_missing_required_fields(self):
-        out, valid = validate_ai_output({"suggestion": "ok"}, expected_fields={"suggestion", "hints"})
+        out, valid = validate_ai_output(
+            {"suggestion": "ok"}, expected_fields={"suggestion", "hints"}
+        )
         assert not valid
         assert "missing_fields" in out["error"]
 
@@ -305,6 +312,7 @@ class TestValidateAIOutput:
 # check_content_safety
 # ---------------------------------------------------------------------------
 
+
 class TestCheckContentSafety:
     def test_safe_text_passes(self):
         safe, reason = check_content_safety("The student got a great grade!")
@@ -328,6 +336,7 @@ class TestCheckContentSafety:
 # ---------------------------------------------------------------------------
 # get_fallback_response / get_prompt_template
 # ---------------------------------------------------------------------------
+
 
 class TestFallbackAndTemplates:
     def test_writing_assist_fallback_has_status_key(self):
@@ -355,6 +364,7 @@ class TestFallbackAndTemplates:
 # ---------------------------------------------------------------------------
 # AIService._resolve_language
 # ---------------------------------------------------------------------------
+
 
 class TestResolveLanguage:
     def _make_svc(self):
@@ -400,6 +410,7 @@ class TestResolveLanguage:
 # AIService — helper to build a service with all deps mocked
 # ---------------------------------------------------------------------------
 
+
 def _make_ai_service():
     db = AsyncMock()
     svc = AIService.__new__(AIService)
@@ -423,6 +434,7 @@ def _make_auth(user_id=None, school_id=None, role="STD"):
 # ---------------------------------------------------------------------------
 # AIService.process_writing_assist
 # ---------------------------------------------------------------------------
+
 
 class TestProcessWritingAssist:
     @pytest.mark.asyncio
@@ -492,6 +504,7 @@ class TestProcessWritingAssist:
 # AIService.process_recommendation
 # ---------------------------------------------------------------------------
 
+
 class TestProcessRecommendation:
     @pytest.mark.asyncio
     async def test_missing_template_returns_fallback(self, monkeypatch):
@@ -528,7 +541,9 @@ class TestProcessRecommendation:
     @pytest.mark.asyncio
     async def test_provider_exception_returns_fallback(self):
         svc = _make_ai_service()
-        svc._provider.generate_recommendations = AsyncMock(side_effect=RuntimeError("API down"))
+        svc._provider.generate_recommendations = AsyncMock(
+            side_effect=RuntimeError("API down")
+        )
         result = await svc.process_recommendation(
             student_id=uuid.uuid4(), school_id=uuid.uuid4()
         )
@@ -548,6 +563,7 @@ class TestProcessRecommendation:
 # ---------------------------------------------------------------------------
 # AIService.create_writing_attempt
 # ---------------------------------------------------------------------------
+
 
 class FakeUow:
     def __init__(self, repo, audit=None):
@@ -577,7 +593,10 @@ class TestCreateWritingAttempt:
         svc.repo.get_opt_out_preference = AsyncMock(return_value=True)  # opted out
 
         attempt = SimpleNamespace(
-            id=uuid.uuid4(), created_at=__import__("datetime").datetime.now(__import__("datetime").timezone.utc)
+            id=uuid.uuid4(),
+            created_at=__import__("datetime").datetime.now(
+                __import__("datetime").timezone.utc
+            ),
         )
         inner_repo = AsyncMock()
         inner_repo.create_writing_attempt = AsyncMock(return_value=attempt)
@@ -586,7 +605,9 @@ class TestCreateWritingAttempt:
         monkeypatch.setattr(ai_module, "AIRepository", lambda _: inner_repo)
         monkeypatch.setattr(ai_module, "emit_event", lambda *_a, **_k: None)
 
-        result = await svc.create_writing_attempt(auth=auth, body=self._body(), client_ip="1.2.3.4")
+        result = await svc.create_writing_attempt(
+            auth=auth, body=self._body(), client_ip="1.2.3.4"
+        )
         assert result["status"] == "fallback"
         assert result["warnings"] == ["ai_opt_out_active"]
 
@@ -600,6 +621,7 @@ class TestCreateWritingAttempt:
         )
 
         from datetime import datetime, timezone
+
         attempt = SimpleNamespace(
             id=uuid.uuid4(),
             status="completed",
@@ -616,7 +638,9 @@ class TestCreateWritingAttempt:
         monkeypatch.setattr(ai_module, "AuditService", lambda _: inner_audit)
         monkeypatch.setattr(ai_module, "emit_event", lambda *_a, **_k: None)
 
-        result = await svc.create_writing_attempt(auth=auth, body=self._body(), client_ip="1.2.3.4")
+        result = await svc.create_writing_attempt(
+            auth=auth, body=self._body(), client_ip="1.2.3.4"
+        )
         assert result["status"] == "completed"
         assert result["suggestion"] == "Great!"
 
@@ -624,6 +648,7 @@ class TestCreateWritingAttempt:
 # ---------------------------------------------------------------------------
 # AIService.update_opt_out
 # ---------------------------------------------------------------------------
+
 
 class TestUpdateOptOut:
     def _body(self, opt_out=True, target_user_id=None):
@@ -636,9 +661,12 @@ class TestUpdateOptOut:
         svc.repo.get_ai_preference = AsyncMock(return_value=None)
 
         from datetime import datetime, timezone
+
         saved_pref = SimpleNamespace(
-            id=uuid.uuid4(), user_id=auth.user_id,
-            target_user_id=auth.user_id, opt_out=True,
+            id=uuid.uuid4(),
+            user_id=auth.user_id,
+            target_user_id=auth.user_id,
+            opt_out=True,
             updated_at=None,
             created_at=datetime.now(timezone.utc),
         )
@@ -652,7 +680,9 @@ class TestUpdateOptOut:
         monkeypatch.setattr(ai_module, "emit_event", lambda *_a, **_k: None)
         monkeypatch.setattr(ai_module, "pseudonymize_actor_id", lambda _: "hash")
 
-        result = await svc.update_opt_out(auth=auth, body=self._body(opt_out=True), client_ip="1.2.3.4")
+        result = await svc.update_opt_out(
+            auth=auth, body=self._body(opt_out=True), client_ip="1.2.3.4"
+        )
         assert result["opt_out"] is True
 
     @pytest.mark.asyncio
@@ -663,9 +693,12 @@ class TestUpdateOptOut:
         svc.repo.get_ai_preference = AsyncMock(return_value=existing)
 
         from datetime import datetime, timezone
+
         saved_pref = SimpleNamespace(
-            id=existing.id, user_id=auth.user_id,
-            target_user_id=auth.user_id, opt_out=True,
+            id=existing.id,
+            user_id=auth.user_id,
+            target_user_id=auth.user_id,
+            opt_out=True,
             updated_at=datetime.now(timezone.utc),
             created_at=datetime.now(timezone.utc),
         )
@@ -679,13 +712,16 @@ class TestUpdateOptOut:
         monkeypatch.setattr(ai_module, "emit_event", lambda *_a, **_k: None)
         monkeypatch.setattr(ai_module, "pseudonymize_actor_id", lambda _: "hash")
 
-        result = await svc.update_opt_out(auth=auth, body=self._body(opt_out=True), client_ip="1.2.3.4")
+        result = await svc.update_opt_out(
+            auth=auth, body=self._body(opt_out=True), client_ip="1.2.3.4"
+        )
         assert result["id"] is not None
 
 
 # ---------------------------------------------------------------------------
 # AIService.get_recommendations_for_user
 # ---------------------------------------------------------------------------
+
 
 class TestGetRecommendationsForUser:
     @pytest.mark.asyncio
@@ -731,12 +767,15 @@ class TestGetRecommendationsForUser:
 # AIService.get_kpis
 # ---------------------------------------------------------------------------
 
+
 class TestGetKpis:
     @pytest.mark.asyncio
     async def test_returns_kpis_with_period(self, monkeypatch):
         svc = _make_ai_service()
         svc._provider.compute_kpi_insights = AsyncMock(return_value=[{"insight": "up"}])
-        monkeypatch.setattr(ai_module, "compute_all_kpis", AsyncMock(return_value={"active_users": 50}))
+        monkeypatch.setattr(
+            ai_module, "compute_all_kpis", AsyncMock(return_value={"active_users": 50})
+        )
 
         result = await svc.get_kpis(school_id=uuid.uuid4(), period=7)
         assert result["period"] == "7d"
@@ -746,8 +785,12 @@ class TestGetKpis:
     @pytest.mark.asyncio
     async def test_provider_exception_still_returns_kpis(self, monkeypatch):
         svc = _make_ai_service()
-        svc._provider.compute_kpi_insights = AsyncMock(side_effect=RuntimeError("KPI provider down"))
-        monkeypatch.setattr(ai_module, "compute_all_kpis", AsyncMock(return_value={"active_users": 10}))
+        svc._provider.compute_kpi_insights = AsyncMock(
+            side_effect=RuntimeError("KPI provider down")
+        )
+        monkeypatch.setattr(
+            ai_module, "compute_all_kpis", AsyncMock(return_value={"active_users": 10})
+        )
 
         result = await svc.get_kpis(school_id=uuid.uuid4(), period=30)
         assert result["kpis"] == {"active_users": 10}
@@ -757,6 +800,7 @@ class TestGetKpis:
 # ---------------------------------------------------------------------------
 # AIService.get_event_schema
 # ---------------------------------------------------------------------------
+
 
 class TestGetEventSchema:
     @pytest.mark.asyncio
@@ -779,7 +823,10 @@ class TestGetEventSchema:
     async def test_non_payment_events_have_low_pii_risk(self):
         svc = _make_ai_service()
         result = await svc.get_event_schema()
-        other_events = [e for e in result["events"]
-                        if "payment" not in e["event_name"] and "invoice" not in e["event_name"]]
+        other_events = [
+            e
+            for e in result["events"]
+            if "payment" not in e["event_name"] and "invoice" not in e["event_name"]
+        ]
         if other_events:
             assert all(e["pii_risk"] == "low" for e in other_events)

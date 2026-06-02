@@ -17,6 +17,7 @@
 - GDPRRepository (user_gdpr.py)
 - ProfileRepository (user_profile.py)
 """
+
 from __future__ import annotations
 
 import uuid
@@ -117,6 +118,7 @@ def _db(result=None, *, side_effects=None):
 # AIRepository
 # ===========================================================================
 
+
 class TestAIRepository:
     @pytest.mark.asyncio
     async def test_get_opt_out_preference_no_school(self):
@@ -177,6 +179,7 @@ class TestAIRepository:
 # GamesRepository
 # ===========================================================================
 
+
 class TestGamesRepository:
     @pytest.mark.asyncio
     async def test_list_configs_minimal(self):
@@ -184,8 +187,13 @@ class TestGamesRepository:
         db = _db(_FR(many=items))
         result, _, _ = await GamesRepository(db).list_configs(
             school_id=_uid(),
-            game_type=None, difficulty=None, subject=None, target_age=None,
-            is_active=None, cursor=None, limit=20,
+            game_type=None,
+            difficulty=None,
+            subject=None,
+            target_age=None,
+            is_active=None,
+            cursor=None,
+            limit=20,
         )
         assert result == items
 
@@ -241,6 +249,7 @@ class TestGamesRepository:
 # RewardsRepository
 # ===========================================================================
 
+
 class TestRewardsRepository:
     @pytest.mark.asyncio
     async def test_get_user(self):
@@ -250,14 +259,18 @@ class TestRewardsRepository:
     @pytest.mark.asyncio
     async def test_get_student_reward(self):
         obj = object()
-        assert await RewardsRepository(_db(_FR(v=obj))).get_student_reward(_uid()) is obj
+        assert (
+            await RewardsRepository(_db(_FR(v=obj))).get_student_reward(_uid()) is obj
+        )
 
     @pytest.mark.asyncio
     async def test_create_student_reward(self):
         fake = SimpleNamespace(id=_uid())
         db = _db()
         with patch("app.repositories.ai_rewards.StudentReward", return_value=fake):
-            result = await RewardsRepository(db).create_student_reward(student_id=_uid())
+            result = await RewardsRepository(db).create_student_reward(
+                student_id=_uid()
+            )
         assert result is fake
 
     @pytest.mark.asyncio
@@ -364,6 +377,7 @@ class TestRewardsRepository:
 # AuditRepository
 # ===========================================================================
 
+
 class TestAuditRepository:
     @pytest.mark.asyncio
     async def test_create_log(self):
@@ -379,9 +393,7 @@ class TestAuditRepository:
     async def test_list_logs_minimal(self):
         items = [object()]
         db = _db(_FR(many=items))
-        rows, _, _ = await AuditRepository(db).list_logs(
-            filters={"school_id": _uid()}
-        )
+        rows, _, _ = await AuditRepository(db).list_logs(filters={"school_id": _uid()})
         assert rows == items
 
     @pytest.mark.asyncio
@@ -406,12 +418,15 @@ class TestAuditRepository:
 # LoginHistoryRepository
 # ===========================================================================
 
+
 class TestLoginHistoryRepository:
     @pytest.mark.asyncio
     async def test_create_login_record_success(self):
         fake = SimpleNamespace(id=_uid())
         db = _db()
-        with patch("app.repositories.auth_login_history.LoginHistory", return_value=fake):
+        with patch(
+            "app.repositories.auth_login_history.LoginHistory", return_value=fake
+        ):
             result = await LoginHistoryRepository(db).create_login_record(
                 user_id=_uid(), school_id=_uid()
             )
@@ -430,7 +445,10 @@ class TestLoginHistoryRepository:
     async def test_list_user_login_history_with_filters(self):
         items = [object()]
         db = _db(_FR(many=items))
-        with patch("app.repositories.auth_login_history.decode_cursor", return_value=(_uid(), None)):
+        with patch(
+            "app.repositories.auth_login_history.decode_cursor",
+            return_value=(_uid(), None),
+        ):
             rows, _, _ = await LoginHistoryRepository(db).list_user_login_history(
                 _uid(), limit=5, cursor="cur"
             )
@@ -447,6 +465,7 @@ class TestLoginHistoryRepository:
 # ===========================================================================
 # ERPRepository
 # ===========================================================================
+
 
 class TestERPRepository:
     @pytest.mark.asyncio
@@ -578,7 +597,9 @@ class TestERPRepository:
     @pytest.mark.asyncio
     async def test_get_attendance_session(self):
         obj = object()
-        assert await ERPRepository(_db(_FR(v=obj))).get_attendance_session(_uid()) is obj
+        assert (
+            await ERPRepository(_db(_FR(v=obj))).get_attendance_session(_uid()) is obj
+        )
 
     @pytest.mark.asyncio
     async def test_create_attendance_session(self):
@@ -622,7 +643,10 @@ class TestERPRepository:
     @pytest.mark.asyncio
     async def test_get_absence_justification(self):
         obj = object()
-        assert await ERPRepository(_db(_FR(v=obj))).get_absence_justification(_uid()) is obj
+        assert (
+            await ERPRepository(_db(_FR(v=obj))).get_absence_justification(_uid())
+            is obj
+        )
 
     @pytest.mark.asyncio
     async def test_create_absence_justification(self):
@@ -713,11 +737,16 @@ class TestERPRepository:
     @pytest.mark.asyncio
     async def test_find_overlapping_class_slot(self):
         from datetime import time as t
+
         obj = object()
         db = _db(_FR(v=obj))
         result = await ERPRepository(db).find_overlapping_class_slot(
-            school_id=_uid(), class_id=_uid(), academic_year_id=_uid(),
-            day_of_week=1, start_time=t(8, 0), end_time=t(9, 0),
+            school_id=_uid(),
+            class_id=_uid(),
+            academic_year_id=_uid(),
+            day_of_week=1,
+            start_time=t(8, 0),
+            end_time=t(9, 0),
             exclude_slot_id=None,
         )
         assert result is obj
@@ -725,11 +754,16 @@ class TestERPRepository:
     @pytest.mark.asyncio
     async def test_find_overlapping_class_slot_with_exclude(self):
         from datetime import time as t
+
         obj = object()
         db = _db(_FR(v=obj))
         result = await ERPRepository(db).find_overlapping_class_slot(
-            school_id=_uid(), class_id=_uid(), academic_year_id=_uid(),
-            day_of_week=1, start_time=t(8, 0), end_time=t(9, 0),
+            school_id=_uid(),
+            class_id=_uid(),
+            academic_year_id=_uid(),
+            day_of_week=1,
+            start_time=t(8, 0),
+            end_time=t(9, 0),
             exclude_slot_id=_uid(),
         )
         assert result is obj
@@ -737,11 +771,16 @@ class TestERPRepository:
     @pytest.mark.asyncio
     async def test_find_overlapping_teacher_slot(self):
         from datetime import time as t
+
         obj = object()
         db = _db(_FR(v=obj))
         result = await ERPRepository(db).find_overlapping_teacher_slot(
-            school_id=_uid(), teacher_id=_uid(), academic_year_id=_uid(),
-            day_of_week=1, start_time=t(8, 0), end_time=t(9, 0),
+            school_id=_uid(),
+            teacher_id=_uid(),
+            academic_year_id=_uid(),
+            day_of_week=1,
+            start_time=t(8, 0),
+            end_time=t(9, 0),
             exclude_slot_id=None,
         )
         assert result is obj
@@ -749,11 +788,16 @@ class TestERPRepository:
     @pytest.mark.asyncio
     async def test_find_overlapping_teacher_slot_with_exclude(self):
         from datetime import time as t
+
         obj = object()
         db = _db(_FR(v=obj))
         result = await ERPRepository(db).find_overlapping_teacher_slot(
-            school_id=_uid(), teacher_id=_uid(), academic_year_id=_uid(),
-            day_of_week=1, start_time=t(8, 0), end_time=t(9, 0),
+            school_id=_uid(),
+            teacher_id=_uid(),
+            academic_year_id=_uid(),
+            day_of_week=1,
+            start_time=t(8, 0),
+            end_time=t(9, 0),
             exclude_slot_id=_uid(),
         )
         assert result is obj
@@ -803,9 +847,7 @@ class TestERPRepository:
     async def test_list_timetable_exceptions_minimal(self):
         items = [object()]
         db = _db(_FR(many=items))
-        result = await ERPRepository(db).list_timetable_exceptions(
-            school_id=_uid()
-        )
+        result = await ERPRepository(db).list_timetable_exceptions(school_id=_uid())
         assert result == items
 
     @pytest.mark.asyncio
@@ -868,12 +910,15 @@ class TestERPRepository:
 # QuestionBankRepository
 # ===========================================================================
 
+
 class TestQuestionBankRepository:
     @pytest.mark.asyncio
     async def test_create_question_bank_item(self):
         fake = SimpleNamespace(id=_uid())
         db = _db()
-        with patch("app.repositories.lms_question_bank.QuestionBankItem", return_value=fake):
+        with patch(
+            "app.repositories.lms_question_bank.QuestionBankItem", return_value=fake
+        ):
             result = await QuestionBankRepository(db).create_question_bank_item(
                 school_id=_uid()
             )
@@ -892,8 +937,13 @@ class TestQuestionBankRepository:
         db = _db(_FR(many=items))
         rows, _ = await QuestionBankRepository(db).list_question_bank_items(
             school_id=_uid(),
-            subject=None, level=None, difficulty=None,
-            tags=None, search=None, cursor=None, limit=10,
+            subject=None,
+            level=None,
+            difficulty=None,
+            tags=None,
+            search=None,
+            cursor=None,
+            limit=10,
         )
         assert rows == items
 
@@ -901,7 +951,10 @@ class TestQuestionBankRepository:
     async def test_list_question_bank_items_with_filters(self):
         items = [object()]
         db = _db(_FR(many=items))
-        with patch("app.repositories.lms_question_bank.decode_cursor", return_value=(_uid(), None)):
+        with patch(
+            "app.repositories.lms_question_bank.decode_cursor",
+            return_value=(_uid(), None),
+        ):
             rows, _ = await QuestionBankRepository(db).list_question_bank_items(
                 school_id=_uid(),
                 subject="math",
@@ -942,6 +995,7 @@ class TestQuestionBankRepository:
 # QuizRepository
 # ===========================================================================
 
+
 class TestQuizRepository:
     @pytest.mark.asyncio
     async def test_get_quiz(self):
@@ -968,9 +1022,15 @@ class TestQuizRepository:
         items = [object()]
         db = _db(_FR(many=items))
         rows, _ = await QuizRepository(db).list_quizzes_for_actor(
-            role="TCH", school_id=_uid(), user_id=_uid(),
-            subject=None, level_band=None, status=None, difficulty=None,
-            cursor=None, limit=10,
+            role="TCH",
+            school_id=_uid(),
+            user_id=_uid(),
+            subject=None,
+            level_band=None,
+            status=None,
+            difficulty=None,
+            cursor=None,
+            limit=10,
         )
         assert rows == items
 
@@ -978,12 +1038,19 @@ class TestQuizRepository:
     async def test_list_quizzes_for_actor_with_filters(self):
         items = [object()]
         db = _db(_FR(many=items))
-        with patch("app.repositories.lms_quiz.decode_cursor", return_value=(_uid(), None)):
+        with patch(
+            "app.repositories.lms_quiz.decode_cursor", return_value=(_uid(), None)
+        ):
             rows, _ = await QuizRepository(db).list_quizzes_for_actor(
-                role="TCH", school_id=_uid(), user_id=_uid(),
-                subject="math", level_band="secondary",
-                status="published", difficulty="easy",
-                cursor="cur", limit=5,
+                role="TCH",
+                school_id=_uid(),
+                user_id=_uid(),
+                subject="math",
+                level_band="secondary",
+                status="published",
+                difficulty="easy",
+                cursor="cur",
+                limit=5,
             )
         assert rows == items
 
@@ -1150,7 +1217,9 @@ class TestQuizRepository:
     @pytest.mark.asyncio
     async def test_list_quiz_attempts_with_filters(self):
         db = _db(_FR(many=[]))
-        with patch("app.repositories.lms_quiz.decode_cursor", return_value=(_uid(), None)):
+        with patch(
+            "app.repositories.lms_quiz.decode_cursor", return_value=(_uid(), None)
+        ):
             rows, _, _ = await QuizRepository(db).list_quiz_attempts(
                 _uid(), cursor="cur", limit=5
             )
@@ -1159,7 +1228,9 @@ class TestQuizRepository:
     @pytest.mark.asyncio
     async def test_get_attempt_stats(self):
         db = _db(_FR(v=(0, 0, None, None, None)))
-        total, completed, avg, mx, mn = await QuizRepository(db).get_attempt_stats(_uid())
+        total, completed, avg, mx, mn = await QuizRepository(db).get_attempt_stats(
+            _uid()
+        )
         assert total == 0
         assert completed == 0
 
@@ -1174,6 +1245,7 @@ class TestQuizRepository:
 # ===========================================================================
 # RubricRepository
 # ===========================================================================
+
 
 class TestRubricRepository:
     @pytest.mark.asyncio
@@ -1266,31 +1338,49 @@ class TestRubricRepository:
 # ProfileLoaderRepository
 # ===========================================================================
 
+
 class TestProfileLoaderRepository:
     @pytest.mark.asyncio
     async def test_find_student_profile(self):
         obj = object()
-        assert await ProfileLoaderRepository(_db(_FR(v=obj))).find_student_profile(_uid()) is obj
+        assert (
+            await ProfileLoaderRepository(_db(_FR(v=obj))).find_student_profile(_uid())
+            is obj
+        )
 
     @pytest.mark.asyncio
     async def test_find_parent_profile(self):
         obj = object()
-        assert await ProfileLoaderRepository(_db(_FR(v=obj))).find_parent_profile(_uid()) is obj
+        assert (
+            await ProfileLoaderRepository(_db(_FR(v=obj))).find_parent_profile(_uid())
+            is obj
+        )
 
     @pytest.mark.asyncio
     async def test_find_teacher_profile(self):
         obj = object()
-        assert await ProfileLoaderRepository(_db(_FR(v=obj))).find_teacher_profile(_uid()) is obj
+        assert (
+            await ProfileLoaderRepository(_db(_FR(v=obj))).find_teacher_profile(_uid())
+            is obj
+        )
 
     @pytest.mark.asyncio
     async def test_find_admin_profile(self):
         obj = object()
-        assert await ProfileLoaderRepository(_db(_FR(v=obj))).find_admin_profile(_uid()) is obj
+        assert (
+            await ProfileLoaderRepository(_db(_FR(v=obj))).find_admin_profile(_uid())
+            is obj
+        )
 
     @pytest.mark.asyncio
     async def test_find_content_manager_profile(self):
         obj = object()
-        assert await ProfileLoaderRepository(_db(_FR(v=obj))).find_content_manager_profile(_uid()) is obj
+        assert (
+            await ProfileLoaderRepository(_db(_FR(v=obj))).find_content_manager_profile(
+                _uid()
+            )
+            is obj
+        )
 
     @pytest.mark.asyncio
     async def test_find_profile_student(self):
@@ -1324,7 +1414,9 @@ class TestProfileLoaderRepository:
     async def test_find_profile_content_manager(self):
         obj = object()
         db = _db(_FR(v=obj))
-        result = await ProfileLoaderRepository(db).find_profile(_uid(), "content_manager")
+        result = await ProfileLoaderRepository(db).find_profile(
+            _uid(), "content_manager"
+        )
         assert result is obj
 
     @pytest.mark.asyncio
@@ -1337,7 +1429,10 @@ class TestProfileLoaderRepository:
     async def test_create_profile(self):
         fake = SimpleNamespace(id=_uid())
         db = _db()
-        with patch.dict("app.repositories.profile_loader._PROFILE_TYPE_MAP", {"student": lambda **kw: fake}):
+        with patch.dict(
+            "app.repositories.profile_loader._PROFILE_TYPE_MAP",
+            {"student": lambda **kw: fake},
+        ):
             result = await ProfileLoaderRepository(db).create_profile(
                 user_id=_uid(), school_id=_uid(), profile_type="student"
             )
@@ -1349,6 +1444,7 @@ class TestProfileLoaderRepository:
 # ===========================================================================
 # ReportsRepository
 # ===========================================================================
+
 
 class TestReportsRepository:
     @pytest.mark.asyncio
@@ -1375,8 +1471,12 @@ class TestReportsRepository:
         obj = object()
         db = _db(_FR(v=obj))
         result = await ReportsRepository(db).find_cached_report(
-            school_id=_uid(), requester_id=_uid(), report_type="grade_summary",
-            parameters_hash="abc123", since=_now(), now=_now(),
+            school_id=_uid(),
+            requester_id=_uid(),
+            report_type="grade_summary",
+            parameters_hash="abc123",
+            since=_now(),
+            now=_now(),
         )
         assert result is obj
 
@@ -1385,8 +1485,12 @@ class TestReportsRepository:
         obj = object()
         db = _db(_FR(v=obj))
         result = await ReportsRepository(db).find_cached_report(
-            school_id=_uid(), requester_id=_uid(), report_type="grade_summary",
-            parameters_hash="abc123", since=_now(), now=_now(),
+            school_id=_uid(),
+            requester_id=_uid(),
+            report_type="grade_summary",
+            parameters_hash="abc123",
+            since=_now(),
+            now=_now(),
         )
         assert result is obj
 
@@ -1395,8 +1499,14 @@ class TestReportsRepository:
         items = [object()]
         db = _db(_FR(many=items))
         rows, _, _ = await ReportsRepository(db).list_report_jobs(
-            school_id=_uid(), requester_id=_uid(), requester_role="ADM",
-            report_type=None, period_id=None, status=None, cursor=None, limit=10,
+            school_id=_uid(),
+            requester_id=_uid(),
+            requester_role="ADM",
+            report_type=None,
+            period_id=None,
+            status=None,
+            cursor=None,
+            limit=10,
         )
         assert rows == items
 
@@ -1404,11 +1514,18 @@ class TestReportsRepository:
     async def test_list_report_jobs_with_filters(self):
         items = [object()]
         db = _db(_FR(many=items))
-        with patch("app.repositories.reports.decode_cursor", return_value=(_uid(), None)):
+        with patch(
+            "app.repositories.reports.decode_cursor", return_value=(_uid(), None)
+        ):
             rows, _, _ = await ReportsRepository(db).list_report_jobs(
-                school_id=_uid(), requester_id=_uid(), requester_role="TCH",
-                report_type="grade", period_id=_uid(), status="ready",
-                cursor="cur", limit=5,
+                school_id=_uid(),
+                requester_id=_uid(),
+                requester_role="TCH",
+                report_type="grade",
+                period_id=_uid(),
+                status="ready",
+                cursor="cur",
+                limit=5,
             )
         assert rows == items
 
@@ -1429,23 +1546,32 @@ class TestReportsRepository:
     @pytest.mark.asyncio
     async def test_get_user_in_school(self):
         obj = object()
-        assert await ReportsRepository(_db(_FR(v=obj))).get_user_in_school(
-            user_id=_uid(), school_id=_uid()
-        ) is obj
+        assert (
+            await ReportsRepository(_db(_FR(v=obj))).get_user_in_school(
+                user_id=_uid(), school_id=_uid()
+            )
+            is obj
+        )
 
     @pytest.mark.asyncio
     async def test_get_period_in_school(self):
         obj = object()
-        assert await ReportsRepository(_db(_FR(v=obj))).get_period_in_school(
-            period_id=_uid(), school_id=_uid()
-        ) is obj
+        assert (
+            await ReportsRepository(_db(_FR(v=obj))).get_period_in_school(
+                period_id=_uid(), school_id=_uid()
+            )
+            is obj
+        )
 
     @pytest.mark.asyncio
     async def test_get_class_in_school(self):
         obj = object()
-        assert await ReportsRepository(_db(_FR(v=obj))).get_class_in_school(
-            class_id=_uid(), school_id=_uid()
-        ) is obj
+        assert (
+            await ReportsRepository(_db(_FR(v=obj))).get_class_in_school(
+                class_id=_uid(), school_id=_uid()
+            )
+            is obj
+        )
 
     @pytest.mark.asyncio
     async def test_get_class_academic_year(self):
@@ -1566,11 +1692,13 @@ class TestReportsRepository:
     async def test_get_student_report_attendance_summary(self):
         row = SimpleNamespace(total=10, present=8, absent=1, excused=1, late=0)
         db = _db(_FR(v=row))
-        total, present, absent, excused, late = (
-            await ReportsRepository(db).get_student_report_attendance_summary(
-                school_id=_uid(), student_id=_uid(),
-                from_date=_now().date(), to_date=_now().date(),
-            )
+        total, present, absent, excused, late = await ReportsRepository(
+            db
+        ).get_student_report_attendance_summary(
+            school_id=_uid(),
+            student_id=_uid(),
+            from_date=_now().date(),
+            to_date=_now().date(),
         )
         assert total == 10
 
@@ -1586,8 +1714,11 @@ class TestReportsRepository:
     async def test_list_class_student_grade_averages(self):
         db = _db(_FR(many=[]))
         result = await ReportsRepository(db).list_class_student_grade_averages(
-            school_id=_uid(), class_id=_uid(),
-            student_ids=[], from_dt=_now(), to_dt=_now()
+            school_id=_uid(),
+            class_id=_uid(),
+            student_ids=[],
+            from_dt=_now(),
+            to_dt=_now(),
         )
         assert result == {}
 
@@ -1595,8 +1726,11 @@ class TestReportsRepository:
     async def test_list_class_student_attendance_rates(self):
         db = _db(_FR(many=[]))
         result = await ReportsRepository(db).list_class_student_attendance_rates(
-            school_id=_uid(), class_id=_uid(),
-            student_ids=[], from_date=_now().date(), to_date=_now().date()
+            school_id=_uid(),
+            class_id=_uid(),
+            student_ids=[],
+            from_date=_now().date(),
+            to_date=_now().date(),
         )
         assert result == {}
 
@@ -1604,8 +1738,11 @@ class TestReportsRepository:
     async def test_list_attendance_summary_rows(self):
         db = _db(_FR(many=[]))
         result = await ReportsRepository(db).list_attendance_summary_rows(
-            school_id=_uid(), class_id=_uid(),
-            student_ids=[], from_date=_now().date(), to_date=_now().date()
+            school_id=_uid(),
+            class_id=_uid(),
+            student_ids=[],
+            from_date=_now().date(),
+            to_date=_now().date(),
         )
         assert result == []
 
@@ -1613,8 +1750,10 @@ class TestReportsRepository:
     async def test_list_attendance_trends(self):
         db = _db(_FR(many=[]))
         result = await ReportsRepository(db).list_attendance_trends(
-            school_id=_uid(), class_id=_uid(),
-            from_date=_now().date(), to_date=_now().date()
+            school_id=_uid(),
+            class_id=_uid(),
+            from_date=_now().date(),
+            to_date=_now().date(),
         )
         assert result == []
 
@@ -1623,8 +1762,10 @@ class TestReportsRepository:
         items = [object()]
         db = _db(_FR(many=items))
         result = await ReportsRepository(db).list_invoices_for_parent(
-            school_id=_uid(), parent_id=_uid(),
-            from_date=_now().date(), to_date=_now().date()
+            school_id=_uid(),
+            parent_id=_uid(),
+            from_date=_now().date(),
+            to_date=_now().date(),
         )
         assert result == items
 
@@ -1659,12 +1800,14 @@ class TestReportsRepository:
 # AnalyticsRepository
 # ===========================================================================
 
+
 class TestAnalyticsRepository:
     def _dt(self):
         return _now()
 
     def _d(self):
         from datetime import date
+
         return date.today()
 
     @pytest.mark.asyncio
@@ -1743,7 +1886,9 @@ class TestAnalyticsRepository:
     @pytest.mark.asyncio
     async def test_list_enrollment_by_class(self):
         db = _db(_FR(many=[]))
-        result = await AnalyticsRepository(db).list_enrollment_by_class(school_id=_uid())
+        result = await AnalyticsRepository(db).list_enrollment_by_class(
+            school_id=_uid()
+        )
         assert result == []
 
     @pytest.mark.asyncio
@@ -1760,6 +1905,7 @@ class TestAnalyticsRepository:
 # FinancialHealthRepository
 # ===========================================================================
 
+
 class TestFinancialHealthRepository:
     @pytest.mark.asyncio
     async def test_get_academic_year_no_school(self):
@@ -1772,7 +1918,9 @@ class TestFinancialHealthRepository:
     async def test_get_academic_year_with_school(self):
         obj = object()
         db = _db(_FR(v=obj))
-        result = await FinancialHealthRepository(db).get_academic_year(_uid(), school_id=_uid())
+        result = await FinancialHealthRepository(db).get_academic_year(
+            _uid(), school_id=_uid()
+        )
         assert result is obj
 
     @pytest.mark.asyncio
@@ -1788,7 +1936,9 @@ class TestFinancialHealthRepository:
     async def test_list_active_student_ids_for_academic_year(self):
         ids = [_uid()]
         db = _db(_FR(many=ids))
-        result = await FinancialHealthRepository(db).list_active_student_ids_for_academic_year(
+        result = await FinancialHealthRepository(
+            db
+        ).list_active_student_ids_for_academic_year(
             school_id=_uid(), academic_year_id=_uid()
         )
         assert isinstance(result, set)
@@ -1796,7 +1946,9 @@ class TestFinancialHealthRepository:
     @pytest.mark.asyncio
     async def test_count_active_students_for_academic_year(self):
         db = _db(_FR(scalar=120))
-        result = await FinancialHealthRepository(db).count_active_students_for_academic_year(
+        result = await FinancialHealthRepository(
+            db
+        ).count_active_students_for_academic_year(
             school_id=_uid(), academic_year_id=_uid()
         )
         assert result == 120
@@ -1806,7 +1958,9 @@ class TestFinancialHealthRepository:
         obj = object()
         db = _db(_FR(v=obj))
         result = await FinancialHealthRepository(db).get_retention_metric(
-            school_id=_uid(), academic_year_from="2023-2024", academic_year_to="2024-2025"
+            school_id=_uid(),
+            academic_year_from="2023-2024",
+            academic_year_to="2024-2025",
         )
         assert result is obj
 
@@ -1814,14 +1968,19 @@ class TestFinancialHealthRepository:
     async def test_list_retention_metrics(self):
         items = [object()]
         db = _db(_FR(many=items))
-        result = await FinancialHealthRepository(db).list_retention_metrics(school_id=_uid())
+        result = await FinancialHealthRepository(db).list_retention_metrics(
+            school_id=_uid()
+        )
         assert result == items
 
     @pytest.mark.asyncio
     async def test_create_retention_metric(self):
         fake = SimpleNamespace(id=_uid())
         db = _db()
-        with patch("app.repositories.reports_financial_health.RetentionMetric", return_value=fake):
+        with patch(
+            "app.repositories.reports_financial_health.RetentionMetric",
+            return_value=fake,
+        ):
             result = await FinancialHealthRepository(db).create_retention_metric(
                 school_id=_uid(), period_type="annual"
             )
@@ -1837,6 +1996,7 @@ class TestFinancialHealthRepository:
     @pytest.mark.asyncio
     async def test_get_cashflow_forecast(self):
         from datetime import date
+
         obj = object()
         db = _db(_FR(v=obj))
         result = await FinancialHealthRepository(db).get_cashflow_forecast(
@@ -1848,12 +2008,15 @@ class TestFinancialHealthRepository:
     async def test_list_cashflow_forecasts_minimal(self):
         items = [object()]
         db = _db(_FR(many=items))
-        result = await FinancialHealthRepository(db).list_cashflow_forecasts(school_id=_uid())
+        result = await FinancialHealthRepository(db).list_cashflow_forecasts(
+            school_id=_uid()
+        )
         assert result == items
 
     @pytest.mark.asyncio
     async def test_list_cashflow_forecasts_with_range(self):
         from datetime import date
+
         items = [object()]
         db = _db(_FR(many=items))
         result = await FinancialHealthRepository(db).list_cashflow_forecasts(
@@ -1865,7 +2028,10 @@ class TestFinancialHealthRepository:
     async def test_create_cashflow_forecast(self):
         fake = SimpleNamespace(id=_uid())
         db = _db()
-        with patch("app.repositories.reports_financial_health.CashflowForecast", return_value=fake):
+        with patch(
+            "app.repositories.reports_financial_health.CashflowForecast",
+            return_value=fake,
+        ):
             result = await FinancialHealthRepository(db).create_cashflow_forecast(
                 school_id=_uid()
             )
@@ -1881,6 +2047,7 @@ class TestFinancialHealthRepository:
     @pytest.mark.asyncio
     async def test_get_financial_snapshot(self):
         from datetime import date
+
         obj = object()
         db = _db(_FR(v=obj))
         result = await FinancialHealthRepository(db).get_financial_snapshot(
@@ -1892,14 +2059,19 @@ class TestFinancialHealthRepository:
     async def test_list_financial_snapshots(self):
         items = [object()]
         db = _db(_FR(many=items))
-        result = await FinancialHealthRepository(db).list_financial_snapshots(school_id=_uid())
+        result = await FinancialHealthRepository(db).list_financial_snapshots(
+            school_id=_uid()
+        )
         assert result == items
 
     @pytest.mark.asyncio
     async def test_create_financial_snapshot(self):
         fake = SimpleNamespace(id=_uid())
         db = _db()
-        with patch("app.repositories.reports_financial_health.FinancialSnapshot", return_value=fake):
+        with patch(
+            "app.repositories.reports_financial_health.FinancialSnapshot",
+            return_value=fake,
+        ):
             result = await FinancialHealthRepository(db).create_financial_snapshot(
                 school_id=_uid()
             )
@@ -1915,8 +2087,11 @@ class TestFinancialHealthRepository:
     @pytest.mark.asyncio
     async def test_aggregate_invoice_amounts_by_due_month(self):
         from datetime import date as d
+
         db = _db(_FR(many=[]))
-        result = await FinancialHealthRepository(db).aggregate_invoice_amounts_by_due_month(
+        result = await FinancialHealthRepository(
+            db
+        ).aggregate_invoice_amounts_by_due_month(
             school_id=_uid(), start_date=d.today(), end_date=d.today()
         )
         assert isinstance(result, dict)
@@ -1924,8 +2099,11 @@ class TestFinancialHealthRepository:
     @pytest.mark.asyncio
     async def test_aggregate_invoice_amounts_with_year(self):
         from datetime import date as d
+
         db = _db(_FR(many=[]))
-        result = await FinancialHealthRepository(db).aggregate_invoice_amounts_by_due_month(
+        result = await FinancialHealthRepository(
+            db
+        ).aggregate_invoice_amounts_by_due_month(
             school_id=_uid(), start_date=d.today(), end_date=d.today()
         )
         assert isinstance(result, dict)
@@ -1933,6 +2111,7 @@ class TestFinancialHealthRepository:
     @pytest.mark.asyncio
     async def test_get_recent_collection_ratio(self):
         from datetime import date as d
+
         db = _db(_FR(v=(None, None)))
         result = await FinancialHealthRepository(db).get_recent_collection_ratio(
             school_id=_uid(), start_date=d.today(), end_date=d.today()
@@ -1950,15 +2129,17 @@ class TestFinancialHealthRepository:
     @pytest.mark.asyncio
     async def test_get_expense_total_for_academic_year(self):
         db = _db(_FR(scalar=None))
-        result = await FinancialHealthRepository(db).get_expense_total_for_academic_year(
-            school_id=_uid(), academic_year_id=_uid()
-        )
+        result = await FinancialHealthRepository(
+            db
+        ).get_expense_total_for_academic_year(school_id=_uid(), academic_year_id=_uid())
         assert isinstance(result, float)
 
     @pytest.mark.asyncio
     async def test_get_collected_revenue_for_academic_year(self):
         db = _db(_FR(scalar=None))
-        result = await FinancialHealthRepository(db).get_collected_revenue_for_academic_year(
+        result = await FinancialHealthRepository(
+            db
+        ).get_collected_revenue_for_academic_year(
             school_id=_uid(), academic_year_id=_uid()
         )
         assert isinstance(result, float)
@@ -1966,6 +2147,7 @@ class TestFinancialHealthRepository:
     @pytest.mark.asyncio
     async def test_get_total_receivable_as_of(self):
         from datetime import date
+
         db = _db(_FR(scalar=None))
         result = await FinancialHealthRepository(db).get_total_receivable_as_of(
             school_id=_uid(), snapshot_date=date.today()
@@ -1975,6 +2157,7 @@ class TestFinancialHealthRepository:
     @pytest.mark.asyncio
     async def test_get_total_collected_as_of(self):
         from datetime import date
+
         db = _db(_FR(scalar=None))
         result = await FinancialHealthRepository(db).get_total_collected_as_of(
             school_id=_uid(), snapshot_date=date.today()
@@ -1984,18 +2167,22 @@ class TestFinancialHealthRepository:
     @pytest.mark.asyncio
     async def test_get_overdue_totals_as_of(self):
         from datetime import date
+
         db = _db(_FR(v=(None, None)))
-        total_amount, count = await FinancialHealthRepository(db).get_overdue_totals_as_of(
-            school_id=_uid(), snapshot_date=date.today()
-        )
+        total_amount, count = await FinancialHealthRepository(
+            db
+        ).get_overdue_totals_as_of(school_id=_uid(), snapshot_date=date.today())
         assert isinstance(total_amount, float)
         assert isinstance(count, int)
 
     @pytest.mark.asyncio
     async def test_get_average_payment_delay_days_as_of(self):
         from datetime import date
+
         db = _db(_FR(scalar=None))
-        result = await FinancialHealthRepository(db).get_average_payment_delay_days_as_of(
+        result = await FinancialHealthRepository(
+            db
+        ).get_average_payment_delay_days_as_of(
             school_id=_uid(), snapshot_date=date.today()
         )
         assert result is None
@@ -2013,7 +2200,10 @@ class TestFinancialHealthRepository:
     async def test_create_cost_per_student(self):
         fake = SimpleNamespace(id=_uid())
         db = _db()
-        with patch("app.repositories.reports_financial_health.CostPerStudent", return_value=fake):
+        with patch(
+            "app.repositories.reports_financial_health.CostPerStudent",
+            return_value=fake,
+        ):
             result = await FinancialHealthRepository(db).create_cost_per_student(
                 school_id=_uid()
             )
@@ -2031,11 +2221,14 @@ class TestFinancialHealthRepository:
 # ReportScheduleRepository
 # ===========================================================================
 
+
 class TestReportScheduleRepository:
     @pytest.mark.asyncio
     async def test_get_schedule(self):
         obj = object()
-        assert await ReportScheduleRepository(_db(_FR(v=obj))).get_schedule(_uid()) is obj
+        assert (
+            await ReportScheduleRepository(_db(_FR(v=obj))).get_schedule(_uid()) is obj
+        )
 
     @pytest.mark.asyncio
     async def test_create_schedule(self):
@@ -2094,6 +2287,7 @@ class TestReportScheduleRepository:
 # ===========================================================================
 # SyncQueueRepository
 # ===========================================================================
+
 
 class TestSyncQueueRepository:
     @pytest.mark.asyncio
@@ -2299,6 +2493,7 @@ class TestSyncQueueRepository:
 # GDPRRepository
 # ===========================================================================
 
+
 class TestGDPRRepository:
     @pytest.mark.asyncio
     async def test_get_user_in_school(self):
@@ -2327,7 +2522,9 @@ class TestGDPRRepository:
     async def test_list_actor_audit_logs(self):
         items = [object()]
         db = _db(_FR(many=items))
-        result = await GDPRRepository(db).list_actor_audit_logs(user_id=_uid(), limit=100)
+        result = await GDPRRepository(db).list_actor_audit_logs(
+            user_id=_uid(), limit=100
+        )
         assert result == items
 
     @pytest.mark.asyncio
@@ -2441,6 +2638,7 @@ class TestGDPRRepository:
 # ProfileRepository
 # ===========================================================================
 
+
 class TestProfileRepository:
     @pytest.mark.asyncio
     async def test_get_user_in_school(self):
@@ -2472,6 +2670,7 @@ class TestProfileRepository:
         obj = object()
         db = _db(_FR(v=obj))
         from app.models.iam import StudentProfile
+
         result = await ProfileRepository(db).get_role_profile(
             profile_cls=StudentProfile, user_id=_uid(), school_id=_uid()
         )
@@ -2572,9 +2771,13 @@ class TestProfileRepository:
     async def test_list_teacher_submissions_no_filters(self):
         db = _db(_FR(many=[]))
         result = await ProfileRepository(db).list_teacher_submissions(
-            teacher_id=_uid(), school_id=_uid(),
-            assignment_id=None, course_id=None, status=None,
-            cursor_dt=None, limit=50,
+            teacher_id=_uid(),
+            school_id=_uid(),
+            assignment_id=None,
+            course_id=None,
+            status=None,
+            cursor_dt=None,
+            limit=50,
         )
         assert result == []
 
@@ -2582,9 +2785,13 @@ class TestProfileRepository:
     async def test_list_teacher_submissions_with_filters(self):
         db = _db(_FR(many=[]))
         result = await ProfileRepository(db).list_teacher_submissions(
-            teacher_id=_uid(), school_id=_uid(),
-            assignment_id=_uid(), course_id=None, status="submitted",
-            cursor_dt=_now(), limit=10,
+            teacher_id=_uid(),
+            school_id=_uid(),
+            assignment_id=_uid(),
+            course_id=None,
+            status="submitted",
+            cursor_dt=_now(),
+            limit=10,
         )
         assert result == []
 

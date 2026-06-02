@@ -26,6 +26,7 @@ from app.services.reports.kpi import (
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _mock_db():
     return AsyncMock()
 
@@ -44,7 +45,9 @@ def _mock_repo(**kwargs):
         "count_invitations_created",
         "count_invitations_consumed",
     ]:
-        if not hasattr(repo, method) or not isinstance(getattr(repo, method), AsyncMock):
+        if not hasattr(repo, method) or not isinstance(
+            getattr(repo, method), AsyncMock
+        ):
             setattr(repo, method, AsyncMock(return_value=0))
     return repo
 
@@ -56,6 +59,7 @@ _SID = uuid.uuid4()
 # ---------------------------------------------------------------------------
 # compute_kpi_g1_001 — Adoption rate
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_kpi_g1_001_normal():
@@ -105,6 +109,7 @@ async def test_kpi_g1_001_full_adoption():
 # compute_kpi_g1_002 — Critical journey usage rate
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_kpi_g1_002_normal():
     repo = _mock_repo(count_distinct_audit_users=40, count_active_users=80)
@@ -141,6 +146,7 @@ async def test_kpi_g1_002_custom_period():
 # ---------------------------------------------------------------------------
 # compute_kpi_g1_003 — Auth error rate
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_kpi_g1_003_normal():
@@ -193,6 +199,7 @@ async def test_kpi_g1_003_passes_outcomes_to_second_call():
 # compute_kpi_g1_004 — API latency (static, no DB calls)
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_kpi_g1_004_static_response():
     result = await compute_kpi_g1_004(_mock_db(), school_id=_SID)
@@ -212,6 +219,7 @@ async def test_kpi_g1_004_custom_period():
 # ---------------------------------------------------------------------------
 # compute_kpi_g1_005 — Incident count
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_kpi_g1_005_normal():
@@ -249,6 +257,7 @@ async def test_kpi_g1_005_custom_period():
 # ---------------------------------------------------------------------------
 # compute_kpi_g1_006 — Invitation conversion
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_kpi_g1_006_normal():
@@ -299,6 +308,7 @@ async def test_kpi_g1_006_custom_period():
 # ---------------------------------------------------------------------------
 # compute_all_kpis — aggregates all 6 KPIs
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_compute_all_kpis_returns_all_six():
@@ -405,6 +415,7 @@ async def test_compute_all_kpis_custom_period():
 # ---------------------------------------------------------------------------
 # Rounding
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_kpi_values_rounded_to_2_decimals():

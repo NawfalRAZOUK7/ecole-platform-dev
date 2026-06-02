@@ -104,14 +104,21 @@ describe('shared/lib/upload — directUpload', () => {
   beforeEach(() => {
     originalXhr = globalThis.XMLHttpRequest;
     xhrInstance = new FakeXHR();
-    // @ts-expect-error replacing constructor for test isolation
-    globalThis.XMLHttpRequest = function MockXhr() {
-      return xhrInstance;
-    };
+    Object.defineProperty(globalThis, 'XMLHttpRequest', {
+      configurable: true,
+      writable: true,
+      value: function MockXhr() {
+        return xhrInstance;
+      },
+    });
   });
 
   afterEach(() => {
-    globalThis.XMLHttpRequest = originalXhr;
+    Object.defineProperty(globalThis, 'XMLHttpRequest', {
+      configurable: true,
+      writable: true,
+      value: originalXhr,
+    });
   });
 
   function options(overrides?: Partial<DirectUploadOptions>): DirectUploadOptions {

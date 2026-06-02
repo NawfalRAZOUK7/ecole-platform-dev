@@ -3,6 +3,7 @@
 Covers: LMSRepository (all public methods), AssignmentRepository,
 AssessmentRepository, and helper _dt_to_iso.  All DB calls are mocked.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -23,6 +24,7 @@ from app.repositories.lms import (
 # ---------------------------------------------------------------------------
 # Shared helpers
 # ---------------------------------------------------------------------------
+
 
 def _uid():
     return uuid.uuid4()
@@ -100,6 +102,7 @@ def _fake_fs():
 # _dt_to_iso helper
 # ---------------------------------------------------------------------------
 
+
 def test_dt_to_iso_with_value():
     dt = _now()
     assert _dt_to_iso(dt) == dt.isoformat()
@@ -112,6 +115,7 @@ def test_dt_to_iso_none():
 # ---------------------------------------------------------------------------
 # _paginate_scalars / _paginate_rows
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_paginate_scalars_no_more():
@@ -156,6 +160,7 @@ async def test_paginate_rows_has_more():
 # get_user
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_get_user():
     obj = object()
@@ -166,6 +171,7 @@ async def test_get_user():
 # ---------------------------------------------------------------------------
 # list_activities
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_list_activities_minimal():
@@ -214,6 +220,7 @@ async def test_list_activities_with_all_filters():
 # ---------------------------------------------------------------------------
 # get_activity / get_next_activity_attempt_no / create_activity_session
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_get_activity():
@@ -270,6 +277,7 @@ async def test_save_activity_session():
 # ---------------------------------------------------------------------------
 # Class / Teacher / Parent / Student helpers
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_get_class():
@@ -329,6 +337,7 @@ async def test_student_is_enrolled_in_class_false():
 # ---------------------------------------------------------------------------
 # Course CRUD + list
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_get_course():
@@ -414,6 +423,7 @@ async def test_list_courses_empty_teacher_class_ids():
 # ---------------------------------------------------------------------------
 # Assignment CRUD + list
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_get_assignment():
@@ -502,6 +512,7 @@ async def test_list_assignments_no_course():
 # Submission
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_get_submission():
     obj = object()
@@ -542,7 +553,9 @@ async def test_create_submission():
     fake = SimpleNamespace(id=_uid())
     db = _db()
     with patch("app.repositories.lms.Submission", return_value=fake):
-        result = await LMSRepository(db).create_submission(assignment_id=_uid(), student_id=_uid())
+        result = await LMSRepository(db).create_submission(
+            assignment_id=_uid(), student_id=_uid()
+        )
     assert result is fake
 
 
@@ -557,6 +570,7 @@ async def test_save_submission():
 # ---------------------------------------------------------------------------
 # Grade
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_get_grade_for_submission():
@@ -585,6 +599,7 @@ async def test_save_grade():
 # ---------------------------------------------------------------------------
 # SubmissionFile
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_count_submission_files():
@@ -633,6 +648,7 @@ async def test_list_submission_files():
 # ---------------------------------------------------------------------------
 # ContentItem
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_get_content_item():
@@ -719,6 +735,7 @@ async def test_list_content_items_with_all_params():
 # ContentProgress
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_get_content_progress_no_student():
     obj = object()
@@ -770,6 +787,7 @@ async def test_save_content_item():
 # ContentItemAsset
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_get_content_asset_no_type():
     obj = object()
@@ -794,9 +812,7 @@ async def test_get_content_asset_with_type():
 async def test_list_content_assets_no_type():
     items = [object()]
     db = _db(_FR(many=items))
-    result = await LMSRepository(db).list_content_assets(
-        content_item_id=_uid()
-    )
+    result = await LMSRepository(db).list_content_assets(content_item_id=_uid())
     assert result == items
 
 
@@ -838,6 +854,7 @@ async def test_delete_content_asset():
 # ---------------------------------------------------------------------------
 # browse_content_library
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_browse_content_library_minimal():
@@ -901,6 +918,7 @@ async def test_browse_content_library_empty_teacher_ids():
 # ClassContentAssignment
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_find_class_content_assignment():
     obj = object()
@@ -941,6 +959,7 @@ async def test_delete_class_content_assignment():
 # ---------------------------------------------------------------------------
 # ContentSubmission
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_find_active_content_submission():
@@ -987,6 +1006,7 @@ async def test_list_my_content_submissions_with_status_and_cursor():
 # ---------------------------------------------------------------------------
 # Assessment CRUD + list
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_create_assessment():
@@ -1100,6 +1120,7 @@ async def test_save_assessment():
 # AssessmentResult
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_get_assessment_result_no_student():
     obj = object()
@@ -1132,6 +1153,7 @@ async def test_create_assessment_result():
 # ---------------------------------------------------------------------------
 # list_results (the combined assignment+assessment list_results)
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_lms_list_results_no_student_ids():
@@ -1167,6 +1189,7 @@ async def test_lms_list_results_with_student_ids():
 # list_class_content
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_list_class_content_minimal():
     rows = [object()]
@@ -1192,6 +1215,7 @@ async def test_list_class_content_with_cursor():
 # AssignmentRepository (subclass)
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_assignment_repo_list_for_class_non_assigned_status():
     db = _db()
@@ -1202,9 +1226,7 @@ async def test_assignment_repo_list_for_class_non_assigned_status():
 
 @pytest.mark.asyncio
 async def test_assignment_repo_list_for_class_none_status():
-    fake_asgn = SimpleNamespace(
-        id=_uid(), title="T", due_at=None, total_points=10
-    )
+    fake_asgn = SimpleNamespace(id=_uid(), title="T", due_at=None, total_points=10)
     db = _db(_FR(many=[fake_asgn]))
     repo = AssignmentRepository(db)
     result = await repo.list_for_class(_uid(), _uid(), status=None)
@@ -1214,9 +1236,7 @@ async def test_assignment_repo_list_for_class_none_status():
 
 @pytest.mark.asyncio
 async def test_assignment_repo_list_for_class_assigned_status():
-    fake_asgn = SimpleNamespace(
-        id=_uid(), title="T2", due_at=None, total_points=5
-    )
+    fake_asgn = SimpleNamespace(id=_uid(), title="T2", due_at=None, total_points=5)
     db = _db(_FR(many=[fake_asgn]))
     repo = AssignmentRepository(db)
     result = await repo.list_for_class(_uid(), _uid(), status="assigned")
@@ -1242,9 +1262,14 @@ async def test_assignment_repo_get_detail_not_found():
 @pytest.mark.asyncio
 async def test_assignment_repo_get_detail_found():
     assignment = SimpleNamespace(
-        id=_uid(), title="A", due_at=None, total_points=10,
-        teacher_id=_uid(), description="desc",
-        exercise_type="pdf", exercise_pdf_path=None
+        id=_uid(),
+        title="A",
+        due_at=None,
+        total_points=10,
+        teacher_id=_uid(),
+        description="desc",
+        exercise_type="pdf",
+        exercise_pdf_path=None,
     )
     course = SimpleNamespace(id=_uid(), class_id=_uid())
     db = _db(_FR(v=(assignment, course)))
@@ -1265,8 +1290,7 @@ async def test_assignment_repo_get_results_empty():
 @pytest.mark.asyncio
 async def test_assignment_repo_get_results_with_grade():
     sub = SimpleNamespace(
-        id=_uid(), student_id=_uid(), status="submitted",
-        submitted_at=_now()
+        id=_uid(), student_id=_uid(), status="submitted", submitted_at=_now()
     )
     grade = SimpleNamespace(score=8.5, feedback_text="Good", published_at=_now())
     db = _db(_FR(many=[(sub, grade)]))
@@ -1291,9 +1315,12 @@ async def test_assignment_repo_get_results_no_grade():
 # AssessmentRepository (subclass)
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_assessment_repo_list_for_class_no_status():
-    fake = SimpleNamespace(id=_uid(), title="Math", due_at=None, total_points=20, status="open")
+    fake = SimpleNamespace(
+        id=_uid(), title="Math", due_at=None, total_points=20, status="open"
+    )
     db = _db(_FR(many=[fake]))
     repo = AssessmentRepository(db)
     result = await repo.list_for_class(_uid(), _uid(), status=None)
@@ -1302,7 +1329,9 @@ async def test_assessment_repo_list_for_class_no_status():
 
 @pytest.mark.asyncio
 async def test_assessment_repo_list_for_class_with_status_filter():
-    fake = SimpleNamespace(id=_uid(), title="Math", due_at=None, total_points=20, status="open")
+    fake = SimpleNamespace(
+        id=_uid(), title="Math", due_at=None, total_points=20, status="open"
+    )
     db = _db(_FR(many=[fake]))
     repo = AssessmentRepository(db)
     result = await repo.list_for_class(_uid(), _uid(), status="closed")
@@ -1328,8 +1357,13 @@ async def test_assessment_repo_get_detail_not_found():
 @pytest.mark.asyncio
 async def test_assessment_repo_get_detail_found():
     assessment = SimpleNamespace(
-        id=_uid(), title="Bio", due_at=None, total_points=15,
-        status="open", teacher_id=_uid(), window_end=None
+        id=_uid(),
+        title="Bio",
+        due_at=None,
+        total_points=15,
+        status="open",
+        teacher_id=_uid(),
+        window_end=None,
     )
     class_room = SimpleNamespace(id=_uid())
     db = _db(_FR(v=(assessment, class_room)))

@@ -24,6 +24,7 @@ from app.services.communication.sms import (
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _fresh_uid() -> uuid.UUID:
     return uuid.uuid4()
 
@@ -37,6 +38,7 @@ def _clear_counts():
 # _today_key
 # ---------------------------------------------------------------------------
 
+
 def test_today_key_returns_string():
     key = _today_key()
     assert isinstance(key, str)
@@ -48,6 +50,7 @@ def test_today_key_returns_string():
 # ---------------------------------------------------------------------------
 # _check_rate_limit / _increment_rate_limit
 # ---------------------------------------------------------------------------
+
 
 def test_check_rate_limit_fresh_user_is_allowed():
     _clear_counts()
@@ -92,6 +95,7 @@ def test_increment_rate_limit_accumulates():
 # StubSMSProvider
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_stub_provider_send_returns_true_mock_enabled():
     provider = StubSMSProvider()
@@ -123,6 +127,7 @@ async def test_stub_provider_send_accepts_kwargs():
 # SMSProvider Protocol
 # ---------------------------------------------------------------------------
 
+
 def test_sms_provider_protocol_conformance():
     assert isinstance(StubSMSProvider(), SMSProvider)
 
@@ -137,6 +142,7 @@ async def test_sms_provider_protocol_send_default_body():
 # ---------------------------------------------------------------------------
 # SMSService.send_sms — happy path
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_send_sms_success_under_limit():
@@ -185,6 +191,7 @@ async def test_send_sms_provider_returns_false_no_increment():
 # SMSService.send_sms — rate limited
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_send_sms_rate_limited_returns_false():
     _clear_counts()
@@ -206,6 +213,7 @@ async def test_send_sms_rate_limited_returns_false():
 # SMSService.send_sms — provider exception
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_send_sms_provider_exception_returns_false():
     _clear_counts()
@@ -225,6 +233,7 @@ async def test_send_sms_provider_exception_returns_false():
 # SMSService.send_sms — kwargs forwarded
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_send_sms_forwards_kwargs_to_provider():
     _clear_counts()
@@ -235,14 +244,13 @@ async def test_send_sms_forwards_kwargs_to_provider():
 
     await svc.send_sms(to="+1", body="hi", user_id=uid, sender_id="ECOLE")
 
-    mock_provider.send.assert_awaited_once_with(
-        to="+1", body="hi", sender_id="ECOLE"
-    )
+    mock_provider.send.assert_awaited_once_with(to="+1", body="hi", sender_id="ECOLE")
 
 
 # ---------------------------------------------------------------------------
 # SMSService.send_notification_fallback
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_send_notification_fallback_short_no_body():
@@ -321,6 +329,7 @@ async def test_send_notification_fallback_exactly_160_not_truncated():
 # SMSService default provider
 # ---------------------------------------------------------------------------
 
+
 def test_sms_service_default_provider_is_stub():
     svc = SMSService()
     assert isinstance(svc.provider, StubSMSProvider)
@@ -329,6 +338,7 @@ def test_sms_service_default_provider_is_stub():
 # ---------------------------------------------------------------------------
 # Module-level singleton
 # ---------------------------------------------------------------------------
+
 
 def test_module_singleton_is_sms_service():
     assert isinstance(sms_service, SMSService)

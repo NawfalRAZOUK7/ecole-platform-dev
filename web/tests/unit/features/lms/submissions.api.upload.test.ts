@@ -70,16 +70,23 @@ describe('submissionsService.uploadSubmissionFile — legacy XHR path', () => {
   beforeEach(() => {
     originalXhr = globalThis.XMLHttpRequest;
     xhr = new FakeXHR();
-    // @ts-expect-error replacing constructor for test isolation
-    globalThis.XMLHttpRequest = function MockXhr() {
-      return xhr;
-    };
+    Object.defineProperty(globalThis, 'XMLHttpRequest', {
+      configurable: true,
+      writable: true,
+      value: function MockXhr() {
+        return xhr;
+      },
+    });
     setAccessToken(null);
     setSchoolId(null);
   });
 
   afterEach(() => {
-    globalThis.XMLHttpRequest = originalXhr;
+    Object.defineProperty(globalThis, 'XMLHttpRequest', {
+      configurable: true,
+      writable: true,
+      value: originalXhr,
+    });
     setAccessToken(null);
     setSchoolId(null);
   });
@@ -187,18 +194,25 @@ describe('submissionsService.uploadFiles', () => {
   beforeEach(() => {
     originalXhr = globalThis.XMLHttpRequest;
     xhrs.length = 0;
-    // @ts-expect-error replacing constructor for test isolation
-    globalThis.XMLHttpRequest = function MockXhr() {
-      const x = new FakeXHR();
-      xhrs.push(x);
-      return x;
-    };
+    Object.defineProperty(globalThis, 'XMLHttpRequest', {
+      configurable: true,
+      writable: true,
+      value: function MockXhr() {
+        const x = new FakeXHR();
+        xhrs.push(x);
+        return x;
+      },
+    });
     setAccessToken(null);
     setSchoolId(null);
   });
 
   afterEach(() => {
-    globalThis.XMLHttpRequest = originalXhr;
+    Object.defineProperty(globalThis, 'XMLHttpRequest', {
+      configurable: true,
+      writable: true,
+      value: originalXhr,
+    });
     setAccessToken(null);
     setSchoolId(null);
   });

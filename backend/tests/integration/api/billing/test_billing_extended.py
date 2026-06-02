@@ -98,7 +98,9 @@ class TestFeeStructureExtended:
     @pytest.mark.asyncio
     async def test_teacher_cannot_create_fee_structure(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             "/billing/fee-structures",
             headers=auth_header(token),
@@ -109,7 +111,9 @@ class TestFeeStructureExtended:
     @pytest.mark.asyncio
     async def test_student_cannot_create_fee_structure(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.post(
             "/billing/fee-structures",
             headers=auth_header(token),
@@ -129,7 +133,9 @@ class TestFeeStructureExtended:
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_list_fee_structures_invalid_status_422(self, client, legacy_api_seed):
+    async def test_list_fee_structures_invalid_status_422(
+        self, client, legacy_api_seed
+    ):
         _ = legacy_api_seed
         token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
         response = await client.get(
@@ -170,7 +176,9 @@ class TestFeeStructureExtended:
         _ = legacy_api_seed
         a_token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
         fs_id = await self._create_fee_structure(client, a_token)
-        t_token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        t_token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.put(
             f"/billing/fee-structures/{fs_id}",
             headers=auth_header(t_token),
@@ -205,7 +213,9 @@ class TestFeeAssignments:
     @pytest.mark.asyncio
     async def test_teacher_cannot_create_fee_assignment(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             "/billing/fee-assignments",
             headers=auth_header(token),
@@ -228,6 +238,7 @@ class TestFeeAssignments:
     async def test_admin_can_bulk_assign_fee_to_class(self, client, legacy_api_seed):
         _ = legacy_api_seed
         from tests.integration.api.helpers import CLASS_ID
+
         token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
         fs_id = await self._create_fee_structure_id(client, token)
         response = await client.post(
@@ -240,7 +251,9 @@ class TestFeeAssignments:
     @pytest.mark.asyncio
     async def test_teacher_cannot_bulk_assign(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             "/billing/fee-assignments/bulk",
             headers=auth_header(token),
@@ -261,7 +274,9 @@ class TestFeeAssignments:
     @pytest.mark.asyncio
     async def test_teacher_cannot_list_fee_assignments(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get(
             "/billing/fee-assignments", headers=auth_header(token)
         )
@@ -300,7 +315,9 @@ class TestGenerateInvoices:
     @pytest.mark.asyncio
     async def test_teacher_cannot_generate_invoices(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             "/billing/generate-invoices",
             headers=auth_header(token),
@@ -328,7 +345,9 @@ class TestSiblingPolicyExtended:
     async def test_admin_can_get_sibling_policy(self, client, legacy_api_seed):
         _ = legacy_api_seed
         token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
-        response = await client.get("/billing/sibling-policy", headers=auth_header(token))
+        response = await client.get(
+            "/billing/sibling-policy", headers=auth_header(token)
+        )
         assert response.status_code == 200
 
     @pytest.mark.asyncio
@@ -351,7 +370,9 @@ class TestSiblingPolicyExtended:
     @pytest.mark.asyncio
     async def test_teacher_cannot_access_sibling_policy(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get(
             "/billing/sibling-policy", headers=auth_header(token)
         )
@@ -360,7 +381,9 @@ class TestSiblingPolicyExtended:
     @pytest.mark.asyncio
     async def test_student_cannot_update_sibling_policy(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.put(
             "/billing/sibling-policy",
             headers=auth_header(token),
@@ -399,7 +422,9 @@ class TestLateFeePolicy:
     @pytest.mark.asyncio
     async def test_teacher_cannot_access_late_fee_policy(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get(
             "/billing/late-fee-policy", headers=auth_header(token)
         )
@@ -436,7 +461,9 @@ class TestPaymentPlansExtended:
     @pytest.mark.asyncio
     async def test_student_cannot_create_payment_plan(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.post(
             "/billing/payment-plans",
             headers=auth_header(token),
@@ -457,7 +484,9 @@ class TestPaymentPlansExtended:
     @pytest.mark.asyncio
     async def test_student_cannot_list_payment_plans(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.get(
             "/billing/payment-plans", headers=auth_header(token)
         )
@@ -486,7 +515,9 @@ class TestInvoicesExtended:
     @pytest.mark.asyncio
     async def test_student_cannot_list_invoices(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.get("/invoices", headers=auth_header(token))
         assert response.status_code == 403
 
@@ -512,7 +543,5 @@ class TestInvoicesExtended:
     async def test_invalid_uuid_invoice_returns_422(self, client, legacy_api_seed):
         _ = legacy_api_seed
         token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
-        response = await client.get(
-            "/invoices/not-a-uuid", headers=auth_header(token)
-        )
+        response = await client.get("/invoices/not-a-uuid", headers=auth_header(token))
         assert response.status_code == 422

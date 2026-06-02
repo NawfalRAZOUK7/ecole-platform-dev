@@ -1,6 +1,7 @@
 """Supplementary coverage tests for reports.py and reports_analytics.py
 with correct method signatures.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -83,6 +84,7 @@ def _db(result=None, *, side_effects=None):
 # ReportsRepository — correct method signatures
 # ===========================================================================
 
+
 class TestReportsRepositoryCorrect:
     @pytest.mark.asyncio
     async def test_create_report_job(self):
@@ -155,7 +157,10 @@ class TestReportsRepositoryCorrect:
         now = _now()
         items = [SimpleNamespace(id=_uid(), created_at=now) for _ in range(6)]
         db = _db(_FR(many=items))
-        with patch("app.repositories.reports.decode_cursor", return_value=(_uid(), now.isoformat())):
+        with patch(
+            "app.repositories.reports.decode_cursor",
+            return_value=(_uid(), now.isoformat()),
+        ):
             result, cursor, has_more = await ReportsRepository(db).list_report_jobs(
                 school_id=_uid(),
                 requester_id=_uid(),
@@ -367,8 +372,11 @@ class TestReportsRepositoryCorrect:
     async def test_list_class_student_grade_averages(self):
         db = _db(_FR(many=[]))
         result = await ReportsRepository(db).list_class_student_grade_averages(
-            school_id=_uid(), class_id=_uid(), student_ids=[_uid()],
-            from_dt=_now(), to_dt=_now()
+            school_id=_uid(),
+            class_id=_uid(),
+            student_ids=[_uid()],
+            from_dt=_now(),
+            to_dt=_now(),
         )
         assert isinstance(result, dict)
 
@@ -376,8 +384,11 @@ class TestReportsRepositoryCorrect:
     async def test_list_class_student_attendance_rates(self):
         db = _db(_FR(many=[]))
         result = await ReportsRepository(db).list_class_student_attendance_rates(
-            school_id=_uid(), class_id=_uid(), student_ids=[_uid()],
-            from_date=_today(), to_date=_today()
+            school_id=_uid(),
+            class_id=_uid(),
+            student_ids=[_uid()],
+            from_date=_today(),
+            to_date=_today(),
         )
         assert isinstance(result, dict)
 
@@ -385,8 +396,11 @@ class TestReportsRepositoryCorrect:
     async def test_list_attendance_summary_rows(self):
         db = _db(_FR(many=[]))
         result = await ReportsRepository(db).list_attendance_summary_rows(
-            school_id=_uid(), class_id=_uid(), student_ids=[_uid()],
-            from_date=_today(), to_date=_today()
+            school_id=_uid(),
+            class_id=_uid(),
+            student_ids=[_uid()],
+            from_date=_today(),
+            to_date=_today(),
         )
         assert result == []
 
@@ -417,7 +431,9 @@ class TestReportsRepositoryCorrect:
     async def test_list_payment_attempts_for_invoice_ids_nonempty(self):
         items = [object()]
         db = _db(_FR(many=items))
-        result = await ReportsRepository(db).list_payment_attempts_for_invoice_ids([_uid()])
+        result = await ReportsRepository(db).list_payment_attempts_for_invoice_ids(
+            [_uid()]
+        )
         assert result == items
 
     @pytest.mark.asyncio
@@ -441,6 +457,7 @@ class TestReportsRepositoryCorrect:
 # ===========================================================================
 # AnalyticsRepository — correct method signatures
 # ===========================================================================
+
 
 class TestAnalyticsRepositoryCorrect:
     @pytest.mark.asyncio
@@ -493,11 +510,13 @@ class TestAnalyticsRepositoryCorrect:
     @pytest.mark.asyncio
     async def test_billing_summary(self):
         # 3 separate execute() calls: invoiced, paid, outstanding - all return scalar_one()
-        db = _db(side_effects=[
-            _FR(v=None),   # invoiced sum → None → 0.0
-            _FR(v=None),   # paid sum
-            _FR(v=None),   # outstanding
-        ])
+        db = _db(
+            side_effects=[
+                _FR(v=None),  # invoiced sum → None → 0.0
+                _FR(v=None),  # paid sum
+                _FR(v=None),  # outstanding
+            ]
+        )
         result = await AnalyticsRepository(db).billing_summary(
             school_id=_uid(), from_date=_today(), to_date=_today()
         )
@@ -506,11 +525,13 @@ class TestAnalyticsRepositoryCorrect:
     @pytest.mark.asyncio
     async def test_engagement_summary(self):
         # Multiple execute calls for engagement metrics
-        db = _db(side_effects=[
-            _FR(scalar=10),
-            _FR(scalar=5),
-            _FR(scalar=3),
-        ])
+        db = _db(
+            side_effects=[
+                _FR(scalar=10),
+                _FR(scalar=5),
+                _FR(scalar=3),
+            ]
+        )
         result = await AnalyticsRepository(db).engagement_summary(
             school_id=_uid(), from_dt=_now(), to_dt=_now()
         )
@@ -535,7 +556,9 @@ class TestAnalyticsRepositoryCorrect:
     @pytest.mark.asyncio
     async def test_list_enrollment_by_class(self):
         db = _db(_FR(many=[]))
-        result = await AnalyticsRepository(db).list_enrollment_by_class(school_id=_uid())
+        result = await AnalyticsRepository(db).list_enrollment_by_class(
+            school_id=_uid()
+        )
         assert result == []
 
     @pytest.mark.asyncio

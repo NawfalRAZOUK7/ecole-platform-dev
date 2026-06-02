@@ -345,7 +345,9 @@ async def test_load_toggle_cache_miss_db_miss_returns_none():
 @pytest.mark.asyncio
 async def test_load_toggle_model_with_none_lists_defaulted():
     """toggle.enabled_school_ids = None → should default to []."""
-    toggle = _mock_toggle_model("feat_c", globally=False, school_ids=None, role_codes=None)
+    toggle = _mock_toggle_model(
+        "feat_c", globally=False, school_ids=None, role_codes=None
+    )
     mock_redis = AsyncMock()
     mock_redis.get.return_value = None
     mock_redis.set = AsyncMock()
@@ -396,7 +398,9 @@ async def test_is_feature_enabled_school_context():
 
     with patch("app.core.feature_flags._load_toggle", AsyncMock(return_value=data)):
         assert await is_feature_enabled("feat", mock_db, school_id=sid) is True
-        assert await is_feature_enabled("feat", mock_db, school_id=uuid.uuid4()) is False
+        assert (
+            await is_feature_enabled("feat", mock_db, school_id=uuid.uuid4()) is False
+        )
 
 
 @pytest.mark.asyncio
@@ -505,7 +509,9 @@ async def test_requires_feature_enabled_returns_auth():
     mock_db = AsyncMock()
     guard = RequiresFeature("my_feature")
 
-    with patch("app.core.feature_flags.is_feature_enabled", AsyncMock(return_value=True)):
+    with patch(
+        "app.core.feature_flags.is_feature_enabled", AsyncMock(return_value=True)
+    ):
         result = await guard(auth=auth, db=mock_db)
 
     assert result is auth

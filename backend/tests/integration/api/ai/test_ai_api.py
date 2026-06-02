@@ -34,7 +34,9 @@ class TestWritingAttempts:
     @pytest.mark.asyncio
     async def test_student_can_create_writing_attempt(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.post(
             "/writing-attempts",
             headers=auth_header(token),
@@ -52,7 +54,9 @@ class TestWritingAttempts:
     @pytest.mark.asyncio
     async def test_writing_attempt_minimal_payload(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.post(
             "/writing-attempts",
             headers=auth_header(token),
@@ -63,7 +67,9 @@ class TestWritingAttempts:
     @pytest.mark.asyncio
     async def test_teacher_cannot_create_writing_attempt(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             "/writing-attempts",
             headers=auth_header(token),
@@ -85,7 +91,9 @@ class TestWritingAttempts:
     @pytest.mark.asyncio
     async def test_missing_text_returns_422(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.post(
             "/writing-attempts",
             headers=auth_header(token),
@@ -96,7 +104,9 @@ class TestWritingAttempts:
     @pytest.mark.asyncio
     async def test_empty_text_returns_422(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.post(
             "/writing-attempts",
             headers=auth_header(token),
@@ -107,7 +117,9 @@ class TestWritingAttempts:
     @pytest.mark.asyncio
     async def test_invalid_language_returns_422(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.post(
             "/writing-attempts",
             headers=auth_header(token),
@@ -120,9 +132,7 @@ class TestWritingAttempts:
         self, client, legacy_api_seed
     ):
         _ = legacy_api_seed
-        response = await client.post(
-            "/writing-attempts", json={"text": "Some text"}
-        )
+        response = await client.post("/writing-attempts", json={"text": "Some text"})
         assert response.status_code in (401, 403)
 
 
@@ -173,7 +183,9 @@ class TestAIOptOut:
     @pytest.mark.asyncio
     async def test_teacher_cannot_update_opt_out(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             "/ai/preferences/opt-out",
             headers=auth_header(token),
@@ -197,10 +209,10 @@ class TestRecommendations:
     @pytest.mark.asyncio
     async def test_student_can_get_recommendations(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
-        response = await client.get(
-            "/recommendations", headers=auth_header(token)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
         )
+        response = await client.get("/recommendations", headers=auth_header(token))
         assert response.status_code == 200
         data = response.json()["data"]
         assert "status" in data
@@ -210,31 +222,33 @@ class TestRecommendations:
     async def test_parent_can_get_recommendations(self, client, legacy_api_seed):
         _ = legacy_api_seed
         token = await login_token(client, email=PARENT_EMAIL, password=PARENT_PASSWORD)
-        response = await client.get(
-            "/recommendations", headers=auth_header(token)
-        )
+        response = await client.get("/recommendations", headers=auth_header(token))
         assert response.status_code == 200
 
     @pytest.mark.asyncio
     async def test_teacher_cannot_get_recommendations(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
-        response = await client.get(
-            "/recommendations", headers=auth_header(token)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
         )
+        response = await client.get("/recommendations", headers=auth_header(token))
         assert response.status_code == 403
 
     @pytest.mark.asyncio
     async def test_opted_out_student_gets_fallback(self, client, legacy_api_seed):
         _ = legacy_api_seed
         # Parent opts out for student
-        p_token = await login_token(client, email=PARENT_EMAIL, password=PARENT_PASSWORD)
+        p_token = await login_token(
+            client, email=PARENT_EMAIL, password=PARENT_PASSWORD
+        )
         await client.post(
             "/ai/preferences/opt-out",
             headers=auth_header(p_token),
             json={"opt_out": True, "target_user_id": STUDENT_ID},
         )
-        s_token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        s_token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.get("/recommendations", headers=auth_header(s_token))
         assert response.status_code == 200
         # When opted out, gets a fallback response
@@ -269,7 +283,9 @@ class TestKPIs:
     async def test_teacher_can_get_kpis(self, client, legacy_api_seed):
         """TCH inherits PERM_IA_REQUEST_READ via ADM→DIR→TCH hierarchy."""
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get(
             "/kpis", headers=auth_header(token), params={"period": 7}
         )
@@ -279,7 +295,9 @@ class TestKPIs:
     async def test_student_cannot_get_kpis(self, client, legacy_api_seed):
         """STD does NOT have PERM_IA_REQUEST_READ."""
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.get(
             "/kpis", headers=auth_header(token), params={"period": 7}
         )
@@ -320,6 +338,8 @@ class TestEventSchema:
     @pytest.mark.asyncio
     async def test_student_cannot_get_event_schema(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.get("/events/schema", headers=auth_header(token))
         assert response.status_code == 403

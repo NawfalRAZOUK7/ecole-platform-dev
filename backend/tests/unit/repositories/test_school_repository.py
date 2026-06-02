@@ -1,4 +1,5 @@
 """Mock-based unit tests for app/repositories/school.py."""
+
 from __future__ import annotations
 
 import uuid
@@ -96,6 +97,7 @@ async def test_list_schools_with_cursor_and_filters():
     items = [SimpleNamespace(id=_uid(), created_at=now) for _ in range(6)]
     db = _db(_FR(many=items))
     from app.core.response import encode_cursor
+
     cursor = encode_cursor(_uid(), now.isoformat())
     result, next_cursor, has_more = await _repo(db).list_schools(
         cursor, 5, filters={"status": "active", "city": "Casablanca"}
@@ -110,7 +112,9 @@ async def test_list_schools_include_deleted_filter():
     now = datetime.now(timezone.utc)
     items = [SimpleNamespace(id=_uid(), created_at=now)]
     db = _db(_FR(many=items))
-    result, _, _ = await _repo(db).list_schools(None, 10, filters={"include_deleted": True})
+    result, _, _ = await _repo(db).list_schools(
+        None, 10, filters={"include_deleted": True}
+    )
     assert result == items
 
 

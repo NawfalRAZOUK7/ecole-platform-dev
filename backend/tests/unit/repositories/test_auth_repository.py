@@ -4,6 +4,7 @@ Every public method is exercised at least once; branch-creating optional
 parameters (school_id, active_only, exclude_session_id, user_id) are
 exercised in both their truthy and falsy forms so branch coverage is complete.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -21,6 +22,7 @@ from app.repositories.auth import AuthRepository
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _uid() -> uuid.UUID:
     return uuid.uuid4()
 
@@ -31,6 +33,7 @@ def _now() -> datetime:
 
 class _FR:
     """Fake SQLAlchemy execute result."""
+
     def __init__(self, v=None, many=None, scalar=None, rowcount=1):
         self._v = v
         self._many = many or []
@@ -77,6 +80,7 @@ def _repo(db):
 # get_user_by_email
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_get_user_by_email_no_school():
     obj = object()
@@ -96,6 +100,7 @@ async def test_get_user_by_email_with_school():
 # ---------------------------------------------------------------------------
 # get_user_by_id / get_school_by_id / get_user_in_school
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_get_user_by_id():
@@ -122,6 +127,7 @@ async def test_get_user_in_school():
 # get_user_with_memberships
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_get_user_with_memberships():
     obj = object()
@@ -132,6 +138,7 @@ async def test_get_user_with_memberships():
 # ---------------------------------------------------------------------------
 # create_user / save_user / update_user
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_create_user():
@@ -167,6 +174,7 @@ async def test_update_user():
 # ---------------------------------------------------------------------------
 # create_membership / get_membership / list_memberships
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_create_membership():
@@ -215,12 +223,15 @@ async def test_list_memberships_active_only():
 # create_*_profile
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_create_student_profile():
     fake = SimpleNamespace(id=_uid())
     db = _db()
     with patch("app.repositories.auth.StudentProfile", return_value=fake):
-        result = await _repo(db).create_student_profile(user_id=_uid(), school_id=_uid())
+        result = await _repo(db).create_student_profile(
+            user_id=_uid(), school_id=_uid()
+        )
     assert result is fake
 
 
@@ -238,13 +249,16 @@ async def test_create_teacher_profile():
     fake = SimpleNamespace(id=_uid())
     db = _db()
     with patch("app.repositories.auth.TeacherProfile", return_value=fake):
-        result = await _repo(db).create_teacher_profile(user_id=_uid(), school_id=_uid())
+        result = await _repo(db).create_teacher_profile(
+            user_id=_uid(), school_id=_uid()
+        )
     assert result is fake
 
 
 # ---------------------------------------------------------------------------
 # ParentChildLink
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_create_parent_child_link():
@@ -260,6 +274,7 @@ async def test_create_parent_child_link():
 # ---------------------------------------------------------------------------
 # Session CRUD
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_create_session():
@@ -342,13 +357,16 @@ async def test_revoke_all_sessions_with_exclude():
     fr = _FR()
     fr.rowcount = 2
     db = _db(fr)
-    result = await _repo(db).revoke_all_sessions(_uid(), _now(), exclude_session_id=_uid())
+    result = await _repo(db).revoke_all_sessions(
+        _uid(), _now(), exclude_session_id=_uid()
+    )
     assert result == 2
 
 
 # ---------------------------------------------------------------------------
 # InvitationCode
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_get_invitation_by_code_hash():
@@ -393,20 +411,25 @@ async def test_consume_invitation_found():
     invite_id = _uid()
     invite = SimpleNamespace(id=invite_id, consumed_by=None, consumed_at=None)
     db = _db(_FR(v=invite))
-    result = await _repo(db).consume_invitation(invite_id, user_id=_uid(), consumed_at=_now())
+    result = await _repo(db).consume_invitation(
+        invite_id, user_id=_uid(), consumed_at=_now()
+    )
     assert result is invite
 
 
 @pytest.mark.asyncio
 async def test_consume_invitation_not_found():
     db = _db(_FR(v=None))
-    result = await _repo(db).consume_invitation(_uid(), user_id=_uid(), consumed_at=_now())
+    result = await _repo(db).consume_invitation(
+        _uid(), user_id=_uid(), consumed_at=_now()
+    )
     assert result is None
 
 
 # ---------------------------------------------------------------------------
 # get_student_in_school
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_get_student_in_school():
@@ -418,6 +441,7 @@ async def test_get_student_in_school():
 # ---------------------------------------------------------------------------
 # AccountRecoveryRequest
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_create_recovery_request():
@@ -446,6 +470,7 @@ async def test_save_recovery_request():
 # ---------------------------------------------------------------------------
 # WebAuthn
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_create_webauthn_credential():
@@ -501,6 +526,7 @@ async def test_delete_webauthn_credential_not_found():
 # OAuthAccount
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_create_oauth_account():
     fake = SimpleNamespace(id=_uid())
@@ -554,6 +580,7 @@ async def test_delete_oauth_account_not_found():
 # PasswordHistory
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_create_password_history():
     fake = SimpleNamespace(id=_uid())
@@ -581,6 +608,7 @@ async def test_delete_old_password_history():
 # ---------------------------------------------------------------------------
 # FailedLoginAttempt
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_create_failed_login_attempt_success():
@@ -638,12 +666,15 @@ async def test_delete_old_failed_login_attempts():
 # KnownLocation / KnownDevice
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_create_known_location():
     fake = SimpleNamespace(id=_uid())
     db = _db()
     with patch("app.repositories.auth.KnownLocation", return_value=fake):
-        result = await _repo(db).create_known_location(user_id=_uid(), ip_address="1.2.3.4")
+        result = await _repo(db).create_known_location(
+            user_id=_uid(), ip_address="1.2.3.4"
+        )
     assert result is fake
 
 
@@ -676,7 +707,9 @@ async def test_create_known_device():
     fake = SimpleNamespace(id=_uid())
     db = _db()
     with patch("app.repositories.auth.KnownDevice", return_value=fake):
-        result = await _repo(db).create_known_device(user_id=_uid(), device_fingerprint="fp")
+        result = await _repo(db).create_known_device(
+            user_id=_uid(), device_fingerprint="fp"
+        )
     assert result is fake
 
 

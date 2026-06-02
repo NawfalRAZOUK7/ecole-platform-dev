@@ -2,6 +2,7 @@
 - CMSRepository (content_cms.py)
 - DocumentRepository (content_documents.py)
 """
+
 from __future__ import annotations
 
 import uuid
@@ -79,6 +80,7 @@ def _db(result=None):
 # CMSRepository
 # ===========================================================================
 
+
 class TestCMSRepository:
     @pytest.mark.asyncio
     async def test_create_content_item(self):
@@ -123,8 +125,13 @@ class TestCMSRepository:
         items = [object()]
         db = _db(_FR(many=items))
         result, has_more = await CMSRepository(db).list_platform_content(
-            content_type=None, level_band=None, subject=None, status=None,
-            origin=None, cursor=None, limit=10
+            content_type=None,
+            level_band=None,
+            subject=None,
+            status=None,
+            origin=None,
+            cursor=None,
+            limit=10,
         )
         assert result == items
 
@@ -133,7 +140,10 @@ class TestCMSRepository:
         now = _now()
         items = [SimpleNamespace(id=_uid(), created_at=now) for _ in range(6)]
         db = _db(_FR(many=items))
-        with patch("app.repositories.content_cms.decode_cursor", return_value=(_uid(), now.isoformat())):
+        with patch(
+            "app.repositories.content_cms.decode_cursor",
+            return_value=(_uid(), now.isoformat()),
+        ):
             result, has_more = await CMSRepository(db).list_platform_content(
                 content_type="video",
                 level_band=None,
@@ -150,8 +160,12 @@ class TestCMSRepository:
         items = [(_uid(), _uid(), _uid())]
         db = _db(_FR(many=items))
         result, has_more = await CMSRepository(db).list_submission_review_queue(
-            status=None, subject=None, level_band=None,
-            school_id_filter=None, cursor=None, limit=10
+            status=None,
+            subject=None,
+            level_band=None,
+            school_id_filter=None,
+            cursor=None,
+            limit=10,
         )
         assert result == items
 
@@ -160,7 +174,10 @@ class TestCMSRepository:
         now = _now()
         items = [(_uid(), _uid(), _uid()) for _ in range(6)]
         db = _db(_FR(many=items))
-        with patch("app.repositories.content_cms.decode_cursor", return_value=(_uid(), now.isoformat())):
+        with patch(
+            "app.repositories.content_cms.decode_cursor",
+            return_value=(_uid(), now.isoformat()),
+        ):
             result, has_more = await CMSRepository(db).list_submission_review_queue(
                 status="PENDING",
                 subject=None,
@@ -266,10 +283,15 @@ class TestCMSRepository:
     async def test_list_announcements_with_status_and_cursor(self):
         items = []
         db = _db(_FR(many=items))
-        with patch("app.repositories.content_cms.decode_cursor", return_value=(_uid(), None)):
+        with patch(
+            "app.repositories.content_cms.decode_cursor", return_value=(_uid(), None)
+        ):
             result, has_more = await CMSRepository(db).list_announcements(
-                school_id=_uid(), requester_role="ADM", status="PUBLISHED",
-                cursor="cur", limit=5
+                school_id=_uid(),
+                requester_role="ADM",
+                status="PUBLISHED",
+                cursor="cur",
+                limit=5,
             )
         assert result == items
 
@@ -312,6 +334,7 @@ class TestCMSRepository:
 # DocumentRepository
 # ===========================================================================
 
+
 class TestDocumentRepository:
     @pytest.mark.asyncio
     async def test_get_document(self):
@@ -352,13 +375,19 @@ class TestDocumentRepository:
     async def test_count_documents_for_storage_path_no_exclude(self):
         # method calls db.execute twice (documents + versions)
         call_count = 0
+
         async def mock_execute(stmt):
             nonlocal call_count
             call_count += 1
             return _FR(v=1)  # each returns 1, total = 2
+
         db = SimpleNamespace(
-            execute=mock_execute, add=Mock(), flush=AsyncMock(),
-            commit=AsyncMock(), merge=AsyncMock(), delete=AsyncMock()
+            execute=mock_execute,
+            add=Mock(),
+            flush=AsyncMock(),
+            commit=AsyncMock(),
+            merge=AsyncMock(),
+            delete=AsyncMock(),
         )
         result = await DocumentsRepository(db).count_documents_for_storage_path(
             storage_path="path/to/file"
@@ -368,13 +397,19 @@ class TestDocumentRepository:
     @pytest.mark.asyncio
     async def test_count_documents_for_storage_path_with_exclude(self):
         call_count = 0
+
         async def mock_execute(stmt):
             nonlocal call_count
             call_count += 1
             return _FR(v=0) if call_count == 1 else _FR(v=1)
+
         db = SimpleNamespace(
-            execute=mock_execute, add=Mock(), flush=AsyncMock(),
-            commit=AsyncMock(), merge=AsyncMock(), delete=AsyncMock()
+            execute=mock_execute,
+            add=Mock(),
+            flush=AsyncMock(),
+            commit=AsyncMock(),
+            merge=AsyncMock(),
+            delete=AsyncMock(),
         )
         result = await DocumentsRepository(db).count_documents_for_storage_path(
             storage_path="path/to/file", exclude_document_id=_uid()
@@ -400,13 +435,19 @@ class TestDocumentRepository:
     @pytest.mark.asyncio
     async def test_count_thumbnail_references_no_exclude(self):
         call_count = 0
+
         async def mock_execute(stmt):
             nonlocal call_count
             call_count += 1
             return _FR(v=2) if call_count == 1 else _FR(v=1)
+
         db = SimpleNamespace(
-            execute=mock_execute, add=Mock(), flush=AsyncMock(),
-            commit=AsyncMock(), merge=AsyncMock(), delete=AsyncMock()
+            execute=mock_execute,
+            add=Mock(),
+            flush=AsyncMock(),
+            commit=AsyncMock(),
+            merge=AsyncMock(),
+            delete=AsyncMock(),
         )
         result = await DocumentsRepository(db).count_thumbnail_references(
             thumbnail_path="thumb/path"
@@ -416,13 +457,19 @@ class TestDocumentRepository:
     @pytest.mark.asyncio
     async def test_count_thumbnail_references_with_exclude(self):
         call_count = 0
+
         async def mock_execute(stmt):
             nonlocal call_count
             call_count += 1
             return _FR(v=1) if call_count == 1 else _FR(v=0)
+
         db = SimpleNamespace(
-            execute=mock_execute, add=Mock(), flush=AsyncMock(),
-            commit=AsyncMock(), merge=AsyncMock(), delete=AsyncMock()
+            execute=mock_execute,
+            add=Mock(),
+            flush=AsyncMock(),
+            commit=AsyncMock(),
+            merge=AsyncMock(),
+            delete=AsyncMock(),
         )
         result = await DocumentsRepository(db).count_thumbnail_references(
             thumbnail_path="thumb/path", exclude_document_id=_uid()
@@ -547,8 +594,14 @@ class TestDocumentRepository:
         items = []
         db = _db(_FR(many=items))
         result, cursor, has_more = await DocumentsRepository(db).list_documents(
-            school_id=_uid(), role="ADM", user_id=_uid(),
-            category=None, owner_id=None, mime_type=None, cursor=None, limit=10
+            school_id=_uid(),
+            role="ADM",
+            user_id=_uid(),
+            category=None,
+            owner_id=None,
+            mime_type=None,
+            cursor=None,
+            limit=10,
         )
         assert result == items
 
@@ -556,11 +609,19 @@ class TestDocumentRepository:
     async def test_list_documents_with_filters(self):
         items = []
         db = _db(_FR(many=items))
-        with patch("app.repositories.content_documents.decode_cursor", return_value=(_uid(), None)):
+        with patch(
+            "app.repositories.content_documents.decode_cursor",
+            return_value=(_uid(), None),
+        ):
             result, cursor, has_more = await DocumentsRepository(db).list_documents(
-                school_id=_uid(), role="TCH", user_id=_uid(),
-                category="grade", owner_id=_uid(), mime_type="application/pdf",
-                cursor="cur", limit=5
+                school_id=_uid(),
+                role="TCH",
+                user_id=_uid(),
+                category="grade",
+                owner_id=_uid(),
+                mime_type="application/pdf",
+                cursor="cur",
+                limit=5,
             )
         assert result == items
 

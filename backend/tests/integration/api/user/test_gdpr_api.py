@@ -38,7 +38,9 @@ class TestDataExport:
     @pytest.mark.asyncio
     async def test_user_can_export_own_data(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.get(
             f"/users/{STUDENT_ID}/data-export",
             headers=auth_header(token),
@@ -61,7 +63,9 @@ class TestDataExport:
     async def test_student_cannot_export_other_user_data(self, client, legacy_api_seed):
         """Student can only export their own data — other user = 403."""
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.get(
             f"/users/{TEACHER_ID}/data-export",
             headers=auth_header(token),
@@ -71,7 +75,9 @@ class TestDataExport:
     @pytest.mark.asyncio
     async def test_teacher_can_export_own_data(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get(
             f"/users/{TEACHER_ID}/data-export",
             headers=auth_header(token),
@@ -123,7 +129,9 @@ class TestDataDeletion:
     @pytest.mark.asyncio
     async def test_teacher_cannot_delete_user_data(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             f"/users/{STUDENT_ID}/data-deletion",
             headers=auth_header(token),
@@ -134,7 +142,9 @@ class TestDataDeletion:
     async def test_student_cannot_delete_own_data(self, client, legacy_api_seed):
         """Data deletion is an admin privilege, not self-service."""
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.post(
             f"/users/{STUDENT_ID}/data-deletion",
             headers=auth_header(token),
@@ -156,7 +166,9 @@ class TestConsentLog:
     @pytest.mark.asyncio
     async def test_user_can_view_own_consent_log(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.get(
             f"/users/{STUDENT_ID}/consent-log",
             headers=auth_header(token),
@@ -180,7 +192,9 @@ class TestConsentLog:
         self, client, legacy_api_seed
     ):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.get(
             f"/users/{TEACHER_ID}/consent-log",
             headers=auth_header(token),

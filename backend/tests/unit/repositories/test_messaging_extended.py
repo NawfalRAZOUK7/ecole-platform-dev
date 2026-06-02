@@ -1,4 +1,5 @@
 """Extended coverage tests for communication_messaging.py."""
+
 from __future__ import annotations
 
 import uuid

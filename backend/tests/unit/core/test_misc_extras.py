@@ -97,6 +97,7 @@ def test_setup_telemetry_initializes_once():
         MockRedis.return_value = MagicMock()
 
         from app.core.telemetry import setup_telemetry
+
         setup_telemetry(mock_app, mock_engine)
 
     assert telemetry._telemetry_initialized is True
@@ -188,60 +189,73 @@ def test_check_name_parts_none_found_no_failure():
 
 def test_normalize_storage_backend_s3():
     from app.core.metrics import _normalize_storage_backend
+
     assert _normalize_storage_backend("s3") == "s3"
     assert _normalize_storage_backend("S3") == "s3"
 
 
 def test_normalize_storage_backend_local():
     from app.core.metrics import _normalize_storage_backend
+
     assert _normalize_storage_backend("local") == "local"
     assert _normalize_storage_backend("minio") == "local"
 
 
 def test_normalize_storage_mime_type_none():
     from app.core.metrics import normalize_storage_mime_type
+
     assert normalize_storage_mime_type(None) == "unknown"
 
 
 def test_normalize_storage_mime_type_empty():
     from app.core.metrics import normalize_storage_mime_type
+
     assert normalize_storage_mime_type("") == "unknown"
 
 
 def test_normalize_storage_mime_type_valid():
     from app.core.metrics import normalize_storage_mime_type
+
     assert normalize_storage_mime_type("application/pdf") == "application/pdf"
 
 
 def test_normalize_storage_mime_type_with_params():
     from app.core.metrics import normalize_storage_mime_type
+
     assert normalize_storage_mime_type("text/html; charset=utf-8") == "text/html"
 
 
 def test_normalize_storage_mime_type_too_long():
     from app.core.metrics import normalize_storage_mime_type
+
     long_mime = "a" * 200
     assert normalize_storage_mime_type(long_mime) == "unknown"
 
 
 def test_normalize_storage_mime_type_invalid_pattern():
     from app.core.metrics import normalize_storage_mime_type
+
     assert normalize_storage_mime_type("invalid mime!!!") == "unknown"
 
 
 def test_record_storage_upload():
     from app.core.metrics import record_storage_upload
+
     # Should not raise; just records a metric
-    record_storage_upload(env="test", backend="s3", mime_type="image/png", size_bytes=1024)
+    record_storage_upload(
+        env="test", backend="s3", mime_type="image/png", size_bytes=1024
+    )
 
 
 def test_record_storage_presign():
     from app.core.metrics import record_storage_presign
+
     record_storage_presign(env="test", backend="s3", operation="presign_get")
 
 
 def test_record_storage_error():
     from app.core.metrics import record_storage_error
+
     record_storage_error(env="test", backend="s3", operation="upload")
 
 
@@ -304,7 +318,9 @@ def test_storage_operation_observer_with_logger():
 
     with pytest.raises(ValueError):
         with storage_operation_observer(
-            env="test", backend="s3", operation="upload",
+            env="test",
+            backend="s3",
+            operation="upload",
             logger=logging.getLogger("test"),
         ):
             raise ValueError("logged failure")
@@ -360,13 +376,18 @@ def test_prometheus_middleware_dispatch_skip_metrics():
     mw = PrometheusMiddleware(app=None, env="test")  # type: ignore
 
     scope = {
-        "type": "http", "method": "GET", "path": "/metrics",
-        "query_string": b"", "headers": [], "server": ("localhost", 8000),
+        "type": "http",
+        "method": "GET",
+        "path": "/metrics",
+        "query_string": b"",
+        "headers": [],
+        "server": ("localhost", 8000),
     }
     request = Request(scope)
     downstream = Response("ok")
 
     import asyncio
+
     result = asyncio.get_event_loop().run_until_complete(
         mw.dispatch(request, AsyncMock(return_value=downstream))
     )
@@ -384,8 +405,12 @@ def test_prometheus_middleware_records_2xx():
     mw = PrometheusMiddleware(app=None, env="test")  # type: ignore
 
     scope = {
-        "type": "http", "method": "GET", "path": "/api/v1/students",
-        "query_string": b"", "headers": [], "server": ("localhost", 8000),
+        "type": "http",
+        "method": "GET",
+        "path": "/api/v1/students",
+        "query_string": b"",
+        "headers": [],
+        "server": ("localhost", 8000),
     }
     request = Request(scope)
     result = asyncio.get_event_loop().run_until_complete(
@@ -405,8 +430,12 @@ def test_prometheus_middleware_records_4xx():
     mw = PrometheusMiddleware(app=None, env="test")  # type: ignore
 
     scope = {
-        "type": "http", "method": "POST", "path": "/api/v1/orders",
-        "query_string": b"", "headers": [], "server": ("localhost", 8000),
+        "type": "http",
+        "method": "POST",
+        "path": "/api/v1/orders",
+        "query_string": b"",
+        "headers": [],
+        "server": ("localhost", 8000),
     }
     request = Request(scope)
     result = asyncio.get_event_loop().run_until_complete(
@@ -426,8 +455,12 @@ def test_prometheus_middleware_records_5xx():
     mw = PrometheusMiddleware(app=None, env="test")  # type: ignore
 
     scope = {
-        "type": "http", "method": "GET", "path": "/api/v1/students",
-        "query_string": b"", "headers": [], "server": ("localhost", 8000),
+        "type": "http",
+        "method": "GET",
+        "path": "/api/v1/students",
+        "query_string": b"",
+        "headers": [],
+        "server": ("localhost", 8000),
     }
     request = Request(scope)
     result = asyncio.get_event_loop().run_until_complete(
@@ -458,12 +491,18 @@ async def test_metrics_endpoint_returns_prometheus():
     from app.core.metrics import metrics_endpoint
 
     scope = {
-        "type": "http", "method": "GET", "path": "/metrics",
-        "query_string": b"", "headers": [], "server": ("localhost", 8000),
+        "type": "http",
+        "method": "GET",
+        "path": "/metrics",
+        "query_string": b"",
+        "headers": [],
+        "server": ("localhost", 8000),
     }
     request = Request(scope)
 
-    with patch("app.core.metrics.collect_db_pool_metrics", side_effect=Exception("no pool")):
+    with patch(
+        "app.core.metrics.collect_db_pool_metrics", side_effect=Exception("no pool")
+    ):
         response = await metrics_endpoint(request)
 
     assert response.status_code == 200

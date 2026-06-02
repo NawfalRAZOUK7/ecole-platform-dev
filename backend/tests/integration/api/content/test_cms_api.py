@@ -47,6 +47,7 @@ async def content_manager_token(client, session_factory):
     in the same event loop as the test, preventing cross-loop Future errors.
     """
     from app.models.school import School
+
     cm_email = f"cm-{unique_suffix()}@test.example"
     cm_pass = "CmPa$$w0rd123"
 
@@ -124,7 +125,9 @@ class TestCmsContentCreate:
     @pytest.mark.asyncio
     async def test_teacher_cannot_create_cms_content(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             "/cms/content",
             headers=auth_header(token),
@@ -155,7 +158,9 @@ class TestCmsContentCreate:
         assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_missing_content_type_returns_422(self, client, content_manager_token):
+    async def test_missing_content_type_returns_422(
+        self, client, content_manager_token
+    ):
         payload = _cms_content_payload()
         del payload["content_type"]
         response = await client.post(
@@ -195,7 +200,9 @@ class TestCmsContentList:
     @pytest.mark.asyncio
     async def test_teacher_cannot_list_cms_content(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get("/cms/content", headers=auth_header(token))
         assert response.status_code == 403
 
@@ -233,7 +240,9 @@ class TestCmsContentUpdate:
     @pytest.mark.asyncio
     async def test_teacher_cannot_update_cms_content(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.put(
             f"/cms/content/{uuid.uuid4()}",
             headers=auth_header(token),
@@ -270,7 +279,9 @@ class TestCmsContentDelete:
     @pytest.mark.asyncio
     async def test_teacher_cannot_delete_cms_content(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.delete(
             f"/cms/content/{uuid.uuid4()}", headers=auth_header(token)
         )
@@ -302,7 +313,9 @@ class TestCmsSubmissions:
     @pytest.mark.asyncio
     async def test_teacher_cannot_list_submissions(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get("/cms/submissions", headers=auth_header(token))
         assert response.status_code == 403
 
@@ -331,7 +344,9 @@ class TestCmsReview:
     @pytest.mark.asyncio
     async def test_teacher_cannot_review(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             f"/cms/submissions/{uuid.uuid4()}/review",
             headers=auth_header(token),

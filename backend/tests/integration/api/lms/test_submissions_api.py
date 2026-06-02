@@ -42,7 +42,9 @@ class TestSubmissionCreate:
     @pytest.mark.asyncio
     async def test_student_can_create_submission(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.post(
             "/submissions",
             headers=auth_header(token),
@@ -54,7 +56,9 @@ class TestSubmissionCreate:
     @pytest.mark.asyncio
     async def test_teacher_cannot_create_submission(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             "/submissions",
             headers=auth_header(token),
@@ -78,7 +82,9 @@ class TestSubmissionCreate:
         self, client, legacy_api_seed
     ):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.post(
             "/submissions", headers=auth_header(token), json={}
         )
@@ -89,7 +95,9 @@ class TestSubmissionCreate:
         self, client, legacy_api_seed
     ):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.post(
             "/submissions",
             headers=auth_header(token),
@@ -112,7 +120,9 @@ class TestSubmissionGrade:
     @pytest.mark.asyncio
     async def test_teacher_can_grade_submission(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             f"/submissions/{SUBMISSION_ID}/grade",
             headers=auth_header(token),
@@ -125,7 +135,9 @@ class TestSubmissionGrade:
         self, client, legacy_api_seed
     ):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             f"/submissions/{uuid.uuid4()}/grade",
             headers=auth_header(token),
@@ -136,7 +148,9 @@ class TestSubmissionGrade:
     @pytest.mark.asyncio
     async def test_student_cannot_grade_submission(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.post(
             f"/submissions/{SUBMISSION_ID}/grade",
             headers=auth_header(token),
@@ -147,7 +161,9 @@ class TestSubmissionGrade:
     @pytest.mark.asyncio
     async def test_grade_negative_score_returns_422(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             f"/submissions/{SUBMISSION_ID}/grade",
             headers=auth_header(token),
@@ -158,7 +174,9 @@ class TestSubmissionGrade:
     @pytest.mark.asyncio
     async def test_grade_missing_score_returns_422(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             f"/submissions/{SUBMISSION_ID}/grade",
             headers=auth_header(token),
@@ -182,7 +200,9 @@ class TestOverridePenalty:
     @pytest.mark.asyncio
     async def test_teacher_can_override_penalty(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             f"/submissions/{SUBMISSION_ID}/override-penalty",
             headers=auth_header(token),
@@ -196,7 +216,9 @@ class TestOverridePenalty:
         self, client, legacy_api_seed
     ):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             f"/submissions/{uuid.uuid4()}/override-penalty",
             headers=auth_header(token),
@@ -206,7 +228,9 @@ class TestOverridePenalty:
     @pytest.mark.asyncio
     async def test_student_cannot_override_penalty(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.post(
             f"/submissions/{SUBMISSION_ID}/override-penalty",
             headers=auth_header(token),
@@ -218,7 +242,9 @@ class TestSubmissionFinalize:
     @pytest.mark.asyncio
     async def test_teacher_cannot_finalize_submission(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             f"/submissions/{SUBMISSION_ID}/submit",
             headers=auth_header(token),
@@ -230,7 +256,9 @@ class TestSubmissionFinalize:
         self, client, legacy_api_seed
     ):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.post(
             f"/submissions/{uuid.uuid4()}/submit",
             headers=auth_header(token),
@@ -242,7 +270,9 @@ class TestSubmissionFinalize:
         self, client, legacy_api_seed
     ):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         # Use the seeded SUBMISSION_ID (may already be submitted, but tests the endpoint)
         response = await client.post(
             f"/submissions/{SUBMISSION_ID}/submit",
@@ -257,7 +287,9 @@ class TestSubmissionPreview:
     @pytest.mark.asyncio
     async def test_teacher_can_preview_submission(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get(
             f"/submissions/{SUBMISSION_ID}/preview",
             headers=auth_header(token),
@@ -269,7 +301,9 @@ class TestSubmissionPreview:
         self, client, legacy_api_seed
     ):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get(
             f"/submissions/{uuid.uuid4()}/preview",
             headers=auth_header(token),
@@ -279,7 +313,9 @@ class TestSubmissionPreview:
     @pytest.mark.asyncio
     async def test_student_cannot_preview_submission(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.get(
             f"/submissions/{SUBMISSION_ID}/preview",
             headers=auth_header(token),
@@ -291,7 +327,9 @@ class TestSubmissionFileUpload:
     @pytest.mark.asyncio
     async def test_student_can_upload_file(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         file_content = b"Test file content for submission"
         response = await client.post(
             f"/submissions/{SUBMISSION_ID}/files",
@@ -304,7 +342,9 @@ class TestSubmissionFileUpload:
     @pytest.mark.asyncio
     async def test_teacher_cannot_upload_submission_file(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             f"/submissions/{SUBMISSION_ID}/files",
             headers=auth_header(token),
@@ -315,7 +355,9 @@ class TestSubmissionFileUpload:
     @pytest.mark.asyncio
     async def test_download_nonexistent_file_returns_404(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get(
             f"/submissions/{SUBMISSION_ID}/files/{uuid.uuid4()}",
             headers=auth_header(token),

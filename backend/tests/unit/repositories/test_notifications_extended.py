@@ -1,4 +1,5 @@
 """Extended coverage tests for communication_notifications.py."""
+
 from __future__ import annotations
 
 import uuid
@@ -206,9 +207,7 @@ class TestNotificationRepositoryExtended:
     @pytest.mark.asyncio
     async def test_list_notifications_has_more(self):
         """When items > limit, has_more = True and next_cursor is generated."""
-        items = [
-            SimpleNamespace(id=_uid(), created_at=_now()) for _ in range(3)
-        ]
+        items = [SimpleNamespace(id=_uid(), created_at=_now()) for _ in range(3)]
         db = _db(_FR(many=items))
         notifs, next_cursor, has_more = await NotificationRepository(
             db

@@ -92,14 +92,18 @@ class TestTimetableSlotCreate:
         response = await client.post(
             "/timetable/slots",
             headers=auth_header(token),
-            json={"slots": [_slot_payload(day_of_week=2), _slot_payload(day_of_week=4)]},
+            json={
+                "slots": [_slot_payload(day_of_week=2), _slot_payload(day_of_week=4)]
+            },
         )
         assert response.status_code == 201
 
     @pytest.mark.asyncio
     async def test_teacher_cannot_create_slot(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             "/timetable/slots",
             headers=auth_header(token),
@@ -110,7 +114,9 @@ class TestTimetableSlotCreate:
     @pytest.mark.asyncio
     async def test_student_cannot_create_slot(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.post(
             "/timetable/slots",
             headers=auth_header(token),
@@ -156,7 +162,9 @@ class TestTimetableSlotList:
     @pytest.mark.asyncio
     async def test_teacher_can_list_slots(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get("/timetable/slots", headers=auth_header(token))
         assert response.status_code == 200
         assert isinstance(response.json()["data"], list)
@@ -164,7 +172,9 @@ class TestTimetableSlotList:
     @pytest.mark.asyncio
     async def test_student_can_list_slots(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.get("/timetable/slots", headers=auth_header(token))
         assert response.status_code == 200
 
@@ -255,7 +265,9 @@ class TestTimetableSlotUpdateDelete:
         _ = legacy_api_seed
         a_token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
         slot_id = await self._create_slot(client, a_token)
-        t_token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        t_token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.put(
             f"/timetable/slots/{slot_id}",
             headers=auth_header(t_token),
@@ -287,7 +299,9 @@ class TestTimetableSlotUpdateDelete:
         _ = legacy_api_seed
         a_token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
         slot_id = await self._create_slot(client, a_token)
-        t_token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        t_token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.delete(
             f"/timetable/slots/{slot_id}", headers=auth_header(t_token)
         )
@@ -298,7 +312,9 @@ class TestTimetableWeeklyViews:
     @pytest.mark.asyncio
     async def test_student_gets_class_weekly(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.get(
             f"/timetable/class/{CLASS_ID}/weekly", headers=auth_header(token)
         )
@@ -307,7 +323,9 @@ class TestTimetableWeeklyViews:
     @pytest.mark.asyncio
     async def test_class_weekly_with_date(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get(
             f"/timetable/class/{CLASS_ID}/weekly",
             headers=auth_header(token),
@@ -318,7 +336,9 @@ class TestTimetableWeeklyViews:
     @pytest.mark.asyncio
     async def test_nonexistent_class_weekly_returns_404(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get(
             f"/timetable/class/{uuid.uuid4()}/weekly", headers=auth_header(token)
         )
@@ -327,7 +347,9 @@ class TestTimetableWeeklyViews:
     @pytest.mark.asyncio
     async def test_teacher_gets_teacher_weekly(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get(
             f"/timetable/teacher/{TEACHER_ID}/weekly", headers=auth_header(token)
         )
@@ -336,14 +358,18 @@ class TestTimetableWeeklyViews:
     @pytest.mark.asyncio
     async def test_me_weekly_student(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.get("/timetable/me/weekly", headers=auth_header(token))
         assert response.status_code == 200
 
     @pytest.mark.asyncio
     async def test_me_weekly_teacher(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get("/timetable/me/weekly", headers=auth_header(token))
         assert response.status_code == 200
 
@@ -368,7 +394,9 @@ class TestTimetableExceptions:
         _ = legacy_api_seed
         a_token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
         slot_id = await self._create_slot_id(client, a_token)
-        t_token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        t_token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             "/timetable/exceptions",
             headers=auth_header(t_token),
@@ -404,7 +432,9 @@ class TestTimetableExceptions:
         _ = legacy_api_seed
         a_token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
         slot_id = await self._create_slot_id(client, a_token)
-        s_token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        s_token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.post(
             "/timetable/exceptions",
             headers=auth_header(s_token),
@@ -419,7 +449,9 @@ class TestTimetableExceptions:
     @pytest.mark.asyncio
     async def test_invalid_exception_type_returns_422(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        t_token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        t_token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             "/timetable/exceptions",
             headers=auth_header(t_token),
@@ -432,9 +464,13 @@ class TestTimetableExceptions:
         assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_nonexistent_slot_exception_returns_404(self, client, legacy_api_seed):
+    async def test_nonexistent_slot_exception_returns_404(
+        self, client, legacy_api_seed
+    ):
         _ = legacy_api_seed
-        t_token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        t_token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             "/timetable/exceptions",
             headers=auth_header(t_token),
@@ -449,10 +485,10 @@ class TestTimetableExceptions:
     @pytest.mark.asyncio
     async def test_list_exceptions(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
-        response = await client.get(
-            "/timetable/exceptions", headers=auth_header(token)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
         )
+        response = await client.get("/timetable/exceptions", headers=auth_header(token))
         assert response.status_code == 200
         assert isinstance(response.json()["data"], list)
 

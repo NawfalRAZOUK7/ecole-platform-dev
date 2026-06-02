@@ -5,6 +5,7 @@
 - academic_skill_passport.py
 - academic_timetable_generation.py
 """
+
 from __future__ import annotations
 
 import uuid
@@ -85,6 +86,7 @@ def _db(result=None):
 # AttendanceAnalyticsRepository
 # ===========================================================================
 
+
 class TestAttendanceAnalyticsRepository:
     @pytest.mark.asyncio
     async def test_compute_student_absence_count_no_period(self):
@@ -160,7 +162,10 @@ class TestAttendanceAnalyticsRepository:
     async def test_create_attendance_alert(self):
         fake = SimpleNamespace(id=_uid())
         db = _db()
-        with patch("app.repositories.academic_attendance_analytics.AttendanceAlert", return_value=fake):
+        with patch(
+            "app.repositories.academic_attendance_analytics.AttendanceAlert",
+            return_value=fake,
+        ):
             result = await AttendanceAnalyticsRepository(db).create_attendance_alert(
                 student_id=_uid(), school_id=_uid()
             )
@@ -207,23 +212,20 @@ class TestAttendanceAnalyticsRepository:
 # GradebookRepository
 # ===========================================================================
 
+
 class TestGradebookRepository:
     @pytest.mark.asyncio
     async def test_get_grade_category_no_scope(self):
         obj = object()
         db = _db(_FR(v=obj))
-        result = await GradebookRepository(db).get_grade_category(
-            _uid()
-        )
+        result = await GradebookRepository(db).get_grade_category(_uid())
         assert result is obj
 
     @pytest.mark.asyncio
     async def test_get_grade_category_with_scope(self):
         obj = object()
         db = _db(_FR(v=obj))
-        result = await GradebookRepository(db).get_grade_category(
-            _uid()
-        )
+        result = await GradebookRepository(db).get_grade_category(_uid())
         assert result is obj
 
     @pytest.mark.asyncio
@@ -248,8 +250,12 @@ class TestGradebookRepository:
     async def test_create_grade_category(self):
         fake = SimpleNamespace(id=_uid())
         db = _db()
-        with patch("app.repositories.academic_gradebook.GradeCategory", return_value=fake):
-            result = await GradebookRepository(db).create_grade_category(school_id=_uid())
+        with patch(
+            "app.repositories.academic_gradebook.GradeCategory", return_value=fake
+        ):
+            result = await GradebookRepository(db).create_grade_category(
+                school_id=_uid()
+            )
         assert result is fake
 
     @pytest.mark.asyncio
@@ -288,9 +294,15 @@ class TestGradebookRepository:
     async def test_save_student_period_average(self):
         db = _db(_FR(v=None))
         await GradebookRepository(db).save_student_period_average(
-            student_id=_uid(), school_id=_uid(), class_id=_uid(),
-            period_id=_uid(), weighted_average=85.0, mention="B",
-            class_rank=1, total_students=30, computed_at=_now()
+            student_id=_uid(),
+            school_id=_uid(),
+            class_id=_uid(),
+            period_id=_uid(),
+            weighted_average=85.0,
+            mention="B",
+            class_rank=1,
+            total_students=30,
+            computed_at=_now(),
         )
         db.execute.assert_awaited()
 
@@ -361,6 +373,7 @@ class TestGradebookRepository:
 # ===========================================================================
 # ProgressRepository
 # ===========================================================================
+
 
 class TestProgressRepository:
     @pytest.mark.asyncio
@@ -609,6 +622,7 @@ class TestProgressRepository:
 # SkillPassportRepository
 # ===========================================================================
 
+
 class TestSkillPassportRepository:
     @pytest.mark.asyncio
     async def test_get_user(self):
@@ -701,7 +715,12 @@ class TestSkillPassportRepository:
     async def test_get_milestone_with_include(self):
         obj = object()
         db = _db(_FR(v=obj))
-        assert await SkillPassportRepository(db).get_milestone(_uid(), include_dimension=True) is obj
+        assert (
+            await SkillPassportRepository(db).get_milestone(
+                _uid(), include_dimension=True
+            )
+            is obj
+        )
 
     @pytest.mark.asyncio
     async def test_get_milestone_by_code(self):
@@ -760,7 +779,10 @@ class TestSkillPassportRepository:
         obj = object()
         db = _db(_FR(v=obj))
         result = await SkillPassportRepository(db).get_progress_record(
-            student_id=_uid(), school_id=_uid(), milestone_id=_uid(), academic_year_id=_uid()
+            student_id=_uid(),
+            school_id=_uid(),
+            milestone_id=_uid(),
+            academic_year_id=_uid(),
         )
         assert result is obj
 
@@ -778,7 +800,10 @@ class TestSkillPassportRepository:
         items = [object()]
         db = _db(_FR(many=items))
         result = await SkillPassportRepository(db).list_progress(
-            school_id=_uid(), academic_year_id=_uid(), student_id=_uid(), status="completed"
+            school_id=_uid(),
+            academic_year_id=_uid(),
+            student_id=_uid(),
+            status="completed",
         )
         assert result == items
 
@@ -891,7 +916,9 @@ class TestSkillPassportRepository:
     async def test_list_school_student_ids(self):
         ids = [_uid()]
         db = _db(_FR(many=ids))
-        result = await SkillPassportRepository(db).list_school_student_ids(school_id=_uid())
+        result = await SkillPassportRepository(db).list_school_student_ids(
+            school_id=_uid()
+        )
         assert result == ids
 
     @pytest.mark.asyncio
@@ -947,6 +974,7 @@ class TestSkillPassportRepository:
 # TimetableGenerationRepository
 # ===========================================================================
 
+
 class TestTimetableGenerationRepository:
     @pytest.mark.asyncio
     async def test_get_academic_year(self):
@@ -976,7 +1004,10 @@ class TestTimetableGenerationRepository:
     async def test_create_constraint(self):
         fake = SimpleNamespace(id=_uid())
         db = _db()
-        with patch("app.repositories.academic_timetable_generation.TimetableConstraint", return_value=fake):
+        with patch(
+            "app.repositories.academic_timetable_generation.TimetableConstraint",
+            return_value=fake,
+        ):
             result = await TimetableGenerationRepository(db).create_constraint(
                 school_id=_uid()
             )
@@ -993,7 +1024,10 @@ class TestTimetableGenerationRepository:
     async def test_create_job(self):
         fake = SimpleNamespace(id=_uid())
         db = _db()
-        with patch("app.repositories.academic_timetable_generation.TimetableGenerationJob", return_value=fake):
+        with patch(
+            "app.repositories.academic_timetable_generation.TimetableGenerationJob",
+            return_value=fake,
+        ):
             result = await TimetableGenerationRepository(db).create_job(
                 school_id=_uid()
             )
@@ -1027,7 +1061,9 @@ class TestTimetableGenerationRepository:
     async def test_list_teacher_assignments_for_academic_year(self):
         items = [(_uid(), _uid())]
         db = _db(_FR(many=items))
-        result = await TimetableGenerationRepository(db).list_teacher_assignments_for_academic_year(
+        result = await TimetableGenerationRepository(
+            db
+        ).list_teacher_assignments_for_academic_year(
             school_id=_uid(), academic_year_id=_uid()
         )
         assert result == items
@@ -1035,7 +1071,9 @@ class TestTimetableGenerationRepository:
     @pytest.mark.asyncio
     async def test_delete_timetable_slots_for_academic_year(self):
         db = _db()
-        await TimetableGenerationRepository(db).delete_timetable_slots_for_academic_year(
+        await TimetableGenerationRepository(
+            db
+        ).delete_timetable_slots_for_academic_year(
             school_id=_uid(), academic_year_id=_uid()
         )
         db.execute.assert_awaited()
@@ -1044,7 +1082,10 @@ class TestTimetableGenerationRepository:
     async def test_create_timetable_slot(self):
         fake = SimpleNamespace(id=_uid())
         db = _db()
-        with patch("app.repositories.academic_timetable_generation.TimetableSlot", return_value=fake):
+        with patch(
+            "app.repositories.academic_timetable_generation.TimetableSlot",
+            return_value=fake,
+        ):
             result = await TimetableGenerationRepository(db).create_timetable_slot(
                 school_id=_uid()
             )

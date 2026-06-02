@@ -37,7 +37,9 @@ class TestBrowseContentLibrary:
     @pytest.mark.asyncio
     async def test_student_can_browse_library(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.get("/content/library", headers=auth_header(token))
         assert response.status_code == 200
         assert isinstance(response.json()["data"], list)
@@ -45,7 +47,9 @@ class TestBrowseContentLibrary:
     @pytest.mark.asyncio
     async def test_teacher_can_browse_library(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get("/content/library", headers=auth_header(token))
         assert response.status_code == 200
 
@@ -59,7 +63,9 @@ class TestBrowseContentLibrary:
     @pytest.mark.asyncio
     async def test_browse_with_content_type_filter(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get(
             "/content/library",
             headers=auth_header(token),
@@ -70,7 +76,9 @@ class TestBrowseContentLibrary:
     @pytest.mark.asyncio
     async def test_browse_with_multiple_filters(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get(
             "/content/library",
             headers=auth_header(token),
@@ -86,7 +94,9 @@ class TestBrowseContentLibrary:
     @pytest.mark.asyncio
     async def test_browse_with_target_age_filter(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.get(
             "/content/library",
             headers=auth_header(token),
@@ -97,7 +107,9 @@ class TestBrowseContentLibrary:
     @pytest.mark.asyncio
     async def test_browse_with_letter_filter(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.get(
             "/content/library",
             headers=auth_header(token),
@@ -116,7 +128,9 @@ class TestContentAssign:
     @pytest.mark.asyncio
     async def test_teacher_can_assign_content_to_class(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         # Try to assign some content (may 404 if no content exists, but tests the route)
         response = await client.post(
             "/content/assign",
@@ -133,7 +147,9 @@ class TestContentAssign:
     @pytest.mark.asyncio
     async def test_student_cannot_assign_content(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.post(
             "/content/assign",
             headers=auth_header(token),
@@ -155,7 +171,9 @@ class TestContentAssign:
     @pytest.mark.asyncio
     async def test_assign_missing_class_id_returns_422(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             "/content/assign",
             headers=auth_header(token),
@@ -166,7 +184,9 @@ class TestContentAssign:
     @pytest.mark.asyncio
     async def test_assign_missing_content_id_returns_422(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             "/content/assign",
             headers=auth_header(token),
@@ -181,7 +201,9 @@ class TestContentUnassign:
         self, client, legacy_api_seed
     ):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.delete(
             f"/content/assign/{uuid.uuid4()}",
             headers=auth_header(token),
@@ -191,7 +213,9 @@ class TestContentUnassign:
     @pytest.mark.asyncio
     async def test_student_cannot_unassign_content(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.delete(
             f"/content/assign/{uuid.uuid4()}",
             headers=auth_header(token),
@@ -203,7 +227,9 @@ class TestContentSubmitForReview:
     @pytest.mark.asyncio
     async def test_teacher_can_submit_for_review(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             "/content/submit-for-review",
             headers=auth_header(token),
@@ -218,7 +244,9 @@ class TestContentSubmitForReview:
     @pytest.mark.asyncio
     async def test_student_cannot_submit_for_review(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.post(
             "/content/submit-for-review",
             headers=auth_header(token),
@@ -229,7 +257,9 @@ class TestContentSubmitForReview:
     @pytest.mark.asyncio
     async def test_submit_missing_content_id_returns_422(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             "/content/submit-for-review",
             headers=auth_header(token),
@@ -242,7 +272,9 @@ class TestMyContentSubmissions:
     @pytest.mark.asyncio
     async def test_teacher_can_list_own_submissions(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get(
             "/content/my-submissions", headers=auth_header(token)
         )
@@ -252,7 +284,9 @@ class TestMyContentSubmissions:
     @pytest.mark.asyncio
     async def test_list_submissions_with_status_filter(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get(
             "/content/my-submissions",
             headers=auth_header(token),
@@ -263,7 +297,9 @@ class TestMyContentSubmissions:
     @pytest.mark.asyncio
     async def test_student_cannot_list_submissions(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.get(
             "/content/my-submissions", headers=auth_header(token)
         )
@@ -274,7 +310,9 @@ class TestClassContent:
     @pytest.mark.asyncio
     async def test_teacher_can_list_class_content(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get(
             f"/classes/{CLASS_ID}/content", headers=auth_header(token)
         )
@@ -284,7 +322,9 @@ class TestClassContent:
     @pytest.mark.asyncio
     async def test_student_can_list_class_content(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.get(
             f"/classes/{CLASS_ID}/content", headers=auth_header(token)
         )
@@ -296,7 +336,9 @@ class TestClassContent:
     ):
         """Service returns empty list for non-existent class (scope-filtered)."""
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get(
             f"/classes/{uuid.uuid4()}/content", headers=auth_header(token)
         )
@@ -306,7 +348,9 @@ class TestClassContent:
     @pytest.mark.asyncio
     async def test_list_class_content_pagination(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get(
             f"/classes/{CLASS_ID}/content",
             headers=auth_header(token),

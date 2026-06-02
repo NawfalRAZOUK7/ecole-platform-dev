@@ -106,7 +106,9 @@ class TestQuizContractSuite:
     @pytest.mark.asyncio
     async def test_quiz_list_envelope(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get("/quizzes", headers=auth_header(token))
         assert response.status_code == 200
         assert _list_envelope_is_valid(response.json())
@@ -114,7 +116,9 @@ class TestQuizContractSuite:
     @pytest.mark.asyncio
     async def test_quiz_create_response_shape(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.post(
             "/quizzes",
             headers=auth_header(token),
@@ -135,7 +139,9 @@ class TestQuizContractSuite:
     @pytest.mark.asyncio
     async def test_quiz_404_error_shape(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get(
             f"/quizzes/{uuid.uuid4()}", headers=auth_header(token)
         )
@@ -146,7 +152,9 @@ class TestQuizContractSuite:
     @pytest.mark.asyncio
     async def test_quiz_analytics_response_shape(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         create_r = await client.post(
             "/quizzes",
             headers=auth_header(token),
@@ -162,7 +170,9 @@ class TestQuizContractSuite:
     @pytest.mark.asyncio
     async def test_recommended_difficulty_response_shape(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.get(
             "/quizzes/recommended-difficulty",
             headers=auth_header(token),
@@ -176,7 +186,9 @@ class TestTimetableContractSuite:
     @pytest.mark.asyncio
     async def test_timetable_slot_list_envelope(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get("/timetable/slots", headers=auth_header(token))
         assert response.status_code == 200
         assert _list_envelope_is_valid(response.json())
@@ -184,7 +196,9 @@ class TestTimetableContractSuite:
     @pytest.mark.asyncio
     async def test_timetable_weekly_response_shape(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.get("/timetable/me/weekly", headers=auth_header(token))
         assert response.status_code == 200
         assert _response_envelope_is_valid(response.json())
@@ -194,7 +208,9 @@ class TestMessagingContractSuite:
     @pytest.mark.asyncio
     async def test_conversation_list_envelope(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get(
             "/messages/conversations", headers=auth_header(token)
         )
@@ -204,7 +220,9 @@ class TestMessagingContractSuite:
     @pytest.mark.asyncio
     async def test_create_conversation_response_shape(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         parent_id = "10000000-0000-4000-8000-000000000005"
         response = await client.post(
             "/messages/conversations",
@@ -259,7 +277,9 @@ class TestContentLibraryContractSuite:
     @pytest.mark.asyncio
     async def test_library_list_envelope(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.get("/content/library", headers=auth_header(token))
         assert response.status_code == 200
         assert _list_envelope_is_valid(response.json())
@@ -267,7 +287,9 @@ class TestContentLibraryContractSuite:
     @pytest.mark.asyncio
     async def test_class_content_list_envelope(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD)
+        token = await login_token(
+            client, email=TEACHER_EMAIL, password=TEACHER_PASSWORD
+        )
         response = await client.get(
             f"/classes/{CLASS_ID}/content", headers=auth_header(token)
         )
@@ -315,7 +337,9 @@ class TestAIContractSuite:
     @pytest.mark.asyncio
     async def test_writing_attempt_response_shape(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.post(
             "/writing-attempts",
             headers=auth_header(token),
@@ -332,7 +356,9 @@ class TestAIContractSuite:
     @pytest.mark.asyncio
     async def test_recommendations_response_shape(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.get("/recommendations", headers=auth_header(token))
         assert response.status_code == 200
         assert _response_envelope_is_valid(response.json())
@@ -369,7 +395,9 @@ class TestGDPRContractSuite:
     @pytest.mark.asyncio
     async def test_data_export_response_shape(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.get(
             f"/users/{STUDENT_ID}/data-export",
             headers=auth_header(token),
@@ -384,7 +412,9 @@ class TestGDPRContractSuite:
     @pytest.mark.asyncio
     async def test_consent_log_response_shape(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD)
+        token = await login_token(
+            client, email=STUDENT_EMAIL, password=STUDENT_PASSWORD
+        )
         response = await client.get(
             f"/users/{STUDENT_ID}/consent-log",
             headers=auth_header(token),

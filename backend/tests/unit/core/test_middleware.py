@@ -166,6 +166,7 @@ async def test_domain_exception_handler_returns_json():
     correlation_id_ctx.reset(token)
 
     import json
+
     body = json.loads(response.body)
     assert response.status_code == 404
     assert body["error"]["code"] == "ERR-404"
@@ -184,6 +185,7 @@ async def test_domain_exception_handler_includes_details():
     correlation_id_ctx.reset(token)
 
     import json
+
     body = json.loads(response.body)
     assert body["error"]["details"]["field"] == "email"
 
@@ -207,6 +209,7 @@ async def test_validation_exception_handler_returns_422():
     assert response.status_code == 422
 
     import json
+
     body = json.loads(response.body)
     assert body["error"]["code"] == "ERR-VAL-422"
     assert body["error"]["details"]["errors"][0]["field"] == "body.email"
@@ -240,5 +243,6 @@ async def test_generic_exception_handler_returns_500():
     assert response.status_code == 500
 
     import json
+
     body = json.loads(response.body)
     assert body["error"]["code"] == "ERR-SYS-500"
