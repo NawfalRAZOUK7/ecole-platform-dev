@@ -52,8 +52,10 @@ jobs:
         include:
           - name: api
             target: tests/unit/api/
-          - name: features-academic-billing
-            target: tests/unit/features/academic/ tests/unit/features/billing/
+          - name: features-academic
+            target: tests/unit/features/academic/
+          - name: features-billing
+            target: tests/unit/features/billing/
           - name: features-content-lms
             target: tests/unit/features/content/ tests/unit/features/lms/
           - name: features-other
@@ -73,7 +75,7 @@ jobs:
           path: web/node_modules
           key: "node-modules-${{ hashFiles('web/package-lock.json') }}"
       - run: npm ci
-      - run: npm run test -- ${{ matrix.target }} --reporter=default --reporter=junit --outputFile=test-results-${{ matrix.name }}.xml
+      - run: npm run test -- ${{ matrix.target }} --maxWorkers=1 --minWorkers=1 --reporter=default --reporter=junit --outputFile=test-results-${{ matrix.name }}.xml
       - uses: actions/upload-artifact@v4
         if: always()
         with:

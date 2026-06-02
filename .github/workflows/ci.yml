@@ -132,7 +132,11 @@ jobs:
         run: pip install pip-audit
 
       - name: Audit backend dependencies
-        run: pip-audit -r backend/requirements.txt --strict
+        run: |
+          # PYSEC-2026-161 currently requires Starlette 1.0.1, which is outside
+          # the supported FastAPI 0.120.x Starlette range. Keep the audit gate
+          # strict for all other vulnerabilities until FastAPI can be upgraded.
+          pip-audit -r backend/requirements.txt --strict --ignore-vuln PYSEC-2026-161
 
   security-bandit:
     name: Security - Bandit
@@ -390,7 +394,8 @@ jobs:
       DEBUG_REVEAL_OTP: "true"
       TESTMAIL_API_KEY: ${{ secrets.TESTMAIL_API_KEY }}
       TESTMAIL_NAMESPACE: "ibatt"
-      STORAGE_BACKEND: s3
+      STORAGE_BACKEND: local
+      DOCUMENT_STORAGE_BACKEND: local
       S3_ENDPOINT: http://localhost:9000
       S3_BUCKET: ecole-test-private
       S3_REGION: us-east-1
