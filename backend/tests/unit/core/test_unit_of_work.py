@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -56,16 +56,16 @@ async def test_rollback_calls_session_rollback():
 @pytest.mark.asyncio
 async def test_single_enter_sets_depth_one():
     session = _mock_session()
-    async with UnitOfWork(session) as uow:
+    async with UnitOfWork(session):
         assert session.info.get("_uow_depth") == 1
 
 
 @pytest.mark.asyncio
 async def test_nested_uow_increments_depth():
     session = _mock_session()
-    async with UnitOfWork(session) as outer:
+    async with UnitOfWork(session):
         assert session.info.get("_uow_depth") == 1
-        async with UnitOfWork(session) as inner:
+        async with UnitOfWork(session):
             assert session.info.get("_uow_depth") == 2
         # After inner exits, depth goes back to 1
         assert session.info.get("_uow_depth") == 1

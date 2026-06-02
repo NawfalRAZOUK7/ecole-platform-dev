@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-import uuid
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 from fastapi.exceptions import RequestValidationError
 from starlette.requests import Request
 from starlette.responses import Response
 
-from app.core.exceptions import DomainException, ErrorCategory, NotFoundError
+from app.core.exceptions import NotFoundError
 from app.core.middleware import (
     CorrelationIdMiddleware,
     _build_error_body,

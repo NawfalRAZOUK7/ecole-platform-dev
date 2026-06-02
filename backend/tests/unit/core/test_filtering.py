@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 from sqlalchemy import String
 from sqlalchemy import column as sa_column
 from starlette.requests import Request
-from starlette.testclient import TestClient
 
 from app.core.filtering import (
     FILTERABLE_FIELDS,

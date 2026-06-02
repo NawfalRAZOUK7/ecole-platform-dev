@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
 from prometheus_client import Counter, Gauge, Histogram
 
 import app.core.business_metrics as bm

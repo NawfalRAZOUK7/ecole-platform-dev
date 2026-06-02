@@ -28,7 +28,6 @@ import uuid
 import pytest
 
 from tests.integration.api.helpers import (
-    SCHOOL_ID,
     STUDENT_ID,
     auth_header,
     login_token,

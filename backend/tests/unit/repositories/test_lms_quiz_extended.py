@@ -212,7 +212,7 @@ class TestQuizRepositoryExtended:
             "app.repositories.lms_quiz.QuizQuestion",
             side_effect=lambda **kw: mock_q,
         ):
-            result = await QuizRepository(db).create_quiz_questions(questions_data)
+            await QuizRepository(db).create_quiz_questions(questions_data)
         db.add_all.assert_called_once()
 
     @pytest.mark.asyncio

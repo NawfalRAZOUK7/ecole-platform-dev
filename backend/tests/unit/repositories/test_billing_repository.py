@@ -38,7 +38,8 @@ class _FR:
         return self._scalar
 
     def scalars(self):
-        many = self._many; v = self._v
+        many = self._many
+        v = self._v
         ns = SimpleNamespace(all=lambda: many, first=lambda: (many[0] if many else v))
         ns.unique = lambda: ns
         return ns
@@ -394,7 +395,6 @@ class TestBillingRepository:
     async def test_get_failed_attempts_no_cutoff(self):
         items = [object()]
         db = _db(_FR(many=items))
-        from datetime import date as _date
         result = await BillingRepository(db).get_failed_attempts(
             now=_now(), max_retries=3
         )
@@ -708,7 +708,7 @@ class TestBudgetRepository:
     async def test_create_allocation(self):
         alloc = SimpleNamespace(id=_uid())
         db = _db()
-        result = await BudgetRepository(db).create_allocation(alloc)
+        await BudgetRepository(db).create_allocation(alloc)
         db.add.assert_called_once_with(alloc)
 
     @pytest.mark.asyncio
@@ -752,7 +752,7 @@ class TestBudgetRepository:
     async def test_create_request(self):
         req = SimpleNamespace(id=_uid())
         db = _db()
-        result = await BudgetRepository(db).create_request(req)
+        await BudgetRepository(db).create_request(req)
         db.add.assert_called_once_with(req)
 
     @pytest.mark.asyncio

@@ -40,7 +40,8 @@ class _FR:
         return self._scalar
 
     def scalars(self):
-        many = self._many; v = self._v
+        many = self._many
+        v = self._v
         return SimpleNamespace(all=lambda: many, first=lambda: (many[0] if many else v))
 
     def first(self):
@@ -321,7 +322,7 @@ class TestDocumentRepository:
     async def test_create_document(self):
         doc = SimpleNamespace(id=_uid())
         db = _db()
-        result = await DocumentsRepository(db).create_document(doc)
+        await DocumentsRepository(db).create_document(doc)
         db.add.assert_called_once_with(doc)
 
     @pytest.mark.asyncio
@@ -335,7 +336,7 @@ class TestDocumentRepository:
     async def test_create_document_version(self):
         fake = SimpleNamespace(id=_uid())
         db = _db()
-        result = await DocumentsRepository(db).create_document_version(fake)
+        await DocumentsRepository(db).create_document_version(fake)
         db.add.assert_called_once_with(fake)
 
     @pytest.mark.asyncio
@@ -649,5 +650,5 @@ class TestDocumentRepository:
     async def test_create_resource(self):
         resource = SimpleNamespace(id=_uid())
         db = _db()
-        result = await DocumentsRepository(db).create_resource(resource)
+        await DocumentsRepository(db).create_resource(resource)
         db.add.assert_called_once_with(resource)

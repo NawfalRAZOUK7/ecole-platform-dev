@@ -22,8 +22,6 @@ from __future__ import annotations
 import uuid
 
 import pytest
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.lms import Quiz
 from tests.integration.api.helpers import (

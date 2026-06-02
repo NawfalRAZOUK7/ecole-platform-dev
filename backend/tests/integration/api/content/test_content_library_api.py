@@ -19,10 +19,8 @@ import pytest
 
 from tests.integration.api.helpers import (
     CLASS_ID,
-    SCHOOL_ID,
     auth_header,
     login_token,
-    unique_suffix,
 )
 
 ADMIN_EMAIL = "admin@ecole-benani.ma"

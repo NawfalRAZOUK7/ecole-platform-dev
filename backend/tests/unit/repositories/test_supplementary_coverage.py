@@ -11,7 +11,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, date, timezone
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, Mock, patch, MagicMock
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -288,7 +288,7 @@ class TestCalendarRepositoryCorrect:
         # list_period_boundaries returns a tuple of (periods, years)
         # It makes 2 DB calls
         db = _db(side_effects=[_FR(many=periods), _FR(many=years)])
-        result = await CalendarRepository(db).list_period_boundaries(
+        await CalendarRepository(db).list_period_boundaries(
             school_id=_uid(), from_date=_today(), to_date=_today()
         )
 

@@ -319,7 +319,7 @@ def test_collector_name_proxy_labels():
 
 
 def test_collector_name_proxy_getattr():
-    from app.core.metrics import _CollectorNameProxy, TASK_ENQUEUED_COUNT
+    from app.core.metrics import TASK_ENQUEUED_COUNT
 
     # __getattr__ is triggered for attributes not in __dict__ or class
     # Access a Prometheus counter method like `inc` which lives on the collector
@@ -352,8 +352,7 @@ def test_normalize_path_no_ids():
 
 def test_prometheus_middleware_dispatch_skip_metrics():
     """PrometheusMiddleware skips /metrics path (no recording)."""
-    import pytest
-    from unittest.mock import AsyncMock, MagicMock, patch
+    from unittest.mock import AsyncMock
     from starlette.requests import Request
     from starlette.responses import Response
     from app.core.metrics import PrometheusMiddleware

@@ -7,10 +7,8 @@ grade_attempt() is tested with both UoW paths via a fake QuizRepository.
 from __future__ import annotations
 
 import uuid
-from contextlib import asynccontextmanager
-from datetime import datetime, timezone
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 

@@ -145,7 +145,7 @@ def test_check_no_special_char():
 
 def test_check_contains_email_local_part():
     v = _validator()
-    errors = v.check("SecureP@ss123", email="john@test.ma")
+    v.check("SecureP@ss123", email="john@test.ma")
     # "john" is 4 chars, if in password → error
     v2 = _validator()
     errors2 = v2.check("johnSecureP@ss123!", email="john@test.ma")

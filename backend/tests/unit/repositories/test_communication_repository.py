@@ -42,7 +42,8 @@ class _FR:
         return self._scalar
 
     def scalars(self):
-        many = self._many; v = self._v
+        many = self._many
+        v = self._v
         return SimpleNamespace(all=lambda: many, first=lambda: (many[0] if many else v))
 
     def first(self):
@@ -93,7 +94,7 @@ class TestCalendarRepository:
     async def test_create_event(self):
         event = SimpleNamespace(id=_uid())
         db = _db()
-        result = await CalendarRepository(db).create_event(event)
+        await CalendarRepository(db).create_event(event)
         db.add.assert_called_once_with(event)
 
     @pytest.mark.asyncio
@@ -164,7 +165,7 @@ class TestCalendarRepository:
     async def test_create_holiday(self):
         holiday = SimpleNamespace(id=_uid())
         db = _db()
-        result = await CalendarRepository(db).create_holiday(holiday)
+        await CalendarRepository(db).create_holiday(holiday)
         db.add.assert_called_once_with(holiday)
 
     @pytest.mark.asyncio
@@ -266,7 +267,7 @@ class TestCalendarRepository:
     @pytest.mark.asyncio
     async def test_list_rsvp_counts(self):
         eid = _uid()
-        rows = [SimpleNamespace(event_id=eid, status="attending", count=1)]
+        [SimpleNamespace(event_id=eid, status="attending", count=1)]
         # Patch all() to return rows with attributes
         db = _db(_FR(many=[]))
         result = await CalendarRepository(db).list_rsvp_counts(event_ids=[])
@@ -685,7 +686,7 @@ class TestNotificationRepository:
     @pytest.mark.asyncio
     async def test_mark_all_read_no_category(self):
         db = _db(_FR(many=[]))
-        count = await NotificationRepository(db).mark_all_read(
+        await NotificationRepository(db).mark_all_read(
             user_id=_uid(), school_id=_uid(), read_at=_now()
         )
         db.execute.assert_awaited()
@@ -693,7 +694,7 @@ class TestNotificationRepository:
     @pytest.mark.asyncio
     async def test_mark_all_read_with_category(self):
         db = _db(_FR(many=[]))
-        count = await NotificationRepository(db).mark_all_read(
+        await NotificationRepository(db).mark_all_read(
             user_id=_uid(), school_id=_uid(), read_at=_now()
         )
         db.execute.assert_awaited()
@@ -713,7 +714,7 @@ class TestNotificationRepository:
         fake = SimpleNamespace(id=_uid())
         db = _db()
         db.add_all = Mock()
-        result = await NotificationRepository(db).create_deliveries(
+        await NotificationRepository(db).create_deliveries(
             deliveries=[fake]
         )
         db.flush.assert_awaited()

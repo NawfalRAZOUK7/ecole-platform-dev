@@ -178,7 +178,7 @@ class TestMessagingRepositoryExtended:
             "app.repositories.communication_messaging.ConversationParticipant",
             side_effect=lambda **kw: mock_cp,
         ):
-            result = await MessagingRepository(db).create_conversation_participants(
+            await MessagingRepository(db).create_conversation_participants(
                 participants_data
             )
         db.add_all.assert_called_once()
@@ -241,7 +241,7 @@ class TestMessagingRepositoryExtended:
         """Non-empty receipts list."""
         from unittest.mock import patch, MagicMock
 
-        school_id = _uid()
+        _uid()
         receipts_data = [{"message_id": _uid(), "user_id": _uid()}]
         db = _db()
         mock_rr = MagicMock()
@@ -249,7 +249,7 @@ class TestMessagingRepositoryExtended:
             "app.repositories.communication_messaging.MessageReadReceipt",
             side_effect=lambda **kw: mock_rr,
         ):
-            result = await MessagingRepository(db).create_read_receipts(receipts_data)
+            await MessagingRepository(db).create_read_receipts(receipts_data)
         db.add_all.assert_called_once()
 
     @pytest.mark.asyncio

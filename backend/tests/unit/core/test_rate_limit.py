@@ -8,7 +8,6 @@ Strategy:
 
 from __future__ import annotations
 
-import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -18,7 +17,6 @@ from starlette.responses import Response
 from app.core.rate_limit import (
     AUTH_PATHS,
     RATE_LIMITS,
-    SKIP_PATHS,
     RateLimitMiddleware,
     _classify_request,
     _get_client_key,

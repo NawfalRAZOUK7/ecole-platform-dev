@@ -22,7 +22,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, Mock, MagicMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -161,7 +161,7 @@ class TestAIRepository:
     async def test_create_writing_attempt(self):
         fake = SimpleNamespace(id=_uid())
         db = _db()
-        result = await AIRepository(db).create_writing_attempt(fake)
+        await AIRepository(db).create_writing_attempt(fake)
         db.add.assert_called_once_with(fake)
 
     @pytest.mark.asyncio
@@ -1355,7 +1355,7 @@ class TestReportsRepository:
     async def test_create_report_job(self):
         job = SimpleNamespace(id=_uid())
         db = _db()
-        result = await ReportsRepository(db).create_report_job(job)
+        await ReportsRepository(db).create_report_job(job)
         db.add.assert_called_once_with(job)
 
     @pytest.mark.asyncio
@@ -1706,21 +1706,21 @@ class TestAnalyticsRepository:
     @pytest.mark.asyncio
     async def test_average_grade(self):
         db = _db(_FR(scalar=78.5))
-        result = await AnalyticsRepository(db).average_grade(
+        await AnalyticsRepository(db).average_grade(
             school_id=_uid(), from_dt=self._dt(), to_dt=self._dt()
         )
 
     @pytest.mark.asyncio
     async def test_billing_summary(self):
         db = _db(_FR(many=[(1000.0, 800.0, 200.0)]))
-        result = await AnalyticsRepository(db).billing_summary(
+        await AnalyticsRepository(db).billing_summary(
             school_id=_uid(), from_date=self._d(), to_date=self._d()
         )
 
     @pytest.mark.asyncio
     async def test_engagement_summary(self):
         db = _db(_FR(many=[(10, 5, 3)]))
-        result = await AnalyticsRepository(db).engagement_summary(
+        await AnalyticsRepository(db).engagement_summary(
             school_id=_uid(), from_dt=self._dt(), to_dt=self._dt()
         )
 
@@ -2041,7 +2041,7 @@ class TestReportScheduleRepository:
     async def test_create_schedule(self):
         sched = SimpleNamespace(id=_uid())
         db = _db()
-        result = await ReportScheduleRepository(db).create_schedule(sched)
+        await ReportScheduleRepository(db).create_schedule(sched)
         db.add.assert_called_once_with(sched)
 
     @pytest.mark.asyncio
@@ -2132,7 +2132,7 @@ class TestSyncQueueRepository:
     async def test_create_device(self):
         device = SimpleNamespace(id=_uid())
         db = _db()
-        result = await SyncQueueRepository(db).create_device(device)
+        await SyncQueueRepository(db).create_device(device)
         db.add.assert_called_once_with(device)
 
     @pytest.mark.asyncio
@@ -2189,7 +2189,7 @@ class TestSyncQueueRepository:
     async def test_create_queue_item(self):
         item = SimpleNamespace(id=_uid())
         db = _db()
-        result = await SyncQueueRepository(db).create_queue_item(item)
+        await SyncQueueRepository(db).create_queue_item(item)
         db.add.assert_called_once_with(item)
 
     @pytest.mark.asyncio
@@ -2233,7 +2233,7 @@ class TestSyncQueueRepository:
     async def test_create_conflict(self):
         conflict = SimpleNamespace(id=_uid())
         db = _db()
-        result = await SyncQueueRepository(db).create_conflict(conflict)
+        await SyncQueueRepository(db).create_conflict(conflict)
         db.add.assert_called_once_with(conflict)
 
     @pytest.mark.asyncio
@@ -2284,7 +2284,7 @@ class TestSyncQueueRepository:
     async def test_create_checkpoint(self):
         cp = SimpleNamespace(id=_uid())
         db = _db()
-        result = await SyncQueueRepository(db).create_checkpoint(cp)
+        await SyncQueueRepository(db).create_checkpoint(cp)
         db.add.assert_called_once_with(cp)
 
     @pytest.mark.asyncio
@@ -2482,7 +2482,7 @@ class TestProfileRepository:
         profile = SimpleNamespace(id=_uid())
         db = _db()
         db.refresh = AsyncMock()
-        result = await ProfileRepository(db).save_profile(profile)
+        await ProfileRepository(db).save_profile(profile)
         db.add.assert_called_once_with(profile)
 
     @pytest.mark.asyncio

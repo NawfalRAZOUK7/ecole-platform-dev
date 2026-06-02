@@ -28,7 +28,7 @@ from app.core.exceptions import (
     RateLimitError,
     ValidationError,
 )
-from app.core.permissions import ADM, DIR, PAR, STD, SUP, SYS, TCH
+from app.core.permissions import ADM, PAR, STD, TCH
 from app.services.auth.auth import (
     AuthService,
     EmailVerificationService,

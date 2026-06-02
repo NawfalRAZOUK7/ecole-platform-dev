@@ -14,10 +14,6 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
-# Python 3.14: MagicMock.__lt__ returns NotImplemented, so datetime comparisons
-# against MagicMock attributes raise TypeError. We use a sentinel datetime instead.
-_PAST_DATETIME = datetime(2000, 1, 1, tzinfo=timezone.utc)
-
 import pytest
 from freezegun import freeze_time
 
@@ -42,6 +38,10 @@ from app.core.tasks import (
     task_send_notification_digest,
     task_send_overdue_reminders,
 )
+
+# Python 3.14: MagicMock.__lt__ returns NotImplemented, so datetime comparisons
+# against MagicMock attributes raise TypeError. We use a sentinel datetime instead.
+_PAST_DATETIME = datetime(2000, 1, 1, tzinfo=timezone.utc)
 
 
 # ---------------------------------------------------------------------------
@@ -1165,7 +1165,6 @@ def test_worker_settings_cron_jobs_extended_in_staging():
     """Line 901: WorkerSettings.cron_jobs gets extra entries in staging env."""
     import app.core.tasks as tasks_module
 
-    original_env = tasks_module.settings.app_env
 
     # Re-evaluate the class body by patching settings at import time is complex;
     # instead we verify the conditional logic directly by examining the value.

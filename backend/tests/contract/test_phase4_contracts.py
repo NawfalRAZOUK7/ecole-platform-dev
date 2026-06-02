@@ -16,14 +16,10 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from pydantic import TypeAdapter
 
 from tests.integration.api.helpers import (
     CLASS_ID,
-    INVOICE_ID,
-    SCHOOL_ID,
     STUDENT_ID,
-    YEAR_ID,
     auth_header,
     login_token,
     unique_suffix,

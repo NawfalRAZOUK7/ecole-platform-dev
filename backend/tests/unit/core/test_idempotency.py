@@ -17,7 +17,6 @@ from starlette.responses import JSONResponse, Response
 
 from app.core.idempotency import (
     IDEMPOTENCY_TTL_SECONDS,
-    IDEMPOTENT_METHODS,
     IdempotencyMiddleware,
 )
 
@@ -239,7 +238,7 @@ async def test_cache_hit_missing_body_key_proceeds():
     mock_redis.setex = AsyncMock()
 
     with patch("app.core.idempotency.redis_client", mock_redis):
-        result = await mw.dispatch(request, call_next)
+        await mw.dispatch(request, call_next)
 
     call_next.assert_awaited_once()
 
@@ -267,7 +266,7 @@ async def test_2xx_response_is_cached():
     mock_redis.setex = AsyncMock()
 
     with patch("app.core.idempotency.redis_client", mock_redis):
-        result = await mw.dispatch(request, call_next)
+        await mw.dispatch(request, call_next)
 
     mock_redis.setex.assert_awaited_once()
     call_args = mock_redis.setex.call_args
@@ -342,7 +341,7 @@ async def test_5xx_response_not_cached():
     mock_redis.get.return_value = None
 
     with patch("app.core.idempotency.redis_client", mock_redis):
-        result = await mw.dispatch(request, call_next)
+        await mw.dispatch(request, call_next)
 
     mock_redis.setex.assert_not_awaited()
 

@@ -263,7 +263,7 @@ class TestNotificationRepositoryExtended:
         """Cover non-empty deliveries path."""
         delivery = SimpleNamespace(id=_uid())
         db = _db()
-        result = await NotificationRepository(db).create_deliveries([delivery])
+        await NotificationRepository(db).create_deliveries([delivery])
         db.add_all.assert_called_once()
 
     @pytest.mark.asyncio

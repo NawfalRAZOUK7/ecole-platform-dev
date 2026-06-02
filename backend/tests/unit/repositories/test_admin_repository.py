@@ -8,7 +8,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
@@ -42,7 +42,8 @@ class _FR:
         return self._scalar
 
     def scalars(self):
-        many = self._many; v = self._v
+        many = self._many
+        v = self._v
         return SimpleNamespace(all=lambda: many, first=lambda: (many[0] if many else v))
 
     def first(self):
@@ -273,28 +274,28 @@ class TestAdminRepository:
     async def test_create_user(self):
         user = SimpleNamespace(id=_uid())
         db = _db()
-        result = await AdminRepository(db).create_user(user)
+        await AdminRepository(db).create_user(user)
         db.add.assert_called_once_with(user)
 
     @pytest.mark.asyncio
     async def test_create_membership(self):
         membership = SimpleNamespace(id=_uid())
         db = _db()
-        result = await AdminRepository(db).create_membership(membership)
+        await AdminRepository(db).create_membership(membership)
         db.add.assert_called_once_with(membership)
 
     @pytest.mark.asyncio
     async def test_create_invitation(self):
         invite = SimpleNamespace(id=_uid())
         db = _db()
-        result = await AdminRepository(db).create_invitation(invite)
+        await AdminRepository(db).create_invitation(invite)
         db.add.assert_called_once_with(invite)
 
     @pytest.mark.asyncio
     async def test_create_parent_child_link(self):
         link = SimpleNamespace(id=_uid())
         db = _db()
-        result = await AdminRepository(db).create_parent_child_link(link)
+        await AdminRepository(db).create_parent_child_link(link)
         db.add.assert_called_once_with(link)
 
     @pytest.mark.asyncio
@@ -373,7 +374,7 @@ class TestFeatureRepository:
     async def test_create_toggle(self):
         toggle = SimpleNamespace(id=_uid())
         db = _db()
-        result = await FeatureRepository(db).create_toggle(toggle)
+        await FeatureRepository(db).create_toggle(toggle)
         db.add.assert_called_once_with(toggle)
 
     @pytest.mark.asyncio
@@ -463,7 +464,7 @@ class TestComplianceRepository:
     async def test_create_curriculum(self):
         curriculum = SimpleNamespace(id=_uid())
         db = _db()
-        result = await ComplianceRepository(db).create_curriculum(curriculum)
+        await ComplianceRepository(db).create_curriculum(curriculum)
         db.add.assert_called_once_with(curriculum)
 
     @pytest.mark.asyncio
@@ -522,7 +523,7 @@ class TestComplianceRepository:
     async def test_create_objective(self):
         obj = SimpleNamespace(id=_uid())
         db = _db()
-        result = await ComplianceRepository(db).create_objective(obj)
+        await ComplianceRepository(db).create_objective(obj)
         db.add.assert_called_once_with(obj)
 
     @pytest.mark.asyncio
@@ -584,7 +585,7 @@ class TestComplianceRepository:
     async def test_create_mapping(self):
         mapping = SimpleNamespace(id=_uid())
         db = _db()
-        result = await ComplianceRepository(db).create_mapping(mapping)
+        await ComplianceRepository(db).create_mapping(mapping)
         db.add.assert_called_once_with(mapping)
 
     @pytest.mark.asyncio

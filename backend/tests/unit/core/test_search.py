@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from sqlalchemy import String
 from sqlalchemy import column as sa_column
 
-from app.core.search import TS_CONFIG, apply_search, parse_search
+from app.core.search import apply_search, parse_search
 
 
 # ---------------------------------------------------------------------------

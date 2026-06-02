@@ -6,14 +6,11 @@ import string
 import time
 
 import pyotp
-import pytest
 
 from app.core.totp import (
     BACKUP_CODE_COUNT,
     BACKUP_CODE_LENGTH,
     TOTP_INTERVAL,
-    TOTP_ISSUER,
-    TOTP_VALID_WINDOW,
     generate_backup_codes,
     generate_totp_secret,
     get_provisioning_uri,

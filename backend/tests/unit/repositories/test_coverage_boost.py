@@ -14,7 +14,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, Mock, MagicMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -277,7 +277,7 @@ class TestGradebookRepositoryBoost:
         )
         db = _db(_FR(v=existing))
 
-        result = await GradebookRepository(db).save_student_period_average(
+        await GradebookRepository(db).save_student_period_average(
             student_id=_uid(),
             class_id=_uid(),
             period_id=_uid(),

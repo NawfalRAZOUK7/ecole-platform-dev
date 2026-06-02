@@ -20,10 +20,8 @@ import uuid
 import pytest
 
 from tests.integration.api.helpers import (
-    SCHOOL_ID,
     auth_header,
     login_token,
-    unique_suffix,
 )
 
 # IDs seeded by legacy_api_seed (defined in tests/integration/api/conftest.py)

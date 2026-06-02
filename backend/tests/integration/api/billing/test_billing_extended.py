@@ -27,7 +27,6 @@ import pytest
 from tests.integration.api.helpers import (
     INVOICE_ID,
     PERIOD_ID,
-    SCHOOL_ID,
     STUDENT_ID,
     YEAR_ID,
     auth_header,

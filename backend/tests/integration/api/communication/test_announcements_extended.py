@@ -19,7 +19,6 @@ import pytest
 
 from app.models.com import Announcement
 from tests.integration.api.helpers import (
-    SCHOOL_ID,
     auth_header,
     login_token,
     unique_suffix,

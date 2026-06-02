@@ -88,7 +88,7 @@ class TestReportsRepositoryCorrect:
     async def test_create_report_job(self):
         job = SimpleNamespace(id=_uid())
         db = _db()
-        result = await ReportsRepository(db).create_report_job(job)
+        await ReportsRepository(db).create_report_job(job)
         db.add.assert_called_once_with(job)
 
     @pytest.mark.asyncio
@@ -179,7 +179,7 @@ class TestReportsRepositoryCorrect:
     async def test_create_export_log(self):
         export = SimpleNamespace(id=_uid())
         db = _db()
-        result = await ReportsRepository(db).create_export_log(export)
+        await ReportsRepository(db).create_export_log(export)
         db.add.assert_called_once_with(export)
 
     @pytest.mark.asyncio

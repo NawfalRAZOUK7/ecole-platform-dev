@@ -17,13 +17,11 @@ import uuid
 
 import pytest
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import hash_password
 from tests.factories.iam import MembershipFactory, UserFactory
 from tests.factories.school import SchoolFactory
 from tests.integration.api.helpers import (
-    SCHOOL_ID,
     auth_header,
     login_token,
     unique_suffix,

@@ -49,7 +49,8 @@ class _FR:
         return self._scalar
 
     def scalars(self):
-        many = self._many; v = self._v
+        many = self._many
+        v = self._v
         return SimpleNamespace(all=lambda: many, first=lambda: (many[0] if many else v))
 
     def first(self):

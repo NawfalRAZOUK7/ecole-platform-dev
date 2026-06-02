@@ -9,7 +9,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from sqlalchemy.exc import IntegrityError
@@ -439,7 +439,7 @@ async def test_get_recovery_request():
 async def test_save_recovery_request():
     recovery = SimpleNamespace(id=_uid())
     db = _db()
-    result = await _repo(db).save_recovery_request(recovery)
+    await _repo(db).save_recovery_request(recovery)
     db.merge.assert_awaited_once_with(recovery)
 
 
@@ -475,7 +475,7 @@ async def test_get_webauthn_credential_by_id():
 async def test_update_webauthn_credential():
     cred = SimpleNamespace(credential_id="abc")
     db = _db()
-    result = await _repo(db).update_webauthn_credential(cred)
+    await _repo(db).update_webauthn_credential(cred)
     db.merge.assert_awaited_once_with(cred)
 
 
@@ -530,7 +530,7 @@ async def test_get_oauth_accounts_by_user():
 async def test_update_oauth_account():
     acct = SimpleNamespace(id=_uid())
     db = _db()
-    result = await _repo(db).update_oauth_account(acct)
+    await _repo(db).update_oauth_account(acct)
     db.merge.assert_awaited_once_with(acct)
 
 

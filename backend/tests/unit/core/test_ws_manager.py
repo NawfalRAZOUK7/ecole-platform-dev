@@ -757,7 +757,6 @@ async def test_deliver_local_ws_not_in_connections_at_cleanup():
     mgr._connections[uid] = [dead_ws]
 
     # Manually remove ws before cleanup (simulate concurrent removal)
-    original_deliver = mgr._deliver_local
 
     async def patched_deliver(user_id, message):
         connections = mgr._connections.get(user_id, [])

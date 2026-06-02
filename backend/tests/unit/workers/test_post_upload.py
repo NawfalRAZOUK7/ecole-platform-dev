@@ -455,7 +455,7 @@ class TestTaskCleanupOrphanedUploads:
     @pytest.mark.asyncio
     async def test_orphaned_uploading_session_is_cleaned(self):
         from app.workers.post_upload import task_cleanup_orphaned_uploads
-        now = datetime.now(timezone.utc)
+        datetime.now(timezone.utc)
         old_session = _make_upload_session(state="uploading")
 
         with (
@@ -533,7 +533,6 @@ class TestPostUploadCoverageBoost:
         """Lines 118-131: S3 get_object + PIL + S3 put_object happy path."""
         from app.workers.post_upload import _maybe_generate_thumbnail
         from app.core.storage import S3StorageBackend
-        from io import BytesIO
 
         session = _make_upload_session(
             kind="content_asset",
@@ -636,7 +635,7 @@ class TestPostUploadCoverageBoost:
         @asynccontextmanager
         async def _failing_client():
             raise RuntimeError("S3 connection failed")
-            yield  # noqa: unreachable
+            yield  # pragma: no cover
 
         mock_storage._client = _failing_client
         mock_storage._bucket = "test-bucket"

@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, date, timezone
+from datetime import datetime, timezone
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -46,7 +46,8 @@ class _FR:
         return self._scalar
 
     def scalars(self):
-        many = self._many; v = self._v
+        many = self._many
+        v = self._v
         return SimpleNamespace(all=lambda: many, first=lambda: (many[0] if many else v))
 
     def first(self):
@@ -673,7 +674,7 @@ class TestSkillPassportRepository:
     async def test_create_dimension(self):
         dim = SimpleNamespace(id=_uid())
         db = _db()
-        result = await SkillPassportRepository(db).create_dimension(dim)
+        await SkillPassportRepository(db).create_dimension(dim)
         db.add.assert_called_once_with(dim)
 
     @pytest.mark.asyncio
@@ -737,7 +738,7 @@ class TestSkillPassportRepository:
     async def test_create_milestone(self):
         milestone = SimpleNamespace(id=_uid())
         db = _db()
-        result = await SkillPassportRepository(db).create_milestone(milestone)
+        await SkillPassportRepository(db).create_milestone(milestone)
         db.add.assert_called_once_with(milestone)
 
     @pytest.mark.asyncio
@@ -802,7 +803,7 @@ class TestSkillPassportRepository:
     async def test_create_progress(self):
         progress = SimpleNamespace(id=_uid())
         db = _db()
-        result = await SkillPassportRepository(db).create_progress(progress)
+        await SkillPassportRepository(db).create_progress(progress)
         db.add.assert_called_once_with(progress)
 
     @pytest.mark.asyncio
@@ -867,7 +868,7 @@ class TestSkillPassportRepository:
     async def test_create_passport(self):
         passport = SimpleNamespace(id=_uid())
         db = _db()
-        result = await SkillPassportRepository(db).create_passport(passport)
+        await SkillPassportRepository(db).create_passport(passport)
         db.add.assert_called_once_with(passport)
 
     @pytest.mark.asyncio
@@ -928,7 +929,7 @@ class TestSkillPassportRepository:
     @pytest.mark.asyncio
     async def test_average_quiz_score_percent(self):
         db = _db(_FR(scalar=75.0))
-        result = await SkillPassportRepository(db).average_quiz_score_percent(
+        await SkillPassportRepository(db).average_quiz_score_percent(
             student_id=_uid(), school_id=_uid(), since=_now()
         )
 
