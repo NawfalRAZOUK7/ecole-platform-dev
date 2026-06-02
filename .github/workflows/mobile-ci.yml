@@ -57,3 +57,38 @@ jobs:
           files: mobile/coverage/lcov.info
           flags: mobile
           fail_ci_if_error: false
+
+  integration-tests:
+    name: Integration Tests (Flutter iOS Simulator)
+    runs-on: macos-latest
+    needs: analyze-and-test
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Boot iOS simulator
+        run: |
+          DEVICE_ID="$(xcrun simctl list devices available iPhone | awk -F '[()]' '/iPhone 16|iPhone 15|iPhone 14/ { print $2; exit }')"
+          if [ -z "$DEVICE_ID" ]; then
+            echo "No available iPhone simulator found."
+            xcrun simctl list devices available
+            exit 1
+          fi
+          xcrun simctl boot "$DEVICE_ID" || true
+          xcrun simctl bootstatus "$DEVICE_ID" -b
+          echo "DEVICE_ID=$DEVICE_ID" >> "$GITHUB_ENV"
+
+      - name: Run integration tests
+        run: flutter test integration_test -d "$DEVICE_ID" --reporter=expanded

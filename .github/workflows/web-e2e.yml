@@ -4,9 +4,17 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
+  workflow_dispatch:
   push:
-    branches: [main]
-    paths: ["web/**"]
+    branches: [main, develop]
+    paths:
+      - "web/**"
+      - ".github/workflows/web-e2e.yml"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "web/**"
+      - ".github/workflows/web-e2e.yml"
 
 jobs:
   e2e:

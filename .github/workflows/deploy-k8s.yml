@@ -159,7 +159,7 @@ jobs:
           keys = ["DATABASE_URL", "REDIS_URL", "JWT_SECRET_KEY", "SMTP_PASSWORD"]
           for key in keys:
               val = secrets.get(key, {}).get("computed", "")
-              secret_name = f"ecole-{key.lower().replace("_", "-")}"
+              secret_name = "ecole-" + key.lower().replace("_", "-")
               if key == "SMTP_PASSWORD":
                   secret_name = "ecole-smtp-password"
               if key == "JWT_SECRET_KEY":

@@ -473,7 +473,7 @@ jobs:
             curl -sf http://localhost:8000/api/v1/health && break
             sleep 1
           done
-          pytest tests/integration/api/auth/test_complete_auth.py tests/integration/api/auth/test_role_flow.py -v --tb=short --cov=app --cov-branch --cov-report=xml --cov-report=term --cov-fail-under=0
+          pytest tests/integration/api/ -v --tb=short --cov=app --cov-branch --cov-report=xml --cov-report=term --cov-fail-under=0
           kill -INT "$SERVER_PID" || true
           wait "$SERVER_PID" || true
           trap - EXIT
@@ -633,7 +633,7 @@ jobs:
           if-no-files-found: warn
 
   security-tests:
-    name: RBAC Security Tests
+    name: Security Tests
     runs-on: ubuntu-latest
     needs: [integration-tests]
     services:
@@ -747,7 +747,7 @@ jobs:
           mc alias set local http://localhost:9000 minioadmin minioadmin123
           mc mb --ignore-existing local/ecole-test-private
 
-      - name: Run RBAC security tests with API coverage
+      - name: Run security tests with API coverage
         run: |
           cd backend
           coverage erase
@@ -763,12 +763,12 @@ jobs:
             curl -sf http://localhost:8000/api/v1/health && break
             sleep 1
           done
-          pytest tests/security/rbac/test_rbac_security.py -v --tb=short --cov=app --cov-branch --cov-report=xml --cov-report=term --cov-fail-under=0
+          pytest tests/security/ --ignore=tests/security/audit/test_security_audit.py -v --tb=short --cov=app --cov-branch --cov-report=xml --cov-report=term --cov-fail-under=0
           kill -INT "$SERVER_PID" || true
           wait "$SERVER_PID" || true
           trap - EXIT
 
-      - name: Upload RBAC coverage data
+      - name: Upload security coverage data
         uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -780,7 +780,7 @@ jobs:
   coverage-report:
     name: Coverage Report
     runs-on: ubuntu-latest
-    needs: [unit-tests, integration-tests, contract-tests, security-tests]
+    needs: [unit-tests, integration-tests, contract-tests, security-tests, security-audit]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -844,44 +844,10 @@ jobs:
           flags: backend
           fail_ci_if_error: false
 
-  web-lint:
-    name: Web Frontend Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Cache npm
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: npm-${{ hashFiles('web/package-lock.json') }}
-          restore-keys: |
-            npm-
-
-      - name: Install dependencies
-        run: |
-          cd web
-          npm ci
-
-      - name: TypeScript compile check
-        run: |
-          cd web
-          npx tsc --noEmit
-
-      - name: Vite build
-        run: |
-          cd web
-          npm run build
-
   e2e-tests:
     name: E2E Tests (Playwright)
     runs-on: ubuntu-latest
-    needs: [web-lint, integration-tests]
+    needs: [integration-tests]
     services:
       postgres:
         image: postgres:16-alpine

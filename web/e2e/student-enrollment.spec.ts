@@ -4,6 +4,7 @@
 
 import { test, expect } from '@playwright/test';
 import { installMockSession, apiResponse, apiListResponse } from './mockApi';
+import { login } from './helpers';
 
 const mockStudent = {
   id: 'student-new-1',
@@ -27,6 +28,7 @@ const mockEnrollment = {
 test.describe('J6 — Admin student enrollment', () => {
   test('admin can view and enroll a student', async ({ page }) => {
     await installMockSession(page, 'admin');
+    await login(page, 'admin');
 
     // Mock enrollments list endpoint
     let enrollments: (typeof mockEnrollment)[] = [];
@@ -70,6 +72,7 @@ test.describe('J6 — Admin student enrollment', () => {
 
   test('enrollment list shows students after enrolling', async ({ page }) => {
     await installMockSession(page, 'admin');
+    await login(page, 'admin');
 
     await page.route(/\/api\/v1\/enrollments(?:\?.*)?$/, async (route) => {
       await route.fulfill({

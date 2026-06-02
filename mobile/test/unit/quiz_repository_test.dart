@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:ecole_platform/core/network/api_client.dart';
 import 'package:ecole_platform/data/repositories_impl/lms/quiz_repository_impl.dart';
 import 'package:ecole_platform/domain/entities/lms/quiz.dart';
 
@@ -9,22 +8,44 @@ import '../helpers/api_responses.dart';
 import '../helpers/test_mocks.dart';
 
 Map<String, dynamic> _quizJson({String id = 'q1'}) => {
-  'id': id, 'title': 'Quiz Maths', 'description': null, 'subject': 'math',
-  'difficulty': 'medium', 'time_limit_minutes': 30, 'max_attempts': 2,
-  'question_count': 5, 'total_points': 20, 'shuffle_questions': false,
-  'status': 'published',
-};
+      'id': id,
+      'title': 'Quiz Maths',
+      'description': null,
+      'subject': 'math',
+      'difficulty': 'medium',
+      'time_limit_minutes': 30,
+      'max_attempts': 2,
+      'question_count': 5,
+      'total_points': 20,
+      'shuffle_questions': false,
+      'status': 'published',
+    };
 
 Map<String, dynamic> _questionJson({String id = 'qn1'}) => {
-  'id': id, 'question_type': 'multiple_choice', 'question_text': 'Combien font 2+2?',
-  'question_media_path': null, 'options': {'choices': ['3', '4', '5']},
-  'points': 4, 'order': 1,
-};
+      'id': id,
+      'question_type': 'multiple_choice',
+      'question_text': 'Combien font 2+2?',
+      'question_media_path': null,
+      'options': {
+        'choices': ['3', '4', '5'],
+      },
+      'points': 4,
+      'order': 1,
+    };
 
-Map<String, dynamic> _attemptJson({String id = 'att-1', String status = 'in_progress'}) => {
-  'id': id, 'quiz_id': 'q1', 'student_id': 'stu-1', 'status': status,
-  'score': null, 'started_at': '2026-05-01T10:00:00Z', 'submitted_at': null,
-};
+Map<String, dynamic> _attemptJson({
+  String id = 'att-1',
+  String status = 'in_progress',
+}) =>
+    {
+      'id': id,
+      'quiz_id': 'q1',
+      'student_id': 'stu-1',
+      'status': status,
+      'score': null,
+      'started_at': '2026-05-01T10:00:00Z',
+      'submitted_at': null,
+    };
 
 void main() {
   late MockApiClient api;
@@ -68,8 +89,9 @@ void main() {
 
   group('getQuiz', () {
     test('fetches quiz by id', () async {
-      when(() => api.get('/quizzes/q1'))
-          .thenAnswer((_) async => response({..._quizJson(), 'questions': <dynamic>[]}));
+      when(() => api.get('/quizzes/q1')).thenAnswer(
+        (_) async => response({..._quizJson(), 'questions': <dynamic>[]}),
+      );
 
       final result = await repo.getQuiz('q1');
       expect(result.id, 'q1');
@@ -79,7 +101,10 @@ void main() {
   group('getQuizQuestions', () {
     test('returns questions embedded in quiz response', () async {
       when(() => api.get('/quizzes/q1')).thenAnswer(
-        (_) async => response({..._quizJson(), 'questions': [_questionJson()]}),
+        (_) async => response({
+          ..._quizJson(),
+          'questions': [_questionJson()],
+        }),
       );
 
       final result = await repo.getQuizQuestions('q1');
@@ -90,8 +115,9 @@ void main() {
     });
 
     test('returns empty list when no questions in response', () async {
-      when(() => api.get(any()))
-          .thenAnswer((_) async => response({..._quizJson(), 'questions': null}));
+      when(() => api.get(any())).thenAnswer(
+        (_) async => response({..._quizJson(), 'questions': null}),
+      );
 
       final result = await repo.getQuizQuestions('q1');
       expect(result, isEmpty);
@@ -117,7 +143,10 @@ void main() {
       await repo.submitResponse('att-1', questionId: 'qn1', answer: '4');
 
       final body = verify(
-        () => api.post('/attempts/att-1/respond', body: captureAny(named: 'body')),
+        () => api.post(
+          '/attempts/att-1/respond',
+          body: captureAny(named: 'body'),
+        ),
       ).captured.first as Map<String, dynamic>;
       expect(body['question_id'], 'qn1');
       expect(body['answer'], '4');
@@ -153,7 +182,12 @@ void main() {
     test('returns list of results on success', () async {
       when(() => api.list('/results/quizzes')).thenAnswer(
         (_) async => listResponse([
-          {'quiz_id': 'q1', 'quiz_title': 'Quiz Maths', 'best_score': 18, 'attempts_count': 1},
+          {
+            'quiz_id': 'q1',
+            'quiz_title': 'Quiz Maths',
+            'best_score': 18,
+            'attempts_count': 1,
+          },
         ]),
       );
 
@@ -173,17 +207,27 @@ void main() {
     test('caches questions and retrieves them', () async {
       final captured = <List<Map<String, dynamic>>>[];
       when(() => cache.put(any(), any(), any())).thenAnswer((inv) async {
-        captured.add((inv.positionalArguments[1] as List).cast<Map<String, dynamic>>());
+        captured.add(
+          (inv.positionalArguments[1] as List).cast<Map<String, dynamic>>(),
+        );
       });
       when(() => cache.get('quiz_offline:q1')).thenAnswer(
         (_) async => [_questionJson()],
       );
 
-      final questions = [Question(
-        id: 'qn1', questionType: 'multiple_choice',
-        questionText: 'Combien font 2+2?', questionMediaPath: null,
-        options: {'choices': ['3', '4', '5']}, points: 4, order: 1,
-      )];
+      final questions = [
+        const Question(
+          id: 'qn1',
+          questionType: 'multiple_choice',
+          questionText: 'Combien font 2+2?',
+          questionMediaPath: null,
+          options: {
+            'choices': ['3', '4', '5'],
+          },
+          points: 4,
+          order: 1,
+        ),
+      ];
 
       await repo.cacheQuizForOffline('q1', questions);
       final cached = await repo.getCachedQuestions('q1');
@@ -193,7 +237,8 @@ void main() {
     });
 
     test('getCachedQuestions returns null when not cached', () async {
-      when(() => cache.get('quiz_offline:q-miss')).thenAnswer((_) async => null);
+      when(() => cache.get('quiz_offline:q-miss'))
+          .thenAnswer((_) async => null);
 
       final result = await repo.getCachedQuestions('q-miss');
       expect(result, isNull);

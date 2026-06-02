@@ -58,10 +58,12 @@ class WsEvent {
 }
 
 typedef WsListener = void Function(WsEvent event);
+typedef WsChannelFactory = WebSocketChannel Function(Uri uri);
 
 class WsClient {
   final String _baseUrl;
   final FlutterLocalNotificationsPlugin _localNotifications;
+  final WsChannelFactory _channelFactory;
 
   WebSocketChannel? _channel;
   StreamSubscription? _subscription;
@@ -82,8 +84,10 @@ class WsClient {
   WsClient({
     required String baseUrl,
     required FlutterLocalNotificationsPlugin localNotifications,
+    WsChannelFactory? channelFactory,
   })  : _baseUrl = baseUrl,
-        _localNotifications = localNotifications;
+        _localNotifications = localNotifications,
+        _channelFactory = channelFactory ?? WebSocketChannel.connect;
 
   int get badgeCount => _badgeCount;
 
@@ -110,7 +114,16 @@ class WsClient {
   /// Reset badge count (e.g. when notifications screen is viewed).
   void resetBadge() {
     _badgeCount = 0;
-    FlutterAppBadger.removeBadge();
+    unawaited(
+      FlutterAppBadger.removeBadge()
+          .catchError((Object error, StackTrace stackTrace) {
+        dev.log(
+          'Badge reset failed: $error',
+          name: 'WsClient',
+          stackTrace: stackTrace,
+        );
+      }),
+    );
   }
 
   void _doConnect() {
@@ -122,7 +135,7 @@ class WsClient {
     final uri = Uri.parse('$wsScheme://$host/api/v1/ws?token=$_accessToken');
 
     try {
-      _channel = WebSocketChannel.connect(uri);
+      _channel = _channelFactory(uri);
       _subscription = _channel!.stream.listen(
         _onMessage,
         onError: (_) => _scheduleReconnect(),

@@ -1,21 +1,43 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 import 'package:ecole_platform/core/network/ws_client.dart';
 
 class MockFlutterLocalNotificationsPlugin extends Mock
     implements FlutterLocalNotificationsPlugin {}
 
+class MockWebSocketChannel extends Mock implements WebSocketChannel {}
+
+class MockWebSocketSink extends Mock implements WebSocketSink {}
+
 /// Creates a WsClient pre-wired with the mock plugin.
-WsClient _makeClient(MockFlutterLocalNotificationsPlugin notifs) {
+WsClient _makeClient(
+  MockFlutterLocalNotificationsPlugin notifs, {
+  WebSocketChannel? channel,
+}) {
   return WsClient(
     baseUrl: 'http://localhost:8000',
     localNotifications: notifs,
+    channelFactory: (_) => channel ?? _mockChannel(),
   );
 }
 
+WebSocketChannel _mockChannel() {
+  final channel = MockWebSocketChannel();
+  final sink = MockWebSocketSink();
+  when(() => channel.stream).thenAnswer((_) => const Stream.empty());
+  when(() => channel.sink).thenReturn(sink);
+  when(() => sink.add(any())).thenReturn(null);
+  when(() => sink.close()).thenAnswer((_) async {});
+  when(() => sink.close(any(), any())).thenAnswer((_) async {});
+  return channel;
+}
+
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   late MockFlutterLocalNotificationsPlugin notifs;
   late WsClient client;
 
@@ -136,6 +158,7 @@ void main() {
         final secureClient = WsClient(
           baseUrl: 'https://api.example.com',
           localNotifications: notifs,
+          channelFactory: (_) => _mockChannel(),
         );
         expect(
           () => secureClient.connect('fake-token'),

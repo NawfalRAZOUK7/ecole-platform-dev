@@ -5,9 +5,9 @@ Automated continuous integration and deployment workflows for Ecole Platform.
 ## Workflows
 
 - **ci.yml** - Main backend/system pipeline: test matrices, migrations, security scans, Postman scenarios, cleanup, and k6 baseline jobs.
-- **mobile-ci.yml** - Flutter mobile checks: dependency install, analyze, tests with coverage, and build validation.
-- **web-ci.yml** - Web checks: install, lint/typecheck, architecture checks, tests, and build.
-- **web-e2e.yml** - Browser end-to-end coverage for the web app.
+- **mobile-ci.yml** - Flutter mobile checks: dependency install, analyze, unit tests with coverage, and integration tests.
+- **web-ci.yml** - Web checks: install, lint/typecheck, unit tests with coverage, and build.
+- **web-e2e.yml** - Browser end-to-end coverage for the web app on main/develop pushes and pull requests.
 - **architecture-check.yml** - Repository architecture compliance and import-boundary checks.
 - **deploy-staging.yml** - Staging deployment workflow.
 - **deploy-k8s.yml** - Kubernetes deployment workflow.
