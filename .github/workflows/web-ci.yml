@@ -110,7 +110,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           directory: web/coverage
-          flags: web
+          flags: web-unit
           fail_ci_if_error: false
 
   build:

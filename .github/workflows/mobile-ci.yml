@@ -55,7 +55,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: mobile/coverage/lcov.info
-          flags: mobile
+          flags: mobile-unit
           fail_ci_if_error: false
 
   integration-tests:

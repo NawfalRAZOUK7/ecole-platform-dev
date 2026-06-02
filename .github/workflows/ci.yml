@@ -785,7 +785,17 @@ jobs:
   coverage-report:
     name: Coverage Report
     runs-on: ubuntu-latest
-    needs: [unit-tests, integration-tests, contract-tests, security-tests, security-audit]
+    needs:
+      [
+        unit-tests,
+        integration-tests,
+        contract-tests,
+        security-tests,
+        security-audit,
+        postman-tests,
+        postman-scenario-tests,
+      ]
+    if: ${{ always() }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -846,7 +856,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: backend/coverage.xml
-          flags: backend
+          flags: backend-unit,backend-integration,backend-contract,backend-security,backend-postman
           fail_ci_if_error: false
 
   e2e-tests:
@@ -980,7 +990,10 @@ jobs:
       - name: Start API server
         run: |
           cd backend
-          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          coverage erase
+          coverage run --parallel-mode --source=app -m uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          API_SERVER_PID=$!
+          echo "API_SERVER_PID=$API_SERVER_PID" >> "$GITHUB_ENV"
           for i in $(seq 1 30); do
             curl -sf http://localhost:8000/api/v1/health && break
             sleep 1
@@ -1137,7 +1150,10 @@ jobs:
       - name: Start API server
         run: |
           cd backend
-          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          coverage erase
+          coverage run --parallel-mode --source=app -m uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          API_SERVER_PID=$!
+          echo "API_SERVER_PID=$API_SERVER_PID" >> "$GITHUB_ENV"
           for i in $(seq 1 30); do
             curl -sf http://localhost:8000/api/v1/health && break
             sleep 1
@@ -1165,6 +1181,23 @@ jobs:
           path: |
             newman-report.html
             newman-report.json
+
+      - name: Stop API server and flush coverage
+        if: always()
+        run: |
+          if [ -n "${API_SERVER_PID:-}" ]; then
+            kill -INT "$API_SERVER_PID" || true
+            wait "$API_SERVER_PID" || true
+          fi
+
+      - name: Upload Postman coverage data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-data-postman-full
+          path: backend/.coverage*
+          include-hidden-files: true
+          if-no-files-found: warn
 
   postman-scenario-tests:
     name: Postman Scenario Tests (Newman)
@@ -1289,7 +1322,10 @@ jobs:
       - name: Start API server
         run: |
           cd backend
-          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          coverage erase
+          coverage run --parallel-mode --source=app -m uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          API_SERVER_PID=$!
+          echo "API_SERVER_PID=$API_SERVER_PID" >> "$GITHUB_ENV"
           for i in $(seq 1 30); do
             curl -sf http://localhost:8000/api/v1/health && break
             sleep 1
@@ -1335,6 +1371,23 @@ jobs:
         with:
           name: scenario-reports
           path: scenario-reports/*
+
+      - name: Stop API server and flush coverage
+        if: always()
+        run: |
+          if [ -n "${API_SERVER_PID:-}" ]; then
+            kill -INT "$API_SERVER_PID" || true
+            wait "$API_SERVER_PID" || true
+          fi
+
+      - name: Upload Postman scenario coverage data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-data-postman-scenarios
+          path: backend/.coverage*
+          include-hidden-files: true
+          if-no-files-found: warn
 
   cleanup-test-data:
     name: Cleanup Test Data
@@ -1971,3 +2024,63 @@ jobs:
           path: |
             sbom-backend.spdx.json
             sbom-web.spdx.json
+
+  ci-summary:
+    name: CI Coordinator Summary
+    runs-on: ubuntu-latest
+    if: ${{ always() }}
+    needs:
+      [
+        lint,
+        security-trivy,
+        security-pip-audit,
+        security-bandit,
+        migration-safety,
+        unit-tests,
+        integration-tests,
+        contract-tests,
+        security-tests,
+        postman-tests,
+        postman-scenario-tests,
+        cleanup-test-data,
+        k6-load-tests,
+        security-audit,
+        load-tests,
+        coverage-report,
+        e2e-tests,
+        publish-images,
+      ]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download coverage summaries
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: coverage-full
+          path: .
+          merge-multiple: true
+
+      - name: Generate dual coverage summary
+        env:
+          NEEDS_JSON: ${{ toJson(needs) }}
+        run: |
+          python3 scripts/generate-ci-coverage-summary.py \
+            --needs-json "$NEEDS_JSON" \
+            --backend-coverage backend/coverage.xml \
+            --output-json test-coverage-summary.json \
+            --output-md test-coverage-summary.md \
+            --fail-required
+
+      - name: Write GitHub Actions summary
+        if: always()
+        run: cat test-coverage-summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload dual coverage summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-coverage-summary
+          path: |
+            test-coverage-summary.json
+            test-coverage-summary.md
