@@ -38,9 +38,22 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
                 "max-age=31536000; includeSubDomains"
             )
 
-        # Content-Security-Policy: Controls resource loading
-        # Hardened for production; relaxed for local development
-        if settings.is_production:
+        # Content-Security-Policy: Controls resource loading.
+        # /docs and /redoc load swagger-ui/redoc from jsdelivr CDN — exempt them from
+        # the strict same-origin policy so the dev UI renders correctly.
+        path = request.url.path
+        is_docs_path = path in ("/docs", "/redoc", "/docs/oauth2-redirect")
+        if is_docs_path:
+            csp = (
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; "
+                "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; "
+                "img-src 'self' data: https:; "
+                "font-src 'self' data: https://cdn.jsdelivr.net; "
+                "connect-src 'self'; "
+                "frame-ancestors 'none';"
+            )
+        elif settings.is_production:
             csp = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; font-src 'self'; connect-src 'self'; frame-ancestors 'none';"
         else:
             csp = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none';"
