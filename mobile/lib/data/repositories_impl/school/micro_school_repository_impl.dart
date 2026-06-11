@@ -160,22 +160,33 @@ class MicroSchoolRepositoryImpl implements MicroSchoolRepository {
       '/micro/progress-logs',
       params: {'micro_school_id': id},
     );
-    final studentIds = response.data
-        .map((item) => item['student_id']?.toString())
-        .whereType<String>()
+    final rawLogs = response.data;
+    final logs = rawLogs
+        .map(
+          (item) => MicroProgressLogEntry.fromJson(item),
+        )
+        .toList()
+      ..sort((a, b) => b.date.compareTo(a.date)); // newest first
+    final enrollmentIds = rawLogs
+        .map(
+          (item) => (item['micro_enrollment_id'] ?? item['student_id'] ?? '')
+              .toString(),
+        )
+        .where((id) => id.isNotEmpty)
         .toSet();
+    final milestones =
+        logs.where((log) => (log.milestoneTag ?? '').isNotEmpty).length;
+    final progressEvents = milestones == 0 ? logs.length : milestones;
     return MicroProgressOverview(
-      averageProgress: response.data.isEmpty ? 0 : 100,
-      activeStudents: studentIds.length,
-      completionRate: response.data.isEmpty ? 0 : 100,
-      series: response.data
+      averageProgress: logs.isEmpty ? 0 : progressEvents / logs.length * 100,
+      activeStudents: enrollmentIds.length,
+      completionRate: logs.isEmpty ? 0 : 100,
+      series: logs
           .map(
-            (item) => MicroMetricPoint(
-              label: item['date']?.toString() ?? '',
-              value: 1,
-            ),
+            (log) => MicroMetricPoint(label: log.date, value: 1),
           )
           .toList(),
+      logs: logs,
     );
   }
 

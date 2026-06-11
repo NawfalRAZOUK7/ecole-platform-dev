@@ -9,8 +9,15 @@ class RewardsRepositoryImpl implements RewardsRepository {
 
   @override
   Future<StudentRewards> getMyRewards() async {
-    final resp = await _api.get('/rewards/me');
-    return StudentRewards.fromJson(resp.data);
+    try {
+      final resp = await _api.get('/rewards/me');
+      return StudentRewards.fromJson(resp.data);
+    } on ApiClientError catch (error) {
+      if (error.statusCode == 404) {
+        return StudentRewards.empty;
+      }
+      rethrow;
+    }
   }
 
   @override

@@ -130,21 +130,55 @@ class MicroMetricPoint {
   }
 }
 
+/// A single educator observation for a micro-enrollment — the raw material
+/// for the parent/educator activity feed (note + optional photo + milestone).
+class MicroProgressLogEntry {
+  final String id;
+  final String microEnrollmentId;
+  final String date;
+  final String note;
+  final String? photoUrl;
+  final String? milestoneTag;
+
+  const MicroProgressLogEntry({
+    required this.id,
+    required this.microEnrollmentId,
+    required this.date,
+    required this.note,
+    this.photoUrl,
+    this.milestoneTag,
+  });
+
+  factory MicroProgressLogEntry.fromJson(Map<String, dynamic> json) {
+    return MicroProgressLogEntry(
+      id: json['id']?.toString() ?? '',
+      microEnrollmentId: json['micro_enrollment_id']?.toString() ?? '',
+      date: json['date']?.toString() ?? '',
+      note: json['note']?.toString() ?? '',
+      photoUrl: json['photo_url'] as String?,
+      milestoneTag: json['milestone_tag'] as String?,
+    );
+  }
+}
+
 class MicroProgressOverview {
   final double averageProgress;
   final int activeStudents;
   final double completionRate;
   final List<MicroMetricPoint> series;
+  final List<MicroProgressLogEntry> logs;
 
   const MicroProgressOverview({
     required this.averageProgress,
     required this.activeStudents,
     required this.completionRate,
     required this.series,
+    this.logs = const [],
   });
 
   factory MicroProgressOverview.fromJson(Map<String, dynamic> json) {
     final seriesJson = (json['series'] as List<dynamic>? ?? const []);
+    final logsJson = (json['logs'] as List<dynamic>? ?? const []);
     return MicroProgressOverview(
       averageProgress: (json['average_progress'] as num?)?.toDouble() ?? 0,
       activeStudents: (json['active_students'] as num?)?.toInt() ?? 0,
@@ -152,6 +186,12 @@ class MicroProgressOverview {
       series: seriesJson
           .map(
             (item) => MicroMetricPoint.fromJson(item as Map<String, dynamic>),
+          )
+          .toList(),
+      logs: logsJson
+          .map(
+            (item) =>
+                MicroProgressLogEntry.fromJson(item as Map<String, dynamic>),
           )
           .toList(),
     );

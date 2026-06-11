@@ -14,9 +14,9 @@ class _BrowseTab extends ConsumerWidget {
           padding: EdgeInsets.fromLTRB(12, 12, 12, 0),
           child: PlatformBridgeCard(
             targetPlatform: BridgePlatform.web,
-            title: 'إنشاء المحتوى والاختبارات',
+            title: 'Création de contenu et de quiz',
             description:
-                'لإنشاء الاختبارات وتعديل المحتوى ومراجعة الطلبات، استخدم المنصة على الحاسوب لتجربة أفضل.',
+                'Pour créer des quiz, modifier le contenu et valider les soumissions, utilisez la version web.',
             icon: Icons.edit_note_rounded,
           ),
         ),

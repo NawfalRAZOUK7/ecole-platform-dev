@@ -76,7 +76,10 @@ class MicroSchoolDetailScreen extends ConsumerWidget {
                     _StudentsTab(items: detail.enrollments),
                     _ResourcesTab(items: detail.resources),
                     _PaymentsTab(items: detail.payments),
-                    _ProgressTab(progress: detail.progress),
+                    _ProgressTab(
+                      progress: detail.progress,
+                      enrollments: detail.enrollments,
+                    ),
                   ],
                 ),
               ),
@@ -188,11 +191,20 @@ class _PaymentsTab extends StatelessWidget {
 
 class _ProgressTab extends StatelessWidget {
   final MicroProgressOverview progress;
+  final List<MicroEnrollment> enrollments;
 
-  const _ProgressTab({required this.progress});
+  const _ProgressTab({required this.progress, required this.enrollments});
+
+  String _childName(String enrollmentId) {
+    for (final e in enrollments) {
+      if (e.id == enrollmentId) return e.childName;
+    }
+    return 'Enfant';
+  }
 
   @override
   Widget build(BuildContext context) {
+    final logs = progress.logs;
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -203,9 +215,9 @@ class _ProgressTab extends StatelessWidget {
             SizedBox(
               width: 160,
               child: AppStatCard(
-                label: 'Average progress',
-                value: '${progress.averageProgress.toStringAsFixed(0)}%',
-                icon: Icons.trending_up,
+                label: 'Observations',
+                value: '${logs.length}',
+                icon: Icons.photo_library_outlined,
               ),
             ),
             SizedBox(
@@ -219,14 +231,111 @@ class _ProgressTab extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-        ...progress.series.map(
-          (point) => ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(point.label),
-            trailing: Text(point.value.toStringAsFixed(0)),
+        if (logs.isEmpty)
+          const AppEmptyState(
+            icon: Icons.timeline_outlined,
+            title: 'Aucune observation pour le moment',
+          )
+        else
+          ...logs.map(
+            (log) => _ProgressFeedCard(
+              log: log,
+              childName: _childName(log.microEnrollmentId),
+            ),
           ),
-        ),
       ],
+    );
+  }
+}
+
+/// One entry in the Micro-École activity feed: child + date, optional photo,
+/// milestone chip, and the educator's note.
+class _ProgressFeedCard extends StatelessWidget {
+  final MicroProgressLogEntry log;
+  final String childName;
+
+  const _ProgressFeedCard({required this.log, required this.childName});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (log.photoUrl != null && log.photoUrl!.isNotEmpty)
+            ClipRRect(
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(12)),
+              child: Image.network(
+                log.photoUrl!,
+                height: 180,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stack) => Container(
+                  height: 80,
+                  alignment: Alignment.center,
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  child: Icon(
+                    Icons.broken_image_outlined,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 16,
+                      backgroundColor: theme.colorScheme.primaryContainer,
+                      child: Text(
+                        childName.isNotEmpty ? childName[0].toUpperCase() : '?',
+                        style: TextStyle(
+                          color: theme.colorScheme.onPrimaryContainer,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        childName,
+                        style: theme.textTheme.titleSmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Text(
+                      log.date,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+                if ((log.milestoneTag ?? '').isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Chip(
+                    label: Text(log.milestoneTag!),
+                    avatar: const Icon(Icons.emoji_events_outlined, size: 16),
+                    visualDensity: VisualDensity.compact,
+                    backgroundColor: theme.colorScheme.secondaryContainer,
+                  ),
+                ],
+                if (log.note.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(log.note, style: theme.textTheme.bodyMedium),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

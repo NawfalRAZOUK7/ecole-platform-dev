@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/admin/admin.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/widgets/platform_bridge_card.dart';
 
@@ -32,9 +33,11 @@ class AdminDashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final dashboard = ref.watch(_dashboardProvider);
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
+    final isRtl = ref.watch(localeProvider) == 'ar';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Tableau de bord')),
+      appBar: AppBar(title: Text(t.t('admin.dashboard'))),
       body: dashboard.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
@@ -51,7 +54,7 @@ class AdminDashboardScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               FilledButton.tonal(
                 onPressed: () => ref.invalidate(_dashboardProvider),
-                child: const Text('Réessayer'),
+                child: Text(t.t('common.retry')),
               ),
             ],
           ),
@@ -61,98 +64,88 @@ class AdminDashboardScreen extends ConsumerWidget {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              // Summary cards
-              _buildGrid(theme, [
-                _StatCard(
-                  icon: Icons.people,
-                  label: 'Utilisateurs',
-                  value: stats.totalUsers.toString(),
-                  color: theme.colorScheme.primary,
-                ),
-                _StatCard(
-                  icon: Icons.devices,
-                  label: 'Sessions actives',
-                  value: stats.activeSessions.toString(),
-                  color: theme.semanticPalette.success,
-                ),
-                _StatCard(
-                  icon: Icons.mail_outline,
-                  label: 'Invitations actives',
-                  value: stats.activeInvitations.toString(),
-                  color: theme.semanticPalette.warning,
-                ),
-                _StatCard(
-                  icon: Icons.history,
-                  label: 'Événements (24h)',
-                  value: stats.auditEvents24h.toString(),
-                  color: theme.colorScheme.secondary,
-                ),
-                _StatCard(
-                  icon: Icons.pending_actions,
-                  label: 'Justifications en attente',
-                  value: stats.pendingJustifications.toString(),
-                  color: theme.colorScheme.error,
-                ),
-              ]),
+              _StatsGrid(
+                cards: [
+                  _StatCard(
+                    icon: Icons.people,
+                    label: t.t('admin.dashboard.users'),
+                    value: stats.totalUsers.toString(),
+                    color: theme.colorScheme.primary,
+                  ),
+                  _StatCard(
+                    icon: Icons.devices,
+                    label: t.t('admin.dashboard.sessions'),
+                    value: stats.activeSessions.toString(),
+                    color: theme.semanticPalette.success,
+                  ),
+                  _StatCard(
+                    icon: Icons.mail_outline,
+                    label: t.t('admin.dashboard.invitations'),
+                    value: stats.activeInvitations.toString(),
+                    color: theme.semanticPalette.warning,
+                  ),
+                  _StatCard(
+                    icon: Icons.history,
+                    label: t.t('admin.dashboard.auditEvents'),
+                    value: stats.auditEvents24h.toString(),
+                    color: theme.colorScheme.secondary,
+                  ),
+                  _StatCard(
+                    icon: Icons.pending_actions,
+                    label: t.t('admin.dashboard.pendingJustifications'),
+                    value: stats.pendingJustifications.toString(),
+                    color: theme.colorScheme.error,
+                  ),
+                ],
+              ),
               const SizedBox(height: 24),
-
-              // Users by role breakdown
-              Text(
-                'Répartition par rôle',
-                style: theme.textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold),
+              _SectionHeader(title: t.t('admin.dashboard.usersByRole')),
+              const SizedBox(height: 12),
+              _UsersByRoleCard(
+                totalUsers: stats.totalUsers,
+                usersByRole: stats.usersByRole,
+              ),
+              const SizedBox(height: 24),
+              _SectionHeader(
+                title: t.t('admin.dashboard.gamificationTitle'),
+                subtitle: t.t('admin.dashboard.gamificationSubtitle'),
               ),
               const SizedBox(height: 12),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: stats.usersByRole.entries.map((entry) {
-                      final label = _roleLabels[entry.key] ?? entry.key;
-                      final count = entry.value;
-                      final total = stats.totalUsers > 0 ? stats.totalUsers : 1;
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              width: 100,
-                              child: Text(
-                                label,
-                                style: theme.textTheme.bodySmall,
-                              ),
-                            ),
-                            Expanded(
-                              child: LinearProgressIndicator(
-                                value: count / total,
-                                backgroundColor:
-                                    theme.colorScheme.surfaceContainerHighest,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              '$count',
-                              style: theme.textTheme.bodyMedium
-                                  ?.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
+              _StatsGrid(
+                cards: [
+                  _StatCard(
+                    icon: Icons.star_outlined,
+                    label: t.t('admin.dashboard.starsAwardedWeek'),
+                    value: stats.rewardsSummary.starsAwardedWeek.toString(),
+                    color: theme.semanticPalette.warning,
                   ),
-                ),
+                  _StatCard(
+                    icon: Icons.auto_awesome_outlined,
+                    label: t.t('admin.dashboard.starsAwardedMonth'),
+                    value: stats.rewardsSummary.starsAwardedMonth.toString(),
+                    color: theme.colorScheme.secondary,
+                  ),
+                  _StatCard(
+                    icon: Icons.school_outlined,
+                    label: t.t('admin.dashboard.mostActiveClass'),
+                    value: stats.rewardsSummary.mostActiveClass ?? '—',
+                    color: theme.colorScheme.primary,
+                  ),
+                  _StatCard(
+                    icon: Icons.workspace_premium_outlined,
+                    label: t.t('admin.dashboard.recentRewardEvents'),
+                    value: stats.rewardsSummary.recentRewardEvents.toString(),
+                    color: theme.semanticPalette.success,
+                  ),
+                ],
               ),
               const SizedBox(height: 24),
-              Text(
-                'Administration',
-                style: theme.textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold),
-              ),
+              _SectionHeader(title: t.t('admin.title')),
               const SizedBox(height: 12),
               Card(
                 child: ListTile(
                   leading: const Icon(Icons.toggle_on_outlined),
-                  title: const Text('Feature toggles'),
+                  title: Text(t.t('admin.featureToggles')),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push('/admin/features'),
                 ),
@@ -160,83 +153,23 @@ class AdminDashboardScreen extends ConsumerWidget {
               Card(
                 child: ListTile(
                   leading: const Icon(Icons.school_outlined),
-                  title: const Text('School settings'),
+                  title: Text(t.t('admin.schoolSettings')),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push('/admin/school'),
                 ),
               ),
               const SizedBox(height: 24),
-
-              // Bridge card: advanced admin tools are web-only
-              const PlatformBridgeCard(
+              PlatformBridgeCard(
                 targetPlatform: BridgePlatform.web,
-                title: 'أدوات الإدارة المتقدمة',
-                description:
-                    'التسجيل الجماعي، سجل التدقيق، إدارة الشارات، وهياكل الرسوم متوفرة على المنصة عبر الحاسوب لتجربة إدارة كاملة.',
+                title: t.t('admin.bridgeTitle'),
+                description: t.t('admin.bridgeDescription'),
                 icon: Icons.admin_panel_settings_rounded,
-                textDirection: TextDirection.rtl,
+                textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
               ),
             ],
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildGrid(ThemeData theme, List<_StatCard> cards) {
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: cards.map((card) {
-        return SizedBox(
-          width: 160,
-          child: Card(
-            elevation: 2,
-            shadowColor: card.color.withValues(alpha: 0.15),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    theme.colorScheme.surface,
-                    Color.lerp(theme.colorScheme.surface, card.color, 0.06) ??
-                        theme.colorScheme.surface,
-                  ],
-                ),
-              ),
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: card.color.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(card.icon, color: card.color, size: 24),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    card.value,
-                    style: theme.textTheme.headlineSmall
-                        ?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    card.label,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      }).toList(),
     );
   }
 }
@@ -253,4 +186,189 @@ class _StatCard {
     required this.value,
     required this.color,
   });
+}
+
+class _StatsGrid extends StatelessWidget {
+  final List<_StatCard> cards;
+
+  const _StatsGrid({required this.cards});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth < 360 ? 1 : 2;
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: cards.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columns,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: columns == 1 ? 3.2 : 1.18,
+          ),
+          itemBuilder: (context, index) => _MetricCard(card: cards[index]),
+        );
+      },
+    );
+  }
+}
+
+class _MetricCard extends StatelessWidget {
+  final _StatCard card;
+
+  const _MetricCard({required this.card});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: card.color.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(card.icon, color: card.color, size: 22),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              card.value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              card.label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _UsersByRoleCard extends StatelessWidget {
+  final int totalUsers;
+  final Map<String, int> usersByRole;
+
+  const _UsersByRoleCard({
+    required this.totalUsers,
+    required this.usersByRole,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final total = totalUsers > 0 ? totalUsers : 1;
+    final entries = usersByRole.entries.toList()
+      ..sort(
+        (a, b) => (_roleLabels[a.key] ?? a.key)
+            .compareTo(_roleLabels[b.key] ?? b.key),
+      );
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: entries.map((entry) {
+            final label = _roleLabels[entry.key] ?? entry.key;
+            final count = entry.value;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 112,
+                    child: Text(label, style: theme.textTheme.bodySmall),
+                  ),
+                  Expanded(
+                    child: LinearProgressIndicator(
+                      value: count / total,
+                      minHeight: 8,
+                      borderRadius: BorderRadius.circular(8),
+                      backgroundColor:
+                          theme.colorScheme.surfaceContainerHighest,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  SizedBox(
+                    width: 32,
+                    child: Text(
+                      '$count',
+                      textAlign: TextAlign.end,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+
+  const _SectionHeader({
+    required this.title,
+    this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        if (subtitle != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            subtitle!,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
 }

@@ -15,6 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/lms/quiz.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 
 part 'quiz_list_view.dart';
@@ -41,6 +42,7 @@ class _QuizPlayerScreenState extends ConsumerState<QuizPlayerScreen> {
   bool _loadingList = true;
 
   // Playing state
+  Quiz? _playingQuiz;
   List<Question> _questions = [];
   QuizAttempt? _attempt;
   int _currentIdx = 0;
@@ -91,6 +93,7 @@ class _QuizPlayerScreenState extends ConsumerState<QuizPlayerScreen> {
     setState(() {
       _error = null;
       _submitting = true;
+      _playingQuiz = quiz;
     });
     try {
       final repo = ref.read(quizRepositoryProvider);

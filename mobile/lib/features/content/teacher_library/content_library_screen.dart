@@ -14,6 +14,7 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/features/auth/auth_provider.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/domain/entities/lms/quiz.dart';
 import 'package:ecole_platform/domain/entities/lms/teacher.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';

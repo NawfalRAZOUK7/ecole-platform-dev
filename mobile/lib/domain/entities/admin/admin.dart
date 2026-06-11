@@ -9,6 +9,7 @@ class DashboardStats {
   final int auditEvents24h;
   final int pendingJustifications;
   final Map<String, int> usersByRole;
+  final RewardsSummary rewardsSummary;
 
   const DashboardStats({
     required this.totalUsers,
@@ -17,6 +18,21 @@ class DashboardStats {
     required this.auditEvents24h,
     required this.pendingJustifications,
     required this.usersByRole,
+    this.rewardsSummary = const RewardsSummary(),
+  });
+}
+
+class RewardsSummary {
+  final int starsAwardedWeek;
+  final int starsAwardedMonth;
+  final String? mostActiveClass;
+  final int recentRewardEvents;
+
+  const RewardsSummary({
+    this.starsAwardedWeek = 0,
+    this.starsAwardedMonth = 0,
+    this.mostActiveClass,
+    this.recentRewardEvents = 0,
   });
 }
 

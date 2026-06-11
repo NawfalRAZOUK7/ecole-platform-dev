@@ -148,6 +148,7 @@ class PaymentPlan {
   final String startDate;
   final String status;
   final List<PaymentPlanInstallment> installments;
+  final int installmentCount;
   final String createdAt;
 
   const PaymentPlan({
@@ -159,6 +160,7 @@ class PaymentPlan {
     required this.startDate,
     required this.status,
     required this.installments,
+    required this.installmentCount,
     required this.createdAt,
   });
 }

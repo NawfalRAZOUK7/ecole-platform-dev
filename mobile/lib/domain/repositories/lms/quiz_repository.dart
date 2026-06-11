@@ -7,6 +7,15 @@ abstract class QuizRepository {
   /// List available quizzes for the student.
   Future<List<Quiz>> getQuizzes();
 
+  /// Generate a DRAFT quiz from a content item (Feature B, teacher).
+  /// Returns the summary payload (quiz_id, question_count, questions[].source).
+  Future<Map<String, dynamic>> generateQuizFromContent(
+    String contentId, {
+    required List<String> questionTypes,
+    required int count,
+    required List<String> sources,
+  });
+
   /// Get quiz detail with questions.
   Future<Quiz> getQuiz(String quizId);
 

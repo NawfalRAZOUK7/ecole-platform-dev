@@ -226,7 +226,7 @@ class ChildrenProgressNotifier extends StateNotifier<ChildrenProgressState> {
       final api = _ref.read(apiClientProvider);
       final resp = await api.get('/progress/children');
       final data = resp.data;
-      final children = (data['children'] as List<dynamic>)
+      final children = (data['children'] as List<dynamic>? ?? const [])
           .map((j) => ChildProgressSummary.fromJson(j as Map<String, dynamic>))
           .toList();
       state = ChildrenProgressState(children: children);

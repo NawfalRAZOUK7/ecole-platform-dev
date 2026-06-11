@@ -236,6 +236,21 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<void> setupSms2fa(String phone) async {
+    await _api.post('/auth/sms-2fa/setup', body: {'phone': phone});
+  }
+
+  @override
+  Future<void> verifySetupSms2fa(String code) async {
+    await _api.post('/auth/sms-2fa/verify-setup', body: {'code': code});
+  }
+
+  @override
+  Future<void> disableSms2fa(String code) async {
+    await _api.post('/auth/sms-2fa/disable', body: {'code': code});
+  }
+
+  @override
   Future<void> changePassword(
     String currentPassword,
     String newPassword,

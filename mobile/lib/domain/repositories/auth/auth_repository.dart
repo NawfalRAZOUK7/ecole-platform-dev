@@ -119,6 +119,15 @@ abstract class AuthRepository {
   /// Disable 2FA with a code.
   Future<void> disable2fa(String code);
 
+  /// Start SMS 2FA setup — sends an OTP to [phone].
+  Future<void> setupSms2fa(String phone);
+
+  /// Verify SMS 2FA setup with the received OTP [code].
+  Future<void> verifySetupSms2fa(String code);
+
+  /// Disable SMS 2FA with a received OTP [code].
+  Future<void> disableSms2fa(String code);
+
   /// Change password.
   Future<void> changePassword(String currentPassword, String newPassword);
 

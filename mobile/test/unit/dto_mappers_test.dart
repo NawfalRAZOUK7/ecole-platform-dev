@@ -450,6 +450,53 @@ void main() {
       expect(siblingPolicy.discounts.single.discountPercent, 10.0);
       expect(lateFee.maxFeeCap, 200.0);
       expect(plan.installments.single.amount, 600.0);
+      expect(plan.installmentCount, 1);
+    });
+
+    test('map backend dashboard and payment plan summary payloads', () {
+      final plan = paymentPlanFromJson({
+        'id': 'plan-1',
+        'invoice_id': 'invoice-1',
+        'invoice_number': 'INV-2026-001',
+        'parent_id': 'parent-1',
+        'parent_name': 'Parent Example',
+        'invoice_total_amount': 2400,
+        'issued_date': '2026-04-01',
+        'due_date': '2026-06-01',
+        'status': 'active',
+        'total_installments': 4,
+        'created_at': '2026-04-01T08:00:00Z',
+      });
+      final stats = dashboardStatsFromJson({
+        'users': 35,
+        'active_sessions': 7,
+        'active_invitations': 2,
+        'audit_events_24h': 9,
+        'pending_justifications': 1,
+        'users_by_role': {
+          'ADM': 2,
+          'TCH': '8',
+          'STD': 25,
+        },
+        'rewards_summary': {
+          'stars_awarded_week': 18,
+          'stars_awarded_month': '64',
+          'most_active_class': '6A (Sixième A)',
+          'recent_reward_events': 11,
+        },
+      });
+
+      expect(plan.name, 'Plan INV-2026-001');
+      expect(plan.totalAmount, 2400);
+      expect(plan.startDate, '2026-04-01');
+      expect(plan.installments, isEmpty);
+      expect(plan.installmentCount, 4);
+      expect(stats.totalUsers, 35);
+      expect(stats.usersByRole['TCH'], 8);
+      expect(stats.rewardsSummary.starsAwardedWeek, 18);
+      expect(stats.rewardsSummary.starsAwardedMonth, 64);
+      expect(stats.rewardsSummary.mostActiveClass, '6A (Sixième A)');
+      expect(stats.rewardsSummary.recentRewardEvents, 11);
     });
 
     test('map admin and teacher payloads', () {

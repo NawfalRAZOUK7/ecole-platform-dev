@@ -3,6 +3,7 @@ part of 'quiz_player_screen.dart';
 extension _QuizPlayView on _QuizPlayerScreenState {
   Widget _buildPlayView(BuildContext context) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
     final question = _questions[_currentIdx];
     final totalQuestions = _questions.length;
 
@@ -50,10 +51,33 @@ extension _QuizPlayView on _QuizPlayerScreenState {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    question.questionText,
-                    style: theme.textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w600),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          question.questionText,
+                          style: theme.textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.volume_up_outlined),
+                        tooltip: t.t('quiz.listenQuestion'),
+                        onPressed: () {
+                          // Prefer the quiz's stored language; fall back to
+                          // script detection (ar vs fr) for older quizzes.
+                          final lang = _playingQuiz?.language ??
+                              (RegExp(r'[؀-ۿ]').hasMatch(question.questionText)
+                                  ? 'ar'
+                                  : 'fr');
+                          ref.read(ttsServiceProvider).speakWord(
+                                question.questionText,
+                                lang: lang,
+                              );
+                        },
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 24),
                   _buildQuestionInput(question),

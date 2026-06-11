@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
 import 'shared_review_provider.dart';
@@ -33,10 +34,11 @@ class _SharedReviewScreenState extends ConsumerState<SharedReviewScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(sharedReviewProvider);
+    final t = AppLocalizations.of(ref);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('مراجعة التعلم'),
+        title: Text(t.t('familyReview.title')),
         centerTitle: true,
       ),
       body: state.isLoading
@@ -49,26 +51,26 @@ class _SharedReviewScreenState extends ConsumerState<SharedReviewScreen> {
                       const Icon(Icons.error_outline, size: 48),
                       const SizedBox(height: 8),
                       Text(
-                        'حدث خطأ',
+                        t.t('common.error'),
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),
                       TextButton(
                         onPressed: () => ref
                             .read(sharedReviewProvider.notifier)
                             .loadSessions(widget.childId),
-                        child: const Text('إعادة المحاولة'),
+                        child: Text(t.t('common.retry')),
                       ),
                     ],
                   ),
                 )
               : state.sessions.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text('📭', style: TextStyle(fontSize: 48)),
-                          SizedBox(height: 8),
-                          Text('لا توجد جلسات تعلم بعد'),
+                          const Text('📭', style: TextStyle(fontSize: 48)),
+                          const SizedBox(height: 8),
+                          Text(t.t('familyReview.empty')),
                         ],
                       ),
                     )
@@ -148,9 +150,10 @@ class _SharedReviewDetailScreenState
     final state = ref.watch(sharedReviewProvider);
     final detail = state.detail;
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
 
     return Scaffold(
-      appBar: AppBar(title: Text(detail?.title ?? 'تفاصيل الجلسة')),
+      appBar: AppBar(title: Text(detail?.title ?? t.t('familyReview.detail'))),
       body: state.isLoading || detail == null
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -169,11 +172,11 @@ class _SharedReviewDetailScreenState
                         spacing: 20,
                         runSpacing: 10,
                         children: [
-                          _InfoChip('النوع', detail.type),
-                          _InfoChip('الحالة', detail.status),
+                          _InfoChip(t.t('familyReview.type'), detail.type),
+                          _InfoChip(t.t('familyReview.status'), detail.status),
                           if (detail.score != null)
                             _InfoChip(
-                              'النتيجة',
+                              t.t('familyReview.score'),
                               '${detail.score!.toStringAsFixed(0)}${detail.maxScore != null ? "/${detail.maxScore}" : "/100"}',
                             ),
                         ],
@@ -194,7 +197,7 @@ class _SharedReviewDetailScreenState
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'نص الطفل',
+                              t.t('familyReview.childText'),
                               style: theme.textTheme.titleSmall
                                   ?.copyWith(fontWeight: FontWeight.w700),
                             ),
@@ -208,7 +211,6 @@ class _SharedReviewDetailScreenState
                               ),
                               child: Text(
                                 detail.text!,
-                                textDirection: TextDirection.rtl,
                                 style: const TextStyle(
                                   fontSize: 15,
                                   height: 1.7,
@@ -233,7 +235,7 @@ class _SharedReviewDetailScreenState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'التشجيعات (${detail.comments.length})',
+                            '${t.t('familyReview.encouragements')} (${detail.comments.length})',
                             style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.w700,
                               color: AppColors.primary,
@@ -242,11 +244,11 @@ class _SharedReviewDetailScreenState
                           const SizedBox(height: AppSpacing.sm),
 
                           if (detail.comments.isEmpty)
-                            const Padding(
-                              padding: EdgeInsets.only(bottom: 12),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
                               child: Text(
-                                'لا توجد تعليقات بعد. كن أول من يشجع!',
-                                style: TextStyle(
+                                t.t('familyReview.noComments'),
+                                style: const TextStyle(
                                   fontSize: 13,
                                   color: Colors.grey,
                                 ),
@@ -342,7 +344,7 @@ class _SharedReviewDetailScreenState
                                 child: TextField(
                                   controller: _commentController,
                                   decoration: InputDecoration(
-                                    hintText: 'اكتب تشجيعاً...',
+                                    hintText: t.t('familyReview.commentHint'),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
@@ -376,7 +378,7 @@ class _SharedReviewDetailScreenState
                                           color: Colors.white,
                                         ),
                                       )
-                                    : const Text('إرسال'),
+                                    : Text(t.t('familyReview.send')),
                               ),
                             ],
                           ),

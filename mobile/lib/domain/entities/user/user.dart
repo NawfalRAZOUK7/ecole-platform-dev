@@ -7,6 +7,9 @@ class User {
   final String fullName;
   final String role;
   final String schoolId;
+  final String schoolType;
+  final String? designMode;
+  final Map<String, dynamic> schoolSettings;
   final List<String> permissions;
   final List<Membership> memberships;
 
@@ -16,6 +19,9 @@ class User {
     required this.fullName,
     required this.role,
     required this.schoolId,
+    this.schoolType = 'formal',
+    this.designMode,
+    this.schoolSettings = const <String, dynamic>{},
     required this.permissions,
     required this.memberships,
   });

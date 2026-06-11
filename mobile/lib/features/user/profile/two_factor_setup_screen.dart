@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 
@@ -27,6 +28,7 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
 
   // Setup state
   String _secret = '';
+  String _provisioningUri = '';
   final _codeController = TextEditingController();
   List<String> _backupCodes = [];
 
@@ -50,6 +52,7 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
       final data = await repo.setup2fa();
       setState(() {
         _secret = data.secret;
+        _provisioningUri = data.provisioningUri;
         _step = _Step.setup;
       });
     } catch (e) {
@@ -174,6 +177,8 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                 ),
               ),
             ),
+            const SizedBox(height: 16),
+            const SmsTwoFactorCard(),
           ],
 
           // ── Setup step — show secret ──
@@ -197,8 +202,8 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // QR Code placeholder (mobile can't render QR inline easily without a package,
-                    // but we show the provisioning URI for copy and the secret for manual entry)
+                    // QR Code rendered locally — the provisioning URI (which
+                    // contains the TOTP secret) never leaves the device.
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
@@ -212,12 +217,28 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                       ),
                       child: Column(
                         children: [
-                          Icon(
-                            Icons.qr_code_2,
-                            size: 80,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(height: 8),
+                          if (_provisioningUri.isNotEmpty)
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: QrImageView(
+                                data: _provisioningUri,
+                                version: QrVersions.auto,
+                                size: 200,
+                                backgroundColor: Colors.white,
+                                errorCorrectionLevel: QrErrorCorrectLevel.M,
+                              ),
+                            )
+                          else
+                            Icon(
+                              Icons.qr_code_2,
+                              size: 80,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          const SizedBox(height: 12),
                           Text(
                             'Clé secrète :',
                             style: theme.textTheme.labelSmall,
@@ -442,6 +463,245 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// SMS-based 2FA — alternative / fallback method.
+///
+/// Flow: idle → enter phone → send OTP → verify → enabled.
+/// Calls /auth/sms-2fa/{setup,verify-setup,disable}.
+class SmsTwoFactorCard extends ConsumerStatefulWidget {
+  const SmsTwoFactorCard({super.key});
+
+  @override
+  ConsumerState<SmsTwoFactorCard> createState() => _SmsTwoFactorCardState();
+}
+
+enum _SmsStep { idle, enterPhone, verify, disable }
+
+class _SmsTwoFactorCardState extends ConsumerState<SmsTwoFactorCard> {
+  _SmsStep _step = _SmsStep.idle;
+  bool _loading = false;
+  String? _error;
+  String _phone = '';
+  final _phoneController = TextEditingController();
+  final _codeController = TextEditingController();
+  final _disableCodeController = TextEditingController();
+
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    _codeController.dispose();
+    _disableCodeController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _run(Future<void> Function() action) async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      await action();
+    } catch (e) {
+      setState(() => _error = e.toString());
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _sendCode() async {
+    final phone = _phoneController.text.trim();
+    if (phone.isEmpty) return;
+    await _run(() async {
+      await ref.read(authRepositoryProvider).setupSms2fa(phone);
+      if (mounted) {
+        setState(() {
+          _phone = phone;
+          _step = _SmsStep.verify;
+        });
+      }
+    });
+  }
+
+  Future<void> _verify() async {
+    final code = _codeController.text.trim();
+    if (code.isEmpty) return;
+    await _run(() async {
+      await ref.read(authRepositoryProvider).verifySetupSms2fa(code);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('2FA par SMS activée')),
+        );
+        setState(() => _step = _SmsStep.idle);
+      }
+    });
+  }
+
+  Future<void> _disable() async {
+    final code = _disableCodeController.text.trim();
+    if (code.isEmpty) return;
+    await _run(() async {
+      await ref.read(authRepositoryProvider).disableSms2fa(code);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('2FA par SMS désactivée')),
+        );
+        setState(() => _step = _SmsStep.idle);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.sms_outlined, color: theme.colorScheme.primary),
+                const SizedBox(width: 8),
+                Text(
+                  '2FA par SMS',
+                  style: theme.textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            if (_error != null) ...[
+              Text(
+                _error!,
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+              const SizedBox(height: 8),
+            ],
+            if (_step == _SmsStep.idle) ...[
+              Text(
+                'Recevez un code à 6 chiffres par SMS comme méthode alternative.',
+                style: theme.textTheme.bodyMedium
+                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  FilledButton.icon(
+                    onPressed: _loading
+                        ? null
+                        : () => setState(() => _step = _SmsStep.enterPhone),
+                    icon: const Icon(Icons.sms),
+                    label: const Text('Activer'),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton(
+                    onPressed: _loading
+                        ? null
+                        : () => setState(() => _step = _SmsStep.disable),
+                    child: const Text('Désactiver'),
+                  ),
+                ],
+              ),
+            ],
+            if (_step == _SmsStep.enterPhone) ...[
+              TextField(
+                controller: _phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: 'Numéro de téléphone',
+                  hintText: '+212...',
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  FilledButton(
+                    onPressed: _loading ? null : _sendCode,
+                    child: _loading
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Envoyer le code'),
+                  ),
+                  const SizedBox(width: 8),
+                  TextButton(
+                    onPressed: () => setState(() => _step = _SmsStep.idle),
+                    child: const Text('Annuler'),
+                  ),
+                ],
+              ),
+            ],
+            if (_step == _SmsStep.verify) ...[
+              Text(
+                'Entrez le code envoyé au $_phone.',
+                style: theme.textTheme.bodyMedium
+                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _codeController,
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+                decoration: const InputDecoration(labelText: 'Code (6 chiffres)'),
+              ),
+              Row(
+                children: [
+                  FilledButton(
+                    onPressed: _loading ? null : _verify,
+                    child: const Text('Vérifier'),
+                  ),
+                  const SizedBox(width: 8),
+                  TextButton(
+                    onPressed: _loading ? null : _sendCode,
+                    child: const Text('Renvoyer'),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () => setState(() => _step = _SmsStep.idle),
+                    child: const Text('Annuler'),
+                  ),
+                ],
+              ),
+            ],
+            if (_step == _SmsStep.disable) ...[
+              Text(
+                'Entrez un code reçu par SMS pour désactiver.',
+                style: theme.textTheme.bodyMedium
+                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _disableCodeController,
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+                decoration: const InputDecoration(labelText: 'Code (6 chiffres)'),
+              ),
+              Row(
+                children: [
+                  FilledButton(
+                    onPressed: _loading ? null : _disable,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: theme.colorScheme.error,
+                    ),
+                    child: const Text('Désactiver'),
+                  ),
+                  const SizedBox(width: 8),
+                  TextButton(
+                    onPressed: () => setState(() => _step = _SmsStep.idle),
+                    child: const Text('Annuler'),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

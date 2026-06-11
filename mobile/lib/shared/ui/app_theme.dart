@@ -17,6 +17,7 @@ final ThemeData appLightTheme = ThemeData(
   ),
   extensions: const <ThemeExtension<dynamic>>[
     AppThemeColors.light,
+    KidsThemeColors.light,
   ],
   useMaterial3: true,
   fontFamily: 'Cairo',
@@ -36,7 +37,7 @@ final ThemeData appLightTheme = ThemeData(
   ),
   cardTheme: CardThemeData(
     elevation: 1,
-    color: AppColors.background,
+    color: AppColors.surface,
     surfaceTintColor: Colors.transparent,
     shadowColor: Colors.black.withValues(alpha: 0.08),
     shape: RoundedRectangleBorder(

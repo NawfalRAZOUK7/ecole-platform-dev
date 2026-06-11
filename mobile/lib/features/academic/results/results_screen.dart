@@ -9,6 +9,8 @@ import 'package:intl/intl.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/lms/quiz.dart';
+import 'package:ecole_platform/features/auth/auth_provider.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'results_provider.dart';
 
@@ -29,7 +31,11 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _fetchQuizResults();
+    Future.microtask(() {
+      if (ref.read(authProvider).user?.role == 'STD') {
+        _fetchQuizResults();
+      }
+    });
   }
 
   @override
@@ -58,23 +64,25 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen>
   Widget build(BuildContext context) {
     final state = ref.watch(resultsProvider);
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
+    final canViewStudentResults = ref.watch(authProvider).user?.role == 'STD';
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Résultats'),
+        title: Text(t.t('results.title')),
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(text: 'Devoirs'),
-            Tab(text: 'Quiz'),
+          tabs: [
+            Tab(text: t.t('results.tabAssignments')),
+            Tab(text: t.t('results.tabQuizzes')),
           ],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildAssignmentsTab(context, ref, state, theme),
-          _buildQuizTab(context, theme),
+          _buildAssignmentsTab(context, ref, state, theme, t),
+          _buildQuizTab(context, theme, t, canViewStudentResults),
         ],
       ),
     );
@@ -87,6 +95,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen>
     WidgetRef ref,
     ResultsState state,
     ThemeData theme,
+    AppLocalizations t,
   ) {
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -103,7 +112,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen>
             const SizedBox(height: 16),
             FilledButton.tonal(
               onPressed: () => ref.read(resultsProvider.notifier).load(),
-              child: const Text('Réessayer'),
+              child: Text(t.t('common.retry')),
             ),
           ],
         ),
@@ -117,7 +126,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen>
           children: [
             Icon(Icons.assessment, size: 48, color: theme.colorScheme.outline),
             const SizedBox(height: 16),
-            const Text('Aucun résultat disponible'),
+            Text(t.t('results.noResults')),
           ],
         ),
       );
@@ -222,7 +231,25 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen>
 
   // ── Quiz Results Tab (Phase 10C) ──
 
-  Widget _buildQuizTab(BuildContext context, ThemeData theme) {
+  Widget _buildQuizTab(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations t,
+    bool canViewStudentResults,
+  ) {
+    if (!canViewStudentResults) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.quiz, size: 48, color: theme.colorScheme.outline),
+            const SizedBox(height: 16),
+            Text(t.t('results.noQuizResults')),
+          ],
+        ),
+      );
+    }
+
     if (_quizLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -234,7 +261,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen>
           children: [
             Icon(Icons.quiz, size: 48, color: theme.colorScheme.outline),
             const SizedBox(height: 16),
-            const Text('Aucun résultat de quiz'),
+            Text(t.t('results.noQuizResults')),
           ],
         ),
       );

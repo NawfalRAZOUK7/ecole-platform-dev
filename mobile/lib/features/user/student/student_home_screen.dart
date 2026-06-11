@@ -1,5 +1,5 @@
 /// Student home screen — engagement hub with greeting, XP/level,
-/// stat cards, and navigation tiles to content/quizzes/games/writing.
+/// stat cards, and navigation tiles to content/quizzes/writing.
 ///
 /// Mirrors web StudentHomePage.tsx — mobile-first design for children.
 /// API: uses rewards provider (GET /rewards/me) + auth state for user name.
@@ -12,9 +12,8 @@ import 'package:ecole_platform/domain/entities/ai/rewards.dart';
 import 'package:ecole_platform/domain/entities/academic/timetable.dart';
 import 'package:ecole_platform/features/auth/auth_provider.dart';
 import 'package:ecole_platform/features/ai/rewards/rewards_provider.dart';
-import 'package:ecole_platform/features/ai/rewards/widgets/level_badge.dart';
-import 'package:ecole_platform/features/ai/rewards/widgets/streak_card.dart';
 import 'package:ecole_platform/features/academic/timetable/timetable_provider.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
 
@@ -27,10 +26,15 @@ class StudentHomeScreen extends ConsumerWidget {
     final authState = ref.watch(authProvider);
     final rewardsAsync = ref.watch(rewardsProvider);
     final timetableState = ref.watch(timetableProvider);
+    final t = AppLocalizations.of(ref);
+    final isRtl = ref.watch(localeProvider) == 'ar';
+    final textDirection = isRtl ? TextDirection.rtl : TextDirection.ltr;
     final user = authState.user;
     final firstName = user?.fullName.split(' ').first ?? '';
+    final displayName = firstName.isEmpty ? 'élève' : firstName;
 
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () => ref.read(rewardsProvider.notifier).refresh(),
@@ -40,26 +44,23 @@ class StudentHomeScreen extends ConsumerWidget {
               vertical: AppSpacing.lg,
             ),
             children: [
-              // ── Greeting ──
               Text(
-                'مرحبا، $firstName! 👋',
+                '👋 ${t.t('studentHome.greeting').replaceAll('{name}', displayName)}',
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w800,
-                  color: KidsContentColors.storyText,
+                  color: theme.colorScheme.primary,
                 ),
-                textDirection: TextDirection.rtl,
+                textDirection: textDirection,
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                'هيّا نتعلم اليوم!',
+                t.t('studentHome.subtitle'),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
-                textDirection: TextDirection.rtl,
+                textDirection: textDirection,
               ),
               const SizedBox(height: AppSpacing.lg),
-
-              // ── Level badge + XP progress ──
               rewardsAsync.when(
                 loading: () => const Center(
                   child: Padding(
@@ -68,98 +69,102 @@ class StudentHomeScreen extends ConsumerWidget {
                   ),
                 ),
                 error: (_, __) => _ErrorCard(
+                  message: t.t('studentHome.loadError'),
+                  retryLabel: t.t('common.retry'),
                   onRetry: () => ref.read(rewardsProvider.notifier).refresh(),
                 ),
                 data: (rewards) => Column(
                   children: [
-                    LevelBadge(rewards: rewards),
-                    const SizedBox(height: AppSpacing.base),
-
-                    // ── Stat cards row ──
-                    _StatCardsRow(rewards: rewards),
-                    const SizedBox(height: AppSpacing.base),
-
-                    // ── Streak card ──
-                    StreakCard(rewards: rewards),
+                    _StatCardsGrid(rewards: rewards, t: t),
                     const SizedBox(height: AppSpacing.lg),
-
-                    // ── Badges preview ──
                     if (rewards.badges.isNotEmpty) ...[
-                      _BadgesPreview(badges: rewards.badges),
+                      _BadgesPreview(
+                        badges: rewards.badges,
+                        title: t.t('studentHome.myBadges'),
+                      ),
                       const SizedBox(height: AppSpacing.lg),
                     ],
                   ],
                 ),
               ),
-
-              // ── Today's schedule ──
-              _TodayScheduleSection(timetableState: timetableState),
-              const SizedBox(height: AppSpacing.lg),
-
-              // ── CTA: Ready to learn? ──
-              const _SectionTitle(
+              _SectionTitle(
                 emoji: '🚀',
-                title: 'ابدأ التعلم',
-                textDirection: TextDirection.rtl,
+                title: t.t('studentHome.startLearning'),
               ),
               const SizedBox(height: AppSpacing.md),
-              const _CtaGrid(
+              _CtaRow(
                 items: [
                   _CtaItem(
                     emoji: '📚',
-                    label: 'الدروس',
-                    sublabel: 'تعلّم',
+                    label: t.t('studentHome.lessons'),
                     path: '/student/content',
-                    color: Color(0xFFEFF6FF),
-                    borderColor: Color(0xFF93C5FD),
+                    colors: const [
+                      Color(0xFF7C3AED),
+                      Color(0xFFA78BFA),
+                    ],
+                    textColor: Colors.white,
                   ),
                   _CtaItem(
                     emoji: '📝',
-                    label: 'الاختبارات',
-                    sublabel: 'أجب',
+                    label: t.t('studentHome.quizzes'),
                     path: '/student/quizzes',
-                    color: Color(0xFFFEF3C7),
-                    borderColor: Color(0xFFFBBF24),
+                    colors: const [
+                      Color(0xFFF59E0B),
+                      Color(0xFFFCD34D),
+                    ],
+                    textColor: const Color(0xFF7C2D12),
                   ),
                   _CtaItem(
                     emoji: '✏️',
-                    label: 'الكتابة',
-                    sublabel: 'اكتب قصة',
+                    label: t.t('studentHome.writing'),
                     path: '/student/writing',
-                    color: Color(0xFFF0FDF4),
-                    borderColor: Color(0xFF86EFAC),
-                  ),
-                  _CtaItem(
-                    emoji: '🎮',
-                    label: 'الألعاب',
-                    sublabel: 'العب وتعلّم',
-                    path: '/games/memory',
-                    color: Color(0xFFFAF5FF),
-                    borderColor: Color(0xFFC4B5FD),
+                    colors: const [
+                      Color(0xFF10B981),
+                      Color(0xFF34D399),
+                    ],
+                    textColor: Colors.white,
                   ),
                 ],
               ),
               const SizedBox(height: AppSpacing.lg),
-
-              // ── Quick links ──
-              const _SectionTitle(
+              _SectionTitle(
                 emoji: '⚡',
-                title: 'الوصول السريع',
-                textDirection: TextDirection.rtl,
+                title: t.t('studentHome.quickAccess'),
               ),
               const SizedBox(height: AppSpacing.md),
-              const _QuickLinksRow(
+              _QuickLinksGrid(
                 links: [
-                  _QuickLink(emoji: '📊', label: 'تقدّمي', path: '/progress'),
-                  _QuickLink(emoji: '🏆', label: 'جوائزي', path: '/rewards'),
-                  _QuickLink(emoji: '🎨', label: 'تلوين', path: '/coloring'),
+                  _QuickLink(
+                    emoji: '📊',
+                    label: t.t('studentHome.myProgress'),
+                    path: '/progress',
+                  ),
+                  _QuickLink(
+                    emoji: '🏆',
+                    label: t.t('studentHome.myRewards'),
+                    path: '/rewards',
+                  ),
+                  _QuickLink(
+                    emoji: '🎯',
+                    label: t.t('studentHome.skills'),
+                    path: '/skills',
+                  ),
                   _QuickLink(
                     emoji: '📢',
-                    label: 'أخبار',
+                    label: t.t('studentHome.news'),
                     path: '/announcements',
                   ),
-                  _QuickLink(emoji: '🗓️', label: 'التقويم', path: '/calendar'),
+                  _QuickLink(
+                    emoji: '🗓️',
+                    label: t.t('studentHome.calendar'),
+                    path: '/calendar',
+                  ),
                 ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              _TodayScheduleSection(
+                timetableState: timetableState,
+                title: t.t('studentHome.todaySchedule'),
               ),
               const SizedBox(height: AppSpacing.xl),
             ],
@@ -170,42 +175,51 @@ class StudentHomeScreen extends ConsumerWidget {
   }
 }
 
-// ── Stat cards (XP, Stars, Streak) ──
+// ── Stat cards (XP, Stars, Streak, Level) ──
 
-class _StatCardsRow extends StatelessWidget {
+class _StatCardsGrid extends StatelessWidget {
   final StudentRewards rewards;
+  final AppLocalizations t;
 
-  const _StatCardsRow({required this.rewards});
+  const _StatCardsGrid({
+    required this.rewards,
+    required this.t,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      mainAxisSpacing: AppSpacing.md,
+      crossAxisSpacing: AppSpacing.md,
+      childAspectRatio: 1.22,
       children: [
-        Expanded(
-          child: _MiniStatCard(
-            emoji: '✨',
-            value: '${rewards.xp}',
-            label: 'XP',
-            color: KidsContentColors.xpBar,
-          ),
+        _MiniStatCard(
+          emoji: '✨',
+          value: '${rewards.xp}',
+          label: 'XP',
+          valueColor: AppColors.primary,
         ),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: _MiniStatCard(
-            emoji: '⭐',
-            value: '${rewards.stars}',
-            label: 'نجوم',
-            color: KidsContentColors.starGold,
-          ),
+        _MiniStatCard(
+          emoji: '⭐',
+          value: '${rewards.stars}',
+          label: t.t('studentHome.stars'),
+          valueColor: AppColors.accent,
         ),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: _MiniStatCard(
-            emoji: '🔥',
-            value: '${rewards.streakDays}',
-            label: 'أيام',
-            color: KidsContentColors.streakOrange,
-          ),
+        _MiniStatCard(
+          emoji: '🔥',
+          value: '${rewards.streakDays}',
+          label: t.t('studentHome.days'),
+          valueColor: const Color(0xFFF97316),
+        ),
+        _MiniStatCard(
+          emoji: '🏅',
+          value: '${rewards.level}',
+          label: t.t('studentHome.level'),
+          valueColor: AppColors.secondary,
+          progress: rewards.levelProgress,
         ),
       ],
     );
@@ -216,13 +230,15 @@ class _MiniStatCard extends StatelessWidget {
   final String emoji;
   final String value;
   final String label;
-  final Color color;
+  final Color valueColor;
+  final double? progress;
 
   const _MiniStatCard({
     required this.emoji,
     required this.value,
     required this.label,
-    required this.color,
+    required this.valueColor,
+    this.progress,
   });
 
   @override
@@ -234,19 +250,27 @@ class _MiniStatCard extends StatelessWidget {
         horizontal: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: color.withAlpha(25),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withAlpha(70)),
+        border: Border.all(color: AppColors.border, width: 2),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x11000000),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 22)),
+          Text(emoji, style: const TextStyle(fontSize: 30)),
           const SizedBox(height: AppSpacing.xs),
           Text(
             value,
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w800,
-              color: KidsContentColors.storyText,
+              color: valueColor,
             ),
           ),
           Text(
@@ -254,20 +278,121 @@ class _MiniStatCard extends StatelessWidget {
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
-            textDirection: TextDirection.rtl,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
+          if (progress != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: LinearProgressIndicator(
+                value: progress!.clamp(0, 1),
+                minHeight: 8,
+                backgroundColor: const Color(0xFFE9D5FF),
+                valueColor: const AlwaysStoppedAnimation<Color>(
+                  AppColors.secondary,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 }
 
-// ── Badges preview ──
+// ── CTA row matching web StudentHomePage ──
+
+class _CtaItem {
+  final String emoji;
+  final String label;
+  final String path;
+  final List<Color> colors;
+  final Color textColor;
+
+  const _CtaItem({
+    required this.emoji,
+    required this.label,
+    required this.path,
+    required this.colors,
+    required this.textColor,
+  });
+}
+
+class _CtaRow extends StatelessWidget {
+  final List<_CtaItem> items;
+
+  const _CtaRow({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      children: items.map((item) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(18),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(18),
+              onTap: () => GoRouter.of(context).go(item.path),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppSpacing.md,
+                  horizontal: AppSpacing.lg,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: item.colors,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: item.colors.first.withAlpha(65),
+                      blurRadius: 14,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(item.emoji, style: const TextStyle(fontSize: 24)),
+                    const SizedBox(width: AppSpacing.sm),
+                    Flexible(
+                      child: Text(
+                        item.label,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: item.textColor,
+                          fontWeight: FontWeight.w800,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
 
 class _BadgesPreview extends StatelessWidget {
   final List<String> badges;
+  final String title;
 
-  const _BadgesPreview({required this.badges});
+  const _BadgesPreview({
+    required this.badges,
+    required this.title,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -275,10 +400,9 @@ class _BadgesPreview extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionTitle(
+        _SectionTitle(
           emoji: '🏅',
-          title: 'شاراتي',
-          textDirection: TextDirection.rtl,
+          title: title,
         ),
         const SizedBox(height: AppSpacing.sm),
         Wrap(
@@ -317,19 +441,16 @@ class _BadgesPreview extends StatelessWidget {
 class _SectionTitle extends StatelessWidget {
   final String emoji;
   final String title;
-  final TextDirection textDirection;
 
   const _SectionTitle({
     required this.emoji,
     required this.title,
-    this.textDirection = TextDirection.ltr,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Row(
-      textDirection: textDirection,
       children: [
         Text(emoji, style: const TextStyle(fontSize: 20)),
         const SizedBox(width: AppSpacing.sm),
@@ -345,85 +466,7 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-// ── CTA grid (learn, quiz, write, play) ──
-
-class _CtaItem {
-  final String emoji;
-  final String label;
-  final String sublabel;
-  final String path;
-  final Color color;
-  final Color borderColor;
-
-  const _CtaItem({
-    required this.emoji,
-    required this.label,
-    required this.sublabel,
-    required this.path,
-    required this.color,
-    required this.borderColor,
-  });
-}
-
-class _CtaGrid extends StatelessWidget {
-  final List<_CtaItem> items;
-
-  const _CtaGrid({required this.items});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: AppSpacing.md,
-      crossAxisSpacing: AppSpacing.md,
-      childAspectRatio: 1.4,
-      children: items.map((item) {
-        return Material(
-          color: item.color,
-          borderRadius: BorderRadius.circular(22),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(22),
-            onTap: () => GoRouter.of(context).go(item.path),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: item.borderColor, width: 1.5),
-              ),
-              padding: const EdgeInsets.all(AppSpacing.base),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(item.emoji, style: const TextStyle(fontSize: 32)),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    item.label,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: KidsContentColors.storyText,
-                    ),
-                    textDirection: TextDirection.rtl,
-                  ),
-                  Text(
-                    item.sublabel,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: KidsContentColors.storyText.withAlpha(160),
-                    ),
-                    textDirection: TextDirection.rtl,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-}
-
-// ── Quick links row ──
+// ── Quick links grid ──
 
 class _QuickLink {
   final String emoji;
@@ -437,60 +480,61 @@ class _QuickLink {
   });
 }
 
-class _QuickLinksRow extends StatelessWidget {
+class _QuickLinksGrid extends StatelessWidget {
   final List<_QuickLink> links;
 
-  const _QuickLinksRow({required this.links});
+  const _QuickLinksGrid({required this.links});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return SizedBox(
-      height: 90,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        reverse: true, // RTL: scroll starts from right
-        itemCount: links.length,
-        separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.md),
-        itemBuilder: (context, index) {
-          final link = links[index];
-          return GestureDetector(
+    return GridView.count(
+      crossAxisCount: 3,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      mainAxisSpacing: AppSpacing.sm,
+      crossAxisSpacing: AppSpacing.sm,
+      childAspectRatio: 1.15,
+      children: links.map((link) {
+        return Material(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
             onTap: () => GoRouter.of(context).go(link.path),
-            child: SizedBox(
-              width: 72,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: AppSpacing.md,
+              ),
+              decoration: BoxDecoration(
+                border: Border.all(color: AppColors.border, width: 2),
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Center(
-                      child: Text(
-                        link.emoji,
-                        style: const TextStyle(fontSize: 26),
-                      ),
-                    ),
+                  Text(
+                    link.emoji,
+                    style: const TextStyle(fontSize: 26),
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
                     link.label,
                     style: theme.textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.w600,
+                      color: AppColors.text,
                     ),
                     textAlign: TextAlign.center,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    textDirection: TextDirection.rtl,
                   ),
                 ],
               ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      }).toList(),
     );
   }
 }
@@ -498,9 +542,15 @@ class _QuickLinksRow extends StatelessWidget {
 // ── Error card with retry ──
 
 class _ErrorCard extends StatelessWidget {
+  final String message;
+  final String retryLabel;
   final VoidCallback onRetry;
 
-  const _ErrorCard({required this.onRetry});
+  const _ErrorCard({
+    required this.message,
+    required this.retryLabel,
+    required this.onRetry,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -515,17 +565,16 @@ class _ErrorCard extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            'تعذّر تحميل البيانات',
+            message,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: AppColors.error,
               fontWeight: FontWeight.w600,
             ),
-            textDirection: TextDirection.rtl,
           ),
           const SizedBox(height: AppSpacing.sm),
           TextButton(
             onPressed: onRetry,
-            child: const Text('إعادة المحاولة'),
+            child: Text(retryLabel),
           ),
         ],
       ),
@@ -537,8 +586,12 @@ class _ErrorCard extends StatelessWidget {
 
 class _TodayScheduleSection extends StatelessWidget {
   final TimetableState timetableState;
+  final String title;
 
-  const _TodayScheduleSection({required this.timetableState});
+  const _TodayScheduleSection({
+    required this.timetableState,
+    required this.title,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -573,10 +626,9 @@ class _TodayScheduleSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionTitle(
+        _SectionTitle(
           emoji: '📅',
-          title: 'جدول اليوم',
-          textDirection: TextDirection.rtl,
+          title: title,
         ),
         const SizedBox(height: AppSpacing.sm),
         ...todaySlots.map((slot) => _ScheduleSlotCard(slot: slot)),

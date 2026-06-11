@@ -19,6 +19,7 @@ Quiz _quizFromJson(Map<String, dynamic> json) {
     questionCount: json['question_count'] as int? ?? 0,
     totalPoints: json['total_points'] as int? ?? 0,
     status: json['status'] as String? ?? 'published',
+    language: json['language'] as String?,
   );
 }
 
@@ -84,6 +85,24 @@ class QuizRepositoryImpl implements QuizRepository {
   Future<List<Quiz>> getQuizzes() async {
     final resp = await _api.list('/quizzes', params: {'status': 'published'});
     return resp.data.map(_quizFromJson).toList();
+  }
+
+  @override
+  Future<Map<String, dynamic>> generateQuizFromContent(
+    String contentId, {
+    required List<String> questionTypes,
+    required int count,
+    required List<String> sources,
+  }) async {
+    final resp = await _api.post(
+      '/quizzes/from-content/$contentId',
+      body: {
+        'question_types': questionTypes,
+        'count': count,
+        'sources': sources,
+      },
+    );
+    return Map<String, dynamic>.from(resp.data as Map);
   }
 
   @override

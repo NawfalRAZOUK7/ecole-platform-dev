@@ -10,6 +10,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:ecole_platform/features/auth/auth_provider.dart';
 import 'package:ecole_platform/features/auth/forgot_password_screen.dart';
+import 'package:ecole_platform/features/onboarding/apply_screen.dart';
+import 'package:ecole_platform/features/onboarding/activate_screen.dart';
 import 'package:ecole_platform/features/auth/login_screen.dart';
 import 'package:ecole_platform/features/auth/register_screen.dart';
 import 'package:ecole_platform/features/auth/reset_password_screen.dart';
@@ -19,6 +21,7 @@ import 'package:ecole_platform/features/content/feed/feed_screen.dart';
 import 'package:ecole_platform/features/ai/games/screens/memory_match_screen.dart';
 import 'package:ecole_platform/features/ai/games/screens/sorting_game_screen.dart';
 import 'package:ecole_platform/features/ai/games/screens/vocabulary_cards_screen.dart';
+import 'package:ecole_platform/features/ai/games/screens/letter_puzzle_screen.dart';
 import 'package:ecole_platform/features/communication/notifications/notifications_screen.dart';
 import 'package:ecole_platform/features/communication/notifications/notification_preferences_screen.dart';
 import 'package:ecole_platform/features/communication/calendar/calendar_screen.dart';
@@ -105,9 +108,10 @@ import 'package:ecole_platform/presentation/shell_screen.dart';
 
 /// Role-based redirect targets.
 const _roleRedirects = <String, String>{
-  'PAR': '/feed',
+  'PAR': '/family',
   'STD': '/student/home',
   'TCH': '/teacher/classes',
+  'EDUCATOR': '/micro-schools',
   'ADM': '/admin/dashboard',
   'DIR': '/admin/dashboard',
   'SUP': '/notifications',
@@ -125,7 +129,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isPublicPage = loc == '/login' ||
           loc == '/register' ||
           loc == '/forgot-password' ||
-          loc == '/reset-password';
+          loc == '/reset-password' ||
+          loc == '/apply' ||
+          loc == '/activate';
 
       // Still loading — don't redirect
       if (isLoading) return null;
@@ -175,6 +181,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/forgot-password',
         builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/apply',
+        builder: (context, state) => const ApplyScreen(),
+      ),
+      GoRoute(
+        path: '/activate',
+        builder: (context, state) => ActivateScreen(
+          token: state.uri.queryParameters['token'],
+        ),
       ),
       GoRoute(
         path: '/reset-password',
@@ -359,6 +375,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/games/vocabulary',
             builder: (context, state) => const VocabularyCardsScreen(),
+          ),
+          GoRoute(
+            path: '/games/letter-puzzle',
+            builder: (context, state) => const LetterPuzzleScreen(),
           ),
           GoRoute(
             path: '/rewards',

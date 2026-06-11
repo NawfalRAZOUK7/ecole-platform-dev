@@ -483,6 +483,15 @@ class FakeAuthRepository implements AuthRepository {
   Future<void> disable2fa(String code) async {}
 
   @override
+  Future<void> setupSms2fa(String phone) async {}
+
+  @override
+  Future<void> verifySetupSms2fa(String code) async {}
+
+  @override
+  Future<void> disableSms2fa(String code) async {}
+
+  @override
   Future<void> changePassword(
     String currentPassword,
     String newPassword,

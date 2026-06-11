@@ -9,6 +9,11 @@ class TtsService {
   TtsService({FlutterTts? flutterTts}) : _tts = flutterTts ?? FlutterTts();
 
   static const String _defaultLocale = 'ar-SA';
+  static const Map<String, String> _localeByLang = <String, String>{
+    'ar': 'ar-SA',
+    'fr': 'fr-FR',
+    'en': 'en-US',
+  };
   static const Duration _instructionDelay = Duration(milliseconds: 250);
   static const List<String> _praisePhrases = <String>[
     'أحسنت!',
@@ -102,6 +107,22 @@ class TtsService {
   /// Speak general-purpose Arabic text.
   Future<void> speakText(String text) async {
     await _speak(text);
+  }
+
+  /// Speak [text] in the given language (`ar` | `fr` | `en`). Restores the
+  /// Arabic default afterwards so subsequent Arabic calls stay correct.
+  /// Speech rate is awaited (awaitSpeakCompletion), so the restore is safe.
+  Future<void> speakWord(String text, {String lang = 'ar'}) async {
+    if (_disposed) return;
+    final normalized = text.trim();
+    if (normalized.isEmpty) return;
+    final locale = _localeByLang[lang] ?? _defaultLocale;
+    await _ensureInitialized();
+    await _tts.setLanguage(locale);
+    await _speak(normalized);
+    if (locale != _defaultLocale) {
+      await _tts.setLanguage(_defaultLocale);
+    }
   }
 
   /// Speak a letter with a simple example word.

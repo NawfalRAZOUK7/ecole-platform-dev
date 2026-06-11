@@ -76,14 +76,12 @@ class MiniGamesScreen extends ConsumerWidget {
                     description: 'Apprends des nouveaux mots !',
                     onTap: () => context.push('/games/vocabulary'),
                   ),
-                  // Placeholder for a future game slot
                   _GameCard(
-                    icon: Icons.lock_outline,
-                    label: 'Bientôt\ndisponible',
-                    color: Colors.grey.shade400,
-                    description: 'Nouveau jeu en préparation',
-                    locked: true,
-                    onTap: () {},
+                    icon: Icons.extension,
+                    label: 'Puzzle\nde lettres',
+                    color: KidsContentColors.gameYellow,
+                    description: 'Assemble la lettre !',
+                    onTap: () => context.push('/games/letter-puzzle'),
                   ),
                 ],
               ),
@@ -100,7 +98,6 @@ class _GameCard extends StatelessWidget {
   final String label;
   final Color color;
   final String description;
-  final bool locked;
   final VoidCallback onTap;
 
   const _GameCard({
@@ -109,7 +106,6 @@ class _GameCard extends StatelessWidget {
     required this.color,
     required this.description,
     required this.onTap,
-    this.locked = false,
   });
 
   @override
@@ -118,19 +114,19 @@ class _GameCard extends StatelessWidget {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: locked ? null : onTap,
+        onTap: onTap,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Color banner
             Container(
               height: 90,
-              color: locked ? Colors.grey.shade200 : color.withAlpha(40),
+              color: color.withAlpha(40),
               child: Center(
                 child: Icon(
                   icon,
                   size: 48,
-                  color: locked ? Colors.grey : color,
+                  color: color,
                 ),
               ),
             ),
@@ -143,16 +139,13 @@ class _GameCard extends StatelessWidget {
                     label,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: locked ? Colors.grey : null,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     description,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: locked
-                          ? Colors.grey
-                          : theme.colorScheme.onSurface.withAlpha(150),
+                      color: theme.colorScheme.onSurface.withAlpha(150),
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,

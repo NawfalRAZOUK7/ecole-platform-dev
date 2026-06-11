@@ -224,7 +224,7 @@ class _PaymentPlansScreenState extends ConsumerState<PaymentPlansScreen> {
                           leading: const Icon(Icons.event_note_outlined),
                           title: Text(plan.name),
                           subtitle: Text(
-                            '${plan.studentName ?? plan.studentId} · ${plan.installments.length} installments',
+                            '${plan.studentName ?? plan.studentId} · ${plan.installmentCount} échéance(s)',
                           ),
                           trailing: Column(
                             mainAxisAlignment: MainAxisAlignment.center,

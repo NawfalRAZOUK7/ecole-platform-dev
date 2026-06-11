@@ -14,6 +14,9 @@ class Quiz {
   final int totalPoints;
   final String status;
 
+  /// Content language ("ar" | "fr" | "en") — drives the quiz audio (TTS).
+  final String? language;
+
   const Quiz({
     required this.id,
     required this.title,
@@ -25,6 +28,7 @@ class Quiz {
     required this.questionCount,
     required this.totalPoints,
     required this.status,
+    this.language,
   });
 }
 

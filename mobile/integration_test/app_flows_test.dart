@@ -22,7 +22,7 @@ void main() {
 
       await _loginAs(tester, container, 'parent@ecole.test');
 
-      expect(find.text('Weekly digest'), findsOneWidget);
+      expect(find.text('Mes enfants'), findsOneWidget);
 
       container.read(routerProvider).go('/notifications');
       await tester.pumpAndSettle();

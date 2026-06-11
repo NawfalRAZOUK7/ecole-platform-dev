@@ -5,6 +5,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/academic/result.dart';
+import 'package:ecole_platform/features/auth/auth_provider.dart';
 
 class ResultsState {
   final List<Result> items;
@@ -32,6 +33,11 @@ class ResultsNotifier extends StateNotifier<ResultsState> {
   Future<void> load() async {
     state = const ResultsState(isLoading: true);
     try {
+      final role = _ref.read(authProvider).user?.role;
+      if (role != 'STD') {
+        state = const ResultsState();
+        return;
+      }
       final repo = _ref.read(resultRepositoryProvider);
       final result = await repo.getResults();
       state = ResultsState(
