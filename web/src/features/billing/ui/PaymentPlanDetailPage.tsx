@@ -20,6 +20,10 @@ function formatMAD(amount: number) {
   return new Intl.NumberFormat('fr-MA', { style: 'currency', currency: 'MAD' }).format(amount);
 }
 
+function valueOrZero(value: number | null | undefined): number {
+  return value ?? 0;
+}
+
 export function PaymentPlanDetailPage() {
   const { planId } = useParams<{ planId: string }>();
   const { t, i18n } = useTranslation();
@@ -47,11 +51,16 @@ export function PaymentPlanDetailPage() {
     );
   }
 
-  const paidTotal = plan.installments
+  const installments = plan.installments ?? [];
+  const totalAmount = valueOrZero(plan.total_amount ?? plan.invoice_total_amount);
+  const planName = plan.name ?? plan.invoice_number ?? plan.id.slice(0, 8);
+  const startDate = plan.start_date ?? plan.issued_date ?? plan.created_at;
+
+  const paidTotal = installments
     .filter((inst) => inst.status === 'paid')
     .reduce((acc, inst) => acc + inst.amount, 0);
   const progressPercent =
-    plan.total_amount > 0 ? Math.min(100, Math.round((paidTotal / plan.total_amount) * 100)) : 0;
+    totalAmount > 0 ? Math.min(100, Math.round((paidTotal / totalAmount) * 100)) : 0;
 
   return (
     <div className="page">
@@ -64,7 +73,7 @@ export function PaymentPlanDetailPage() {
           ← {t('app.back')}
         </button>
         <h1 className="page-title" style={{ marginBottom: 0 }}>
-          {plan.name}
+          {planName}
         </h1>
         <Badge variant={STATUS_VARIANT[plan.status] ?? 'info'}>
           {t(`billing.paymentPlans.statuses.${plan.status}`, plan.status)}
@@ -89,13 +98,13 @@ export function PaymentPlanDetailPage() {
             <p style={{ color: 'var(--color-text-secondary)', fontSize: 12 }}>
               {t('billing.paymentPlans.totalAmount')}
             </p>
-            <p style={{ fontWeight: 600 }}>{formatMAD(plan.total_amount)}</p>
+            <p style={{ fontWeight: 600 }}>{formatMAD(totalAmount)}</p>
           </div>
           <div>
             <p style={{ color: 'var(--color-text-secondary)', fontSize: 12 }}>
               {t('billing.paymentPlans.startDate')}
             </p>
-            <p style={{ fontWeight: 600 }}>{formatDate(plan.start_date, i18n.language)}</p>
+            <p style={{ fontWeight: 600 }}>{formatDate(startDate, i18n.language)}</p>
           </div>
           <div>
             <p style={{ color: 'var(--color-text-secondary)', fontSize: 12 }}>
@@ -110,7 +119,7 @@ export function PaymentPlanDetailPage() {
         <p style={{ marginBottom: 8 }}>
           <strong>{t('billing.paymentPlans.progress')}</strong>
           {' — '}
-          {formatMAD(paidTotal)} / {formatMAD(plan.total_amount)}
+          {formatMAD(paidTotal)} / {formatMAD(totalAmount)}
           {' ('}
           {progressPercent}
           {'%)'}
@@ -137,7 +146,7 @@ export function PaymentPlanDetailPage() {
 
       <div className="card">
         <h2 style={{ marginBottom: 16 }}>{t('billing.paymentPlans.installmentsLabel')}</h2>
-        {plan.installments.length === 0 ? (
+        {installments.length === 0 ? (
           <EmptyState message={t('billing.paymentPlans.noInstallments')} />
         ) : (
           <table className="data-table">
@@ -151,7 +160,7 @@ export function PaymentPlanDetailPage() {
               </tr>
             </thead>
             <tbody>
-              {plan.installments.map((inst, index) => (
+              {installments.map((inst, index) => (
                 <tr key={inst.id}>
                   <td>{index + 1}</td>
                   <td>{formatDate(inst.due_date, i18n.language)}</td>

@@ -14,6 +14,9 @@ import { Layout } from '@/widgets/layout/Layout';
 import { OfflineIndicator } from '@/shared/ui/OfflineIndicator';
 import { ROLE_REDIRECT } from '@/app/roleRedirects';
 import { ProtectedRoute } from '@/app/ProtectedRoute';
+import { ApplyPage } from '@/features/onboarding/ui/ApplyPage';
+import { ActivatePage } from '@/features/onboarding/ui/ActivatePage';
+import { PlatformApplicationsPage } from '@/features/onboarding/ui/PlatformApplicationsPage';
 import { FeatureTogglesPage } from '@/pages/admin/FeatureTogglesPage';
 import { CmsLayout } from '@/features/content/cms/ui/CmsLayout';
 import { QuizAnalyticsPage } from '@/features/lms/quizzes/ui/QuizAnalyticsPage';
@@ -191,6 +194,8 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/apply" element={<ApplyPage />} />
+            <Route path="/activate" element={<ActivatePage />} />
 
             {/* Protected routes with layout */}
             <Route
@@ -200,6 +205,16 @@ function App() {
                 </ProtectedRoute>
               }
             >
+              {/* Platform console (SUP) */}
+              <Route
+                path="/platform"
+                element={
+                  <ProtectedRoute roles={['SUP']}>
+                    <PlatformApplicationsPage />
+                  </ProtectedRoute>
+                }
+              />
+
               {/* Admin routes (ADM, DIR) */}
               <Route
                 path="/admin"
@@ -634,7 +649,7 @@ function App() {
               <Route
                 path="/micro-schools"
                 element={
-                  <ProtectedRoute roles={['ADM', 'DIR', 'PAR']}>
+                  <ProtectedRoute roles={['EDUCATOR', 'ADM', 'DIR', 'PAR']}>
                     <MicroSchoolListPage />
                   </ProtectedRoute>
                 }
@@ -642,7 +657,7 @@ function App() {
               <Route
                 path="/micro-schools/:id"
                 element={
-                  <ProtectedRoute roles={['ADM', 'DIR', 'PAR']}>
+                  <ProtectedRoute roles={['EDUCATOR', 'ADM', 'DIR', 'PAR']}>
                     <MicroSchoolDetailPage />
                   </ProtectedRoute>
                 }
@@ -650,7 +665,7 @@ function App() {
               <Route
                 path="/micro-schools/:id/enroll"
                 element={
-                  <ProtectedRoute roles={['ADM', 'DIR', 'PAR']}>
+                  <ProtectedRoute roles={['EDUCATOR', 'ADM', 'DIR', 'PAR']}>
                     <MicroSchoolEnrollPage />
                   </ProtectedRoute>
                 }

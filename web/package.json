@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "preview": "vite preview",
+    "tokens:generate": "node ../scripts/generate-design-tokens.mjs",
     "test": "node ./scripts/run-vitest.mjs",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -40,6 +41,7 @@
     "i18next": "^25.8.18",
     "i18next-browser-languagedetector": "^8.2.1",
     "lucide-react": "^1.14.0",
+    "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.72.1",
@@ -56,10 +58,10 @@
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
+    "@types/react-dom": "^18.3.7",
     "@types/testing-library__jest-dom": "^5.14.9",
     "@vitejs/plugin-react": "^4.3.4",
-    "@vitest/coverage-v8": "^2.1.9",
+    "@vitest/coverage-v8": "^4.1.8",
     "dependency-cruiser": "^17.4.0",
     "eslint": "^9.13.0",
     "eslint-plugin-boundaries": "^6.0.2",
@@ -76,7 +78,7 @@
     "typescript": "~5.6.2",
     "typescript-eslint": "^8.11.0",
     "vite": "^6.0.0",
-    "vitest": "^2.1.8",
+    "vitest": "^4.1.8",
     "web-streams-polyfill": "^4.2.0"
   }
 }

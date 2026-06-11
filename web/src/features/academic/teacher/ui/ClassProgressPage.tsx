@@ -19,6 +19,18 @@ import {
 
 type SortKey = 'student_name' | 'grade_average' | 'attendance_rate' | 'content_completion_rate';
 
+function metricValue(value: number | null | undefined): number {
+  return value ?? 0;
+}
+
+function sortableMetric(value: unknown): number {
+  return typeof value === 'number' ? value : 0;
+}
+
+function formatMetric(value: number | null | undefined, digits = 0, suffix = ''): string {
+  return value == null ? '—' : `${value.toFixed(digits)}${suffix}`;
+}
+
 export function ClassProgressPage() {
   const { t } = useTranslation();
   const [selectedClass, setSelectedClass] = useState('');
@@ -42,22 +54,30 @@ export function ClassProgressPage() {
     }
   }, [classes, selectedClass]);
 
+  const students = data?.students ?? [];
+  const classAverages = data?.class_averages ?? {
+    grade_average: null,
+    attendance_rate: null,
+    content_completion_rate: null,
+  };
+  const gradeComparison = data?.charts?.grade_comparison ?? { labels: [], datasets: [] };
+  const gradeDataset = gradeComparison.datasets[0];
+
   const sortedStudents = data
-    ? [...data.students].sort((a, b) => {
+    ? [...students].sort((a, b) => {
         const av = a[sortKey];
         const bv = b[sortKey];
         if (typeof av === 'string') {
           return sortAsc ? av.localeCompare(bv as string) : (bv as string).localeCompare(av);
         }
-        return sortAsc ? (av as number) - (bv as number) : (bv as number) - (av as number);
+        return sortAsc ? sortableMetric(av) - sortableMetric(bv) : sortableMetric(bv) - sortableMetric(av);
       })
     : [];
 
   const gradeChartData = data
-    ? data.charts.grade_comparison.labels.map((label, index) => ({
+    ? gradeComparison.labels.map((label, index) => ({
         name: label,
-        [data.charts.grade_comparison.datasets[0]?.label || 'grade']:
-          data.charts.grade_comparison.datasets[0]?.data[index] ?? 0,
+        [gradeDataset?.label || 'grade']: gradeDataset?.data[index] ?? 0,
       }))
     : [];
 
@@ -113,18 +133,18 @@ export function ClassProgressPage() {
           <div className="progress-summary-cards">
             <div className="summary-card">
               <span className="summary-label">{t('progress.classGradeAvg')}</span>
-              <span className="summary-value">{data.class_averages.grade_average.toFixed(1)}</span>
+              <span className="summary-value">{formatMetric(classAverages.grade_average, 1)}</span>
             </div>
             <div className="summary-card">
               <span className="summary-label">{t('progress.classAttendance')}</span>
               <span className="summary-value">
-                {data.class_averages.attendance_rate.toFixed(0)}%
+                {formatMetric(classAverages.attendance_rate, 0, '%')}
               </span>
             </div>
             <div className="summary-card">
               <span className="summary-label">{t('progress.classContent')}</span>
               <span className="summary-value">
-                {data.class_averages.content_completion_rate.toFixed(0)}%
+                {formatMetric(classAverages.content_completion_rate, 0, '%')}
               </span>
             </div>
             <div className="summary-card">
@@ -149,7 +169,7 @@ export function ClassProgressPage() {
                   <YAxis domain={[0, 100]} />
                   <Tooltip />
                   <Bar
-                    dataKey={data.charts.grade_comparison.datasets[0]?.label || 'grade'}
+                    dataKey={gradeDataset?.label || 'grade'}
                     fill="var(--color-primary)"
                     radius={[4, 4, 0, 0]}
                   />
@@ -191,13 +211,13 @@ export function ClassProgressPage() {
                     <td>
                       <span
                         className="sparkline-value"
-                        style={{ color: colorForGrade(student.grade_average) }}
+                        style={{ color: colorForGrade(metricValue(student.grade_average)) }}
                       >
-                        {student.grade_average.toFixed(1)}
+                        {formatMetric(student.grade_average, 1)}
                       </span>
                     </td>
-                    <td>{student.attendance_rate.toFixed(0)}%</td>
-                    <td>{student.content_completion_rate.toFixed(0)}%</td>
+                    <td>{formatMetric(student.attendance_rate, 0, '%')}</td>
+                    <td>{formatMetric(student.content_completion_rate, 0, '%')}</td>
                   </tr>
                 ))}
               </tbody>

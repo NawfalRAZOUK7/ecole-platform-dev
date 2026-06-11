@@ -174,6 +174,80 @@ body {
   color: var(--color-text);
 }
 
+html[data-design-mode='formal'] {
+  --context-bg: var(--school-formal-bg, var(--color-bg));
+  --context-surface: var(--school-formal-surface, var(--color-surface));
+  --context-surface-soft: var(--school-formal-surface-soft, var(--color-bg-secondary));
+  --context-border: var(--school-formal-border, var(--color-border));
+  --context-accent: var(--school-formal-accent, var(--color-primary));
+}
+
+html[data-design-mode='informal'] {
+  --color-bg: var(--school-informal-bg);
+  --color-surface: var(--school-informal-surface);
+  --color-text: var(--school-informal-text);
+  --color-text-secondary: var(--school-informal-text-secondary);
+  --color-border: var(--school-informal-border);
+  --context-bg: var(--school-informal-bg);
+  --context-surface: var(--school-informal-surface);
+  --context-surface-soft: var(--school-informal-surface-soft);
+  --context-border: var(--school-informal-border);
+  --context-accent: var(--school-informal-accent);
+}
+
+html[data-design-mode='informal'] .app-sidebar,
+html[data-design-mode='informal'] .app-topbar,
+html[data-design-mode='informal'] .card,
+html[data-design-mode='informal'] .panel,
+html[data-design-mode='informal'] .micro-school-card {
+  border-color: var(--context-border);
+}
+
+html[data-design-mode='informal'] .nav-link--active {
+  background: var(--school-informal-accent-soft);
+  color: var(--school-informal-accent);
+}
+
+html[data-design-mode='informal'] .page-title,
+html[data-design-mode='informal'] h1 {
+  color: var(--school-informal-text);
+}
+
+html[data-age-tier='maternelle'] {
+  --student-tier-bg: var(--student-maternelle-bg);
+  --student-tier-surface: var(--student-maternelle-surface);
+  --student-tier-accent: var(--student-maternelle-accent);
+  --student-tier-accent-soft: var(--student-maternelle-accent-soft);
+  --student-tier-border: var(--student-maternelle-border);
+  --radius-lg: 16px;
+  font-size: 16px;
+}
+
+html[data-age-tier='primaire'] {
+  --student-tier-bg: var(--student-primaire-bg);
+  --student-tier-surface: var(--student-primaire-surface);
+  --student-tier-accent: var(--student-primaire-accent);
+  --student-tier-accent-soft: var(--student-primaire-accent-soft);
+  --student-tier-border: var(--student-primaire-border);
+}
+
+html[data-age-tier='college'] {
+  --student-tier-bg: var(--student-college-bg);
+  --student-tier-surface: var(--student-college-surface);
+  --student-tier-accent: var(--student-college-accent);
+  --student-tier-accent-soft: var(--student-college-accent-soft);
+  --student-tier-border: var(--student-college-border);
+  --radius-lg: 10px;
+}
+
+html[data-role='std'] .app-main {
+  background: var(--student-tier-bg, var(--color-bg));
+}
+
+html[data-role='std'] .nav-link--active {
+  background: var(--student-tier-accent-soft, var(--kids-theme-sidebar-active));
+}
+
 .recharts-cartesian-grid line,
 .recharts-reference-line line,
 .recharts-polar-grid-angle line,
@@ -215,6 +289,7 @@ button {
 .app-layout {
   display: flex;
   min-height: 100vh;
+  --role-accent: var(--color-primary);
 }
 
 .app-sidebar {
@@ -243,6 +318,8 @@ button {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+  border-top: 3px solid var(--role-accent);
+  padding-top: 12px;
 }
 
 .topbar-actions {
@@ -378,7 +455,7 @@ button {
 .sidebar-title {
   font-size: 18px;
   font-weight: 700;
-  color: var(--color-primary);
+  color: var(--role-accent);
   margin-bottom: 12px;
 }
 
@@ -407,8 +484,8 @@ button {
 }
 
 .nav-link--active {
-  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
-  color: var(--color-primary);
+  background: color-mix(in srgb, var(--role-accent) 12%, var(--color-surface));
+  color: var(--role-accent);
   font-weight: 600;
 }
 
@@ -1132,6 +1209,8 @@ button {
   font-weight: 700;
   margin-bottom: 24px;
   color: var(--color-text);
+  border-inline-start: 4px solid var(--role-accent);
+  padding-inline-start: 12px;
 }
 
 .page-header {
@@ -3820,9 +3899,9 @@ textarea.filter-input {
   display: grid;
   gap: 12px;
   padding: 16px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--micro-school-border);
   border-radius: var(--radius-lg);
-  background: var(--color-surface);
+  background: var(--micro-school-surface);
   text-align: start;
   cursor: pointer;
 }
@@ -3837,13 +3916,13 @@ textarea.filter-input {
 .micro-school-card__capacity {
   height: 10px;
   border-radius: var(--radius-full);
-  background: var(--color-border);
+  background: var(--micro-school-accent-soft);
   overflow: hidden;
 }
 
 .micro-school-card__capacity-bar {
   height: 100%;
-  background: var(--color-primary);
+  background: var(--micro-school-success);
 }
 
 .micro-schools-page__form,
@@ -3852,4 +3931,5 @@ textarea.filter-input {
 .micro-school-detail-page__progress {
   display: grid;
   gap: 16px;
+  border-color: var(--micro-school-border);
 }

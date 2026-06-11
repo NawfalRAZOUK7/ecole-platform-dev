@@ -56,20 +56,18 @@ export interface ChildrenResponse {
 
 export const progressService = {
   getProgress(studentId?: string | null) {
-    return api.get<{ data: ProgressData }>(
-      studentId ? `/progress/student/${studentId}` : '/progress/me',
-    );
+    return api.get<ProgressData>(studentId ? `/progress/student/${studentId}` : '/progress/me');
   },
 
   getChildrenOverview() {
-    return api.get<{ data: ChildrenResponse }>('/progress/children');
+    return api.get<ChildrenResponse>('/progress/children');
   },
 
   getStudentProgress(studentId: string) {
-    return api.get<{ data: ProgressData }>(`/progress/student/${studentId}`);
+    return api.get<ProgressData>(`/progress/student/${studentId}`);
   },
 
   getMyProgress() {
-    return api.get<{ data: ProgressData }>('/progress/me');
+    return api.get<ProgressData>('/progress/me');
   },
 };

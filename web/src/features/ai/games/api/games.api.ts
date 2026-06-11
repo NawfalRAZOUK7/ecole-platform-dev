@@ -1,6 +1,6 @@
 import { api } from '@/core/api/client';
 
-export const GAME_TYPES = ['memory_match', 'sorting', 'vocabulary_cards'] as const;
+export const GAME_TYPES = ['memory_match', 'sorting', 'vocabulary_cards', 'letter_puzzle'] as const;
 export const GAME_DIFFICULTIES = ['easy', 'medium', 'hard', 'expert'] as const;
 
 export type GameType = (typeof GAME_TYPES)[number];

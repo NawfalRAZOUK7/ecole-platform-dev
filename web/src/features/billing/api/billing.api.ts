@@ -97,6 +97,7 @@ export interface LateFeePolicyInput {
 export interface PaymentPlanInstallment {
   id: string;
   plan_id: string;
+  installment_number?: number;
   due_date: string;
   amount: number;
   status: 'pending' | 'paid' | 'overdue';
@@ -106,21 +107,27 @@ export interface PaymentPlanInstallment {
 export interface PaymentPlan {
   id: string;
   student_id: string;
+  parent_id?: string;
+  invoice_id?: string;
   student_name?: string;
-  name: string;
-  total_amount: number;
-  start_date: string;
+  invoice_number?: string;
+  name?: string;
+  total_amount?: number;
+  invoice_total_amount?: number;
+  total_installments?: number;
+  installments_paid?: number;
+  installments_pending?: number;
+  start_date?: string;
+  issued_date?: string;
+  due_date?: string;
   status: 'active' | 'completed' | 'cancelled';
-  installments: PaymentPlanInstallment[];
-  created_at: string;
+  installments?: PaymentPlanInstallment[];
+  created_at?: string;
 }
 
 export interface PaymentPlanInput {
-  student_id: string;
-  name: string;
-  total_amount: number;
-  start_date: string;
-  installments: Array<{ due_date: string; amount: number }>;
+  invoice_id: string;
+  num_installments: number;
 }
 
 export const billingService = {

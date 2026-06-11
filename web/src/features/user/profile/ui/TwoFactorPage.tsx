@@ -6,6 +6,7 @@
  */
 
 import { useMemo, useState, type FormEvent } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/app/providers/AuthContext';
 import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
@@ -16,17 +17,20 @@ import {
   useTwoFactorSetup,
   useVerifyTwoFactorSetup,
 } from '../model/useProfile';
+import { SmsTwoFactorCard } from './SmsTwoFactorCard';
 
 type Step = 'idle' | 'setup' | 'verify' | 'done' | 'disable';
 
 export function TwoFactorPage() {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [step, setStep] = useState<Step>('idle');
   const [provisioningUri, setProvisioningUri] = useState('');
   const [secret, setSecret] = useState('');
   const [code, setCode] = useState('');
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
+  const [backupSaved, setBackupSaved] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [disableCode, setDisableCode] = useState('');
   const setupMutation = useTwoFactorSetup();
   const verifySetupMutation = useVerifyTwoFactorSetup();
@@ -62,9 +66,27 @@ export function TwoFactorPage() {
     e.preventDefault();
     if (!disableCode.trim()) return;
     await disableMutation.mutateAsync(disableCode.trim());
-    setStep('idle');
     setDisableCode('');
-    window.location.reload();
+    await refreshUser();
+    setStep('idle');
+  }
+
+  async function handleFinishSetup() {
+    setBackupCodes([]);
+    setBackupSaved(false);
+    setCopied(false);
+    await refreshUser();
+    setStep('idle');
+  }
+
+  async function handleCopyBackupCodes() {
+    try {
+      await navigator.clipboard.writeText(backupCodes.join('\n'));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard unavailable — the download button remains as a fallback.
+    }
   }
 
   function handleDownloadBackupCodes() {
@@ -121,14 +143,21 @@ export function TwoFactorPage() {
             {t('twoFactor.scanInstructions')}
           </p>
 
-          {/* QR code via Google Charts API — encodes the provisioning URI */}
+          {/* QR code rendered locally — the provisioning URI (which contains the
+              TOTP secret) never leaves the browser. */}
           <div style={{ textAlign: 'center', marginBottom: 16 }}>
-            <img
-              src={`https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl=${encodeURIComponent(provisioningUri)}`}
-              alt={t('twoFactor.qrAlt', { defaultValue: 'QR code for two-factor setup' })}
-              style={{ border: '1px solid var(--color-border)', borderRadius: 8, padding: 8 }}
-              width={200}
-              height={200}
+            <QRCodeSVG
+              value={provisioningUri}
+              size={200}
+              level="M"
+              marginSize={2}
+              title={t('twoFactor.qrAlt', { defaultValue: 'QR code for two-factor setup' })}
+              style={{
+                border: '1px solid var(--color-border)',
+                borderRadius: 8,
+                padding: 8,
+                background: '#ffffff',
+              }}
             />
           </div>
 
@@ -198,14 +227,31 @@ export function TwoFactorPage() {
               </code>
             ))}
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button className="btn btn-primary" onClick={handleDownloadBackupCodes}>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+            <button className="btn btn-secondary" onClick={() => void handleCopyBackupCodes()}>
+              {copied ? t('twoFactor.copied') : t('twoFactor.copyCodes')}
+            </button>
+            <button className="btn btn-secondary" onClick={handleDownloadBackupCodes}>
               {t('twoFactor.downloadCodes')}
             </button>
-            <button className="btn btn-secondary" onClick={() => window.location.reload()}>
-              {t('app.close')}
-            </button>
           </div>
+          <label
+            style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, fontSize: 13 }}
+          >
+            <input
+              type="checkbox"
+              checked={backupSaved}
+              onChange={(e) => setBackupSaved(e.target.checked)}
+            />
+            {t('twoFactor.backupConfirm')}
+          </label>
+          <button
+            className="btn btn-primary"
+            onClick={() => void handleFinishSetup()}
+            disabled={!backupSaved}
+          >
+            {t('app.close')}
+          </button>
         </div>
       )}
 
@@ -242,6 +288,9 @@ export function TwoFactorPage() {
           </form>
         </div>
       )}
+
+      {/* SMS-based 2FA — alternative / fallback method */}
+      <SmsTwoFactorCard />
     </div>
   );
 }

@@ -35,6 +35,14 @@ const DONUT_COLORS = [
   'var(--color-warning)',
 ];
 
+function emptyChart() {
+  return { labels: [], datasets: [] };
+}
+
+function metric(value: number | null | undefined): number {
+  return value ?? 0;
+}
+
 export function ProgressDashboardPage() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
@@ -55,39 +63,48 @@ export function ProgressDashboardPage() {
     );
   }
 
-  const gradeTrendData = data.grade_trends.labels.map((label, i) => ({
+  const gradeTrends = data.grade_trends ?? emptyChart();
+  const contentCompletion = data.content_completion ?? {
+    ...emptyChart(),
+    summary: { total: 0, completed: 0, completion_rate: 0 },
+  };
+  const activityScores = data.activity_scores ?? emptyChart();
+  const attendanceOverview = data.attendance?.overview ?? {
+    ...emptyChart(),
+    summary: { total: 0, present: 0, attendance_rate: 0 },
+  };
+  const assessmentResults = data.assessment_results ?? emptyChart();
+
+  const gradeTrendData = gradeTrends.labels.map((label, i) => ({
     month: label,
-    [data.grade_trends.datasets[0]?.label || 'avg']: data.grade_trends.datasets[0]?.data[i] ?? 0,
+    [gradeTrends.datasets[0]?.label || 'avg']: metric(gradeTrends.datasets[0]?.data[i]),
   }));
 
-  const contentPieData = data.content_completion.labels.map((label, i) => ({
+  const contentPieData = contentCompletion.labels.map((label, i) => ({
     name: label,
-    value: data.content_completion.datasets[0]?.data[i] ?? 0,
+    value: metric(contentCompletion.datasets[0]?.data[i]),
   }));
 
-  const activityBarData = data.activity_scores.labels.map((label, i) => ({
+  const activityBarData = activityScores.labels.map((label, i) => ({
     month: label,
-    [data.activity_scores.datasets[0]?.label || 'score']:
-      data.activity_scores.datasets[0]?.data[i] ?? 0,
+    [activityScores.datasets[0]?.label || 'score']: metric(activityScores.datasets[0]?.data[i]),
   }));
 
-  const attendanceDonutData = data.attendance.overview.labels.map((label, i) => ({
+  const attendanceDonutData = attendanceOverview.labels.map((label, i) => ({
     name: label,
-    value: data.attendance.overview.datasets[0]?.data[i] ?? 0,
+    value: metric(attendanceOverview.datasets[0]?.data[i]),
   }));
 
-  const assessmentBarData = data.assessment_results.labels.map((label, i) => ({
+  const assessmentBarData = assessmentResults.labels.map((label, i) => ({
     name: label,
-    [data.assessment_results.datasets[0]?.label || 'score']:
-      data.assessment_results.datasets[0]?.data[i] ?? 0,
-    [data.assessment_results.datasets[1]?.label || 'max']:
-      data.assessment_results.datasets[1]?.data[i] ?? 0,
+    [assessmentResults.datasets[0]?.label || 'score']: metric(assessmentResults.datasets[0]?.data[i]),
+    [assessmentResults.datasets[1]?.label || 'max']: metric(assessmentResults.datasets[1]?.data[i]),
   }));
 
-  const gradeKey = data.grade_trends.datasets[0]?.label || 'avg';
-  const activityKey = data.activity_scores.datasets[0]?.label || 'score';
-  const assessScoreKey = data.assessment_results.datasets[0]?.label || 'score';
-  const assessMaxKey = data.assessment_results.datasets[1]?.label || 'max';
+  const gradeKey = gradeTrends.datasets[0]?.label || 'avg';
+  const activityKey = activityScores.datasets[0]?.label || 'score';
+  const assessScoreKey = assessmentResults.datasets[0]?.label || 'score';
+  const assessMaxKey = assessmentResults.datasets[1]?.label || 'max';
 
   return (
     <div className="progress-dashboard">
@@ -99,10 +116,10 @@ export function ProgressDashboardPage() {
         <div className="summary-card">
           <span className="summary-label">{t('progress.gradeAvg')}</span>
           <span className="summary-value">
-            {data.grade_trends.datasets[0]?.data.length
+            {gradeTrends.datasets[0]?.data.length
               ? (
-                  data.grade_trends.datasets[0].data.reduce((a, b) => a + b, 0) /
-                  data.grade_trends.datasets[0].data.length
+                  gradeTrends.datasets[0].data.reduce((a, b) => a + metric(b), 0) /
+                  gradeTrends.datasets[0].data.length
                 ).toFixed(1)
               : '—'}
           </span>
@@ -110,13 +127,13 @@ export function ProgressDashboardPage() {
         <div className="summary-card">
           <span className="summary-label">{t('progress.contentRate')}</span>
           <span className="summary-value">
-            {data.content_completion.summary.completion_rate.toFixed(0)}%
+            {metric(contentCompletion.summary.completion_rate).toFixed(0)}%
           </span>
         </div>
         <div className="summary-card">
           <span className="summary-label">{t('progress.attendanceRate')}</span>
           <span className="summary-value">
-            {data.attendance.overview.summary.attendance_rate.toFixed(0)}%
+            {metric(attendanceOverview.summary.attendance_rate).toFixed(0)}%
           </span>
         </div>
       </div>
@@ -217,8 +234,8 @@ export function ProgressDashboardPage() {
           )}
           <div className="attendance-summary">
             {t('progress.attendanceRate')}:{' '}
-            <strong>{data.attendance.overview.summary.attendance_rate.toFixed(1)}%</strong> (
-            {data.attendance.overview.summary.present}/{data.attendance.overview.summary.total})
+            <strong>{metric(attendanceOverview.summary.attendance_rate).toFixed(1)}%</strong> (
+            {attendanceOverview.summary.present}/{attendanceOverview.summary.total})
           </div>
         </div>
 

@@ -40,3 +40,20 @@ export interface VocabularyCard {
 export interface VocabularyCardsConfig {
   cards: VocabularyCard[];
 }
+
+/** One puzzle piece: a word starting with the target letter, with an emoji
+ *  and an optional image (image_url takes priority, emoji is the fallback). */
+export interface LetterPuzzlePiece {
+  word: string;
+  emoji?: string | null;
+  image_url?: string | null;
+  audio_url?: string | null;
+}
+
+export interface LetterPuzzleConfig {
+  letter: string;
+  language: 'ar' | 'fr' | 'en';
+  letter_audio_url?: string | null;
+  grid?: { rows: number; cols: number };
+  pieces: LetterPuzzlePiece[];
+}

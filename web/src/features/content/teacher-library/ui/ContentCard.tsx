@@ -1,4 +1,6 @@
 import { useTranslation } from 'react-i18next';
+import { getSubjectColor } from '@/shared/ui/tokens';
+import { GenerateQuizButton } from '@/features/lms/quizzes/ui/GenerateQuizButton';
 import type { ContentCardProps } from '../model/content-library.types';
 
 export function ContentCard({
@@ -40,12 +42,22 @@ export function ContentCard({
       )}
       <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 8 }}>
         {item.subject && (
-          <span style={{ marginRight: 8 }}>{t(`cms.subjects.${item.subject}`, item.subject)}</span>
+          <span
+            className="badge"
+            style={{
+              marginRight: 8,
+              background: getSubjectColor(item.subject),
+              color: 'var(--color-text)',
+              border: '1px solid var(--color-border)',
+            }}
+          >
+            {t(`cms.subjects.${item.subject}`, item.subject)}
+          </span>
         )}
         {item.level_band && <span style={{ marginRight: 8 }}>{item.level_band}</span>}
         <span>{t(`cms.origins.${item.origin}`, item.origin)}</span>
       </div>
-      <div style={{ display: 'flex', gap: 6 }}>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
         {onAssign && (
           <button
             className="btn btn-primary"
@@ -55,6 +67,7 @@ export function ContentCard({
             {t('teacherContent.assignToClass')}
           </button>
         )}
+        <GenerateQuizButton contentId={item.id} contentTitle={item.title} />
         {item.school_id && (
           <button
             className="btn btn-secondary"

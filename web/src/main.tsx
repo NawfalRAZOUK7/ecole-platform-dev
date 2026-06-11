@@ -24,6 +24,7 @@ import '@/shared/i18n';
 
 // Global styles
 import '@/app/styles.css';
+import '@/shared/ui/generated-tokens.css';
 import '@/shared/styles/animations.css';
 import '@/shared/styles/glassmorphism.css';
 

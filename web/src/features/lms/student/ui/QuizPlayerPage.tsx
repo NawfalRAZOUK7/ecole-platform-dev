@@ -16,6 +16,7 @@ import { EmptyState } from '@/shared/ui/EmptyState';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
 import { toBannerError } from '@/shared/ui/errorUtils';
+import { getSubjectColor } from '@/shared/ui/tokens';
 import {
   usePublishedQuizzes,
   useQuizDetail,
@@ -24,6 +25,7 @@ import {
   useSubmitAttempt,
 } from '@/features/lms/student/model/useStudent';
 import type { Attempt, Question, QuizListItem } from '@/features/lms/student/api/student.api';
+import { useSpeech } from '@/shared/hooks/useSpeech';
 
 interface ChoiceOption {
   id: string;
@@ -217,7 +219,15 @@ function QuizList({
           )}
           <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 12 }}>
             {quiz.subject && (
-              <span style={{ marginRight: 8 }}>
+              <span
+                className="badge"
+                style={{
+                  marginRight: 8,
+                  background: getSubjectColor(quiz.subject),
+                  color: 'var(--color-text)',
+                  border: '1px solid var(--color-border)',
+                }}
+              >
                 {t(`cms.subjects.${quiz.subject}`, quiz.subject)}
               </span>
             )}
@@ -260,6 +270,7 @@ function QuizPlay({
   onSubmit: () => void | Promise<void>;
 }) {
   const { t } = useTranslation();
+  const { speak } = useSpeech();
   const question = questions[currentIdx];
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
@@ -340,7 +351,26 @@ function QuizPlay({
           {t('studentQuiz.question')} {currentIdx + 1}/{questions.length} — {question.points}{' '}
           {t('studentQuiz.pts')}
         </div>
-        <h4 style={{ margin: '0 0 16px', fontSize: 16 }}>{question.question_text}</h4>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, margin: '0 0 16px' }}>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            aria-label={t('studentQuiz.listen', 'Écouter la question')}
+            title={t('studentQuiz.listen', 'Écouter la question')}
+            style={{ padding: '4px 10px', flexShrink: 0 }}
+            onClick={() =>
+              speak(question.question_text, {
+                audioUrl: question.question_media_path ?? undefined,
+                lang:
+                  (quiz.language as 'ar' | 'fr' | 'en' | null) ??
+                  (/[؀-ۿ]/.test(question.question_text) ? 'ar' : 'fr'),
+              })
+            }
+          >
+            🔊
+          </button>
+          <h4 style={{ margin: 0, fontSize: 16 }}>{question.question_text}</h4>
+        </div>
 
         {question.question_type === 'MCQ' && (
           <McqInput

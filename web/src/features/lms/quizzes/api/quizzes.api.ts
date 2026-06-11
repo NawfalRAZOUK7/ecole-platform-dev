@@ -28,6 +28,7 @@ export interface QuizSummary {
   max_attempts: number;
   shuffle_questions: boolean;
   status: string;
+  language?: string | null;
   total_points: number;
   question_count: number;
   recommended?: boolean;
@@ -124,9 +125,42 @@ export interface QuizAnalytics {
   question_stats: QuizAnalyticsQuestionStat[];
 }
 
+export type QuizQuestionSource = 'ai' | 'template';
+
+export interface GenerateFromContentPayload {
+  question_types?: QuizQuestionType[];
+  count?: number;
+  sources?: QuizQuestionSource[];
+  title?: string;
+  difficulty?: string;
+  time_limit_minutes?: number;
+  max_attempts?: number;
+  shuffle_questions?: boolean;
+}
+
+export interface GeneratedQuestionPreview {
+  order: number;
+  question_type: string;
+  question_text: string;
+  source: string;
+}
+
+export interface GenerateFromContentResult {
+  quiz_id: string;
+  title: string;
+  status: string;
+  source_content_id: string;
+  question_count: number;
+  questions: GeneratedQuestionPreview[];
+}
+
 export const quizzesService = {
   createQuiz(payload: QuizPayload) {
     return api.post<{ id: string }>('/quizzes', payload);
+  },
+
+  generateFromContent(contentId: string, payload: GenerateFromContentPayload) {
+    return api.post<GenerateFromContentResult>(`/quizzes/from-content/${contentId}`, payload);
   },
 
   listQuizzes(params: QuizListFilters = {}) {

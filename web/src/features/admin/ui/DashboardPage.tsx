@@ -22,6 +22,7 @@ export function DashboardPage() {
   );
   const dismissibleError = useDismissibleError(bannerError);
   const data = dashboardQuery.data;
+  const rewardsSummary = data?.rewards_summary;
 
   if (dashboardQuery.isLoading) {
     return <LoadingState />;
@@ -90,26 +91,24 @@ export function DashboardPage() {
 
             <div className="stats-grid">
               <div className="stat-card">
-                <div className="stat-value">N/A</div>
+                <div className="stat-value">{rewardsSummary?.stars_awarded_week ?? 0}</div>
                 <div className="stat-label">{t('admin.dashboard.starsAwardedWeek')}</div>
               </div>
               <div className="stat-card">
-                <div className="stat-value">N/A</div>
+                <div className="stat-value">{rewardsSummary?.stars_awarded_month ?? 0}</div>
                 <div className="stat-label">{t('admin.dashboard.starsAwardedMonth')}</div>
               </div>
               <div className="stat-card">
-                <div className="stat-value">N/A</div>
+                <div className="stat-value" style={{ fontSize: 20 }}>
+                  {rewardsSummary?.most_active_class ?? '—'}
+                </div>
                 <div className="stat-label">{t('admin.dashboard.mostActiveClass')}</div>
               </div>
               <div className="stat-card">
-                <div className="stat-value">N/A</div>
+                <div className="stat-value">{rewardsSummary?.recent_reward_events ?? 0}</div>
                 <div className="stat-label">{t('admin.dashboard.recentBadgeUnlocks')}</div>
               </div>
             </div>
-
-            <p style={{ margin: '16px 0 0', color: 'var(--color-text-secondary)' }}>
-              {t('admin.dashboard.gamificationUnavailable')}
-            </p>
           </div>
         </>
       )}

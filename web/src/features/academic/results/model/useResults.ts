@@ -24,10 +24,11 @@ export function useAssignmentResults(filters: Omit<ResultsFilters, 'cursor'> = {
   });
 }
 
-export function useQuizAttemptResults() {
+export function useQuizAttemptResults(enabled = true) {
   return useQuery({
     queryKey: resultsQueryKeys.quizzes(),
     queryFn: async () => (await resultsService.listQuizResults()).data,
+    enabled,
     staleTime: STALE_RESULTS,
   });
 }

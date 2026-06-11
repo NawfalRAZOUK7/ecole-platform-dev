@@ -23,7 +23,10 @@ export function WritingWorkspacePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const profileQuery = useProfileData();
-  const ageTier = useAgeTheme(profileQuery.data?.student_profile?.date_of_birth);
+  const ageTier = useAgeTheme(
+    profileQuery.data?.student_profile?.date_of_birth,
+    profileQuery.data?.student_profile?.class_level,
+  );
   const submitMutation = useSubmitWriting();
 
   const [text, setText] = useState('');

@@ -26,7 +26,12 @@ export interface UserProfile {
   full_name: string;
   role: string;
   school_id: string;
+  school_type?: 'formal' | 'informal';
+  school_settings?: Record<string, unknown>;
+  design_mode?: 'formal' | 'informal' | null;
   totp_enabled?: boolean;
+  phone_otp_enabled?: boolean;
+  phone?: string;
   permissions: string[];
   memberships: Array<{
     school_id: string;
@@ -61,6 +66,7 @@ export interface AuthContextValue extends AuthState {
   cancel2fa: () => void;
   logout: () => Promise<void>;
   clearError: () => void;
+  refreshUser: () => Promise<void>;
   startOAuthLogin: (provider: 'google' | 'microsoft', schoolId: string) => Promise<void>;
   completeOAuthLogin: (
     provider: 'google' | 'microsoft',
@@ -411,6 +417,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setState((s) => ({ ...s, error: null }));
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    try {
+      const profileResp = await api.get<UserProfile>('/auth/me');
+      setSchoolId(profileResp.data.school_id);
+      setState((s) => ({ ...s, user: profileResp.data }));
+    } catch {
+      // Keep the existing user if the refresh fails.
+    }
+  }, []);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       ...state,
@@ -419,10 +435,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
       cancel2fa,
       logout,
       clearError,
+      refreshUser,
       startOAuthLogin,
       completeOAuthLogin,
     }),
-    [state, login, verify2fa, cancel2fa, logout, clearError, startOAuthLogin, completeOAuthLogin],
+    [
+      state,
+      login,
+      verify2fa,
+      cancel2fa,
+      logout,
+      clearError,
+      refreshUser,
+      startOAuthLogin,
+      completeOAuthLogin,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -99,6 +99,26 @@ export function useDisableTwoFactor() {
   });
 }
 
+export function useSmsTwoFactorSetup() {
+  return useMutation({
+    mutationFn: async (phone: string) => (await profileService.setupSmsTwoFactor(phone)).data,
+  });
+}
+
+export function useVerifySmsTwoFactorSetup() {
+  return useMutation({
+    mutationFn: async (code: string) => (await profileService.verifySmsTwoFactorSetup(code)).data,
+  });
+}
+
+export function useDisableSmsTwoFactor() {
+  return useMutation({
+    mutationFn: async (code: string) => {
+      await profileService.disableSmsTwoFactor(code);
+    },
+  });
+}
+
 export function useLoginHistory() {
   return useQuery({
     queryKey: profileQueryKeys.loginHistory(),

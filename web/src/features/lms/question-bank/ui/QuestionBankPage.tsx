@@ -6,6 +6,7 @@ import { Badge } from '@/shared/ui/Badge';
 import { EmptyState } from '@/shared/ui/EmptyState';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
+import { getSubjectColor } from '@/shared/ui/tokens';
 import { useCreateQuestion, useQuestionBankStats, useQuestions } from '../model/useQuestionBank';
 import type {
   CreateQuestionPayload,
@@ -242,7 +243,18 @@ export function QuestionBankPage() {
                   >
                     {q.text}
                   </td>
-                  <td>{q.subject}</td>
+                  <td>
+                    <span
+                      className="badge"
+                      style={{
+                        background: getSubjectColor(q.subject),
+                        color: 'var(--color-text)',
+                        border: '1px solid var(--color-border)',
+                      }}
+                    >
+                      {q.subject}
+                    </span>
+                  </td>
                   <td>
                     <Badge variant={TYPE_VARIANT[q.type]}>
                       {t(`questionBank.types.${q.type}`)}

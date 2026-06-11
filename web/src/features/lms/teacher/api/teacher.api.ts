@@ -63,20 +63,20 @@ export interface StudentItem {
 export interface StudentRow {
   student_id: string;
   student_name: string;
-  grade_average: number;
-  attendance_rate: number;
-  content_completion_rate: number;
+  grade_average: number | null;
+  attendance_rate: number | null;
+  content_completion_rate: number | null;
 }
 
 export interface ClassAverages {
-  grade_average: number;
-  attendance_rate: number;
-  content_completion_rate: number;
+  grade_average: number | null;
+  attendance_rate: number | null;
+  content_completion_rate: number | null;
 }
 
 export interface ChartDataset {
   label: string;
-  data: number[];
+  data: Array<number | null>;
 }
 
 export interface ClassProgressData {
@@ -278,7 +278,17 @@ export const teacherService = {
   },
 
   getClassProgress(classId: string) {
-    return api.get<{ data: ClassProgressData }>(`/progress/class/${classId}`);
+    return api.get<ClassProgressData | { data: ClassProgressData }>(`/progress/class/${classId}`).then(
+      (response) => ({
+        ...response,
+        data:
+          response.data &&
+          typeof response.data === 'object' &&
+          'data' in response.data
+            ? response.data.data
+            : response.data,
+      }),
+    );
   },
 
   listContentLibrary(params: TeacherContentFilters) {

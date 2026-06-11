@@ -5,6 +5,7 @@ import { useGameConfig } from '../model/useGames';
 import { MemoryMatchGame } from './MemoryMatchGame';
 import { SortingGame } from './SortingGame';
 import { VocabularyCardsGame } from './VocabularyCardsGame';
+import { LetterPuzzleGame } from './LetterPuzzleGame';
 
 export function GamePlayerPage() {
   const { id } = useParams<{ id: string }>();
@@ -45,6 +46,8 @@ export function GamePlayerPage() {
         <MemoryMatchGame game={game} onExit={onExit} />
       ) : game.gameType === 'sorting' ? (
         <SortingGame game={game} onExit={onExit} />
+      ) : game.gameType === 'letter_puzzle' ? (
+        <LetterPuzzleGame game={game} onExit={onExit} />
       ) : (
         <VocabularyCardsGame game={game} onExit={onExit} />
       )}

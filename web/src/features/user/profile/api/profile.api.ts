@@ -34,6 +34,9 @@ export interface ProfileResponse {
   phone?: string | null;
   role?: string;
   school_id?: string;
+  school_type?: 'formal' | 'informal';
+  school_settings?: Record<string, unknown>;
+  design_mode?: 'formal' | 'informal' | null;
   student_profile?: StudentProfileData | null;
   parent_profile?: ParentProfileData | null;
   teacher_profile?: TeacherProfileData | null;
@@ -94,6 +97,18 @@ export const profileService = {
 
   disableTwoFactor(code: string) {
     return api.post<void>('/auth/2fa/disable', { code });
+  },
+
+  setupSmsTwoFactor(phone: string) {
+    return api.post<{ message: string; phone: string }>('/auth/sms-2fa/setup', { phone });
+  },
+
+  verifySmsTwoFactorSetup(code: string) {
+    return api.post<{ message: string }>('/auth/sms-2fa/verify-setup', { code });
+  },
+
+  disableSmsTwoFactor(code: string) {
+    return api.post<{ message: string }>('/auth/sms-2fa/disable', { code });
   },
 
   getProfile() {

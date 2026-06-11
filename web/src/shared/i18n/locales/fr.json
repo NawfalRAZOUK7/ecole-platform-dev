@@ -1128,7 +1128,10 @@
     "downloadCodes": "Telecharger les codes",
     "disableTitle": "Desactiver la double authentification",
     "disableInstructions": "Entrez votre code d'authentification ou un code de secours pour desactiver la 2FA.",
-    "codePlaceholder": "Code ou code de secours"
+    "codePlaceholder": "Code ou code de secours",
+    "copyCodes": "Copier les codes",
+    "copied": "Copie !",
+    "backupConfirm": "J'ai enregistre mes codes de secours en lieu sur."
   },
   "studentSubmission": {
     "title": "Soumettre un travail",
@@ -1349,7 +1352,7 @@
       "starsAwardedWeek": "Etoiles attribuees cette semaine",
       "starsAwardedMonth": "Etoiles attribuees ce mois-ci",
       "mostActiveClass": "Classe la plus active",
-      "recentBadgeUnlocks": "Deblocages de badges recents",
+      "recentBadgeUnlocks": "Evenements rewards recents",
       "gamificationUnavailable": "Cette version du backend n'expose pas encore /api/v1/rewards/analytics, donc ces indicateurs sont indisponibles."
     },
     "badges": {
@@ -2109,7 +2112,8 @@
     "dragDropHint": "Associez chaque element a une zone avec le menu deroulant",
     "selectZone": "Selectionner une zone",
     "matchHint": "Associez chaque element de gauche a son correspondant",
-    "selectMatch": "Selectionner"
+    "selectMatch": "Selectionner",
+    "listen": "Écouter la question"
   },
   "quizAnalytics": {
     "subtitle": "Consultez la participation, la performance moyenne et les questions les plus difficiles pour les eleves.",
@@ -2785,5 +2789,85 @@
       "fromInitial": "Pas de filière précédente",
       "to": "Vers"
     }
+  },
+  "twoFactorSms": {
+    "title": "Authentification a deux facteurs par SMS",
+    "enableBtn": "Activer la 2FA par SMS",
+    "disableBtn": "Desactiver la 2FA par SMS",
+    "phoneInstructions": "Saisissez votre numero de telephone. Un code a 6 chiffres vous sera envoye par SMS.",
+    "phoneLabel": "Numero de telephone",
+    "sendCode": "Envoyer le code",
+    "verifyInstructions": "Saisissez le code a 6 chiffres envoye au {{phone}}.",
+    "resend": "Renvoyer le code",
+    "disableInstructions": "Saisissez un code recu par SMS pour desactiver la 2FA par SMS."
+  },
+  "letterPuzzle": {
+    "instructions": "Assemble la lettre : touche chaque image qui commence par cette lettre.",
+    "noPieces": "Aucune pièce disponible.",
+    "hearLetter": "Écouter la lettre"
+  },
+  "generateQuiz": {
+    "button": "Générer un quiz",
+    "title": "Générer un quiz",
+    "subtitle": "Depuis : {{title}}. Un brouillon sera créé, à revoir avant publication.",
+    "thisContent": "ce contenu",
+    "types": "Types de questions",
+    "count": "Nombre de questions",
+    "sources": "Sources",
+    "typeMcq": "QCM",
+    "typeTrueFalse": "Vrai / Faux",
+    "typeFillIn": "Texte à trous",
+    "typeMatching": "Association (IA)",
+    "sourceTemplate": "Modèles",
+    "sourceTemplateHint": "déterministe, gratuit",
+    "sourceAi": "IA",
+    "sourceAiHint": "via le fournisseur configuré",
+    "error": "La génération a échoué.",
+    "generating": "Génération…",
+    "generate": "Générer le brouillon",
+    "created": "Brouillon créé : {{count}} question(s).",
+    "viewQuizzes": "Voir mes quiz"
+  },
+  "nav.platform": "Plateforme",
+  "apply": {
+    "title": "Demande d'inscription",
+    "subtitle": "Choisissez le type d'établissement. Votre demande sera examinée avant activation.",
+    "formal": "École formelle",
+    "micro": "Micro-école / Éducateur",
+    "yourName": "Votre nom",
+    "email": "Email",
+    "phone": "Téléphone",
+    "city": "Ville",
+    "schoolName": "Nom de l'école",
+    "microName": "Nom de la micro-école",
+    "address": "Adresse",
+    "level": "Niveau (ex. primaire, collège)",
+    "neighborhood": "Quartier",
+    "capacity": "Capacité (enfants)",
+    "notes": "Message (optionnel)",
+    "documents": "Documents / photos (optionnel)",
+    "fileSelected": "fichier(s) sélectionné(s)",
+    "error": "L'envoi a échoué.",
+    "sending": "Envoi…",
+    "submit": "Envoyer la demande",
+    "sentTitle": "Demande envoyée",
+    "sentBody": "Votre demande a été reçue. Un administrateur de la plateforme la vérifiera. Une fois approuvée, vous recevrez par email un lien d'activation pour définir votre mot de passe.",
+    "backToLogin": "Retour à la connexion"
+  },
+  "activate": {
+    "title": "Activer votre compte",
+    "subtitle": "Choisissez un mot de passe pour finaliser votre compte.",
+    "password": "Mot de passe",
+    "confirm": "Confirmer le mot de passe",
+    "activate": "Activer le compte",
+    "activating": "Activation…",
+    "tooShort": "Le mot de passe doit contenir au moins 12 caractères.",
+    "mismatch": "Les mots de passe ne correspondent pas.",
+    "noToken": "Lien d'activation invalide ou incomplet.",
+    "failed": "L'activation a échoué. Le lien est peut-être expiré ou déjà utilisé.",
+    "backToLogin": "Aller à la connexion",
+    "doneTitle": "Compte activé !",
+    "doneBody": "Votre mot de passe a été défini et votre compte est actif. Vous pouvez maintenant vous connecter.",
+    "goLogin": "Se connecter"
   }
 }

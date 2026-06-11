@@ -12,7 +12,10 @@ export function StudentHomePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const profileQuery = useProfileData();
-  const ageTier = useAgeTheme(profileQuery.data?.student_profile?.date_of_birth);
+  const ageTier = useAgeTheme(
+    profileQuery.data?.student_profile?.date_of_birth,
+    profileQuery.data?.student_profile?.class_level,
+  );
   const rewardsQuery = useMyRewards();
   const rewards = rewardsQuery.data;
 

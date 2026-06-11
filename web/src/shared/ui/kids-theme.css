@@ -80,6 +80,10 @@
   border-radius: 12px;
   margin: 2px 8px;
   padding: 10px 12px;
+  /* WCAG 2.1 AA (2.5.5) — guarantee a ≥44px tap target for young users */
+  min-height: 44px;
+  display: flex;
+  align-items: center;
   font-size: 0.95rem;
   font-weight: 500;
   transition:
@@ -177,6 +181,8 @@
 :root[data-theme='kids'] .page-title {
   font-size: 1.8rem;
   color: var(--color-primary);
+  border-inline-start: 0;
+  padding-inline-start: 0;
 }
 
 /* ── Kids Cards ── */
@@ -256,16 +262,18 @@
   display: block;
 }
 
+/* Stat values sit on white — deepened to meet WCAG AA (≥4.5:1 on #fff).
+   Original #3b82f6 / #f59e0b / #f97316 failed even the 3:1 large-text bar. */
 .kids-stat-card--xp .kids-stat-card__value {
-  color: #3b82f6;
+  color: #2563eb;
 }
 
 .kids-stat-card--stars .kids-stat-card__value {
-  color: #f59e0b;
+  color: #b45309;
 }
 
 .kids-stat-card--streak .kids-stat-card__value {
-  color: #f97316;
+  color: #c2410c;
 }
 
 .kids-stat-card--level .kids-stat-card__value {
@@ -313,7 +321,9 @@
 }
 
 .kids-cta-btn--primary {
-  background: linear-gradient(135deg, #7c3aed, #a78bfa);
+  /* Light stop deepened #a78bfa→#8b5cf6 so white text stays ≥3:1 (large) /
+     ~4.2:1 across the whole button (was 2.7:1 at the light end). */
+  background: linear-gradient(135deg, #7c3aed, #8b5cf6);
   color: #ffffff;
   box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3);
 }
@@ -330,7 +340,9 @@
 
 /* ── Kids Writing CTA Button ── */
 .kids-cta-btn--writing {
-  background: linear-gradient(135deg, #10b981, #34d399);
+  /* Deepened #10b981→#34d399 to #047857→#059669 so white text meets ≥3:1
+     (large) across the gradient (was 2.5:1 / 1.9:1 — failing). */
+  background: linear-gradient(135deg, #047857, #059669);
   color: #ffffff;
   box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
 }
@@ -508,6 +520,93 @@
 
 .kids-content-card__progress-fill--completed {
   background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+/* ── Kids Dark: same student structure with dark-readable surfaces ── */
+:root[data-theme='kids-dark'] .app-sidebar {
+  background: var(--kids-theme-sidebar-bg);
+  border-inline-end: none;
+  box-shadow: 4px 0 24px rgba(46, 16, 101, 0.35);
+}
+
+:root[data-theme='kids-dark'] .sidebar-title,
+:root[data-theme='kids-dark'] .user-name {
+  color: #ffffff;
+}
+
+:root[data-theme='kids-dark'] .sidebar-header,
+:root[data-theme='kids-dark'] .sidebar-footer {
+  background: rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+:root[data-theme='kids-dark'] .theme-toggle,
+:root[data-theme='kids-dark'] .logout-btn {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+:root[data-theme='kids-dark'] .nav-link {
+  color: rgba(255, 255, 255, 0.88);
+  border-radius: 12px;
+  margin: 2px 8px;
+  padding: 10px 12px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+:root[data-theme='kids-dark'] .nav-link:hover {
+  background: var(--kids-theme-sidebar-hover);
+  color: #ffffff;
+}
+
+:root[data-theme='kids-dark'] .nav-link--active {
+  background: var(--kids-theme-sidebar-active);
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.28);
+}
+
+:root[data-theme='kids-dark'] .nav-icon {
+  font-size: 1.3rem;
+  min-width: 28px;
+}
+
+:root[data-theme='kids-dark'] .nav-label {
+  font-size: 0.95rem;
+}
+
+:root[data-theme='kids-dark'] .user-role {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+:root[data-theme='kids-dark'] .app-main {
+  background: var(--color-bg);
+}
+
+:root[data-theme='kids-dark'] .page-title {
+  font-size: 1.8rem;
+  color: var(--color-primary);
+  border-inline-start: 0;
+  padding-inline-start: 0;
+}
+
+:root[data-theme='kids-dark'] .card,
+:root[data-theme='kids-dark'] .kids-stat-card,
+:root[data-theme='kids-dark'] .kids-content-card,
+:root[data-theme='kids-dark'] .kids-mascot__bubble {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+:root[data-theme='kids-dark'] .kids-xp-bar-wrap,
+:root[data-theme='kids-dark'] .kids-content-card__progress-bar {
+  background: var(--kids-theme-bg-secondary);
 }
 
 .kids-content-card__status {

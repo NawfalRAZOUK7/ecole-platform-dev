@@ -2,7 +2,7 @@
  * Main application layout — sidebar navigation + topbar bell/dropdown.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -22,7 +22,9 @@ import { useFocusManagement } from '@/shared/hooks/useFocusManagement';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
 import { LanguageSwitcher } from '@/shared/ui/LanguageSwitcher';
+import { resolveDesignContext } from '@/shared/ui/designContext';
 import { getNavIcon } from '@/shared/ui/navIcons';
+import { getRoleAccent } from '@/shared/ui/tokens';
 import { X, LogOut } from 'lucide-react';
 import { formatDate } from '@/shared/i18n';
 import { useMyRewards } from '@/features/ai/rewards/model/useRewards';
@@ -112,9 +114,15 @@ const NAV_ITEMS: NavItem[] = [
     icon: '📅',
     roles: ['ADM', 'DIR', 'PAR'],
   },
+  { to: '/platform', labelKey: 'nav.platform', icon: '🛠️', roles: ['SUP'] },
   { to: '/budgets', labelKey: 'nav.budgets', icon: '💼', roles: ['ADM', 'DIR'] },
   { to: '/financial-health', labelKey: 'nav.financialHealth', icon: '💹', roles: ['ADM', 'SYS'] },
-  { to: '/micro-schools', labelKey: 'nav.microSchools', icon: '🏠', roles: ['ADM', 'DIR', 'PAR'] },
+  {
+    to: '/micro-schools',
+    labelKey: 'nav.microSchools',
+    icon: '🏠',
+    roles: ['EDUCATOR', 'ADM', 'DIR', 'PAR'],
+  },
   { to: '/teacher', labelKey: 'nav.teacherClasses', icon: '🏫', roles: ['TCH'] },
   { to: '/teacher/courses', labelKey: 'nav.teacherCourses', icon: '📖', roles: ['TCH'] },
   { to: '/teacher/assignments', labelKey: 'nav.teacherAssignments', icon: '📝', roles: ['TCH'] },
@@ -276,18 +284,53 @@ export function Layout() {
 
   const queryClient = useQueryClient();
   const isStudent = userRole === 'STD';
+  const roleAccent = getRoleAccent(userRole);
   const profileQuery = useProfileData();
   const dateOfBirth = profileQuery.data?.student_profile?.date_of_birth;
-  useAgeTheme(dateOfBirth);
+  const classLevel = profileQuery.data?.student_profile?.class_level;
+  const ageTier = useAgeTheme(dateOfBirth, classLevel);
   const rewardsQuery = useMyRewards(isStudent);
   const rewards = rewardsQuery.data;
+  const designContext = useMemo(
+    () =>
+      resolveDesignContext({
+        role: userRole,
+        pathname: location.pathname,
+        schoolType: user?.school_type,
+        schoolSettings: user?.school_settings,
+        designMode: user?.design_mode,
+        ageTier,
+        themeMode: theme,
+        isRtl: i18n.dir() === 'rtl',
+      }),
+    [
+      ageTier,
+      i18n,
+      location.pathname,
+      theme,
+      user?.design_mode,
+      user?.school_settings,
+      user?.school_type,
+      userRole,
+    ],
+  );
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', isStudent ? 'kids' : theme);
+    document.documentElement.setAttribute('data-theme', designContext.appliedTheme);
+    document.documentElement.setAttribute('data-school-type', designContext.schoolType);
+    document.documentElement.setAttribute('data-design-mode', designContext.designMode);
+    document.documentElement.setAttribute('data-age-tier', designContext.ageTier);
+    if (userRole) {
+      document.documentElement.setAttribute('data-role', userRole.toLowerCase());
+    }
     return () => {
       document.documentElement.removeAttribute('data-theme');
+      document.documentElement.removeAttribute('data-role');
+      document.documentElement.removeAttribute('data-school-type');
+      document.documentElement.removeAttribute('data-design-mode');
+      document.documentElement.removeAttribute('data-age-tier');
     };
-  }, [isStudent, theme]);
+  }, [designContext, userRole]);
 
   const handleNavPrefetch = useCallback(
     (to: string) => {
@@ -449,7 +492,7 @@ export function Layout() {
   const isStaging = import.meta.env.VITE_APP_ENV === 'staging';
 
   return (
-    <div className="app-layout">
+    <div className="app-layout" style={{ '--role-accent': roleAccent } as CSSProperties}>
       {isStaging && (
         <div className="staging-banner" role="banner">
           ⚠️ Environnement de staging — Ne pas utiliser avec de vraies données

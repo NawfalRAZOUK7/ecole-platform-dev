@@ -318,6 +318,11 @@ export function LoginPage() {
             </Link>
           </div>
           <div style={{ textAlign: 'center', marginTop: 8 }}>
+            <Link to="/apply" style={{ color: 'var(--color-primary)', fontSize: 14 }}>
+              {t('apply.title', "Demande d'inscription")}
+            </Link>
+          </div>
+          <div style={{ textAlign: 'center', marginTop: 8 }}>
             <Link
               to="/forgot-password"
               style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}

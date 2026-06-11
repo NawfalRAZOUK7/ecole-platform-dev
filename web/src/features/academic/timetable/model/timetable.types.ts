@@ -1,24 +1,7 @@
 import type { ClassOption, ExceptionForm, SlotForm, TimetableSlot } from '../api/timetable.api';
+export { getSubjectColor } from '@/shared/ui/tokens';
 
 export const DAYS = [1, 2, 3, 4, 5, 6] as const;
-
-const SUBJECT_COLORS: Record<string, string> = {
-  math: 'var(--color-surface-primary)',
-  french: 'var(--color-surface-warning)',
-  arabic: 'var(--color-surface-success)',
-  science: 'var(--color-surface-success)',
-  history: 'var(--color-surface-secondary)',
-  geography: 'var(--color-surface-warning)',
-  english: 'var(--color-surface-secondary)',
-  islamic_studies: 'var(--color-surface-info)',
-  art: 'var(--color-surface-warning)',
-  sport: 'var(--color-surface-info)',
-};
-
-export function getSubjectColor(subject: string): string {
-  const key = subject.toLowerCase().replace(/\s+/g, '_');
-  return SUBJECT_COLORS[key] || 'var(--color-bg-secondary)';
-}
 
 export const EMPTY_SLOT_FORM: SlotForm = {
   class_id: '',

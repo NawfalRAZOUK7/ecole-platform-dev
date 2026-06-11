@@ -81,7 +81,7 @@ export function useRewardChildren(enabled: boolean) {
     queryFn: async () => {
       try {
         const r = await progressService.getChildrenOverview();
-        return r?.data?.data?.children ?? [];
+        return r.data.children ?? [];
       } catch {
         return [];
       }

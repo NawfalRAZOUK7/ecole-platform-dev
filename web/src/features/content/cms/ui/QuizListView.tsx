@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { LoadingState } from '@/shared/ui/LoadingState';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
+import { getSubjectColor } from '@/shared/ui/tokens';
 import { useCmsQuizzes } from '../model/useCms';
 
 interface QuizListViewProps {
@@ -63,7 +64,18 @@ export function QuizListView({ onCreate, onEdit }: QuizListViewProps) {
               )}
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', fontSize: 11 }}>
                 <span className={`badge badge--${quiz.status}`}>{quiz.status}</span>
-                {quiz.subject && <span className="badge">{quiz.subject}</span>}
+                {quiz.subject && (
+                  <span
+                    className="badge"
+                    style={{
+                      background: getSubjectColor(quiz.subject),
+                      color: 'var(--color-text)',
+                      border: '1px solid var(--color-border)',
+                    }}
+                  >
+                    {quiz.subject}
+                  </span>
+                )}
                 {quiz.level_band && <span className="badge">{quiz.level_band}</span>}
                 {quiz.difficulty && <span className="badge">{quiz.difficulty}</span>}
               </div>

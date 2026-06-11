@@ -15,25 +15,34 @@ import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
 import { toBannerError } from '@/shared/ui/errorUtils';
 import { formatDate } from '@/shared/i18n';
+import { useAuth } from '@/app/providers/AuthContext';
 import { useAssignmentResults, useQuizAttemptResults } from '../model/useResults';
 import type { QuizAttemptResult, Result } from '../api/results.api';
 
 export function ResultsPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [tab, setTab] = useState<'assignments' | 'quizzes'>('assignments');
+  const quizResultsEnabled = user?.role === 'STD';
   const assignmentsQuery = useAssignmentResults();
-  const quizResultsQuery = useQuizAttemptResults();
+  const quizResultsQuery = useQuizAttemptResults(quizResultsEnabled);
   const items: Result[] = useMemo(
     () => assignmentsQuery.data?.pages.flatMap((page) => page.data) ?? [],
     [assignmentsQuery.data],
   );
   const quizResults: QuizAttemptResult[] = quizResultsQuery.data ?? [];
   const dismissibleError = useDismissibleError(
-    toBannerError(assignmentsQuery.error ?? quizResultsQuery.error, t('app.error')),
+    toBannerError(
+      assignmentsQuery.error ?? (quizResultsEnabled ? quizResultsQuery.error : null),
+      t('app.error'),
+    ),
   );
 
-  if ((assignmentsQuery.isLoading && !assignmentsQuery.data) || quizResultsQuery.isLoading) {
+  if (
+    (assignmentsQuery.isLoading && !assignmentsQuery.data) ||
+    (quizResultsEnabled && quizResultsQuery.isLoading)
+  ) {
     return <LoadingState />;
   }
 
@@ -44,7 +53,12 @@ export function ResultsPage() {
       <ErrorBanner
         error={dismissibleError.error}
         onDismiss={dismissibleError.dismiss}
-        onRetry={() => void Promise.all([assignmentsQuery.refetch(), quizResultsQuery.refetch()])}
+        onRetry={() =>
+          void Promise.all([
+            assignmentsQuery.refetch(),
+            quizResultsEnabled ? quizResultsQuery.refetch() : Promise.resolve(null),
+          ])
+        }
       />
 
       {quizResults.length > 0 && (

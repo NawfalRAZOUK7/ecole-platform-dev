@@ -13,6 +13,12 @@ export interface DashboardData {
   audit_events_24h: number;
   pending_justifications: number;
   users_by_role: Record<string, number>;
+  rewards_summary?: {
+    stars_awarded_week: number;
+    stars_awarded_month: number;
+    most_active_class: string | null;
+    recent_reward_events: number;
+  };
 }
 
 export interface UserItem {

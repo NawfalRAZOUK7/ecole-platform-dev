@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { EmptyState } from '@/shared/ui/EmptyState';
+import { getSubjectColor } from '@/shared/ui/tokens';
 import type { ResourceItem } from '../api/documents.api';
 
 interface ResourceGridProps {
@@ -46,7 +47,21 @@ export function ResourceGrid({
               )}
               <div>
                 <strong>{resource.title}</strong>
-                <p>{[resource.subject, resource.level].filter(Boolean).join(' · ')}</p>
+                <p>
+                  {resource.subject ? (
+                    <span
+                      className="badge"
+                      style={{
+                        background: getSubjectColor(resource.subject),
+                        color: 'var(--color-text)',
+                        border: '1px solid var(--color-border)',
+                      }}
+                    >
+                      {resource.subject}
+                    </span>
+                  ) : null}
+                  {resource.level ? <span> {resource.level}</span> : null}
+                </p>
                 <span>
                   {t('documents.resources.rating', {
                     rating: resource.avg_rating.toFixed(1),

@@ -177,7 +177,7 @@ export function useTeacherClassProgress(classId: string | null | undefined) {
     queryKey: classId
       ? teacherQueryKeys.classProgress(classId)
       : [...teacherQueryKeys.all, 'class-progress', 'pending'],
-    queryFn: async () => (await teacherService.getClassProgress(classId!)).data.data,
+    queryFn: async () => (await teacherService.getClassProgress(classId!)).data,
     enabled: Boolean(classId),
     staleTime: STALE_RESULTS,
   });

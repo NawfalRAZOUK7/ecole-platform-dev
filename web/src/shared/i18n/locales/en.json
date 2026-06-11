@@ -965,7 +965,10 @@
     "downloadCodes": "Download Codes",
     "disableTitle": "Disable Two-Factor Authentication",
     "disableInstructions": "Enter your authenticator code or a backup code to disable 2FA.",
-    "codePlaceholder": "Code or backup code"
+    "codePlaceholder": "Code or backup code",
+    "copyCodes": "Copy codes",
+    "copied": "Copied!",
+    "backupConfirm": "I have saved my backup codes in a safe place."
   },
   "studentSubmission": {
     "title": "Submit Work",
@@ -1186,7 +1189,7 @@
       "starsAwardedWeek": "Stars Awarded This Week",
       "starsAwardedMonth": "Stars Awarded This Month",
       "mostActiveClass": "Most Active Class",
-      "recentBadgeUnlocks": "Recent Badge Unlocks",
+      "recentBadgeUnlocks": "Recent Reward Events",
       "gamificationUnavailable": "The current backend build does not expose /api/v1/rewards/analytics yet, so these metrics are unavailable."
     },
     "badges": {
@@ -1792,7 +1795,7 @@
     "level": "Level",
     "file": "File",
     "uploading": "Uploading",
-    "scanning": "Scanning file\u2026",
+    "scanning": "Scanning file…",
     "upload": "Upload",
     "uploadSuccess": "Upload Successful!",
     "uploadSuccessMsg": "Your content has been uploaded to the school library.",
@@ -1923,7 +1926,8 @@
     "dragDropHint": "Assign each item to a zone using the dropdown",
     "selectZone": "Select zone",
     "matchHint": "Match each left item with its right pair",
-    "selectMatch": "Select match"
+    "selectMatch": "Select match",
+    "listen": "Listen to the question"
   },
   "quizAnalytics": {
     "subtitle": "Review participation, average performance, and the questions that students found hardest.",
@@ -2500,5 +2504,85 @@
       "fromInitial": "No previous program",
       "to": "To"
     }
+  },
+  "twoFactorSms": {
+    "title": "SMS Two-Factor Authentication",
+    "enableBtn": "Enable SMS 2FA",
+    "disableBtn": "Disable SMS 2FA",
+    "phoneInstructions": "Enter your phone number. We'll send you a 6-digit code by SMS.",
+    "phoneLabel": "Phone number",
+    "sendCode": "Send code",
+    "verifyInstructions": "Enter the 6-digit code sent to {{phone}}.",
+    "resend": "Resend code",
+    "disableInstructions": "Enter a code received by SMS to disable SMS 2FA."
+  },
+  "letterPuzzle": {
+    "instructions": "Build the letter: tap each picture that starts with it.",
+    "noPieces": "No pieces available.",
+    "hearLetter": "Hear the letter"
+  },
+  "generateQuiz": {
+    "button": "Generate a quiz",
+    "title": "Generate a quiz",
+    "subtitle": "From: {{title}}. A draft will be created for you to review before publishing.",
+    "thisContent": "this content",
+    "types": "Question types",
+    "count": "Number of questions",
+    "sources": "Sources",
+    "typeMcq": "MCQ",
+    "typeTrueFalse": "True / False",
+    "typeFillIn": "Fill in the blank",
+    "typeMatching": "Matching (AI)",
+    "sourceTemplate": "Templates",
+    "sourceTemplateHint": "deterministic, free",
+    "sourceAi": "AI",
+    "sourceAiHint": "via the configured provider",
+    "error": "Generation failed.",
+    "generating": "Generating…",
+    "generate": "Generate draft",
+    "created": "Draft created: {{count}} question(s).",
+    "viewQuizzes": "View my quizzes"
+  },
+  "nav.platform": "Platform",
+  "apply": {
+    "title": "Registration request",
+    "subtitle": "Choose the establishment type. Your request will be reviewed before activation.",
+    "formal": "Formal school",
+    "micro": "Micro-school / Educator",
+    "yourName": "Your name",
+    "email": "Email",
+    "phone": "Phone",
+    "city": "City",
+    "schoolName": "School name",
+    "microName": "Micro-school name",
+    "address": "Address",
+    "level": "Level (e.g. primary, middle)",
+    "neighborhood": "Neighborhood",
+    "capacity": "Capacity (children)",
+    "notes": "Message (optional)",
+    "documents": "Documents / photos (optional)",
+    "fileSelected": "file(s) selected",
+    "error": "Submission failed.",
+    "sending": "Sending…",
+    "submit": "Send request",
+    "sentTitle": "Request sent",
+    "sentBody": "Your request has been received. A platform administrator will review it. Once approved, you will receive an email with an activation link to set your password.",
+    "backToLogin": "Back to login"
+  },
+  "activate": {
+    "title": "Activate your account",
+    "subtitle": "Choose a password to finish setting up your account.",
+    "password": "Password",
+    "confirm": "Confirm password",
+    "activate": "Activate account",
+    "activating": "Activating…",
+    "tooShort": "Password must be at least 12 characters.",
+    "mismatch": "Passwords do not match.",
+    "noToken": "Invalid or incomplete activation link.",
+    "failed": "Activation failed. The link may be expired or already used.",
+    "backToLogin": "Go to login",
+    "doneTitle": "Account activated!",
+    "doneBody": "Your password has been set and your account is active. You can now log in.",
+    "goLogin": "Log in"
   }
 }

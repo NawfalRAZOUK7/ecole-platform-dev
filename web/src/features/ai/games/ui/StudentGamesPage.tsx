@@ -9,6 +9,7 @@ const GAME_ICONS: Record<GameType, string> = {
   memory_match: '🧠',
   sorting: '🗂️',
   vocabulary_cards: '📖',
+  letter_puzzle: '🧩',
 };
 
 const DIFFICULTY_BADGE: Record<string, { label: string; color: string }> = {

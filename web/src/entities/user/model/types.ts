@@ -65,6 +65,9 @@ export interface ProfileResponse {
   phone?: string | null;
   role?: string;
   school_id?: string;
+  school_type?: 'formal' | 'informal';
+  school_settings?: Record<string, unknown>;
+  design_mode?: 'formal' | 'informal' | null;
   student_profile?: StudentProfileData | null;
   parent_profile?: ParentProfileData | null;
   teacher_profile?: TeacherProfileData | null;
