@@ -10,7 +10,7 @@ services:
       APP_DB_PASSWORD: ${APP_DB_PASSWORD:-change-me-app-user}
       APP_READONLY_PASSWORD: ${APP_READONLY_PASSWORD:-change-me-readonly}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
@@ -90,8 +90,9 @@ services:
       APP_ENV: development
       LOG_LEVEL: DEBUG
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:3000}
-      # Seed data on startup for testing
-      SEED_ON_STARTUP: ${SEED_ON_STARTUP:-true}
+      # Dev setup seeds explicitly via `make dev-init` / `make seed`.
+      # Keep startup seeding opt-in to avoid racing manual seed runs during reloads.
+      SEED_ON_STARTUP: ${SEED_ON_STARTUP:-false}
       # OAuth social login (Phase 10)
       GOOGLE_OAUTH_ENABLED: ${GOOGLE_OAUTH_ENABLED:-true}
       GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-mock-client-id}
@@ -148,6 +149,8 @@ services:
       DOCUMENT_STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin123}
       DOCUMENT_STORAGE_FORCE_PATH_STYLE: "true"
     ports:
+      # Bound to all interfaces so mobile devices can reach the dev API over the LAN.
+      # To restrict to localhost only, change to "127.0.0.1:8000:8000".
       - "8000:8000"
     volumes:
       - ../backend/app:/app/app
@@ -163,6 +166,14 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - python -c "import httpx; httpx.get('http://localhost:8000/api/v1/health').raise_for_status()"
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
     networks:
       - ecole-network
     deploy:
@@ -244,6 +255,14 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - python -c "import redis,os,sys; r=redis.from_url(os.environ['REDIS_URL']); sys.exit(0 if r.ping() else 1)"
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
     networks:
       - ecole-network
     deploy:
@@ -277,7 +296,8 @@ services:
       - ../web:/app
       - web_node_modules:/app/node_modules
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - ecole-network
     deploy:
@@ -373,6 +393,12 @@ services:
     environment:
       PORT: 9999
       MOCK_USERS_FILE: /app/fixtures/oauth-users.json
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9999/.well-known/openid-configuration || exit 1"]
+      interval: 10s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
     networks:
       - ecole-network
     deploy:
@@ -382,6 +408,96 @@ services:
           cpus: "0.25"
         reservations:
           memory: 64M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ==================== Test Runner (one-shot, opt-in `tests` profile) ====================
+  # Mirrors ecole-minio-init: a one-shot container that starts ONLY when the
+  # `tests` profile is enabled. It waits for the real dev containers to be
+  # healthy, then runs the backend suite against an ISOLATED `ecole_platform_test`
+  # database on the SAME Postgres — your real `ecole_platform` data is never
+  # touched (the entrypoint hard-refuses any DB name without `_test`). Coverage
+  # (XML + HTML) and junit are written to ./test-artifacts on the host, then the
+  # container exits 0 and STAYS (restart: "no"), exactly like ecole-minio-init,
+  # so you can re-read its logs and the report afterwards.
+  #
+  #   docker compose --profile tests up        # full suite (seq) after health, container stays
+  #   make dtest                                # same, recommended (waits for health first)
+  #
+  # A plain `docker compose up` / `make up` SKIPS this service (profile-gated),
+  # so everyday development startup stays fast.
+  tests:
+    profiles: ["tests"]
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+      target: development
+    image: ecole-backend-tests:dev
+    container_name: ecole-tests-runner
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_started
+      mock-oauth:
+        condition: service_started
+    environment:
+      APP_ENV: test
+      # Same credentials/defaults as the dev Postgres above, so the runner always
+      # authenticates against the real ecole-postgres container.
+      POSTGRES_USER: ${POSTGRES_USER:-ecole}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+      TEST_DB_HOST: postgres
+      TEST_DB_PORT: "5432"
+      TEST_DATABASE_NAME: ecole_platform_test
+      # Isolated test database on the SAME Postgres — real ecole_platform untouched.
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-ecole}:${POSTGRES_PASSWORD:-change-me}@postgres:5432/ecole_platform_test
+      TEST_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-ecole}:${POSTGRES_PASSWORD:-change-me}@postgres:5432/ecole_platform_test
+      REDIS_URL: redis://:${REDIS_PASSWORD:-change-me-dev-redis}@redis:6379/1
+      JWT_SECRET_KEY: test-secret-key-ci-only
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+      REFRESH_TOKEN_EXPIRE_DAYS: "7"
+      MOCK_SMS_ENABLED: "true"
+      MOCK_OAUTH_ENABLED: "true"
+      MOCK_OAUTH_BASE_URL: http://mock-oauth:9999
+      STORAGE_BACKEND: local
+      DOCUMENT_STORAGE_BACKEND: local
+      S3_ENDPOINT: http://minio:9000
+      S3_BUCKET: ecole-test-private
+      S3_REGION: us-east-1
+      S3_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+      S3_FORCE_PATH_STYLE: "true"
+      S3_SSE_ENABLED: "false"
+      RESET_TEST_DB: "1"
+      SEED_ON_STARTUP: "false"
+      TEST_ARTIFACT_ROOT: /artifacts/test-runs/manual
+    working_dir: /app
+    volumes:
+      - ../backend/app:/app/app
+      - ../backend/alembic:/app/alembic
+      - ../backend/tests:/app/tests
+      - ../backend/scripts:/app/scripts
+      - ../backend/alembic.ini:/app/alembic.ini:ro
+      - ../backend/pytest.ini:/app/pytest.ini:ro
+      - ../backend/pyproject.toml:/app/pyproject.toml:ro
+      - ../scripts:/workspace/scripts:ro
+      - ../test-artifacts:/artifacts/test-runs
+    networks:
+      - ecole-network
+    entrypoint: ["/bin/sh", "/app/scripts/docker-test-entrypoint.sh"]
+    # Default = full sequential suite (unit→integration→security→contract→edge)
+    # then combined coverage report (XML + HTML). Override per-suite via the
+    # Makefile `dtest-unit` / `dtest-integration` / … targets.
+    command: ["seq"]
+    # One-shot: run once and stay as `Exited (0)` — never auto-restart.
+    restart: "no"
     logging:
       driver: json-file
       options:

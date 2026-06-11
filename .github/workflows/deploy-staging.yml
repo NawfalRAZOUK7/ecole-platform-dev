@@ -7,9 +7,17 @@ on:
   push:
     branches: [develop]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
 jobs:
   deploy-staging:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     environment: staging
 
     steps:

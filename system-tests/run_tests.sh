@@ -3,7 +3,7 @@
 # Ecole Platform Postman runner
 #
 # Safe by default: this script refuses localhost:8000 because that is the
-# normal dev database target. Use api-test-up or pass a disposable base URL.
+# normal dev database target. Pass a disposable base URL or use make dtest-up.
 # =============================================================================
 
 set -euo pipefail
@@ -83,11 +83,11 @@ assert_safe_target() {
   if [[ "$ROOT_BASE_URL" =~ ^https?://(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\]):8000$ ]] && ! is_true "$ALLOW_DEV_DB"; then
     cat >&2 <<EOF
 Refusing to run Postman against $API_BASE_URL.
-That target is the normal dev DB. Use the disposable API-test stack instead:
+That target is the normal dev DB. Use a disposable backend instead:
 
-  make api-test-up
+  make dtest-up
   POSTMAN_BASE_URL=http://localhost:8010/api/v1 system-tests/run_tests.sh --all
-  make api-test-down
+  make dtest-down
 
 If you intentionally want to dirty the dev DB, rerun with --allow-dev-db.
 EOF

@@ -113,3 +113,6 @@ CLAUDE.md
 CODEX_TRACEABILITY.md
 Conversation_Claude_Cowork.txt
 History_claude.md
+
+# Dockerised test coverage/junit output
+test-artifacts/

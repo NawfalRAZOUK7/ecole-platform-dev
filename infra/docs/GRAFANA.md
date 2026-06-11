@@ -38,9 +38,12 @@ See `provisioning/datasources/` for configuration.
 ## Access
 
 Development:
+
+> **Before running `make monitoring-up`:** set `GRAFANA_ADMIN_PASSWORD` in your `.env` — the stack fails fast if it is missing or empty.
+
 ```bash
 http://localhost:3000
-# Default credentials: admin / admin
+# Credentials: admin / <your GRAFANA_ADMIN_PASSWORD>
 ```
 
 Staging/Production:

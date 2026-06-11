@@ -29,3 +29,20 @@ spec:
       app.kubernetes.io/instance: {{ .Release.Name }}
       app.kubernetes.io/component: web
 {{- end }}
+{{- if .Values.worker.pdb.enabled }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "ecole-platform.fullname" . }}-worker
+  labels:
+    {{- include "ecole.labels" . | nindent 4 }}
+    app.kubernetes.io/component: worker
+spec:
+  minAvailable: {{ .Values.worker.pdb.minAvailable }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Chart.Name }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: worker
+{{- end }}

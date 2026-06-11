@@ -1,0 +1,42 @@
+name: "Setup backend (Python + deps)"
+description: >-
+  Composite step shared by all backend jobs: sets up Python, restores the pip
+  cache, and installs the requested requirements file. Keeps job definitions DRY
+  (no more repeated setup-python + cache + install blocks per job).
+
+inputs:
+  python-version:
+    description: "Python version to set up."
+    required: false
+    default: "3.12"
+  requirements:
+    description: "Requirements file to install (relative to working-directory)."
+    required: false
+    default: "requirements-test.txt"
+  working-directory:
+    description: "Backend directory."
+    required: false
+    default: "backend"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python ${{ inputs.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Cache pip
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: pip-${{ inputs.python-version }}-${{ hashFiles('backend/requirements*.txt') }}
+        restore-keys: |
+          pip-${{ inputs.python-version }}-
+
+    - name: Install dependencies (${{ inputs.requirements }})
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r ${{ inputs.requirements }}

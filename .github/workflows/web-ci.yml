@@ -24,27 +24,30 @@ on:
       - "scripts/generate-openapi.sh"
       - ".github/workflows/web-ci.yml"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   lint-and-typecheck:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     defaults:
       run:
         working-directory: web
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - uses: actions/cache@v4
-        with:
-          path: web/node_modules
-          key: "node-modules-${{ hashFiles('web/package-lock.json') }}"
-      - run: npm ci
+      - name: Set up Node app
+        uses: ./.github/actions/setup-node-app
       - run: npx tsc --noEmit
       - run: npm run lint
 
   unit-tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     needs: lint-and-typecheck
     strategy:
       fail-fast: false
@@ -67,14 +70,8 @@ jobs:
         working-directory: web
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - uses: actions/cache@v4
-        with:
-          path: web/node_modules
-          key: "node-modules-${{ hashFiles('web/package-lock.json') }}"
-      - run: npm ci
+      - name: Set up Node app
+        uses: ./.github/actions/setup-node-app
       - run: npm run test -- ${{ matrix.target }} --maxWorkers=1 --minWorkers=1 --reporter=default --reporter=junit --outputFile=test-results-${{ matrix.name }}.xml
       - uses: actions/upload-artifact@v4
         if: always()
@@ -84,20 +81,15 @@ jobs:
 
   coverage:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     needs: unit-tests
     defaults:
       run:
         working-directory: web
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - uses: actions/cache@v4
-        with:
-          path: web/node_modules
-          key: "node-modules-${{ hashFiles('web/package-lock.json') }}"
-      - run: npm ci
+      - name: Set up Node app
+        uses: ./.github/actions/setup-node-app
       - run: npm run test:coverage -- tests/unit/ --maxWorkers=1 --minWorkers=1
       - uses: actions/upload-artifact@v4
         if: always()
@@ -115,20 +107,15 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     needs: lint-and-typecheck
     defaults:
       run:
         working-directory: web
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - uses: actions/cache@v4
-        with:
-          path: web/node_modules
-          key: "node-modules-${{ hashFiles('web/package-lock.json') }}"
-      - run: npm ci
+      - name: Set up Node app
+        uses: ./.github/actions/setup-node-app
       - run: npm run build
       - name: Check bundle sizes
         run: |

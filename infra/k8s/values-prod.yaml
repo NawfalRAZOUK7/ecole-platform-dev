@@ -11,6 +11,7 @@ backend:
     minReplicas: 2
     maxReplicas: 8
     targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 70
   env:
     APP_ENV: production
     LOG_LEVEL: WARNING
@@ -52,3 +53,18 @@ ingress:
 pdb:
   enabled: true
   minAvailable: 1
+
+networkPolicy:
+  enabled: true            # also restricts ingress + pod-to-pod, the main value
+  s3Egress:
+    # Port 443 = external HTTPS (OAuth, SMS, email — and AWS S3 after migration).
+    # Port 9000 = INTERIM MinIO object storage. Remove 9000 once on AWS S3.
+    ports:
+      - 443
+      - 9000
+    # cidrs: destination ranges for the ports above.
+    #  - INTERIM (MinIO): set to your MinIO host CIDR if it has a fixed address; else 0.0.0.0/0.
+    #  - AWS S3 cutover: prefer an S3 VPC Gateway Endpoint prefix-list (traffic stays internal),
+    #    or 0.0.0.0/0 on port 443 only. Do NOT hand-maintain S3 IP ranges from ip-ranges.json.
+    cidrs:
+      - "0.0.0.0/0"        # interim — tighten at AWS S3 cutover per the note above

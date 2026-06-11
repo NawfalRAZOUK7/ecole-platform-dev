@@ -36,6 +36,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     PIP_NO_CACHE_DIR=0 pip install --no-compile -r requirements-test.txt
 
 COPY . .
+RUN chmod +x /app/scripts/*.sh
 RUN ruff check app/ tests/ && ruff format --check app/ tests/
 
 FROM base AS development
@@ -45,6 +46,14 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     PIP_NO_CACHE_DIR=0 pip install --no-compile -r requirements-test.txt
 
 COPY . .
+RUN chmod +x /app/scripts/*.sh
+
+RUN adduser --disabled-password --gecos '' appuser && \
+    chown -R appuser:appuser /app
+USER appuser
+
+HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
+    CMD ["python", "-c", "import httpx; httpx.get('http://localhost:8000/api/v1/health').raise_for_status()"]
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
@@ -56,6 +65,8 @@ RUN adduser --disabled-password --gecos '' appuser && \
     chown -R appuser:appuser /app
 
 USER appuser
+
+EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD ["python", "-c", "import httpx; httpx.get('http://localhost:8000/api/v1/health').raise_for_status()"]

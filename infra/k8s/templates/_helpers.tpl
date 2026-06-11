@@ -29,3 +29,14 @@ the release name alone to avoid duplication (e.g. "ecole-platform-ecole-platform
 {{- printf "%s-%s" .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" }}
 {{- end }}
 {{- end }}
+
+{{/*
+Service account name — defaults to chart fullname when serviceAccount.create is true.
+*/}}
+{{- define "ecole-platform.serviceAccountName" -}}
+{{- if .Values.serviceAccount.create }}
+{{- default (include "ecole-platform.fullname" .) .Values.serviceAccount.name }}
+{{- else }}
+{{- default "default" .Values.serviceAccount.name }}
+{{- end }}
+{{- end }}

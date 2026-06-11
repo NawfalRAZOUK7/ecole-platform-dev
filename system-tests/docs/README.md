@@ -11,20 +11,13 @@ Manual API testing collections and load test scripts. Complements automated pyte
 
 ## Safe Execution
 
-Start an isolated backend on `localhost:8010`, run the API/load checks, then remove the stack and its volumes:
+Start the dev stack, run the API/load checks, then tear it down:
 
 ```bash
-make api-test-up
+make dtest-up
 make test-postman
 make test-load
-make api-test-down
-```
-
-Or run the same API/system checks inside the Dockerized test matrix:
-
-```bash
-make docker-test-postman
-make docker-test-load
+make dtest-down
 ```
 
 Reports are written under `artifacts/test-runs/<run-id>/`.

@@ -51,16 +51,15 @@ docker compose -f infra/docker-compose.dev.yml up
 | `docker-compose.staging.yml`                           | Pre-production parity checks.                                                                                      |
 | `docker-compose.prod.yml`                              | Production with PgBouncer, PostgreSQL + replica, Redis, backend, web, worker, nginx, certbot, Prometheus, Grafana. |
 | `docker-compose.monitoring.yml`                        | Observability only: Prometheus, Grafana, Loki, Tempo, Promtail, Alertmanager.                                      |
-| `docker-compose.tests.yml`                             | Disposable Docker test matrix for backend pytest, Postman/Newman, k6 smoke, and infra validation.                  |
+| `docker-compose.dev.yml` → `tests` profile             | One-shot test runner (service `tests` / `ecole-tests-runner`) — reuses dev containers against isolated `ecole_platform_test` DB. Run via `make dtest*`.                        |
 | `docker-compose.blue.yml` / `docker-compose.green.yml` | Blue/green app instances for zero-downtime cutover.                                                                |
-| `docker-compose.api-test.yml`                          | Lean stack for API / contract testing in CI or locally.                                                            |
 | `docker-compose.override.yml.example`                  | Copy to `docker-compose.override.yml` (gitignored) for machine-specific ports and env.                             |
 
 Secrets and environment-specific values are typically injected via **Doppler** or env files — see [`DEPLOYMENT.md`](DEPLOYMENT.md) and [`doppler/`](doppler/) scripts.
 
 ## Structure Conventions
 
-- Compose files stay at the `infra/` root. Use `docker-compose.dev.yml` for local development, `docker-compose.tests.yml` for the Dockerized test matrix, `docker-compose.api-test.yml` for lean backend API/system-test support, `docker-compose.monitoring.yml` for observability-only work, and the staging/prod/blue/green files for deployment flows.
+- Compose files stay at the `infra/` root. Use `docker-compose.dev.yml` for local development (it also carries the `tests` profile for the Dockerized test runner — `make dtest*`), `docker-compose.monitoring.yml` for observability-only work, and the staging/prod/blue/green files for deployment flows. The legacy `docker-compose.tests.yml`, `docker-compose.api-test.yml`, and the former `docker-compose.test.override.yml` (now merged into the `tests` profile of `docker-compose.dev.yml`) have been archived under `infra/_archive/`.
 - Kubernetes assets stay under `infra/k8s/`. Shared defaults live in `values.yaml`; keep environment-specific settings in the matching values file. The Helm chart includes 12 resource templates plus 2 Helm helper files.
 - Secrets are owned by Doppler or ignored local files under `infra/secrets/`. Do not commit rendered secret values.
 - Database bootstrap is split deliberately: `infra/postgres/init.sql` owns roles, extensions, and privileges only; application tables, indexes, constraints, and enums are owned by Alembic migrations under `backend/alembic/`.

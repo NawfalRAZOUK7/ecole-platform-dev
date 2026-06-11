@@ -10,10 +10,18 @@ on:
       - main # → production
       - develop # → staging
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
 jobs:
   build-and-push:
     name: Build & Push Images
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     permissions:
       contents: read
       packages: write
@@ -69,6 +77,7 @@ jobs:
   deploy:
     name: Deploy to ${{ github.ref_name == 'main' && 'Production' || 'Staging' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     needs: build-and-push
     environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
     steps:

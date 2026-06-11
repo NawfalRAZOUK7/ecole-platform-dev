@@ -51,11 +51,15 @@ spec:
       ports:
         - protocol: TCP
           port: 6379
-    # Allow external S3/MinIO access
-    - to: []
+    # Allow external S3/MinIO access — override s3Egress.cidrs and s3Egress.ports in values
+    - to:
+        {{- range .Values.networkPolicy.s3Egress.cidrs }}
+        - ipBlock:
+            cidr: {{ . }}
+        {{- end }}
       ports:
+        {{- range .Values.networkPolicy.s3Egress.ports }}
         - protocol: TCP
-          port: 443
-        - protocol: TCP
-          port: 9000
+          port: {{ . }}
+        {{- end }}
 {{- end }}

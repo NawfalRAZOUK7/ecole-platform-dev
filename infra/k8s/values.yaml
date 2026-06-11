@@ -21,14 +21,23 @@ namespace:
 images:
   backend:
     repository: ghcr.io/ecole-platform/backend
-    tag: latest
-    pullPolicy: IfNotPresent
+    # "0.0.0.0-set-me" forces an explicit override — never deploy with this value.
+    tag: "0.0.0-set-me"
+    # Always because tags are mutable; pin a digest in production for full reproducibility.
+    pullPolicy: Always
   web:
     repository: ghcr.io/ecole-platform/web
-    tag: latest
-    pullPolicy: IfNotPresent
+    tag: "0.0.0-set-me"
+    pullPolicy: Always
 
 imagePullSecrets: []
+
+# ---------------------------------------------------------------------------
+# Service Account
+# ---------------------------------------------------------------------------
+serviceAccount:
+  create: true
+  name: ""  # Defaults to chart fullname when empty
 
 # ---------------------------------------------------------------------------
 # Backend (FastAPI)
@@ -77,6 +86,9 @@ backend:
 # ---------------------------------------------------------------------------
 worker:
   replicas: 1
+  pdb:
+    enabled: true
+    minAvailable: 1
   resources:
     requests:
       cpu: 100m
@@ -124,6 +136,16 @@ pdb:
 networkPolicy:
   enabled: false
   ingressNamespace: ingress-nginx
+  s3Egress:
+    # Replace with the actual CIDR(s) of your S3/MinIO endpoint in values-prod.yaml.
+    # 0.0.0.0/0 is intentionally permissive for dev; tighten before enabling networkPolicy.
+    cidrs:
+      - "0.0.0.0/0"
+    # Port 443 = external HTTPS (S3, OAuth, email, etc.)
+    # Port 9000 = MinIO — remove once migrated to AWS S3.
+    ports:
+      - 443
+      - 9000
 
 # ---------------------------------------------------------------------------
 # External services (managed — not deployed in k8s)

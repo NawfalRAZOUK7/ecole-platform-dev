@@ -17,10 +17,18 @@ on:
       - "mobile/**"
       - ".github/workflows/mobile-ci.yml"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   analyze-and-test:
     name: Analyze + Test (Flutter)
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     defaults:
       run:
         working-directory: mobile
@@ -61,6 +69,7 @@ jobs:
   integration-tests:
     name: Integration Tests (Flutter iOS Simulator)
     runs-on: macos-latest
+    timeout-minutes: 45
     needs: analyze-and-test
     strategy:
       fail-fast: false
