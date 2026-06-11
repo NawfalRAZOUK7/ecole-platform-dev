@@ -1,4 +1,4 @@
-.PHONY: audit-export backup backup-status build build-prod clean deploy-blue-green deploy-rollback deploy-status design-tokens dev-init dev-reset docker-prune docs docs-schema doppler-run down format health hooks-install lint lint-fix logs migrate migrate-down migrate-new migrate-status migrate-validate monitoring-down monitoring-up ngrok-webhook openapi openapi-check prod-down prod-logs prod-up redis-cli redis-cli-staging restart restore restore-drill rotate-all rotate-db rotate-jwt rotate-redis seed seed-all seed-audit seed-core seed-friend-content shell shell-db shell-db-staging staging-down staging-logs staging-up status test test-cov test-full test-integration test-load test-perf test-postman test-postman-full test-postman-phases test-postman-scenarios test-security test-unit up up-doppler version web-install web-lint worker worker-logs mobile-run mobile-build mobile-test web-build web-test web-test-e2e web-format pre-rollout
+.PHONY: audit-export backup backup-status build build-prod clean deploy-blue-green deploy-rollback deploy-status design-tokens dev-init dev-reset docker-prune docs docs-schema doppler-run down format health hooks-install lint lint-fix logs migrate migrate-down migrate-new migrate-status migrate-validate monitoring-down monitoring-up ngrok-webhook openapi openapi-check prod-down prod-logs prod-up redis-cli redis-cli-staging restart restore restore-drill rotate-all rotate-db rotate-jwt rotate-redis seed seed-all seed-audit seed-core seed-friend-content shell shell-db shell-db-staging staging-down staging-logs staging-up status test test-cov test-full test-integration test-load test-perf test-postman test-postman-full test-postman-phases test-postman-scenarios test-security test-unit up up-doppler version web-install web-lint worker worker-logs mobile-run mobile-build mobile-clean mobile-test mobile-run-sim mobile-run-iphone mobile-run-device mobile-full web-build web-test web-test-e2e web-format pre-rollout
 
 # ==================== Compose Files ====================
 COMPOSE_FILE = infra/docker-compose.dev.yml
@@ -380,69 +380,112 @@ web-format:
 
 # ==================== Mobile ====================
 
-MOBILE_API_BASE_URL ?= http://localhost:8000
-MOBILE_DEVICE_ID ?=
-MOBILE_FLUTTER_ARGS ?=
-MOBILE_DETACH ?= false
-MOBILE_BUNDLE_ID ?= com.ecole.platform
+# Device identifiers
+IPHONE_DEVICE_ID := 00008101-000531A20C61001E
+SIMULATOR_UUID   := 5D2FCB5F-1EA7-435B-B342-939CB46DC2D7
 
-mobile-run:
-	@command -v flutter >/dev/null 2>&1 || { echo "Flutter CLI not found. Install Flutter first."; exit 1; }
+# Legacy vars kept for mobile-run backward-compat
+MOBILE_DEVICE_ID    ?=
+MOBILE_FLUTTER_ARGS ?=
+MOBILE_BUNDLE_ID    ?= com.ecole.platform
+
+mobile-clean:  ## Kill Xcode build helpers, clear DerivedData, flutter clean
+	@echo "[ 1/3 ] killing Xcode build services"
+	@pkill -9 -f XCBBuildService 2>/dev/null || true
+	@echo "[ 2/3 ] clearing DerivedData"
+	@rm -rf ~/Library/Developer/Xcode/DerivedData
+	@echo "[ 3/3 ] flutter clean"
+	cd mobile && flutter clean
+
+mobile-build:  ## pub get + Xcode config + pod install + build iOS debug
+	cd mobile && flutter pub get
+	cd mobile && flutter build ios --config-only
+	cd mobile/ios && pod install
+	cd mobile && flutter build ios --debug
+
+mobile-run:  ## Generic run — Flutter device picker (simulator or any attached device)
+	@command -v flutter >/dev/null 2>&1 || { echo "Flutter CLI not found."; exit 1; }
 	@test -f mobile/.env || cp mobile/.env.example mobile/.env
-	@if grep -q '^API_BASE_URL=' mobile/.env; then \
-		sed -i.bak 's#^API_BASE_URL=.*#API_BASE_URL=$(MOBILE_API_BASE_URL)#' mobile/.env && rm -f mobile/.env.bak; \
-	else \
-		printf '\nAPI_BASE_URL=$(MOBILE_API_BASE_URL)\n' >> mobile/.env; \
-	fi
 	@grep -q '^APP_ENV=' mobile/.env || printf '\nAPP_ENV=development\n' >> mobile/.env
-	@curl -sf http://localhost:8000/api/v1/health >/dev/null || echo "Warning: backend health check failed at http://localhost:8000/api/v1/health"
 	@device_id="$(MOBILE_DEVICE_ID)"; \
 	if [ -z "$$device_id" ]; then \
 		device_id=$$(xcrun simctl list devices booted 2>/dev/null | sed -n 's/.*(\([0-9A-F-]\{36\}\)) (Booted).*/\1/p' | head -1); \
 	fi; \
-	if [ -z "$$device_id" ]; then \
-		echo "No booted iOS simulator detected. Opening Simulator..."; \
-		open -a Simulator; \
-		sleep 5; \
-		device_id=$$(xcrun simctl list devices booted 2>/dev/null | sed -n 's/.*(\([0-9A-F-]\{36\}\)) (Booted).*/\1/p' | head -1); \
-	fi; \
 	cd mobile && flutter pub get; \
-	fallback_ios() { \
-		if [ -z "$$device_id" ]; then \
-			echo "No booted iOS simulator ID available for fallback."; \
-			return 1; \
-		fi; \
-		echo "Flutter run failed. Falling back to build/install/launch on iOS simulator $$device_id"; \
-		flutter build ios --simulator --debug && \
-		xcrun simctl install "$$device_id" build/ios/iphonesimulator/Runner.app && \
-		xcrun simctl launch --terminate-running-process "$$device_id" $(MOBILE_BUNDLE_ID); \
-	}; \
-	if [ "$(MOBILE_DETACH)" = "true" ]; then \
-		if [ -n "$$device_id" ]; then \
-			echo "Running mobile app in background on iOS simulator $$device_id"; \
-			nohup flutter run -d "$$device_id" $(MOBILE_FLUTTER_ARGS) </dev/null > ../mobile-run.log 2>&1 & \
-		else \
-			echo "Running mobile app in background with Flutter device picker fallback"; \
-			nohup flutter run $(MOBILE_FLUTTER_ARGS) </dev/null > ../mobile-run.log 2>&1 & \
-		fi; \
-		sleep 2; \
-		xcrun simctl launch booted $(MOBILE_BUNDLE_ID) >/dev/null 2>&1 || true; \
-		echo "Mobile launch started. Logs: ./mobile-run.log"; \
+	if [ -n "$$device_id" ]; then \
+		flutter run -d "$$device_id" $(MOBILE_FLUTTER_ARGS); \
 	else \
-		if [ -n "$$device_id" ]; then \
-			echo "Running mobile app on iOS simulator $$device_id"; \
-			flutter run -d "$$device_id" $(MOBILE_FLUTTER_ARGS) || fallback_ios; \
-		else \
-			echo "No simulator ID found. Falling back to Flutter device picker."; \
-			flutter run $(MOBILE_FLUTTER_ARGS); \
-		fi; \
+		flutter run $(MOBILE_FLUTTER_ARGS); \
 	fi
 
-mobile-build:
-	cd mobile && flutter build apk
+mobile-run-sim:  ## Patch .env to localhost + run on iPhone 17 simulator
+	@if grep -q '^API_BASE_URL=' mobile/.env; then \
+		sed -i.bak 's#^API_BASE_URL=.*#API_BASE_URL=http://localhost:8000#' mobile/.env && rm -f mobile/.env.bak; \
+	else \
+		printf '\nAPI_BASE_URL=http://localhost:8000\n' >> mobile/.env; \
+	fi
+	cd mobile && flutter run -d $(SIMULATOR_UUID)
 
-mobile-test:
+mobile-run-iphone:  ## Auto-detect USB IP → patch .env → run --profile on Nawfal's iPhone
+	@IP=$$(ipconfig getifaddr en7 2>/dev/null || ipconfig getifaddr en8 2>/dev/null); \
+	if [ -z "$$IP" ]; then \
+		echo "ERROR: No USB link-local IP found. Make sure iPhone is connected via USB."; \
+		echo "  Try: ipconfig getifaddr en7"; \
+		exit 1; \
+	fi; \
+	echo "  USB link-local IP: $$IP  →  patching mobile/.env"; \
+	if grep -q '^API_BASE_URL=' mobile/.env; then \
+		sed -i.bak "s#^API_BASE_URL=.*#API_BASE_URL=http://$$IP:8000#" mobile/.env && rm -f mobile/.env.bak; \
+	else \
+		printf '\nAPI_BASE_URL=http://$$IP:8000\n' >> mobile/.env; \
+	fi
+	cd mobile && flutter run --profile -d $(IPHONE_DEVICE_ID)
+
+mobile-run-device:  ## Auto-detect USB IP → patch .env → run --profile on any physical iOS device
+	@IP=$$(ipconfig getifaddr en7 2>/dev/null || ipconfig getifaddr en8 2>/dev/null); \
+	if [ -z "$$IP" ]; then \
+		echo "ERROR: No USB link-local IP found. Make sure device is connected via USB."; \
+		exit 1; \
+	fi; \
+	echo "  USB link-local IP: $$IP  →  patching mobile/.env"; \
+	if grep -q '^API_BASE_URL=' mobile/.env; then \
+		sed -i.bak "s#^API_BASE_URL=.*#API_BASE_URL=http://$$IP:8000#" mobile/.env && rm -f mobile/.env.bak; \
+	else \
+		printf '\nAPI_BASE_URL=http://$$IP:8000\n' >> mobile/.env; \
+	fi
+	cd mobile && flutter run --profile
+
+mobile-test:  ## Run Flutter unit tests
 	cd mobile && flutter test
+
+mobile-full:  ## FROM SCRATCH → iPhone: clean + deps + pods + IP patch + run --profile
+	@echo "══════════════════════════════════════════════"
+	@echo "  Mobile full pipeline  (scratch → iPhone)"
+	@echo "══════════════════════════════════════════════"
+	@echo "[ 1/5 ] kill Xcode helpers + clear DerivedData"
+	@pkill -9 -f XCBBuildService 2>/dev/null || true
+	@rm -rf ~/Library/Developer/Xcode/DerivedData
+	@echo "[ 2/5 ] flutter clean + pub get"
+	cd mobile && flutter clean && flutter pub get
+	@echo "[ 3/5 ] generate Xcode config"
+	cd mobile && flutter build ios --config-only
+	@echo "[ 4/5 ] pod install"
+	cd mobile/ios && pod install
+	@echo "[ 5/5 ] detect USB IP + patch .env + flutter run --profile"
+	@IP=$$(ipconfig getifaddr en7 2>/dev/null || ipconfig getifaddr en8 2>/dev/null); \
+	if [ -z "$$IP" ]; then \
+		echo "ERROR: No USB link-local IP found. Plug in iPhone via USB, then retry."; \
+		echo "  Tip: ipconfig getifaddr en7"; \
+		exit 1; \
+	fi; \
+	echo "  USB IP: $$IP  →  updating mobile/.env"; \
+	if grep -q '^API_BASE_URL=' mobile/.env; then \
+		sed -i.bak "s#^API_BASE_URL=.*#API_BASE_URL=http://$$IP:8000#" mobile/.env && rm -f mobile/.env.bak; \
+	else \
+		printf '\nAPI_BASE_URL=http://$$IP:8000\n' >> mobile/.env; \
+	fi; \
+	echo "  API_BASE_URL=http://$$IP:8000"
+	cd mobile && flutter run --profile -d $(IPHONE_DEVICE_ID)
 
 # ==================== Maintenance ====================
 

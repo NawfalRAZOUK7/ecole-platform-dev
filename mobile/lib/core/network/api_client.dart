@@ -130,8 +130,8 @@ class ApiClient {
         _dio = Dio(
           BaseOptions(
             baseUrl: '$baseUrl$_apiBase',
-            connectTimeout: const Duration(seconds: 15),
-            receiveTimeout: const Duration(seconds: 15),
+            connectTimeout: const Duration(seconds: 30),
+            receiveTimeout: const Duration(seconds: 30),
           ),
         );
 
@@ -415,7 +415,34 @@ class ApiClient {
         ),
       );
     }
-    return DownloadMetadata.fromJson(body);
+    return _normalizeDownloadUrl(DownloadMetadata.fromJson(body));
+  }
+
+  // Backend local-storage URLs embed localhost, which only works on the Mac.
+  // Rewrite the origin to match the configured base URL so real devices can
+  // reach the file over USB link-local or LAN.
+  DownloadMetadata _normalizeDownloadUrl(DownloadMetadata metadata) {
+    final url = metadata.downloadUrl;
+    final isLocal = url.startsWith('http://localhost:') ||
+        url.startsWith('https://localhost:') ||
+        url.startsWith('http://127.0.0.1:') ||
+        url.startsWith('https://127.0.0.1:');
+    if (!isLocal) return metadata;
+    final configuredUri = Uri.parse(_dio.options.baseUrl);
+    final rewritten = Uri.parse(url)
+        .replace(
+            scheme: configuredUri.scheme,
+            host: configuredUri.host,
+            port: configuredUri.port)
+        .toString();
+    return DownloadMetadata(
+      downloadUrl: rewritten,
+      expiresAt: metadata.expiresAt,
+      mimeType: metadata.mimeType,
+      size: metadata.size,
+      filename: metadata.filename,
+      etag: metadata.etag,
+    );
   }
 
   Future<File> downloadSignedUrl(

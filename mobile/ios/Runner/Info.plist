@@ -66,5 +66,11 @@
 				</array>
 			</dict>
 		</array>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<!-- Dev only: allow cleartext HTTP to the local/LAN backend during development. -->
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
 	</dict>
+</dict>
 </plist>
