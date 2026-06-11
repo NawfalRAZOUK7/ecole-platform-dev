@@ -143,7 +143,9 @@ async def get_student_rewards(
     return success_response(await service.get_student_rewards(student_id=student_id))
 
 
-@router.get("/student/{student_id}/history", summary="Get reward history for one student")
+@router.get(
+    "/student/{student_id}/history", summary="Get reward history for one student"
+)
 async def get_student_reward_history(
     student_id: uuid.UUID,
     limit: int = Query(10, ge=1, le=100),

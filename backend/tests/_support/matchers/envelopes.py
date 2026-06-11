@@ -46,9 +46,11 @@ def assert_error_envelope(
     err = payload["error"]
     assert "message" in err, f"error block missing 'message': {err!r}"
     if code is not None:
-        assert err.get("code") == code, f"expected error code {code!r}, got {err.get('code')!r}"
+        assert (
+            err.get("code") == code
+        ), f"expected error code {code!r}, got {err.get('code')!r}"
     if category is not None:
-        assert err.get("category") == category, (
-            f"expected category {category!r}, got {err.get('category')!r}"
-        )
+        assert (
+            err.get("category") == category
+        ), f"expected category {category!r}, got {err.get('category')!r}"
     return err

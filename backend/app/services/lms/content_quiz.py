@@ -306,9 +306,7 @@ class ContentQuizService:
 
         types = _normalize_types(getattr(body, "question_types", None))
         count = max(1, int(getattr(body, "count", 5) or 5))
-        sources = [
-            s.lower() for s in (getattr(body, "sources", None) or ["template"])
-        ]
+        sources = [s.lower() for s in (getattr(body, "sources", None) or ["template"])]
         language = content.language or "fr"
 
         generated: list[dict[str, Any]] = []

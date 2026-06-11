@@ -36,7 +36,9 @@ GLOBAL_TABLES = {"schools"}
 
 def _table(name: str):
     table = Base.metadata.tables.get(name)
-    assert table is not None, f"expected table '{name}' to be registered on Base.metadata"
+    assert (
+        table is not None
+    ), f"expected table '{name}' to be registered on Base.metadata"
     return table
 
 
@@ -55,13 +57,14 @@ class TestSchoolIdForeignKeys:
 
 class TestCoreTenantTables:
     def test_core_tables_have_school_id(self) -> None:
-        missing = [t for t in CORE_TENANT_TABLES if "school_id" not in _table(t).columns]
+        missing = [
+            t for t in CORE_TENANT_TABLES if "school_id" not in _table(t).columns
+        ]
         assert missing == [], f"core tenant tables missing school_id: {missing}"
 
     def test_core_tables_school_id_is_not_null(self) -> None:
         nullable = [
-            t for t in CORE_TENANT_TABLES
-            if _table(t).columns["school_id"].nullable
+            t for t in CORE_TENANT_TABLES if _table(t).columns["school_id"].nullable
         ]
         assert nullable == [], f"core tenant tables with nullable school_id: {nullable}"
 

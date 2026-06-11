@@ -85,7 +85,9 @@ async def seed_onboarding_applications(session: AsyncSession) -> None:
             reviewed_at=now - timedelta(days=2),
         ),
         SchoolApplication(
-            id=uuid.uuid5(uuid.NAMESPACE_URL, "onboarding:micro:needs-info:rawd-yasmine"),
+            id=uuid.uuid5(
+                uuid.NAMESPACE_URL, "onboarding:micro:needs-info:rawd-yasmine"
+            ),
             application_type=ApplicationType.MICRO_SCHOOL.value,
             status=ApplicationStatus.NEEDS_INFO.value,
             applicant_name="Mme Yasmine Farah",

@@ -107,7 +107,8 @@ class _ApplyScreenState extends ConsumerState<ApplyScreen> {
     if (_sent) {
       return Scaffold(
         appBar: AppBar(
-            title: Text(tr('Demande envoyée', 'Request sent', 'تم الإرسال')),),
+          title: Text(tr('Demande envoyée', 'Request sent', 'تم الإرسال')),
+        ),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -139,7 +140,8 @@ class _ApplyScreenState extends ConsumerState<ApplyScreen> {
     final isFormal = _type == 'formal_school';
     return Scaffold(
       appBar: AppBar(
-          title: Text(tr("Demande d'inscription", 'Apply', 'طلب التسجيل')),),
+        title: Text(tr("Demande d'inscription", 'Apply', 'طلب التسجيل')),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -161,17 +163,26 @@ class _ApplyScreenState extends ConsumerState<ApplyScreen> {
           ),
           const SizedBox(height: 12),
           _field(_name, tr('Votre nom *', 'Your name *', 'اسمك *')),
-          _field(_email, tr('Email *', 'Email *', 'البريد *'),
-              keyboard: TextInputType.emailAddress,),
-          _field(_phone, tr('Téléphone', 'Phone', 'الهاتف'),
-              keyboard: TextInputType.phone,),
+          _field(
+            _email,
+            tr('Email *', 'Email *', 'البريد *'),
+            keyboard: TextInputType.emailAddress,
+          ),
+          _field(
+            _phone,
+            tr('Téléphone', 'Phone', 'الهاتف'),
+            keyboard: TextInputType.phone,
+          ),
           _field(_city, tr('Ville', 'City', 'المدينة')),
           _field(
             _orgName,
             isFormal
                 ? tr("Nom de l'école *", 'School name *', 'اسم المدرسة *')
-                : tr('Nom de la micro-école *', 'Micro-school name *',
-                    'اسم المدرسة المصغّرة *',),
+                : tr(
+                    'Nom de la micro-école *',
+                    'Micro-school name *',
+                    'اسم المدرسة المصغّرة *',
+                  ),
           ),
           _field(_address, tr('Adresse', 'Address', 'العنوان')),
           _field(
@@ -181,8 +192,11 @@ class _ApplyScreenState extends ConsumerState<ApplyScreen> {
                 : tr('Quartier', 'Neighborhood', 'الحي'),
           ),
           if (!isFormal)
-            _field(_capacity, tr('Capacité', 'Capacity', 'السعة'),
-                keyboard: TextInputType.number,),
+            _field(
+              _capacity,
+              tr('Capacité', 'Capacity', 'السعة'),
+              keyboard: TextInputType.number,
+            ),
           _field(_notes, tr('Message', 'Message', 'رسالة'), maxLines: 3),
           if (_error != null) ...[
             const SizedBox(height: 8),
@@ -191,9 +205,11 @@ class _ApplyScreenState extends ConsumerState<ApplyScreen> {
           const SizedBox(height: 16),
           FilledButton(
             onPressed: _submitting ? null : _submit,
-            child: Text(_submitting
-                ? tr('Envoi…', 'Sending…', 'جارٍ الإرسال…')
-                : tr('Envoyer la demande', 'Send request', 'إرسال الطلب'),),
+            child: Text(
+              _submitting
+                  ? tr('Envoi…', 'Sending…', 'جارٍ الإرسال…')
+                  : tr('Envoyer la demande', 'Send request', 'إرسال الطلب'),
+            ),
           ),
         ],
       ),
@@ -213,7 +229,9 @@ class _ApplyScreenState extends ConsumerState<ApplyScreen> {
         keyboardType: keyboard,
         maxLines: maxLines,
         decoration: InputDecoration(
-            labelText: label, border: const OutlineInputBorder(),),
+          labelText: label,
+          border: const OutlineInputBorder(),
+        ),
       ),
     );
   }

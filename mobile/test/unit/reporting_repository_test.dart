@@ -70,7 +70,11 @@ void main() {
             {'full_name': 'Alice', 'email': 'alice@school.ma', 'id': 'stu-1'},
           ],
           'parents': [
-            {'full_name': 'M. Alaoui', 'email': 'alaoui@gmail.com', 'id': 'par-1'},
+            {
+              'full_name': 'M. Alaoui',
+              'email': 'alaoui@gmail.com',
+              'id': 'par-1'
+            },
           ],
         }),
       );
@@ -147,7 +151,8 @@ void main() {
         () => api.list('/reports', params: any(named: 'params')),
       ).thenAnswer((_) async => listResponse([]));
 
-      await repo.getReportJobs(cursor: 'cur-1', type: 'grades', status: 'completed');
+      await repo.getReportJobs(
+          cursor: 'cur-1', type: 'grades', status: 'completed');
 
       final captured = verify(
         () => api.list('/reports', params: captureAny(named: 'params')),
@@ -157,7 +162,8 @@ void main() {
       expect(captured['status'], 'completed');
     });
 
-    test('falls back to cached reports on offline error (first page)', () async {
+    test('falls back to cached reports on offline error (first page)',
+        () async {
       when(
         () => api.list(any(), params: any(named: 'params')),
       ).thenThrow(offlineError());
@@ -169,7 +175,8 @@ void main() {
       expect(result.hasMore, isFalse);
     });
 
-    test('rethrows offline error when fetching paginated pages (cursor set)', () async {
+    test('rethrows offline error when fetching paginated pages (cursor set)',
+        () async {
       when(
         () => api.list(any(), params: any(named: 'params')),
       ).thenThrow(offlineError());
@@ -297,10 +304,12 @@ void main() {
       when(() => api.get('/analytics/overview', params: any(named: 'params')))
           .thenAnswer((_) async => response({'metrics': <dynamic>[]}));
 
-      await repo.getOverview(fromDate: '2026-01-01', toDate: '2026-06-01', compare: true);
+      await repo.getOverview(
+          fromDate: '2026-01-01', toDate: '2026-06-01', compare: true);
 
       final params = verify(
-        () => api.get('/analytics/overview', params: captureAny(named: 'params')),
+        () =>
+            api.get('/analytics/overview', params: captureAny(named: 'params')),
       ).captured.first as Map<String, dynamic>;
       expect(params['from'], '2026-01-01');
       expect(params['compare'], 'true');
@@ -462,7 +471,8 @@ void main() {
 
     test('updateSchedule updates and returns schedule', () async {
       when(() => api.put('/reports/schedules/sch-1', body: any(named: 'body')))
-          .thenAnswer((_) async => response({...scheduleJson, 'is_active': false}));
+          .thenAnswer(
+              (_) async => response({...scheduleJson, 'is_active': false}));
 
       final result = await repo.updateSchedule(id: 'sch-1', isActive: false);
 
@@ -480,7 +490,8 @@ void main() {
 
     test('runSchedule triggers run and returns job', () async {
       when(
-        () => api.post('/reports/schedules/sch-1/run', body: any(named: 'body')),
+        () =>
+            api.post('/reports/schedules/sch-1/run', body: any(named: 'body')),
       ).thenAnswer((_) async => response(_jobJson(status: 'pending')));
 
       final result = await repo.runSchedule('sch-1');

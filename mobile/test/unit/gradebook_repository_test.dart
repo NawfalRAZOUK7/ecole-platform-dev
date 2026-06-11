@@ -179,12 +179,14 @@ void main() {
       await repo.updateGrades(update);
 
       final body = verify(
-        () => api.post('/gradebook/bulk-update', body: captureAny(named: 'body')),
+        () =>
+            api.post('/gradebook/bulk-update', body: captureAny(named: 'body')),
       ).captured.first as Map<String, dynamic>;
       expect(body['class_id'], 'cls-1');
       expect((body['grades'] as List).first['value'], 18.0);
       verify(() => cache.invalidate('gradebook:grid:cls-1')).called(1);
-      verify(() => cache.invalidatePrefix('gradebook:summary:cls-1:')).called(1);
+      verify(() => cache.invalidatePrefix('gradebook:summary:cls-1:'))
+          .called(1);
     });
   });
 
@@ -212,7 +214,7 @@ void main() {
           '/gradebook/classes/cls-1/summary',
           params: any(named: 'params'),
         ),
-      ).thenAnswer((_) async => response({...  _summaryJson, 'period_id': null}));
+      ).thenAnswer((_) async => response({..._summaryJson, 'period_id': null}));
 
       await repo.getWeightedSummary('cls-1');
 
@@ -245,7 +247,8 @@ void main() {
           params: any(named: 'params'),
         ),
       ).thenAnswer(
-        (_) async => response({'download_url': 'https://cdn.example.com/grades.csv'}),
+        (_) async =>
+            response({'download_url': 'https://cdn.example.com/grades.csv'}),
       );
 
       final url = await repo.exportGrades('cls-1');
@@ -286,9 +289,10 @@ void main() {
 
   group('getCategories', () {
     test('returns list of category strings', () async {
-      when(() => api.get('/gradebook/classes/cls-1/categories'))
-          .thenAnswer(
-        (_) async => response({'categories': ['Quiz', 'Exam', 'Homework']}),
+      when(() => api.get('/gradebook/classes/cls-1/categories')).thenAnswer(
+        (_) async => response({
+          'categories': ['Quiz', 'Exam', 'Homework']
+        }),
       );
 
       final result = await repo.getCategories('cls-1');

@@ -4,7 +4,13 @@ from __future__ import annotations
 
 import pytest
 
-from tests.security.conftest import ADMIN_ID, PARENT_ID, STUDENT_ID, TEACHER_ID, auth_header
+from tests.security.conftest import (
+    ADMIN_ID,
+    PARENT_ID,
+    STUDENT_ID,
+    TEACHER_ID,
+    auth_header,
+)
 
 
 async def create_direct_conversation(

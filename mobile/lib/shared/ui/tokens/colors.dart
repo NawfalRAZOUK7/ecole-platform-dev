@@ -472,16 +472,14 @@ class KidsThemeColors extends ThemeExtension<KidsThemeColors> {
       primary: Color.lerp(primary, other.primary, t) ?? primary,
       primaryLight:
           Color.lerp(primaryLight, other.primaryLight, t) ?? primaryLight,
-      primaryDark:
-          Color.lerp(primaryDark, other.primaryDark, t) ?? primaryDark,
+      primaryDark: Color.lerp(primaryDark, other.primaryDark, t) ?? primaryDark,
       text: Color.lerp(text, other.text, t) ?? text,
       textSecondary:
           Color.lerp(textSecondary, other.textSecondary, t) ?? textSecondary,
       border: Color.lerp(border, other.border, t) ?? border,
       xp: Color.lerp(xp, other.xp, t) ?? xp,
-      xpBarBackground:
-          Color.lerp(xpBarBackground, other.xpBarBackground, t) ??
-              xpBarBackground,
+      xpBarBackground: Color.lerp(xpBarBackground, other.xpBarBackground, t) ??
+          xpBarBackground,
       level: Color.lerp(level, other.level, t) ?? level,
       streak: Color.lerp(streak, other.streak, t) ?? streak,
     );
@@ -531,5 +529,7 @@ extension AppThemeDataColors on ThemeData {
 
   KidsThemeColors get kidsPalette =>
       extension<KidsThemeColors>() ??
-      (brightness == Brightness.dark ? KidsThemeColors.dark : KidsThemeColors.light);
+      (brightness == Brightness.dark
+          ? KidsThemeColors.dark
+          : KidsThemeColors.light);
 }

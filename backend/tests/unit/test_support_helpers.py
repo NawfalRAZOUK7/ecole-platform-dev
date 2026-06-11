@@ -49,7 +49,12 @@ class TestAuthContextBuilder:
 class TestSchoolApplicationBuilder:
     def test_payload_has_required_fields(self) -> None:
         payload = SchoolApplicationBuilder().micro_school().as_payload()
-        assert {"applicant_name", "applicant_email", "org_name", "language"} <= payload.keys()
+        assert {
+            "applicant_name",
+            "applicant_email",
+            "org_name",
+            "language",
+        } <= payload.keys()
 
     def test_model_is_pending_application(self) -> None:
         model = SchoolApplicationBuilder().formal_school().as_model()
@@ -95,7 +100,9 @@ class TestEnvelopeMatchers:
         assert assert_list_envelope(payload, min_items=2) == [1, 2]
 
     def test_error_envelope_with_code(self) -> None:
-        payload = {"error": {"code": "ERR-APP-404", "message": "x", "category": "resource"}}
+        payload = {
+            "error": {"code": "ERR-APP-404", "message": "x", "category": "resource"}
+        }
         err = assert_error_envelope(payload, code="ERR-APP-404", category="resource")
         assert err["message"] == "x"
 

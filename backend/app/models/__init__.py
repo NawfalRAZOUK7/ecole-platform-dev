@@ -4,7 +4,7 @@ Migration group order: G1-IAM -> G2-ERP -> G3-LMS -> G4-COM -> G5-Billing -> G6-
 """
 
 # G0 — Schools
-from app.models.school import School, SchoolStatus, SchoolType
+from app.models.school import School, SchoolStatus
 
 # G1 — IAM
 from app.models.iam import (

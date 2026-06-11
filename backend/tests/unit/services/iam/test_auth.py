@@ -1619,7 +1619,9 @@ class TestInvitationService:
         user = SimpleNamespace(id=user_id, email="u@e.com", email_verified_at=None)
         svc.repo.get_user_by_id.return_value = user
 
-        with patch.object(EmailVerificationService, "send_verification_otp", AsyncMock()):
+        with patch.object(
+            EmailVerificationService, "send_verification_otp", AsyncMock()
+        ):
             result = await svc.consume_invite("CODE", user_id, school_id)
         assert result["email_verification_required"] is True
 

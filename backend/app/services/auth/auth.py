@@ -1024,7 +1024,9 @@ class AuthService:
 
         # 3. Get permissions for current role
         permissions = sorted(get_permissions_for_role(role))
-        school_settings = school.settings if school and isinstance(school.settings, dict) else {}
+        school_settings = (
+            school.settings if school and isinstance(school.settings, dict) else {}
+        )
         design_mode = school_settings.get("design_mode")
         if design_mode == "micro":
             design_mode = "informal"
@@ -1037,7 +1039,9 @@ class AuthService:
             "school_id": school_id,
             "school_type": school.school_type if school else "formal",
             "school_settings": school_settings,
-            "design_mode": design_mode if design_mode in {"formal", "informal"} else None,
+            "design_mode": design_mode
+            if design_mode in {"formal", "informal"}
+            else None,
             "permissions": permissions,
             "memberships": [
                 {

@@ -153,9 +153,7 @@ class OnboardingService:
         async with UnitOfWork(self.db) as uow:
             app = await uow.session.get(SchoolApplication, application_id)
             if app is None:
-                raise NotFoundError(
-                    "Application not found", error_code="ERR-APP-404"
-                )
+                raise NotFoundError("Application not found", error_code="ERR-APP-404")
             attachment = SchoolApplicationAttachment(
                 application_id=application_id,
                 file_path=relative_path,
@@ -187,9 +185,7 @@ class OnboardingService:
         if status:
             query = query.where(SchoolApplication.status == status)
         if application_type:
-            query = query.where(
-                SchoolApplication.application_type == application_type
-            )
+            query = query.where(SchoolApplication.application_type == application_type)
         result = await self.db.execute(query)
         return [self._to_dict(a) for a in result.scalars().all()]
 
@@ -248,9 +244,7 @@ class OnboardingService:
             # per-school check below therefore never trips for a fresh tenant but
             # documents the invariant.
             auth_repo = AuthRepository(uow.session)
-            clash = await auth_repo.get_user_by_email(
-                app.applicant_email, school.id
-            )
+            clash = await auth_repo.get_user_by_email(app.applicant_email, school.id)
             if clash is not None:
                 raise ValidationError(
                     "An account with this email already exists for this school.",
@@ -310,9 +304,7 @@ class OnboardingService:
             school_id = school.id
             owner_id = owner.id
 
-        activation_url = (
-            f"{settings.web_app_base_url}/activate?token={plaintext_token}"
-        )
+        activation_url = f"{settings.web_app_base_url}/activate?token={plaintext_token}"
 
         # Best-effort: email the activation link. The plaintext token is also
         # returned (dev convention, like mock SMS) so the reviewer can relay the
@@ -332,9 +324,7 @@ class OnboardingService:
         except Exception:  # pragma: no cover - email is best-effort
             import logging
 
-            logging.getLogger(__name__).exception(
-                "Approval email failed (best-effort)"
-            )
+            logging.getLogger(__name__).exception("Approval email failed (best-effort)")
 
         result = {
             "application_id": str(application_id),
@@ -400,7 +390,9 @@ class OnboardingService:
                 outcome="success",
                 target_type="user",
                 target_id=owner.id,
-                entity_after={"activation_expires_at": owner.activation_expires_at.isoformat()},
+                entity_after={
+                    "activation_expires_at": owner.activation_expires_at.isoformat()
+                },
                 ip_address=ip_address,
             )
             applicant_email = app.applicant_email
@@ -410,9 +402,7 @@ class OnboardingService:
             await uow.commit()
             owner_id = owner.id
 
-        activation_url = (
-            f"{settings.web_app_base_url}/activate?token={plaintext_token}"
-        )
+        activation_url = f"{settings.web_app_base_url}/activate?token={plaintext_token}"
         try:
             from app.services.auth.email import email_service
 
@@ -466,10 +456,7 @@ class OnboardingService:
                     "Invalid or already-used activation link.",
                     error_code="ERR-ACTIVATE-INVALID",
                 )
-            if (
-                user.activation_expires_at is None
-                or user.activation_expires_at < now
-            ):
+            if user.activation_expires_at is None or user.activation_expires_at < now:
                 raise ValidationError(
                     "This activation link has expired.",
                     error_code="ERR-ACTIVATE-EXPIRED",

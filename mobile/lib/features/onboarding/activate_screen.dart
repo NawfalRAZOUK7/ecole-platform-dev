@@ -39,19 +39,23 @@ class _ActivateScreenState extends ConsumerState<ActivateScreen> {
   Future<void> _submit(String Function(String, String, String) tr) async {
     final pw = _password.text;
     if (pw.length < 12) {
-      setState(() => _error = tr(
-            'Le mot de passe doit contenir au moins 12 caractères.',
-            'Password must be at least 12 characters.',
-            'يجب أن تتكون كلمة المرور من 12 حرفًا على الأقل.',
-          ),);
+      setState(
+        () => _error = tr(
+          'Le mot de passe doit contenir au moins 12 caractères.',
+          'Password must be at least 12 characters.',
+          'يجب أن تتكون كلمة المرور من 12 حرفًا على الأقل.',
+        ),
+      );
       return;
     }
     if (pw != _confirm.text) {
-      setState(() => _error = tr(
-            'Les mots de passe ne correspondent pas.',
-            'Passwords do not match.',
-            'كلمتا المرور غير متطابقتين.',
-          ),);
+      setState(
+        () => _error = tr(
+          'Les mots de passe ne correspondent pas.',
+          'Passwords do not match.',
+          'كلمتا المرور غير متطابقتين.',
+        ),
+      );
       return;
     }
     setState(() {
@@ -60,18 +64,20 @@ class _ActivateScreenState extends ConsumerState<ActivateScreen> {
     });
     try {
       await ref.read(apiClientProvider).post(
-        '/auth/activate',
-        body: {'token': widget.token, 'password': pw},
-        skipAuth: true,
-      );
+            '/auth/activate',
+            body: {'token': widget.token, 'password': pw},
+            skipAuth: true,
+          );
       if (mounted) setState(() => _done = true);
     } catch (e) {
       if (mounted) {
-        setState(() => _error = tr(
-              "L'activation a échoué. Le lien est peut-être expiré ou déjà utilisé.",
-              'Activation failed. The link may be expired or already used.',
-              'فشل التفعيل. قد يكون الرابط منتهي الصلاحية أو مستخدمًا من قبل.',
-            ),);
+        setState(
+          () => _error = tr(
+            "L'activation a échoué. Le lien est peut-être expiré ou déjà utilisé.",
+            'Activation failed. The link may be expired or already used.',
+            'فشل التفعيل. قد يكون الرابط منتهي الصلاحية أو مستخدمًا من قبل.',
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -88,7 +94,8 @@ class _ActivateScreenState extends ConsumerState<ActivateScreen> {
     if (widget.token == null || widget.token!.isEmpty) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(tr('Activer le compte', 'Activate account', 'تفعيل الحساب')),
+          title:
+              Text(tr('Activer le compte', 'Activate account', 'تفعيل الحساب')),
         ),
         body: Center(
           child: Padding(
@@ -151,7 +158,8 @@ class _ActivateScreenState extends ConsumerState<ActivateScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(tr('Activer votre compte', 'Activate your account', 'تفعيل حسابك')),
+        title: Text(
+            tr('Activer votre compte', 'Activate your account', 'تفعيل حسابك')),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),

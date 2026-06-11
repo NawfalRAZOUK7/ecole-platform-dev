@@ -152,6 +152,46 @@
         }
       }
     },
+    "/api/v1/auth/activate": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Activate an onboarding-provisioned account",
+        "description": "Set the password for an account provisioned by SuperAdmin approval.\n\nThe one-time token comes from the activation link emailed on approval.\nValid activation flips the account from INACTIVE to ACTIVE. Public, but\nrate-limited under the auth category.",
+        "operationId": "activate_api_v1_auth_activate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Activated user id + email",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/refresh": {
       "post": {
         "tags": [
@@ -1207,6 +1247,23 @@
               ],
               "title": "Status"
             }
+          },
+          {
+            "name": "school_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(formal|informal)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "School Type"
+            }
           }
         ],
         "responses": {
@@ -1613,6 +1670,453 @@
         "responses": {
           "200": {
             "description": "Password reset confirmation",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/applications/formal-school": {
+      "post": {
+        "tags": [
+          "onboarding"
+        ],
+        "summary": "Apply to register a formal school (public)",
+        "operationId": "apply_formal_school_api_v1_applications_formal_school_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FormalSchoolApplicationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/applications/micro-school": {
+      "post": {
+        "tags": [
+          "onboarding"
+        ],
+        "summary": "Apply to register a micro-école / educator (public)",
+        "operationId": "apply_micro_school_api_v1_applications_micro_school_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MicroSchoolApplicationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/applications/{application_id}/attachments": {
+      "post": {
+        "tags": [
+          "onboarding"
+        ],
+        "summary": "Attach a document/photo to an application (public)",
+        "operationId": "add_attachment_api_v1_applications__application_id__attachments_post",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_add_attachment_api_v1_applications__application_id__attachments_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/platform/applications": {
+      "get": {
+        "tags": [
+          "onboarding"
+        ],
+        "summary": "List onboarding applications (SuperAdmin)",
+        "operationId": "list_applications_api_v1_platform_applications_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Type"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/platform/applications/{application_id}": {
+      "get": {
+        "tags": [
+          "onboarding"
+        ],
+        "summary": "Get one onboarding application (SuperAdmin)",
+        "operationId": "get_application_api_v1_platform_applications__application_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/platform/applications/{application_id}/approve": {
+      "post": {
+        "tags": [
+          "onboarding"
+        ],
+        "summary": "Approve an application — provisions the tenant (SuperAdmin)",
+        "operationId": "approve_application_api_v1_platform_applications__application_id__approve_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/platform/applications/{application_id}/resend-activation": {
+      "post": {
+        "tags": [
+          "onboarding"
+        ],
+        "summary": "Re-issue the owner's activation link (SuperAdmin)",
+        "operationId": "resend_activation_api_v1_platform_applications__application_id__resend_activation_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/platform/applications/{application_id}/reject": {
+      "post": {
+        "tags": [
+          "onboarding"
+        ],
+        "summary": "Reject an application (SuperAdmin)",
+        "operationId": "reject_application_api_v1_platform_applications__application_id__reject_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplicationReviewRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/platform/applications/{application_id}/request-info": {
+      "post": {
+        "tags": [
+          "onboarding"
+        ],
+        "summary": "Request more info on an application (SuperAdmin)",
+        "operationId": "request_info_application_api_v1_platform_applications__application_id__request_info_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplicationReviewRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {}
@@ -5566,6 +6070,63 @@
             "HTTPBearer": []
           }
         ]
+      }
+    },
+    "/api/v1/quizzes/from-content/{content_id}": {
+      "post": {
+        "tags": [
+          "question-bank"
+        ],
+        "summary": "Generate a draft quiz from a PDF+audio content item (Feature B)",
+        "description": "Teacher-triggered. The teacher chooses question types, count, and which sources to merge (template and/or AI). Builds a draft quiz from the content's narration text for review before publishing.",
+        "operationId": "generate_quiz_from_content_api_v1_quizzes_from_content__content_id__post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "content_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Content Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateQuizFromContentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/question-bank/stats": {
@@ -14972,6 +15533,64 @@
         }
       }
     },
+    "/api/v1/rewards/student/{student_id}/history": {
+      "get": {
+        "tags": [
+          "Rewards"
+        ],
+        "summary": "Get reward history for one student",
+        "operationId": "get_student_reward_history_api_v1_rewards_student__student_id__history_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "student_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Student Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/rewards/leaderboard/{class_id}": {
       "get": {
         "tags": [
@@ -23763,6 +24382,29 @@
         ],
         "title": "AcademicSnapshotCreateRequest"
       },
+      "ActivateRequest": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 16,
+            "title": "Token",
+            "description": "One-time activation token"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 12,
+            "title": "Password",
+            "description": "New password (min 12 chars, Phase 2A policy)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token",
+          "password"
+        ],
+        "title": "ActivateRequest",
+        "description": "Set the password for an onboarding-provisioned owner account.\n\nThe token comes from the activation link emailed on approval. Setting a\nvalid password flips the account from INACTIVE to ACTIVE."
+      },
       "ActivitySessionCompleteRequest": {
         "properties": {
           "score": {
@@ -23969,6 +24611,24 @@
           "data"
         ],
         "title": "ApiResponse[dict]"
+      },
+      "ApplicationReviewRequest": {
+        "properties": {
+          "review_notes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Notes"
+          }
+        },
+        "type": "object",
+        "title": "ApplicationReviewRequest"
       },
       "AssessmentCreateRequest": {
         "properties": {
@@ -24310,7 +24970,7 @@
           "role": {
             "type": "string",
             "title": "Role",
-            "description": "Role code: STD, PAR, TCH"
+            "description": "Role code. Formal schools: DIR, TCH, PAR, STD. Micro-schools: PAR, STD."
           },
           "phone": {
             "anyOf": [
@@ -24375,6 +25035,25 @@
           "users"
         ],
         "title": "BatchRegisterRequest"
+      },
+      "Body_add_attachment_api_v1_applications__application_id__attachments_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind",
+            "default": "other"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_add_attachment_api_v1_applications__application_id__attachments_post"
       },
       "Body_create_resource_api_v1_resources_post": {
         "properties": {
@@ -26679,6 +27358,119 @@
         "title": "FinancialSnapshotComputeRequest",
         "description": "Payload for computing a financial snapshot."
       },
+      "FormalSchoolApplicationRequest": {
+        "properties": {
+          "applicant_name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 2,
+            "title": "Applicant Name"
+          },
+          "applicant_email": {
+            "type": "string",
+            "format": "email",
+            "title": "Applicant Email"
+          },
+          "applicant_phone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 30
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applicant Phone"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 10
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "org_name": {
+            "type": "string",
+            "maxLength": 250,
+            "minLength": 2,
+            "title": "Org Name"
+          },
+          "address": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "level_band": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level Band"
+          },
+          "subjects": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subjects"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "applicant_name",
+          "applicant_email",
+          "org_name"
+        ],
+        "title": "FormalSchoolApplicationRequest"
+      },
       "GameCompletionRequest": {
         "properties": {
           "score": {
@@ -27044,6 +27836,92 @@
         ],
         "title": "GenerateQuizFromBankRequest"
       },
+      "GenerateQuizFromContentRequest": {
+        "properties": {
+          "question_types": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Question Types"
+          },
+          "count": {
+            "type": "integer",
+            "maximum": 30.0,
+            "minimum": 1.0,
+            "title": "Count",
+            "default": 5
+          },
+          "sources": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sources"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "difficulty": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Difficulty"
+          },
+          "time_limit_minutes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Limit Minutes"
+          },
+          "max_attempts": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Max Attempts",
+            "default": 1
+          },
+          "shuffle_questions": {
+            "type": "boolean",
+            "title": "Shuffle Questions",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "GenerateQuizFromContentRequest",
+        "description": "Teacher-chosen options for generating a draft quiz from a PDF+audio item.\n\nThe teacher decides per content: which question types, how many, and which\nsources to merge — deterministic ``template`` and/or the ``ai`` provider."
+      },
       "GradeCategoryInput": {
         "properties": {
           "name": {
@@ -27380,7 +28258,7 @@
           "role_target": {
             "type": "string",
             "title": "Role Target",
-            "description": "Role code for the invited user (e.g. TCH, PAR, STD)"
+            "description": "Role code for the invited user. Formal schools: DIR, TCH, PAR, STD. Micro-schools: PAR, STD. ADM/EDUCATOR owners are SuperAdmin-approved."
           },
           "expires_in_hours": {
             "type": "integer",
@@ -28340,6 +29218,118 @@
         ],
         "title": "MicroResourceCreateRequest",
         "description": "Payload for creating a micro-resource."
+      },
+      "MicroSchoolApplicationRequest": {
+        "properties": {
+          "applicant_name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 2,
+            "title": "Applicant Name"
+          },
+          "applicant_email": {
+            "type": "string",
+            "format": "email",
+            "title": "Applicant Email"
+          },
+          "applicant_phone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 30
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applicant Phone"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 10
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "org_name": {
+            "type": "string",
+            "maxLength": 250,
+            "minLength": 2,
+            "title": "Org Name"
+          },
+          "neighborhood": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Neighborhood"
+          },
+          "address": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "max_capacity": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 500.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Capacity"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "applicant_name",
+          "applicant_email",
+          "org_name"
+        ],
+        "title": "MicroSchoolApplicationRequest"
       },
       "MicroSchoolCreateRequest": {
         "properties": {
@@ -30621,6 +31611,12 @@
             "title": "Status",
             "default": "active"
           },
+          "school_type": {
+            "type": "string",
+            "pattern": "^(formal|informal)$",
+            "title": "School Type",
+            "default": "formal"
+          },
           "address": {
             "anyOf": [
               {
@@ -30823,6 +31819,10 @@
             "type": "string",
             "title": "Status"
           },
+          "school_type": {
+            "type": "string",
+            "title": "School Type"
+          },
           "address": {
             "anyOf": [
               {
@@ -31002,6 +32002,7 @@
           "name",
           "code",
           "status",
+          "school_type",
           "timezone",
           "default_language",
           "grading_scale",
@@ -31075,6 +32076,18 @@
               }
             ],
             "title": "Status"
+          },
+          "school_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(formal|informal)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "School Type"
           },
           "address": {
             "anyOf": [

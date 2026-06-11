@@ -144,7 +144,8 @@ void main() {
         await service.init();
         await service.setSpeed(5.0); // above max
 
-        final calls = verify(() => mockTts.setSpeechRate(captureAny())).captured;
+        final calls =
+            verify(() => mockTts.setSpeechRate(captureAny())).captured;
         final last = calls.last as double;
         expect(last, lessThanOrEqualTo(1.0));
       });

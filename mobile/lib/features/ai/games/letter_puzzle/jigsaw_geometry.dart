@@ -95,18 +95,46 @@ Path jigsawPiecePath({
 
   final path = Path()..moveTo(left, top);
 
-  _edge(path, layout.topOf(row, col), Offset(left, top), Offset(right, top),
-      cellW, knob,
-      outwardSign: -1, horizontal: true,);
-  _edge(path, layout.rightOf(row, col), Offset(right, top),
-      Offset(right, bottom), cellH, knob,
-      outwardSign: 1, horizontal: false,);
-  _edge(path, layout.bottomOf(row, col), Offset(right, bottom),
-      Offset(left, bottom), cellW, knob,
-      outwardSign: 1, horizontal: true,);
-  _edge(path, layout.leftOf(row, col), Offset(left, bottom), Offset(left, top),
-      cellH, knob,
-      outwardSign: -1, horizontal: false,);
+  _edge(
+    path,
+    layout.topOf(row, col),
+    Offset(left, top),
+    Offset(right, top),
+    cellW,
+    knob,
+    outwardSign: -1,
+    horizontal: true,
+  );
+  _edge(
+    path,
+    layout.rightOf(row, col),
+    Offset(right, top),
+    Offset(right, bottom),
+    cellH,
+    knob,
+    outwardSign: 1,
+    horizontal: false,
+  );
+  _edge(
+    path,
+    layout.bottomOf(row, col),
+    Offset(right, bottom),
+    Offset(left, bottom),
+    cellW,
+    knob,
+    outwardSign: 1,
+    horizontal: true,
+  );
+  _edge(
+    path,
+    layout.leftOf(row, col),
+    Offset(left, bottom),
+    Offset(left, top),
+    cellH,
+    knob,
+    outwardSign: -1,
+    horizontal: false,
+  );
 
   path.close();
   return path;
@@ -144,10 +172,22 @@ void _edge(
 
   path.lineTo(neckStart.dx, neckStart.dy);
   // Up into the knob, around the head, and back down — two cubics.
-  path.cubicTo(headLeft.dx, headLeft.dy, headCenter.dx, headCenter.dy,
-      headCenter.dx, headCenter.dy,);
-  path.cubicTo(headCenter.dx, headCenter.dy, headRight.dx, headRight.dy,
-      neckEnd.dx, neckEnd.dy,);
+  path.cubicTo(
+    headLeft.dx,
+    headLeft.dy,
+    headCenter.dx,
+    headCenter.dy,
+    headCenter.dx,
+    headCenter.dy,
+  );
+  path.cubicTo(
+    headCenter.dx,
+    headCenter.dy,
+    headRight.dx,
+    headRight.dy,
+    neckEnd.dx,
+    neckEnd.dy,
+  );
   path.lineTo(end.dx, end.dy);
 }
 

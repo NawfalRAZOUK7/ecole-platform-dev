@@ -36,7 +36,8 @@ void main() {
       expect(page.hasMore, isFalse);
     });
 
-    test('hasMore=true with no cursor is allowed (caller-defined contract)', () {
+    test('hasMore=true with no cursor is allowed (caller-defined contract)',
+        () {
       const page = PaginatedList<String>(
         items: ['a'],
         hasMore: true,

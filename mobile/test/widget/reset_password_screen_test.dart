@@ -36,8 +36,7 @@ void main() {
     mockAuth = _MockAuthRepository();
     when(() => mockAuth.verifyRecovery(any(), any()))
         .thenAnswer((_) async => true);
-    when(() => mockAuth.resetPassword(any(), any()))
-        .thenAnswer((_) async {});
+    when(() => mockAuth.resetPassword(any(), any())).thenAnswer((_) async {});
   });
 
   group('ResetPasswordScreen', () {
@@ -60,11 +59,13 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final fields = tester.widgetList<TextField>(find.byType(TextField)).toList();
+      final fields =
+          tester.widgetList<TextField>(find.byType(TextField)).toList();
       expect(fields.first.controller?.text, 'abc-xyz');
     });
 
-    testWidgets('renders the lock_reset icon in the submit button', (tester) async {
+    testWidgets('renders the lock_reset icon in the submit button',
+        (tester) async {
       await pumpApp(
         tester,
         const ResetPasswordScreen(),
@@ -101,7 +102,9 @@ void main() {
       verify(() => mockAuth.resetPassword('tok-1', 'NewPass123!')).called(1);
     });
 
-    testWidgets('with verification code calls verifyRecovery then resetPassword', (tester) async {
+    testWidgets(
+        'with verification code calls verifyRecovery then resetPassword',
+        (tester) async {
       await pumpApp(
         tester,
         const ResetPasswordScreen(token: 'tok-1'),
@@ -123,7 +126,8 @@ void main() {
       verify(() => mockAuth.resetPassword('tok-1', 'Pass!')).called(1);
     });
 
-    testWidgets('CircularProgressIndicator appears while submit is pending', (tester) async {
+    testWidgets('CircularProgressIndicator appears while submit is pending',
+        (tester) async {
       when(() => mockAuth.resetPassword(any(), any())).thenAnswer(
         (_) async => Future.delayed(const Duration(seconds: 2)),
       );

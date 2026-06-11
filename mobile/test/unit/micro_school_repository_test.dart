@@ -8,7 +8,9 @@ import 'package:ecole_platform/domain/entities/school/micro_school.dart';
 import '../helpers/api_responses.dart';
 import '../helpers/test_mocks.dart';
 
-Map<String, dynamic> _schoolJson({String id = 'ms-1', String status = 'active'}) => {
+Map<String, dynamic> _schoolJson(
+        {String id = 'ms-1', String status = 'active'}) =>
+    {
       'id': id,
       'name': 'École Benani Casablanca',
       'description': 'Micro-school for CE1-CE2',
@@ -155,7 +157,8 @@ void main() {
       when(() => api.put('/micro/schools/ms-1', body: any(named: 'body')))
           .thenAnswer((_) async => response(_schoolJson(status: 'inactive')));
 
-      final result = await repo.updateMicroSchool('ms-1', {'status': 'inactive'});
+      final result =
+          await repo.updateMicroSchool('ms-1', {'status': 'inactive'});
 
       expect(result.status, 'inactive');
     });
@@ -200,7 +203,8 @@ void main() {
       await repo.getEnrollments('ms-1');
 
       final params = verify(
-        () => api.list('/micro/enrollments', params: captureAny(named: 'params')),
+        () =>
+            api.list('/micro/enrollments', params: captureAny(named: 'params')),
       ).captured.first as Map<String, dynamic>;
       expect(params['micro_school_id'], 'ms-1');
     });
@@ -240,7 +244,8 @@ void main() {
 
       await repo.unenrollStudent('ms-1', 'enr-1');
 
-      verify(() => api.delete('/micro/schools/ms-1/enrollments/enr-1')).called(1);
+      verify(() => api.delete('/micro/schools/ms-1/enrollments/enr-1'))
+          .called(1);
     });
   });
 

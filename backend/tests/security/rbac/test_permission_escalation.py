@@ -6,7 +6,13 @@ import uuid
 
 import pytest
 
-from tests.security.conftest import PERIOD_ID, SCHOOL_ID, STUDENT_ID, YEAR_ID, auth_header
+from tests.security.conftest import (
+    PERIOD_ID,
+    SCHOOL_ID,
+    STUDENT_ID,
+    YEAR_ID,
+    auth_header,
+)
 
 
 @pytest.mark.asyncio

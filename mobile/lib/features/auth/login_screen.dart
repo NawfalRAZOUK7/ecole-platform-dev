@@ -567,7 +567,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                           TextButton(
                             onPressed: () => context.push('/apply'),
-                            child: const Text("Demande d'inscription (école / éducateur)"),
+                            child: const Text(
+                                "Demande d'inscription (école / éducateur)"),
                           ),
                         ],
                       ),

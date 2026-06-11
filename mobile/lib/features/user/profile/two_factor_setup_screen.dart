@@ -649,7 +649,8 @@ class _SmsTwoFactorCardState extends ConsumerState<SmsTwoFactorCard> {
                 controller: _codeController,
                 keyboardType: TextInputType.number,
                 maxLength: 6,
-                decoration: const InputDecoration(labelText: 'Code (6 chiffres)'),
+                decoration:
+                    const InputDecoration(labelText: 'Code (6 chiffres)'),
               ),
               Row(
                 children: [
@@ -681,7 +682,8 @@ class _SmsTwoFactorCardState extends ConsumerState<SmsTwoFactorCard> {
                 controller: _disableCodeController,
                 keyboardType: TextInputType.number,
                 maxLength: 6,
-                decoration: const InputDecoration(labelText: 'Code (6 chiffres)'),
+                decoration:
+                    const InputDecoration(labelText: 'Code (6 chiffres)'),
               ),
               Row(
                 children: [

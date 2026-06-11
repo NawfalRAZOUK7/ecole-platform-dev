@@ -8,7 +8,9 @@ import 'package:ecole_platform/domain/entities/lms/rubric.dart';
 import '../helpers/api_responses.dart';
 import '../helpers/test_mocks.dart';
 
-Map<String, dynamic> _rubricJson({String id = 'rub-1', String title = 'Grille orale'}) => {
+Map<String, dynamic> _rubricJson(
+        {String id = 'rub-1', String title = 'Grille orale'}) =>
+    {
       'id': id,
       'title': title,
       'description': 'Grille pour évaluation orale',
@@ -23,7 +25,12 @@ Map<String, dynamic> _rubricJson({String id = 'rub-1', String title = 'Grille or
           'name': 'Prononciation',
           'weight': 0.4,
           'levels': [
-            {'id': 'lvl-1', 'label': 'Excellent', 'score': 8.0, 'description': ''},
+            {
+              'id': 'lvl-1',
+              'label': 'Excellent',
+              'score': 8.0,
+              'description': ''
+            },
             {'id': 'lvl-2', 'label': 'Bien', 'score': 5.0, 'description': ''},
           ],
         },
@@ -153,7 +160,8 @@ void main() {
   group('updateRubric', () {
     test('puts updated rubric and returns entity', () async {
       when(() => api.put('/rubrics/rub-1', body: any(named: 'body')))
-          .thenAnswer((_) async => response(_rubricJson(title: 'Grille modifiée')));
+          .thenAnswer(
+              (_) async => response(_rubricJson(title: 'Grille modifiée')));
 
       final result = await repo.updateRubric(
         id: 'rub-1',
@@ -206,13 +214,15 @@ void main() {
 
     test('uses rubricId as path fallback when assignmentId is null', () async {
       when(
-        () => api.post('/submissions/rub-1/grade-rubric', body: any(named: 'body')),
+        () => api.post('/submissions/rub-1/grade-rubric',
+            body: any(named: 'body')),
       ).thenAnswer((_) async => response({}));
 
       await repo.gradeRubric(rubricId: 'rub-1', entries: const []);
 
       verify(
-        () => api.post('/submissions/rub-1/grade-rubric', body: any(named: 'body')),
+        () => api.post('/submissions/rub-1/grade-rubric',
+            body: any(named: 'body')),
       ).called(1);
     });
   });

@@ -35,7 +35,11 @@ class Sms2FAService:
         otp: str,
     ) -> bool:
         """Send OTP code via SMS."""
-        if settings.mock_sms_enabled or not settings.sms_enabled or not self.twilio_client:
+        if (
+            settings.mock_sms_enabled
+            or not settings.sms_enabled
+            or not self.twilio_client
+        ):
             # In development mode, log the OTP instead
             print(f"[SMS 2FA - DEV MODE] OTP for {phone}: {otp}")
             return True

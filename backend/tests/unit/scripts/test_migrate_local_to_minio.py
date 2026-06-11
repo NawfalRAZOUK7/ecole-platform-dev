@@ -72,7 +72,9 @@ mimetypes.add_type(
 # Import the migration module from scripts/ (outside backend/)
 # ---------------------------------------------------------------------------
 
-_REPO_ROOT = Path(__file__).resolve().parents[4]  # …/ecole-platform-dev (local) or / (Docker)
+_REPO_ROOT = (
+    Path(__file__).resolve().parents[4]
+)  # …/ecole-platform-dev (local) or / (Docker)
 _SCRIPTS_DIR = _REPO_ROOT / "scripts"
 if not _SCRIPTS_DIR.is_dir():
     _SCRIPTS_DIR = Path("/workspace/scripts")  # Docker volume mount

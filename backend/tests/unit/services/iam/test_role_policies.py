@@ -64,11 +64,19 @@ class TestNormalization:
         assert allowed_invitation_roles("Informal") == INFORMAL_SCHOOL_INVITABLE_ROLES
 
     def test_strips_whitespace(self) -> None:
-        assert allowed_invitation_roles("  informal  ") == INFORMAL_SCHOOL_INVITABLE_ROLES
+        assert (
+            allowed_invitation_roles("  informal  ") == INFORMAL_SCHOOL_INVITABLE_ROLES
+        )
 
     def test_enum_values_are_consistent(self) -> None:
-        assert allowed_invitation_roles(SchoolType.FORMAL.value) == FORMAL_SCHOOL_INVITABLE_ROLES
-        assert allowed_invitation_roles(SchoolType.INFORMAL.value) == INFORMAL_SCHOOL_INVITABLE_ROLES
+        assert (
+            allowed_invitation_roles(SchoolType.FORMAL.value)
+            == FORMAL_SCHOOL_INVITABLE_ROLES
+        )
+        assert (
+            allowed_invitation_roles(SchoolType.INFORMAL.value)
+            == INFORMAL_SCHOOL_INVITABLE_ROLES
+        )
 
 
 class TestInvariants:
@@ -77,4 +85,6 @@ class TestInvariants:
         assert isinstance(allowed_managed_roles("informal"), frozenset)
 
     def test_informal_is_subset_of_formal(self) -> None:
-        assert allowed_invitation_roles("informal") <= allowed_invitation_roles("formal")
+        assert allowed_invitation_roles("informal") <= allowed_invitation_roles(
+            "formal"
+        )

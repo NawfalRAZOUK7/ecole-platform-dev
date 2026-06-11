@@ -34,8 +34,13 @@ class LetterDef {
   final List<PuzzleVocab> vocab;
   final int rows;
   final int cols;
-  const LetterDef(this.letter, this.lang, this.vocab,
-      {this.rows = 2, this.cols = 3,});
+  const LetterDef(
+    this.letter,
+    this.lang,
+    this.vocab, {
+    this.rows = 2,
+    this.cols = 3,
+  });
 }
 
 const _green = Color(0xFF4CAF50);
@@ -216,8 +221,10 @@ class _LetterPuzzleScreenState extends ConsumerState<LetterPuzzleScreen> {
           children: [
             const Text('🎉', style: TextStyle(fontSize: 56)),
             const SizedBox(height: 8),
-            Text('أحسنت! Bravo !',
-                style: Theme.of(ctx).textTheme.headlineSmall,),
+            Text(
+              'أحسنت! Bravo !',
+              style: Theme.of(ctx).textTheme.headlineSmall,
+            ),
             const SizedBox(height: 4),
             Text('Lettre « ${_letter.letter} » complétée'),
           ],
@@ -283,14 +290,20 @@ class _LetterPuzzleScreenState extends ConsumerState<LetterPuzzleScreen> {
                   value: i,
                   child: Row(
                     children: [
-                      Text(_source[i].letter,
-                          style: const TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold,),),
+                      Text(
+                        _source[i].letter,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       const SizedBox(width: 8),
-                      Text('(${_source[i].lang})',
-                          style: TextStyle(
-                              color:
-                                  Theme.of(ctx).colorScheme.onSurfaceVariant,),),
+                      Text(
+                        '(${_source[i].lang})',
+                        style: TextStyle(
+                          color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -430,9 +443,19 @@ class _PieceGeom {
   const _PieceGeom(this.local, this.bounds);
 
   factory _PieceGeom.build(
-      JigsawLayout layout, int row, int col, double cellW, double cellH,) {
+    JigsawLayout layout,
+    int row,
+    int col,
+    double cellW,
+    double cellH,
+  ) {
     final boardPath = jigsawPiecePath(
-        layout: layout, row: row, col: col, cellW: cellW, cellH: cellH,);
+      layout: layout,
+      row: row,
+      col: col,
+      cellW: cellW,
+      cellH: cellH,
+    );
     final bounds = boardPath.getBounds();
     final local = boardPath.shift(-bounds.topLeft);
     return _PieceGeom(local, bounds);
@@ -517,10 +540,12 @@ class _SlotPainter extends CustomPainter {
   final bool highlight;
   final Color color;
   final Color highlightColor;
-  _SlotPainter(this.path,
-      {required this.highlight,
-      required this.color,
-      required this.highlightColor,});
+  _SlotPainter(
+    this.path, {
+    required this.highlight,
+    required this.color,
+    required this.highlightColor,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {

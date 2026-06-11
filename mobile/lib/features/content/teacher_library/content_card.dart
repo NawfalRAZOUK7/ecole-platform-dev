@@ -259,8 +259,10 @@ Future<void> _showGenerateQuizDialog(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(tr('Générer un quiz', 'Generate a quiz', 'إنشاء اختبار'),
-                    style: theme.textTheme.titleLarge,),
+                Text(
+                  tr('Générer un quiz', 'Generate a quiz', 'إنشاء اختبار'),
+                  style: theme.textTheme.titleLarge,
+                ),
                 const SizedBox(height: 4),
                 Text(
                   tr(
@@ -273,23 +275,31 @@ Future<void> _showGenerateQuizDialog(
                 ),
                 const SizedBox(height: 16),
                 Text(
-                    tr('Types de questions', 'Question types', 'أنواع الأسئلة'),
-                    style: theme.textTheme.labelLarge,),
+                  tr('Types de questions', 'Question types', 'أنواع الأسئلة'),
+                  style: theme.textTheme.labelLarge,
+                ),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
                   children: [
                     chip(types, 'MCQ', tr('QCM', 'MCQ', 'اختيار من متعدد')),
-                    chip(types, 'TRUE_FALSE',
-                        tr('Vrai/Faux', 'True/False', 'صح/خطأ'),),
-                    chip(types, 'FILL_IN',
-                        tr('Texte à trous', 'Fill in', 'ملء الفراغ'),),
+                    chip(
+                      types,
+                      'TRUE_FALSE',
+                      tr('Vrai/Faux', 'True/False', 'صح/خطأ'),
+                    ),
+                    chip(
+                      types,
+                      'FILL_IN',
+                      tr('Texte à trous', 'Fill in', 'ملء الفراغ'),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 16),
                 Text(
-                    '${tr('Nombre de questions', 'Number of questions', 'عدد الأسئلة')} : $count',
-                    style: theme.textTheme.labelLarge,),
+                  '${tr('Nombre de questions', 'Number of questions', 'عدد الأسئلة')} : $count',
+                  style: theme.textTheme.labelLarge,
+                ),
                 Slider(
                   value: count.toDouble(),
                   min: 1,
@@ -298,14 +308,19 @@ Future<void> _showGenerateQuizDialog(
                   label: '$count',
                   onChanged: (v) => setSheetState(() => count = v.round()),
                 ),
-                Text(tr('Sources', 'Sources', 'المصادر'),
-                    style: theme.textTheme.labelLarge,),
+                Text(
+                  tr('Sources', 'Sources', 'المصادر'),
+                  style: theme.textTheme.labelLarge,
+                ),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
                   children: [
-                    chip(sources, 'template',
-                        tr('Modèles', 'Templates', 'قوالب'),),
+                    chip(
+                      sources,
+                      'template',
+                      tr('Modèles', 'Templates', 'قوالب'),
+                    ),
                     chip(sources, 'ai', tr('IA', 'AI', 'ذكاء اصطناعي')),
                   ],
                 ),
@@ -333,11 +348,13 @@ Future<void> _showGenerateQuizDialog(
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text(tr(
-                                      'Brouillon créé : $n question(s)',
-                                      'Draft created: $n question(s)',
-                                      'تم إنشاء المسودة: $n سؤال/أسئلة',
-                                    ),),
+                                    content: Text(
+                                      tr(
+                                        'Brouillon créé : $n question(s)',
+                                        'Draft created: $n question(s)',
+                                        'تم إنشاء المسودة: $n سؤال/أسئلة',
+                                      ),
+                                    ),
                                     backgroundColor: Theme.of(context)
                                         .semanticPalette
                                         .success,
@@ -364,10 +381,15 @@ Future<void> _showGenerateQuizDialog(
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.auto_awesome),
-                    label: Text(generating
-                        ? tr('Génération…', 'Generating…', 'جارٍ الإنشاء…')
-                        : tr('Générer le brouillon', 'Generate draft',
-                            'إنشاء المسودة',),),
+                    label: Text(
+                      generating
+                          ? tr('Génération…', 'Generating…', 'جارٍ الإنشاء…')
+                          : tr(
+                              'Générer le brouillon',
+                              'Generate draft',
+                              'إنشاء المسودة',
+                            ),
+                    ),
                   ),
                 ),
               ],

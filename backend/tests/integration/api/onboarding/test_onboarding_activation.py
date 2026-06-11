@@ -35,7 +35,6 @@ from app.models.onboarding import (
     ApplicationType,
     SchoolApplication,
 )
-from app.models.school import SchoolType
 from app.services.platform.onboarding import OnboardingService
 from tests.factories.iam import UserFactory
 from tests.factories.school import SchoolFactory

@@ -210,8 +210,7 @@ class BatchRegisterItem(BaseModel):
     role: str = Field(
         ...,
         description=(
-            "Role code. Formal schools: DIR, TCH, PAR, STD. "
-            "Micro-schools: PAR, STD."
+            "Role code. Formal schools: DIR, TCH, PAR, STD. " "Micro-schools: PAR, STD."
         ),
     )
     phone: str | None = Field(None, max_length=20)

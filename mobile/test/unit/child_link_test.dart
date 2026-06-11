@@ -72,7 +72,8 @@ void main() {
       expect(link.classLevel, isNull);
     });
 
-    test('classLevel throws a TypeError when class_level value is not a string', () {
+    test('classLevel throws a TypeError when class_level value is not a string',
+        () {
       // Production code uses `as String?`, which throws TypeError on non-string
       // non-null values (Dart strict typing). This test documents that contract:
       // callers of ChildLink.classLevel must trust the upstream API to always

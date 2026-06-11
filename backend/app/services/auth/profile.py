@@ -81,7 +81,9 @@ class ProfileService:
 
         school = await self.repo.get_school(school_id)
         if school is not None:
-            school_settings = school.settings if isinstance(school.settings, dict) else {}
+            school_settings = (
+                school.settings if isinstance(school.settings, dict) else {}
+            )
             design_mode = school_settings.get("design_mode")
             result["school_type"] = school.school_type
             result["school_settings"] = school_settings

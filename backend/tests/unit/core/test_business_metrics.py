@@ -53,9 +53,9 @@ def test_metric_names_are_prefixed_with_ecole():
     for attr, expected_prefix in _ALL_METRICS.items():
         metric = getattr(bm, attr)
         assert metric._name.startswith("ecole_"), f"{attr} not ecole-prefixed"
-        assert metric._name.startswith(expected_prefix), (
-            f"{attr} name {metric._name!r} != expected {expected_prefix!r}"
-        )
+        assert metric._name.startswith(
+            expected_prefix
+        ), f"{attr} name {metric._name!r} != expected {expected_prefix!r}"
 
 
 def test_every_metric_is_labelled_by_school_id():

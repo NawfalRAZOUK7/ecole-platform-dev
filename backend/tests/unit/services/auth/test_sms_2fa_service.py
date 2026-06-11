@@ -95,7 +95,10 @@ class TestSend:
         monkeypatch.setattr(sms_2fa.settings, "mock_sms_enabled", True)
         service = sms_2fa.Sms2FAService()
         assert await service.send_otp("+212600000099", "123456") is True
-        assert "[SMS 2FA - DEV MODE] OTP for +212600000099: 123456" in capsys.readouterr().out
+        assert (
+            "[SMS 2FA - DEV MODE] OTP for +212600000099: 123456"
+            in capsys.readouterr().out
+        )
 
     @pytest.mark.asyncio
     async def test_real_send_calls_twilio_and_returns_true(self, monkeypatch):
