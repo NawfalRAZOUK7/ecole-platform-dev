@@ -47,9 +47,13 @@ async def test_startup_success():
     mock_pubsub = AsyncMock()
     mock_redis.pubsub.return_value = mock_pubsub
 
+    def _close_coro(coro):
+        coro.close()
+        return MagicMock()
+
     with (
         patch("redis.asyncio.from_url", return_value=mock_redis),
-        patch("asyncio.create_task", return_value=MagicMock()),
+        patch("asyncio.create_task", side_effect=_close_coro),
     ):
         await mgr.startup()
 

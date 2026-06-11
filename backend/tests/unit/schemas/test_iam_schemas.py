@@ -7,7 +7,7 @@ for authentication, profile, and identity-related schemas.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 import pytest
 from pydantic import ValidationError
@@ -152,13 +152,13 @@ class TestProfileSchemas:
             full_name="User",
             role="parent",
             school_id=uuid.uuid4(),
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
         )
         assert model.email == "user@school.ma"
 
     def test_profile_avatar_response(self) -> None:
         model = ProfileAvatarResponse(
             avatar_url="https://cdn.example.com/avatar.png",
-            updated_at=datetime.utcnow(),
+            updated_at=datetime.now(timezone.utc),
         )
         assert "avatar.png" in model.avatar_url

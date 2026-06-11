@@ -69,6 +69,50 @@ class TestProviderFactory:
         provider = create_ai_provider(settings)
         assert isinstance(provider, MockProvider)
 
+    def test_open_with_base_url_returns_open_provider(self) -> None:
+        settings = MagicMock()
+        settings.ai_provider = "open"
+        settings.ai_api_key = ""
+        settings.ai_open_base_url = "http://localhost:11434/v1"
+        settings.ai_open_model = "qwen2.5"
+        settings.ai_open_api_key = ""
+        provider = create_ai_provider(settings)
+        assert type(provider).__name__ == "OpenModelProvider"
+
+    def test_open_without_base_url_returns_mock(self) -> None:
+        settings = MagicMock()
+        settings.ai_provider = "open"
+        settings.ai_api_key = ""
+        settings.ai_open_base_url = ""
+        provider = create_ai_provider(settings)
+        assert isinstance(provider, MockProvider)
+
+    def test_auto_prefers_claude_when_api_key_present(self) -> None:
+        settings = MagicMock()
+        settings.ai_provider = "auto"
+        settings.ai_api_key = "sk-ant-api03-test"
+        settings.ai_model = "claude-sonnet-4-20250514"
+        provider = create_ai_provider(settings)
+        assert type(provider).__name__ == "ClaudeProvider"
+
+    def test_auto_uses_open_model_when_only_base_url_present(self) -> None:
+        settings = MagicMock()
+        settings.ai_provider = "auto"
+        settings.ai_api_key = ""
+        settings.ai_open_base_url = "http://localhost:11434/v1"
+        settings.ai_open_model = "qwen2.5"
+        settings.ai_open_api_key = ""
+        provider = create_ai_provider(settings)
+        assert type(provider).__name__ == "OpenModelProvider"
+
+    def test_auto_falls_back_to_mock_when_nothing_configured(self) -> None:
+        settings = MagicMock()
+        settings.ai_provider = "auto"
+        settings.ai_api_key = ""
+        settings.ai_open_base_url = ""
+        provider = create_ai_provider(settings)
+        assert isinstance(provider, MockProvider)
+
 
 # ---------------------------------------------------------------------------
 # MockProvider

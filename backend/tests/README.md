@@ -24,8 +24,14 @@ Comprehensive test suite for the École Platform backend. Organized by domain an
 
 ```
 tests/
-├── conftest.py                          # Shared fixtures
-├── _support/                            # Test helpers (factories, fixtures, builders, matchers)
+├── conftest.py                          # Root fixtures (db_session, tokens, auth ctx) + pytest_plugins
+├── factories/                           # factory_boy factories per domain (iam, erp, lms, …)
+├── utils/                               # Test helpers (e.g. testmail)
+├── _support/                            # Shared test-support package (see _support/README.md)
+│   ├── builders/                        #   fluent builders (AuthContextBuilder, SchoolApplicationBuilder)
+│   ├── factories/                       #   factory import surface + onboarding factories
+│   ├── fixtures/                        #   reusable pytest fixtures (auto-registered)
+│   └── matchers/                        #   assertion helpers (uuid, envelopes, activation URL)
 │
 ├── unit/                                # Fast, mocked, no DB
 │   ├── core/                            # JWT, permissions, rate limit, middleware, etc.

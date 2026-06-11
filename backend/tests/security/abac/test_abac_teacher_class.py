@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .conftest import auth_header
+from tests.security.conftest import auth_header
 
 
 GRADE_BODY = {

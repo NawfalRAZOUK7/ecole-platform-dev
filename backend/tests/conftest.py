@@ -35,6 +35,10 @@ from app.core.permissions import get_permissions_for_role
 from app.core.security import hash_password
 from app.models.iam import User
 
+# Reusable fixtures from the _support helper package (builders, etc.).
+# Registered as a plugin so they are available test-wide without imports.
+pytest_plugins = ("tests._support.fixtures.common",)
+
 # Fixed IDs from seed.py
 SCHOOL_ID = "00000000-0000-4000-8000-000000000001"
 ADMIN_EMAIL = "admin@ecole-benani.ma"

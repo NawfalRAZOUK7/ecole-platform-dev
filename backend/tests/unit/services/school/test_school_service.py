@@ -51,6 +51,7 @@ def make_school(school_id: uuid.UUID | None = None):
         code="atlas-001",
         massar_code="MASSAR001",
         status="active",
+        school_type="formal",
         address="123 Rue Atlas",
         city="Casablanca",
         region="Casablanca-Settat",

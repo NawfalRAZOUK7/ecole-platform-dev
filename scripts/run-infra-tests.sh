@@ -22,8 +22,6 @@ fi
 
 compose_files="
 infra/docker-compose.dev.yml
-infra/docker-compose.api-test.yml
-infra/docker-compose.tests.yml
 infra/docker-compose.monitoring.yml
 infra/docker-compose.staging.yml
 infra/docker-compose.prod.yml
@@ -46,25 +44,19 @@ for file in ${compose_files}; do
   fi
 done
 
+# The `tests` service now lives inside docker-compose.dev.yml (profile `tests`).
 if [ -f .env ]; then
-  services="$(docker compose --env-file .env -f infra/docker-compose.tests.yml config --services)"
+  services="$(docker compose --env-file .env -f infra/docker-compose.dev.yml --profile tests config --services)"
 else
-  services="$(docker compose -f infra/docker-compose.tests.yml config --services)"
+  services="$(docker compose -f infra/docker-compose.dev.yml --profile tests config --services)"
 fi
-printf '%s\n' "${services}" > "${infra_dir}/docker-compose.tests.services.txt"
+printf '%s\n' "${services}" > "${infra_dir}/docker-compose.tests-profile.services.txt"
 
 required_services="
 postgres
 redis
 minio
-backend-api
-backend-unit-tests
-backend-integration-tests
-backend-security-tests
-backend-contract-tests
-postman-tests
-load-tests
-infra-tests
+tests
 "
 
 for service in ${required_services}; do

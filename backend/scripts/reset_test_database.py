@@ -23,13 +23,25 @@ def _database_url() -> str:
 
 
 async def _reset() -> None:
+    url = _database_url()
+    # Extract the database name from the URL to target connection termination.
+    db_name = url.rsplit("/", 1)[-1].split("?")[0]
+
     engine = create_async_engine(
-        _database_url(),
+        url,
         isolation_level="AUTOCOMMIT",
         connect_args={"statement_cache_size": 0},
     )
     try:
         async with engine.begin() as conn:
+            # Terminate all other connections to the test DB to prevent deadlocks.
+            await conn.execute(
+                text(
+                    "SELECT pg_terminate_backend(pid) FROM pg_stat_activity "
+                    "WHERE datname = :db AND pid <> pg_backend_pid()"
+                ),
+                {"db": db_name},
+            )
             await conn.execute(text("DROP SCHEMA IF EXISTS public CASCADE"))
             await conn.execute(text("CREATE SCHEMA IF NOT EXISTS public"))
             await conn.execute(text('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"'))

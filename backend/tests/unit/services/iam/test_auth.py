@@ -1423,6 +1423,7 @@ def setup_invitation_service():
     redis = FakeRedis()
     svc = InvitationService(AsyncMock(), redis)
     svc.repo = AsyncMock()
+    svc.repo.get_school_by_id.return_value = SimpleNamespace(school_type="formal")
     svc.audit = AsyncMock()
     return svc, redis
 
@@ -1438,6 +1439,39 @@ class TestInvitationService:
         )
         assert "code" in result
         assert len(result["code"]) == 8
+
+    @pytest.mark.asyncio
+    async def test_create_invite_rejects_educator_regular_invite(self):
+        svc, _ = setup_invitation_service()
+        with pytest.raises(ValidationError, match="SuperAdmin"):
+            await svc.create_invite(
+                school_id=uuid.uuid4(),
+                issuer_user_id=uuid.uuid4(),
+                role_target="EDUCATOR",
+            )
+
+    @pytest.mark.asyncio
+    async def test_create_invite_informal_school_rejects_teacher(self):
+        svc, _ = setup_invitation_service()
+        svc.repo.get_school_by_id.return_value = SimpleNamespace(school_type="informal")
+        with pytest.raises(ValidationError, match="Invalid invitation role"):
+            await svc.create_invite(
+                school_id=uuid.uuid4(),
+                issuer_user_id=uuid.uuid4(),
+                role_target=TCH,
+            )
+
+    @pytest.mark.asyncio
+    async def test_create_invite_informal_school_allows_student(self):
+        svc, _ = setup_invitation_service()
+        svc.repo.get_school_by_id.return_value = SimpleNamespace(school_type="informal")
+        svc.repo.create_invitation.return_value = SimpleNamespace(id=uuid.uuid4())
+        result = await svc.create_invite(
+            school_id=uuid.uuid4(),
+            issuer_user_id=uuid.uuid4(),
+            role_target=STD,
+        )
+        assert result["role_target"] == STD
 
     @pytest.mark.asyncio
     async def test_create_invite_non_par_with_student_id_raises(self):
@@ -1585,7 +1619,8 @@ class TestInvitationService:
         user = SimpleNamespace(id=user_id, email="u@e.com", email_verified_at=None)
         svc.repo.get_user_by_id.return_value = user
 
-        result = await svc.consume_invite("CODE", user_id, school_id)
+        with patch.object(EmailVerificationService, "send_verification_otp", AsyncMock()):
+            result = await svc.consume_invite("CODE", user_id, school_id)
         assert result["email_verification_required"] is True
 
     @pytest.mark.asyncio
@@ -2113,8 +2148,9 @@ class TestTwoFactorService:
         monkeypatch.setattr("app.core.totp.verify_totp_code", lambda *_: False)
         monkeypatch.setattr("app.core.totp.verify_backup_code", lambda *_: None)
 
-        with pytest.raises(AuthenticationError, match="Invalid TOTP"):
-            await svc.verify_login(temp_token=temp_token, code="000000")
+        with patch.object(AuthService, "_record_login_history", AsyncMock()):
+            with pytest.raises(AuthenticationError, match="Invalid TOTP"):
+                await svc.verify_login(temp_token=temp_token, code="000000")
 
     @pytest.mark.asyncio
     async def test_verify_login_success_totp(self, monkeypatch):

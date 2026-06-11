@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 import pytest_asyncio
 
-from .conftest import SCHOOL_ID, STUDENT_ID, YEAR_ID, auth_header
+from tests.security.conftest import SCHOOL_ID, STUDENT_ID, YEAR_ID, auth_header
 
 
 PARENT_TOKEN_CASES = [

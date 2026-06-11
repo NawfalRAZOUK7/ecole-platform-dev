@@ -42,9 +42,61 @@ case "${suite}" in
   full)
     target="${PYTEST_TARGET:-tests}"
     ;;
+
+  seq)
+    # Sequential pipeline: unit → integration → security → contract → edge
+    # Stops immediately on first failure; generates combined coverage only when all pass.
+    groups="unit integration security contract edge"
+    first=1
+
+    for group in $groups; do
+      group_dir="${suite_dir}/${group}"
+      mkdir -p "${group_dir}"
+
+      printf '\n'
+      printf '═══════════════════════════════════════════\n'
+      printf '  ▶  %-12s tests\n' "${group}"
+      printf '═══════════════════════════════════════════\n'
+
+      if [ "${first}" = "1" ]; then
+        python -m pytest "tests/${group}" \
+          -x \
+          --junitxml="${group_dir}/junit.xml" \
+          --cov=app \
+          --cov-branch \
+          --cov-report= \
+          || { printf '\n✗  %s tests FAILED — pipeline stopped.\n' "${group}" >&2; exit 1; }
+        first=0
+      else
+        python -m pytest "tests/${group}" \
+          -x \
+          --junitxml="${group_dir}/junit.xml" \
+          --cov=app \
+          --cov-branch \
+          --cov-append \
+          --cov-report= \
+          || { printf '\n✗  %s tests FAILED — pipeline stopped.\n' "${group}" >&2; exit 1; }
+      fi
+
+      printf '✓  %s passed\n' "${group}"
+    done
+
+    printf '\n'
+    printf '═══════════════════════════════════════════\n'
+    printf '  All groups passed — generating coverage\n'
+    printf '═══════════════════════════════════════════\n'
+    python -m coverage report \
+      --fail-under="${COV_FAIL_UNDER:-0}" \
+      --show-missing
+    python -m coverage html -d "${suite_dir}/htmlcov"
+    python -m coverage xml -o "${suite_dir}/coverage.xml"
+    printf '\nCoverage report → %s/htmlcov/index.html\n' "${suite_dir}"
+    exit 0
+    ;;
+
   *)
     echo "Unknown backend test suite: ${suite}" >&2
-    echo "Expected one of: unit, integration, security, contract, edge, performance, full" >&2
+    echo "Expected one of: unit, integration, security, contract, edge, performance, full, seq" >&2
     exit 2
     ;;
 esac

@@ -89,6 +89,7 @@ def make_quiz(
         max_attempts=max_attempts,
         shuffle_questions=False,
         status=status,
+        language="fr",
     )
 
 

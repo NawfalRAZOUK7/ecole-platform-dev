@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .conftest import CLASS_ID, PERIOD_ID, YEAR_ID, auth_header
+from tests.security.conftest import CLASS_ID, PERIOD_ID, YEAR_ID, auth_header
 
 
 ENDPOINT_CASES = [
