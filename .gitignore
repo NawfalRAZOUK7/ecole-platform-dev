@@ -116,3 +116,17 @@ History_claude.md
 
 # Dockerised test coverage/junit output
 test-artifacts/
+
+# ==================== Seed / Local Artifacts ====================
+*-report.md
+backend/uploads/reports/
+backend/uploads/submissions/
+design-tokens/
+.junie/
+
+# ==================== Smoke Test Screenshots ====================
+web-smoke-*.png
+web/web-smoke-*.png
+
+# ==================== Scratch Copies ====================
+STRUCTURE copy.md
