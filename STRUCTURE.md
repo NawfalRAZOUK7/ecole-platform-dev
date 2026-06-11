@@ -2739,7 +2739,8 @@ infra/backup/local_restore_drill.sh
 infra/backup/pg_backup.sh
 infra/backup/pg_restore.sh
 infra/certs/.gitignore
-infra/docker-compose.api-test.yml
+infra/_archive/docker-compose.api-test.yml
+infra/_archive/docker-compose.tests.yml
 infra/docker-compose.blue.yml
 infra/docker-compose.dev.yml
 infra/docker-compose.green.yml
@@ -2747,7 +2748,7 @@ infra/docker-compose.monitoring.yml
 infra/docker-compose.override.yml.example
 infra/docker-compose.prod.yml
 infra/docker-compose.staging.yml
-infra/docker-compose.tests.yml
+infra/docker-compose.test.override.yml
 infra/docs/ALERTMANAGER.md
 infra/docs/BACKUP.md
 infra/docs/CERTS.md
