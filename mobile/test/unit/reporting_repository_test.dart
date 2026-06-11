@@ -73,7 +73,7 @@ void main() {
             {
               'full_name': 'M. Alaoui',
               'email': 'alaoui@gmail.com',
-              'id': 'par-1'
+              'id': 'par-1',
             },
           ],
         }),
@@ -152,7 +152,10 @@ void main() {
       ).thenAnswer((_) async => listResponse([]));
 
       await repo.getReportJobs(
-          cursor: 'cur-1', type: 'grades', status: 'completed');
+        cursor: 'cur-1',
+        type: 'grades',
+        status: 'completed',
+      );
 
       final captured = verify(
         () => api.list('/reports', params: captureAny(named: 'params')),
@@ -305,7 +308,10 @@ void main() {
           .thenAnswer((_) async => response({'metrics': <dynamic>[]}));
 
       await repo.getOverview(
-          fromDate: '2026-01-01', toDate: '2026-06-01', compare: true);
+        fromDate: '2026-01-01',
+        toDate: '2026-06-01',
+        compare: true,
+      );
 
       final params = verify(
         () =>
@@ -472,7 +478,8 @@ void main() {
     test('updateSchedule updates and returns schedule', () async {
       when(() => api.put('/reports/schedules/sch-1', body: any(named: 'body')))
           .thenAnswer(
-              (_) async => response({...scheduleJson, 'is_active': false}));
+        (_) async => response({...scheduleJson, 'is_active': false}),
+      );
 
       final result = await repo.updateSchedule(id: 'sch-1', isActive: false);
 

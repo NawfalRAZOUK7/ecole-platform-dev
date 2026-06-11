@@ -291,7 +291,7 @@ void main() {
     test('returns list of category strings', () async {
       when(() => api.get('/gradebook/classes/cls-1/categories')).thenAnswer(
         (_) async => response({
-          'categories': ['Quiz', 'Exam', 'Homework']
+          'categories': ['Quiz', 'Exam', 'Homework'],
         }),
       );
 

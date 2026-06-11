@@ -24,12 +24,20 @@ Quiz _quizFromJson(Map<String, dynamic> json) {
 }
 
 Question _questionFromJson(Map<String, dynamic> json) {
+  final rawOptions = json['options'];
+  // Backend returns options as a List for MCQ (e.g. [{id, text}, ...]).
+  // Normalize to Map so quiz_inputs.dart can read options?['choices'].
+  final Map<String, dynamic>? options = switch (rawOptions) {
+    final List<dynamic> list => {'choices': list},
+    final Map<String, dynamic> map => map,
+    _ => null,
+  };
   return Question(
     id: json['id'] as String,
     questionType: json['question_type'] as String,
     questionText: json['question_text'] as String,
     questionMediaPath: json['question_media_path'] as String?,
-    options: json['options'] as Map<String, dynamic>?,
+    options: options,
     points: json['points'] as int? ?? 1,
     order: json['order'] as int? ?? 0,
   );

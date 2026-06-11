@@ -159,7 +159,8 @@ class _ActivateScreenState extends ConsumerState<ActivateScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-            tr('Activer votre compte', 'Activate your account', 'تفعيل حسابك')),
+          tr('Activer votre compte', 'Activate your account', 'تفعيل حسابك'),
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),

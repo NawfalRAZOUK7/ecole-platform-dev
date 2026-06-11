@@ -9,8 +9,10 @@ import 'package:ecole_platform/domain/entities/billing/invoice.dart';
 import '../helpers/api_responses.dart';
 import '../helpers/test_mocks.dart';
 
-Map<String, dynamic> _invoiceJson(
-        {String id = 'inv-1', String status = 'pending'}) =>
+Map<String, dynamic> _invoiceJson({
+  String id = 'inv-1',
+  String status = 'pending',
+}) =>
     {
       'id': id,
       'school_id': 'school-1',

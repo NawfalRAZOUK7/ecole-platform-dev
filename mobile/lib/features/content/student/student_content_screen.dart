@@ -54,7 +54,7 @@ class _StudentContentScreenState extends ConsumerState<StudentContentScreen> {
       // Student gets content from their enrolled classes
       // Use a default class endpoint that returns all assigned content
       final api = ref.read(apiClientProvider);
-      final resp = await api.list('/student/content');
+      final resp = await api.list('/content-items');
       _items = resp.data
           .map(
             (json) => AssignedContent(
@@ -328,6 +328,7 @@ class _ContentCard extends ConsumerWidget {
       case 'AUDIO':
         return Icons.audiotrack;
       case 'DOCUMENT':
+      case 'PDF':
         return Icons.picture_as_pdf;
       case 'INTERACTIVE':
         return Icons.touch_app;
@@ -345,6 +346,7 @@ class _ContentCard extends ConsumerWidget {
       case 'AUDIO':
         return theme.colorScheme.secondary;
       case 'DOCUMENT':
+      case 'PDF':
         return theme.colorScheme.primary;
       case 'INTERACTIVE':
         return theme.semanticPalette.warning;
@@ -592,6 +594,7 @@ class _ContentPlayer extends StatelessWidget {
           onStarted: () => onProgress('in_progress'),
         );
       case 'DOCUMENT':
+      case 'PDF':
         return _SignedPdfPlayer(
           path: path,
           title: item.title,

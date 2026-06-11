@@ -8,8 +8,10 @@ import 'package:ecole_platform/domain/entities/school/micro_school.dart';
 import '../helpers/api_responses.dart';
 import '../helpers/test_mocks.dart';
 
-Map<String, dynamic> _schoolJson(
-        {String id = 'ms-1', String status = 'active'}) =>
+Map<String, dynamic> _schoolJson({
+  String id = 'ms-1',
+  String status = 'active',
+}) =>
     {
       'id': id,
       'name': 'École Benani Casablanca',

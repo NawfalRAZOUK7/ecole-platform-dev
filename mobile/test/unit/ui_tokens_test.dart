@@ -77,12 +77,18 @@ void main() {
     });
 
     test('headings decrease in size h1 > h2 > h3 > h4', () {
-      expect(AppTypography.heading1.fontSize,
-          greaterThan(AppTypography.heading2.fontSize!));
-      expect(AppTypography.heading2.fontSize,
-          greaterThan(AppTypography.heading3.fontSize!));
-      expect(AppTypography.heading3.fontSize,
-          greaterThan(AppTypography.heading4.fontSize!));
+      expect(
+        AppTypography.heading1.fontSize,
+        greaterThan(AppTypography.heading2.fontSize!),
+      );
+      expect(
+        AppTypography.heading2.fontSize,
+        greaterThan(AppTypography.heading3.fontSize!),
+      );
+      expect(
+        AppTypography.heading3.fontSize,
+        greaterThan(AppTypography.heading4.fontSize!),
+      );
     });
   });
 }
