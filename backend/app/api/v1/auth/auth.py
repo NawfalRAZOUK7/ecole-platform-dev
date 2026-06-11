@@ -24,6 +24,7 @@ from app.core.redis import get_redis
 from app.core.response import Meta, list_response, success_response
 from app.core.request_utils import get_client_ip, parse_device_name
 from app.schemas.auth import (
+    ActivateRequest,
     ChangePasswordRequest,
     EmailVerifyRequest,
     LoginData,
@@ -197,6 +198,43 @@ async def register(
         response_data["email_verification_otp"] = verification["otp"]
 
     return success_response(response_data)
+
+
+# ---------------------------------------------------------------------------
+# POST /auth/activate — Public (onboarding owner sets password via email link)
+# ---------------------------------------------------------------------------
+@router.post(
+    "/activate",
+    summary="Activate an onboarding-provisioned account",
+    response_description="Activated user id + email",
+)
+async def activate(
+    body: ActivateRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Set the password for an account provisioned by SuperAdmin approval.
+
+    The one-time token comes from the activation link emailed on approval.
+    Valid activation flips the account from INACTIVE to ACTIVE. Public, but
+    rate-limited under the auth category.
+    """
+    from app.services.platform.onboarding import OnboardingService
+
+    service = OnboardingService(db)
+    result = await service.activate_account(
+        token=body.token,
+        password=body.password,
+        ip_address=get_client_ip(request),
+    )
+    return success_response(
+        {
+            "user_id": str(result["user_id"]),
+            "email": result["email"],
+            "status": result["status"],
+            "activated": True,
+        }
+    )
 
 
 # ---------------------------------------------------------------------------

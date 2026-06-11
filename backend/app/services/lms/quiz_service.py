@@ -122,6 +122,7 @@ class QuizService(LMSServiceBase):
                     "max_attempts": quiz.max_attempts,
                     "shuffle_questions": quiz.shuffle_questions,
                     "status": quiz.status,
+                    "language": quiz.language,
                     "total_points": total_points,
                     "question_count": question_count,
                 }

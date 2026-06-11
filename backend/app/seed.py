@@ -19,9 +19,11 @@ from app.models.audit import AuditLog
 from app.models.billing import (
     FeeAssignment,
     FeeStructure,
+    Installment,
     Invoice,
     InvoiceItem,
     PaymentAttempt,
+    PaymentPlan,
 )
 from app.models.com import (
     Announcement,
@@ -64,10 +66,12 @@ from app.models.lms import (
     Assignment,
     ClassContentAssignment,
     ContentItem,
+    ContentItemAsset,
     ContentProgress,
     ContentSubmission,
     Course,
     Grade,
+    StudentPeriodAverage,
     Quiz,
     QuizAttempt,
     QuizQuestion,
@@ -88,6 +92,7 @@ from app.seed_extensions import (
 )
 from app.seed_enhanced import (
     seed_absence_justifications,
+    seed_auth_security_showcase,
     seed_billing_policies,
     seed_budget,
     seed_enhanced_attendance,
@@ -112,12 +117,15 @@ from app.seed_enhanced import (
     seed_timetable_extras,
     seed_upload_sessions,
 )
+from app.seed_demo_scenarios import seed_demo_scenarios
+from app.seed_onboarding import seed_onboarding_applications
 from app.services.admin.compliance import seed_men_reference_data
 
 # ── Fixed UUIDs for deterministic seeding ──────────────────────────────────
 
 SCHOOL_ID = uuid.UUID("00000000-0000-4000-8000-000000000001")
 SCHOOL_ID_2 = uuid.UUID("00000000-0000-4000-8000-000000000002")
+MICRO_SCHOOL_TENANT_ID = uuid.UUID("00000000-0000-4000-8000-000000000003")
 
 # Users
 ADMIN_ID = uuid.UUID("10000000-0000-4000-8000-000000000001")
@@ -154,6 +162,8 @@ PLATFORM_CONTENT_3_ID = uuid.UUID("30000000-0000-4000-8000-000000000012")
 PLATFORM_CONTENT_4_ID = uuid.UUID("30000000-0000-4000-8000-000000000013")
 PLATFORM_CONTENT_5_ID = uuid.UUID("30000000-0000-4000-8000-000000000014")
 PLATFORM_CONTENT_6_ID = uuid.UUID("30000000-0000-4000-8000-000000000015")
+PLATFORM_CONTENT_3_AUDIO_ID = uuid.UUID("30000000-0000-4000-8000-000000000016")
+PLATFORM_CONTENT_5_AUDIO_ID = uuid.UUID("30000000-0000-4000-8000-000000000017")
 
 # Phase 9B — Quizzes
 QUIZ_MATH_ID = uuid.UUID("30000000-0000-4000-8000-000000000020")
@@ -190,6 +200,9 @@ STUDENT_TERM_ID = uuid.UUID("10000000-0000-4000-8000-000000000010")
 
 PARENT_TAZI_ID = uuid.UUID("10000000-0000-4000-8000-000000000011")
 PARENT_FASSI_ID = uuid.UUID("10000000-0000-4000-8000-000000000012")
+PARENT_MANSOURI_ID = uuid.UUID("10000000-0000-4000-8000-000000000013")
+PARENT_BERRADA_ID = uuid.UUID("10000000-0000-4000-8000-000000000014")
+PARENT_CHRAIBI_ID = uuid.UUID("10000000-0000-4000-8000-000000000015")
 
 CLASS_CP_ID = uuid.UUID("20000000-0000-4000-8000-000000000010")
 CLASS_CE2_ID = uuid.UUID("20000000-0000-4000-8000-000000000011")
@@ -366,6 +379,7 @@ async def seed_schools(session: AsyncSession) -> None:
             code="ECOLE-BENANI",
             massar_code="MASSAR-BENANI",
             status="active",
+            school_type="formal",
             address="12 Rue des Orangers, Casablanca",
             city="Casablanca",
             region="Casablanca-Settat",
@@ -379,6 +393,7 @@ async def seed_schools(session: AsyncSession) -> None:
             default_language="fr",
             grading_scale="moroccan_20",
             settings={
+                "design_mode": "formal",
                 "timezone": "Africa/Casablanca",
                 "currency": "MAD",
                 "supported_languages": ["fr", "ar"],
@@ -391,6 +406,7 @@ async def seed_schools(session: AsyncSession) -> None:
             code="ECOLE-ATLAS",
             massar_code="MASSAR-ATLAS",
             status="trial",
+            school_type="formal",
             address="45 Avenue Mohammed V, Rabat",
             city="Rabat",
             region="Rabat-Sale-Kenitra",
@@ -404,15 +420,44 @@ async def seed_schools(session: AsyncSession) -> None:
             default_language="fr",
             grading_scale="moroccan_20",
             settings={
+                "design_mode": "formal",
                 "timezone": "Africa/Casablanca",
                 "currency": "MAD",
                 "supported_languages": ["fr", "ar"],
             },
         ),
+        School(
+            id=MICRO_SCHOOL_TENANT_ID,
+            name="Petite Ecole des Orangers",
+            name_ar="روضة البرتقال",
+            code="MICRO-ORANGERS",
+            massar_code=None,
+            status="active",
+            school_type="informal",
+            address="Hay Orangers, Casablanca",
+            city="Casablanca",
+            region="Casablanca-Settat",
+            phone="+212612345999",
+            email="educateur.micro@ecole-benani.ma",
+            website=None,
+            max_students=40,
+            max_teachers=3,
+            subscription_plan="micro",
+            timezone="Africa/Casablanca",
+            default_language="fr",
+            grading_scale="skills",
+            settings={
+                "design_mode": "informal",
+                "timezone": "Africa/Casablanca",
+                "currency": "MAD",
+                "supported_languages": ["fr", "ar"],
+                "informal": True,
+            },
+        ),
     ]
     session.add_all(schools)
     await session.flush()
-    print("  [School]    2 schools")
+    print("  [School]    3 schools")
 
 
 async def seed_iam(session: AsyncSession) -> None:
@@ -1334,6 +1379,39 @@ async def seed_cms(session: AsyncSession) -> None:
     session.add_all(platform_content)
     await session.flush()
 
+    session.add_all(
+        [
+            ContentItemAsset(
+                id=PLATFORM_CONTENT_3_AUDIO_ID,
+                content_item_id=PLATFORM_CONTENT_3_ID,
+                file_path="content/audio/geometry-triangles-page-1.mp3",
+                mime_type="audio/mpeg",
+                file_size=180000,
+                page_number=1,
+                narration_text=(
+                    "Un triangle est une figure qui possède trois côtés et "
+                    "trois sommets. On peut le classer selon ses côtés et ses angles."
+                ),
+                has_activity=True,
+                asset_type="audio_narration",
+            ),
+            ContentItemAsset(
+                id=PLATFORM_CONTENT_5_AUDIO_ID,
+                content_item_id=PLATFORM_CONTENT_5_ID,
+                file_path="content/audio/arabic-alphabet-page-1.mp3",
+                mime_type="audio/mpeg",
+                file_size=160000,
+                page_number=1,
+                narration_text=(
+                    "الحروف العربية جميلة. نسمع الحرف ثم نكرر الكلمة بصوت واضح."
+                ),
+                has_activity=True,
+                asset_type="audio_narration",
+            ),
+        ]
+    )
+    await session.flush()
+
     # Teacher's school-scoped content (used for submission)
     teacher_content = ContentItem(
         school_id=SCHOOL_ID,
@@ -1400,6 +1478,7 @@ async def seed_quizzes(session: AsyncSession) -> None:
         description="Quiz de révision sur les fractions pour le niveau 6ème.",
         subject="math",
         level_band="6eme",
+        language="fr",
         difficulty="MEDIUM",
         time_limit_minutes=15,
         max_attempts=3,
@@ -1476,6 +1555,7 @@ async def seed_quizzes(session: AsyncSession) -> None:
         description="Vérifiez vos connaissances sur les accords du participe passé.",
         subject="french",
         level_band="6eme",
+        language="fr",
         difficulty="EASY",
         time_limit_minutes=10,
         max_attempts=2,
@@ -2173,6 +2253,259 @@ async def seed_game_configs(session: AsyncSession) -> None:
             is_active=True,
         ),
     ]
+
+    # ── Letter puzzles (procedural jigsaw) ──
+    # config: {letter, language, grid{rows,cols}, pieces[{word,emoji,image_url,audio_url}]}
+    # 6 pieces → 2×3 grid. Arabic from maternelle; English gated to age >= 8.
+    # (letter shapes are generated client-side, so config stays lightweight.)
+    _letter_puzzles: list[tuple[str, str, str, int, int, list[tuple[str, str]]]] = [
+        (
+            "ar",
+            "أ",
+            "Alif",
+            4,
+            7,
+            [
+                ("أَرْنَبٌ", "🐰"),
+                ("أَسَدٌ", "🦁"),
+                ("أَنَانَاسٌ", "🍍"),
+                ("أَفْعَى", "🐍"),
+                ("أَزْهَارٌ", "🌸"),
+                ("أُذُنٌ", "👂"),
+            ],
+        ),
+        (
+            "ar",
+            "ب",
+            "Baa",
+            4,
+            7,
+            [
+                ("بُرْتُقَالٌ", "🍊"),
+                ("بَصَلٌ", "🧅"),
+                ("بَيْتٌ", "🏠"),
+                ("بِطِّيخٌ", "🍉"),
+                ("بَاذِنْجَانٌ", "🍆"),
+                ("بِطْرِيقٌ", "🐧"),
+            ],
+        ),
+        (
+            "ar",
+            "ت",
+            "Taa",
+            4,
+            7,
+            [
+                ("تُفَّاحٌ", "🍎"),
+                ("تَاجٌ", "👑"),
+                ("تِمْسَاحٌ", "🐊"),
+                ("تُوتٌ", "🫐"),
+                ("تِينٌ", "🪴"),
+                ("تَلٌّ", "⛰️"),
+            ],
+        ),
+        (
+            "ar",
+            "ث",
+            "Thaa",
+            4,
+            7,
+            [
+                ("ثُعْبَانٌ", "🐍"),
+                ("ثَلْجٌ", "❄️"),
+                ("ثَوْرٌ", "🐂"),
+                ("ثَعْلَبٌ", "🦊"),
+                ("ثُومٌ", "🧄"),
+                ("ثَوْبٌ", "👗"),
+            ],
+        ),
+        (
+            "ar",
+            "ز",
+            "Zay",
+            4,
+            7,
+            [
+                ("زَيْتُونٌ", "🫒"),
+                ("زَيْتٌ", "🍶"),
+                ("زَرَافَةٌ", "🦒"),
+                ("زَهْرَةٌ", "🌸"),
+                ("زَوْرَقٌ", "⛵"),
+                ("زُجَاجٌ", "🥃"),
+            ],
+        ),
+        (
+            "fr",
+            "A",
+            "A",
+            4,
+            7,
+            [
+                ("Avion", "✈️"),
+                ("Abeille", "🐝"),
+                ("Arbre", "🌳"),
+                ("Ananas", "🍍"),
+                ("Âne", "🫏"),
+                ("Arc", "🏹"),
+            ],
+        ),
+        (
+            "fr",
+            "B",
+            "B",
+            4,
+            7,
+            [
+                ("Banane", "🍌"),
+                ("Ballon", "🎈"),
+                ("Bateau", "⛵"),
+                ("Bébé", "👶"),
+                ("Bougie", "🕯️"),
+                ("Bague", "💍"),
+            ],
+        ),
+        (
+            "fr",
+            "C",
+            "C",
+            4,
+            7,
+            [
+                ("Chat", "🐱"),
+                ("Chien", "🐶"),
+                ("Carotte", "🥕"),
+                ("Citron", "🍋"),
+                ("Clé", "🔑"),
+                ("Cœur", "❤️"),
+            ],
+        ),
+        (
+            "fr",
+            "M",
+            "M",
+            4,
+            7,
+            [
+                ("Maison", "🏠"),
+                ("Montagne", "⛰️"),
+                ("Main", "✋"),
+                ("Mangue", "🥭"),
+                ("Moto", "🏍️"),
+                ("Mouton", "🐑"),
+            ],
+        ),
+        (
+            "fr",
+            "S",
+            "S",
+            4,
+            7,
+            [
+                ("Soleil", "☀️"),
+                ("Serpent", "🐍"),
+                ("Singe", "🐒"),
+                ("Sac", "🎒"),
+                ("Souris", "🐭"),
+                ("Salade", "🥗"),
+            ],
+        ),
+        (
+            "en",
+            "A",
+            "A (anglais)",
+            8,
+            12,
+            [
+                ("Apple", "🍎"),
+                ("Ant", "🐜"),
+                ("Airplane", "✈️"),
+                ("Apricot", "🍑"),
+                ("Arm", "💪"),
+                ("Arrow", "🏹"),
+            ],
+        ),
+        (
+            "en",
+            "B",
+            "B (anglais)",
+            8,
+            12,
+            [
+                ("Ball", "⚽"),
+                ("Banana", "🍌"),
+                ("Bear", "🐻"),
+                ("Book", "📖"),
+                ("Bee", "🐝"),
+                ("Boat", "⛵"),
+            ],
+        ),
+        (
+            "en",
+            "C",
+            "C (anglais)",
+            8,
+            12,
+            [
+                ("Cat", "🐱"),
+                ("Car", "🚗"),
+                ("Cake", "🍰"),
+                ("Cloud", "☁️"),
+                ("Cow", "🐄"),
+                ("Crown", "👑"),
+            ],
+        ),
+        (
+            "en",
+            "S",
+            "S (anglais)",
+            8,
+            12,
+            [
+                ("Sun", "☀️"),
+                ("Star", "⭐"),
+                ("Snake", "🐍"),
+                ("Ship", "🚢"),
+                ("Sheep", "🐑"),
+                ("Strawberry", "🍓"),
+            ],
+        ),
+    ]
+    for lang, letter, label, age_min, age_max, words in _letter_puzzles:
+        configs.append(
+            GameConfig(
+                id=uuid.uuid5(
+                    uuid.NAMESPACE_URL, f"game-config-letter-puzzle-{lang}-{label}"
+                ),
+                game_type="letter_puzzle",
+                title=f"Letter Puzzle - {label}",
+                title_ar=f"لغز الحرف - {letter}",
+                title_fr=f"Puzzle de lettre - {label}",
+                subject="literacy",
+                difficulty="easy",
+                target_age_min=age_min,
+                target_age_max=age_max,
+                config={
+                    "letter": letter,
+                    "language": lang,
+                    "grid": {"rows": 2, "cols": 3},
+                    "letter_audio_url": None,
+                    "pieces": [
+                        {
+                            "word": word,
+                            "emoji": emoji,
+                            "image_url": None,
+                            "audio_url": None,
+                        }
+                        for (word, emoji) in words
+                    ],
+                },
+                reward_stars=10,
+                reward_xp=15,
+                school_id=None,
+                is_active=True,
+            )
+        )
+
     session.add_all(configs)
     await session.flush()
     print(f"  [Games] {len(configs)} game configs")
@@ -2648,7 +2981,7 @@ async def seed_level_content(session: AsyncSession) -> None:
             11,
             [
                 ("L'histoire du Maroc médiéval", "video", "history", "fr"),
-                ("Anglais - Unit 1 - Greetings", "pdf", "english", "fr"),
+                ("Anglais - Unit 1 - Greetings", "pdf", "english", "en"),
             ],
         ),
         (
@@ -2711,22 +3044,37 @@ async def seed_level_content(session: AsyncSession) -> None:
     count = 0
     for level_band, level_label, age_min, age_max, items in level_specs:
         for title, content_type, subject, language in items:
-            session.add(
-                ContentItem(
-                    school_id=None,
-                    title=title,
-                    content_type=content_type,
-                    level_band=level_band,
-                    language=language,
-                    subject=subject,
-                    description=f"Contenu pédagogique pour le niveau {level_label}.",
-                    status="published",
-                    origin="PLATFORM",
-                    created_by=CONTENT_MGR_ID,
-                    target_age_min=age_min,
-                    target_age_max=age_max,
-                )
+            content_item = ContentItem(
+                school_id=None,
+                title=title,
+                content_type=content_type,
+                level_band=level_band,
+                language=language,
+                subject=subject,
+                description=f"Contenu pédagogique pour le niveau {level_label}.",
+                status="published",
+                origin="PLATFORM",
+                created_by=CONTENT_MGR_ID,
+                target_age_min=age_min,
+                target_age_max=age_max,
             )
+            session.add(content_item)
+            if title == "Anglais - Unit 1 - Greetings":
+                session.add(
+                    ContentItemAsset(
+                        content_item=content_item,
+                        file_path="content/audio/english-greetings-page-1.mp3",
+                        mime_type="audio/mpeg",
+                        file_size=150000,
+                        page_number=1,
+                        narration_text=(
+                            "Hello and welcome. Today we learn simple greetings: "
+                            "hello, good morning, and goodbye."
+                        ),
+                        has_activity=True,
+                        asset_type="audio_narration",
+                    )
+                )
             count += 1
     await session.flush()
     print(
@@ -3420,6 +3768,336 @@ async def seed_new_student_rewards(session: AsyncSession) -> None:
     print("  [H2] 5 new student rewards + 12 reward events for G8 students")
 
 
+async def seed_demo_coverage_data(session: AsyncSession) -> None:
+    """Fill demo-facing gaps so role tabs have coherent, non-empty data."""
+    from datetime import time
+
+    from sqlalchemy import select
+
+    now = _now()
+
+    # Parents for the remaining age-tier demo students.
+    parent_specs = [
+        (
+            PARENT_MANSOURI_ID,
+            "parent.mansouri@gmail.com",
+            "Nadia Mansouri",
+            "+212633333333",
+            "mother",
+            "IJ778899",
+            "14 Rue Ibn Sina, Casablanca",
+            "Pharmacienne",
+            STUDENT_CM2_ID,
+        ),
+        (
+            PARENT_BERRADA_ID,
+            "parent.berrada@gmail.com",
+            "Samir Berrada",
+            "+212644444444",
+            "father",
+            "KL990011",
+            "31 Rue Al Massira, Casablanca",
+            "Ingénieur",
+            STUDENT_3EME_ID,
+        ),
+        (
+            PARENT_CHRAIBI_ID,
+            "parent.chraibi@gmail.com",
+            "Meryem Chraibi",
+            "+212655555555",
+            "mother",
+            "MN223344",
+            "6 Avenue Zerktouni, Casablanca",
+            "Médecin",
+            STUDENT_TERM_ID,
+        ),
+    ]
+    for uid, email, full_name, phone, *_ in parent_specs:
+        session.add(
+            User(
+                id=uid,
+                email=email,
+                full_name=full_name,
+                phone=phone,
+                password_hash=_hash("parent123"),
+                status="active",
+                school_id=SCHOOL_ID,
+            )
+        )
+    await session.flush()
+
+    for (
+        uid,
+        _email,
+        _name,
+        phone,
+        relation,
+        cin,
+        address,
+        job,
+        child_id,
+    ) in parent_specs:
+        session.add(
+            Membership(
+                user_id=uid,
+                school_id=SCHOOL_ID,
+                role_code="PAR",
+                status="active",
+            )
+        )
+        session.add(
+            ParentProfile(
+                user_id=uid,
+                school_id=SCHOOL_ID,
+                relationship_type=relation,
+                cin_number=cin,
+                address=address,
+                profession=job,
+                emergency_phone=phone,
+            )
+        )
+        session.add(
+            ParentChildLink(
+                parent_user_id=uid,
+                child_user_id=child_id,
+                school_id=SCHOOL_ID,
+                status="active",
+                linked_at=now - timedelta(days=12),
+                linked_by=ADMIN_ID,
+            )
+        )
+    await session.flush()
+
+    # Make every age-tier class visible in teacher/director workflows.
+    class_teacher_specs = [
+        (CLASS_CP_ID, TEACHER_2_ID, "Lecture", "Salle CP"),
+        (CLASS_CE2_ID, TEACHER_1_ID, "Mathématiques", "Salle CE2"),
+        (CLASS_CM2_ID, TEACHER_2_ID, "Français", "Salle CM2"),
+        (CLASS_3EME_ID, TEACHER_1_ID, "Mathématiques", "Salle 3A"),
+        (CLASS_TERM_ID, TEACHER_1_ID, "Mathématiques", "Salle BAC"),
+    ]
+    for class_id, teacher_id, _subject, _room in class_teacher_specs:
+        session.add(
+            TeacherAssignment(
+                school_id=SCHOOL_ID,
+                teacher_id=teacher_id,
+                class_id=class_id,
+                period_id=PERIOD_2_ID,
+            )
+        )
+
+    for index, (class_id, teacher_id, subject, room) in enumerate(class_teacher_specs):
+        session.add(
+            TimetableSlot(
+                school_id=SCHOOL_ID,
+                class_id=class_id,
+                academic_year_id=YEAR_ID,
+                day_of_week=index % 5,
+                start_time=time(9, 0),
+                end_time=time(10, 0),
+                subject=subject,
+                teacher_id=teacher_id,
+                room=room,
+                is_recurring=True,
+            )
+        )
+        session.add(
+            TimetableSlot(
+                school_id=SCHOOL_ID,
+                class_id=class_id,
+                academic_year_id=YEAR_ID,
+                day_of_week=(index + 2) % 5,
+                start_time=time(11, 0),
+                end_time=time(12, 0),
+                subject="Sciences" if index < 3 else "Préparation examen",
+                teacher_id=teacher_id,
+                room=room,
+                is_recurring=True,
+            )
+        )
+
+    age_students = [
+        (STUDENT_CP_ID, CLASS_CP_ID, "CP", 16.5, "Très bien"),
+        (STUDENT_CE2_ID, CLASS_CE2_ID, "CE2", 15.2, "Bien"),
+        (STUDENT_CM2_ID, CLASS_CM2_ID, "CM2", 14.7, "Bien"),
+        (STUDENT_3EME_ID, CLASS_3EME_ID, "3eme", 13.4, "Assez bien"),
+        (STUDENT_TERM_ID, CLASS_TERM_ID, "Terminale", 15.8, "Très bien"),
+    ]
+
+    for index, (student_id, class_id, _level, average, mention) in enumerate(
+        age_students
+    ):
+        session.add(
+            StudentPeriodAverage(
+                school_id=SCHOOL_ID,
+                student_id=student_id,
+                class_id=class_id,
+                period_id=PERIOD_2_ID,
+                weighted_average=average,
+                mention=mention,
+                class_rank=1,
+                total_students=1,
+                computed_at=now - timedelta(days=index + 1),
+            )
+        )
+
+        att = AttendanceSession(
+            class_id=class_id,
+            period_id=PERIOD_2_ID,
+            teacher_id=TEACHER_1_ID if index >= 1 else TEACHER_2_ID,
+            school_id=SCHOOL_ID,
+            session_date=date(2026, 4, 20 + index),
+            slot="09:00-10:00",
+        )
+        session.add(att)
+        await session.flush()
+        session.add(
+            AttendanceRecord(
+                attendance_session_id=att.id,
+                student_id=student_id,
+                school_id=SCHOOL_ID,
+                status="late" if index == 3 else "present",
+                absence_reason=None,
+            )
+        )
+
+        assessment = Assessment(
+            class_id=class_id,
+            teacher_id=TEACHER_1_ID if index >= 1 else TEACHER_2_ID,
+            title=f"Évaluation diagnostique {_level}",
+            due_at=now - timedelta(days=7 - index),
+            total_points=20,
+            status="published",
+        )
+        session.add(assessment)
+        await session.flush()
+        session.add(
+            AssessmentResult(
+                assessment_id=assessment.id,
+                student_id=student_id,
+                score=average,
+                status="published",
+            )
+        )
+
+    # Content progress per level so Student/Parent progress and shared review tabs show data.
+    for student_id, _class_id, level, _average, _mention in age_students:
+        result = await session.execute(
+            select(ContentItem)
+            .where(ContentItem.level_band == level)
+            .order_by(ContentItem.title.asc())
+            .limit(2)
+        )
+        for idx, content in enumerate(result.scalars().all()):
+            session.add(
+                ContentProgress(
+                    student_id=student_id,
+                    content_item_id=content.id,
+                    status="completed" if idx == 0 else "in_progress",
+                )
+            )
+
+    # Billing coverage for all parent demo accounts, including payment plans.
+    billing_specs = [
+        (PARENT_TAZI_ID, STUDENT_CP_ID, "CP", 1800.00),
+        (PARENT_FASSI_ID, STUDENT_CE2_ID, "CE2", 2200.00),
+        (PARENT_MANSOURI_ID, STUDENT_CM2_ID, "CM2", 2600.00),
+        (PARENT_BERRADA_ID, STUDENT_3EME_ID, "3ème", 3000.00),
+        (PARENT_CHRAIBI_ID, STUDENT_TERM_ID, "Terminale", 3500.00),
+    ]
+    for index, (parent_id, _student_id, level, amount) in enumerate(billing_specs):
+        invoice = Invoice(
+            school_id=SCHOOL_ID,
+            parent_id=parent_id,
+            period_id=PERIOD_2_ID,
+            status="pending",
+            total_amount=amount,
+            currency="MAD",
+            issued_date=date(2026, 5, 1),
+            due_date=date(2026, 5, 30),
+        )
+        session.add(invoice)
+        await session.flush()
+        session.add(
+            InvoiceItem(
+                invoice_id=invoice.id,
+                description=f"Scolarité et services — {level}",
+                amount=amount,
+                unit_price=amount,
+                quantity=1,
+                tva_rate=0,
+                tva_amount=0,
+                amount_ht=amount,
+                amount_ttc=amount,
+            )
+        )
+        plan = PaymentPlan(
+            school_id=SCHOOL_ID,
+            invoice_id=invoice.id,
+            total_installments=3,
+            status="active",
+        )
+        session.add(plan)
+        await session.flush()
+        installment_amount = round(amount / 3, 2)
+        for number in range(1, 4):
+            session.add(
+                Installment(
+                    plan_id=plan.id,
+                    installment_number=number,
+                    amount=installment_amount,
+                    due_date=now + timedelta(days=(number - 1) * 20 + index),
+                    paid_at=now - timedelta(days=2)
+                    if number == 1 and index < 2
+                    else None,
+                    status="paid" if number == 1 and index < 2 else "pending",
+                )
+            )
+        session.add(
+            PaymentAttempt(
+                school_id=SCHOOL_ID,
+                invoice_id=invoice.id,
+                parent_id=parent_id,
+                idempotency_key=f"demo-coverage-{parent_id}",
+                status="processing" if index == 0 else "pending",
+            )
+        )
+
+    # Parent feed and notifications for the new family accounts.
+    for parent_id, student_id, level, amount in billing_specs:
+        session.add(
+            ParentFeedItem(
+                school_id=SCHOOL_ID,
+                parent_id=parent_id,
+                student_id=student_id,
+                source_type="progress",
+                source_ref=f"progress:{student_id}",
+                title=f"Progression {level} mise à jour",
+                body="Les contenus récents, notes et présences sont disponibles.",
+            )
+        )
+        session.add(
+            Notification(
+                school_id=SCHOOL_ID,
+                parent_id=parent_id,
+                event_ref=f"billing:{student_id}",
+                idempotency_key=f"demo-coverage-billing-{parent_id}",
+                category="billing",
+                priority="normal",
+                title="Plan de paiement disponible",
+                body=f"Un plan de paiement de {amount:.0f} MAD est prêt à consulter.",
+                action_url="/billing/payment-plans",
+                action_payload={"student_id": str(student_id)},
+            )
+        )
+
+    await session.flush()
+    print(
+        "  [Demo Coverage] +3 parents, +5 payment plans, +10 timetable slots, "
+        "+5 assessments/results, +5 averages, +content progress for all age-tier students"
+    )
+
+
 async def main() -> None:
     print("=" * 60)
     print("Ecole Platform — Seeding development database")
@@ -3447,6 +4125,7 @@ async def main() -> None:
         await seed_feature_toggles(session)
         await seed_reward_badges(session)
         await seed_game_configs(session)
+        await seed_onboarding_applications(session)
         await seed_men_compliance(session)
         await seed_demo_student_data(session)
         await seed_additional_students(session)
@@ -3463,6 +4142,7 @@ async def main() -> None:
         await seed_programs(session)
         await seed_ai_preferences(session)
         await seed_notification_preferences(session)
+        await seed_auth_security_showcase(session)
 
         # ── Enhanced seeders (high-volume demo data) ──
         print("\n  [Enhanced] Seeding high-volume demo data:")
@@ -3489,6 +4169,8 @@ async def main() -> None:
         await seed_school_2_minimal(session)
         await seed_timetable_extras(session)
         await seed_program_assignment_events(session)
+        await seed_demo_scenarios(session)
+        await seed_demo_coverage_data(session)
         await seed_misc_empty_tables(session)
 
         await session.commit()
@@ -3524,6 +4206,9 @@ def _generate_seed_report() -> None:
 | Parent (Idrissi) | `parent.idrissi@gmail.com` | `parent123` |
 | Parent (Tazi) | `parent.tazi@gmail.com` | `parent123` |
 | Parent (Fassi) | `parent.fassi@gmail.com` | `parent123` |
+| Parent (Mansouri) | `parent.mansouri@gmail.com` | `parent123` |
+| Parent (Berrada) | `parent.berrada@gmail.com` | `parent123` |
+| Parent (Chraibi) | `parent.chraibi@gmail.com` | `parent123` |
 | Student 6eme (Yassine) | `yassine.alaoui@ecole-benani.ma` | `student123` |
 | Student 6eme (Salma) | `salma.idrissi@ecole-benani.ma` | `student123` |
 | Student 6eme (Omar) | `omar.benali@ecole-benani.ma` | `student123` |
@@ -3532,8 +4217,13 @@ def _generate_seed_report() -> None:
 | Student CM2 (Leila) | `leila.cm2@ecole-benani.ma` | `student123` |
 | Student 3eme (Mehdi) | `mehdi.3eme@ecole-benani.ma` | `student123` |
 | Student Terminale (Sara) | `sara.terminale@ecole-benani.ma` | `student123` |
+| Micro-school Educator | `educateur.micro@ecole-benani.ma` | `teacher123` |
 | Superadmin | `superadmin@ecole-platform.ma` | `superadmin123` |
 | Content Manager | `cms@ecole-platform.ma` | `content123` |
+| Atlas Admin | `admin@ecole-atlas.ma` | `admin123` |
+| Atlas Teacher | `prof@ecole-atlas.ma` | `teacher123` |
+| Atlas Parent | `parent@ecole-atlas.ma` | `parent123` |
+| Atlas Student | `enfant@ecole-atlas.ma` | `student123` |
 
 ## Schools
 
@@ -3563,6 +4253,9 @@ def _generate_seed_report() -> None:
 | Parent Idrissi | Salma Idrissi |
 | Fatima Tazi | Amina Tazi (CP) |
 | Omar Fassi | Karim Fassi (CE2) |
+| Nadia Mansouri | Leila Mansouri (CM2) |
+| Samir Berrada | Mehdi Berrada (3ème) |
+| Meryem Chraibi | Sara Chraibi (Terminale) |
 
 ## Academic Year
 
@@ -3587,8 +4280,8 @@ def _generate_seed_report() -> None:
 | Inscription | 500 | Annual |
 | Parascolaire | 300 | Annual |
 
-Invoices: 18 total (pending, paid, failed, canceled) + payment proofs + webhook events
-Payment Plans: 2 active plans with installments
+Invoices: 23 total (pending, paid, failed, canceled) + payment proofs + webhook events
+Payment Plans: 7 active plans with installments, including all age-tier demo families
 Billing Policies: Sibling discount + Late fee policies configured
 
 ## Gamification
@@ -3673,15 +4366,28 @@ Cashflow forecasts: 3 months | Financial snapshots: 2 (Mar + Apr 2026)
 ## Multi-Tenant
 
 School 1 (Ecole Benani): Full dataset (~90% table coverage)
-School 2 (Ecole Atlas): Minimal demo data (4 users, 1 class, 1 invoice, 1 announcement)
+School 2 (Ecole Atlas): Minimal demo data (4 loginable users, 1 class, 1 invoice, 1 announcement)
+
+## Auth & Security Showcase
+
+Seeded for profile/security demos:
+- Register demo invitation codes: `PARDMO01` (parent), `TCHDMO02` (teacher), `USEDPAR3` (already consumed parent code)
+- Verified emails for core demo accounts + verified phone for Parent Alaoui
+- Login history: success, new device, failed attempt
+- Known devices and known locations, including one suspicious example
+- Failed login attempt for account-lockout demo
+- Password history rows for password-change validation
+- Pending recovery request for password-reset flow context
+- Mock OAuth link for Yassine (Google) and mock WebAuthn/passkey row for Admin
 
 ## Feature Toggles
 
 gamification, rewards, skill_passport, difficulty_adaptation, parent_dashboard_v2 — all **enabled**
 
-## Timetable (6A sample)
+## Timetable
 
-Mon 08:00 Maths, Mon 09:45 Francais, Wed 08:00 Maths, Thu 09:45 Francais
+6A/6B base timetable + extra slots for CP, CE2, CM2, 3ème and Terminale.
+Every demo student has at least one class slot and attendance record for timetable/progress demos.
 
 ## Content Library
 
@@ -3712,6 +4418,7 @@ PDF/Excel/JPG stubs in `backend/app/templates/fixtures/`:
     print("    Student:    yassine.alaoui@ecole-benani.ma / student123")
     print("    Superadmin: superadmin@ecole-platform.ma / superadmin123")
     print("    CMS:        cms@ecole-platform.ma / content123")
+    print("    Atlas ADM:  admin@ecole-atlas.ma / admin123")
 
 
 if __name__ == "__main__":

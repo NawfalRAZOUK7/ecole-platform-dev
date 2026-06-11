@@ -18,10 +18,13 @@ from __future__ import annotations
 
 import random
 import uuid
+import hashlib
 from datetime import date, datetime, timedelta, timezone
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.security import hash_password
 
 # ── LMS ──
 from app.models.lms import (
@@ -143,19 +146,29 @@ from app.models.uploads import UploadSession
 
 # ── IAM / School ──
 from app.models.iam import (
+    AccountRecoveryRequest,
     AdminProfile,
     ContentManagerProfile,
+    FailedLoginAttempt,
+    KnownDevice,
+    KnownLocation,
+    LoginHistory,
     Membership,
+    OAuthAccount,
     ParentChildLink,
     ParentProfile,
+    PasswordHistory,
+    RecoveryStatus,
     StudentProfile,
     TeacherProfile,
     User,
+    WebAuthnCredential,
 )
 
 # ── Shared constants from seed.py (duplicated to avoid circular import) ──
 SCHOOL_ID = uuid.UUID("00000000-0000-4000-8000-000000000001")
 SCHOOL_ID_2 = uuid.UUID("00000000-0000-4000-8000-000000000002")
+MICRO_SCHOOL_TENANT_ID = uuid.UUID("00000000-0000-4000-8000-000000000003")
 ADMIN_ID = uuid.UUID("10000000-0000-4000-8000-000000000001")
 DIRECTOR_ID = uuid.UUID("10000000-0000-4000-8000-000000000002")
 TEACHER_1_ID = uuid.UUID("10000000-0000-4000-8000-000000000003")
@@ -199,10 +212,229 @@ STUDENT_13_ID = uuid.UUID("10000000-0000-4000-8000-000000000029")
 STUDENT_14_ID = uuid.UUID("10000000-0000-4000-8000-00000000002a")
 STUDENT_15_ID = uuid.UUID("10000000-0000-4000-8000-00000000002b")
 CLASS_5EME_ID = uuid.UUID("20000000-0000-4000-8000-000000000015")
+MICRO_PARENT_1_ID = uuid.UUID("10000000-0000-4000-8000-000000000032")
+MICRO_PARENT_2_ID = uuid.UUID("10000000-0000-4000-8000-000000000033")
 
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def _demo_password_hash(password: str) -> str:
+    """Hash demo passwords with the same bcrypt helper used by production auth."""
+    return hash_password(password)
+
+
+def _invitation_code_hash(code: str) -> str:
+    return hashlib.sha256(code.encode()).hexdigest()
+
+
+async def seed_auth_security_showcase(session: AsyncSession) -> None:
+    """Seed auth/security records used by login, register, profile, and security demos."""
+    now = _now()
+
+    main_users = [
+        (ADMIN_ID, SCHOOL_ID),
+        (DIRECTOR_ID, SCHOOL_ID),
+        (TEACHER_1_ID, SCHOOL_ID),
+        (PARENT_1_ID, SCHOOL_ID),
+        (STUDENT_1_ID, SCHOOL_ID),
+        (CONTENT_MGR_ID, SCHOOL_ID),
+    ]
+
+    for user_id, _school_id in main_users:
+        user = await session.get(User, user_id)
+        if user is not None:
+            user.email_verified_at = now - timedelta(days=30)
+
+    parent = await session.get(User, PARENT_1_ID)
+    if parent is not None:
+        parent.phone_verified_at = now - timedelta(days=20)
+
+    session.add_all(
+        [
+            LoginHistory(
+                user_id=ADMIN_ID,
+                school_id=SCHOOL_ID,
+                ip_address="196.12.221.10",
+                user_agent="Mozilla/5.0 Demo Chrome",
+                device_name="Admin MacBook Pro",
+                device_fingerprint="admin-device-main",
+                city="Casablanca",
+                country="MA",
+                success=True,
+                is_new_device=False,
+            ),
+            LoginHistory(
+                user_id=TEACHER_1_ID,
+                school_id=SCHOOL_ID,
+                ip_address="196.12.221.20",
+                user_agent="Mozilla/5.0 Demo Chrome",
+                device_name="Teacher Windows Laptop",
+                device_fingerprint="teacher-device-main",
+                city="Casablanca",
+                country="MA",
+                success=True,
+                is_new_device=True,
+            ),
+            LoginHistory(
+                user_id=PARENT_1_ID,
+                school_id=SCHOOL_ID,
+                ip_address="105.158.10.22",
+                user_agent="EcolePlatformMobile/1.0",
+                device_name="Hassan iPhone",
+                device_fingerprint="parent-device-mobile",
+                city="Casablanca",
+                country="MA",
+                success=True,
+                is_new_device=False,
+            ),
+            LoginHistory(
+                user_id=STUDENT_1_ID,
+                school_id=SCHOOL_ID,
+                ip_address="105.158.10.23",
+                user_agent="EcolePlatformMobile/1.0",
+                device_name="Yassine Tablet",
+                device_fingerprint="student-device-tablet",
+                city="Casablanca",
+                country="MA",
+                success=True,
+                is_new_device=False,
+            ),
+            LoginHistory(
+                user_id=ADMIN_ID,
+                school_id=SCHOOL_ID,
+                ip_address="203.0.113.44",
+                user_agent="Mozilla/5.0 Unknown",
+                device_name="Unknown browser",
+                device_fingerprint="unknown-device",
+                city="Unknown",
+                country="ZZ",
+                success=False,
+                failure_reason="wrong_password",
+                is_new_device=True,
+            ),
+        ]
+    )
+
+    session.add_all(
+        [
+            KnownDevice(
+                user_id=ADMIN_ID,
+                school_id=SCHOOL_ID,
+                device_fingerprint="admin-device-main",
+                device_name="Admin MacBook Pro",
+                user_agent="Mozilla/5.0 Demo Chrome",
+                last_seen_at=now - timedelta(hours=2),
+                is_suspicious=False,
+            ),
+            KnownDevice(
+                user_id=PARENT_1_ID,
+                school_id=SCHOOL_ID,
+                device_fingerprint="parent-device-mobile",
+                device_name="Hassan iPhone",
+                user_agent="EcolePlatformMobile/1.0",
+                last_seen_at=now - timedelta(hours=8),
+                is_suspicious=False,
+            ),
+            KnownDevice(
+                user_id=ADMIN_ID,
+                school_id=SCHOOL_ID,
+                device_fingerprint="unknown-device",
+                device_name="Unknown browser",
+                user_agent="Mozilla/5.0 Unknown",
+                last_seen_at=now - timedelta(days=1),
+                is_suspicious=True,
+            ),
+            KnownLocation(
+                user_id=ADMIN_ID,
+                school_id=SCHOOL_ID,
+                ip_address="196.12.221.10",
+                country_code="MA",
+                city="Casablanca",
+                region="Casablanca-Settat",
+                last_seen_at=now - timedelta(hours=2),
+                is_suspicious=False,
+            ),
+            KnownLocation(
+                user_id=ADMIN_ID,
+                school_id=SCHOOL_ID,
+                ip_address="203.0.113.44",
+                country_code="ZZ",
+                city="Unknown",
+                region="Unknown",
+                last_seen_at=now - timedelta(days=1),
+                is_suspicious=True,
+            ),
+            FailedLoginAttempt(
+                user_id=ADMIN_ID,
+                school_id=SCHOOL_ID,
+                email="admin@ecole-benani.ma",
+                ip_address="203.0.113.44",
+                user_agent="Mozilla/5.0 Unknown",
+                failure_reason="wrong_password",
+            ),
+        ]
+    )
+
+    session.add_all(
+        [
+            PasswordHistory(
+                user_id=ADMIN_ID,
+                school_id=SCHOOL_ID,
+                password_hash=_demo_password_hash("OldAdmin123!"),
+            ),
+            PasswordHistory(
+                user_id=TEACHER_1_ID,
+                school_id=SCHOOL_ID,
+                password_hash=_demo_password_hash("OldTeacher123!"),
+            ),
+            PasswordHistory(
+                user_id=PARENT_1_ID,
+                school_id=SCHOOL_ID,
+                password_hash=_demo_password_hash("OldParent123!"),
+            ),
+            AccountRecoveryRequest(
+                user_id=PARENT_1_ID,
+                school_id=SCHOOL_ID,
+                status=RecoveryStatus.PENDING.value,
+                attempts=1,
+                expires_at=now + timedelta(minutes=15),
+            ),
+        ]
+    )
+
+    session.add_all(
+        [
+            WebAuthnCredential(
+                user_id=ADMIN_ID,
+                school_id=SCHOOL_ID,
+                credential_id="demo-admin-passkey-credential",
+                public_key="demo-public-key-for-ui-only",
+                sign_count=12,
+                device_type="multi_device",
+                device_name="Admin MacBook Touch ID",
+                transports="internal",
+                is_backup=False,
+                is_active=True,
+            ),
+            OAuthAccount(
+                user_id=STUDENT_1_ID,
+                school_id=SCHOOL_ID,
+                provider="google",
+                provider_user_id="demo-google-yassine-alaoui",
+                provider_email="yassine.alaoui@ecole-benani.ma",
+                access_token="demo-access-token",
+                refresh_token=None,
+                token_expires_at=now + timedelta(hours=1),
+            ),
+        ]
+    )
+
+    print(
+        "    Auth/Security: login history, known devices/locations, failed login, "
+        "password history, recovery request, OAuth link, WebAuthn mock"
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -326,14 +558,14 @@ async def seed_enhanced_students(session: AsyncSession) -> None:
                 id=uid,
                 email=email,
                 full_name=full_name,
-                password_hash="$2b$12$dummyhashforseed",  # placeholder — seeded users use seed.py hashes
+                password_hash=_demo_password_hash("student123"),
                 status="active",
                 school_id=SCHOOL_ID,
             )
         )
     await session.flush()
 
-    for uid, email, full_name, student_no, dob in new_students:
+    for index, (uid, email, full_name, student_no, dob) in enumerate(new_students):
         session.add(
             Membership(
                 user_id=uid, school_id=SCHOOL_ID, role_code="STD", status="active"
@@ -372,6 +604,16 @@ async def seed_enhanced_students(session: AsyncSession) -> None:
                     else "5eme"
                 ),
                 nationality="Marocaine",
+            )
+        )
+        session.add(
+            ParentChildLink(
+                parent_user_id=PARENT_1_ID if index % 2 == 0 else PARENT_2_ID,
+                child_user_id=uid,
+                school_id=SCHOOL_ID,
+                status="active",
+                linked_at=_now(),
+                linked_by=ADMIN_ID,
             )
         )
 
@@ -1427,15 +1669,52 @@ async def seed_micro_school(session: AsyncSession) -> None:
             id=EDUCATOR_ID,
             email="educateur.micro@ecole-benani.ma",
             full_name="Said El Fassi",
-            password_hash="$2b$12$dummyhashforseed",
+            password_hash=_demo_password_hash("teacher123"),
             status="active",
-            school_id=SCHOOL_ID,
+            school_id=MICRO_SCHOOL_TENANT_ID,
         )
     )
     session.add(
         Membership(
-            user_id=EDUCATOR_ID, school_id=SCHOOL_ID, role_code="TCH", status="active"
+            user_id=EDUCATOR_ID,
+            school_id=MICRO_SCHOOL_TENANT_ID,
+            role_code="EDUCATOR",
+            status="active",
         )
+    )
+    session.add_all(
+        [
+            User(
+                id=MICRO_PARENT_1_ID,
+                email="parent.micro1@ecole-benani.ma",
+                full_name="Parent Micro 1",
+                phone="+212600100101",
+                password_hash=_demo_password_hash("parent123"),
+                status="active",
+                school_id=MICRO_SCHOOL_TENANT_ID,
+            ),
+            User(
+                id=MICRO_PARENT_2_ID,
+                email="parent.micro2@ecole-benani.ma",
+                full_name="Parent Micro 2",
+                phone="+212600100102",
+                password_hash=_demo_password_hash("parent123"),
+                status="active",
+                school_id=MICRO_SCHOOL_TENANT_ID,
+            ),
+            Membership(
+                user_id=MICRO_PARENT_1_ID,
+                school_id=MICRO_SCHOOL_TENANT_ID,
+                role_code="PAR",
+                status="active",
+            ),
+            Membership(
+                user_id=MICRO_PARENT_2_ID,
+                school_id=MICRO_SCHOOL_TENANT_ID,
+                role_code="PAR",
+                status="active",
+            ),
+        ]
     )
     await session.flush()
 
@@ -1469,10 +1748,10 @@ async def seed_micro_school(session: AsyncSession) -> None:
 
     # Enrollments
     enrollments_data = [
-        (g1.id, "Adam", PARENT_1_ID, date(2022, 3, 10)),
-        (g1.id, "Lina", PARENT_2_ID, date(2022, 7, 15)),
-        (g2.id, "Youssef", PARENT_1_ID, date(2020, 1, 20)),
-        (g2.id, "Sara", PARENT_2_ID, date(2019, 11, 5)),
+        (g1.id, "Adam", MICRO_PARENT_1_ID, date(2022, 3, 10)),
+        (g1.id, "Lina", MICRO_PARENT_2_ID, date(2022, 7, 15)),
+        (g2.id, "Youssef", MICRO_PARENT_1_ID, date(2020, 1, 20)),
+        (g2.id, "Sara", MICRO_PARENT_2_ID, date(2019, 11, 5)),
     ]
     enrollment_objs: list[MicroEnrollment] = []
     for gid, child_name, parent_id, dob in enrollments_data:
@@ -2120,7 +2399,7 @@ async def seed_school_2_minimal(session: AsyncSession) -> None:
                 id=s2_admin,
                 email="admin@ecole-atlas.ma",
                 full_name="Karim Atlas",
-                password_hash="$2b$12$dummyhashforseed",
+                password_hash=_demo_password_hash("admin123"),
                 status="active",
                 school_id=SCHOOL_ID_2,
             ),
@@ -2128,7 +2407,7 @@ async def seed_school_2_minimal(session: AsyncSession) -> None:
                 id=s2_teacher,
                 email="prof@ecole-atlas.ma",
                 full_name="Leila Atlas",
-                password_hash="$2b$12$dummyhashforseed",
+                password_hash=_demo_password_hash("teacher123"),
                 status="active",
                 school_id=SCHOOL_ID_2,
             ),
@@ -2137,7 +2416,7 @@ async def seed_school_2_minimal(session: AsyncSession) -> None:
                 email="parent@ecole-atlas.ma",
                 full_name="Ahmed Atlas",
                 phone="+212611111222",
-                password_hash="$2b$12$dummyhashforseed",
+                password_hash=_demo_password_hash("parent123"),
                 status="active",
                 school_id=SCHOOL_ID_2,
             ),
@@ -2145,7 +2424,7 @@ async def seed_school_2_minimal(session: AsyncSession) -> None:
                 id=s2_student,
                 email="enfant@ecole-atlas.ma",
                 full_name="Youssef Atlas",
-                password_hash="$2b$12$dummyhashforseed",
+                password_hash=_demo_password_hash("student123"),
                 status="active",
                 school_id=SCHOOL_ID_2,
             ),
@@ -2217,6 +2496,15 @@ async def seed_school_2_minimal(session: AsyncSession) -> None:
         )
     )
     await session.flush()
+
+    session.add(
+        TeacherAssignment(
+            teacher_id=s2_teacher,
+            class_id=s2_class,
+            period_id=s2_period,
+            school_id=SCHOOL_ID_2,
+        )
+    )
 
     # Enrollment
     session.add(
@@ -2490,7 +2778,7 @@ async def seed_misc_empty_tables(session: AsyncSession) -> None:
                 id=uuid.uuid4(),
                 school_id=SCHOOL_ID,
                 issuer_user_id=ADMIN_ID,
-                code_hash="$2b$12$invitehashforparent001",
+                code_hash=_invitation_code_hash("PARDMO01"),
                 role_target="PAR",
                 expires_at=_now() + timedelta(days=30),
             ),
@@ -2498,7 +2786,7 @@ async def seed_misc_empty_tables(session: AsyncSession) -> None:
                 id=uuid.uuid4(),
                 school_id=SCHOOL_ID,
                 issuer_user_id=ADMIN_ID,
-                code_hash="$2b$12$invitehashforteacher002",
+                code_hash=_invitation_code_hash("TCHDMO02"),
                 role_target="TCH",
                 expires_at=_now() + timedelta(days=30),
             ),
@@ -2506,7 +2794,7 @@ async def seed_misc_empty_tables(session: AsyncSession) -> None:
                 id=uuid.uuid4(),
                 school_id=SCHOOL_ID,
                 issuer_user_id=ADMIN_ID,
-                code_hash="$2b$12$invitehashforparent003",
+                code_hash=_invitation_code_hash("USEDPAR3"),
                 role_target="PAR",
                 consumed_by=PARENT_1_ID,
                 consumed_at=_now() - timedelta(days=10),

@@ -130,6 +130,14 @@ class User(TimestampMixin, SchoolScopedMixin, Base):
     )
     backup_codes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
+    # Onboarding activation — set-password link for approved owners (INACTIVE → ACTIVE).
+    activation_token_hash: Mapped[str | None] = mapped_column(
+        String(255), nullable=True
+    )
+    activation_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
     # Phase 2B — Email verification
     email_verified_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True

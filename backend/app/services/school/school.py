@@ -29,6 +29,7 @@ class SchoolService:
             "code": school.code,
             "massar_code": school.massar_code,
             "status": school.status,
+            "school_type": school.school_type,
             "address": school.address,
             "city": school.city,
             "region": school.region,
@@ -101,12 +102,13 @@ class SchoolService:
         cursor: str | None,
         limit: int,
         status: str | None = None,
+        school_type: str | None = None,
     ) -> tuple[list[dict], str | None, bool]:
         if auth.role == SUP:
             schools, next_cursor, has_more = await self.repo.list_schools(
                 cursor,
                 limit,
-                {"status": status},
+                {"status": status, "school_type": school_type},
             )
             return (
                 [self._to_response(school) for school in schools],
@@ -121,6 +123,8 @@ class SchoolService:
         if school is None:
             return [], None, False
         if status and school.status != status:
+            return [], None, False
+        if school_type and school.school_type != school_type:
             return [], None, False
         return [self._to_response(school)], None, False
 

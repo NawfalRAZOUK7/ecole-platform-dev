@@ -168,9 +168,18 @@ class Settings(BaseSettings):
     report_storage_subdirectory: str = "reports"
     report_download_ttl_hours: int = 24
     report_cache_ttl_hours: int = 1
-    ai_provider: str = "mock"
-    ai_api_key: str = ""
+    # AI backend selection. "auto" = mock by default, but auto-upgrade to a real
+    # backend when credentials are present (paid Claude first for Arabic quality,
+    # then a free/self-hosted open model). Force a specific one with
+    # "mock" | "claude" | "open". See services/ai/provider_factory.py.
+    ai_provider: str = "auto"
+    ai_api_key: str = ""  # Anthropic Claude key (paid). Empty → no Claude.
     ai_model: str = ""
+    # Free / self-hosted OpenAI-compatible endpoint (Ollama, LM Studio, vLLM…).
+    # Empty → no open model. Example: http://localhost:11434/v1
+    ai_open_base_url: str = ""
+    ai_open_model: str = ""
+    ai_open_api_key: str = ""
     analytics_cache_ttl_seconds: int = 300
     attendance_warning_threshold: float = 0.15
     attendance_critical_threshold: float = 0.25

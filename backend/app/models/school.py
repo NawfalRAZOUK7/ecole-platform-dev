@@ -18,6 +18,11 @@ class SchoolStatus(str, enum.Enum):
     TRIAL = "trial"
 
 
+class SchoolType(str, enum.Enum):
+    FORMAL = "formal"
+    INFORMAL = "informal"
+
+
 class School(TimestampMixin, SoftDeleteMixin, Base):
     """A school (tenant) on the platform."""
 
@@ -35,6 +40,11 @@ class School(TimestampMixin, SoftDeleteMixin, Base):
         String(20),
         nullable=False,
         default=SchoolStatus.ACTIVE.value,
+    )
+    school_type: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        default=SchoolType.FORMAL.value,
     )
     address: Mapped[str | None] = mapped_column(Text, nullable=True)
     city: Mapped[str | None] = mapped_column(String(100), nullable=True)
@@ -100,6 +110,14 @@ class School(TimestampMixin, SoftDeleteMixin, Base):
         if value and "@" not in value:
             raise ValueError(f"Invalid school email: {value}")
         return value.lower().strip() if value else value
+
+    @validates("school_type")
+    def validate_school_type(self, key: str, value: str | None) -> str:
+        normalized = (value or SchoolType.FORMAL.value).lower().strip()
+        allowed = {item.value for item in SchoolType}
+        if normalized not in allowed:
+            raise ValueError(f"Invalid school type: {value}")
+        return normalized
 
     def __repr__(self) -> str:
         return f"<School id={str(self.id)[:8]} name={self.name} status={self.status}>"

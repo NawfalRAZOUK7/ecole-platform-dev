@@ -7,15 +7,18 @@ import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import AuthContext
 from app.core.exceptions import ConflictError, NotFoundError, ValidationError
-from app.core.permissions import ADM, DIR, EDUCATOR, PAR, STD, TCH
+from app.core.permissions import PAR, STD
 from app.core.security import hash_password
 from app.core.unit_of_work import UnitOfWork
 from app.models.iam import InvitationCode, Membership, ParentChildLink, User
+from app.models.school import School
 from app.repositories.admin import AdminRepository
+from app.services.iam.role_policies import allowed_managed_roles
 from app.services.platform.audit import AuditService
 
 
@@ -36,9 +39,17 @@ class AdminService:
         self.repo = AdminRepository(db)
         self.audit = AuditService(db)
 
+    async def _get_school_type(self, school_id: uuid.UUID) -> str:
+        result = await self.db.execute(
+            select(School.school_type).where(School.id == school_id)
+        )
+        return result.scalar_one_or_none() or "formal"
+
     async def get_dashboard_stats(self, auth: AuthContext) -> dict:
         now = datetime.now(timezone.utc)
         audit_cutoff = now - timedelta(hours=24)
+        reward_week_cutoff = now - timedelta(days=7)
+        reward_month_cutoff = now - timedelta(days=30)
         return {
             "users": await self.repo.count_school_users(auth.school_id),
             "active_sessions": await self.repo.count_active_sessions(auth.school_id),
@@ -54,6 +65,11 @@ class AdminService:
                 auth.school_id
             ),
             "users_by_role": await self.repo.get_role_counts(auth.school_id),
+            "rewards_summary": await self.repo.get_rewards_summary(
+                school_id=auth.school_id,
+                week_cutoff=reward_week_cutoff,
+                month_cutoff=reward_month_cutoff,
+            ),
         }
 
     async def list_users(
@@ -171,7 +187,8 @@ class AdminService:
         auth: AuthContext,
         client_ip: str,
     ) -> dict:
-        valid_targets = {TCH, EDUCATOR, PAR, STD, DIR}
+        school_type = await self._get_school_type(auth.school_id)
+        valid_targets = allowed_managed_roles(school_type)
         if role not in valid_targets:
             raise ValidationError(
                 f"Invalid role. Must be one of: {', '.join(sorted(valid_targets))}",
@@ -354,7 +371,8 @@ class AdminService:
         school_id = auth.school_id
         results: list[dict] = []
         errors: list[dict] = []
-        valid_roles = {STD, PAR, TCH, EDUCATOR, ADM, DIR}
+        school_type = await self._get_school_type(school_id)
+        valid_roles = allowed_managed_roles(school_type)
         now = datetime.now(timezone.utc)
 
         async with UnitOfWork(self.db) as uow:

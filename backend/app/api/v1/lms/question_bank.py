@@ -17,8 +17,10 @@ from app.core.request_utils import get_client_ip
 from app.core.response import clamp_page_size, list_response, success_response
 from app.schemas.lms.question_bank import (
     GenerateQuizFromBankRequest,
+    GenerateQuizFromContentRequest,
     QuestionBankCreateRequest,
 )
+from app.services.lms.content_quiz import ContentQuizService
 from app.services.lms.question_bank import QuestionBankService
 
 router = APIRouter(tags=["question-bank"])
@@ -104,6 +106,34 @@ async def generate_quiz_from_bank(
     service = QuestionBankService(db)
     return success_response(
         await service.generate_quiz_from_bank(
+            body=body,
+            auth=auth,
+            ip_address=get_client_ip(request),
+        )
+    )
+
+
+@router.post(
+    "/quizzes/from-content/{content_id}",
+    status_code=201,
+    summary="Generate a draft quiz from a PDF+audio content item (Feature B)",
+    description=(
+        "Teacher-triggered. The teacher chooses question types, count, and which "
+        "sources to merge (template and/or AI). Builds a draft quiz from the "
+        "content's narration text for review before publishing."
+    ),
+)
+async def generate_quiz_from_content(
+    content_id: uuid.UUID,
+    body: GenerateQuizFromContentRequest,
+    request: Request,
+    auth: AuthContext = Depends(requires_permission(PERM_LMS_QUESTION_BANK_MANAGE)),
+    db: AsyncSession = Depends(get_db),
+):
+    service = ContentQuizService(db)
+    return success_response(
+        await service.generate_from_content(
+            content_id=content_id,
             body=body,
             auth=auth,
             ip_address=get_client_ip(request),

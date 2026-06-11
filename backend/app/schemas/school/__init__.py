@@ -14,6 +14,7 @@ class SchoolCreateRequest(BaseModel):
     code: str = Field(..., min_length=1, max_length=50)
     massar_code: str | None = Field(None, max_length=50)
     status: str = Field("active", pattern="^(active|suspended|trial)$")
+    school_type: str = Field("formal", pattern="^(formal|informal)$")
     address: str | None = None
     city: str | None = Field(None, max_length=100)
     region: str | None = Field(None, max_length=100)
@@ -37,6 +38,7 @@ class SchoolUpdateRequest(BaseModel):
     code: str | None = Field(None, min_length=1, max_length=50)
     massar_code: str | None = Field(None, max_length=50)
     status: str | None = Field(None, pattern="^(active|suspended|trial)$")
+    school_type: str | None = Field(None, pattern="^(formal|informal)$")
     address: str | None = None
     city: str | None = Field(None, max_length=100)
     region: str | None = Field(None, max_length=100)
@@ -61,6 +63,7 @@ class SchoolResponse(BaseModel):
     code: str
     massar_code: str | None = None
     status: str
+    school_type: str
     address: str | None = None
     city: str | None = None
     region: str | None = None

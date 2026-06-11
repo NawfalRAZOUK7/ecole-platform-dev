@@ -1,0 +1,43 @@
+{% extends "email/base.html" %}
+{% block content %}
+{% if lang == 'ar' %}
+  <h2>مرحباً {{ applicant_name }}!</h2>
+  <p>تمت الموافقة على طلب تسجيل <strong>{{ org_name }}</strong> على منصة المدرسة.</p>
+  <table class="info-table">
+    <tr><td>المؤسسة</td><td>{{ org_name }}</td></tr>
+    <tr><td>الدور</td><td>{{ role }}</td></tr>
+  </table>
+  <p>لإكمال إنشاء حسابك، اضغط على الزر أدناه لتعيين كلمة المرور وتفعيل حسابك:</p>
+  <p style="text-align:center;margin:24px 0;">
+    <a href="{{ activation_url }}" class="button">تفعيل الحساب وتعيين كلمة المرور</a>
+  </p>
+  <p style="font-size:12px;color:#666;">إذا لم يعمل الزر، انسخ هذا الرابط: {{ activation_url }}</p>
+  <p style="font-size:12px;color:#666;">هذا الرابط صالح لمدة 72 ساعة ويُستخدم مرة واحدة فقط.</p>
+{% elif lang == 'en' %}
+  <h2>Hello {{ applicant_name }}!</h2>
+  <p>Your application for <strong>{{ org_name }}</strong> has been approved on École Platform.</p>
+  <table class="info-table">
+    <tr><td>Organisation</td><td>{{ org_name }}</td></tr>
+    <tr><td>Role</td><td>{{ role }}</td></tr>
+  </table>
+  <p>To finish setting up your account, click the button below to choose a password and activate your account:</p>
+  <p style="text-align:center;margin:24px 0;">
+    <a href="{{ activation_url }}" class="button">Activate account &amp; set password</a>
+  </p>
+  <p style="font-size:12px;color:#666;">If the button doesn't work, copy this link: {{ activation_url }}</p>
+  <p style="font-size:12px;color:#666;">This link is valid for 72 hours and can be used once.</p>
+{% else %}
+  <h2>Bonjour {{ applicant_name }} !</h2>
+  <p>Votre demande pour <strong>{{ org_name }}</strong> a &eacute;t&eacute; approuv&eacute;e sur &Eacute;cole Platform.</p>
+  <table class="info-table">
+    <tr><td>&Eacute;tablissement</td><td>{{ org_name }}</td></tr>
+    <tr><td>R&ocirc;le</td><td>{{ role }}</td></tr>
+  </table>
+  <p>Pour finaliser la cr&eacute;ation de votre compte, cliquez sur le bouton ci-dessous afin de choisir un mot de passe et activer votre compte&nbsp;:</p>
+  <p style="text-align:center;margin:24px 0;">
+    <a href="{{ activation_url }}" class="button">Activer le compte et d&eacute;finir le mot de passe</a>
+  </p>
+  <p style="font-size:12px;color:#666;">Si le bouton ne fonctionne pas, copiez ce lien&nbsp;: {{ activation_url }}</p>
+  <p style="font-size:12px;color:#666;">Ce lien est valable 72&nbsp;heures et utilisable une seule fois.</p>
+{% endif %}
+{% endblock %}

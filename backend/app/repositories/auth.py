@@ -494,7 +494,7 @@ class AuthRepository(BaseRepository):
             .cte()
         )
         await self.db.execute(
-            delete(PasswordHistory).where(PasswordHistory.id.in_(cte))
+            delete(PasswordHistory).where(PasswordHistory.id.in_(select(cte.c.id)))
         )
         await self.db.commit()
 

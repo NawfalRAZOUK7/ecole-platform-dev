@@ -50,6 +50,9 @@ class MeData(BaseModel):
     full_name: str
     role: str
     school_id: UUID
+    school_type: str = "formal"
+    school_settings: dict[str, Any] = Field(default_factory=dict)
+    design_mode: str | None = None
     permissions: list[str]
     memberships: list[MembershipInfo]
 
@@ -59,7 +62,11 @@ class MeData(BaseModel):
 # ---------------------------------------------------------------------------
 class InviteCreateRequest(BaseModel):
     role_target: str = Field(
-        ..., description="Role code for the invited user (e.g. TCH, PAR, STD)"
+        ...,
+        description=(
+            "Role code for the invited user. Formal schools: DIR, TCH, PAR, STD. "
+            "Micro-schools: PAR, STD. ADM/EDUCATOR owners are SuperAdmin-approved."
+        ),
     )
     expires_in_hours: int = Field(
         default=72, ge=1, le=720, description="Hours until code expires"
@@ -177,10 +184,36 @@ class RegisterRequest(BaseModel):
     )
 
 
+class ActivateRequest(BaseModel):
+    """Set the password for an onboarding-provisioned owner account.
+
+    The token comes from the activation link emailed on approval. Setting a
+    valid password flips the account from INACTIVE to ACTIVE.
+    """
+
+    token: str = Field(..., min_length=16, description="One-time activation token")
+    password: str = Field(
+        ..., min_length=12, description="New password (min 12 chars, Phase 2A policy)"
+    )
+
+
+class ActivateResponse(BaseModel):
+    user_id: UUID
+    email: EmailStr
+    status: str = "active"
+    activated: bool = True
+
+
 class BatchRegisterItem(BaseModel):
     email: EmailStr
     full_name: str = Field(..., min_length=1, max_length=200)
-    role: str = Field(..., description="Role code: STD, PAR, TCH")
+    role: str = Field(
+        ...,
+        description=(
+            "Role code. Formal schools: DIR, TCH, PAR, STD. "
+            "Micro-schools: PAR, STD."
+        ),
+    )
     phone: str | None = Field(None, max_length=20)
     class_code: str | None = Field(
         None, description="Class code for auto-enrollment (optional)"

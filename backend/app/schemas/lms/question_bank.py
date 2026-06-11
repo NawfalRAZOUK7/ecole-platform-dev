@@ -52,6 +52,26 @@ class GenerateQuizFromBankRequest(BaseModel):
     max_attempts: int = Field(default=1, ge=1)
 
 
+class GenerateQuizFromContentRequest(BaseModel):
+    """Teacher-chosen options for generating a draft quiz from a PDF+audio item.
+
+    The teacher decides per content: which question types, how many, and which
+    sources to merge — deterministic ``template`` and/or the ``ai`` provider.
+    """
+
+    question_types: list[str] = Field(
+        default_factory=lambda: ["MCQ", "TRUE_FALSE", "FILL_IN"]
+    )
+    count: int = Field(default=5, ge=1, le=30)
+    sources: list[str] = Field(default_factory=lambda: ["template"])  # ai | template
+    title: str | None = Field(default=None, max_length=300)
+    description: str | None = None
+    difficulty: str | None = Field(default=None, max_length=20)
+    time_limit_minutes: int | None = Field(default=None, ge=0)
+    max_attempts: int = Field(default=1, ge=1)
+    shuffle_questions: bool = False
+
+
 class QuestionBankImportResponse(BaseModel):
     quiz_id: str
     imported_count: int

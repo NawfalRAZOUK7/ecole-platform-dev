@@ -15,7 +15,11 @@ class Sms2FAService:
 
     def __init__(self):
         self.twilio_client = None
-        if settings.sms_enabled and settings.sms_provider == "twilio":
+        if (
+            settings.sms_enabled
+            and not settings.mock_sms_enabled
+            and settings.sms_provider == "twilio"
+        ):
             self.twilio_client = TwilioClient(
                 settings.twilio_account_sid,
                 settings.twilio_auth_token,
@@ -31,7 +35,7 @@ class Sms2FAService:
         otp: str,
     ) -> bool:
         """Send OTP code via SMS."""
-        if not settings.sms_enabled or not self.twilio_client:
+        if settings.mock_sms_enabled or not settings.sms_enabled or not self.twilio_client:
             # In development mode, log the OTP instead
             print(f"[SMS 2FA - DEV MODE] OTP for {phone}: {otp}")
             return True

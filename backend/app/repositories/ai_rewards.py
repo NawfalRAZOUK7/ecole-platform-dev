@@ -43,6 +43,20 @@ class RewardsRepository(BaseRepository):
         await self.db.flush()
         return event
 
+    async def list_reward_events(
+        self,
+        *,
+        student_id: uuid.UUID,
+        limit: int,
+    ) -> list[RewardEvent]:
+        result = await self.db.execute(
+            select(RewardEvent)
+            .where(RewardEvent.student_id == student_id)
+            .order_by(RewardEvent.created_at.desc(), RewardEvent.id.desc())
+            .limit(limit)
+        )
+        return list(result.scalars().all())
+
     async def get_class_school_id(self, class_id: uuid.UUID) -> uuid.UUID | None:
         result = await self.db.execute(
             select(Class.school_id).where(Class.id == class_id)

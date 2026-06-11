@@ -143,6 +143,22 @@ async def get_student_rewards(
     return success_response(await service.get_student_rewards(student_id=student_id))
 
 
+@router.get("/student/{student_id}/history", summary="Get reward history for one student")
+async def get_student_reward_history(
+    student_id: uuid.UUID,
+    limit: int = Query(10, ge=1, le=100),
+    auth: AuthContext = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    service = RewardsService(db)
+    await service.verify_student_view_access(student_id=student_id, auth=auth)
+    items = await service.get_student_history(
+        student_id=student_id,
+        limit=clamp_page_size(limit),
+    )
+    return list_response(items, has_more=False)
+
+
 @router.get("/leaderboard/{class_id}", summary="Get class rewards leaderboard")
 async def get_rewards_leaderboard(
     class_id: uuid.UUID,

@@ -71,10 +71,23 @@ class ProfileService:
             "phone": user.phone,
             "role": role,
             "school_id": user.school_id,
+            "school_type": "formal",
+            "school_settings": {},
+            "design_mode": None,
             "student_profile": None,
             "parent_profile": None,
             "teacher_profile": None,
         }
+
+        school = await self.repo.get_school(school_id)
+        if school is not None:
+            school_settings = school.settings if isinstance(school.settings, dict) else {}
+            design_mode = school_settings.get("design_mode")
+            result["school_type"] = school.school_type
+            result["school_settings"] = school_settings
+            result["design_mode"] = (
+                design_mode if design_mode in {"formal", "informal"} else None
+            )
 
         profile_type = _ROLE_PROFILE_MAP.get(role)
         if not profile_type:

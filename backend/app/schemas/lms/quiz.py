@@ -76,6 +76,7 @@ class QuizResponse(BaseModel):
     max_attempts: int
     shuffle_questions: bool
     status: str
+    language: str | None = None
     total_points: int = 0
     question_count: int = 0
 

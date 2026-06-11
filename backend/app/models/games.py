@@ -25,6 +25,7 @@ class GameType(str, enum.Enum):
     MEMORY_MATCH = "memory_match"
     SORTING = "sorting"
     VOCABULARY_CARDS = "vocabulary_cards"
+    LETTER_PUZZLE = "letter_puzzle"
 
 
 class GameDifficulty(str, enum.Enum):

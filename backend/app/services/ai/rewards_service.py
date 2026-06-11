@@ -17,7 +17,7 @@ from app.core.dependencies import (
 from app.core.exceptions import NotFoundError, ValidationError
 from app.core.permissions import ADM, DIR, PAR, STD, SUP, SYS, TCH
 from app.core.unit_of_work import UnitOfWork
-from app.models.rewards import StudentReward
+from app.models.rewards import RewardEvent, StudentReward
 from app.repositories.ai_rewards import RewardsRepository
 from app.schemas.ai.rewards import (
     AwardRewardResponse,
@@ -99,6 +99,17 @@ class RewardsService:
             last_activity_at=_iso(reward.last_activity_at),
             level_progress=_level_progress(reward.xp),
         ).model_dump()
+
+    def _event_to_response(self, event: RewardEvent) -> dict[str, Any]:
+        return {
+            "id": str(event.id),
+            "event_type": event.event_type,
+            "stars_earned": event.stars_earned,
+            "xp_earned": event.xp_earned,
+            "source_type": event.source_type,
+            "source_id": str(event.source_id) if event.source_id is not None else None,
+            "created_at": _iso(event.created_at),
+        }
 
     def _award_to_response(self, reward: StudentReward) -> dict[str, Any]:
         payload = self._reward_to_response(reward)
@@ -325,6 +336,16 @@ class RewardsService:
             )
             await uow.commit()
             return self._reward_to_response(reward)
+
+    async def get_student_history(
+        self,
+        *,
+        student_id: uuid.UUID,
+        limit: int = 10,
+    ) -> list[dict[str, Any]]:
+        await self._get_student_or_404(student_id)
+        events = await self.repo.list_reward_events(student_id=student_id, limit=limit)
+        return [self._event_to_response(event) for event in events]
 
     async def get_leaderboard(
         self,

@@ -64,6 +64,7 @@ from app.api.v1.school.classes import router as classes_router
 from app.api.v1.lms.enrollments import router as enrollments_router
 from app.api.v1.admin.invitations import router as invitations_router
 from app.api.v1.user.recovery import router as recovery_router
+from app.api.v1.onboarding import router as onboarding_router
 from app.api.v1.school.schools import router as schools_router
 
 # Phase 3 — ERP routers
@@ -297,6 +298,7 @@ router.include_router(sms_2fa_router)
 router.include_router(schools_router)
 router.include_router(invitations_router)
 router.include_router(recovery_router)
+router.include_router(onboarding_router)
 router.include_router(classes_router)
 router.include_router(enrollments_router)
 

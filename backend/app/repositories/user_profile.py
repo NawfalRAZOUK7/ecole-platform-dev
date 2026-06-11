@@ -16,6 +16,7 @@ from app.models.iam import (
     User,
 )
 from app.models.lms import Assignment, Course, Grade, Submission
+from app.models.school import School
 from app.repositories.base import BaseRepository
 
 
@@ -48,6 +49,10 @@ class ProfileRepository(BaseRepository):
         )
         role_code = result.scalar_one_or_none()
         return role_code or ""
+
+    async def get_school(self, school_id: uuid.UUID) -> School | None:
+        result = await self.db.execute(select(School).where(School.id == school_id))
+        return result.scalar_one_or_none()
 
     async def get_role_profile(
         self,

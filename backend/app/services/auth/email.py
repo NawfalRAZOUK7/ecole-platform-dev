@@ -47,6 +47,11 @@ SUBJECTS: dict[str, dict[str, str]] = {
         "ar": "مرحبا بك في منصة المدرسة",
         "en": "Welcome to École Platform",
     },
+    "application_approved": {
+        "fr": "Votre inscription est approuvée",
+        "ar": "تمت الموافقة على طلب تسجيلك",
+        "en": "Your application is approved",
+    },
     "otp": {
         "fr": "Votre code de récupération",
         "ar": "رمز استرداد حسابك",

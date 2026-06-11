@@ -32,6 +32,7 @@ from app.core.middleware import get_correlation_id
 from app.core.permissions import (
     ADM,
     DIR,
+    EDUCATOR,
     PAR,
     STD,
     SUP,
@@ -57,6 +58,7 @@ from app.schemas.user.profile import (
     StudentProfileUpdate,
     TeacherProfileUpdate,
 )
+from app.services.iam.role_policies import allowed_invitation_roles
 from app.services.platform.audit import AuditService
 from app.services.communication.event_dispatcher import EventDispatcher
 from app.services.user.profile_loader import ProfileLoader
@@ -1007,6 +1009,7 @@ class AuthService:
 
         # 2. Load all memberships for this user
         memberships = await self.repo.list_memberships(user_id, active_only=True)
+        school = await self.repo.get_school_by_id(school_id)
         profile_loader = ProfileLoader(self.db)
         # /auth/me keeps its existing response shape, but now sources role-profile
         # composition through ProfileLoader rather than scattered direct queries.
@@ -1021,6 +1024,10 @@ class AuthService:
 
         # 3. Get permissions for current role
         permissions = sorted(get_permissions_for_role(role))
+        school_settings = school.settings if school and isinstance(school.settings, dict) else {}
+        design_mode = school_settings.get("design_mode")
+        if design_mode == "micro":
+            design_mode = "informal"
 
         return {
             "id": user.id,
@@ -1028,6 +1035,9 @@ class AuthService:
             "full_name": user.full_name,
             "role": role,
             "school_id": school_id,
+            "school_type": school.school_type if school else "formal",
+            "school_settings": school_settings,
+            "design_mode": design_mode if design_mode in {"formal", "informal"} else None,
             "permissions": permissions,
             "memberships": [
                 {
@@ -1467,11 +1477,27 @@ class InvitationService:
         If target_student_id is provided (PAR invites), validates the student exists
         in the same school and persists the link target on the invitation.
         """
+        school = await self.repo.get_school_by_id(school_id)
+        if school is None:
+            raise NotFoundError("School not found", error_code="ERR-RES-404")
+
+        valid_roles = allowed_invitation_roles(school.school_type)
+        if role_target not in valid_roles:
+            if role_target == EDUCATOR:
+                message = (
+                    "Educator accounts are created only through SuperAdmin "
+                    "micro-school application approval"
+                )
+            else:
+                message = (
+                    "Invalid invitation role for this school type. "
+                    f"Must be one of: {', '.join(sorted(valid_roles))}"
+                )
+            raise ValidationError(message, error_code="ERR-VAL-001")
+
         # Validate target_student_id if provided
         if target_student_id is not None:
             if role_target != PAR:
-                from app.core.exceptions import ValidationError
-
                 raise ValidationError(
                     "target_student_id is only valid for PAR invitations",
                     error_code="ERR-VAL-001",
@@ -1481,8 +1507,6 @@ class InvitationService:
                 target_student_id, school_id
             )
             if student is None:
-                from app.core.exceptions import NotFoundError
-
                 raise NotFoundError(
                     "Target student not found in this school",
                     error_code="ERR-RES-404",

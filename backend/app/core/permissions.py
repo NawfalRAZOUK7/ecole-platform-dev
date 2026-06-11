@@ -566,10 +566,13 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_IAM_SESSION_REVOKE,
         PERM_IAM_SESSION_LIST,
         PERM_IAM_PASSWORD_CHANGE,
+        PERM_IAM_INVITE_CREATE,
         PERM_IAM_INVITE_CONSUME,
+        PERM_IAM_INVITE_REVOKE,
         PERM_IAM_RECOVERY_REQUEST,
         PERM_IAM_RECOVERY_VERIFY,
         PERM_IAM_RECOVERY_RESET,
+        PERM_ADM_INVITATION_READ,
         # Micro-school operations
         PERM_MICRO_SCHOOL_CREATE,
         PERM_MICRO_SCHOOL_READ,
@@ -584,6 +587,9 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         PERM_MICRO_RESOURCE_MANAGE,
         PERM_MICRO_PROGRESS_CREATE,
         PERM_MICRO_PROGRESS_READ,
+        # COM — shared shell notifications/announcements
+        PERM_COM_NOTIFICATION_READ,
+        PERM_COM_ANNOUNCEMENT_READ,
     },
     PAR: {
         # Profiles

@@ -8,8 +8,9 @@ from datetime import datetime
 from sqlalchemy import func, select, update
 
 from app.models.audit import AuditLog
-from app.models.erp import AbsenceJustification
+from app.models.erp import AbsenceJustification, Class, Enrollment
 from app.models.iam import InvitationCode, Membership, ParentChildLink, Session, User
+from app.models.rewards import RewardEvent, StudentReward
 from app.repositories.base import BaseRepository
 
 
@@ -81,6 +82,54 @@ class AdminRepository(BaseRepository):
             .group_by(Membership.role_code)
         )
         return {role_code: int(count or 0) for role_code, count in result.all()}
+
+    async def get_rewards_summary(
+        self,
+        *,
+        school_id: uuid.UUID,
+        week_cutoff: datetime,
+        month_cutoff: datetime,
+    ) -> dict[str, object]:
+        week_stars_result = await self.db.execute(
+            select(func.coalesce(func.sum(RewardEvent.stars_earned), 0))
+            .join(User, User.id == RewardEvent.student_id)
+            .where(User.school_id == school_id, RewardEvent.created_at >= week_cutoff)
+        )
+        month_stars_result = await self.db.execute(
+            select(func.coalesce(func.sum(RewardEvent.stars_earned), 0))
+            .join(User, User.id == RewardEvent.student_id)
+            .where(User.school_id == school_id, RewardEvent.created_at >= month_cutoff)
+        )
+        event_count_result = await self.db.execute(
+            select(func.count())
+            .select_from(RewardEvent)
+            .join(User, User.id == RewardEvent.student_id)
+            .where(User.school_id == school_id, RewardEvent.created_at >= week_cutoff)
+        )
+
+        total_stars = func.coalesce(func.sum(StudentReward.stars), 0).label(
+            "total_stars"
+        )
+        class_result = await self.db.execute(
+            select(Class.name, Class.code, total_stars)
+            .join(Enrollment, Enrollment.class_id == Class.id)
+            .join(StudentReward, StudentReward.student_id == Enrollment.student_id)
+            .where(Class.school_id == school_id, Enrollment.status == "active")
+            .group_by(Class.id, Class.name, Class.code)
+            .order_by(total_stars.desc(), Class.name.asc())
+            .limit(1)
+        )
+        active_class = class_result.first()
+        most_active_class = None
+        if active_class is not None and int(active_class.total_stars or 0) > 0:
+            most_active_class = f"{active_class.name} ({active_class.code})"
+
+        return {
+            "stars_awarded_week": int(week_stars_result.scalar() or 0),
+            "stars_awarded_month": int(month_stars_result.scalar() or 0),
+            "most_active_class": most_active_class,
+            "recent_reward_events": int(event_count_result.scalar() or 0),
+        }
 
     async def list_users(
         self,

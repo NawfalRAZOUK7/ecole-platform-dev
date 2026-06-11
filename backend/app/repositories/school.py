@@ -49,6 +49,8 @@ class SchoolRepository(BaseRepository):
             query = query.where(School.deleted_at.is_(None))
         if status := filters.get("status"):
             query = query.where(School.status == status)
+        if school_type := filters.get("school_type"):
+            query = query.where(School.school_type == school_type)
         if city := filters.get("city"):
             query = query.where(School.city == city)
 

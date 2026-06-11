@@ -1035,6 +1035,12 @@ class Quiz(TimestampMixin, NullableSchoolScopedMixin, Base):
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default=QuizStatus.DRAFT.value
     )
+    # Feature B: the content item this quiz was generated from (if any).
+    source_content_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("content_items.id", ondelete="SET NULL"), nullable=True
+    )
+    # Content language ("ar" | "fr" | "en") — drives quiz audio (TTS) in players.
+    language: Mapped[str | None] = mapped_column(String(10), nullable=True)
 
     # Relationships
     questions: Mapped[list["QuizQuestion"]] = relationship(
@@ -1094,6 +1100,8 @@ class QuizQuestion(TimestampMixin, Base):
     points: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     explanation: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Feature B provenance: "ai" | "template" | "teacher" | "bank" (nullable).
+    source: Mapped[str | None] = mapped_column(String(20), nullable=True)
 
     # Relationships
     quiz: Mapped["Quiz"] = relationship(back_populates="questions")

@@ -4,7 +4,7 @@ Migration group order: G1-IAM -> G2-ERP -> G3-LMS -> G4-COM -> G5-Billing -> G6-
 """
 
 # G0 — Schools
-from app.models.school import School, SchoolStatus
+from app.models.school import School, SchoolStatus, SchoolType
 
 # G1 — IAM
 from app.models.iam import (
@@ -196,6 +196,15 @@ from app.models.levels import LevelAgeMapping
 # G5I — Games
 from app.models.games import GameConfig
 
+# Onboarding — public school/educator applications + SuperAdmin approval
+from app.models.onboarding import (
+    ApplicationStatus,
+    ApplicationType,
+    AttachmentKind,
+    SchoolApplication,
+    SchoolApplicationAttachment,
+)
+
 # G6 — Audit
 from app.models.audit import AuditLog
 
@@ -377,6 +386,11 @@ __all__ = [
     "LevelAgeMapping",
     # Games
     "GameConfig",
+    "ApplicationStatus",
+    "ApplicationType",
+    "AttachmentKind",
+    "SchoolApplication",
+    "SchoolApplicationAttachment",
     # Audit
     "AuditLog",
     # AI

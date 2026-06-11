@@ -45,6 +45,7 @@ async def list_schools(
     cursor: str | None = Query(None),
     limit: int = Query(20, ge=1, le=100),
     status: str | None = Query(None, pattern="^(active|suspended|trial)$"),
+    school_type: str | None = Query(None, pattern="^(formal|informal)$"),
     auth: AuthContext = Depends(requires_permission(PERM_ADM_SCHOOL_READ)),
     db: AsyncSession = Depends(get_db),
 ):
@@ -54,6 +55,7 @@ async def list_schools(
         cursor=cursor,
         limit=limit,
         status=status,
+        school_type=school_type,
     )
     return list_response(items, next_cursor=next_cursor, has_more=has_more)
 
