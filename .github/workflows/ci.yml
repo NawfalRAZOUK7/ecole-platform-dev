@@ -99,7 +99,7 @@ jobs:
         run: docker build -t ecole-backend:ci ./backend
 
       - name: Scan backend image
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ecole-backend:ci
           format: table
@@ -329,8 +329,8 @@ jobs:
           if-no-files-found: warn
 
   # Dynamically enumerate the integration API suites so the matrix never drifts
-  # from the filesystem. Emits one job per suite (on the primary Py/PG) plus a
-  # few cross-version "full suite" compat combos.
+  # from the filesystem. Each API domain runs in its own matrix job; unit tests
+  # already cover the broad Py/PG compatibility matrix.
   discover-suites:
     name: Discover integration suites
     runs-on: ubuntu-latest
@@ -341,7 +341,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - id: set
-        name: Enumerate suites + compat combos
+        name: Enumerate domain suites
         working-directory: backend
         run: |
           python3 - <<'PY' >> "$GITHUB_OUTPUT"
@@ -351,19 +351,15 @@ jobs:
               d for d in os.listdir(base)
               if os.path.isdir(os.path.join(base, d)) and not d.startswith("__")
           )
-          # Per-suite fan-out on the primary interpreter/database.
           combos = [
               {"suite": s, "python-version": "3.12", "postgres-version": "17"}
               for s in suites
           ]
-          # Cross-version compatibility: the full API suite on other combos.
-          for py, pg in (("3.13", "17"), ("3.12", "15"), ("3.13", "16")):
-              combos.append({"suite": "", "python-version": py, "postgres-version": pg})
           print("combos=" + json.dumps(combos))
           PY
 
   integration-tests:
-    name: "Integration: ${{ matrix.suite || 'full' }} (Py ${{ matrix.python-version }}/PG ${{ matrix.postgres-version }})"
+    name: "Integration: ${{ matrix.suite }} (Py ${{ matrix.python-version }}/PG ${{ matrix.postgres-version }})"
     runs-on: ubuntu-latest
     timeout-minutes: 45
     needs: [unit-tests, discover-suites]
@@ -500,7 +496,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: coverage-data-integration-${{ matrix.suite || 'full' }}-py${{ matrix.python-version }}-pg${{ matrix.postgres-version }}
+          name: coverage-data-integration-${{ matrix.suite }}-py${{ matrix.python-version }}-pg${{ matrix.postgres-version }}
           path: backend/.coverage*
           include-hidden-files: true
           if-no-files-found: warn

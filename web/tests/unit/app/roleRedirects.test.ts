@@ -23,15 +23,19 @@ describe('ROLE_REDIRECT', () => {
   });
 
   it('redirects supervisors to /notifications', () => {
-    expect(ROLE_REDIRECT['SUP']).toBe('/notifications');
+    expect(ROLE_REDIRECT['SUP']).toBe('/platform');
   });
 
   it('redirects content managers to /cms', () => {
     expect(ROLE_REDIRECT['CONTENT_MGR']).toBe('/cms');
   });
 
+  it('redirects educators to /micro-schools', () => {
+    expect(ROLE_REDIRECT['EDUCATOR']).toBe('/micro-schools');
+  });
+
   it('covers all known roles', () => {
-    const expectedRoles = ['PAR', 'STD', 'TCH', 'ADM', 'DIR', 'SUP', 'CONTENT_MGR'];
+    const expectedRoles = ['PAR', 'STD', 'TCH', 'EDUCATOR', 'ADM', 'DIR', 'SUP', 'CONTENT_MGR'];
     expectedRoles.forEach((role) => {
       expect(ROLE_REDIRECT[role]).toBeDefined();
       expect(typeof ROLE_REDIRECT[role]).toBe('string');
@@ -49,6 +53,6 @@ describe('ROLE_REDIRECT', () => {
   });
 
   it('has exactly 7 entries', () => {
-    expect(Object.keys(ROLE_REDIRECT)).toHaveLength(7);
+    expect(Object.keys(ROLE_REDIRECT)).toHaveLength(8);
   });
 });

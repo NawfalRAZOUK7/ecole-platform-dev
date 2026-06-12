@@ -52,7 +52,9 @@ async def _count_tables() -> tuple[list[tuple[str, int]], list[str]]:
         counts: list[tuple[str, int]] = []
         for table in tables:
             count_result = await session.execute(
-                text(f"select count(*) from public.{_quote_identifier(table)}")
+                # Table names come from information_schema and are quoted before
+                # interpolation; SQLAlchemy bind params cannot bind identifiers.
+                text(f"select count(*) from public.{_quote_identifier(table)}")  # nosec B608
             )
             counts.append((table, int(count_result.scalar_one())))
 

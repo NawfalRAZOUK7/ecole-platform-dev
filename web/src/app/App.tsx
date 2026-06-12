@@ -14,9 +14,7 @@ import { Layout } from '@/widgets/layout/Layout';
 import { OfflineIndicator } from '@/shared/ui/OfflineIndicator';
 import { ROLE_REDIRECT } from '@/app/roleRedirects';
 import { ProtectedRoute } from '@/app/ProtectedRoute';
-import { ApplyPage } from '@/features/onboarding/ui/ApplyPage';
-import { ActivatePage } from '@/features/onboarding/ui/ActivatePage';
-import { PlatformApplicationsPage } from '@/features/onboarding/ui/PlatformApplicationsPage';
+import { ActivatePage, ApplyPage, PlatformApplicationsPage } from '@/features/onboarding';
 import { FeatureTogglesPage } from '@/pages/admin/FeatureTogglesPage';
 import { CmsLayout } from '@/features/content/cms/ui/CmsLayout';
 import { QuizAnalyticsPage } from '@/features/lms/quizzes/ui/QuizAnalyticsPage';
@@ -180,6 +178,11 @@ function RoleRedirect() {
 
   const target = ROLE_REDIRECT[user?.role || ''] || '/profile';
   return <Navigate to={target} replace />;
+}
+
+function ResultsRoute() {
+  const { user } = useAuth();
+  return <ResultsPage userRole={user?.role} />;
 }
 
 function App() {
@@ -955,7 +958,7 @@ function App() {
                 path="/results"
                 element={
                   <ProtectedRoute roles={['STD', 'PAR']}>
-                    <ResultsPage />
+                    <ResultsRoute />
                   </ProtectedRoute>
                 }
               />

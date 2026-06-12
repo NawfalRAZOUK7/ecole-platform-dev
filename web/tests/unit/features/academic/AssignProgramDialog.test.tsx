@@ -10,11 +10,16 @@ const hookMocks = vi.hoisted(() => ({
   useProgramVersionsQuery: vi.fn(),
 }));
 
-vi.mock('@/features/academic/programs/model/usePrograms', () => ({
-  useProgramsQuery: hookMocks.useProgramsQuery,
-  useAssignProgramMutation: hookMocks.useAssignProgramMutation,
-  useProgramVersionsQuery: hookMocks.useProgramVersionsQuery,
-}));
+vi.mock('@/features/academic/programs/model/usePrograms', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@/features/academic/programs/model/usePrograms')>();
+  return {
+    ...actual,
+    useProgramsQuery: hookMocks.useProgramsQuery,
+    useAssignProgramMutation: hookMocks.useAssignProgramMutation,
+    useProgramVersionsQuery: hookMocks.useProgramVersionsQuery,
+  };
+});
 
 function makeProgram(id: string, code: string, name: string) {
   return {

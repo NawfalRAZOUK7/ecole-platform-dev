@@ -1,10 +1,20 @@
 import { waitFor } from '@testing-library/react';
-import { http, HttpResponse } from 'msw';
-import { describe, it, expect } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Route, Routes } from 'react-router-dom';
 import { RubricGradingPage } from '@/features/lms/rubrics/ui/RubricGradingPage';
 import { renderWithProviders } from '../../../utils/render';
-import { server, apiResponse, apiListResponse, apiErrorResponse } from '../../../utils/mocks';
+
+const rubricHooks = vi.hoisted(() => ({
+  useGradeRubric: vi.fn(),
+  useRubric: vi.fn(),
+  useRubricResults: vi.fn(),
+}));
+
+vi.mock('@/features/lms/rubrics/model/useRubrics', () => ({
+  useGradeRubric: rubricHooks.useGradeRubric,
+  useRubric: rubricHooks.useRubric,
+  useRubricResults: rubricHooks.useRubricResults,
+}));
 
 const mockRubric = {
   id: 'rubric-1',
@@ -38,49 +48,55 @@ const mockResults = {
   ],
 };
 
+function queryResult(data: unknown, error: Error | null = null) {
+  return {
+    data: error ? undefined : data,
+    error,
+    isLoading: false,
+    refetch: vi.fn(),
+  };
+}
+
+function renderRubricPage() {
+  return renderWithProviders(
+    <Routes>
+      <Route path="/rubrics/:id/grade" element={<RubricGradingPage />} />
+    </Routes>,
+    { route: '/rubrics/rubric-1/grade', user: { role: 'TCH' } },
+  );
+}
+
 describe('RubricGradingPage', () => {
+  beforeEach(() => {
+    rubricHooks.useRubric.mockReturnValue(queryResult(mockRubric));
+    rubricHooks.useRubricResults.mockReturnValue(queryResult(mockResults));
+    rubricHooks.useGradeRubric.mockReturnValue({
+      error: null,
+      isPending: false,
+      mutateAsync: vi.fn(),
+    });
+  });
+
   it('renders without crashing', async () => {
-    server.use(
-      http.get('/api/v1/rubrics/rubric-1', () => apiResponse(mockRubric)),
-      http.get('/api/v1/submissions/rubric-1/rubric-results', () => apiResponse(mockResults)),
-    );
-    renderWithProviders(
-      <Routes>
-        <Route path="/rubrics/:id/grade" element={<RubricGradingPage />} />
-      </Routes>,
-      { route: '/rubrics/rubric-1/grade', user: { role: 'TCH' } },
-    );
+    renderRubricPage();
     await waitFor(() => expect(document.body.textContent).toBeTruthy());
   });
 
   it('shows loading state initially', () => {
-    server.use(
-      http.get('/api/v1/rubrics/rubric-1', async () => {
-        await new Promise((r) => setTimeout(r, 200));
-        return apiResponse(mockRubric);
-      }),
-      http.get('/api/v1/submissions/rubric-1/rubric-results', () => apiResponse(mockResults)),
-    );
-    renderWithProviders(
-      <Routes>
-        <Route path="/rubrics/:id/grade" element={<RubricGradingPage />} />
-      </Routes>,
-      { route: '/rubrics/rubric-1/grade', user: { role: 'TCH' } },
-    );
+    rubricHooks.useRubric.mockReturnValue({
+      ...queryResult(undefined),
+      isLoading: true,
+    });
+
+    renderRubricPage();
     expect(document.body.innerHTML.length).toBeGreaterThan(0);
   });
 
   it('renders rubric grading form with criteria', async () => {
-    server.use(
-      http.get('/api/v1/rubrics/rubric-1', () => apiResponse(mockRubric)),
-      http.get('/api/v1/submissions/rubric-1/rubric-results', () => apiResponse(mockResults)),
-    );
-    renderWithProviders(
-      <Routes>
-        <Route path="/rubrics/:id/grade" element={<RubricGradingPage />} />
-      </Routes>,
-      { route: '/rubrics/rubric-1/grade', user: { role: 'TCH' } },
-    );
+    rubricHooks.useRubric.mockReturnValue(queryResult(mockRubric));
+    rubricHooks.useRubricResults.mockReturnValue(queryResult(mockResults));
+
+    renderRubricPage();
     await waitFor(
       () => {
         expect(document.body.textContent).not.toContain('Loading');
@@ -91,18 +107,10 @@ describe('RubricGradingPage', () => {
   });
 
   it('shows error state on failure', async () => {
-    server.use(
-      http.get('/api/v1/rubrics/rubric-1', () => apiErrorResponse('Not found', 404)),
-      http.get('/api/v1/submissions/rubric-1/rubric-results', () =>
-        apiErrorResponse('Not found', 404),
-      ),
-    );
-    renderWithProviders(
-      <Routes>
-        <Route path="/rubrics/:id/grade" element={<RubricGradingPage />} />
-      </Routes>,
-      { route: '/rubrics/rubric-1/grade', user: { role: 'TCH' } },
-    );
+    rubricHooks.useRubric.mockReturnValue(queryResult(undefined, new Error('Not found')));
+    rubricHooks.useRubricResults.mockReturnValue(queryResult(undefined, new Error('Not found')));
+
+    renderRubricPage();
     await waitFor(() => expect(document.body.textContent).toBeTruthy());
   });
 });

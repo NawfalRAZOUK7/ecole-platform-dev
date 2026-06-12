@@ -3,11 +3,9 @@ import { http } from 'msw';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Route, Routes } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
-import { ApiClientError } from '@/core/api/client';
 import { StudentAcademicHistoryPage } from '@/features/academic/programs/ui/StudentAcademicHistoryPage';
-import { programsService } from '@/features/academic/programs/api/programs.api';
 import { renderWithProviders } from '../../../utils/render';
-import { apiListResponse, apiResponse, server } from '../../../utils/mocks';
+import { apiErrorResponse, apiListResponse, apiResponse, server } from '../../../utils/mocks';
 import { HttpResponse } from 'msw';
 
 const STUDENT_ID = 'std-1';
@@ -250,16 +248,17 @@ describe('StudentAcademicHistoryPage', () => {
   });
 
   it('surfaces a 404 (scope-masked student) via the error banner', async () => {
-    const notFoundError = new ApiClientError(404, {
-      code: 'ERR-SYS-404',
-      message: 'Resource not found',
-      category: 'system',
-      retryable: false,
-      timestamp: '2026-01-01T00:00:00Z',
-    });
-    vi.spyOn(programsService, 'getCurrentProgram').mockRejectedValue(notFoundError);
-    vi.spyOn(programsService, 'getAcademicTimeline').mockRejectedValue(notFoundError);
-    vi.spyOn(programsService, 'getProgramHistory').mockRejectedValue(notFoundError);
+    server.use(
+      http.get(`/api/v1/students/${STUDENT_ID}/current-program`, () =>
+        apiErrorResponse('Resource not found', 404),
+      ),
+      http.get(`/api/v1/students/${STUDENT_ID}/academic-timeline`, () =>
+        apiErrorResponse('Resource not found', 404),
+      ),
+      http.get(`/api/v1/students/${STUDENT_ID}/program-history`, () =>
+        apiErrorResponse('Resource not found', 404),
+      ),
+    );
 
     renderAtRoute();
 

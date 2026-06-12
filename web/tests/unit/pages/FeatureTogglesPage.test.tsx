@@ -1,9 +1,20 @@
 import { waitFor } from '@testing-library/react';
-import { http } from 'msw';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { QueryClient } from '@tanstack/react-query';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { FeatureTogglesPage } from '@/pages/admin/FeatureTogglesPage';
 import { renderWithProviders } from '../../utils/render';
-import { server, apiListResponse, apiErrorResponse } from '../../utils/mocks';
+
+const featureApiMocks = vi.hoisted(() => ({
+  listFeatures: vi.fn(),
+  updateFeature: vi.fn(),
+}));
+
+vi.mock('@/features/admin/api/features.api', () => ({
+  featuresService: {
+    listFeatures: featureApiMocks.listFeatures,
+    updateFeature: featureApiMocks.updateFeature,
+  },
+}));
 
 const featureToggle = {
   id: 'feature-1',
@@ -31,7 +42,8 @@ const disabledFeature = {
 
 describe('FeatureTogglesPage', () => {
   beforeEach(() => {
-    server.use(http.get('/api/v1/features', () => apiListResponse([])));
+    featureApiMocks.listFeatures.mockResolvedValue({ data: [] });
+    featureApiMocks.updateFeature.mockResolvedValue({ data: featureToggle });
   });
 
   it('renders without crashing', async () => {
@@ -45,15 +57,32 @@ describe('FeatureTogglesPage', () => {
   });
 
   it('renders feature toggles in a table', async () => {
-    server.use(
-      http.get('/api/v1/features', () => apiListResponse([featureToggle, disabledFeature])),
-    );
-    renderWithProviders(<FeatureTogglesPage />, { user: { role: 'ADM' } });
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+          staleTime: Infinity,
+        },
+        mutations: {
+          retry: false,
+        },
+      },
+    });
+    queryClient.setQueryData(['admin', 'feature-toggles'], [featureToggle, disabledFeature]);
+    featureApiMocks.listFeatures.mockResolvedValue({
+      data: [featureToggle, disabledFeature],
+    });
+
+    renderWithProviders(<FeatureTogglesPage />, {
+      queryClient,
+      user: { role: 'ADM' },
+    });
     await waitFor(() => expect(document.body.textContent).toContain('ai_assistant'));
   });
 
   it('shows error banner on API failure', async () => {
-    server.use(http.get('/api/v1/features', () => apiErrorResponse('Server error')));
+    featureApiMocks.listFeatures.mockRejectedValue(new Error('Server error'));
+
     renderWithProviders(<FeatureTogglesPage />, { user: { role: 'ADM' } });
     await waitFor(() => expect(document.body.textContent).toBeTruthy());
   });

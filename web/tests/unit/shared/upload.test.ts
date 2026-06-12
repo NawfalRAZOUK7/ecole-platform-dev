@@ -99,10 +99,12 @@ describe('directUpload', () => {
     mockXhr = createMockXhr();
     vi.stubGlobal(
       'XMLHttpRequest',
-      vi.fn().mockImplementation(() => mockXhr),
+      vi.fn(function MockXMLHttpRequest() {
+        return mockXhr;
+      }),
     );
     vi.stubGlobal('crypto', { randomUUID: () => 'test-uuid' });
-    Object.defineProperty(document, 'cookie', { value: '', configurable: true });
+    Object.defineProperty(document, 'cookie', { value: '', configurable: true, writable: true });
   });
 
   afterEach(() => {

@@ -1,9 +1,21 @@
 import { screen, waitFor } from '@testing-library/react';
-import { http } from 'msw';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { InvitationsPage } from '@/features/admin/ui/InvitationsPage';
 import { renderWithProviders } from '../../../utils/render';
-import { apiErrorResponse, apiListResponse, server } from '../../../utils/mocks';
+
+const adminHooks = vi.hoisted(() => ({
+  useAdminInvitations: vi.fn(),
+  useAdminUserSearch: vi.fn(),
+  useCreateInvitation: vi.fn(),
+  useRevokeInvitation: vi.fn(),
+}));
+
+vi.mock('@/features/admin/model/useAdmin', () => ({
+  useAdminInvitations: adminHooks.useAdminInvitations,
+  useAdminUserSearch: adminHooks.useAdminUserSearch,
+  useCreateInvitation: adminHooks.useCreateInvitation,
+  useRevokeInvitation: adminHooks.useRevokeInvitation,
+}));
 
 const mockInvitation = {
   id: 'invite-1',
@@ -16,14 +28,43 @@ const mockInvitation = {
   status: 'active',
 };
 
+function invitationsResult(items: unknown[], error: Error | null = null) {
+  return {
+    data: error ? undefined : { pages: [{ data: items, meta: { has_more: false } }] },
+    error,
+    fetchNextPage: vi.fn(),
+    hasNextPage: false,
+    isFetchingNextPage: false,
+    isLoading: false,
+    refetch: vi.fn(),
+  };
+}
+
 describe('InvitationsPage', () => {
+  beforeEach(() => {
+    adminHooks.useAdminInvitations.mockReturnValue(invitationsResult([]));
+    adminHooks.useAdminUserSearch.mockReturnValue({
+      data: [],
+      isFetching: false,
+    });
+    adminHooks.useCreateInvitation.mockReturnValue({
+      error: null,
+      isPending: false,
+      mutateAsync: vi.fn(),
+    });
+    adminHooks.useRevokeInvitation.mockReturnValue({
+      error: null,
+      isPending: false,
+      mutateAsync: vi.fn(),
+    });
+  });
+
   it('renders loading state initially', () => {
-    server.use(
-      http.get('/api/v1/admin/invitations', async () => {
-        await new Promise((r) => setTimeout(r, 100));
-        return apiListResponse([]);
-      }),
-    );
+    adminHooks.useAdminInvitations.mockReturnValue({
+      ...invitationsResult([]),
+      isLoading: true,
+    });
+
     renderWithProviders(<InvitationsPage />, { user: { role: 'ADM' } });
     expect(
       document.querySelector('[role="status"]') || document.querySelector('.loading-state'),
@@ -31,7 +72,8 @@ describe('InvitationsPage', () => {
   });
 
   it('shows empty state when no invitations', async () => {
-    server.use(http.get('/api/v1/admin/invitations', () => apiListResponse([])));
+    adminHooks.useAdminInvitations.mockReturnValue(invitationsResult([]));
+
     renderWithProviders(<InvitationsPage />, { user: { role: 'ADM' } });
     await waitFor(() => {
       expect(
@@ -43,7 +85,8 @@ describe('InvitationsPage', () => {
   });
 
   it('renders invitation list successfully', async () => {
-    server.use(http.get('/api/v1/admin/invitations', () => apiListResponse([mockInvitation])));
+    adminHooks.useAdminInvitations.mockReturnValue(invitationsResult([mockInvitation]));
+
     renderWithProviders(<InvitationsPage />, { user: { role: 'ADM' } });
     // The page renders a table with invitations - look for the revoke button or role badge
     await waitFor(() => {
@@ -52,9 +95,10 @@ describe('InvitationsPage', () => {
   });
 
   it('shows error state when invitations fail to load', async () => {
-    server.use(
-      http.get('/api/v1/admin/invitations', () => apiErrorResponse('Failed to load invitations')),
+    adminHooks.useAdminInvitations.mockReturnValue(
+      invitationsResult([], new Error('Failed to load invitations')),
     );
+
     renderWithProviders(<InvitationsPage />, { user: { role: 'ADM' } });
     expect(await screen.findByText(/Failed to load invitations/)).toBeInTheDocument();
   });

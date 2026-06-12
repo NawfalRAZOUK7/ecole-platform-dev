@@ -431,9 +431,10 @@ class ApiClient {
     final configuredUri = Uri.parse(_dio.options.baseUrl);
     final rewritten = Uri.parse(url)
         .replace(
-            scheme: configuredUri.scheme,
-            host: configuredUri.host,
-            port: configuredUri.port)
+          scheme: configuredUri.scheme,
+          host: configuredUri.host,
+          port: configuredUri.port,
+        )
         .toString();
     return DownloadMetadata(
       downloadUrl: rewritten,

@@ -7,6 +7,7 @@ describe('OfflineIndicator', () => {
   afterEach(() => {
     // Restore navigator.onLine to true after each test
     Object.defineProperty(window.navigator, 'onLine', {
+      configurable: true,
       writable: true,
       value: true,
     });
@@ -14,6 +15,7 @@ describe('OfflineIndicator', () => {
 
   it('renders nothing when online and was not previously offline', () => {
     Object.defineProperty(window.navigator, 'onLine', {
+      configurable: true,
       writable: true,
       value: true,
     });
@@ -23,6 +25,7 @@ describe('OfflineIndicator', () => {
 
   it('renders offline message when navigator.onLine is false', () => {
     Object.defineProperty(window.navigator, 'onLine', {
+      configurable: true,
       writable: true,
       value: false,
     });
@@ -32,6 +35,7 @@ describe('OfflineIndicator', () => {
 
   it('shows offline text when offline', () => {
     Object.defineProperty(window.navigator, 'onLine', {
+      configurable: true,
       writable: true,
       value: false,
     });
@@ -42,6 +46,7 @@ describe('OfflineIndicator', () => {
 
   it('has aria-live="polite" attribute', () => {
     Object.defineProperty(window.navigator, 'onLine', {
+      configurable: true,
       writable: true,
       value: false,
     });
@@ -52,6 +57,7 @@ describe('OfflineIndicator', () => {
 
   it('has class offline-indicator when visible', () => {
     Object.defineProperty(window.navigator, 'onLine', {
+      configurable: true,
       writable: true,
       value: false,
     });
@@ -62,6 +68,7 @@ describe('OfflineIndicator', () => {
 
   it('shows online message when coming back online after being offline', async () => {
     Object.defineProperty(window.navigator, 'onLine', {
+      configurable: true,
       writable: true,
       value: false,
     });
@@ -71,6 +78,7 @@ describe('OfflineIndicator', () => {
     // Simulate coming back online
     act(() => {
       Object.defineProperty(window.navigator, 'onLine', {
+        configurable: true,
         writable: true,
         value: true,
       });
@@ -88,6 +96,7 @@ describe('OfflineIndicator', () => {
   it('hides indicator after going online briefly', async () => {
     vi.useFakeTimers();
     Object.defineProperty(window.navigator, 'onLine', {
+      configurable: true,
       writable: true,
       value: true,
     });
@@ -99,6 +108,7 @@ describe('OfflineIndicator', () => {
 
   it('dispatching offline event shows offline message', async () => {
     Object.defineProperty(window.navigator, 'onLine', {
+      configurable: true,
       writable: true,
       value: true,
     });
@@ -106,6 +116,7 @@ describe('OfflineIndicator', () => {
 
     act(() => {
       Object.defineProperty(window.navigator, 'onLine', {
+        configurable: true,
         writable: true,
         value: false,
       });

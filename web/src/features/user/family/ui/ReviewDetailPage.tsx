@@ -51,7 +51,11 @@ export function ReviewDetailPage() {
     return <ErrorBanner error={t('errors.generic', 'Something went wrong.')} />;
   }
 
-  const session = detailQuery.data!;
+  const session = detailQuery.data;
+  if (!session) {
+    return <ErrorBanner error={t('errors.generic', 'Something went wrong.')} />;
+  }
+
   const canSubmitComment = commentText.trim().length > 0 && !commentMutation.isPending;
 
   return (

@@ -33,6 +33,7 @@ export interface ProfileResponse {
   full_name?: string;
   phone?: string | null;
   role?: string;
+  phone_otp_enabled?: boolean;
   school_id?: string;
   school_type?: 'formal' | 'informal';
   school_settings?: Record<string, unknown>;

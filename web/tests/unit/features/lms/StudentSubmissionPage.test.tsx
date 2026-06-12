@@ -1,9 +1,21 @@
 import { screen, waitFor } from '@testing-library/react';
-import { http, HttpResponse } from 'msw';
-import { describe, it, expect } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { StudentSubmissionPage } from '@/features/lms/submissions/ui/StudentSubmissionPage';
 import { renderWithProviders } from '../../../utils/render';
-import { server, apiListResponse, apiErrorResponse } from '../../../utils/mocks';
+
+const submissionHooks = vi.hoisted(() => ({
+  useCreateStudentSubmission: vi.fn(),
+  useFinalizeStudentSubmission: vi.fn(),
+  useSubmissionAssignments: vi.fn(),
+  useUploadSubmissionFile: vi.fn(),
+}));
+
+vi.mock('@/features/lms/submissions/model/useSubmissions', () => ({
+  useCreateStudentSubmission: submissionHooks.useCreateStudentSubmission,
+  useFinalizeStudentSubmission: submissionHooks.useFinalizeStudentSubmission,
+  useSubmissionAssignments: submissionHooks.useSubmissionAssignments,
+  useUploadSubmissionFile: submissionHooks.useUploadSubmissionFile,
+}));
 
 const mockAssignment = {
   id: 'assign-1',
@@ -15,26 +27,55 @@ const mockAssignment = {
   exercise_pdf_path: null,
 };
 
+function assignmentsResult(items: unknown[], error: Error | null = null) {
+  return {
+    data: error ? undefined : items,
+    error,
+    isLoading: false,
+    refetch: vi.fn(),
+  };
+}
+
 describe('StudentSubmissionPage', () => {
+  beforeEach(() => {
+    submissionHooks.useSubmissionAssignments.mockReturnValue(assignmentsResult([]));
+    submissionHooks.useCreateStudentSubmission.mockReturnValue({
+      error: null,
+      isPending: false,
+      mutateAsync: vi.fn(),
+    });
+    submissionHooks.useFinalizeStudentSubmission.mockReturnValue({
+      error: null,
+      isPending: false,
+      mutateAsync: vi.fn(),
+    });
+    submissionHooks.useUploadSubmissionFile.mockReturnValue({
+      error: null,
+      isPending: false,
+      mutateAsync: vi.fn(),
+    });
+  });
+
   it('renders without crashing', async () => {
-    server.use(http.get('/api/v1/assignments', () => apiListResponse([])));
+    submissionHooks.useSubmissionAssignments.mockReturnValue(assignmentsResult([]));
+
     renderWithProviders(<StudentSubmissionPage />, { user: { role: 'STD' } });
     await waitFor(() => expect(document.body.textContent).toBeTruthy());
   });
 
   it('shows loading state initially', () => {
-    server.use(
-      http.get('/api/v1/assignments', async () => {
-        await new Promise((r) => setTimeout(r, 200));
-        return apiListResponse([]);
-      }),
-    );
+    submissionHooks.useSubmissionAssignments.mockReturnValue({
+      ...assignmentsResult([]),
+      isLoading: true,
+    });
+
     renderWithProviders(<StudentSubmissionPage />, { user: { role: 'STD' } });
     expect(document.body.innerHTML.length).toBeGreaterThan(0);
   });
 
   it('renders assignments when loaded', async () => {
-    server.use(http.get('/api/v1/assignments', () => apiListResponse([mockAssignment])));
+    submissionHooks.useSubmissionAssignments.mockReturnValue(assignmentsResult([mockAssignment]));
+
     renderWithProviders(<StudentSubmissionPage />, { user: { role: 'STD' } });
     await waitFor(() => {
       expect(document.body.textContent).toContain('Math Homework');
@@ -42,7 +83,8 @@ describe('StudentSubmissionPage', () => {
   });
 
   it('shows empty state when no assignments', async () => {
-    server.use(http.get('/api/v1/assignments', () => apiListResponse([])));
+    submissionHooks.useSubmissionAssignments.mockReturnValue(assignmentsResult([]));
+
     renderWithProviders(<StudentSubmissionPage />, { user: { role: 'STD' } });
     await waitFor(() => {
       expect(document.body.textContent).not.toContain('Loading');
@@ -51,7 +93,10 @@ describe('StudentSubmissionPage', () => {
   });
 
   it('shows error state on failure', async () => {
-    server.use(http.get('/api/v1/assignments', () => apiErrorResponse('Load failed')));
+    submissionHooks.useSubmissionAssignments.mockReturnValue(
+      assignmentsResult([], new Error('Load failed')),
+    );
+
     renderWithProviders(<StudentSubmissionPage />, { user: { role: 'STD' } });
     await waitFor(() => expect(document.body.textContent).toBeTruthy());
   });

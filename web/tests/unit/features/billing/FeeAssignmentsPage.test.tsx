@@ -1,10 +1,22 @@
 import { waitFor } from '@testing-library/react';
 import { fireEvent } from '@testing-library/react';
-import { http } from 'msw';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { FeeAssignmentsPage } from '@/features/billing/ui/FeeAssignmentsPage';
 import { renderWithProviders } from '../../../utils/render';
-import { server, apiListResponse, apiErrorResponse } from '../../../utils/mocks';
+
+const billingHooks = vi.hoisted(() => ({
+  useBulkFeeAssignments: vi.fn(),
+  useCreateFeeAssignment: vi.fn(),
+  useFeeAssignments: vi.fn(),
+  useFeeStructures: vi.fn(),
+}));
+
+vi.mock('@/features/billing/model/useBilling', () => ({
+  useBulkFeeAssignments: billingHooks.useBulkFeeAssignments,
+  useCreateFeeAssignment: billingHooks.useCreateFeeAssignment,
+  useFeeAssignments: billingHooks.useFeeAssignments,
+  useFeeStructures: billingHooks.useFeeStructures,
+}));
 
 const feeAssignment = {
   id: 'fa-1',
@@ -32,12 +44,29 @@ const feeStructure = {
   updated_at: null,
 };
 
+function queryResult(data: unknown, error: Error | null = null) {
+  return {
+    data: error ? undefined : data,
+    error,
+    isLoading: false,
+    refetch: vi.fn(),
+  };
+}
+
 describe('FeeAssignmentsPage', () => {
   beforeEach(() => {
-    server.use(
-      http.get('/api/v1/billing/fee-assignments', () => apiListResponse([])),
-      http.get('/api/v1/billing/fee-structures', () => apiListResponse([])),
-    );
+    billingHooks.useFeeAssignments.mockReturnValue(queryResult([]));
+    billingHooks.useFeeStructures.mockReturnValue(queryResult([]));
+    billingHooks.useCreateFeeAssignment.mockReturnValue({
+      error: null,
+      isPending: false,
+      mutateAsync: vi.fn(),
+    });
+    billingHooks.useBulkFeeAssignments.mockReturnValue({
+      error: null,
+      isPending: false,
+      mutateAsync: vi.fn(),
+    });
   });
 
   it('renders without crashing', async () => {
@@ -51,29 +80,26 @@ describe('FeeAssignmentsPage', () => {
   });
 
   it('renders assignment data in a table', async () => {
-    server.use(
-      http.get('/api/v1/billing/fee-assignments', () => apiListResponse([feeAssignment])),
-      http.get('/api/v1/billing/fee-structures', () => apiListResponse([feeStructure])),
-    );
+    billingHooks.useFeeAssignments.mockReturnValue(queryResult([feeAssignment]));
+    billingHooks.useFeeStructures.mockReturnValue(queryResult([feeStructure]));
+
     renderWithProviders(<FeeAssignmentsPage />, { user: { role: 'ADM' } });
     await waitFor(() => expect(document.body.textContent).toContain('stu-1'));
   });
 
   it('shows error banner on API failure', async () => {
-    server.use(
-      http.get('/api/v1/billing/fee-assignments', () => apiErrorResponse('Server error')),
-      http.get('/api/v1/billing/fee-structures', () => apiListResponse([])),
-    );
+    billingHooks.useFeeAssignments.mockReturnValue(queryResult([], new Error('Server error')));
+    billingHooks.useFeeStructures.mockReturnValue(queryResult([]));
+
     renderWithProviders(<FeeAssignmentsPage />, { user: { role: 'ADM' } });
     await waitFor(() => expect(document.body.textContent).toBeTruthy());
   });
 
   it('opens the assign form when button is clicked', async () => {
-    server.use(
-      http.get('/api/v1/billing/fee-assignments', () => apiListResponse([])),
-      http.get('/api/v1/billing/fee-structures', () => apiListResponse([feeStructure])),
-    );
-    const { getByRole } = renderWithProviders(<FeeAssignmentsPage />, { user: { role: 'ADM' } });
+    billingHooks.useFeeAssignments.mockReturnValue(queryResult([]));
+    billingHooks.useFeeStructures.mockReturnValue(queryResult([feeStructure]));
+
+    renderWithProviders(<FeeAssignmentsPage />, { user: { role: 'ADM' } });
     await waitFor(() => expect(document.body.textContent).toBeTruthy());
     const buttons = document.querySelectorAll('button');
     const assignButton = Array.from(buttons).find((btn) =>

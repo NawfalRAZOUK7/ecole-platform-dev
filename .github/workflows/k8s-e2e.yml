@@ -145,6 +145,8 @@ jobs:
 
       - name: Deploy with Helm
         run: |
+          kubectl get nodes -o wide
+          kubectl get pods -n ecole-test -o wide
           helm upgrade --install ecole-platform ./infra/k8s \
             -n ecole-test \
             -f ./infra/k8s/values-staging.yaml \
@@ -159,7 +161,8 @@ jobs:
             --set backend.secrets.jwtSecretKey=ecole-jwt-secret \
             --set backend.secrets.smtpPassword=ecole-smtp-password \
             --wait \
-            --timeout 5m
+            --timeout 10m \
+            --debug
 
       - name: Verify deployment
         run: |

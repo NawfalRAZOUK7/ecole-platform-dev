@@ -1,9 +1,17 @@
 import { waitFor } from '@testing-library/react';
-import { http } from 'msw';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { JustificationReviewPage } from '@/features/admin/ui/JustificationReviewPage';
 import { renderWithProviders } from '../../../utils/render';
-import { server, apiListResponse, apiErrorResponse } from '../../../utils/mocks';
+
+const adminHooks = vi.hoisted(() => ({
+  useAdminJustifications: vi.fn(),
+  useReviewJustification: vi.fn(),
+}));
+
+vi.mock('@/features/admin/model/useAdmin', () => ({
+  useAdminJustifications: adminHooks.useAdminJustifications,
+  useReviewJustification: adminHooks.useReviewJustification,
+}));
 
 const pendingJustification = {
   id: 'just-1',
@@ -25,9 +33,26 @@ const rejectedJustification = {
   created_at: '2026-04-06T00:00:00Z',
 };
 
+function justificationsResult(items: unknown[], error: Error | null = null) {
+  return {
+    data: error ? undefined : { pages: [{ data: items, meta: { has_more: false } }] },
+    error,
+    fetchNextPage: vi.fn(),
+    hasNextPage: false,
+    isFetchingNextPage: false,
+    isLoading: false,
+    refetch: vi.fn(),
+  };
+}
+
 describe('JustificationReviewPage', () => {
   beforeEach(() => {
-    server.use(http.get('/api/v1/admin/justifications', () => apiListResponse([])));
+    adminHooks.useAdminJustifications.mockReturnValue(justificationsResult([]));
+    adminHooks.useReviewJustification.mockReturnValue({
+      error: null,
+      isPending: false,
+      mutateAsync: vi.fn(),
+    });
   });
 
   it('renders without crashing', async () => {
@@ -43,23 +68,26 @@ describe('JustificationReviewPage', () => {
   });
 
   it('renders pending justification items', async () => {
-    server.use(
-      http.get('/api/v1/admin/justifications', () => apiListResponse([pendingJustification])),
-    );
+    adminHooks.useAdminJustifications.mockReturnValue(justificationsResult([pendingJustification]));
+
     renderWithProviders(<JustificationReviewPage />, { user: { role: 'ADM' } });
     await waitFor(() => expect(document.body.textContent).toContain('Child was sick'));
   });
 
   it('renders rejected justification with rejection reason', async () => {
-    server.use(
-      http.get('/api/v1/admin/justifications', () => apiListResponse([rejectedJustification])),
+    adminHooks.useAdminJustifications.mockReturnValue(
+      justificationsResult([rejectedJustification]),
     );
+
     renderWithProviders(<JustificationReviewPage />, { user: { role: 'ADM' } });
     await waitFor(() => expect(document.body.textContent).toBeTruthy());
   });
 
   it('shows error banner on API failure', async () => {
-    server.use(http.get('/api/v1/admin/justifications', () => apiErrorResponse('Server error')));
+    adminHooks.useAdminJustifications.mockReturnValue(
+      justificationsResult([], new Error('Server error')),
+    );
+
     renderWithProviders(<JustificationReviewPage />, { user: { role: 'ADM' } });
     await waitFor(() => expect(document.body.textContent).toBeTruthy());
   });

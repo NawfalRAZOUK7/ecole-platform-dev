@@ -5,14 +5,14 @@
  * /verify-setup, /disable. Phone-based OTP via the backend Twilio service.
  */
 
-import { useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '@/app/providers/AuthContext';
 import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { toBannerError } from '@/shared/ui/errorUtils';
 import {
   useDisableSmsTwoFactor,
+  useProfileData,
   useSmsTwoFactorSetup,
   useVerifySmsTwoFactorSetup,
 } from '../model/useProfile';
@@ -21,14 +21,21 @@ type Step = 'idle' | 'enter-phone' | 'verify' | 'disable';
 
 export function SmsTwoFactorCard() {
   const { t } = useTranslation();
-  const { user, refreshUser } = useAuth();
+  const profileQuery = useProfileData();
+  const profile = profileQuery.data;
   const [step, setStep] = useState<Step>('idle');
-  const [phone, setPhone] = useState(user?.phone ?? '');
+  const [phone, setPhone] = useState(profile?.phone ?? '');
   const [code, setCode] = useState('');
   const [disableCode, setDisableCode] = useState('');
   const setupMutation = useSmsTwoFactorSetup();
   const verifyMutation = useVerifySmsTwoFactorSetup();
   const disableMutation = useDisableSmsTwoFactor();
+
+  useEffect(() => {
+    if (profile?.phone && !phone) {
+      setPhone(profile.phone);
+    }
+  }, [phone, profile?.phone]);
 
   const dismissibleError = useDismissibleError(
     useMemo(
@@ -41,7 +48,7 @@ export function SmsTwoFactorCard() {
     ),
   );
 
-  const isEnabled = user?.phone_otp_enabled === true;
+  const isEnabled = profile?.phone_otp_enabled === true;
 
   async function handleSendCode(e: FormEvent) {
     e.preventDefault();
@@ -55,7 +62,7 @@ export function SmsTwoFactorCard() {
     if (!code.trim()) return;
     await verifyMutation.mutateAsync(code.trim());
     setCode('');
-    await refreshUser();
+    await profileQuery.refetch();
     setStep('idle');
   }
 
@@ -64,15 +71,13 @@ export function SmsTwoFactorCard() {
     if (!disableCode.trim()) return;
     await disableMutation.mutateAsync(disableCode.trim());
     setDisableCode('');
-    await refreshUser();
+    await profileQuery.refetch();
     setStep('idle');
   }
 
   return (
     <div className="card" style={{ maxWidth: 500, marginTop: 24 }}>
-      <h3 style={{ marginBottom: 12, fontSize: 16, fontWeight: 600 }}>
-        {t('twoFactorSms.title')}
-      </h3>
+      <h3 style={{ marginBottom: 12, fontSize: 16, fontWeight: 600 }}>{t('twoFactorSms.title')}</h3>
 
       <ErrorBanner error={dismissibleError.error} onDismiss={dismissibleError.dismiss} />
 

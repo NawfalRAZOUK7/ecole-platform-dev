@@ -1,10 +1,26 @@
 import { screen, waitFor } from '@testing-library/react';
-import { http } from 'msw';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Route, Routes } from 'react-router-dom';
 import { CmsContentEditPage } from '@/features/content/cms/ui/ContentEditPage';
 import { renderWithProviders } from '../../../utils/render';
-import { apiErrorResponse, apiListResponse, server } from '../../../utils/mocks';
+
+const cmsHooks = vi.hoisted(() => ({
+  useCmsContentItem: vi.fn(),
+  useDeleteCmsContent: vi.fn(),
+  useUpdateCmsContent: vi.fn(),
+  useUploadCmsContentAsset: vi.fn(),
+}));
+
+vi.mock('@/features/content/cms/model/useCms', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/features/content/cms/model/useCms')>();
+  return {
+    ...actual,
+    useCmsContentItem: cmsHooks.useCmsContentItem,
+    useDeleteCmsContent: cmsHooks.useDeleteCmsContent,
+    useUpdateCmsContent: cmsHooks.useUpdateCmsContent,
+    useUploadCmsContentAsset: cmsHooks.useUploadCmsContentAsset,
+  };
+});
 
 const mockContentItem = {
   id: 'content-1',
@@ -26,6 +42,15 @@ const mockContentItem = {
   original_content_id: null,
 };
 
+function cmsContentResult(data: unknown, error: Error | null = null) {
+  return {
+    data: error ? undefined : data,
+    error,
+    isLoading: false,
+    refetch: vi.fn(),
+  };
+}
+
 function renderEditPage() {
   return renderWithProviders(
     <Routes>
@@ -36,13 +61,31 @@ function renderEditPage() {
 }
 
 describe('CmsContentEditPage', () => {
+  beforeEach(() => {
+    cmsHooks.useCmsContentItem.mockReturnValue(cmsContentResult(mockContentItem));
+    cmsHooks.useDeleteCmsContent.mockReturnValue({
+      error: null,
+      isPending: false,
+      mutateAsync: vi.fn(),
+    });
+    cmsHooks.useUpdateCmsContent.mockReturnValue({
+      error: null,
+      isPending: false,
+      mutateAsync: vi.fn(),
+    });
+    cmsHooks.useUploadCmsContentAsset.mockReturnValue({
+      error: null,
+      isPending: false,
+      mutateAsync: vi.fn(),
+    });
+  });
+
   it('renders loading state initially', () => {
-    server.use(
-      http.get('/api/v1/cms/content', async () => {
-        await new Promise((r) => setTimeout(r, 100));
-        return apiListResponse([mockContentItem]);
-      }),
-    );
+    cmsHooks.useCmsContentItem.mockReturnValue({
+      ...cmsContentResult(undefined),
+      isLoading: true,
+    });
+
     renderEditPage();
     expect(
       document.querySelector('[role="status"]') || document.querySelector('.loading-state'),
@@ -50,7 +93,8 @@ describe('CmsContentEditPage', () => {
   });
 
   it('renders edit form with content data', async () => {
-    server.use(http.get('/api/v1/cms/content', () => apiListResponse([mockContentItem])));
+    cmsHooks.useCmsContentItem.mockReturnValue(cmsContentResult(mockContentItem));
+
     renderEditPage();
     await waitFor(() => {
       const titleInput = document.querySelector('input[name="title"]') as HTMLInputElement;
@@ -59,7 +103,10 @@ describe('CmsContentEditPage', () => {
   });
 
   it('shows error when content fails to load', async () => {
-    server.use(http.get('/api/v1/cms/content', () => apiErrorResponse('Content not found', 404)));
+    cmsHooks.useCmsContentItem.mockReturnValue(
+      cmsContentResult(undefined, new Error('Content not found')),
+    );
+
     renderEditPage();
     await waitFor(() => {
       expect(

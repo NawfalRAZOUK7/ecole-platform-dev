@@ -15,16 +15,18 @@ import { ErrorBanner } from '@/shared/ui/ErrorBanner';
 import { LoadingState } from '@/shared/ui/LoadingState';
 import { toBannerError } from '@/shared/ui/errorUtils';
 import { formatDate } from '@/shared/i18n';
-import { useAuth } from '@/app/providers/AuthContext';
 import { useAssignmentResults, useQuizAttemptResults } from '../model/useResults';
 import type { QuizAttemptResult, Result } from '../api/results.api';
 
-export function ResultsPage() {
+interface ResultsPageProps {
+  userRole?: string;
+}
+
+export function ResultsPage({ userRole }: ResultsPageProps) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [tab, setTab] = useState<'assignments' | 'quizzes'>('assignments');
-  const quizResultsEnabled = user?.role === 'STD';
+  const quizResultsEnabled = userRole === 'STD';
   const assignmentsQuery = useAssignmentResults();
   const quizResultsQuery = useQuizAttemptResults(quizResultsEnabled);
   const items: Result[] = useMemo(

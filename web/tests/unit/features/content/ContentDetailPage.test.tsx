@@ -1,10 +1,22 @@
 import { screen, waitFor } from '@testing-library/react';
-import { http, HttpResponse } from 'msw';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Route, Routes } from 'react-router-dom';
 import { ContentDetailPage } from '@/features/content/catalog/ui/ContentDetailPage';
 import { renderWithProviders } from '../../../utils/render';
-import { apiErrorResponse, apiListResponse, apiResponse, server } from '../../../utils/mocks';
+
+const contentHooks = vi.hoisted(() => ({
+  useContentDetail: vi.fn(),
+  useToggleContentPublish: vi.fn(),
+  useUpdateContentOrdering: vi.fn(),
+  useUpdateContentProgress: vi.fn(),
+}));
+
+vi.mock('@/features/content/catalog/model/useContent', () => ({
+  useContentDetail: contentHooks.useContentDetail,
+  useToggleContentPublish: contentHooks.useToggleContentPublish,
+  useUpdateContentOrdering: contentHooks.useUpdateContentOrdering,
+  useUpdateContentProgress: contentHooks.useUpdateContentProgress,
+}));
 
 const mockContentItem = {
   id: 'content-1',
@@ -26,6 +38,15 @@ const mockContentItem = {
   original_content_id: null,
 };
 
+function detailResult(data: unknown, error: Error | null = null) {
+  return {
+    data: error ? undefined : data,
+    error,
+    isLoading: false,
+    refetch: vi.fn(),
+  };
+}
+
 function renderDetailPage() {
   return renderWithProviders(
     <Routes>
@@ -36,13 +57,31 @@ function renderDetailPage() {
 }
 
 describe('ContentDetailPage', () => {
+  beforeEach(() => {
+    contentHooks.useContentDetail.mockReturnValue(detailResult(mockContentItem));
+    contentHooks.useToggleContentPublish.mockReturnValue({
+      error: null,
+      isPending: false,
+      mutateAsync: vi.fn(),
+    });
+    contentHooks.useUpdateContentOrdering.mockReturnValue({
+      error: null,
+      isPending: false,
+      mutateAsync: vi.fn(),
+    });
+    contentHooks.useUpdateContentProgress.mockReturnValue({
+      error: null,
+      isPending: false,
+      mutateAsync: vi.fn(),
+    });
+  });
+
   it('renders loading state initially', () => {
-    server.use(
-      http.get('/api/v1/content-items/:id', async () => {
-        await new Promise((r) => setTimeout(r, 100));
-        return apiResponse(mockContentItem);
-      }),
-    );
+    contentHooks.useContentDetail.mockReturnValue({
+      ...detailResult(undefined),
+      isLoading: true,
+    });
+
     renderDetailPage();
     expect(
       document.querySelector('[role="status"]') || document.querySelector('.loading-state'),
@@ -50,18 +89,17 @@ describe('ContentDetailPage', () => {
   });
 
   it('renders content details successfully', async () => {
-    server.use(
-      http.get('/api/v1/content-items/:id', () => apiResponse(mockContentItem)),
-      http.get('/api/v1/content-items/:id/pages', () => apiListResponse([])),
-    );
+    contentHooks.useContentDetail.mockReturnValue(detailResult(mockContentItem));
+
     renderDetailPage();
     expect(await screen.findByText('Arabic Storybook')).toBeInTheDocument();
   });
 
   it('shows error state when content fails to load', async () => {
-    server.use(
-      http.get('/api/v1/content-items/:id', () => apiErrorResponse('Content not found', 404)),
+    contentHooks.useContentDetail.mockReturnValue(
+      detailResult(undefined, new Error('Content not found')),
     );
+
     renderDetailPage();
     await waitFor(() => {
       expect(

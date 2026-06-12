@@ -1,7 +1,8 @@
 process.env.NODE_ENV = 'test';
 
 import '@testing-library/jest-dom';
-import { afterAll, afterEach, beforeAll } from 'vitest';
+import { cleanup } from '@testing-library/react';
+import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 import { ReadableStream, TransformStream, WritableStream } from 'web-streams-polyfill';
 
 class ResizeObserverMock {
@@ -67,7 +68,9 @@ beforeAll(() => {
 });
 
 afterEach(() => {
+  cleanup();
   server.resetHandlers();
+  vi.useRealTimers();
 });
 
 afterAll(() => {

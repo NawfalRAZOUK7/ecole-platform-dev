@@ -5,12 +5,8 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-vi.mock('@/core/api/client', () => ({
-  getAccessToken: vi.fn().mockReturnValue('test-access-token'),
-}));
-
 import { wsClient, type WsEvent } from '@/core/ws/WebSocketClient';
-import { getAccessToken } from '@/core/api/client';
+import { setAccessToken } from '@/core/api/client';
 
 class MockWebSocket {
   static instances: MockWebSocket[] = [];
@@ -56,16 +52,14 @@ function getLatestWs() {
 beforeEach(() => {
   MockWebSocket.instances = [];
   vi.useFakeTimers();
-  vi.stubGlobal(
-    'WebSocket',
-    vi.fn().mockImplementation((url: string) => new MockWebSocket(url)),
-  );
-  vi.mocked(getAccessToken).mockReturnValue('test-access-token');
+  vi.stubGlobal('WebSocket', MockWebSocket);
+  setAccessToken('test-access-token');
   wsClient.disconnect();
 });
 
 afterEach(() => {
   wsClient.disconnect();
+  setAccessToken(null);
   vi.clearAllTimers();
   vi.useRealTimers();
   vi.unstubAllGlobals();
@@ -85,7 +79,7 @@ describe('WebSocketClient', () => {
   });
 
   it('does not create WebSocket when no access token', () => {
-    vi.mocked(getAccessToken).mockReturnValue(null);
+    setAccessToken(null);
     wsClient.connect();
     expect(MockWebSocket.instances).toHaveLength(0);
     expect(wsClient.connected).toBe(false);
@@ -166,9 +160,11 @@ describe('WebSocketClient', () => {
   it('handles WebSocket constructor throwing', () => {
     vi.stubGlobal(
       'WebSocket',
-      vi.fn().mockImplementation(() => {
-        throw new Error('WS unavailable');
-      }),
+      class {
+        constructor() {
+          throw new Error('WS unavailable');
+        }
+      },
     );
     expect(() => wsClient.connect()).not.toThrow();
     expect(wsClient.connected).toBe(false);

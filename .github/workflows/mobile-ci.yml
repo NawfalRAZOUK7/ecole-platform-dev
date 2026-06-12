@@ -43,7 +43,9 @@ jobs:
           cache: true
 
       - name: Install dependencies
-        run: flutter pub get
+        run: |
+          test -f .env || cp .env.example .env
+          flutter pub get
 
       - name: Analyze
         run: flutter analyze
@@ -91,7 +93,9 @@ jobs:
           cache: true
 
       - name: Install dependencies
-        run: flutter pub get
+        run: |
+          test -f .env || cp .env.example .env
+          flutter pub get
 
       - name: Boot iOS simulator
         run: |
