@@ -52,7 +52,8 @@ class TestSchoolCode:
         assert prefix.isupper()
         assert len(prefix) <= 6
         assert len(suffix) == 6  # token_hex(3) -> 6 hex chars
-        assert suffix.isupper()
+        assert suffix == suffix.upper()
+        assert set(suffix) <= set("0123456789ABCDEF")
 
     def test_falls_back_when_name_has_no_alnum(self) -> None:
         code = _school_code("—— !!! ——")
