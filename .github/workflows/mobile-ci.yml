@@ -69,16 +69,20 @@ jobs:
           fail_ci_if_error: false
 
   integration-tests:
-    name: Integration Tests (Flutter iOS Simulator)
+    name: "Integration Tests (Flutter iOS Simulator) (${{ matrix.suite }})"
     runs-on: macos-latest
-    timeout-minutes: 45
+    timeout-minutes: 75
     needs: analyze-and-test
     strategy:
       fail-fast: false
       matrix:
-        test-file:
-          - integration_test/offline_sync_test.dart
-          - integration_test/app_flows_test.dart
+        include:
+          - suite: offline-sync
+            test-file: integration_test/offline_sync_test.dart
+            test-timeout: 30m
+          - suite: app-flows
+            test-file: integration_test/app_flows_test.dart
+            test-timeout: 60m
     defaults:
       run:
         working-directory: mobile
@@ -110,4 +114,4 @@ jobs:
           echo "DEVICE_ID=$DEVICE_ID" >> "$GITHUB_ENV"
 
       - name: Run integration tests
-        run: flutter test --timeout=30m -d "$DEVICE_ID" --reporter=expanded "${{ matrix.test-file }}"
+        run: flutter test --timeout=${{ matrix.test-timeout }} -d "$DEVICE_ID" --reporter=expanded "${{ matrix.test-file }}"

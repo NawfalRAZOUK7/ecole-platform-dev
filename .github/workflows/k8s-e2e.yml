@@ -154,8 +154,10 @@ jobs:
             --set namespace.name=ecole-test \
             --set images.backend.repository=ecole-backend \
             --set images.backend.tag=test \
+            --set images.backend.pullPolicy=Never \
             --set images.web.repository=ecole-web \
             --set images.web.tag=test \
+            --set images.web.pullPolicy=Never \
             --set backend.secrets.databaseUrl=ecole-database-url \
             --set backend.secrets.redisUrl=ecole-redis-url \
             --set backend.secrets.jwtSecretKey=ecole-jwt-secret \
