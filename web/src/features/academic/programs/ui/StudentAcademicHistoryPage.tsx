@@ -123,7 +123,10 @@ export function StudentAcademicHistoryPage() {
     ),
   );
 
-  if (currentQuery.isLoading || timelineQuery.isLoading || historyQuery.isLoading) {
+  if (
+    !dismissibleError.error &&
+    (currentQuery.isLoading || timelineQuery.isLoading || historyQuery.isLoading)
+  ) {
     return <LoadingState />;
   }
 

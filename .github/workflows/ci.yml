@@ -1167,7 +1167,21 @@ jobs:
         run: |
           if [ -n "${API_SERVER_PID:-}" ]; then
             kill -INT "$API_SERVER_PID" || true
-            wait "$API_SERVER_PID" || true
+            for i in $(seq 1 30); do
+              if ! kill -0 "$API_SERVER_PID" 2>/dev/null; then
+                break
+              fi
+              sleep 1
+            done
+          fi
+          cd backend
+          mkdir -p coverage-upload/postman-full
+          coverage combine --keep .coverage* || true
+          if [ -f .coverage ]; then
+            cp .coverage coverage-upload/postman-full/
+          else
+            find . -maxdepth 1 -type f -name '.coverage.*' \
+              -exec cp {} coverage-upload/postman-full/ \;
           fi
 
       - name: Upload Postman coverage data
@@ -1175,7 +1189,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-data-postman-full
-          path: backend/.coverage*
+          path: backend/coverage-upload/postman-full/
           include-hidden-files: true
           if-no-files-found: warn
 
@@ -1358,7 +1372,21 @@ jobs:
         run: |
           if [ -n "${API_SERVER_PID:-}" ]; then
             kill -INT "$API_SERVER_PID" || true
-            wait "$API_SERVER_PID" || true
+            for i in $(seq 1 30); do
+              if ! kill -0 "$API_SERVER_PID" 2>/dev/null; then
+                break
+              fi
+              sleep 1
+            done
+          fi
+          cd backend
+          mkdir -p coverage-upload/postman-scenarios
+          coverage combine --keep .coverage* || true
+          if [ -f .coverage ]; then
+            cp .coverage coverage-upload/postman-scenarios/
+          else
+            find . -maxdepth 1 -type f -name '.coverage.*' \
+              -exec cp {} coverage-upload/postman-scenarios/ \;
           fi
 
       - name: Upload Postman scenario coverage data
@@ -1366,7 +1394,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-data-postman-scenarios
-          path: backend/.coverage*
+          path: backend/coverage-upload/postman-scenarios/
           include-hidden-files: true
           if-no-files-found: warn
 

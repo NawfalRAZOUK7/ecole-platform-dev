@@ -84,6 +84,7 @@ spec:
                   sys.exit(0 if r.ping() else 1)
             failureThreshold: 20
             periodSeconds: 5
+            timeoutSeconds: 10
           readinessProbe:
             exec:
               command:
