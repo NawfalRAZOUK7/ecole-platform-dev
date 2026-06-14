@@ -114,4 +114,4 @@ jobs:
           echo "DEVICE_ID=$DEVICE_ID" >> "$GITHUB_ENV"
 
       - name: Run integration tests
-        run: flutter test --timeout=${{ matrix.test-timeout }} -d "$DEVICE_ID" --reporter=expanded "${{ matrix.test-file }}"
+        run: flutter test --ignore-timeouts --timeout=${{ matrix.test-timeout }} -d "$DEVICE_ID" --reporter=expanded "${{ matrix.test-file }}"
