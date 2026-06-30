@@ -34,7 +34,7 @@ export function useCreateConversation() {
     mutationFn: async (payload: {
       type: string;
       participant_ids: string[];
-      subject?: string;
+      subject_line?: string;
       initial_message: string;
     }) => (await messagesService.createConversation(payload)).data,
     onSuccess: async () => {

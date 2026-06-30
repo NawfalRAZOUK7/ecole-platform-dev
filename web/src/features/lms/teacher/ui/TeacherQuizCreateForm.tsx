@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { TeacherQuizQuestionEditor } from './TeacherQuizQuestionEditor';
 import {
   QUIZ_QUESTION_TYPES,
-  QUIZ_SUBJECTS,
+  QUIZ_SUBJECT_OPTIONS,
+  SUBJECT_OTHER,
   createDefaultQuestion,
   type TeacherQuizPayload,
 } from '../model/teacher-quiz.types';
@@ -24,6 +25,7 @@ export function TeacherQuizCreateForm({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [subject, setSubject] = useState('');
+  const [subjectOther, setSubjectOther] = useState('');
   const [difficulty, setDifficulty] = useState('easy');
   const [timeLimit, setTimeLimit] = useState('');
   const [maxAttempts, setMaxAttempts] = useState('3');
@@ -46,14 +48,19 @@ export function TeacherQuizCreateForm({
     setQuestions((current) => current.filter((_, questionIndex) => questionIndex !== index));
   }
 
+  const trimmedSubjectOther = subjectOther.trim();
+  // A custom matière (subject === 'other') needs a free-text name (backend 422s otherwise).
+  const subjectOtherMissing = subject === SUBJECT_OTHER && !trimmedSubjectOther;
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!title.trim() || questions.length === 0) return;
+    if (!title.trim() || questions.length === 0 || subjectOtherMissing) return;
 
     await onCreate({
       title: title.trim(),
       description: description.trim() || null,
       subject: subject || null,
+      subject_other: subject === SUBJECT_OTHER ? trimmedSubjectOther || null : null,
       level_band: null,
       difficulty,
       time_limit_minutes: timeLimit ? parseInt(timeLimit, 10) : null,
@@ -87,13 +94,26 @@ export function TeacherQuizCreateForm({
             style={{ width: '100%' }}
           >
             <option value="">-</option>
-            {QUIZ_SUBJECTS.map((item) => (
+            {QUIZ_SUBJECT_OPTIONS.map((item) => (
               <option key={item} value={item}>
                 {t(`cms.subjects.${item}`, item)}
               </option>
             ))}
           </select>
         </div>
+        {subject === SUBJECT_OTHER ? (
+          <div className="form-field">
+            <label>{t('cms.upload.subjectOther')}</label>
+            <input
+              className="filter-input"
+              value={subjectOther}
+              onChange={(event) => setSubjectOther(event.target.value)}
+              maxLength={120}
+              required
+              style={{ width: '100%' }}
+            />
+          </div>
+        ) : null}
         <div className="form-field">
           <label>{t('teacherQuiz.difficulty')}</label>
           <select

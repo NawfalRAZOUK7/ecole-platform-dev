@@ -22,7 +22,7 @@ import { useCreateCmsContent, useUploadCmsContentAsset } from '../model/useCms';
 import { fetchLevelMappings, buildLevelMap, type LevelAgeMapping } from '@/shared/lib/levels';
 
 const languageOptions = [
-  { value: 'fr', label: 'Francais' },
+  { value: 'fr', label: 'Français' },
   { value: 'ar', label: 'Arabe' },
   { value: 'en', label: 'English' },
 ];
@@ -50,11 +50,13 @@ export function CmsContentUploadPage() {
   const [bulkResults, setBulkResults] = useState<BulkUploadResult[]>([]);
   const [bulkLevelBand, setBulkLevelBand] = useState('');
   const [bulkSubject, setBulkSubject] = useState('');
+  const [bulkSubjectOther, setBulkSubjectOther] = useState('');
   const [bulkLanguage, setBulkLanguage] = useState('fr');
 
   const watchedContentType = methods.watch('content_type');
   const watchedTitle = methods.watch('title');
   const watchedLevelBand = methods.watch('level_band');
+  const watchedSubject = methods.watch('subject');
   const isStoryLike = isStoryContentType(watchedContentType);
   const [levelMap, setLevelMap] = useState<Record<string, LevelAgeMapping>>({});
 
@@ -123,6 +125,8 @@ export function CmsContentUploadPage() {
         level_band: values.level_band || undefined,
         language: values.language || undefined,
         subject: values.subject || undefined,
+        subject_other:
+          values.subject === 'other' ? values.subject_other?.trim() || undefined : undefined,
         description: values.description.trim() || undefined,
         page_count: isStoryContentType(values.content_type) ? values.page_count : null,
         letter: isStoryContentType(values.content_type) ? values.letter.trim() || null : null,
@@ -151,6 +155,11 @@ export function CmsContentUploadPage() {
 
   async function handleBulkUpload() {
     if (bulkFiles.length === 0) return;
+    // A custom matière ('other') needs a free-text name (backend 422s otherwise).
+    if (bulkSubject === 'other' && !bulkSubjectOther.trim()) {
+      setError(t('cms.validation.subjectOtherRequired'));
+      return;
+    }
 
     setUploading(true);
     setError(null);
@@ -172,6 +181,7 @@ export function CmsContentUploadPage() {
           level_band: bulkLevelBand || undefined,
           language: bulkLanguage || undefined,
           subject: bulkSubject || undefined,
+          subject_other: bulkSubject === 'other' ? bulkSubjectOther.trim() || undefined : undefined,
           status: 'draft',
         });
         await uploadFileWithProgress(created.id, file);
@@ -232,12 +242,14 @@ export function CmsContentUploadPage() {
           levelBand={bulkLevelBand}
           progress={progress}
           subject={bulkSubject}
+          subjectOther={bulkSubjectOther}
           uploading={uploading}
           onBulkUpload={() => void handleBulkUpload()}
           onChangeBulkFiles={setBulkFiles}
           onChangeLanguage={setBulkLanguage}
           onChangeLevelBand={setBulkLevelBand}
           onChangeSubject={setBulkSubject}
+          onChangeSubjectOther={setBulkSubjectOther}
         />
       ) : (
         <FormProvider {...methods}>
@@ -299,6 +311,14 @@ export function CmsContentUploadPage() {
                 placeholder="cms.content.allSubjects"
                 disabled={uploading}
               />
+
+              {watchedSubject === 'other' ? (
+                <FormField<CmsContentFormValues>
+                  name="subject_other"
+                  label="cms.upload.subjectOther"
+                  disabled={uploading}
+                />
+              ) : null}
 
               <FormSelect<CmsContentFormValues>
                 name="language"

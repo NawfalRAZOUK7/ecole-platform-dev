@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
 import { EmptyState } from '@/shared/ui/EmptyState';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
-import { LoadingState } from '@/shared/ui/LoadingState';
+import { TableSkeleton } from '@/shared/ui/SkeletonLayouts';
 import { toBannerError } from '@/shared/ui/errorUtils';
 import { formatDate } from '@/shared/i18n';
 import { useAdminAuditLogs } from '@/features/admin/model/useAdmin';
@@ -46,7 +46,7 @@ export function AuditLogPage() {
   }
 
   if (auditLogsQuery.isLoading) {
-    return <LoadingState />;
+    return <TableSkeleton />;
   }
 
   return (

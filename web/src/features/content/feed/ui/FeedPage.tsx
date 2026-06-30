@@ -76,7 +76,7 @@ function resolveFeedDestination(item: FeedItem) {
     return '/announcements';
   }
   if (source.includes('grade')) {
-    return '/results';
+    return '/grades';
   }
   if (source.includes('attendance')) {
     return '/justification';

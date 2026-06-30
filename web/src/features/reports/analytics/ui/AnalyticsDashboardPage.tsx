@@ -346,7 +346,7 @@ export function AnalyticsDashboardPage() {
               <XAxis dataKey="label" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="count" fill="var(--color-success)" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="count" fill="url(#chart-grad-success)" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </article>
@@ -383,7 +383,7 @@ export function AnalyticsDashboardPage() {
               <XAxis dataKey="label" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="value" fill="var(--color-accent)" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="value" fill="url(#chart-grad-accent)" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </article>

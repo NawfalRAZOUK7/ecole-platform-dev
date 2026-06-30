@@ -2,6 +2,7 @@ import { screen, waitFor } from '@testing-library/react';
 import { http } from 'msw';
 import { describe, expect, it } from 'vitest';
 import { GamesListPage } from '@/features/ai/games/ui/GamesListPage';
+import { PERMISSIONS } from '@/shared/permissions';
 import { renderWithProviders } from '../../../utils/render';
 import { apiErrorResponse, apiListResponse, server } from '../../../utils/mocks';
 
@@ -36,7 +37,9 @@ describe('GamesListPage', () => {
         return apiListResponse([]);
       }),
     );
-    renderWithProviders(<GamesListPage />, { user: { role: 'TCH' } });
+    renderWithProviders(<GamesListPage />, {
+      user: { role: 'TCH', permissions: [PERMISSIONS.GAME_CONFIG_MANAGE] },
+    });
     expect(
       document.querySelector('[role="status"]') || document.querySelector('.loading-state'),
     ).toBeTruthy();
@@ -50,7 +53,9 @@ describe('GamesListPage', () => {
 
   it('shows create game button for teacher role', async () => {
     setupHandlers();
-    renderWithProviders(<GamesListPage />, { user: { role: 'TCH' } });
+    renderWithProviders(<GamesListPage />, {
+      user: { role: 'TCH', permissions: [PERMISSIONS.GAME_CONFIG_MANAGE] },
+    });
     await waitFor(() => {
       expect(
         screen.queryByRole('button', { name: /create/i }) || screen.queryByText(/createGame/i),

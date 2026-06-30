@@ -199,7 +199,7 @@ export function AnalyticsPage() {
                   ];
                 }}
               />
-              <Bar dataKey="value" fill="var(--color-primary)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="value" fill="url(#chart-grad-primary)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

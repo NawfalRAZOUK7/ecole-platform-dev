@@ -8,7 +8,9 @@ export const ROUTES = {
   ADMIN_USERS: '/admin/users',
   ADMIN_INVITATIONS: '/admin/invitations',
   ADMIN_AUDIT: '/admin/audit',
-  ADMIN_SETTINGS: '/admin/settings',
+  // Canonical school-settings path is /admin/school; /admin/settings now
+  // redirects there (was a duplicate route rendering the same page).
+  ADMIN_SETTINGS: '/admin/school',
   ADMIN_BADGES: '/admin/badges',
   ADMIN_JUSTIFICATIONS: '/admin/justifications',
   ADMIN_ANALYTICS: '/admin/analytics',
@@ -88,7 +90,7 @@ export const ROUTES = {
   CONTENT: '/content',
   CONTENT_DETAIL: '/content/:id',
   CONTENT_PLAYER: '/content/:id/play',
-  RESULTS: '/results',
+  RESULTS: '/grades',
   ACTIVITIES: '/activities',
   ACTIVITY_DETAIL: '/activities/:id',
   PROFILE: '/profile',

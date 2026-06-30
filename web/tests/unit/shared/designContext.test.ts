@@ -33,10 +33,8 @@ describe('resolveDesignContext', () => {
     );
   });
 
-  it('applies kids themes for student light and dark modes', () => {
-    expect(resolveDesignContext({ role: 'STD', themeMode: 'light' }).appliedTheme).toBe('kids');
-    expect(resolveDesignContext({ role: 'STD', themeMode: 'dark' }).appliedTheme).toBe(
-      'kids-dark',
-    );
+  it('keeps student themes aligned with the school theme mode', () => {
+    expect(resolveDesignContext({ role: 'STD', themeMode: 'light' }).appliedTheme).toBe('light');
+    expect(resolveDesignContext({ role: 'STD', themeMode: 'dark' }).appliedTheme).toBe('dark');
   });
 });

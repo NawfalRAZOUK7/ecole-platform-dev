@@ -1,11 +1,11 @@
 import type {
   AttendanceClassStats,
   AttendanceRecord,
-} from '@/features/academic/attendance/attendance.types';
-import type { BudgetEnvelope } from '@/features/billing/budgets/budgets.types';
-import type { StudentGradeRow } from '@/features/academic/gradebook/gradebook.types';
-import type { InvoiceSummary } from '@/features/billing/invoices/invoices.service';
-import type { ClassOption, StudentItem } from '@/features/lms/teacher/teacher.service';
+} from '@/features/academic/attendance/model/attendance.types';
+import type { BudgetEnvelope } from '@/features/billing/budgets/model/budgets.types';
+import type { StudentGradeRow } from '@/features/academic/gradebook/model/gradebook.types';
+import type { InvoiceSummary } from '@/features/billing/invoices/api/invoices.api';
+import type { ClassOption, StudentItem } from '@/features/lms/teacher/api/teacher.api';
 import type { UserProfile } from '@/app/providers/AuthContext';
 
 export interface TestSchool {

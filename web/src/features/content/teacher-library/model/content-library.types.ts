@@ -1,18 +1,12 @@
 import type { FormEvent } from 'react';
 import type { ClassOption, ContentItem } from '@/features/lms/teacher/api/teacher.api';
+// Single source of truth — aligned to backend ContentSubject / ContentLevelBand.
+import { LEVEL_BANDS, SUBJECTS } from '@/shared/taxonomy';
 
 export type ContentLibraryTab = 'browse' | 'upload' | 'submissions';
 
-export const SUBJECT_OPTIONS = [
-  'math',
-  'french',
-  'arabic',
-  'science',
-  'history',
-  'geography',
-  'english',
-] as const;
-export const LEVEL_OPTIONS = ['primaire', 'college', 'lycee'] as const;
+export const SUBJECT_OPTIONS = SUBJECTS;
+export const LEVEL_OPTIONS = LEVEL_BANDS;
 export const REVIEW_STATUS_OPTIONS = ['PENDING', 'UNDER_REVIEW', 'APPROVED', 'REJECTED'] as const;
 
 export interface ContentFiltersProps {

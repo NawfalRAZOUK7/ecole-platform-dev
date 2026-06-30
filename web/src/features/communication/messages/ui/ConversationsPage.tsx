@@ -41,7 +41,7 @@ export function ConversationsPage() {
     const conversation = await createConversationMutation.mutateAsync({
       type: 'DIRECT',
       participant_ids: [newParticipant],
-      subject: newSubject || undefined,
+      subject_line: newSubject || undefined,
       initial_message: newMessage,
     });
     setShowNew(false);
@@ -56,7 +56,7 @@ export function ConversationsPage() {
     if (other) {
       return `${other.user_id.slice(0, 8)}...`;
     }
-    return conversation.subject || t('messages.conversation');
+    return conversation.subject_line || t('messages.conversation');
   }
 
   if (conversationsQuery.isLoading && !conversationsQuery.data) {
@@ -109,7 +109,7 @@ export function ConversationsPage() {
                         fontSize: 15,
                       }}
                     >
-                      {conversation.subject || getOtherParticipant(conversation)}
+                      {conversation.subject_line || getOtherParticipant(conversation)}
                     </span>
                     {conversation.unread_count > 0 && (
                       <span className="notif-badge">{conversation.unread_count}</span>

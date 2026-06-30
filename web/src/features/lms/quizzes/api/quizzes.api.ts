@@ -53,6 +53,8 @@ export interface QuizPayload {
   title: string;
   description?: string | null;
   subject?: string | null;
+  /** Free-text matière name; required by the backend when subject === 'other'. */
+  subject_other?: string | null;
   level_band?: string | null;
   difficulty?: QuizDifficulty | null;
   time_limit_minutes?: number | null;

@@ -92,7 +92,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: '📜',
     roles: ['ADM', 'DIR'],
   },
-  { to: '/admin/settings', labelKey: 'nav.adminSettings', icon: '🏫', roles: ['ADM'] },
+  { to: '/admin/school', labelKey: 'nav.adminSettings', icon: '🏫', roles: ['ADM'] },
   { to: '/admin/fee-structures', labelKey: 'nav.adminFeeStructures', icon: '💰', roles: ['ADM'] },
   { to: '/admin/fee-assignments', labelKey: 'nav.adminFeeAssignments', icon: '📋', roles: ['ADM'] },
   {
@@ -178,15 +178,20 @@ const NAV_ITEMS: NavItem[] = [
     to: '/calendar',
     labelKey: 'nav.calendar',
     icon: '🗓️',
-    roles: ['ADM', 'DIR', 'TCH', 'STD', 'PAR'],
+    roles: ['ADM', 'DIR', 'TCH', 'STD', 'PAR', 'EDUCATOR'],
   },
   { to: '/calendar/holidays', labelKey: 'nav.calendarHolidays', icon: '🏖️', roles: ['ADM', 'DIR'] },
-  { to: '/messages', labelKey: 'nav.messages', icon: '💬', roles: ['PAR', 'TCH', 'ADM', 'DIR'] },
+  {
+    to: '/messages',
+    labelKey: 'nav.messages',
+    icon: '💬',
+    roles: ['PAR', 'TCH', 'ADM', 'DIR', 'EDUCATOR'],
+  },
   {
     to: '/announcements',
     labelKey: 'nav.announcements',
     icon: '📢',
-    roles: ['PAR', 'TCH', 'ADM', 'DIR', 'STD'],
+    roles: ['PAR', 'TCH', 'ADM', 'DIR', 'STD', 'EDUCATOR'],
   },
   {
     to: '/notifications',
@@ -198,7 +203,8 @@ const NAV_ITEMS: NavItem[] = [
     to: '/reports',
     labelKey: 'nav.reports',
     icon: '🧾',
-    roles: ['PAR', 'TCH', 'ADM', 'DIR', 'STD'],
+    // Génération de rapports / conformité = fonction staff (pas élève/parent).
+    roles: ['TCH', 'ADM', 'DIR'],
   },
   {
     to: '/documents',
@@ -212,9 +218,9 @@ const NAV_ITEMS: NavItem[] = [
     icon: '⚡',
     roles: ['PAR', 'TCH', 'ADM', 'DIR', 'STD'],
   },
-  { to: '/content', labelKey: 'nav.content', icon: '📚', roles: ['PAR', 'TCH', 'ADM'] },
+  { to: '/content', labelKey: 'nav.content', icon: '📚', roles: ['PAR', 'ADM', 'EDUCATOR'] },
   { to: '/submissions', labelKey: 'nav.submissions', icon: '📤', roles: ['STD'] },
-  { to: '/results', labelKey: 'nav.results', icon: '📊', roles: ['STD', 'PAR'] },
+  { to: '/grades', labelKey: 'nav.results', icon: '📊', roles: ['STD', 'PAR'] },
   { to: '/progress', labelKey: 'nav.progress', icon: '📈', roles: ['STD'] },
   { to: '/parent/progress', labelKey: 'nav.parentProgress', icon: '📈', roles: ['PAR'] },
   { to: '/justification', labelKey: 'nav.justification', icon: '📋', roles: ['PAR'] },
@@ -251,6 +257,7 @@ const NAV_ITEMS: NavItem[] = [
 interface Toast {
   id: number;
   message: string;
+  exiting?: boolean;
 }
 
 let toastIdCounter = 0;
@@ -320,6 +327,14 @@ export function Layout() {
     document.documentElement.setAttribute('data-school-type', designContext.schoolType);
     document.documentElement.setAttribute('data-design-mode', designContext.designMode);
     document.documentElement.setAttribute('data-age-tier', designContext.ageTier);
+    document.documentElement.setAttribute(
+      'data-platform',
+      designContext.isPlatform ? 'true' : 'false',
+    );
+    document.documentElement.setAttribute(
+      'data-age-accent',
+      designContext.ageAccent ? 'true' : 'false',
+    );
     if (userRole) {
       document.documentElement.setAttribute('data-role', userRole.toLowerCase());
     }
@@ -329,6 +344,8 @@ export function Layout() {
       document.documentElement.removeAttribute('data-school-type');
       document.documentElement.removeAttribute('data-design-mode');
       document.documentElement.removeAttribute('data-age-tier');
+      document.documentElement.removeAttribute('data-platform');
+      document.documentElement.removeAttribute('data-age-accent');
     };
   }, [designContext, userRole]);
 
@@ -372,18 +389,43 @@ export function Layout() {
   );
 
   useFocusManagement();
-  const visibleItems = useMemo(
-    () => (isStudent ? KIDS_NAV_ITEMS : NAV_ITEMS.filter((item) => item.roles.includes(userRole))),
-    [isStudent, userRole],
-  );
+  const visibleItems = useMemo(() => {
+    const source = isStudent
+      ? KIDS_NAV_ITEMS
+      : NAV_ITEMS.filter((item) => item.roles.includes(userRole));
+    // Micro-écoles : réservé au contexte informel (ou SUP en supervision) — un parent
+    // d'école formelle ne doit pas voir ces flux. Filtrage par TYPE, pas par rôle seul.
+    const informalContext = user?.school_type === 'informal' || userRole === 'EDUCATOR';
+    const canSeeMicroSchools = informalContext || userRole === 'SUP';
+    // Garde-fou anti-doublon : un rôle ne voit jamais deux fois la même destination,
+    // quelle que soit la liste d'origine (corrige le pattern, pas un onglet précis).
+    const seen = new Set<string>();
+    return source.filter((item) => {
+      if (item.to.startsWith('/micro') && !canSeeMicroSchools) return false;
+      if (seen.has(item.to)) return false;
+      seen.add(item.to);
+      return true;
+    });
+  }, [isStudent, userRole, user?.school_type]);
 
-  const addToast = useCallback((message: string) => {
-    const id = ++toastIdCounter;
-    setToasts((prev) => [...prev, { id, message }]);
+  const dismissToast = useCallback((id: number) => {
+    // Mark exiting to play the slide-out animation, then remove after it ends.
+    setToasts((prev) =>
+      prev.map((toast) => (toast.id === id ? { ...toast, exiting: true } : toast)),
+    );
     setTimeout(() => {
       setToasts((prev) => prev.filter((toast) => toast.id !== id));
-    }, 5000);
+    }, 200);
   }, []);
+
+  const addToast = useCallback(
+    (message: string) => {
+      const id = ++toastIdCounter;
+      setToasts((prev) => [...prev, { id, message }]);
+      setTimeout(() => dismissToast(id), 5000);
+    },
+    [dismissToast],
+  );
 
   const fetchNotificationSummary = useCallback(async () => {
     if (!user) return;
@@ -555,6 +597,7 @@ export function Layout() {
             <NavLink
               key={item.to}
               to={item.to}
+              end
               className={({ isActive }) => `nav-link ${isActive ? 'nav-link--active' : ''}`}
               aria-label={t(item.labelKey)}
               onMouseEnter={() => handleNavPrefetch(item.to)}
@@ -745,11 +788,11 @@ export function Layout() {
       {toasts.length > 0 && (
         <div className="toast-container">
           {toasts.map((toast) => (
-            <div key={toast.id} className="toast">
+            <div key={toast.id} className={toast.exiting ? 'toast toast--exiting' : 'toast'}>
               <span>{toast.message}</span>
               <button
                 className="toast-close"
-                onClick={() => setToasts((prev) => prev.filter((item) => item.id !== toast.id))}
+                onClick={() => dismissToast(toast.id)}
                 aria-label={t('app.close')}
               >
                 <X size={14} strokeWidth={2} />

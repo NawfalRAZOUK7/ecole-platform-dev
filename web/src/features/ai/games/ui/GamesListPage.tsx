@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/app/providers/AuthContext';
+import { PERMISSIONS, hasPermission } from '@/shared/permissions';
 import { EmptyState, ErrorBanner, LoadingState } from '@/shared/ui';
 import { GameConfigCard } from './GameConfigCard';
 import { GAME_DIFFICULTIES, GAME_TYPES, type Difficulty, type GameType } from '../model/types';
@@ -44,7 +45,9 @@ export function GamesListPage() {
     () => configsQuery.data?.pages.flatMap((page) => page.items) ?? [],
     [configsQuery.data],
   );
-  const canManageGames = user?.role === 'TCH' || user?.role === 'ADM';
+  // Gate the *edit* affordance on the backend permission (TCH/EDUCATOR hold it;
+  // ADM can browse but cannot author — the API would 403).
+  const canManageGames = hasPermission(user?.permissions, PERMISSIONS.GAME_CONFIG_MANAGE);
 
   if (configsQuery.isLoading) {
     return <LoadingState />;

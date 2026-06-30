@@ -5,7 +5,7 @@ import { useAuth } from '@/app/providers/AuthContext';
 import { Badge } from '@/shared/ui/Badge';
 import { EmptyState } from '@/shared/ui/EmptyState';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
-import { LoadingState } from '@/shared/ui/LoadingState';
+import { ListSkeleton } from '@/shared/ui/SkeletonLayouts';
 import { getSubjectColor } from '@/shared/ui/tokens';
 import { useCreateQuestion, useQuestionBankStats, useQuestions } from '../model/useQuestionBank';
 import type {
@@ -100,7 +100,7 @@ export function QuestionBankPage() {
     }
   }
 
-  if (questionsQuery.isLoading) return <LoadingState />;
+  if (questionsQuery.isLoading) return <ListSkeleton />;
 
   return (
     <div className="page">

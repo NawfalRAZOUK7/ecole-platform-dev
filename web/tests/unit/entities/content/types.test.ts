@@ -96,10 +96,10 @@ describe('STORY_CONTENT_TYPES constant', () => {
 });
 
 describe('LEVELS constant', () => {
-  it('contains standard French school levels', () => {
-    expect(LEVELS).toContain('maternelle');
-    expect(LEVELS).toContain('cp');
-    expect(LEVELS).toContain('terminale');
+  it('contains Moroccan level-band codes', () => {
+    expect(LEVELS).toContain('PS');
+    expect(LEVELS).toContain('1AEP');
+    expect(LEVELS).toContain('2BAC');
   });
 });
 

@@ -10,7 +10,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
-import { LoadingState } from '@/shared/ui/LoadingState';
+import { ListSkeleton } from '@/shared/ui/SkeletonLayouts';
 import { toBannerError } from '@/shared/ui/errorUtils';
 import { TeacherQuizCreateForm } from './TeacherQuizCreateForm';
 import { TeacherQuizListView } from './TeacherQuizListView';
@@ -54,7 +54,7 @@ export function QuizManagerPage() {
     await quizzesQuery.refetch();
   }
 
-  if (quizzesQuery.isLoading) return <LoadingState />;
+  if (quizzesQuery.isLoading) return <ListSkeleton />;
 
   return (
     <div className="page">

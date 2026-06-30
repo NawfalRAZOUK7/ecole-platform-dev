@@ -10,9 +10,9 @@ describe('StatCard', () => {
     expect(screen.getByText('150')).toBeInTheDocument();
   });
 
-  it('renders numeric value', () => {
+  it('renders numeric value', async () => {
     renderWithProviders(<StatCard label="Count" value={42} />);
-    expect(screen.getByText('42')).toBeInTheDocument();
+    expect(await screen.findByText('42')).toBeInTheDocument();
   });
 
   it('renders icon when provided', () => {

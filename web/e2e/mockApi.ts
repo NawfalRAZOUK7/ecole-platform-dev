@@ -41,7 +41,7 @@ const USERS: Record<MockRole, MockUser> = {
     full_name: 'Professeur Math',
     role: 'TCH',
     school_id: SCHOOL_ID,
-    permissions: ['attendance.write', 'gradebook.write'],
+    permissions: ['attendance.write', 'gradebook.write', 'PERM-AI:game-config:manage'],
     memberships: [{ school_id: SCHOOL_ID, role: 'TCH', status: 'active' }],
   },
   parent: {

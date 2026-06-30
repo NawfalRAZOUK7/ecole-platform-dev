@@ -25,7 +25,7 @@ import {
 } from '../model/useCms';
 
 const languageOptions = [
-  { value: 'fr', label: 'Francais' },
+  { value: 'fr', label: 'Français' },
   { value: 'ar', label: 'Arabe' },
   { value: 'en', label: 'English' },
 ];

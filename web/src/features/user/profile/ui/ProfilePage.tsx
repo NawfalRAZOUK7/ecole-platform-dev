@@ -148,9 +148,21 @@ export function ProfilePage() {
 
   return (
     <div className="page">
-      <h1 className="page-title">
-        {t(adminViewMode ? 'profile.adminView.title' : 'profile.title')}
-      </h1>
+      <header className="profile-hero">
+        <div className="profile-hero__cover" aria-hidden="true" />
+        <div className="profile-hero__body">
+          <div className="profile-hero__avatar" aria-hidden="true">
+            {(user.full_name?.[0] ?? '?').toUpperCase()}
+          </div>
+          <div className="profile-hero__meta">
+            <p className="profile-hero__eyebrow">
+              {t(adminViewMode ? 'profile.adminView.title' : 'profile.title')}
+            </p>
+            <h1 className="profile-hero__name">{user.full_name}</h1>
+            <span className="role-badge">{t(`roles.${user.role}`, user.role)}</span>
+          </div>
+        </div>
+      </header>
 
       <div className="card profile-card">
         <AvatarUpload fullName={user.full_name} />

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { EmptyState } from '@/shared/ui/EmptyState';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
-import { LoadingState } from '@/shared/ui/LoadingState';
+import { ListSkeleton } from '@/shared/ui/SkeletonLayouts';
 import { formatDate } from '@/shared/i18n';
 import { useCreateRubric, useDuplicateRubric, useRubrics } from '../model/useRubrics';
 import type { CreateRubricPayload } from '../model/rubrics.types';
@@ -49,7 +49,7 @@ export function RubricsListPage() {
     }
   }
 
-  if (rubricsQuery.isLoading) return <LoadingState />;
+  if (rubricsQuery.isLoading) return <ListSkeleton />;
 
   return (
     <div className="page">

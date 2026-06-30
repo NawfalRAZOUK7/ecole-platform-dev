@@ -61,8 +61,7 @@ describe('PlatformBridgeCard', () => {
       <PlatformBridgeCard targetPlatform="mobile" title="Test" description="Desc" />,
     );
 
-    // Default value from i18n fallback
-    expect(screen.getByText('متوفر على التطبيق')).toBeInTheDocument();
+    expect(screen.getByText('Available on mobile')).toBeInTheDocument();
   });
 
   it('shows correct platform badge label for web', () => {
@@ -70,6 +69,6 @@ describe('PlatformBridgeCard', () => {
       <PlatformBridgeCard targetPlatform="web" title="Test" description="Desc" />,
     );
 
-    expect(screen.getByText('متوفر على الويب')).toBeInTheDocument();
+    expect(screen.getByText('Available on web')).toBeInTheDocument();
   });
 });

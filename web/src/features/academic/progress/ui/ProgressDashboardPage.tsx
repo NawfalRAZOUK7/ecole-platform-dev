@@ -97,7 +97,9 @@ export function ProgressDashboardPage() {
 
   const assessmentBarData = assessmentResults.labels.map((label, i) => ({
     name: label,
-    [assessmentResults.datasets[0]?.label || 'score']: metric(assessmentResults.datasets[0]?.data[i]),
+    [assessmentResults.datasets[0]?.label || 'score']: metric(
+      assessmentResults.datasets[0]?.data[i],
+    ),
     [assessmentResults.datasets[1]?.label || 'max']: metric(assessmentResults.datasets[1]?.data[i]),
   }));
 
@@ -198,7 +200,11 @@ export function ProgressDashboardPage() {
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                 <YAxis domain={[0, 100]} />
                 <Tooltip />
-                <Bar dataKey={activityKey} fill="var(--color-secondary)" radius={[4, 4, 0, 0]} />
+                <Bar
+                  dataKey={activityKey}
+                  fill="url(#chart-grad-secondary)"
+                  radius={[4, 4, 0, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -255,7 +261,11 @@ export function ProgressDashboardPage() {
                 <YAxis domain={[0, 'auto']} />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey={assessScoreKey} fill="var(--color-primary)" radius={[4, 4, 0, 0]} />
+                <Bar
+                  dataKey={assessScoreKey}
+                  fill="url(#chart-grad-primary)"
+                  radius={[4, 4, 0, 0]}
+                />
                 <Bar dataKey={assessMaxKey} fill="var(--color-border)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>

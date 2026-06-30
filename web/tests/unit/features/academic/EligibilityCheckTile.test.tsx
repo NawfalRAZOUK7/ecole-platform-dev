@@ -65,7 +65,7 @@ describe('EligibilityCheckTile', () => {
 
     renderWithProviders(<EligibilityCheckTile studentId="std-1" />, { user: { role: 'ADM' } });
 
-    expect(await screen.findByText('Pick a target program to run the check.')).toBeInTheDocument();
+    expect(await screen.findByText('Select a program')).toBeInTheDocument();
 
     await screen.findByRole('option', {
       name: /SCI-MATH — Sciences Maths/,
@@ -73,7 +73,7 @@ describe('EligibilityCheckTile', () => {
     await user.selectOptions(screen.getByLabelText('Target program'), 'p1');
 
     await waitFor(() => {
-      expect(screen.getByText('❌ Not eligible')).toBeInTheDocument();
+      expect(screen.getByText('Not eligible')).toBeInTheDocument();
     });
     expect(screen.getByText('min_attendance_rate')).toBeInTheDocument();
     expect(screen.getByText('has_completed_program')).toBeInTheDocument();

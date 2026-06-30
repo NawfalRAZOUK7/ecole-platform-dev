@@ -80,7 +80,7 @@ function ChildCard({ child, onNavigate, t }: ChildCardProps) {
         <button
           type="button"
           className="btn"
-          onClick={() => onNavigate(`/results?studentId=${child.student_id}`)}
+          onClick={() => onNavigate(`/grades?studentId=${child.student_id}`)}
         >
           {t('family.actions.viewGrades')}
         </button>

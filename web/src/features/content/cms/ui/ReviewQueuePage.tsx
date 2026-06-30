@@ -1,39 +1,14 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
-import { LoadingState } from '@/shared/ui/LoadingState';
+import { ListSkeleton } from '@/shared/ui/SkeletonLayouts';
 import { formatDate } from '@/shared/i18n';
 import { useCmsSubmissions, useReviewCmsSubmission } from '../model/useCms';
 import type { CmsSubmission } from '../api/cms.api';
+// Curriculum vocabulary — single source of truth (mirrors backend enums).
+import { LEVEL_BANDS as LEVELS, SUBJECTS } from '@/shared/taxonomy';
 
 const STATUS_OPTIONS = ['PENDING', 'UNDER_REVIEW', 'APPROVED', 'REJECTED'];
-const SUBJECTS = [
-  'math',
-  'french',
-  'arabic',
-  'science',
-  'history',
-  'geography',
-  'english',
-  'islamic_studies',
-  'art',
-  'sport',
-];
-const LEVELS = [
-  'maternelle',
-  'cp',
-  'ce1',
-  'ce2',
-  'cm1',
-  'cm2',
-  '6eme',
-  '5eme',
-  '4eme',
-  '3eme',
-  '2nde',
-  '1ere',
-  'terminale',
-];
 
 export function CmsReviewQueuePage() {
   const { t } = useTranslation();
@@ -59,7 +34,7 @@ export function CmsReviewQueuePage() {
   );
 
   if (submissionsQuery.isLoading && items.length === 0) {
-    return <LoadingState />;
+    return <ListSkeleton />;
   }
 
   async function handleReview() {

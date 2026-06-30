@@ -15,7 +15,7 @@ describe('ROUTES', () => {
     expect(ROUTES.ADMIN_USERS).toBe('/admin/users');
     expect(ROUTES.ADMIN_INVITATIONS).toBe('/admin/invitations');
     expect(ROUTES.ADMIN_AUDIT).toBe('/admin/audit');
-    expect(ROUTES.ADMIN_SETTINGS).toBe('/admin/settings');
+    expect(ROUTES.ADMIN_SETTINGS).toBe('/admin/school');
     expect(ROUTES.ADMIN_BADGES).toBe('/admin/badges');
     expect(ROUTES.ADMIN_JUSTIFICATIONS).toBe('/admin/justifications');
     expect(ROUTES.ADMIN_ANALYTICS).toBe('/admin/analytics');

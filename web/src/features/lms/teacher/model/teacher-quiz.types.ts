@@ -8,6 +8,8 @@ export interface TeacherQuizPayload extends Record<string, unknown> {
   title: string;
   description: string | null;
   subject: string | null;
+  /** Free-text matière name; required by the backend when subject === 'other'. */
+  subject_other: string | null;
   level_band: string | null;
   difficulty: string;
   time_limit_minutes: number | null;
@@ -18,15 +20,13 @@ export interface TeacherQuizPayload extends Record<string, unknown> {
 
 export type QuizManagerView = 'list' | 'create';
 
-export const QUIZ_SUBJECTS = [
-  'math',
-  'french',
-  'arabic',
-  'science',
-  'history',
-  'geography',
-  'english',
-];
+// Curriculum vocabulary — single source of truth (mirrors backend enums).
+export { QUIZ_SUBJECTS, SUBJECT_OTHER } from '@/shared/taxonomy';
+import { QUIZ_SUBJECTS, SUBJECT_OTHER } from '@/shared/taxonomy';
+
+/** Quiz subject dropdown options: academic matières + the 'other' escape hatch
+ *  (which reveals a free-text `subject_other` input). */
+export const QUIZ_SUBJECT_OPTIONS: readonly string[] = [...QUIZ_SUBJECTS, SUBJECT_OTHER];
 
 export const QUIZ_QUESTION_TYPES = ['mcq', 'true_false', 'fill_in_blank'];
 

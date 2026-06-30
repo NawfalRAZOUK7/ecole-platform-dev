@@ -25,7 +25,7 @@ export function ProfileInfo({ children, childrenLoading, user }: ProfileInfoProp
           <label>{t('profile.school')}</label>
           <span>{user.school_id}</span>
         </div>
-        {user.permissions.length > 0 && (
+        {(user.role === 'SUP' || user.role === 'ADM') && user.permissions.length > 0 && (
           <div className="profile-field">
             <label>{t('profile.permissions')}</label>
             <div className="permissions-list">
@@ -59,7 +59,7 @@ export function ProfileInfo({ children, childrenLoading, user }: ProfileInfoProp
               {children.map((child) => (
                 <Link
                   key={child.user_id}
-                  to="/results"
+                  to="/grades"
                   style={{
                     display: 'flex',
                     alignItems: 'center',

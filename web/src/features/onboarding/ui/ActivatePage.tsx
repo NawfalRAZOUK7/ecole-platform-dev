@@ -12,6 +12,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMutation } from '@tanstack/react-query';
 import { applicationsService } from '@/features/onboarding/api/applications.api';
+import { CelebrationOverlay } from '@/shared/ui/CelebrationOverlay';
 
 export function ActivatePage() {
   const { t } = useTranslation();
@@ -30,7 +31,9 @@ export function ActivatePage() {
     e.preventDefault();
     setLocalError(null);
     if (password.length < 12) {
-      setLocalError(t('activate.tooShort', 'Le mot de passe doit contenir au moins 12 caractères.'));
+      setLocalError(
+        t('activate.tooShort', 'Le mot de passe doit contenir au moins 12 caractères.'),
+      );
       return;
     }
     if (password !== confirm) {
@@ -55,6 +58,7 @@ export function ActivatePage() {
   if (mutation.isSuccess) {
     return (
       <div className="page" style={{ maxWidth: 480, margin: '48px auto', textAlign: 'center' }}>
+        <CelebrationOverlay trigger="onboarding_complete" />
         <div style={{ fontSize: 56 }}>✅</div>
         <h1 className="page-title">{t('activate.doneTitle', 'Compte activé !')}</h1>
         <p>
@@ -63,19 +67,22 @@ export function ActivatePage() {
             'Votre mot de passe a été défini et votre compte est actif. Vous pouvez maintenant vous connecter.',
           )}
         </p>
-        <Link className="btn btn-primary" to="/login" style={{ marginTop: 16, display: 'inline-block' }}>
+        <Link
+          className="btn btn-primary"
+          to="/login"
+          style={{ marginTop: 16, display: 'inline-block' }}
+        >
           {t('activate.goLogin', 'Se connecter')}
         </Link>
       </div>
     );
   }
 
-  const serverError =
-    mutation.isError
-      ? (mutation.error as { response?: { data?: { error?: { message?: string } } } })?.response
-          ?.data?.error?.message ??
-        t('activate.failed', "L'activation a échoué. Le lien est peut-être expiré ou déjà utilisé.")
-      : null;
+  const serverError = mutation.isError
+    ? ((mutation.error as { response?: { data?: { error?: { message?: string } } } })?.response
+        ?.data?.error?.message ??
+      t('activate.failed', "L'activation a échoué. Le lien est peut-être expiré ou déjà utilisé."))
+    : null;
 
   return (
     <div className="page" style={{ maxWidth: 480, margin: '48px auto' }}>
@@ -83,7 +90,10 @@ export function ActivatePage() {
       <p style={{ color: 'var(--color-text-secondary)' }}>
         {t('activate.subtitle', 'Choisissez un mot de passe pour finaliser votre compte.')}
       </p>
-      <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
+      <form
+        onSubmit={submit}
+        style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}
+      >
         <label>
           {t('activate.password', 'Mot de passe')}
           <input

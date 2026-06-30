@@ -1,6 +1,7 @@
 import { memo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { useCountUp } from '@/shared/hooks/useCountUp';
 
 interface Trend {
   direction: 'up' | 'down' | 'flat';
@@ -13,6 +14,16 @@ interface StatCardProps {
   trend?: Trend;
   icon?: ReactNode;
 }
+
+/** Animated numeric value — counts up on mount / change, reduced-motion safe. */
+const AnimatedValue = memo(function AnimatedValue({ value }: { value: number }) {
+  const { i18n } = useTranslation();
+  const display = useCountUp(value);
+  const formatted = Number.isInteger(value)
+    ? Math.round(display).toLocaleString(i18n.language)
+    : display.toFixed(1);
+  return <>{formatted}</>;
+});
 
 const TREND_ICONS = {
   up: TrendingUp,
@@ -37,7 +48,9 @@ export const StatCard = memo(function StatCard({ label, value, trend, icon }: St
         <span className="stat-card__label">{t(label)}</span>
         {icon && <span className="stat-card__icon">{icon}</span>}
       </div>
-      <strong className="stat-card__value">{value}</strong>
+      <strong className="stat-card__value">
+        {typeof value === 'number' ? <AnimatedValue value={value} /> : value}
+      </strong>
       {trend && TrendIcon && (
         <span className="stat-card__trend" style={{ color: trendColor }}>
           <TrendIcon size={14} strokeWidth={2} style={{ marginInlineEnd: '4px' }} />

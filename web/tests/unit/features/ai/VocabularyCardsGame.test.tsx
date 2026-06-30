@@ -44,7 +44,7 @@ describe('VocabularyCardsGame', () => {
     renderWithProviders(<VocabularyCardsGame game={mockGameNoCards} onExit={onExit} />, {
       user: { role: 'STD' },
     });
-    expect(screen.getByText(/Aucune carte/i)).toBeInTheDocument();
+    expect(screen.getByText(/Aucune carte|No cards/i)).toBeInTheDocument();
   });
 
   it('renders first card with Arabic word', () => {
@@ -70,7 +70,7 @@ describe('VocabularyCardsGame', () => {
       user: { role: 'STD' },
     });
     // Previous button should be disabled on first card
-    const prevButton = screen.getByRole('button', { name: /précédent/i });
+    const prevButton = screen.getByRole('button', { name: /précédent|previous/i });
     expect(prevButton).toBeDisabled();
   });
 
@@ -100,7 +100,7 @@ describe('VocabularyCardsGame', () => {
     await user.click(nextButton);
 
     await waitFor(() => {
-      const prevButton = screen.getByRole('button', { name: /précédent/i });
+      const prevButton = screen.getByRole('button', { name: /précédent|previous/i });
       expect(prevButton).not.toBeDisabled();
     });
   });

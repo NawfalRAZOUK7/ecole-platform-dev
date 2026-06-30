@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
-import { Badge, EmptyState, ErrorBanner, LoadingState, SearchInput, Tabs } from '@/shared/ui';
+import { Badge, EmptyState, ErrorBanner, SearchInput, Tabs } from '@/shared/ui';
+import { ListSkeleton } from '@/shared/ui/SkeletonLayouts';
 import { toBannerError } from '@/shared/ui/errorUtils';
 import { normalizeContentType } from '../model/content-types';
 import type { ContentItem } from '../api/content.api';
@@ -38,7 +39,7 @@ export function ContentPage() {
   const dismissibleError = useDismissibleError(toBannerError(contentQuery.error, t('app.error')));
 
   if (contentQuery.isLoading && !contentQuery.data) {
-    return <LoadingState />;
+    return <ListSkeleton />;
   }
 
   return (

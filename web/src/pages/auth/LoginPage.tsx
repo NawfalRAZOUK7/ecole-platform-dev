@@ -230,107 +230,141 @@ export function LoginPage() {
   // Normal login form
   return (
     <div className="login-page">
-      <div className="login-card">
-        <div className="login-header">
-          <h1 className="login-title">{t('app.name')}</h1>
-          <LanguageSwitcher />
-        </div>
-
-        <h2 className="login-subtitle">{t('login.title')}</h2>
-
-        <ErrorBanner error={translatedError} onDismiss={clearError} />
-
-        <div className="oauth-login" aria-label={t('login.oauth.title')}>
-          <button
-            type="button"
-            className="oauth-button oauth-button-google"
-            onClick={() => void handleOAuthLogin('google')}
-            disabled={isLoading || !schoolId.trim()}
-          >
-            <LogIn aria-hidden="true" />
-            <span>{t('login.oauth.google')}</span>
-          </button>
-          <button
-            type="button"
-            className="oauth-button oauth-button-microsoft"
-            onClick={() => void handleOAuthLogin('microsoft')}
-            disabled={isLoading || !schoolId.trim()}
-          >
-            <Building2 aria-hidden="true" />
-            <span>{t('login.oauth.microsoft')}</span>
-          </button>
-        </div>
-
-        <div className="login-separator">
-          <span>{t('login.oauth.separator')}</span>
-        </div>
-
-        <form onSubmit={handleSubmit} className="login-form">
-          <div className="form-field">
-            <label htmlFor="email">{t('login.email')}</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-              disabled={isLoading}
-            />
-          </div>
-
-          <div className="form-field">
-            <label htmlFor="password">{t('login.password')}</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-              disabled={isLoading}
-            />
-          </div>
-
-          <div className="form-field">
-            <label htmlFor="schoolId">{t('login.school')}</label>
-            <input
-              id="schoolId"
-              type="text"
-              value={schoolId}
-              onChange={(e) => setSchoolId(e.target.value)}
-              required
-              disabled={isLoading}
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="login-submit"
-            disabled={isLoading || !email || !password || !schoolId}
-          >
-            {isLoading ? t('login.loading') : t('login.submit')}
-          </button>
-
-          <div style={{ textAlign: 'center', marginTop: 12 }}>
-            <Link to="/register" style={{ color: 'var(--color-primary)', fontSize: 14 }}>
-              {t('register.hasCode')}
-            </Link>
-          </div>
-          <div style={{ textAlign: 'center', marginTop: 8 }}>
-            <Link to="/apply" style={{ color: 'var(--color-primary)', fontSize: 14 }}>
-              {t('apply.title', "Demande d'inscription")}
-            </Link>
-          </div>
-          <div style={{ textAlign: 'center', marginTop: 8 }}>
-            <Link
-              to="/forgot-password"
-              style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}
+      <div className="login-split">
+        <aside className="login-brand" aria-hidden="true">
+          <span className="login-brand__blob login-brand__blob--1" />
+          <span className="login-brand__blob login-brand__blob--2" />
+          <div className="login-brand__content">
+            <svg
+              className="login-brand__mark"
+              viewBox="0 0 512 512"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
             >
-              {t('login.forgotPassword')}
-            </Link>
+              <circle
+                cx="256"
+                cy="248"
+                r="170"
+                stroke="#fff"
+                strokeOpacity="0.35"
+                strokeWidth="6"
+              />
+              <g fill="#fff">
+                <path d="M256 150 L402 214 L256 278 L110 214 Z" />
+                <path d="M222 266 L290 266 L290 292 Q290 322 256 322 Q222 322 222 292 Z" />
+                <circle cx="256" cy="214" r="12" />
+              </g>
+              <path d="M402 214 L402 300" stroke="#fff" strokeWidth="7" strokeLinecap="round" />
+              <circle cx="402" cy="316" r="14" fill="#f59e0b" />
+            </svg>
+            <h2 className="login-brand__name">École Platform</h2>
+            <p className="login-brand__tagline">
+              {t('login.tagline', 'Apprendre, enseigner, gérer — en un seul espace.')}
+            </p>
           </div>
-        </form>
+        </aside>
+        <div className="login-card">
+          <div className="login-header">
+            <h1 className="login-title">{t('app.name')}</h1>
+            <LanguageSwitcher />
+          </div>
+
+          <h2 className="login-subtitle">{t('login.title')}</h2>
+
+          <ErrorBanner error={translatedError} onDismiss={clearError} />
+
+          <div className="oauth-login" aria-label={t('login.oauth.title')}>
+            <button
+              type="button"
+              className="oauth-button oauth-button-google"
+              onClick={() => void handleOAuthLogin('google')}
+              disabled={isLoading || !schoolId.trim()}
+            >
+              <LogIn aria-hidden="true" />
+              <span>{t('login.oauth.google')}</span>
+            </button>
+            <button
+              type="button"
+              className="oauth-button oauth-button-microsoft"
+              onClick={() => void handleOAuthLogin('microsoft')}
+              disabled={isLoading || !schoolId.trim()}
+            >
+              <Building2 aria-hidden="true" />
+              <span>{t('login.oauth.microsoft')}</span>
+            </button>
+          </div>
+
+          <div className="login-separator">
+            <span>{t('login.oauth.separator')}</span>
+          </div>
+
+          <form onSubmit={handleSubmit} className="login-form">
+            <div className="form-field">
+              <label htmlFor="email">{t('login.email')}</label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="form-field">
+              <label htmlFor="password">{t('login.password')}</label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="form-field">
+              <label htmlFor="schoolId">{t('login.school')}</label>
+              <input
+                id="schoolId"
+                type="text"
+                value={schoolId}
+                onChange={(e) => setSchoolId(e.target.value)}
+                required
+                disabled={isLoading}
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="login-submit"
+              disabled={isLoading || !email || !password || !schoolId}
+            >
+              {isLoading ? t('login.loading') : t('login.submit')}
+            </button>
+
+            <div style={{ textAlign: 'center', marginTop: 12 }}>
+              <Link to="/register" style={{ color: 'var(--color-primary)', fontSize: 14 }}>
+                {t('register.hasCode')}
+              </Link>
+            </div>
+            <div style={{ textAlign: 'center', marginTop: 8 }}>
+              <Link to="/apply" style={{ color: 'var(--color-primary)', fontSize: 14 }}>
+                {t('apply.title', "Demande d'inscription")}
+              </Link>
+            </div>
+            <div style={{ textAlign: 'center', marginTop: 8 }}>
+              <Link
+                to="/forgot-password"
+                style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}
+              >
+                {t('login.forgotPassword')}
+              </Link>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

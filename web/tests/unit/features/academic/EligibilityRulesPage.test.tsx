@@ -87,15 +87,15 @@ describe('EligibilityRulesPage', () => {
 
     renderWithProviders(<EligibilityRulesPage />, { user: { role: 'ADM' } });
 
-    await screen.findByRole('heading', { name: 'New rule' });
+    await screen.findByRole('heading', { name: 'Create a rule' });
 
     await user.selectOptions(screen.getByLabelText('Target program'), 'p1');
-    await user.selectOptions(screen.getByLabelText('Condition type'), 'min_attendance_rate');
-    const params = screen.getByLabelText('Parameters (JSON)');
+    await user.selectOptions(screen.getByLabelText('Condition'), 'min_attendance_rate');
+    const params = screen.getByLabelText('Parameters');
     await user.clear(params);
     await user.type(params, '{{"min_rate": 0.8}');
-    await user.type(screen.getByLabelText('Message key (i18n)'), 'eligibility.attendance.required');
-    const buttons = screen.getAllByRole('button', { name: 'Create' });
+    await user.type(screen.getByLabelText('Message key'), 'eligibility.attendance.required');
+    const buttons = screen.getAllByRole('button', { name: 'Create a rule' });
     await user.click(buttons[buttons.length - 1]);
 
     await waitFor(() => {

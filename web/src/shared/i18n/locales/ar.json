@@ -12,7 +12,13 @@
     "close": "إغلاق",
     "edit": "تعديل",
     "actions": "الإجراءات",
-    "table": "جدول"
+    "table": "جدول",
+    "delete": "حذف",
+    "optional": "اختياري",
+    "saved": "تم الحفظ",
+    "clear": "مسح",
+    "next": "التالي",
+    "previous": "السابق"
   },
   "nav": {
     "feed": "آخر الأخبار",
@@ -75,7 +81,17 @@
     "adminPrograms": "الشُّعب",
     "adminEnrollments": "التسجيلات",
     "adminEquivalences": "المعادلات",
-    "adminEligibilityRules": "قواعد الأهلية"
+    "adminEligibilityRules": "قواعد الأهلية",
+    "billingSiblingPolicy": "سياسة الإخوة",
+    "billingLateFees": "غرامات التأخير",
+    "billingPaymentPlans": "خطط الدفع",
+    "calendarHolidays": "العطل",
+    "loginHistory": "سجل الدخول",
+    "questionBank": "بنك الأسئلة",
+    "rubrics": "شبكات التقييم",
+    "timetableConstraints": "قيود الجدول الزمني",
+    "timetableGenerate": "توليد الجدول الزمني",
+    "home": "الرئيسية"
   },
   "login": {
     "title": "تسجيل الدخول",
@@ -106,7 +122,9 @@
       "verify": "تحقق",
       "useBackup": "استخدم رمز الاسترداد",
       "useApp": "استخدم تطبيق المصادقة"
-    }
+    },
+    "forgotPassword": "هل نسيت كلمة المرور؟",
+    "tagline": "التعلّم والتعليم والإدارة — في فضاء واحد."
   },
   "feed": {
     "title": "آخر الأخبار",
@@ -246,7 +264,10 @@
       "badgeCode": "يجب أن يكون رمز الشارة بين حرفين و50 حرفاً.",
       "badgeTitle": "يجب ألا يتجاوز عنوان الشارة 120 حرفاً.",
       "badgeIcon": "يجب ألا تتجاوز أيقونة الشارة 12 حرفاً."
-    }
+    },
+    "classStudentsTitle": "طلاب القسم",
+    "classStudentsSubtitle": "المكافآت لكل طالب",
+    "classStudentsEmpty": "لا يوجد طلاب في هذا القسم"
   },
   "games": {
     "title": "إعدادات الألعاب",
@@ -445,7 +466,9 @@
     "filters": {
       "search": "ابحث عن الملفات...",
       "allCategories": "كل الفئات",
-      "allTypes": "كل الأنواع"
+      "allTypes": "كل الأنواع",
+      "fromDate": "تاريخ البداية",
+      "toDate": "تاريخ النهاية"
     },
     "view": {
       "grid": "عرض شبكي",
@@ -505,8 +528,34 @@
       "title": "العنوان",
       "tags": "الوسوم (مفصولة بفواصل)",
       "description": "الوصف",
-      "empty": "لا توجد موارد"
-    }
+      "empty": "لا توجد موارد",
+      "type": "النوع"
+    },
+    "versions": {
+      "title": "سجل الإصدارات",
+      "empty": "لا توجد إصدارات متاحة",
+      "version": "الإصدار",
+      "date": "التاريخ",
+      "author": "المؤلف",
+      "size": "الحجم",
+      "current": "الحالي",
+      "restore": "استعادة",
+      "noPreview": "المعاينة غير متاحة لهذا النوع من الملفات",
+      "confirmRestoreTitle": "استعادة هذا الإصدار؟",
+      "confirmRestoreBody": "سيُستعاد الإصدار v{{version}}. سيُحتفظ بالإصدار الحالي في السجل."
+    },
+    "studentDocuments": {
+      "title": "وثائق التلميذ",
+      "selectStudent": "اختر تلميذًا",
+      "checklist": "الوثائق المطلوبة",
+      "required": "إلزامي",
+      "filename": "اسم الملف",
+      "size": "الحجم",
+      "category": "الفئة",
+      "file": "الملف"
+    },
+    "categoriesLabel": "الفئات",
+    "expiryDate": "تاريخ الانتهاء"
   },
   "content": {
     "title": "مكتبة المحتويات",
@@ -830,7 +879,10 @@
     "allStatuses": "جميع الحالات",
     "retry": "إعادة محاولة الدفع",
     "actions": "الإجراءات",
-    "paymentProof": "إثبات الدفع"
+    "paymentProof": "إثبات الدفع",
+    "downloadPdf": "تنزيل ملف PDF",
+    "downloadReceipt": "تنزيل الإيصال",
+    "pdfLanguage": "لغة ملف PDF"
   },
   "activities": {
     "title": "الأنشطة",
@@ -968,7 +1020,8 @@
     "codePlaceholder": "الرمز أو رمز الاسترداد",
     "copyCodes": "نسخ الرموز",
     "copied": "تم النسخ!",
-    "backupConfirm": "لقد حفظت رموز الاسترداد في مكان آمن."
+    "backupConfirm": "لقد حفظت رموز الاسترداد في مكان آمن.",
+    "qrAlt": "رمز الاستجابة السريعة للمصادقة الثنائية"
   },
   "studentSubmission": {
     "title": "تسليم العمل",
@@ -1067,7 +1120,8 @@
     "export": "تصدير",
     "exportReady": "ملف {{format}} جاهز",
     "exportFailed": "فشل تصدير الدرجات",
-    "noData": "لا توجد بيانات درجات"
+    "noData": "لا توجد بيانات درجات",
+    "programFilter": "تصفية حسب البرنامج"
   },
   "budgets": {
     "title": "الميزانيات",
@@ -1173,7 +1227,10 @@
     "rate_limit": "طلبات كثيرة جداً",
     "not_found": "المورد غير موجود",
     "network": "خطأ في الشبكة",
-    "unknown": "خطأ غير معروف"
+    "unknown": "خطأ غير معروف",
+    "boundaryTitle": "حدث خطأ",
+    "boundaryMessage": "حدث خطأ غير متوقع. يُرجى المحاولة مرة أخرى.",
+    "generic": "حدث خطأ."
   },
   "admin": {
     "dashboard": {
@@ -1190,7 +1247,8 @@
       "starsAwardedMonth": "النجوم الممنوحة هذا الشهر",
       "mostActiveClass": "الفصل الأكثر نشاطاً",
       "recentBadgeUnlocks": "أحداث المكافآت الأخيرة",
-      "gamificationUnavailable": "هذه النسخة من الخلفية لا توفر /api/v1/rewards/analytics بعد، لذلك هذه المؤشرات غير متاحة."
+      "gamificationUnavailable": "هذه النسخة من الخلفية لا توفر /api/v1/rewards/analytics بعد، لذلك هذه المؤشرات غير متاحة.",
+      "heroGreeting": "لوحة التحكم"
     },
     "badges": {
       "title": "إدارة الباجات",
@@ -1386,8 +1444,11 @@
           "PROMOTION": "انتقال (بداية السنة)",
           "CORRECTION": "تصحيح",
           "READMISSION": "إعادة قبول"
-        }
-      }
+        },
+        "versionLabel": "إصدار البرنامج",
+        "versionPlaceholder": "اختر إصدارًا"
+      },
+      "manageVersions": "إدارة الإصدارات"
     },
     "enrollments": {
       "title": "التسجيلات",
@@ -1410,6 +1471,48 @@
       "assignProgram": "تعيين الشُّعبة",
       "empty": "لا توجد تسجيلات مطابقة لهذه التصفية.",
       "viewAcademicHistory": "عرض السجل الأكاديمي"
+    },
+    "eligibility": {
+      "title": "التحقق من الأهلية",
+      "choose": "اختيار",
+      "eligible": "مؤهَّل",
+      "kindLabel": "نوع القاعدة",
+      "noRules": "لا توجد قواعد محددة",
+      "notEligible": "غير مؤهَّل",
+      "pickProgram": "اختر برنامجًا",
+      "targetLabel": "البرنامج المستهدف"
+    },
+    "eligibilityRules": {
+      "title": "قواعد الأهلية",
+      "subtitle": "إدارة قواعد أهلية البرامج",
+      "create": "إنشاء قاعدة",
+      "condition": "الشرط",
+      "empty": "لا توجد قواعد أهلية",
+      "kind": "النوع",
+      "messageKey": "مفتاح الرسالة",
+      "params": "المعطيات",
+      "targetProgram": "البرنامج المستهدف"
+    },
+    "equivalences": {
+      "title": "معادلات البرامج",
+      "subtitle": "إدارة المعادلات بين البرامج",
+      "create": "إنشاء معادلة",
+      "delete": "حذف",
+      "empty": "لا توجد معادلات",
+      "from": "من",
+      "to": "إلى",
+      "kind": "النوع",
+      "note": "ملاحظة"
+    },
+    "versions": {
+      "title": "إصدارات البرنامج",
+      "create": "إنشاء إصدار",
+      "description": "الوصف",
+      "effectiveFrom": "سارٍ ابتداءً من",
+      "empty": "لا توجد إصدارات",
+      "label": "التسمية",
+      "retire": "سحب",
+      "retiredAt": "تاريخ السحب"
     }
   },
   "teacher": {
@@ -1489,7 +1592,10 @@
       "slot_3": "الحصة 3",
       "slot_4": "الحصة 4",
       "slot_5": "الحصة 5",
-      "slot_6": "الحصة 6"
+      "slot_6": "الحصة 6",
+      "date": "التاريخ",
+      "selectPeriod": "اختر فترة",
+      "slot": "الحصة"
     },
     "assessments": {
       "title": "التقييمات",
@@ -1560,7 +1666,18 @@
       "payments": "المدفوعات"
     },
     "allPrograms": "جميع الشُّعَب",
-    "programFilterLabel": "التصفية حسب الشُّعبة"
+    "programFilterLabel": "التصفية حسب الشُّعبة",
+    "adoption": "التبنّي",
+    "authErrors": "أخطاء المصادقة",
+    "autoRefresh": "تحديث تلقائي",
+    "breakdownTitle": "التوزيع",
+    "conversion": "التحويل",
+    "incidents": "الحوادث",
+    "lastUpdated": "آخر تحديث",
+    "latency": "زمن الاستجابة",
+    "prometheusSource": "المصدر: Prometheus",
+    "trendTitle": "الاتجاه",
+    "usage": "الاستخدام"
   },
   "calendar": {
     "title": "التقويم",
@@ -1646,7 +1763,10 @@
       "declined_two": "رفضان",
       "declined_few": "{{count}} رفض",
       "declined_many": "{{count}} رافضًا",
-      "declined_other": "{{count}} رافض"
+      "declined_other": "{{count}} رافض",
+      "attending": "{{count}} مشارك",
+      "declined": "{{count}} غير مشارك",
+      "maybe": "{{count}} ربما"
     },
     "external": {
       "google": "Google Calendar",
@@ -1671,7 +1791,32 @@
       "recurrence": "التكرار",
       "interval": "الفاصل",
       "until": "التكرار حتى"
-    }
+    },
+    "exportIcal": "تصدير iCal",
+    "holidays": {
+      "title": "العطل",
+      "create": "إضافة عطلة",
+      "edit": "تعديل العطلة",
+      "empty": "لا توجد عطل مُعدّة",
+      "name": "الاسم",
+      "startDate": "تاريخ البداية",
+      "endDate": "تاريخ النهاية",
+      "type": "النوع",
+      "description": "الوصف",
+      "types": {
+        "national": "وطنية",
+        "school": "مدرسية"
+      },
+      "confirmDeleteTitle": "حذف هذه العطلة؟",
+      "confirmDeleteBody": "لا يمكن التراجع عن هذا الإجراء."
+    },
+    "reminderPreferences": {
+      "title": "تفضيلات التذكير",
+      "enabled": "مفعّل",
+      "disabled": "معطّل"
+    },
+    "capacityValue": "{{count}} مقعد",
+    "eventCount": "{{count}} حدث"
   },
   "reports": {
     "title": "التقارير",
@@ -1924,7 +2069,8 @@
     "videoUnsupported": "المتصفح لا يدعم الفيديو.",
     "audioUnsupported": "المتصفح لا يدعم الصوت.",
     "interactiveHint": "هذا المحتوى يفتح في نافذة جديدة.",
-    "openInteractive": "فتح المحتوى"
+    "openInteractive": "فتح المحتوى",
+    "open": "فتح"
   },
   "studentQuiz": {
     "title": "الاختبارات",
@@ -1947,7 +2093,8 @@
     "selectZone": "اختر منطقة",
     "matchHint": "طابق كل عنصر من اليسار مع نظيره",
     "selectMatch": "اختر",
-    "listen": "استمع إلى السؤال"
+    "listen": "استمع إلى السؤال",
+    "recommended": "مُوصى به لك"
   },
   "quizAnalytics": {
     "subtitle": "راجع المشاركة ومتوسط الأداء والأسئلة التي وجدها الطلاب الأكثر صعوبة.",
@@ -2007,7 +2154,8 @@
       "reviewQueue": "قائمة المراجعة",
       "quizzes": "الاختبارات",
       "analytics": "التحليلات",
-      "pending": "معلق"
+      "pending": "معلق",
+      "review": "قائمة المراجعة"
     },
     "content": {
       "title": "مكتبة المحتويات",
@@ -2024,7 +2172,8 @@
       "tabs": {
         "managed": "المحتوى المُدار",
         "library": "تصفح المكتبة"
-      }
+      },
+      "ageHintSuffix": "سنة"
     },
     "contentTypes": {
       "video": "فيديو",
@@ -2046,16 +2195,31 @@
       "themeColor": "لون السمة"
     },
     "subjects": {
+      "accounting": "المحاسبة",
+      "activite_scientifique": "النشاط العلمي",
+      "amazigh": "اللغة الأمازيغية",
+      "arabic": "اللغة العربية",
+      "arabic_letters": "الحروف العربية",
+      "art": "التربية الفنية",
+      "civic": "التربية على المواطنة",
+      "economics": "الاقتصاد",
+      "english": "اللغة الإنجليزية",
+      "french": "اللغة الفرنسية",
+      "histoire_geo": "الاجتماعيات",
+      "informatique": "المعلوميات",
+      "islamic": "التربية الإسلامية",
+      "literacy": "القراءة الأولية",
       "math": "الرياضيات",
-      "french": "الفرنسية",
-      "arabic": "العربية",
-      "science": "العلوم",
-      "history": "التاريخ",
-      "geography": "الجغرافيا",
-      "english": "الإنجليزية",
-      "islamic_studies": "التربية الإسلامية",
-      "art": "الفنون",
-      "sport": "الرياضة"
+      "music": "التربية الموسيقية",
+      "pedagogy": "البيداغوجيا",
+      "philosophy": "الفلسفة",
+      "physique_chimie": "الفيزياء والكيمياء",
+      "quranic": "التعليم العتيق",
+      "sport": "التربية البدنية",
+      "svt": "علوم الحياة والأرض",
+      "technology": "التكنولوجيا",
+      "vocabulary": "المفردات",
+      "other": "أخرى (مخصصة)"
     },
     "statuses": {
       "draft": "مسودة",
@@ -2075,6 +2239,7 @@
       "contentType": "نوع المحتوى",
       "level": "المستوى",
       "subject": "المادة",
+      "subjectOther": "اسم المادة المخصصة",
       "language": "اللغة",
       "mainFile": "الملف الرئيسي",
       "thumbnail": "الصورة المصغرة",
@@ -2094,7 +2259,8 @@
       "bulkResults": "نتائج الرفع",
       "bulkOk": "نجاح",
       "largeFileWarning": "تحذير: ملف فيديو كبير (>100 ميجابايت). قد يستغرق الرفع وقتاً.",
-      "letterPlaceholder": "حرف اختياري، حتى 3 أحرف"
+      "letterPlaceholder": "حرف اختياري، حتى 3 أحرف",
+      "success": "تم الرفع بنجاح"
     },
     "edit": {
       "title": "تعديل المحتوى",
@@ -2155,7 +2321,9 @@
       "targetAge": "يجب أن يكون العمر المستهدف بين 2 و18.",
       "targetAgeRequired": "العمر المستهدف مطلوب للقصص وكتب التلوين.",
       "targetAgeRange": "يجب أن يكون العمر الأقصى أكبر من أو يساوي العمر الأدنى.",
-      "themeColor": "يجب أن يكون لون السمة قيمة hex صالحة."
+      "themeColor": "يجب أن يكون لون السمة قيمة hex صالحة.",
+      "subjectOther": "يجب ألا يتجاوز اسم المادة المخصصة 120 حرفاً.",
+      "subjectOtherRequired": "أدخل اسماً للمادة المخصصة."
     },
     "review": {
       "title": "قائمة المراجعة",
@@ -2178,7 +2346,9 @@
       "feedbackPlaceholder": "أدخل تعليقك...",
       "rewardPoints": "نقاط المكافأة",
       "confirmApprove": "تأكيد القبول",
-      "confirmReject": "تأكيد الرفض"
+      "confirmReject": "تأكيد الرفض",
+      "notes": "ملاحظات",
+      "view": "عرض"
     },
     "reviewStatuses": {
       "PENDING": "معلق",
@@ -2249,7 +2419,22 @@
       "previewTitle": "معاينة الاختبار",
       "status": "الحالة",
       "questionCount": "{{count}} أسئلة",
-      "noQuestions": "لم تتم إضافة أسئلة بعد"
+      "noQuestions": "لم تتم إضافة أسئلة بعد",
+      "addPair": "إضافة زوج",
+      "alternative": "بديل",
+      "correct": "صحيح",
+      "createTitle": "إنشاء اختبار",
+      "dragDropPreview": "معاينة السحب والإفلات",
+      "easy": "سهل",
+      "editTitle": "تعديل الاختبار",
+      "exitPreview": "إنهاء المعاينة",
+      "fillInPlaceholder": "أدخل الإجابة",
+      "hard": "صعب",
+      "matchingPreview": "معاينة المطابقة",
+      "medium": "متوسط",
+      "metadata": "البيانات الوصفية",
+      "saved": "تم حفظ الاختبار",
+      "shuffle": "خلط"
     },
     "analytics": {
       "title": "تحليلات المحتوى",
@@ -2273,7 +2458,8 @@
       "empty": "لا يوجد محتوى في المكتبة",
       "submissionsTitle": "تقديمات مراجعة المكتبة",
       "submissionsSubtitle": "تابع المحتوى الذي أرسلته للمراجعة من مساحة CMS."
-    }
+    },
+    "title": "إدارة المحتوى"
   },
   "gdpr": {
     "title": "الخصوصية و GDPR",
@@ -2368,7 +2554,60 @@
       "4": "الخميس",
       "5": "الجمعة",
       "6": "السبت"
-    }
+    },
+    "constraints": {
+      "title": "قيود الجدول الزمني",
+      "subtitle": "حدّد القيود قبل تشغيل التوليد التلقائي.",
+      "global": "الإعدادات العامة",
+      "academicYear": "السنة الدراسية (المعرّف)",
+      "academicYearPlaceholder": "UUID السنة الدراسية",
+      "maxConsecutive": "أقصى عدد حصص متتالية",
+      "teacherAvailability": "توفّر الأساتذة",
+      "addAvailability": "إضافة توفّر",
+      "noAvailability": "لم يُحدَّد أي توفّر.",
+      "teacherId": "الأستاذ (المعرّف)",
+      "teacherIdPlaceholder": "UUID الأستاذ",
+      "day": "اليوم",
+      "from": "من",
+      "until": "إلى",
+      "rooms": "القاعات",
+      "addRoom": "إضافة قاعة",
+      "noRooms": "لم تُحدَّد أي قاعة.",
+      "roomName": "اسم القاعة",
+      "roomNamePlaceholder": "مثال: قاعة 101",
+      "capacity": "السعة"
+    },
+    "generate": {
+      "title": "التوليد التلقائي",
+      "subtitle": "وَلِّد الجدول الزمني تلقائيًا من القيود المحددة.",
+      "triggerTitle": "تشغيل التوليد",
+      "academicYear": "السنة الدراسية",
+      "noConstraints": "يرجى تحديد القيود أولًا.",
+      "trigger": "توليد",
+      "jobStatus": "حالة المهمة",
+      "jobId": "المعرّف",
+      "previewTitle": "تم توليد {{count}} حصة",
+      "apply": "تطبيق",
+      "applyConfirm": "نعم، طبّق",
+      "applied": "تم تطبيق {{applied}} حصة، وتجاهل {{skipped}}.",
+      "confirmApplyTitle": "تطبيق الجدول الزمني",
+      "confirmApplyBody": "سيستبدل هذا الإجراء الحصص الحالية. هل تريد المتابعة؟",
+      "statuses": {
+        "pending": "قيد الانتظار",
+        "running": "قيد التنفيذ",
+        "completed": "مكتمل",
+        "failed": "فشل"
+      },
+      "cols": {
+        "day": "اليوم",
+        "time": "التوقيت",
+        "subject": "المادة",
+        "class": "القسم",
+        "teacher": "الأستاذ",
+        "room": "القاعة"
+      }
+    },
+    "deleteSlot": "حذف الحصة"
   },
   "billing": {
     "feeStructures": {
@@ -2433,6 +2672,55 @@
       "ACTIVE": "نشط",
       "ARCHIVED": "مؤرشف",
       "EXEMPTED": "معفى"
+    },
+    "siblingPolicy": {
+      "title": "سياسة الإخوة",
+      "description": "حدّد التخفيضات الممنوحة للأسر التي لديها عدة أبناء مسجّلين.",
+      "maxSiblings": "أقصى عدد إخوة مشمولين",
+      "siblingRank": "الابن",
+      "discountPercent": "التخفيض (%)",
+      "siblingN": "الابن {{n}}"
+    },
+    "lateFeePolicy": {
+      "title": "سياسة غرامات التأخير",
+      "description": "اضبط الغرامات المطبّقة على المدفوعات المتأخرة.",
+      "gracePeriodDays": "مهلة السماح (أيام)",
+      "feePercent": "نسبة الغرامة",
+      "maxFeeCap": "الحد الأقصى",
+      "days": "أيام"
+    },
+    "paymentPlans": {
+      "title": "خطط الدفع",
+      "create": "خطة جديدة",
+      "empty": "لا توجد خطط دفع",
+      "notFound": "الخطة غير موجودة",
+      "planName": "اسم الخطة",
+      "student": "التلميذ",
+      "studentId": "معرّف التلميذ",
+      "totalAmount": "المبلغ الإجمالي",
+      "installments": "الأقساط",
+      "installmentsLabel": "جدول الأقساط",
+      "addInstallment": "إضافة قسط",
+      "noInstallments": "لا توجد أقساط",
+      "startDate": "تاريخ البداية",
+      "dueDate": "تاريخ الاستحقاق",
+      "amount": "المبلغ",
+      "paidAt": "تاريخ الدفع",
+      "progress": "التقدّم",
+      "createdAt": "أُنشئ في",
+      "status": "الحالة",
+      "statuses": {
+        "active": "نشطة",
+        "completed": "مكتملة",
+        "cancelled": "ملغاة"
+      },
+      "installmentStatuses": {
+        "pending": "قيد الانتظار",
+        "paid": "مدفوع",
+        "overdue": "متأخر"
+      },
+      "invoiceId": "معرّف الفاتورة",
+      "numInstallments": "عدد الأقساط"
     }
   },
   "messages": {
@@ -2477,7 +2765,8 @@
     "actions": {
       "viewProgress": "عرض التقدم",
       "viewGrades": "الدرجات",
-      "viewTimetable": "الجدول الزمني"
+      "viewTimetable": "الجدول الزمني",
+      "reviewSessions": "جلسات المراجعة"
     }
   },
   "progress": {
@@ -2522,7 +2811,15 @@
       "status": "الحالة",
       "from": "من",
       "fromInitial": "لا توجد شُعبة سابقة",
-      "to": "إلى"
+      "to": "إلى",
+      "snapshotYear": "السنة",
+      "snapshotsEmpty": "لا توجد لقطات",
+      "snapshotsTitle": "اللقطات",
+      "takeSnapshot": "أخذ لقطة",
+      "transcriptDownload": "تنزيل كشف النقاط",
+      "transcriptDownloadPdf": "تنزيل كشف النقاط (PDF)",
+      "transcriptPreviewLive": "معاينة مباشرة",
+      "transcriptPreviewSnapshot": "معاينة اللقطة"
     }
   },
   "twoFactorSms": {
@@ -2604,5 +2901,200 @@
     "doneTitle": "تم تفعيل الحساب!",
     "doneBody": "تم تعيين كلمة المرور وحسابك الآن نشط. يمكنك تسجيل الدخول.",
     "goLogin": "تسجيل الدخول"
+  },
+  "forgotPassword": {
+    "title": "نسيت كلمة المرور",
+    "instructions": "أدخل بريدك الإلكتروني لتلقي رابط إعادة التعيين.",
+    "submit": "إرسال الرابط",
+    "sent": "تم إرسال بريد إعادة التعيين. يرجى التحقق من صندوق الوارد.",
+    "backToLogin": "العودة إلى تسجيل الدخول"
+  },
+  "resetPassword": {
+    "title": "إعادة تعيين كلمة المرور",
+    "newPassword": "كلمة المرور الجديدة",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "submit": "إعادة التعيين",
+    "mismatch": "كلمتا المرور غير متطابقتين",
+    "invalidToken": "رابط إعادة التعيين غير صالح أو منتهي الصلاحية",
+    "strength": {
+      "weak": "ضعيفة",
+      "medium": "متوسطة",
+      "strong": "قوية"
+    }
+  },
+  "loginHistory": {
+    "title": "سجل الدخول",
+    "subtitle": "اطّلع على آخر محاولات تسجيل الدخول.",
+    "empty": "لا يوجد سجل دخول",
+    "date": "التاريخ",
+    "ip": "عنوان IP",
+    "location": "الموقع",
+    "userAgent": "الجهاز",
+    "status": "الحالة",
+    "statuses": {
+      "success": "ناجحة",
+      "failed": "فاشلة"
+    }
+  },
+  "rubrics": {
+    "title": "شبكات التقييم",
+    "subtitle": "أنشئ وأدِر شبكات التقييم القائمة على المعايير.",
+    "empty": "لا توجد شبكات تقييم",
+    "create": "إنشاء شبكة",
+    "createAndEdit": "إنشاء وتعديل",
+    "edit": "تعديل",
+    "grade": "تقييم",
+    "duplicate": "نسخ",
+    "editorSubtitle": "حدّد المعايير ومستويات الأداء.",
+    "gradingTitle": "التقييم بالشبكة",
+    "criterion": "المعيار",
+    "weight": "الوزن",
+    "total": "المجموع",
+    "percentage": "النسبة المئوية",
+    "levelLabel": "المستوى",
+    "levelScore": "النقطة",
+    "levelDescription": "وصف المستوى",
+    "criterionName": "اسم المعيار",
+    "addLevel": "مستوى",
+    "addCriterion": "إضافة معيار",
+    "studentId": "معرّف التلميذ",
+    "studentIdPlaceholder": "المعرّف أو UUID للتلميذ",
+    "saveGrade": "حفظ التقييم",
+    "gradeSaved": "تم حفظ التقييم للتلميذ {{studentId}}",
+    "previousResults": "التقييمات السابقة",
+    "cols": {
+      "title": "العنوان",
+      "subject": "المادة",
+      "description": "الوصف",
+      "criteria": "المعايير",
+      "maxScore": "أقصى نقطة",
+      "createdAt": "أُنشئ في",
+      "score": "النقطة"
+    }
+  },
+  "questionBank": {
+    "title": "بنك الأسئلة",
+    "subtitle": "أدِر واستورد ووَلِّد الأسئلة لتقييماتك.",
+    "empty": "لا توجد أسئلة في البنك",
+    "addQuestion": "إضافة سؤال",
+    "importFromQuiz": "استيراد من اختبار",
+    "generateQuiz": "توليد اختبار",
+    "filterSubject": "تصفية حسب المادة",
+    "allTypes": "كل الأنواع",
+    "allDifficulties": "كل مستويات الصعوبة",
+    "choices": "خيارات الإجابة",
+    "choiceText": "نص الخيار",
+    "correct": "صحيح",
+    "addChoice": "إضافة خيار",
+    "tags": "الوسوم",
+    "tagsPlaceholder": "رياضيات، جبر، كسور",
+    "cols": {
+      "text": "السؤال",
+      "subject": "المادة",
+      "type": "النوع",
+      "difficulty": "الصعوبة",
+      "tags": "الوسوم"
+    },
+    "types": {
+      "mcq": "اختيار متعدد",
+      "true_false": "صح / خطأ",
+      "short_answer": "إجابة قصيرة",
+      "essay": "مقال"
+    },
+    "difficulty": {
+      "easy": "سهل",
+      "medium": "متوسط",
+      "hard": "صعب"
+    },
+    "stats": {
+      "total": "المجموع"
+    },
+    "import": {
+      "title": "استيراد من اختبار",
+      "subtitle": "اختر اختبارًا لاستيراد أسئلته إلى البنك.",
+      "quizId": "معرّف الاختبار",
+      "quizIdPlaceholder": "مثال: 00000000-0000-4000-8000-000000000001",
+      "quizIdHint": "أدخل UUID للاختبار الموجود.",
+      "submit": "استيراد",
+      "imported": "تم استيراد {{count}} سؤال",
+      "skipped": "تم تجاهل {{count}} (مكرر)",
+      "previewTitle": "الأسئلة المستوردة"
+    },
+    "generate": {
+      "title": "توليد اختبار",
+      "subtitle": "وَلِّد تلقائيًا مجموعة أسئلة وفق معاييرك.",
+      "count": "عدد الأسئلة",
+      "submit": "توليد",
+      "previewTitle": "تم توليد {{count}} سؤال",
+      "saveAll": "حفظ الكل"
+    }
+  },
+  "a11y": {
+    "mainNavigation": "التنقل الرئيسي",
+    "skipToContent": "الانتقال إلى المحتوى الرئيسي"
+  },
+  "breadcrumb": {
+    "label": "مسار التنقل"
+  },
+  "tabs": {
+    "list": "علامات التبويب"
+  },
+  "theme": {
+    "toggle": "تبديل السمة"
+  },
+  "network": {
+    "backOnline": "تمت استعادة الاتصال",
+    "offline": "غير متصل"
+  },
+  "pagination": {
+    "navigation": "ترقيم الصفحات",
+    "next": "التالي",
+    "previous": "السابق",
+    "pageSize": "عناصر لكل صفحة"
+  },
+  "bridge": {
+    "availableOnMobile": "متاح على الهاتف المحمول",
+    "availableOnWeb": "متاح على الويب",
+    "coloringDescription": "افتح تطبيق الهاتف لتلوين هذه الصفحة.",
+    "coloringTitle": "التلوين"
+  },
+  "memoryMatch": {
+    "moves": "{{count}} حركة"
+  },
+  "sharedReview": {
+    "aiSuggestion": "اقتراح الذكاء الاصطناعي",
+    "backToSessions": "العودة إلى الجلسات",
+    "childText": "نص الطفل",
+    "commentPlaceholder": "اكتب تشجيعًا…",
+    "comments": "التشجيعات",
+    "date": "التاريخ",
+    "noComments": "لا توجد تعليقات بعد. كن أول من يشجّع!",
+    "noSessions": "لا توجد جلسات تعلّم بعد.",
+    "score": "النتيجة",
+    "send": "إرسال",
+    "status": "الحالة",
+    "subtitle": "اطّلع على الأنشطة الأخيرة وأضف تشجيعات",
+    "title": "جلسات تعلّم الطفل",
+    "type": "النوع"
+  },
+  "sortingGame": {
+    "progress": "التقدّم:"
+  },
+  "studentGames": {
+    "all": "الكل",
+    "backToGames": "العودة إلى الألعاب",
+    "congrats": "أحسنت!",
+    "empty": "لا توجد ألعاب متاحة. عُد لاحقًا!",
+    "noCards": "لا توجد بطاقات متاحة.",
+    "replay": "إعادة اللعب",
+    "subtitle": "اختر لعبة لتتعلّم وأنت تستمتع!",
+    "timedOut": "انتهى الوقت",
+    "title": "ألعابي",
+    "tryAgain": "حاول مرة أخرى!"
+  },
+  "vocabulary": {
+    "finish": "إنهاء",
+    "progress": "بطاقة",
+    "tapFlip": "انقر للقلب"
   }
 }

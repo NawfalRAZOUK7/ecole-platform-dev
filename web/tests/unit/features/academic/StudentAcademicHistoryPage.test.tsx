@@ -202,11 +202,11 @@ describe('StudentAcademicHistoryPage', () => {
 
       renderAtRoute();
 
-      await user.click(await screen.findByRole('button', { name: /Live transcript preview/i }));
+      await user.click(await screen.findByRole('button', { name: /Live (transcript )?preview/i }));
       expect(
-        await screen.findByRole('dialog', { name: /Live transcript preview/i }),
+        await screen.findByRole('dialog', { name: /Live (transcript )?preview/i }),
       ).toBeInTheDocument();
-      expect(screen.getByTitle(/Live transcript preview/i)).toHaveAttribute(
+      expect(screen.getByTitle(/Live (transcript )?preview/i)).toHaveAttribute(
         'srcdoc',
         expect.stringContaining('Live transcript'),
       );

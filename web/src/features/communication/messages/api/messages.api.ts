@@ -12,7 +12,7 @@ export interface Conversation {
   school_id: string;
   type: string;
   created_by: string;
-  subject: string | null;
+  subject_line: string | null;
   participants: Participant[];
   last_message_at: string | null;
   last_message_body: string | null;
@@ -43,7 +43,7 @@ export const messagesService = {
   createConversation(payload: {
     type: string;
     participant_ids: string[];
-    subject?: string;
+    subject_line?: string;
     initial_message: string;
   }) {
     return api.post<Conversation>('/messages/conversations', payload);

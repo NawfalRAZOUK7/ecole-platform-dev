@@ -16,33 +16,53 @@ export interface DesignContextInput {
 
 export interface DesignContext {
   role: string;
+  /** Contexte plateforme : SUP / gestionnaire de contenu (CMS). Identité visuelle dédiée. */
+  isPlatform: boolean;
   schoolType: SchoolType;
+  /** Identité visuelle, pilotée par le CONTEXTE d'école (formel/informel), jamais par le rôle. */
   designMode: DesignMode;
   ageTier: AgeTier;
+  /** Accent ludique (gros texte, icônes) pour les jeunes élèves. N'est PAS un thème séparé. */
+  ageAccent: boolean;
   themeMode: ThemeMode;
   isRtl: boolean;
   appliedTheme: 'light' | 'dark' | 'kids' | 'kids-dark';
 }
 
+/**
+ * Règle de design (décision produit) :
+ *  - 3 identités par CONTEXTE : Plateforme (SUP/CMS), École formelle, École informelle.
+ *  - TOUS les rôles d'une même école partagent l'identité de cette école (y compris l'élève).
+ *  - L'âge de l'élève n'ajoute qu'un ACCENT (gros texte, icônes), pas un thème « kids » séparé.
+ *  - Mêmes tokens web et mobile : un compte est cohérent d'une plateforme à l'autre.
+ */
 export function resolveDesignContext(input: DesignContextInput): DesignContext {
   const role = (input.role ?? '').toUpperCase();
+  const isPlatform = role === 'SUP' || role === 'CONTENT_MGR' || role === 'CMS';
   const schoolType = normalizeSchoolType(input.schoolType);
   const override = normalizeDesignMode(
     input.designMode ?? readSettingsDesignMode(input.schoolSettings),
   );
   const designMode = isInformalContext(role, input.pathname)
     ? 'informal'
-    : override ?? schoolType;
+    : (override ?? schoolType);
   const themeMode = input.themeMode === 'dark' ? 'dark' : 'light';
   const ageTier = input.ageTier ?? 'primaire';
-  const appliedTheme =
-    role === 'STD' ? (themeMode === 'dark' ? 'kids-dark' : 'kids') : themeMode;
+  // Accent ludique (gros texte, icônes) réservé aux jeunes enfants :
+  //  - tout élève en contexte INFORMEL (rawd : enfants 3-5 ans), ET
+  //  - l'élève FORMEL en préscolaire (PS/MS/GS → tier 'maternelle').
+  // Le primaire formel et au-delà gardent le look standard (piloté par niveau/matière).
+  const ageAccent = role === 'STD' && (designMode === 'informal' || ageTier === 'maternelle');
+  // Plus de thème « kids » séparé : l'élève reste sur le thème (clair/sombre) de son école.
+  const appliedTheme = themeMode;
 
   return {
     role,
+    isPlatform,
     schoolType,
     designMode,
     ageTier,
+    ageAccent,
     themeMode,
     isRtl: Boolean(input.isRtl),
     appliedTheme,

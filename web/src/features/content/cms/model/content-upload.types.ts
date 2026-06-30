@@ -14,34 +14,8 @@ export const STORY_CONTENT_TYPES = ['story', 'coloring_book'] as const;
 export type CmsContentType = (typeof CONTENT_TYPES)[number];
 export type StoryContentType = (typeof STORY_CONTENT_TYPES)[number];
 
-export const LEVELS = [
-  'maternelle',
-  'cp',
-  'ce1',
-  'ce2',
-  'cm1',
-  'cm2',
-  '6eme',
-  '5eme',
-  '4eme',
-  '3eme',
-  '2nde',
-  '1ere',
-  'terminale',
-];
-
-export const SUBJECTS = [
-  'math',
-  'french',
-  'arabic',
-  'science',
-  'history',
-  'geography',
-  'english',
-  'islamic_studies',
-  'art',
-  'sport',
-];
+// Curriculum vocabulary — single source of truth (mirrors backend enums).
+export { LEVEL_BANDS as LEVELS, SUBJECTS } from '@/shared/taxonomy';
 
 export const ACCEPT_MAP: Record<string, string> = {
   video: '.mp4,.webm',
@@ -76,6 +50,7 @@ export interface CmsContentFormValues extends CmsStoryMetadataFields {
   content_type: CmsContentType;
   level_band: string;
   subject: string;
+  subject_other?: string;
   language: string;
   status: 'draft' | 'published' | 'archived';
 }
@@ -151,6 +126,8 @@ export const cmsContentFormSchema = z
     }),
     level_band: z.string().trim(),
     subject: z.string().trim(),
+    // Free-text matière name, required only when subject === 'other'.
+    subject_other: z.string().trim().max(120, 'cms.validation.subjectOther').optional(),
     language: z
       .string()
       .trim()
@@ -171,6 +148,15 @@ export const cmsContentFormSchema = z
     status: z.enum(['draft', 'published', 'archived']),
   })
   .superRefine((values, context) => {
+    // A custom matière (subject === 'other') requires a free-text name.
+    if (values.subject === 'other' && !(values.subject_other ?? '').trim()) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'cms.validation.subjectOtherRequired',
+        path: ['subject_other'],
+      });
+    }
+
     if (!isStoryContentType(values.content_type)) {
       return;
     }
@@ -232,6 +218,7 @@ export function buildCmsContentFormDefaults(
     content_type: values?.content_type ?? 'pdf',
     level_band: values?.level_band ?? '',
     subject: values?.subject ?? '',
+    subject_other: values?.subject_other ?? '',
     language: values?.language ?? 'fr',
     page_count: values?.page_count ?? null,
     letter: values?.letter ?? '',

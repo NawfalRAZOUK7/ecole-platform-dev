@@ -80,7 +80,7 @@ export function BudgetAnalyticsPage() {
               <XAxis dataKey="category" />
               <YAxis />
               <Tooltip formatter={(value: number) => madFormatter.format(value)} />
-              <Bar dataKey="amount" fill="var(--color-accent)" />
+              <Bar dataKey="amount" fill="url(#chart-grad-accent)" />
             </BarChart>
           </ResponsiveContainer>
         </div>

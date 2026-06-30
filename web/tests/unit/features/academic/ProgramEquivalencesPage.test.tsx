@@ -119,12 +119,12 @@ describe('ProgramEquivalencesPage', () => {
 
     renderWithProviders(<ProgramEquivalencesPage />, { user: { role: 'ADM' } });
 
-    await screen.findByRole('heading', { name: 'New equivalence' });
+    await screen.findByRole('heading', { name: 'Create an equivalence' });
 
-    await user.selectOptions(screen.getByLabelText('From program'), 'p1');
-    await user.selectOptions(screen.getByLabelText('To program'), 'p2');
+    await user.selectOptions(screen.getByLabelText('From'), 'p1');
+    await user.selectOptions(screen.getByLabelText('To'), 'p2');
     // The submit button has the same label as the heading; pick by role.
-    const buttons = screen.getAllByRole('button', { name: 'Create' });
+    const buttons = screen.getAllByRole('button', { name: 'Create an equivalence' });
     await user.click(buttons[buttons.length - 1]);
 
     await waitFor(() => {

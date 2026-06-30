@@ -8,12 +8,14 @@ export interface CmsBulkUploadFormProps {
   levelBand: string;
   progress: number;
   subject: string;
+  subjectOther: string;
   uploading: boolean;
   onBulkUpload: () => void;
   onChangeBulkFiles: (files: File[]) => void;
   onChangeLanguage: (value: string) => void;
   onChangeLevelBand: (value: string) => void;
   onChangeSubject: (value: string) => void;
+  onChangeSubjectOther: (value: string) => void;
 }
 
 export function CmsBulkUploadForm({
@@ -23,12 +25,14 @@ export function CmsBulkUploadForm({
   levelBand,
   progress,
   subject,
+  subjectOther,
   uploading,
   onBulkUpload,
   onChangeBulkFiles,
   onChangeLanguage,
   onChangeLevelBand,
   onChangeSubject,
+  onChangeSubjectOther,
 }: CmsBulkUploadFormProps) {
   const { t } = useTranslation();
 
@@ -69,11 +73,24 @@ export function CmsBulkUploadForm({
           value={language}
           onChange={(event) => onChangeLanguage(event.target.value)}
         >
-          <option value="fr">Francais</option>
+          <option value="fr">Français</option>
           <option value="ar">Arabe</option>
           <option value="en">English</option>
         </select>
       </div>
+
+      {subject === 'other' ? (
+        <div style={{ marginBottom: 16 }}>
+          <input
+            className="filter-input"
+            value={subjectOther}
+            onChange={(event) => onChangeSubjectOther(event.target.value)}
+            placeholder={t('cms.upload.subjectOther')}
+            maxLength={120}
+            style={{ width: '100%' }}
+          />
+        </div>
+      ) : null}
 
       <input
         type="file"

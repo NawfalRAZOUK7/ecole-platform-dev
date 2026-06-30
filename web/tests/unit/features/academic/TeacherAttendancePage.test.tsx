@@ -75,7 +75,7 @@ describe('TeacherAttendancePage', () => {
 
     expect(await screen.findByRole('heading', { name: 'Take Attendance' })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'Select a class' })).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'Select period' })).toHaveValue('period-1');
+    expect(screen.getByRole('combobox', { name: 'Select a period' })).toHaveValue('period-1');
   });
 
   it('shows loading state initially', async () => {

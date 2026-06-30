@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
 import { EmptyState } from '@/shared/ui/EmptyState';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
-import { LoadingState } from '@/shared/ui/LoadingState';
+import { ListSkeleton } from '@/shared/ui/SkeletonLayouts';
 import { toBannerError } from '@/shared/ui/errorUtils';
 import {
   useCreateCourse,
@@ -71,7 +71,7 @@ export function CoursesPage() {
   }
 
   if (classesQuery.isLoading || coursesQuery.isLoading) {
-    return <LoadingState />;
+    return <ListSkeleton />;
   }
 
   return (

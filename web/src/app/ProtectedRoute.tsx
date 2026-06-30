@@ -13,9 +13,11 @@ import { LoadingState } from '@/shared/ui/LoadingState';
 interface ProtectedRouteProps {
   children?: React.ReactNode;
   roles?: string[];
+  /** If set, the user must hold every listed permission (mirrors the backend). */
+  permissions?: string[];
 }
 
-export function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
+export function ProtectedRoute({ children, roles, permissions }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, user } = useAuth();
   const location = useLocation();
 
@@ -29,6 +31,16 @@ export function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
 
   if (roles && roles.length > 0 && user && !roles.includes(user.role)) {
     // User is authenticated but lacks the required role — redirect to home
+    return <Navigate to="/" replace />;
+  }
+
+  if (
+    permissions &&
+    permissions.length > 0 &&
+    user &&
+    !permissions.every((permission) => user.permissions.includes(permission))
+  ) {
+    // Authenticated but missing a required permission — redirect to home
     return <Navigate to="/" replace />;
   }
 

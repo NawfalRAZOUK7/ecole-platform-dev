@@ -12,8 +12,11 @@ import { useAuth } from '@/app/providers/AuthContext';
 import { ErrorBoundary } from '@/shared/ui/ErrorBoundary';
 import { Layout } from '@/widgets/layout/Layout';
 import { OfflineIndicator } from '@/shared/ui/OfflineIndicator';
+import { BrandSplash } from '@/shared/ui/BrandSplash';
+import { ChartGradients } from '@/shared/ui/ChartGradients';
 import { ROLE_REDIRECT } from '@/app/roleRedirects';
 import { ProtectedRoute } from '@/app/ProtectedRoute';
+import { PERMISSIONS } from '@/shared/permissions';
 import { ActivatePage, ApplyPage, PlatformApplicationsPage } from '@/features/onboarding';
 import { FeatureTogglesPage } from '@/pages/admin/FeatureTogglesPage';
 import { CmsLayout } from '@/features/content/cms/ui/CmsLayout';
@@ -188,6 +191,8 @@ function ResultsRoute() {
 function App() {
   return (
     <div className="app-root">
+      <BrandSplash />
+      <ChartGradients />
       <OfflineIndicator />
       <ErrorBoundary onError={(error) => console.error(error)}>
         <Suspense fallback={<LoadingState />}>
@@ -299,14 +304,9 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="/admin/settings"
-                element={
-                  <ProtectedRoute roles={['ADM']}>
-                    <SchoolSettingsPage />
-                  </ProtectedRoute>
-                }
-              />
+              {/* /admin/settings was a duplicate of /admin/school (same page);
+                  redirect it to the canonical path. */}
+              <Route path="/admin/settings" element={<Navigate to="/admin/school" replace />} />
               <Route
                 path="/admin/school"
                 element={
@@ -339,14 +339,8 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="/analytics"
-                element={
-                  <ProtectedRoute roles={['ADM', 'DIR']}>
-                    <AnalyticsDashboardPage />
-                  </ProtectedRoute>
-                }
-              />
+              {/* Duplicate of /admin/analytics (same page); redirect. */}
+              <Route path="/analytics" element={<Navigate to="/admin/analytics" replace />} />
               <Route
                 path="/admin/batch-register"
                 element={
@@ -821,7 +815,10 @@ function App() {
               <Route
                 path="/teacher/games/new"
                 element={
-                  <ProtectedRoute roles={['TCH', 'ADM']}>
+                  <ProtectedRoute
+                    roles={['TCH', 'ADM']}
+                    permissions={[PERMISSIONS.GAME_CONFIG_MANAGE]}
+                  >
                     <GameConfigEditor />
                   </ProtectedRoute>
                 }
@@ -869,7 +866,7 @@ function App() {
               <Route
                 path="/reports"
                 element={
-                  <ProtectedRoute roles={['PAR', 'TCH', 'ADM', 'DIR', 'STD']}>
+                  <ProtectedRoute roles={['TCH', 'ADM', 'DIR']}>
                     <ReportsPage />
                   </ProtectedRoute>
                 }
@@ -933,7 +930,7 @@ function App() {
               <Route
                 path="/content"
                 element={
-                  <ProtectedRoute roles={['STD', 'PAR', 'TCH', 'ADM']}>
+                  <ProtectedRoute roles={['PAR', 'ADM']}>
                     <ContentPage />
                   </ProtectedRoute>
                 }
@@ -955,13 +952,16 @@ function App() {
                 }
               />
               <Route
-                path="/results"
+                path="/grades"
                 element={
                   <ProtectedRoute roles={['STD', 'PAR']}>
                     <ResultsRoute />
                   </ProtectedRoute>
                 }
               />
+              {/* Old /results path renamed to /grades; keep a redirect for
+                  existing links/bookmarks. */}
+              <Route path="/results" element={<Navigate to="/grades" replace />} />
               <Route
                 path="/quizzes/attempts/:id/results"
                 element={
@@ -1118,13 +1118,10 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              {/* Duplicate of /attendance/justify (same page); redirect. */}
               <Route
                 path="/justification"
-                element={
-                  <ProtectedRoute roles={['PAR']}>
-                    <ParentJustificationPage />
-                  </ProtectedRoute>
-                }
+                element={<Navigate to="/attendance/justify" replace />}
               />
               {/* Rubrics routes */}
               <Route

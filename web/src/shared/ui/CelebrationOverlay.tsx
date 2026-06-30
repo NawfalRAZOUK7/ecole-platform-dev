@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 
-export type CelebrationTrigger = 'quiz_complete' | 'badge_earned' | 'streak_milestone';
+export type CelebrationTrigger =
+  | 'quiz_complete'
+  | 'badge_earned'
+  | 'streak_milestone'
+  | 'onboarding_complete';
 
 interface Props {
   trigger: CelebrationTrigger | null;
@@ -11,6 +15,7 @@ const CELEBRATION_CONFIG: Record<CelebrationTrigger, { emoji: string; message: s
   quiz_complete: { emoji: '🎉', message: 'Bravo!' },
   badge_earned: { emoji: '🏅', message: 'Badge débloqué!' },
   streak_milestone: { emoji: '🔥', message: 'Série en cours!' },
+  onboarding_complete: { emoji: '🎓', message: 'Bienvenue à bord!' },
 };
 
 const CONFETTI_COLORS = ['#7c3aed', '#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#ec4899'];

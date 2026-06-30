@@ -82,8 +82,8 @@ describe('ProgramVersionsPage', () => {
 
     expect(await screen.findByText('v1.0')).toBeInTheDocument();
 
-    await user.type(screen.getByLabelText('Version label'), '2.0');
-    await user.click(screen.getByRole('button', { name: 'Add version' }));
+    await user.type(screen.getByLabelText('Label'), '2.0');
+    await user.click(screen.getByRole('button', { name: 'Create a version' }));
 
     await waitFor(() => {
       expect(createCalls).toBe(1);

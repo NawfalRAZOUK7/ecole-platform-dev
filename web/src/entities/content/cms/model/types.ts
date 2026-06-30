@@ -95,34 +95,8 @@ export const STORY_CONTENT_TYPES = ['story', 'coloring_book'] as const;
 export type CmsContentType = (typeof CONTENT_TYPES)[number];
 export type StoryContentType = (typeof STORY_CONTENT_TYPES)[number];
 
-export const LEVELS = [
-  'maternelle',
-  'cp',
-  'ce1',
-  'ce2',
-  'cm1',
-  'cm2',
-  '6eme',
-  '5eme',
-  '4eme',
-  '3eme',
-  '2nde',
-  '1ere',
-  'terminale',
-];
-
-export const SUBJECTS = [
-  'math',
-  'french',
-  'arabic',
-  'science',
-  'history',
-  'geography',
-  'english',
-  'islamic_studies',
-  'art',
-  'sport',
-];
+// Curriculum vocabulary — single source of truth (mirrors backend enums).
+export { LEVEL_BANDS as LEVELS, SUBJECTS } from '@/shared/taxonomy';
 
 export const ACCEPT_MAP: Record<string, string> = {
   video: '.mp4,.webm',

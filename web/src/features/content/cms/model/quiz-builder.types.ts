@@ -33,22 +33,8 @@ export const QUESTION_TYPES: QuestionType[] = [
   'DRAG_DROP',
   'MATCHING',
 ];
-export const SUBJECTS = ['math', 'french', 'arabic', 'science', 'history', 'geography', 'english'];
-export const LEVELS = [
-  'maternelle',
-  'cp',
-  'ce1',
-  'ce2',
-  'cm1',
-  'cm2',
-  '6eme',
-  '5eme',
-  '4eme',
-  '3eme',
-  '2nde',
-  '1ere',
-  'terminale',
-];
+// Curriculum vocabulary — single source of truth (mirrors backend enums).
+export { LEVEL_BANDS as LEVELS, QUIZ_SUBJECTS as SUBJECTS } from '@/shared/taxonomy';
 
 let keyCounter = 0;
 

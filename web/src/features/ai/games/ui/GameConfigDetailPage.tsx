@@ -1,5 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '@/app/providers/AuthContext';
+import { PERMISSIONS, hasPermission } from '@/shared/permissions';
 import { Badge, EmptyState, ErrorBanner, LoadingState } from '@/shared/ui';
 import { GameConfigEditor } from './GameConfigEditor';
 import { useGameConfig } from '../model/useGames';
@@ -19,8 +21,10 @@ function getAgeRangeLabel(min: number | null, max: number | null, fallback: stri
 export function GameConfigDetailPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { id } = useParams<{ id: string }>();
   const configQuery = useGameConfig(id);
+  const canManageGames = hasPermission(user?.permissions, PERMISSIONS.GAME_CONFIG_MANAGE);
 
   if (configQuery.isLoading) {
     return <LoadingState />;
@@ -69,13 +73,15 @@ export function GameConfigDetailPage() {
           >
             {t('games.backToList')}
           </button>
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={() => navigate('/teacher/games/new')}
-          >
-            {t('games.createGame')}
-          </button>
+          {canManageGames ? (
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => navigate('/teacher/games/new')}
+            >
+              {t('games.createGame')}
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -156,12 +162,14 @@ export function GameConfigDetailPage() {
         </div>
       </section>
 
-      <GameConfigEditor
-        config={config}
-        embedded
-        onSaved={() => void configQuery.refetch()}
-        onCancel={() => navigate('/teacher/games')}
-      />
+      {canManageGames ? (
+        <GameConfigEditor
+          config={config}
+          embedded
+          onSaved={() => void configQuery.refetch()}
+          onCancel={() => navigate('/teacher/games')}
+        />
+      ) : null}
     </div>
   );
 }

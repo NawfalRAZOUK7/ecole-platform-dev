@@ -204,7 +204,7 @@ export function FinancialDashboardPage() {
                 <XAxis dataKey="label" />
                 <YAxis />
                 <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                <Bar dataKey="amount" fill="var(--color-accent)" />
+                <Bar dataKey="amount" fill="url(#chart-grad-accent)" />
               </BarChart>
             </ResponsiveContainer>
           ) : (

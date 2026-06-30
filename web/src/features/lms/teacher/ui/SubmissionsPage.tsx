@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
 import { EmptyState } from '@/shared/ui/EmptyState';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
-import { LoadingState } from '@/shared/ui/LoadingState';
+import { ListSkeleton } from '@/shared/ui/SkeletonLayouts';
 import { toBannerError } from '@/shared/ui/errorUtils';
 import { useGradeSubmission, useTeacherSubmissions } from '@/features/lms/teacher/model/useTeacher';
 import type { SubmissionItem } from '@/features/lms/teacher/api/teacher.api';
@@ -63,7 +63,7 @@ export function SubmissionsPage() {
   }
 
   if (submissionsQuery.isLoading) {
-    return <LoadingState />;
+    return <ListSkeleton />;
   }
 
   return (

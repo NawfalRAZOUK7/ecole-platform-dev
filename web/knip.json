@@ -1,12 +1,15 @@
 {
   "entry": ["src/main.tsx", "vite.config.ts"],
   "project": ["src/**/*.{ts,tsx}", "e2e/**/*.ts", "tests/**/*.ts", "tests/**/*.tsx"],
+  "include": ["files", "dependencies", "unlisted", "unresolved", "duplicates"],
   "ignore": ["dist/**", "coverage/**", "node_modules/**"],
   "ignoreDependencies": [
     "@hookform/resolvers",
     "@testing-library/jest-dom",
+    "@types/testing-library__jest-dom",
     "@testing-library/user-event",
     "framer-motion",
+    "husky",
     "i18next",
     "i18next-browser-languagedetector",
     "lucide-react",

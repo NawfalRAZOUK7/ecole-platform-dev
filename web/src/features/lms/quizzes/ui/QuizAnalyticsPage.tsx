@@ -124,11 +124,23 @@ export function QuizAnalyticsPage() {
           </p>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={scoreDistribution}>
+              <defs>
+                <linearGradient id="qa-grad-primary" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.95} />
+                  <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0.45} />
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
               <XAxis dataKey="bucket" />
               <YAxis />
-              <Tooltip />
-              <Bar dataKey="score" fill="var(--color-primary)" radius={[6, 6, 0, 0]} />
+              <Tooltip cursor={{ fill: 'var(--color-bg)' }} />
+              <Bar
+                dataKey="score"
+                fill="url(#qa-grad-primary)"
+                radius={[6, 6, 0, 0]}
+                animationDuration={700}
+                animationEasing="ease-out"
+              />
             </BarChart>
           </ResponsiveContainer>
         </section>
@@ -156,14 +168,27 @@ export function QuizAnalyticsPage() {
         ) : (
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={questionChart}>
+              <defs>
+                <linearGradient id="qa-grad-accent" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="var(--color-accent)" stopOpacity={0.95} />
+                  <stop offset="100%" stopColor="var(--color-accent)" stopOpacity={0.45} />
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
               <XAxis dataKey="label" />
               <YAxis domain={[0, 100]} />
               <Tooltip
+                cursor={{ fill: 'var(--color-bg)' }}
                 formatter={(value: number) => `${value}%`}
                 labelFormatter={(_label, payload) => payload?.[0]?.payload?.question || ''}
               />
-              <Bar dataKey="accuracy" fill="var(--color-accent)" radius={[6, 6, 0, 0]} />
+              <Bar
+                dataKey="accuracy"
+                fill="url(#qa-grad-accent)"
+                radius={[6, 6, 0, 0]}
+                animationDuration={700}
+                animationEasing="ease-out"
+              />
             </BarChart>
           </ResponsiveContainer>
         )}

@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSignedUrl } from '@/shared/hooks/useSignedUrl';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
-import { LoadingState } from '@/shared/ui/LoadingState';
+import { ListSkeleton } from '@/shared/ui/SkeletonLayouts';
 import { Tabs } from '@/shared/ui/Tabs';
 import { CmsLibraryBrowseTab } from './CmsLibraryBrowseTab';
-import { CONTENT_TYPES } from '../model/content-upload.types';
+import { CONTENT_TYPES, LEVELS, SUBJECTS } from '../model/content-upload.types';
 import { useCmsContent } from '../model/useCms';
 import { fetchLevelMappings, buildLevelMap, type LevelAgeMapping } from '@/shared/lib/levels';
 import type { CmsContentItem } from '../api/cms.api';
@@ -45,33 +45,6 @@ function SignedThumbnail({ item }: { item: CmsContentItem }) {
     />
   );
 }
-const LEVELS = [
-  'maternelle',
-  'cp',
-  'ce1',
-  'ce2',
-  'cm1',
-  'cm2',
-  '6eme',
-  '5eme',
-  '4eme',
-  '3eme',
-  '2nde',
-  '1ere',
-  'terminale',
-];
-const SUBJECTS = [
-  'math',
-  'french',
-  'arabic',
-  'science',
-  'history',
-  'geography',
-  'english',
-  'islamic_studies',
-  'art',
-  'sport',
-];
 const LANGUAGES = ['fr', 'ar', 'en'];
 const STATUSES = ['draft', 'published', 'archived'];
 const ORIGINS = ['PLATFORM', 'PROMOTED'];
@@ -111,7 +84,7 @@ export function CmsContentListPage() {
   );
 
   if (contentQuery.isLoading) {
-    return <LoadingState />;
+    return <ListSkeleton />;
   }
 
   return (

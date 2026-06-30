@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { useDismissibleError } from '@/shared/hooks/useDismissibleError';
 import { EmptyState } from '@/shared/ui/EmptyState';
 import { ErrorBanner } from '@/shared/ui/ErrorBanner';
-import { LoadingState } from '@/shared/ui/LoadingState';
+import { ListSkeleton } from '@/shared/ui/SkeletonLayouts';
 import { toBannerError } from '@/shared/ui/errorUtils';
 import { formatDate } from '@/shared/i18n';
 import { useAdminJustifications, useReviewJustification } from '@/features/admin/model/useAdmin';
@@ -76,7 +76,12 @@ export function JustificationReviewPage() {
   }
 
   if (justificationsQuery.isLoading) {
-    return <LoadingState />;
+    return (
+      <div className="page">
+        <h1 className="page-title">{t('admin.justifications.title')}</h1>
+        <ListSkeleton />
+      </div>
+    );
   }
 
   return (

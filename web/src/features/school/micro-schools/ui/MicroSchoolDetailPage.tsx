@@ -208,7 +208,7 @@ export function MicroSchoolDetailPage() {
                     <XAxis dataKey="label" />
                     <YAxis />
                     <Tooltip />
-                    <Bar dataKey="value" fill="var(--color-primary)" />
+                    <Bar dataKey="value" fill="url(#chart-grad-primary)" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
