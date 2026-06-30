@@ -266,9 +266,9 @@ class _AssignmentFormScreenState extends ConsumerState<AssignmentFormScreen> {
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
                         initialValue: _selectedCourseId,
-                        decoration: const InputDecoration(
-                          labelText: 'Cours *',
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          labelText: t.t('assignment.courseLabel'),
+                          border: const OutlineInputBorder(),
                         ),
                         items: state.courses
                             .map(
@@ -284,9 +284,9 @@ class _AssignmentFormScreenState extends ConsumerState<AssignmentFormScreen> {
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: _titleController,
-                        decoration: const InputDecoration(
-                          labelText: 'Titre *',
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          labelText: t.t('assignment.titleLabel'),
+                          border: const OutlineInputBorder(),
                         ),
                         validator: (v) =>
                             (v == null || v.isEmpty) ? 'Titre requis' : null,
@@ -295,9 +295,9 @@ class _AssignmentFormScreenState extends ConsumerState<AssignmentFormScreen> {
                       TextFormField(
                         controller: _descriptionController,
                         maxLines: 2,
-                        decoration: const InputDecoration(
-                          labelText: 'Description',
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          labelText: t.t('common.description'),
+                          border: const OutlineInputBorder(),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -307,9 +307,9 @@ class _AssignmentFormScreenState extends ConsumerState<AssignmentFormScreen> {
                             child: TextFormField(
                               controller: _pointsController,
                               keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                labelText: 'Points',
-                                border: OutlineInputBorder(),
+                              decoration: InputDecoration(
+                                labelText: t.t('assignment.points'),
+                                border: const OutlineInputBorder(),
                               ),
                             ),
                           ),
@@ -318,10 +318,10 @@ class _AssignmentFormScreenState extends ConsumerState<AssignmentFormScreen> {
                             child: InkWell(
                               onTap: _pickDueDate,
                               child: InputDecorator(
-                                decoration: const InputDecoration(
-                                  labelText: 'Date limite',
-                                  border: OutlineInputBorder(),
-                                  suffixIcon: Icon(Icons.calendar_today),
+                                decoration: InputDecoration(
+                                  labelText: t.t('assignment.deadline'),
+                                  border: const OutlineInputBorder(),
+                                  suffixIcon: const Icon(Icons.calendar_today),
                                 ),
                                 child: Text(
                                   _dueAt != null
@@ -400,7 +400,7 @@ class _AssignmentFormScreenState extends ConsumerState<AssignmentFormScreen> {
               color: theme.colorScheme.outline,
             ),
             const SizedBox(height: 16),
-            const Text('Aucun devoir'),
+            Text(AppLocalizations.of(ref).t('assignment.noAssignments')),
           ],
         ),
       );

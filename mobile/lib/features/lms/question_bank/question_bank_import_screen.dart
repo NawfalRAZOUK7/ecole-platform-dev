@@ -58,9 +58,9 @@ class _QuestionBankImportScreenState
         children: [
           TextField(
             controller: _quizIdController,
-            decoration: const InputDecoration(
-              labelText: 'Quiz ID',
-              helperText: 'Imports questions from an existing quiz',
+            decoration: InputDecoration(
+              labelText: t.t('questionBank.quizId'),
+              helperText: t.t('questionBank.importHelper'),
             ),
           ),
           const SizedBox(height: 16),

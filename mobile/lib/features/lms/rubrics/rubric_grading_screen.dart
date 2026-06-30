@@ -80,13 +80,14 @@ class _RubricGradingScreenState extends ConsumerState<RubricGradingScreen> {
           children: [
             TextField(
               controller: _studentController,
-              decoration: const InputDecoration(labelText: 'Student ID'),
+              decoration:
+                  InputDecoration(labelText: t.t('rubrics.studentId')),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _assignmentController,
-              decoration: const InputDecoration(
-                labelText: 'Assignment ID (optional)',
+              decoration: InputDecoration(
+                labelText: t.t('rubrics.assignmentIdOptional'),
               ),
             ),
             const SizedBox(height: 16),

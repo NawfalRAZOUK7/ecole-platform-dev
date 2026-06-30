@@ -241,7 +241,7 @@ class SubmissionsScreen extends ConsumerWidget {
           children: [
             Icon(Icons.inbox, size: 48, color: theme.colorScheme.outline),
             const SizedBox(height: 16),
-            const Text('Aucune soumission'),
+            Text(AppLocalizations.of(ref).t('submissions.empty')),
           ],
         ),
       );
@@ -262,7 +262,7 @@ class SubmissionsScreen extends ConsumerWidget {
                     : TextButton(
                         onPressed: () =>
                             ref.read(_submissionsProvider.notifier).loadMore(),
-                        child: const Text('Charger plus'),
+                        child: Text(AppLocalizations.of(ref).t('common.loadMore')),
                       ),
               ),
             );

@@ -40,7 +40,7 @@ extension _QuizListView on _QuizPlayerScreenState {
                             color: theme.colorScheme.outline,
                           ),
                           const SizedBox(height: 16),
-                          const Text('Aucun quiz disponible'),
+                          Text(t.t('quiz.noQuizzes')),
                         ],
                       ),
                     )
@@ -63,7 +63,7 @@ extension _QuizListView on _QuizPlayerScreenState {
   }
 }
 
-class _QuizCard extends StatelessWidget {
+class _QuizCard extends ConsumerWidget {
   final Quiz quiz;
   final bool loading;
   final VoidCallback onStart;
@@ -75,8 +75,9 @@ class _QuizCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -138,7 +139,7 @@ class _QuizCard extends StatelessWidget {
                         ),
                       )
                     : const Icon(Icons.play_arrow),
-                label: const Text('Commencer'),
+                label: Text(t.t('quiz.start')),
               ),
             ),
           ],

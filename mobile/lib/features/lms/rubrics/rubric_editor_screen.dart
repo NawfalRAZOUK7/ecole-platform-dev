@@ -133,18 +133,19 @@ class _RubricEditorScreenState extends ConsumerState<RubricEditorScreen> {
             children: [
               TextField(
                 controller: _titleController,
-                decoration: const InputDecoration(labelText: 'Title'),
+                decoration: InputDecoration(labelText: t.t('common.title')),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _subjectController,
-                decoration: const InputDecoration(labelText: 'Subject'),
+                decoration: InputDecoration(labelText: t.t('common.subject')),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _descriptionController,
                 maxLines: 3,
-                decoration: const InputDecoration(labelText: 'Description'),
+                decoration:
+                    InputDecoration(labelText: t.t('common.description')),
               ),
               const SizedBox(height: 12),
               Text(
@@ -158,9 +159,9 @@ class _RubricEditorScreenState extends ConsumerState<RubricEditorScreen> {
               TextField(
                 controller: _criteriaController,
                 maxLines: 18,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  helperText: 'Edit criteria, weights and levels directly',
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(),
+                  helperText: t.t('rubrics.criteriaHelper'),
                 ),
               ),
             ],

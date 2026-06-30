@@ -10,7 +10,7 @@ extension _QuizPlayView on _QuizPlayerScreenState {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          tooltip: 'Quit quiz',
+          tooltip: t.t('quiz.exit'),
           icon: const Icon(Icons.close),
           onPressed: () => _showExitConfirm(context),
         ),

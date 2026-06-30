@@ -166,7 +166,7 @@ extension _QuizResultsView on _QuizPlayerScreenState {
           FilledButton.icon(
             onPressed: _backToList,
             icon: const Icon(Icons.arrow_back),
-            label: const Text('Retour aux quiz'),
+            label: Text(t.t('quiz.backToList')),
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),

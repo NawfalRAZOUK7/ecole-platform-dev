@@ -1081,6 +1081,20 @@ const Map<String, Map<String, String>> _translations = {
     'billing.justification': 'Justification',
     'billing.reject': 'Rejeter',
     'billing.approve': 'Approuver',
+
+    // ── LMS (assignments / rubrics / submissions / question bank) ──
+    'assignment.courseLabel': 'Cours *',
+    'assignment.titleLabel': 'Titre *',
+    'assignment.points': 'Points',
+    'assignment.deadline': 'Date limite',
+    'assignment.noAssignments': 'Aucun devoir',
+    'rubrics.criteriaHelper':
+        'Modifiez les critères, pondérations et niveaux directement',
+    'rubrics.studentId': 'ID élève',
+    'rubrics.assignmentIdOptional': 'ID du devoir (optionnel)',
+    'submissions.empty': 'Aucune soumission',
+    'questionBank.quizId': 'ID du quiz',
+    'questionBank.importHelper': "Importe les questions d'un quiz existant",
   },
   'ar': {
     // ── Nav ──
@@ -2116,6 +2130,19 @@ const Map<String, Map<String, String>> _translations = {
     'billing.justification': 'المبرر',
     'billing.reject': 'رفض',
     'billing.approve': 'موافقة',
+
+    // ── LMS (assignments / rubrics / submissions / question bank) ──
+    'assignment.courseLabel': 'المقرر *',
+    'assignment.titleLabel': 'العنوان *',
+    'assignment.points': 'النقاط',
+    'assignment.deadline': 'الموعد النهائي',
+    'assignment.noAssignments': 'لا توجد واجبات',
+    'rubrics.criteriaHelper': 'حرّر المعايير والأوزان والمستويات مباشرة',
+    'rubrics.studentId': 'معرّف الطالب',
+    'rubrics.assignmentIdOptional': 'معرّف الواجب (اختياري)',
+    'submissions.empty': 'لا توجد تسليمات',
+    'questionBank.quizId': 'معرّف الاختبار',
+    'questionBank.importHelper': 'يستورد الأسئلة من اختبار موجود',
   },
   'en': {
     // ── Nav ──
@@ -3156,6 +3183,19 @@ const Map<String, Map<String, String>> _translations = {
     'billing.justification': 'Justification',
     'billing.reject': 'Reject',
     'billing.approve': 'Approve',
+
+    // ── LMS (assignments / rubrics / submissions / question bank) ──
+    'assignment.courseLabel': 'Course *',
+    'assignment.titleLabel': 'Title *',
+    'assignment.points': 'Points',
+    'assignment.deadline': 'Deadline',
+    'assignment.noAssignments': 'No assignments',
+    'rubrics.criteriaHelper': 'Edit criteria, weights and levels directly',
+    'rubrics.studentId': 'Student ID',
+    'rubrics.assignmentIdOptional': 'Assignment ID (optional)',
+    'submissions.empty': 'No submissions',
+    'questionBank.quizId': 'Quiz ID',
+    'questionBank.importHelper': 'Imports questions from an existing quiz',
   },
 };
 
