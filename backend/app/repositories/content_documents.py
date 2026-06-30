@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime
 from typing import Iterable
 
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import String, and_, cast, func, or_, select
 
 from app.core.response import decode_cursor, encode_cursor
 from app.models.com import Notification
@@ -553,7 +553,8 @@ class DocumentsRepository(BaseRepository):
                 or_(
                     Resource.title.ilike(pattern),
                     Resource.description.ilike(pattern),
-                    Resource.subject.ilike(pattern),
+                    # subject is a native enum; cast to text for case-insensitive search
+                    cast(Resource.subject, String).ilike(pattern),
                     Resource.level.ilike(pattern),
                 )
             )
