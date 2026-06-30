@@ -718,7 +718,7 @@ async def test_list_content_items_with_all_params():
         result, _ = await LMSRepository(db).list_content_items(
             school_id=_uid(),
             content_type="video",
-            level_band="primary",
+            level_band="1AEP",
             language="fr",
             letter=None,
             target_age=None,
@@ -884,7 +884,7 @@ async def test_browse_content_library_all_params():
             school_id=_uid(),
             content_type="video",
             level_band=None,
-            subject="science",
+            subject="activite_scientifique",
             language=None,
             origin=None,
             letter=None,

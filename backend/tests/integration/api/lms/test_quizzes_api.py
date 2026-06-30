@@ -46,8 +46,8 @@ def _quiz_payload(**overrides) -> dict:
     return {
         "title": f"Quiz {suffix}",
         "description": "A test quiz",
-        "subject": "Maths",
-        "level_band": "6eme",
+        "subject": "math",
+        "level_band": "1AC",
         "difficulty": "MEDIUM",
         "time_limit_minutes": 30,
         "max_attempts": 3,
@@ -96,7 +96,7 @@ class TestQuizCreate:
         response = await client.post(
             "/quizzes",
             headers=auth_header(token),
-            json={"title": title, "subject": "Sciences", "difficulty": "EASY"},
+            json={"title": title, "subject": "activite_scientifique", "difficulty": "EASY"},
         )
         assert response.status_code == 201
         quiz_id = uuid.UUID(response.json()["data"]["id"])
@@ -230,7 +230,7 @@ class TestQuizList:
             "/quizzes",
             headers=auth_header(token),
             params={
-                "subject": "Maths",
+                "subject": "math",
                 "difficulty": "MEDIUM",
                 "status": "DRAFT",
                 "limit": 10,
@@ -274,7 +274,7 @@ class TestQuizList:
         response = await client.get(
             "/quizzes",
             headers=auth_header(s_token),
-            params={"subject": "Maths"},
+            params={"subject": "math"},
         )
         assert response.status_code == 200
         # recommended_difficulty may be set for student + subject combo
@@ -663,7 +663,7 @@ class TestRecommendedDifficulty:
         response = await client.get(
             "/quizzes/recommended-difficulty",
             headers=auth_header(token),
-            params={"subject": "Maths"},
+            params={"subject": "math"},
         )
         assert response.status_code == 200
         assert "recommended_difficulty" in response.json()["data"]
@@ -689,6 +689,6 @@ class TestRecommendedDifficulty:
         response = await client.get(
             "/quizzes/recommended-difficulty",
             headers=auth_header(token),
-            params={"subject": "Maths"},
+            params={"subject": "math"},
         )
         assert response.status_code == 403

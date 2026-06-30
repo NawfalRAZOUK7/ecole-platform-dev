@@ -341,7 +341,7 @@ class TestDocumentsRepositoryExtended:
             school_id=_uid(),
             role="TCH",
             user_id=_uid(),
-            subject="Math",
+            subject="math",
             level="primary",
             resource_type="pdf",
             tags=["tag1"],

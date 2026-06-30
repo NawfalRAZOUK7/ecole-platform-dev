@@ -6,7 +6,7 @@ Routes covered:
   GET    /admin/dashboard             — stats (ADM/DIR)
   GET    /admin/users                 — list users (ADM/DIR)
   GET    /admin/enrollments           — list enrollments (ADM/DIR)
-  POST   /admin/impersonate/{id}      — impersonate (ADM/DIR)
+  POST   /admin/impersonate/{id}      — impersonate (SUP)
   POST   /admin/stop-impersonation    — stop impersonating
   GET    /admin/users/{id}/login-history
   PUT    /admin/users/{id}/suspend
@@ -36,6 +36,8 @@ from tests.integration.api.helpers import (
 
 ADMIN_EMAIL = "admin@ecole-benani.ma"
 ADMIN_PASSWORD = "admin123"
+DIRECTOR_EMAIL = "directeur@ecole-benani.ma"
+DIRECTOR_PASSWORD = "director123"
 TEACHER_EMAIL = "prof.math@ecole-benani.ma"
 TEACHER_PASSWORD = "teacher123"
 STUDENT_EMAIL = "yassine.alaoui@ecole-benani.ma"
@@ -303,9 +305,13 @@ class TestAdminInvitations:
 
 class TestAdminAuditLogs:
     @pytest.mark.asyncio
-    async def test_admin_can_list_audit_logs(self, client, legacy_api_seed):
+    async def test_director_can_list_audit_logs(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+        token = await login_token(
+            client,
+            email=DIRECTOR_EMAIL,
+            password=DIRECTOR_PASSWORD,
+        )
         response = await client.get("/admin/audit-logs", headers=auth_header(token))
         assert response.status_code == 200
         assert isinstance(response.json()["data"], list)
@@ -313,7 +319,11 @@ class TestAdminAuditLogs:
     @pytest.mark.asyncio
     async def test_audit_logs_with_action_filter(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+        token = await login_token(
+            client,
+            email=DIRECTOR_EMAIL,
+            password=DIRECTOR_PASSWORD,
+        )
         response = await client.get(
             "/admin/audit-logs",
             headers=auth_header(token),
@@ -498,21 +508,29 @@ class TestParentChildLinks:
 
 class TestImpersonation:
     @pytest.mark.asyncio
-    async def test_admin_can_impersonate_user(self, client, legacy_api_seed):
+    async def test_superadmin_can_impersonate_user(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+        token = await login_token(
+            client,
+            email=SUPERADMIN_EMAIL,
+            password=SUPERADMIN_PASSWORD,
+        )
         response = await client.post(
             f"/admin/impersonate/{TEACHER_ID}",
             headers=auth_header(token),
         )
-        assert response.status_code in (200, 403)
+        assert response.status_code == 200
 
     @pytest.mark.asyncio
     async def test_impersonate_nonexistent_user_returns_404(
         self, client, legacy_api_seed
     ):
         _ = legacy_api_seed
-        token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+        token = await login_token(
+            client,
+            email=SUPERADMIN_EMAIL,
+            password=SUPERADMIN_PASSWORD,
+        )
         response = await client.post(
             f"/admin/impersonate/{uuid.uuid4()}",
             headers=auth_header(token),

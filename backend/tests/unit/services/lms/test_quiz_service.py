@@ -83,7 +83,7 @@ def make_quiz(
         title="Quiz Fractions",
         description="Revise fractions",
         subject="math",
-        level_band="6eme",
+        level_band="1AC",
         difficulty="MEDIUM",
         time_limit_minutes=15,
         max_attempts=max_attempts,

@@ -294,7 +294,7 @@ class TestDocumentManagementIntegration:
                 headers=_auth_headers(teacher_token),
                 params={
                     "q": title.split()[-1],
-                    "subject": "Mathematics",
+                    "subject": "math",
                     "type": "worksheet",
                 },
             )

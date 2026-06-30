@@ -31,7 +31,7 @@ async def _create_content(
     payload: dict = {
         "title": title,
         "content_type": "story",
-        "level_band": "cp",
+        "level_band": "1AEP",
         "language": "fr",
         "status": status,
     }

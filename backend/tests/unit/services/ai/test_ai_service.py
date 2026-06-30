@@ -627,8 +627,9 @@ class FakeUow:
 
 
 class TestCreateWritingAttempt:
-    def _body(self, text="Hello world", subject="math"):
-        return SimpleNamespace(text=text, subject=subject, language=None)
+    def _body(self, text="Hello world", topic="math"):
+        # Source reads body.topic (WritingAttempt.topic), not body.subject.
+        return SimpleNamespace(text=text, topic=topic, language=None)
 
     @pytest.mark.asyncio
     async def test_opt_out_returns_fallback_attempt(self, monkeypatch):

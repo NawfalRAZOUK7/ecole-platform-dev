@@ -1046,7 +1046,7 @@ class TestQuizRepository:
                 school_id=_uid(),
                 user_id=_uid(),
                 subject="math",
-                level_band="secondary",
+                level_band="1AC",
                 status="published",
                 difficulty="easy",
                 cursor="cur",

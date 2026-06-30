@@ -20,7 +20,7 @@ from tests.factories.budget import (
     BudgetAllocationFactory,
     BudgetRequestFactory,
     BudgetTransactionFactory,
-    MicroBudgetFactory,
+    SchoolBudgetFactory,
 )
 from tests.factories.erp import (
     AcademicYearFactory,
@@ -260,7 +260,7 @@ async def finhealth_api_context(session_factory):
             due_date=date.today() + timedelta(days=20),
         )
 
-        budget = await MicroBudgetFactory.create(
+        budget = await SchoolBudgetFactory.create(
             session=session,
             school=school,
             academic_year=current_year,

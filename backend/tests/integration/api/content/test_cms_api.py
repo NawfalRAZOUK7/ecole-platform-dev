@@ -82,8 +82,8 @@ def _cms_content_payload(**overrides) -> dict:
     return {
         "title": f"Test Content {unique_suffix()}",
         "content_type": "ARTICLE",
-        "subject": "Maths",
-        "level_band": "6eme",
+        "subject": "math",
+        "level_band": "1AC",
         "body": "This is test content body.",
         "language": "fr",
         "origin": "school",
@@ -116,8 +116,8 @@ class TestCmsContentCreate:
             headers=auth_header(content_manager_token),
             json=_cms_content_payload(
                 content_type="VIDEO",
-                level_band="3eme",
-                subject="Sciences",
+                level_band="3AC",
+                subject="activite_scientifique",
             ),
         )
         assert response.status_code == 201
@@ -193,7 +193,7 @@ class TestCmsContentList:
         response = await client.get(
             "/cms/content",
             headers=auth_header(content_manager_token),
-            params={"subject": "Maths", "level_band": "6eme", "status": "DRAFT"},
+            params={"subject": "math", "level_band": "1AC", "status": "DRAFT"},
         )
         assert response.status_code == 200
 

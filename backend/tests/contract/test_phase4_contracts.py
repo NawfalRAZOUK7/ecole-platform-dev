@@ -27,6 +27,8 @@ from tests.integration.api.helpers import (
 
 ADMIN_EMAIL = "admin@ecole-benani.ma"
 ADMIN_PASSWORD = "admin123"
+DIRECTOR_EMAIL = "directeur@ecole-benani.ma"
+DIRECTOR_PASSWORD = "director123"
 TEACHER_EMAIL = "prof.math@ecole-benani.ma"
 TEACHER_PASSWORD = "teacher123"
 STUDENT_EMAIL = "yassine.alaoui@ecole-benani.ma"
@@ -176,7 +178,7 @@ class TestQuizContractSuite:
         response = await client.get(
             "/quizzes/recommended-difficulty",
             headers=auth_header(token),
-            params={"subject": "Maths"},
+            params={"subject": "math"},
         )
         assert response.status_code == 200
         assert "recommended_difficulty" in response.json()["data"]
@@ -246,7 +248,11 @@ class TestAnnouncementsContractSuite:
     @pytest.mark.asyncio
     async def test_announcement_create_response_shape(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+        token = await login_token(
+            client,
+            email=DIRECTOR_EMAIL,
+            password=DIRECTOR_PASSWORD,
+        )
         response = await client.post(
             "/announcements",
             headers=auth_header(token),
@@ -317,7 +323,11 @@ class TestAdminContractSuite:
     @pytest.mark.asyncio
     async def test_audit_log_list_envelope(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+        token = await login_token(
+            client,
+            email=DIRECTOR_EMAIL,
+            password=DIRECTOR_PASSWORD,
+        )
         response = await client.get("/admin/audit-logs", headers=auth_header(token))
         assert response.status_code == 200
         assert _list_envelope_is_valid(response.json())

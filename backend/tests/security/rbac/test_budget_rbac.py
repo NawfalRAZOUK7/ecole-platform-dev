@@ -16,7 +16,7 @@ from app.models.iam import RoleCode
 from tests.factories.budget import (
     BudgetAllocationFactory,
     BudgetRequestFactory,
-    MicroBudgetFactory,
+    SchoolBudgetFactory,
 )
 from tests.factories.erp import AcademicYearFactory, ClassFactory
 from tests.factories.iam import MembershipFactory, SessionFactory, UserFactory
@@ -133,7 +133,7 @@ async def budget_rbac_context(session_factory):
                 label=label,
             )
 
-        budget = await MicroBudgetFactory.create(
+        budget = await SchoolBudgetFactory.create(
             session=session,
             school=school,
             academic_year=academic_year,

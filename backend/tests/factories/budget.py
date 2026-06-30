@@ -15,8 +15,8 @@ from app.models.budget import (
     BudgetRequestStatus,
     BudgetTransaction,
     BudgetTransactionType,
-    MicroBudget,
-    MicroBudgetStatus,
+    SchoolBudget,
+    SchoolBudgetStatus,
 )
 from tests.factories.base import AsyncSQLAlchemyFactory
 from tests.factories.erp import AcademicYearFactory, ClassFactory
@@ -28,11 +28,11 @@ def _utc_now() -> datetime:
     return datetime.now(UTC)
 
 
-class MicroBudgetFactory(AsyncSQLAlchemyFactory):
+class SchoolBudgetFactory(AsyncSQLAlchemyFactory):
     """Factory for school budgets."""
 
     class Meta:
-        model = MicroBudget
+        model = SchoolBudget
         exclude = ("school", "academic_year", "creator")
 
     id = factory.LazyFunction(uuid.uuid4)
@@ -48,7 +48,7 @@ class MicroBudgetFactory(AsyncSQLAlchemyFactory):
     allocated_amount = Decimal("0.00")
     remaining_amount = Decimal("10000.00")
     currency = "MAD"
-    status = MicroBudgetStatus.ACTIVE.value
+    status = SchoolBudgetStatus.ACTIVE.value
     created_by = factory.LazyAttribute(lambda o: o.creator.id)
 
 
@@ -60,7 +60,7 @@ class BudgetAllocationFactory(AsyncSQLAlchemyFactory):
         exclude = ("budget", "school_class", "teacher", "allocator")
 
     id = factory.LazyFunction(uuid.uuid4)
-    budget = factory.SubFactory(MicroBudgetFactory)
+    budget = factory.SubFactory(SchoolBudgetFactory)
     school_class = factory.SubFactory(
         ClassFactory,
         school=factory.SelfAttribute("..budget.school"),
@@ -133,7 +133,7 @@ class BudgetTransactionFactory(AsyncSQLAlchemyFactory):
 
 
 __all__ = [
-    "MicroBudgetFactory",
+    "SchoolBudgetFactory",
     "BudgetAllocationFactory",
     "BudgetRequestFactory",
     "BudgetTransactionFactory",

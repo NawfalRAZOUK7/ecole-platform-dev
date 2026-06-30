@@ -5,6 +5,8 @@ verification, and the send paths: dev-mode logging, real Twilio success, and
 graceful failure handling.
 """
 
+import logging
+
 import pytest
 
 from app.services.auth import sms_2fa
@@ -90,15 +92,14 @@ class TestOtp:
 # ---------------------------------------------------------------------------
 class TestSend:
     @pytest.mark.asyncio
-    async def test_mock_sms_send_logs_otp(self, monkeypatch, capsys):
+    async def test_mock_sms_send_logs_otp(self, monkeypatch, caplog):
         monkeypatch.setattr(sms_2fa.settings, "sms_enabled", True)
         monkeypatch.setattr(sms_2fa.settings, "mock_sms_enabled", True)
         service = sms_2fa.Sms2FAService()
-        assert await service.send_otp("+212600000099", "123456") is True
-        assert (
-            "[SMS 2FA - DEV MODE] OTP for +212600000099: 123456"
-            in capsys.readouterr().out
-        )
+        # Dev-mode OTP is emitted via logger.debug (was print()), so assert on logs.
+        with caplog.at_level(logging.DEBUG, logger="app.services.auth.sms_2fa"):
+            assert await service.send_otp("+212600000099", "123456") is True
+        assert "[SMS 2FA - DEV MODE] OTP for +212600000099: 123456" in caplog.text
 
     @pytest.mark.asyncio
     async def test_real_send_calls_twilio_and_returns_true(self, monkeypatch):

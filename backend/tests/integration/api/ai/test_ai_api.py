@@ -42,7 +42,7 @@ class TestWritingAttempts:
             headers=auth_header(token),
             json={
                 "text": "Aujourd'hui nous allons étudier les fractions en mathématiques.",
-                "subject": "Maths",
+                "subject": "math",
                 "language": "fr",
             },
         )
@@ -97,7 +97,7 @@ class TestWritingAttempts:
         response = await client.post(
             "/writing-attempts",
             headers=auth_header(token),
-            json={"subject": "Maths"},
+            json={"subject": "math"},
         )
         assert response.status_code == 422
 

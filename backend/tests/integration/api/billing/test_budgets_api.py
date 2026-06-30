@@ -17,7 +17,7 @@ from tests.factories.budget import (
     BudgetAllocationFactory,
     BudgetRequestFactory,
     BudgetTransactionFactory,
-    MicroBudgetFactory,
+    SchoolBudgetFactory,
 )
 from tests.factories.erp import AcademicYearFactory, ClassFactory
 from tests.factories.iam import MembershipFactory, SessionFactory, UserFactory
@@ -147,7 +147,7 @@ async def budget_api_context(session_factory):
             label="student",
         )
 
-        budget = await MicroBudgetFactory.create(
+        budget = await SchoolBudgetFactory.create(
             session=session,
             school=school,
             academic_year=academic_year,

@@ -325,12 +325,9 @@ class TestAttendanceAlerts:
             student_empty: (0, 0),
         }
 
-        async def compute_student_absence_count(*, student_id, period_id):
-            return counts[student_id]
-
-        repo_in_uow.compute_student_absence_count.side_effect = (
-            compute_student_absence_count
-        )
+        # Source uses one batched GROUP BY (compute_period_absence_counts ->
+        # {student_id: (absences, total)}), not a per-student query in the loop.
+        repo_in_uow.compute_period_absence_counts.return_value = counts
         created_alert = make_alert(auth.school_id, period_id, student_new)
         repo_in_uow.create_attendance_alert.return_value = created_alert
 
@@ -374,7 +371,7 @@ class TestAttendanceAlerts:
         )
         repo_in_uow.list_period_students.return_value = [(student_id, "Amina")]
         repo_in_uow.list_alerts.return_value = []
-        repo_in_uow.compute_student_absence_count.return_value = (3, 10)
+        repo_in_uow.compute_period_absence_counts.return_value = {student_id: (3, 10)}
         repo_in_uow.create_attendance_alert.return_value = make_alert(
             auth.school_id,
             period_id,

@@ -48,7 +48,7 @@ def make_conversation(auth: AuthContext, *, participants: list | None = None):
         school_id=auth.school_id,
         type="DIRECT",
         created_by=auth.user_id,
-        subject="Math feedback",
+        subject_line="Math feedback",
         participants=list(participants or []),
         created_at=now,
     )

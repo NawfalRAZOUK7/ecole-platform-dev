@@ -38,7 +38,7 @@ class TestContentItemSchemas:
             title="Math Basics",
             content_type="video",
             subject="mathematics",
-            level_band="CP",
+            level_band="1AEP",
             status="published",
         )
         assert item.content_type == "video"

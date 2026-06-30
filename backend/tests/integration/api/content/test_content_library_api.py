@@ -83,8 +83,8 @@ class TestBrowseContentLibrary:
             "/content/library",
             headers=auth_header(token),
             params={
-                "level_band": "6eme",
-                "subject": "Maths",
+                "level_band": "1AC",
+                "subject": "math",
                 "language": "fr",
                 "origin": "platform",
             },

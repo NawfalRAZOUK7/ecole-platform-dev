@@ -420,7 +420,7 @@ class TestComplianceService:
                 {
                     "level": "college",
                     "grade": "3eme",
-                    "subject": "science",
+                    "subject": "activite_scientifique",
                     "academic_year": "2025-2026",
                     "version": "1.0",
                     "objectives": [

@@ -31,7 +31,7 @@ async def _create_cms_content(
     payload = {
         "title": title,
         "content_type": content_type,
-        "level_band": "preschool",
+        "level_band": "GS",
         "language": "ar",
         "subject": "arabic_letters",
         "description": "محتوى اختباري للحروف العربية",

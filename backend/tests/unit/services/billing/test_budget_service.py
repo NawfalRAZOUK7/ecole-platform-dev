@@ -17,8 +17,8 @@ from app.schemas.billing.budget import (
     BudgetRequestCreateRequest,
     BudgetRequestReviewRequest,
     BudgetTransactionCreateRequest,
-    MicroBudgetCreateRequest,
-    MicroBudgetUpdateRequest,
+    SchoolBudgetCreateRequest,
+    SchoolBudgetUpdateRequest,
 )
 import app.services.billing.budget_service as budget_module
 from app.services.billing.budget_service import BudgetService
@@ -194,7 +194,7 @@ class TestBudgetService:
 
         with pytest.raises(NotFoundError, match="Academic year not found"):
             await service.create_budget(
-                body=MicroBudgetCreateRequest(
+                body=SchoolBudgetCreateRequest(
                     academic_year_id=uuid.uuid4(),
                     total_amount=15000,
                 ),
@@ -214,7 +214,7 @@ class TestBudgetService:
         repo_in_uow.create_budget.return_value = budget
 
         result = await service.create_budget(
-            body=MicroBudgetCreateRequest(
+            body=SchoolBudgetCreateRequest(
                 academic_year_id=academic_year.id,
                 total_amount=15000,
             ),
@@ -240,7 +240,7 @@ class TestBudgetService:
         with pytest.raises(ValidationError, match="lower than allocated_amount"):
             await service.update_budget(
                 budget_id=budget.id,
-                body=MicroBudgetUpdateRequest(total_amount=3000),
+                body=SchoolBudgetUpdateRequest(total_amount=3000),
                 auth=auth,
             )
 
@@ -258,7 +258,7 @@ class TestBudgetService:
 
         result = await service.update_budget(
             budget_id=budget.id,
-            body=MicroBudgetUpdateRequest(total_amount=12000),
+            body=SchoolBudgetUpdateRequest(total_amount=12000),
             auth=auth,
             ip_address="127.0.0.1",
         )
@@ -483,6 +483,9 @@ class TestBudgetService:
         repo_in_uow.save_request.return_value = request
         repo_in_uow.save_allocation.return_value = allocation
         repo_in_uow.create_transaction.return_value = transaction
+        # Caches are self-healed from the ledger via _recompute_allocation_rollup
+        # (session.scalar -> authoritative spent). 500 prior + 300 approved = 800.
+        uow.session.scalar.return_value = 800.0
 
         result = await service.approve_request(
             request_id=request.id,
@@ -496,7 +499,8 @@ class TestBudgetService:
         assert allocation.remaining == 0
         assert allocation.status == "exhausted"
         repo_in_uow.save_request.assert_awaited_once()
-        repo_in_uow.save_allocation.assert_awaited_once()
+        # Saved twice: inline write, then authoritative self-heal recompute.
+        assert repo_in_uow.save_allocation.await_count == 2
         assert dispatcher.dispatch.await_count == 2
         audit.log_event.assert_awaited_once()
         assert uow.committed is True
@@ -567,6 +571,9 @@ class TestBudgetService:
         service.repo.get_allocation.return_value = allocation
         repo_in_uow.get_allocation.return_value = allocation
         repo_in_uow.create_transaction.return_value = transaction
+        # Caches self-heal from the ledger/allocations: _recompute_allocation_rollup
+        # (spent=200) then _recompute_budget_rollup (allocated=1500), in that order.
+        uow.session.scalar.side_effect = [200.0, 1500.0]
 
         result = await service.record_transaction(
             allocation_id=allocation.id,
@@ -584,8 +591,9 @@ class TestBudgetService:
         assert allocation.remaining == 1300.0
         assert budget.allocated_amount == 1500.0
         assert budget.remaining_amount == 3500.0
-        repo_in_uow.save_budget.assert_awaited_once()
-        repo_in_uow.save_allocation.assert_awaited_once()
+        # Saved twice each: inline write, then authoritative self-heal recompute.
+        assert repo_in_uow.save_budget.await_count == 2
+        assert repo_in_uow.save_allocation.await_count == 2
         dispatcher.dispatch.assert_awaited_once()
         audit.log_event.assert_awaited_once()
         assert uow.committed is True
