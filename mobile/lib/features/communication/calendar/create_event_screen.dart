@@ -400,10 +400,19 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
               initialValue: _recurrenceFrequency,
               decoration:
                   InputDecoration(labelText: t.t('calendar.fields.recurrence')),
-              items: const [
-                DropdownMenuItem(value: '', child: Text('None')),
-                DropdownMenuItem(value: 'weekly', child: Text('Weekly')),
-                DropdownMenuItem(value: 'annual', child: Text('Annual')),
+              items: [
+                DropdownMenuItem(
+                  value: '',
+                  child: Text(t.t('calendar.recurNone')),
+                ),
+                DropdownMenuItem(
+                  value: 'weekly',
+                  child: Text(t.t('calendar.recurWeekly')),
+                ),
+                DropdownMenuItem(
+                  value: 'annual',
+                  child: Text(t.t('calendar.recurAnnual')),
+                ),
               ],
               onChanged: (value) =>
                   setState(() => _recurrenceFrequency = value ?? ''),

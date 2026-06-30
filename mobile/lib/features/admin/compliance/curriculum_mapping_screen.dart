@@ -64,9 +64,9 @@ class _CurriculumMappingScreenState
                       children: [
                         DropdownButtonFormField<String>(
                           initialValue: _curriculumId,
-                          decoration: const InputDecoration(
-                            labelText: 'Curriculum',
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            labelText: t.t('admin.curriculum'),
+                            border: const OutlineInputBorder(),
                           ),
                           items: curricula
                               .map(
@@ -83,9 +83,9 @@ class _CurriculumMappingScreenState
                         const SizedBox(height: 12),
                         TextField(
                           controller: _courseController,
-                          decoration: const InputDecoration(
-                            labelText: 'Course ID',
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            labelText: t.t('admin.courseId'),
+                            border: const OutlineInputBorder(),
                           ),
                         ),
                         const SizedBox(height: 16),

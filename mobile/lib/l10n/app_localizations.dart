@@ -1119,6 +1119,25 @@ const Map<String, Map<String, String>> _translations = {
     'timetable.generate': 'Générer',
     'attendance.absenceReason': "Motif d'absence",
     'attendance.export': 'Exporter',
+
+    // ── Reports / School settings / Admin / Calendar ──
+    'reports.scheduleName': 'Nom du planning',
+    'reports.cronExpression': 'Expression cron',
+    'reports.cronExample': 'Exemple : 0 7 * * 1',
+    'reports.active': 'Actif',
+    'school.name': "Nom de l'école",
+    'school.address': 'Adresse',
+    'school.phone': 'Téléphone',
+    'school.timezone': 'Fuseau horaire',
+    'school.currency': 'Devise',
+    'school.saveSettings': 'Enregistrer les paramètres',
+    'admin.noJustifications': 'Aucune justification',
+    'admin.saveToggles': 'Enregistrer les options',
+    'admin.curriculum': 'Curriculum',
+    'admin.courseId': 'ID du cours',
+    'calendar.recurNone': 'Aucune',
+    'calendar.recurWeekly': 'Hebdomadaire',
+    'calendar.recurAnnual': 'Annuel',
   },
   'ar': {
     // ── Nav ──
@@ -2190,6 +2209,25 @@ const Map<String, Map<String, String>> _translations = {
     'timetable.generate': 'إنشاء',
     'attendance.absenceReason': 'سبب الغياب',
     'attendance.export': 'تصدير',
+
+    // ── Reports / School settings / Admin / Calendar ──
+    'reports.scheduleName': 'اسم الجدولة',
+    'reports.cronExpression': 'تعبير cron',
+    'reports.cronExample': 'مثال: 0 7 * * 1',
+    'reports.active': 'نشط',
+    'school.name': 'اسم المدرسة',
+    'school.address': 'العنوان',
+    'school.phone': 'الهاتف',
+    'school.timezone': 'المنطقة الزمنية',
+    'school.currency': 'العملة',
+    'school.saveSettings': 'حفظ الإعدادات',
+    'admin.noJustifications': 'لا توجد مبررات',
+    'admin.saveToggles': 'حفظ الخيارات',
+    'admin.curriculum': 'المنهج',
+    'admin.courseId': 'معرّف المقرر',
+    'calendar.recurNone': 'بدون',
+    'calendar.recurWeekly': 'أسبوعي',
+    'calendar.recurAnnual': 'سنوي',
   },
   'en': {
     // ── Nav ──
@@ -3266,6 +3304,25 @@ const Map<String, Map<String, String>> _translations = {
     'timetable.generate': 'Generate',
     'attendance.absenceReason': 'Absence reason',
     'attendance.export': 'Export',
+
+    // ── Reports / School settings / Admin / Calendar ──
+    'reports.scheduleName': 'Schedule name',
+    'reports.cronExpression': 'Cron expression',
+    'reports.cronExample': 'Example: 0 7 * * 1',
+    'reports.active': 'Active',
+    'school.name': 'School name',
+    'school.address': 'Address',
+    'school.phone': 'Phone',
+    'school.timezone': 'Timezone',
+    'school.currency': 'Currency',
+    'school.saveSettings': 'Save settings',
+    'admin.noJustifications': 'No justifications',
+    'admin.saveToggles': 'Save toggles',
+    'admin.curriculum': 'Curriculum',
+    'admin.courseId': 'Course ID',
+    'calendar.recurNone': 'None',
+    'calendar.recurWeekly': 'Weekly',
+    'calendar.recurAnnual': 'Annual',
   },
 };
 

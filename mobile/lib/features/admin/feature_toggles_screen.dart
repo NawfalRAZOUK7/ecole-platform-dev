@@ -3,6 +3,7 @@ import 'package:ecole_platform/shared/ui/widgets/app_snackbar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/app/providers.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 
 class FeatureTogglesScreen extends ConsumerStatefulWidget {
   const FeatureTogglesScreen({super.key});
@@ -67,7 +68,7 @@ class _FeatureTogglesScreenState extends ConsumerState<FeatureTogglesScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Feature toggles')),
+      appBar: AppBar(title: Text(AppLocalizations.of(ref).t('admin.featureToggles'))),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: _toggles.entries
@@ -95,7 +96,7 @@ class _FeatureTogglesScreenState extends ConsumerState<FeatureTogglesScreen> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : const Icon(Icons.save_outlined),
-          label: const Text('Save toggles'),
+          label: Text(AppLocalizations.of(ref).t('admin.saveToggles')),
         ),
       ),
     );

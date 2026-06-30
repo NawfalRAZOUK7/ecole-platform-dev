@@ -60,20 +60,22 @@ class _ReportScheduleManagerState extends ConsumerState<ReportScheduleManager> {
               children: [
                 TextField(
                   controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Schedule name'),
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(ref).t('reports.scheduleName'),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: cronController,
-                  decoration: const InputDecoration(
-                    labelText: 'Cron expression',
-                    helperText: 'Example: 0 7 * * 1',
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(ref).t('reports.cronExpression'),
+                    helperText: AppLocalizations.of(ref).t('reports.cronExample'),
                   ),
                 ),
                 const SizedBox(height: 12),
                 SwitchListTile(
                   value: isActive,
-                  title: const Text('Active'),
+                  title: Text(AppLocalizations.of(ref).t('reports.active')),
                   contentPadding: EdgeInsets.zero,
                   onChanged: (value) {
                     setStateDialog(() => isActive = value);
@@ -88,7 +90,7 @@ class _ReportScheduleManagerState extends ConsumerState<ReportScheduleManager> {
               ),
               FilledButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Create'),
+                child: Text(AppLocalizations.of(ref).t('common.create')),
               ),
             ],
           ),

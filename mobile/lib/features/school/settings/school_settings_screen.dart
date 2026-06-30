@@ -3,6 +3,7 @@ import 'package:ecole_platform/shared/ui/widgets/app_snackbar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/app/providers.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 
 class SchoolSettingsScreen extends ConsumerStatefulWidget {
   const SchoolSettingsScreen({super.key});
@@ -85,35 +86,36 @@ class _SchoolSettingsScreenState extends ConsumerState<SchoolSettingsScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
+    final t = AppLocalizations.of(ref);
     return Scaffold(
-      appBar: AppBar(title: const Text('School settings')),
+      appBar: AppBar(title: Text(t.t('admin.schoolSettings'))),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           TextField(
             controller: _nameController,
-            decoration: const InputDecoration(labelText: 'School name'),
+            decoration: InputDecoration(labelText: t.t('school.name')),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _addressController,
             maxLines: 2,
-            decoration: const InputDecoration(labelText: 'Address'),
+            decoration: InputDecoration(labelText: t.t('school.address')),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _phoneController,
-            decoration: const InputDecoration(labelText: 'Phone'),
+            decoration: InputDecoration(labelText: t.t('school.phone')),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _timezoneController,
-            decoration: const InputDecoration(labelText: 'Timezone'),
+            decoration: InputDecoration(labelText: t.t('school.timezone')),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _currencyController,
-            decoration: const InputDecoration(labelText: 'Currency'),
+            decoration: InputDecoration(labelText: t.t('school.currency')),
           ),
         ],
       ),
@@ -128,7 +130,7 @@ class _SchoolSettingsScreenState extends ConsumerState<SchoolSettingsScreen> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : const Icon(Icons.save_outlined),
-          label: const Text('Save settings'),
+          label: Text(t.t('school.saveSettings')),
         ),
       ),
     );

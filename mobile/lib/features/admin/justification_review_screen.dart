@@ -214,7 +214,7 @@ class JustificationReviewScreen extends ConsumerWidget {
           children: [
             Icon(Icons.check_circle_outline, size: 48, color: colors.outline),
             const SizedBox(height: 16),
-            const Text('Aucune justification'),
+            Text(AppLocalizations.of(ref).t('admin.noJustifications')),
           ],
         ),
       );
@@ -296,7 +296,7 @@ class JustificationReviewScreen extends ConsumerWidget {
                                   .read(_justificationsProvider.notifier)
                                   .approve(j.id),
                               icon: const Icon(Icons.check, size: 18),
-                              label: const Text('Approuver'),
+                              label: Text(AppLocalizations.of(ref).t('billing.approve')),
                             ),
                           ),
                           const SizedBox(width: 12),
