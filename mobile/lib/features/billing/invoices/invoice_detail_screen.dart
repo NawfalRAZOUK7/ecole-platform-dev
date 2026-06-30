@@ -43,7 +43,7 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             return AlertDialog(
-              title: const Text('Create payment'),
+              title: Text(AppLocalizations.of(ref).t('billing.createPayment')),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -52,17 +52,31 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
-                    decoration: const InputDecoration(labelText: 'Amount'),
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(ref).t('billing.amount'),
+                    ),
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     initialValue: method,
-                    items: const [
-                      DropdownMenuItem(value: 'card', child: Text('Card')),
-                      DropdownMenuItem(value: 'cash', child: Text('Cash')),
+                    items: [
+                      DropdownMenuItem(
+                        value: 'card',
+                        child: Text(
+                          AppLocalizations.of(ref).t('billing.methodCard'),
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: 'cash',
+                        child: Text(
+                          AppLocalizations.of(ref).t('billing.methodCash'),
+                        ),
+                      ),
                       DropdownMenuItem(
                         value: 'transfer',
-                        child: Text('Transfer'),
+                        child: Text(
+                          AppLocalizations.of(ref).t('billing.methodTransfer'),
+                        ),
                       ),
                     ],
                     onChanged: (value) {
@@ -77,11 +91,11 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('Cancel'),
+                  child: Text(AppLocalizations.of(ref).t('common.cancel')),
                 ),
                 FilledButton(
                   onPressed: () => Navigator.of(context).pop(true),
-                  child: const Text('Create'),
+                  child: Text(AppLocalizations.of(ref).t('common.create')),
                 ),
               ],
             );
@@ -152,11 +166,11 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(AppLocalizations.of(ref).t('common.cancel')),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, language),
-              child: const Text('Download'),
+              child: Text(AppLocalizations.of(ref).t('billing.download')),
             ),
           ],
         ),
@@ -165,7 +179,9 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
   }
 
   Future<void> _downloadPdf() async {
-    final language = await _showLanguageDialog('PDF Language');
+    final language = await _showLanguageDialog(
+      AppLocalizations.of(ref).t('billing.pdfLanguage'),
+    );
     if (language == null || !mounted) return;
 
     setState(() => _downloadingPdf = true);
@@ -177,7 +193,12 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
       await OpenFilex.open(file.path);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('PDF downloaded: ${file.path.split('/').last}')),
+        SnackBar(
+          content: Text(
+            '${AppLocalizations.of(ref).t('billing.pdfDownloaded')}: '
+            '${file.path.split('/').last}',
+          ),
+        ),
       );
     } catch (e) {
       if (!mounted) return;
@@ -188,7 +209,9 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
   }
 
   Future<void> _downloadReceipt(String paymentId) async {
-    final language = await _showLanguageDialog('Receipt Language');
+    final language = await _showLanguageDialog(
+      AppLocalizations.of(ref).t('billing.receiptLanguage'),
+    );
     if (language == null || !mounted) return;
 
     setState(() => _downloadingReceipt = true);
@@ -200,7 +223,10 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Receipt downloaded: ${file.path.split('/').last}'),
+          content: Text(
+            '${AppLocalizations.of(ref).t('billing.receiptDownloaded')}: '
+            '${file.path.split('/').last}',
+          ),
         ),
       );
     } catch (e) {
@@ -345,7 +371,7 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
   }
 }
 
-class _PaymentCard extends StatelessWidget {
+class _PaymentCard extends ConsumerWidget {
   final InvoicePaymentRecord payment;
   final bool uploading;
   final bool downloadingReceipt;
@@ -361,7 +387,8 @@ class _PaymentCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = AppLocalizations.of(ref);
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
@@ -404,7 +431,7 @@ class _PaymentCard extends StatelessWidget {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.receipt_long_outlined),
-                  label: const Text('Receipt'),
+                  label: Text(t.t('billing.receipt')),
                 ),
                 const SizedBox(width: 8),
                 FilledButton.tonalIcon(
@@ -416,7 +443,7 @@ class _PaymentCard extends StatelessWidget {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.upload_file_outlined),
-                  label: const Text('Upload proof'),
+                  label: Text(t.t('billing.uploadProof')),
                 ),
               ],
             ),

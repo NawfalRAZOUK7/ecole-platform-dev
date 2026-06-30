@@ -34,29 +34,34 @@ class _LateFeePolicyScreenState extends ConsumerState<LateFeePolicyScreen> {
     final shouldSave = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Edit late fee policy'),
+        title: Text(AppLocalizations.of(ref).t('billing.editLateFeePolicy')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: graceController,
               keyboardType: TextInputType.number,
-              decoration:
-                  const InputDecoration(labelText: 'Grace period (days)'),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(ref).t('billing.gracePeriodDays'),
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: percentController,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(labelText: 'Fee percent'),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(ref).t('billing.feePercent'),
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: capController,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(labelText: 'Max fee cap (MAD)'),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(ref).t('billing.maxFeeCapMad'),
+              ),
             ),
           ],
         ),
@@ -150,7 +155,7 @@ class _LateFeePolicyScreenState extends ConsumerState<LateFeePolicyScreen> {
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
             : const Icon(Icons.edit_outlined),
-        label: const Text('Edit'),
+        label: Text(t.t('common.edit')),
       ),
     );
   }

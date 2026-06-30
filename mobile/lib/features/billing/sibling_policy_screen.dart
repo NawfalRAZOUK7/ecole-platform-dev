@@ -46,7 +46,7 @@ class _SiblingPolicyScreenState extends ConsumerState<SiblingPolicyScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Edit sibling policy'),
+          title: Text(AppLocalizations.of(ref).t('billing.editSiblingPolicy')),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -54,8 +54,9 @@ class _SiblingPolicyScreenState extends ConsumerState<SiblingPolicyScreen> {
                 TextField(
                   controller: maxController,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Max siblings covered',
+                  decoration: InputDecoration(
+                    labelText:
+                        AppLocalizations.of(ref).t('billing.maxSiblingsCovered'),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -68,8 +69,9 @@ class _SiblingPolicyScreenState extends ConsumerState<SiblingPolicyScreen> {
                         child: TextField(
                           controller: rankControllers[index],
                           keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: 'Sibling rank',
+                          decoration: InputDecoration(
+                            labelText:
+                                AppLocalizations.of(ref).t('billing.siblingRank'),
                           ),
                         ),
                       ),
@@ -80,8 +82,9 @@ class _SiblingPolicyScreenState extends ConsumerState<SiblingPolicyScreen> {
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
-                          decoration: const InputDecoration(
-                            labelText: 'Discount %',
+                          decoration: InputDecoration(
+                            labelText: AppLocalizations.of(ref)
+                                .t('billing.discountPercent'),
                           ),
                         ),
                       ),
@@ -185,7 +188,9 @@ class _SiblingPolicyScreenState extends ConsumerState<SiblingPolicyScreen> {
                           (tier) => ListTile(
                             contentPadding: EdgeInsets.zero,
                             leading: const Icon(Icons.group_outlined),
-                            title: Text('Sibling #${tier.siblingRank}'),
+                            title: Text(
+                              '${t.t('billing.sibling')} #${tier.siblingRank}',
+                            ),
                             trailing: AppBadge(
                               label:
                                   '${tier.discountPercent.toStringAsFixed(0)}%',
@@ -219,7 +224,7 @@ class _SiblingPolicyScreenState extends ConsumerState<SiblingPolicyScreen> {
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
             : const Icon(Icons.edit_outlined),
-        label: const Text('Edit'),
+        label: Text(t.t('common.edit')),
       ),
     );
   }

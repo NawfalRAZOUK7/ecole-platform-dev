@@ -107,9 +107,9 @@ class _BudgetRequestScreenState extends ConsumerState<BudgetRequestScreen> {
                                   const TextInputType.numberWithOptions(
                                 decimal: true,
                               ),
-                              decoration: const InputDecoration(
-                                labelText: 'Amount (MAD)',
-                                border: OutlineInputBorder(),
+                              decoration: InputDecoration(
+                                labelText: t.t('billing.amountMad'),
+                                border: const OutlineInputBorder(),
                               ),
                               validator: (value) {
                                 final parsed = double.tryParse(value ?? '');
@@ -122,9 +122,9 @@ class _BudgetRequestScreenState extends ConsumerState<BudgetRequestScreen> {
                             const SizedBox(height: 12),
                             TextFormField(
                               controller: _descriptionController,
-                              decoration: const InputDecoration(
-                                labelText: 'Description',
-                                border: OutlineInputBorder(),
+                              decoration: InputDecoration(
+                                labelText: t.t('common.description'),
+                                border: const OutlineInputBorder(),
                               ),
                               validator: (value) {
                                 if (value == null || value.trim().isEmpty) {
@@ -138,9 +138,9 @@ class _BudgetRequestScreenState extends ConsumerState<BudgetRequestScreen> {
                               controller: _justificationController,
                               minLines: 3,
                               maxLines: 5,
-                              decoration: const InputDecoration(
-                                labelText: 'Justification',
-                                border: OutlineInputBorder(),
+                              decoration: InputDecoration(
+                                labelText: t.t('billing.justification'),
+                                border: const OutlineInputBorder(),
                               ),
                             ),
                             const SizedBox(height: 16),
@@ -217,7 +217,7 @@ class _BudgetRequestScreenState extends ConsumerState<BudgetRequestScreen> {
   }
 }
 
-class _BudgetRequestCard extends StatelessWidget {
+class _BudgetRequestCard extends ConsumerWidget {
   final BudgetRequest request;
   final VoidCallback? onApprove;
   final VoidCallback? onReject;
@@ -229,7 +229,8 @@ class _BudgetRequestCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = AppLocalizations.of(ref);
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
@@ -266,12 +267,12 @@ class _BudgetRequestCard extends StatelessWidget {
                 if (onReject != null)
                   TextButton(
                     onPressed: onReject,
-                    child: const Text('Reject'),
+                    child: Text(t.t('billing.reject')),
                   ),
                 if (onApprove != null)
                   FilledButton.tonal(
                     onPressed: onApprove,
-                    child: const Text('Approve'),
+                    child: Text(t.t('billing.approve')),
                   ),
               ],
             ),
