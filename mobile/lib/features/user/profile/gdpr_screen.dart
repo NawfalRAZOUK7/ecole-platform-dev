@@ -88,7 +88,7 @@ class _GdprScreenState extends ConsumerState<GdprScreen> {
                           FilledButton.tonalIcon(
                             onPressed: _requestDeletion,
                             icon: const Icon(Icons.delete_outline),
-                            label: const Text('Request data deletion'),
+                            label: Text(t.t('gdpr.requestDeletion')),
                           ),
                         ],
                       ),

@@ -1,11 +1,13 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
 
-class ConfettiOverlay extends StatefulWidget {
+class ConfettiOverlay extends ConsumerStatefulWidget {
   final int starsEarned;
   final int xpEarned;
   final VoidCallback onDismiss;
@@ -18,10 +20,10 @@ class ConfettiOverlay extends StatefulWidget {
   });
 
   @override
-  State<ConfettiOverlay> createState() => _ConfettiOverlayState();
+  ConsumerState<ConfettiOverlay> createState() => _ConfettiOverlayState();
 }
 
-class _ConfettiOverlayState extends State<ConfettiOverlay>
+class _ConfettiOverlayState extends ConsumerState<ConfettiOverlay>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _scale;
@@ -103,7 +105,7 @@ class _ConfettiOverlayState extends State<ConfettiOverlay>
                     const SizedBox(height: AppSpacing.base),
                     FilledButton(
                       onPressed: widget.onDismiss,
-                      child: const Text('Continuer'),
+                      child: Text(AppLocalizations.of(ref).t('games.continueLabel')),
                     ),
                   ],
                 ),

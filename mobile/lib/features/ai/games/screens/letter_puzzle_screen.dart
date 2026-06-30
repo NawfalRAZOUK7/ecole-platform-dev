@@ -280,7 +280,9 @@ class _LetterPuzzleScreenState extends ConsumerState<LetterPuzzleScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Puzzle — ${_letter.letter}'),
+        title: Text(
+          '${AppLocalizations.of(ref).t('games.puzzleTitle')} — ${_letter.letter}',
+        ),
         actions: [
           PopupMenuButton<int>(
             icon: const Icon(Icons.apps),

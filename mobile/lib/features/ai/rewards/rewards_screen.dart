@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ecole_platform/domain/entities/ai/rewards.dart';
 import 'package:ecole_platform/features/auth/auth_provider.dart';
 import 'package:ecole_platform/features/ai/rewards/rewards_provider.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/features/ai/rewards/widgets/level_badge.dart';
 import 'package:ecole_platform/features/ai/rewards/widgets/star_counter.dart';
 import 'package:ecole_platform/features/ai/rewards/widgets/streak_card.dart';
@@ -35,7 +36,7 @@ class RewardsScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: KidsContentColors.storyBackground,
       appBar: AppBar(
-        title: const Text('Recompenses'),
+        title: Text(AppLocalizations.of(ref).t('rewards.title')),
         actions: const <Widget>[
           Padding(
             padding: EdgeInsets.only(right: AppSpacing.base),

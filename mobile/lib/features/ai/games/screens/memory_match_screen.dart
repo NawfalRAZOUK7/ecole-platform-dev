@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/app/providers.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/features/ai/games/game_provider.dart';
 import 'package:ecole_platform/features/ai/games/models/game_config.dart';
 import 'package:ecole_platform/features/ai/rewards/rewards_provider.dart';
@@ -43,7 +44,7 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Memory Match'),
+        title: Text(AppLocalizations.of(ref).t('games.memoryTitle')),
       ),
       body: sessionAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -169,7 +170,7 @@ class _MemoryMatchScreenState extends ConsumerState<MemoryMatchScreen> {
   }
 }
 
-class _GameStatsRow extends StatelessWidget {
+class _GameStatsRow extends ConsumerWidget {
   const _GameStatsRow({
     required this.elapsedSeconds,
     required this.moveCount,
@@ -183,7 +184,7 @@ class _GameStatsRow extends StatelessWidget {
   final VoidCallback onReplay;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Row(
       children: <Widget>[
         _MetricChip(
@@ -204,7 +205,7 @@ class _GameStatsRow extends StatelessWidget {
         FilledButton.tonalIcon(
           onPressed: onReplay,
           icon: const Icon(Icons.replay),
-          label: const Text('Replay'),
+          label: Text(AppLocalizations.of(ref).t('games.replay')),
         ),
       ],
     );

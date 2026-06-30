@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/app/providers.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/features/ai/games/game_provider.dart';
 import 'package:ecole_platform/features/ai/games/models/game_config.dart';
 import 'package:ecole_platform/features/ai/rewards/rewards_provider.dart';
@@ -42,7 +43,7 @@ class _VocabularyCardsScreenState extends ConsumerState<VocabularyCardsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Vocabulary Cards'),
+        title: Text(AppLocalizations.of(ref).t('games.vocabularyTitle')),
       ),
       body: sessionAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -153,7 +154,9 @@ class _VocabularyCardsScreenState extends ConsumerState<VocabularyCardsScreen> {
                                 )
                                 .classifyVocabularyCard(false),
                             icon: const Icon(Icons.arrow_back_rounded),
-                            label: const Text('Unknown'),
+                            label: Text(
+                              AppLocalizations.of(ref).t('games.unknown'),
+                            ),
                           ),
                         ),
                         const SizedBox(width: AppSpacing.sm),
@@ -165,7 +168,9 @@ class _VocabularyCardsScreenState extends ConsumerState<VocabularyCardsScreen> {
                                 )
                                 .classifyVocabularyCard(true),
                             icon: const Icon(Icons.arrow_forward_rounded),
-                            label: const Text('Known'),
+                            label: Text(
+                              AppLocalizations.of(ref).t('games.known'),
+                            ),
                           ),
                         ),
                       ],
@@ -283,7 +288,7 @@ class _SwipeBackground extends StatelessWidget {
   }
 }
 
-class _VocabularyCard extends StatelessWidget {
+class _VocabularyCard extends ConsumerWidget {
   const _VocabularyCard({
     required this.item,
     required this.showBack,
@@ -297,7 +302,7 @@ class _VocabularyCard extends StatelessWidget {
   final VoidCallback onSpeak;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final accent = _accentColor(item.accentHex);
     return GestureDetector(
       onTap: onFlip,
@@ -351,7 +356,7 @@ class _VocabularyCard extends StatelessWidget {
                       OutlinedButton.icon(
                         onPressed: onSpeak,
                         icon: const Icon(Icons.volume_up_outlined),
-                        label: const Text('Listen'),
+                        label: Text(AppLocalizations.of(ref).t('games.listen')),
                       ),
                     ],
                   ),

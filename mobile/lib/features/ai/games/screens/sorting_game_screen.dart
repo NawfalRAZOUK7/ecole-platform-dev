@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/features/ai/games/game_provider.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/features/ai/games/models/game_config.dart';
 import 'package:ecole_platform/features/ai/rewards/rewards_provider.dart';
 import 'package:ecole_platform/features/ai/rewards/rewards_widgets.dart';
@@ -39,7 +40,7 @@ class _SortingGameScreenState extends ConsumerState<SortingGameScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sorting Game'),
+        title: Text(AppLocalizations.of(ref).t('games.sortingTitle')),
       ),
       body: sessionAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -85,7 +86,7 @@ class _SortingGameScreenState extends ConsumerState<SortingGameScreen> {
                         FilledButton.tonalIcon(
                           onPressed: _reset,
                           icon: const Icon(Icons.replay),
-                          label: const Text('Replay'),
+                          label: Text(AppLocalizations.of(ref).t('games.replay')),
                         ),
                       ],
                     ),

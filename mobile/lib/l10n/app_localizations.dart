@@ -1138,6 +1138,17 @@ const Map<String, Map<String, String>> _translations = {
     'calendar.recurNone': 'Aucune',
     'calendar.recurWeekly': 'Hebdomadaire',
     'calendar.recurAnnual': 'Annuel',
+
+    // ── Games / Rewards / GDPR (mobile tail) ──
+    'games.vocabularyTitle': 'Cartes de vocabulaire',
+    'games.unknown': 'À revoir',
+    'games.known': 'Acquis',
+    'games.listen': 'Écouter',
+    'games.memoryTitle': 'Memory Match',
+    'games.puzzleTitle': 'Puzzle',
+    'games.continueLabel': 'Continuer',
+    'rewards.title': 'Récompenses',
+    'gdpr.requestDeletion': 'Demander la suppression des données',
   },
   'ar': {
     // ── Nav ──
@@ -2228,6 +2239,17 @@ const Map<String, Map<String, String>> _translations = {
     'calendar.recurNone': 'بدون',
     'calendar.recurWeekly': 'أسبوعي',
     'calendar.recurAnnual': 'سنوي',
+
+    // ── Games / Rewards / GDPR (mobile tail) ──
+    'games.vocabularyTitle': 'بطاقات المفردات',
+    'games.unknown': 'للمراجعة',
+    'games.known': 'مكتسب',
+    'games.listen': 'استمع',
+    'games.memoryTitle': 'لعبة الذاكرة',
+    'games.puzzleTitle': 'أحجية',
+    'games.continueLabel': 'متابعة',
+    'rewards.title': 'المكافآت',
+    'gdpr.requestDeletion': 'طلب حذف البيانات',
   },
   'en': {
     // ── Nav ──
@@ -3323,6 +3345,17 @@ const Map<String, Map<String, String>> _translations = {
     'calendar.recurNone': 'None',
     'calendar.recurWeekly': 'Weekly',
     'calendar.recurAnnual': 'Annual',
+
+    // ── Games / Rewards / GDPR (mobile tail) ──
+    'games.vocabularyTitle': 'Vocabulary cards',
+    'games.unknown': 'Unknown',
+    'games.known': 'Known',
+    'games.listen': 'Listen',
+    'games.memoryTitle': 'Memory Match',
+    'games.puzzleTitle': 'Puzzle',
+    'games.continueLabel': 'Continue',
+    'rewards.title': 'Rewards',
+    'gdpr.requestDeletion': 'Request data deletion',
   },
 };
 
