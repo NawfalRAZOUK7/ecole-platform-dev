@@ -1,5 +1,6 @@
 import 'package:device_calendar/device_calendar.dart' as device_calendar;
 import 'package:flutter/material.dart';
+import 'package:ecole_platform/shared/ui/widgets/app_snackbar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -167,9 +168,7 @@ class _EventDetailSheetState extends ConsumerState<EventDetailSheet> {
       await plugin.createOrUpdateEvent(deviceEvent);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.t('calendar.addedToDeviceCalendar'))),
-      );
+      AppSnackBar.show(context, t.t('calendar.addedToDeviceCalendar'));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -212,9 +211,7 @@ class _EventDetailSheetState extends ConsumerState<EventDetailSheet> {
     try {
       await ref.read(calendarRepositoryProvider).deleteEvent(event.id);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.t('calendar.deleted'))),
-      );
+      AppSnackBar.show(context, t.t('calendar.deleted'));
       if (widget.embedded || !Navigator.of(context).canPop()) {
         context.go('/calendar');
       } else {

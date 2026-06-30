@@ -132,7 +132,11 @@ class _DistributionChart extends StatelessWidget {
                 barRods: [
                   BarChartRodData(
                     toY: entry.value.count.toDouble(),
-                    color: color,
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [(color).withValues(alpha: 0.55), color],
+                    ),
                     width: 18,
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(6),
@@ -207,7 +211,11 @@ class _WaterfallChart extends StatelessWidget {
                 barRods: [
                   BarChartRodData(
                     toY: entry.value,
-                    color: palette[entry.key % palette.length],
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [(palette[entry.key % palette.length]).withValues(alpha: 0.55), palette[entry.key % palette.length]],
+                    ),
                     width: 18,
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(6),
@@ -279,7 +287,11 @@ class _FunnelChartCard extends StatelessWidget {
                 barRods: [
                   BarChartRodData(
                     toY: entry.value.value.toDouble(),
-                    color: theme.colorScheme.secondary,
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [(theme.colorScheme.secondary).withValues(alpha: 0.55), theme.colorScheme.secondary],
+                    ),
                     width: 18,
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(6),

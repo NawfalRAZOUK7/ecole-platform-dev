@@ -22,6 +22,7 @@ import 'package:ecole_platform/features/ai/games/screens/memory_match_screen.dar
 import 'package:ecole_platform/features/ai/games/screens/sorting_game_screen.dart';
 import 'package:ecole_platform/features/ai/games/screens/vocabulary_cards_screen.dart';
 import 'package:ecole_platform/features/ai/games/screens/letter_puzzle_screen.dart';
+import 'package:ecole_platform/features/ai/games/mini_games_screen.dart';
 import 'package:ecole_platform/features/communication/notifications/notifications_screen.dart';
 import 'package:ecole_platform/features/communication/notifications/notification_preferences_screen.dart';
 import 'package:ecole_platform/features/communication/calendar/calendar_screen.dart';
@@ -114,8 +115,160 @@ const _roleRedirects = <String, String>{
   'EDUCATOR': '/micro-schools',
   'ADM': '/admin/dashboard',
   'DIR': '/admin/dashboard',
-  'SUP': '/notifications',
+  // SUP et CONTENT_MGR n'ont pas d'espace mobile dédié : atterrissage sur le profil
+  // (SUP n'a pas la permission de lecture des notifications).
+  'SUP': '/profile',
+  'CONTENT_MGR': '/profile',
 };
+
+const _routeRoles = <String, Set<String>>{
+  '/student/content/:id/read': {'STD'},
+  '/admin/dashboard': {'ADM', 'DIR'},
+  '/admin/users': {'ADM', 'DIR'},
+  '/admin/invitations': {'ADM'},
+  '/admin/justifications': {'ADM'},
+  '/admin/features': {'ADM'},
+  '/admin/school': {'ADM'},
+  '/admin/settings': {'ADM'},
+  '/analytics': {'ADM', 'DIR'},
+  '/budgets': {'ADM', 'DIR'},
+  '/budgets/requests': {'ADM', 'DIR'},
+  '/budgets/:id': {'ADM', 'DIR'},
+  '/micro-schools': {'EDUCATOR', 'ADM', 'DIR', 'PAR'},
+  '/micro-schools/:id/enroll': {'EDUCATOR', 'ADM', 'DIR', 'PAR'},
+  '/micro-schools/:id': {'EDUCATOR', 'ADM', 'DIR', 'PAR'},
+  '/teacher/classes': {'TCH'},
+  '/teacher/assignments': {'TCH'},
+  '/teacher/submissions': {'TCH'},
+  '/teacher/attendance': {'TCH'},
+  '/attendance/history': {'STD', 'PAR'},
+  '/attendance/analytics': {'ADM', 'DIR'},
+  '/teacher/content-library': {'TCH'},
+  '/gradebook': {'TCH', 'DIR'},
+  '/gradebook/student/:id': {'STD', 'PAR', 'TCH', 'DIR'},
+  '/gradebook/transcript/:id': {'STD', 'PAR', 'TCH', 'DIR'},
+  '/family': {'PAR'},
+  '/family/review/:childId': {'PAR'},
+  '/family/review/:childId/sessions/:sessionId': {'PAR'},
+  '/student/home': {'STD'},
+  '/students/:studentId/academic-history': {'ADM', 'DIR', 'TCH', 'PAR', 'STD'},
+  '/student/content': {'STD'},
+  '/student/quizzes': {'STD'},
+  '/student/writing': {'STD'},
+  '/student/games': {'STD'},
+  '/games/memory': {'STD'},
+  '/games/sorting': {'STD'},
+  '/games/vocabulary': {'STD'},
+  '/games/letter-puzzle': {'STD'},
+  '/rewards': {'STD'},
+  '/leaderboard': {'STD'},
+  '/attendance/justify': {'PAR'},
+  '/justification': {'PAR'},
+  '/quizzes/:id/analytics': {'TCH'},
+  '/teacher/quizzes': {'TCH'},
+  '/teacher/class-progress': {'TCH'},
+  '/coloring': {'STD'},
+  '/coloring/:id': {'STD'},
+  '/timetable': {'PAR', 'STD', 'TCH', 'ADM', 'DIR'},
+  '/messages': {'PAR', 'TCH', 'EDUCATOR', 'ADM', 'DIR'},
+  '/messages/:id': {'PAR', 'TCH', 'EDUCATOR', 'ADM', 'DIR'},
+  '/announcements': {'PAR', 'STD', 'TCH', 'EDUCATOR', 'ADM', 'DIR'},
+  '/progress': {'STD'},
+  '/progress/:studentId': {'STD'},
+  '/parent/progress': {'PAR'},
+  '/feed': {'PAR'},
+  '/notifications': {'PAR', 'STD', 'TCH', 'EDUCATOR', 'ADM', 'DIR'},
+  '/calendar': {'PAR', 'STD', 'TCH', 'EDUCATOR', 'ADM', 'DIR'},
+  '/events/:id': {'PAR', 'STD', 'TCH', 'EDUCATOR', 'ADM', 'DIR'},
+  '/events/create': {'TCH', 'ADM', 'DIR'},
+  '/reports': {'TCH', 'ADM', 'DIR'},
+  '/documents': {'PAR', 'STD', 'TCH', 'ADM', 'DIR'},
+  '/invoices/:id': {'PAR', 'ADM', 'DIR'},
+  '/skills': {'TCH', 'DIR', 'PAR', 'STD'},
+  '/skills/passport/:id': {'TCH', 'DIR', 'PAR', 'STD'},
+  '/skills/evaluate': {'TCH', 'DIR'},
+  '/skills/analytics': {'TCH', 'DIR'},
+  '/compliance': {'ADM', 'DIR'},
+  '/compliance/mapping': {'ADM', 'DIR'},
+  '/compliance/reports': {'ADM', 'DIR'},
+  '/sync': {'ADM', 'DIR'},
+  '/sync/conflicts': {'ADM', 'DIR'},
+  '/financial-health': {'ADM', 'SYS'},
+  '/financial-health/snapshots': {'ADM', 'SYS'},
+  '/billing/sibling-policy': {'ADM'},
+  '/billing/late-fees': {'ADM'},
+  '/billing/payment-plans': {'ADM', 'DIR', 'PAR'},
+  '/billing/payment-plans/:id': {'ADM', 'DIR', 'PAR'},
+  '/question-bank': {'TCH', 'ADM', 'DIR', 'CONTENT_MGR'},
+  '/question-bank/import': {'TCH', 'ADM', 'DIR', 'CONTENT_MGR'},
+  '/question-bank/generate': {'TCH', 'ADM', 'DIR', 'CONTENT_MGR'},
+  '/rubrics': {'TCH', 'ADM', 'DIR'},
+  '/rubrics/:id/edit': {'TCH', 'ADM', 'DIR'},
+  '/rubrics/:id/grade': {'TCH', 'ADM', 'DIR'},
+  '/timetable/constraints': {'ADM', 'DIR'},
+  '/timetable/generate': {'ADM', 'DIR'},
+  '/settings/notifications': {'PAR', 'STD', 'TCH', 'EDUCATOR', 'ADM', 'DIR'},
+  '/settings/privacy': {
+    'PAR',
+    'STD',
+    'TCH',
+    'EDUCATOR',
+    'ADM',
+    'DIR',
+    'SUP',
+    'CONTENT_MGR',
+  },
+  '/content': {'PAR', 'EDUCATOR', 'ADM'},
+  '/grades': {'STD', 'PAR'},
+  '/results': {'STD', 'PAR'},
+  '/invoices': {'PAR', 'ADM'},
+  '/profile': {
+    'PAR',
+    'STD',
+    'TCH',
+    'EDUCATOR',
+    'ADM',
+    'DIR',
+    'SUP',
+    'CONTENT_MGR',
+  },
+  '/profile/2fa': {
+    'PAR',
+    'STD',
+    'TCH',
+    'EDUCATOR',
+    'ADM',
+    'DIR',
+    'SUP',
+    'CONTENT_MGR',
+  },
+  '/profile/password': {
+    'PAR',
+    'STD',
+    'TCH',
+    'EDUCATOR',
+    'ADM',
+    'DIR',
+    'SUP',
+    'CONTENT_MGR',
+  },
+  '2fa': {'PAR', 'STD', 'TCH', 'EDUCATOR', 'ADM', 'DIR', 'SUP', 'CONTENT_MGR'},
+  'password': {
+    'PAR',
+    'STD',
+    'TCH',
+    'EDUCATOR',
+    'ADM',
+    'DIR',
+    'SUP',
+    'CONTENT_MGR',
+  },
+  '/submissions/upload': {'STD'},
+};
+
+Set<String>? _allowedRolesForRoute(String matchedLocation) {
+  return _routeRoles[matchedLocation];
+}
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
@@ -143,6 +296,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (isAuthenticated && isPublicPage) {
         final role = authState.user?.role ?? '';
         return _roleRedirects[role] ?? '/profile';
+      }
+
+      if (isAuthenticated) {
+        final role = authState.user?.role ?? '';
+        final allowedRoles = _allowedRolesForRoute(loc);
+        if (allowedRoles != null && !allowedRoles.contains(role)) {
+          return _roleRedirects[role] ?? '/profile';
+        }
       }
 
       return null; // no redirect needed
@@ -234,6 +395,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/admin/school',
             builder: (context, state) => const SchoolSettingsScreen(),
+          ),
+          GoRoute(
+            path: '/admin/settings',
+            redirect: (context, state) => '/admin/school',
           ),
           GoRoute(
             path: '/analytics',
@@ -364,6 +529,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/student/writing',
             builder: (context, state) => const WritingWorkspaceScreen(),
           ),
+          // Hub des jeux éducatifs (parité avec le web /student/games).
+          GoRoute(
+            path: '/student/games',
+            builder: (context, state) => const MiniGamesScreen(),
+          ),
           GoRoute(
             path: '/games/memory',
             builder: (context, state) => const MemoryMatchScreen(),
@@ -389,8 +559,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const LeaderboardScreen(),
           ),
           GoRoute(
-            path: '/justification',
+            path: '/attendance/justify',
             builder: (context, state) => const ParentJustificationScreen(),
+          ),
+          GoRoute(
+            path: '/justification',
+            redirect: (context, state) => '/attendance/justify',
           ),
           GoRoute(
             path: '/quizzes/:id/analytics',
@@ -605,8 +779,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const ContentScreen(),
           ),
           GoRoute(
-            path: '/results',
+            path: '/grades',
             builder: (context, state) => const ResultsScreen(),
+          ),
+          GoRoute(
+            path: '/results',
+            redirect: (context, state) => '/grades',
           ),
           GoRoute(
             path: '/invoices',

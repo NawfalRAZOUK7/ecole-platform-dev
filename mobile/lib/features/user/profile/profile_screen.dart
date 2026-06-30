@@ -12,6 +12,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/features/auth/auth_provider.dart';
 import 'package:ecole_platform/l10n/app_localizations.dart';
+import 'package:ecole_platform/shared/taxonomy/taxonomy.g.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 
 const _roleLabels = {
@@ -60,11 +61,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   // Edit controllers — initialized from profile data
   final _dobController = TextEditingController();
-  final _classLevelController = TextEditingController();
+  String _classLevel = '';
   String _relationshipType = '';
   final _cinController = TextEditingController();
   final _emergencyPhoneController = TextEditingController();
-  final _subjectController = TextEditingController();
+  String _subjectSpecialty = '';
   final _qualificationController = TextEditingController();
 
   @override
@@ -76,10 +77,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   void dispose() {
     _dobController.dispose();
-    _classLevelController.dispose();
     _cinController.dispose();
     _emergencyPhoneController.dispose();
-    _subjectController.dispose();
     _qualificationController.dispose();
     super.dispose();
   }
@@ -112,12 +111,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final teacher = data['teacher_profile'] as Map<String, dynamic>?;
 
     _dobController.text = student?['date_of_birth'] as String? ?? '';
-    _classLevelController.text = student?['class_level'] as String? ?? '';
+    final classLevel = student?['class_level'] as String? ?? '';
+    _classLevel = Taxonomy.levelBands.contains(classLevel) ? classLevel : '';
     _relationshipType = parent?['relationship_type'] as String? ?? '';
     _cinController.text = parent?['cin_number'] as String? ?? '';
     _emergencyPhoneController.text =
         parent?['emergency_phone'] as String? ?? '';
-    _subjectController.text = teacher?['subject_specialty'] as String? ?? '';
+    final specialty = teacher?['subject_specialty'] as String? ?? '';
+    _subjectSpecialty = Taxonomy.subjects.contains(specialty) ? specialty : '';
     _qualificationController.text = teacher?['qualification'] as String? ?? '';
   }
 
@@ -131,8 +132,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (_dobController.text.isNotEmpty) {
       body['date_of_birth'] = _dobController.text;
     }
-    if (_classLevelController.text.isNotEmpty) {
-      body['class_level'] = _classLevelController.text;
+    if (_classLevel.isNotEmpty) {
+      body['class_level'] = _classLevel;
     }
     if (_relationshipType.isNotEmpty) {
       body['relationship_type'] = _relationshipType;
@@ -143,8 +144,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (_emergencyPhoneController.text.isNotEmpty) {
       body['emergency_phone'] = _emergencyPhoneController.text;
     }
-    if (_subjectController.text.isNotEmpty) {
-      body['subject_specialty'] = _subjectController.text;
+    if (_subjectSpecialty.isNotEmpty) {
+      body['subject_specialty'] = _subjectSpecialty;
     }
     if (_qualificationController.text.isNotEmpty) {
       body['qualification'] = _qualificationController.text;
@@ -178,61 +179,93 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final theme = Theme.of(context);
     final themeMode = ref.watch(themeModeProvider);
     final localeCode = ref.watch(localeProvider);
+    final t = AppLocalizations.of(ref);
 
     if (user == null) return const SizedBox.shrink();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mon Profil')),
+      appBar: AppBar(title: Text(t.t('profile.title'))),
       body: Semantics(
         container: true,
         label: 'Profil utilisateur',
         child: ListView(
           padding: const EdgeInsets.all(24),
           children: [
-            // Avatar
-            Center(
-              child: Semantics(
-                label: 'Avatar de ${user.fullName}',
-                image: true,
-                child: CircleAvatar(
-                  radius: 48,
-                  backgroundColor: theme.colorScheme.primaryContainer,
-                  child: Text(
-                    user.fullName.isNotEmpty
-                        ? user.fullName[0].toUpperCase()
-                        : '?',
-                    style: TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Center(
-              child: Text(
-                user.fullName,
-                style: theme.textTheme.headlineSmall
-                    ?.copyWith(fontWeight: FontWeight.bold),
-              ),
-            ),
-            Center(
+            // Profile hero
+            Semantics(
+              label: 'Profil de ${user.fullName}',
               child: Container(
-                margin: const EdgeInsets.only(top: 8),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(16),
-                ),
-                child: Text(
-                  _roleLabels[user.role] ?? user.role,
-                  style: TextStyle(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.w600,
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF2563EB),
+                      Color(0xFF5B5BEF),
+                      Color(0xFF8B5CF6),
+                    ],
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.12),
+                      blurRadius: 18,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 36,
+                      backgroundColor: Colors.white,
+                      child: Text(
+                        user.fullName.isNotEmpty
+                            ? user.fullName[0].toUpperCase()
+                            : '?',
+                        style: const TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2563EB),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            user.fullName,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Text(
+                              _roleLabels[user.role] ?? user.role,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -251,8 +284,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Permissions
-            if (user.permissions.isNotEmpty) ...[
+            // Permissions (réservé aux rôles d'administration)
+            if ((user.role == 'SUP' || user.role == 'ADM') &&
+                user.permissions.isNotEmpty) ...[
               Text(
                 'Permissions',
                 style: theme.textTheme.titleSmall
@@ -311,7 +345,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
             // ── Security section ──
             Text(
-              'Sécurité',
+              t.t('profile.security'),
               style: theme.textTheme.titleSmall
                   ?.copyWith(fontWeight: FontWeight.w600),
             ),
@@ -325,8 +359,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 child: ListTile(
                   leading:
                       Icon(Icons.security, color: theme.colorScheme.primary),
-                  title: const Text('Authentification 2FA'),
-                  subtitle: const Text('Configurer la double authentification'),
+                  title: Text(t.t('twoFactor.title')),
+                  subtitle: Text(t.t('profile.twoFactorSubtitle')),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push('/profile/2fa'),
                 ),
@@ -339,8 +373,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 child: SwitchListTile(
                   secondary:
                       Icon(Icons.fingerprint, color: theme.colorScheme.primary),
-                  title: const Text('Déverrouillage biométrique'),
-                  subtitle: const Text('Empreinte digitale / Face ID'),
+                  title: Text(t.t('profile.biometricTitle')),
+                  subtitle: Text(t.t('profile.biometricSubtitle')),
                   value: authState.biometricEnabled,
                   onChanged: (value) {
                     ref.read(authProvider.notifier).setBiometricEnabled(value);
@@ -354,7 +388,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               child: ListTile(
                 leading:
                     Icon(Icons.lock_outline, color: theme.colorScheme.primary),
-                title: const Text('Changer le mot de passe'),
+                title: Text(t.t('profile.changePassword')),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push('/profile/password'),
               ),
@@ -365,7 +399,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   Icons.privacy_tip_outlined,
                   color: theme.colorScheme.primary,
                 ),
-                title: const Text('Confidentialité'),
+                title: Text(t.t('settings.privacy')),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push('/settings/privacy'),
               ),
@@ -373,7 +407,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             const SizedBox(height: 24),
 
             Text(
-              'Préférences',
+              t.t('profile.preferences'),
               style: theme.textTheme.titleSmall
                   ?.copyWith(fontWeight: FontWeight.w600),
             ),
@@ -386,9 +420,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     DropdownButtonFormField<ThemeMode>(
                       key: const Key('profile.theme.mode'),
                       initialValue: themeMode,
-                      decoration: const InputDecoration(
-                        labelText: 'Thème',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: t.t('profile.theme'),
+                        border: const OutlineInputBorder(),
                       ),
                       items: ThemeMode.values
                           .map(
@@ -410,9 +444,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     DropdownButtonFormField<String>(
                       key: const Key('profile.locale.code'),
                       initialValue: localeCode,
-                      decoration: const InputDecoration(
-                        labelText: 'Langue',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: t.t('profile.language'),
+                        border: const OutlineInputBorder(),
                       ),
                       items: _localeLabels.entries
                           .map(
@@ -442,7 +476,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 onPressed: () => ref.read(authProvider.notifier).logout(),
                 icon: Icon(Icons.logout, color: theme.colorScheme.error),
                 label: Text(
-                  'Déconnexion',
+                  t.t('profile.logout'),
                   style: TextStyle(color: theme.colorScheme.error),
                 ),
                 style: OutlinedButton.styleFrom(
@@ -458,6 +492,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildRoleProfileSection(ThemeData theme, String role) {
+    final t = AppLocalizations.of(ref);
+
     if (_profileLoading) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 16),
@@ -476,7 +512,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
             TextButton(
               onPressed: _fetchProfile,
-              child: const Text('Réessayer'),
+              child: Text(AppLocalizations.of(ref).t('common.retry')),
             ),
           ],
         ),
@@ -502,7 +538,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               TextButton.icon(
                 onPressed: () => setState(() => _editing = true),
                 icon: const Icon(Icons.edit, size: 16),
-                label: const Text('Modifier'),
+                label: Text(t.t('common.edit')),
               )
             else
               Row(
@@ -514,7 +550,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             _populateEditFields(_profileData ?? {});
                             setState(() => _editing = false);
                           },
-                    child: const Text('Annuler'),
+                    child: Text(t.t('common.cancel')),
                   ),
                   const SizedBox(width: 4),
                   FilledButton(
@@ -528,7 +564,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               color: theme.colorScheme.onPrimary,
                             ),
                           )
-                        : const Text('Enregistrer'),
+                        : Text(t.t('common.save')),
                   ),
                 ],
               ),
@@ -651,6 +687,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   // ── Edit mode ──
   Widget _buildEditForm(String role) {
+    final t = AppLocalizations.of(ref);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -660,10 +697,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               TextFormField(
                 controller: _dobController,
                 readOnly: true,
-                decoration: const InputDecoration(
-                  labelText: 'Date de naissance',
-                  prefixIcon: Icon(Icons.calendar_today),
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: t.t('profileForm.birthDate'),
+                  prefixIcon: const Icon(Icons.calendar_today),
+                  border: const OutlineInputBorder(),
                 ),
                 onTap: () async {
                   final date = await showDatePicker(
@@ -679,28 +716,41 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 },
               ),
               const SizedBox(height: 12),
-              TextFormField(
-                controller: _classLevelController,
-                decoration: const InputDecoration(
-                  labelText: 'Niveau scolaire',
-                  prefixIcon: Icon(Icons.school_outlined),
-                  border: OutlineInputBorder(),
+              DropdownButtonFormField<String>(
+                initialValue: _classLevel.isEmpty ? null : _classLevel,
+                decoration: InputDecoration(
+                  labelText: t.t('profileForm.gradeLevel'),
+                  prefixIcon: const Icon(Icons.school_outlined),
+                  border: const OutlineInputBorder(),
                 ),
+                items: [
+                  DropdownMenuItem(
+                    value: '',
+                    child: Text(t.t('profileForm.select')),
+                  ),
+                  ...Taxonomy.levelBands.map(
+                    (level) => DropdownMenuItem(
+                      value: level,
+                      child: Text(level),
+                    ),
+                  ),
+                ],
+                onChanged: (value) => setState(() => _classLevel = value ?? ''),
               ),
             ],
             if (role == 'PAR') ...[
               DropdownButtonFormField<String>(
                 initialValue:
                     _relationshipType.isEmpty ? null : _relationshipType,
-                decoration: const InputDecoration(
-                  labelText: 'Lien de parenté',
-                  prefixIcon: Icon(Icons.family_restroom),
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: t.t('profileForm.relationship'),
+                  prefixIcon: const Icon(Icons.family_restroom),
+                  border: const OutlineInputBorder(),
                 ),
                 items: [
-                  const DropdownMenuItem(
+                  DropdownMenuItem(
                     value: '',
-                    child: Text('Sélectionner'),
+                    child: Text(t.t('profileForm.select')),
                   ),
                   ..._relationshipTypes.map(
                     (rt) => DropdownMenuItem(
@@ -714,39 +764,54 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _cinController,
-                decoration: const InputDecoration(
-                  labelText: 'CIN (Carte nationale)',
-                  prefixIcon: Icon(Icons.badge_outlined),
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: t.t('profileForm.cin'),
+                  prefixIcon: const Icon(Icons.badge_outlined),
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _emergencyPhoneController,
                 keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: 'Téléphone d\'urgence',
-                  prefixIcon: Icon(Icons.phone_outlined),
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: t.t('profileForm.emergencyPhone'),
+                  prefixIcon: const Icon(Icons.phone_outlined),
+                  border: const OutlineInputBorder(),
                 ),
               ),
             ],
             if (role == 'TCH') ...[
-              TextFormField(
-                controller: _subjectController,
-                decoration: const InputDecoration(
-                  labelText: 'Spécialité',
-                  prefixIcon: Icon(Icons.book_outlined),
-                  border: OutlineInputBorder(),
+              DropdownButtonFormField<String>(
+                initialValue:
+                    _subjectSpecialty.isEmpty ? null : _subjectSpecialty,
+                decoration: InputDecoration(
+                  labelText: t.t('profileForm.specialty'),
+                  prefixIcon: const Icon(Icons.book_outlined),
+                  border: const OutlineInputBorder(),
                 ),
+                items: [
+                  DropdownMenuItem(
+                    value: '',
+                    child: Text(t.t('profileForm.select')),
+                  ),
+                  ...Taxonomy.subjects.map(
+                    (subject) => DropdownMenuItem(
+                      value: subject,
+                      child: Text(_subjectLabel(subject, t.locale)),
+                    ),
+                  ),
+                ],
+                onChanged: (value) =>
+                    setState(() => _subjectSpecialty = value ?? ''),
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _qualificationController,
-                decoration: const InputDecoration(
-                  labelText: 'Diplôme / Qualification',
-                  prefixIcon: Icon(Icons.workspace_premium_outlined),
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: t.t('profileForm.qualification'),
+                  prefixIcon: const Icon(Icons.workspace_premium_outlined),
+                  border: const OutlineInputBorder(),
                 ),
               ),
             ],
@@ -754,6 +819,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ),
       ),
     );
+  }
+
+  String _subjectLabel(String code, String locale) {
+    final titles = Taxonomy.subjectTitles[code];
+    return titles?[locale] ?? titles?['fr'] ?? code;
   }
 }
 

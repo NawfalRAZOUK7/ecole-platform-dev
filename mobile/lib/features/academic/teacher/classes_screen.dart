@@ -3,10 +3,12 @@
 /// Reference: Phase 5B (from 4B)
 
 import 'package:flutter/material.dart';
+import 'package:ecole_platform/shared/ui/widgets/shimmer_skeleton.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/lms/teacher.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/widgets/search_filter_bar.dart';
 
@@ -125,13 +127,14 @@ class ClassesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(_classesProvider);
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mes classes')),
+      appBar: AppBar(title: Text(t.t('teacher.classes'))),
       body: Column(
         children: [
           SearchFilterBar(
-            searchHint: 'Rechercher une classe...',
+            searchHint: t.t('classes.searchHint'),
             searchValue: state.search,
             onSearchChanged: (v) =>
                 ref.read(_classesProvider.notifier).setSearch(v),
@@ -148,8 +151,9 @@ class ClassesScreen extends ConsumerWidget {
     _ClassesState state,
     ThemeData theme,
   ) {
+    final t = AppLocalizations.of(ref);
     if (state.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const MobileListSkeleton();
     }
     if (state.error != null && state.classes.isEmpty) {
       return Center(
@@ -162,7 +166,7 @@ class ClassesScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             FilledButton.tonal(
               onPressed: () => ref.read(_classesProvider.notifier).load(),
-              child: const Text('Réessayer'),
+              child: Text(t.t('common.retry')),
             ),
           ],
         ),
@@ -181,7 +185,7 @@ class ClassesScreen extends ConsumerWidget {
               color: theme.colorScheme.outline,
             ),
             const SizedBox(height: 16),
-            const Text('Aucune classe assignée'),
+            Text(t.t('classProgress.noClasses')),
           ],
         ),
       );
@@ -216,7 +220,10 @@ class ClassesScreen extends ConsumerWidget {
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   subtitle: Text(
-                    '${cls.studentCount} élèves · ${cls.courseCount} cours',
+                    t
+                        .t('classes.classMeta')
+                        .replaceAll('{students}', '${cls.studentCount}')
+                        .replaceAll('{courses}', '${cls.courseCount}'),
                   ),
                   trailing: Icon(
                     isExpanded ? Icons.expand_less : Icons.expand_more,
@@ -234,9 +241,9 @@ class ClassesScreen extends ConsumerWidget {
                       ),
                     )
                   else if (state.students.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Text('Aucun élève inscrit'),
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text(t.t('classes.noStudentsEnrolled')),
                     )
                   else
                     ...state.students.map(

@@ -70,10 +70,12 @@ class PaymentPlanDetailScreen extends ConsumerWidget {
               Card(
                 child: ListTile(
                   leading: const Icon(Icons.info_outline),
-                  title: Text('${plan.installmentCount} échéance(s)'),
-                  subtitle: const Text(
-                    'Le détail des échéances n’est pas disponible dans cette réponse.',
+                  title: Text(
+                    t
+                        .t('billing.installmentCount')
+                        .replaceAll('{count}', '${plan.installmentCount}'),
                   ),
+                  subtitle: Text(t.t('billing.installmentDetailUnavailable')),
                 ),
               )
             else
@@ -85,7 +87,11 @@ class PaymentPlanDetailScreen extends ConsumerWidget {
                     title: Text(_formatDate(item.dueDate)),
                     subtitle: item.paidAt == null
                         ? null
-                        : Text('Payé le ${_formatDate(item.paidAt!)}'),
+                        : Text(
+                            t
+                                .t('billing.paidOn')
+                                .replaceAll('{date}', _formatDate(item.paidAt!)),
+                          ),
                     trailing: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.end,

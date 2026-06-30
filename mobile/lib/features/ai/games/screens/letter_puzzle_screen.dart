@@ -20,6 +20,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/core/di/providers.dart';
 import 'package:ecole_platform/features/ai/games/letter_puzzle/jigsaw_geometry.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 
 class PuzzleVocab {
   final String word;
@@ -213,6 +214,7 @@ class _LetterPuzzleScreenState extends ConsumerState<LetterPuzzleScreen> {
   }
 
   void _showSuccess() {
+    final t = AppLocalizations.of(ref);
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -226,7 +228,9 @@ class _LetterPuzzleScreenState extends ConsumerState<LetterPuzzleScreen> {
               style: Theme.of(ctx).textTheme.headlineSmall,
             ),
             const SizedBox(height: 4),
-            Text('Lettre « ${_letter.letter} » complétée'),
+            Text(
+              t.t('games.letterCompleted').replaceAll('{letter}', _letter.letter),
+            ),
           ],
         ),
         actions: [
@@ -235,7 +239,7 @@ class _LetterPuzzleScreenState extends ConsumerState<LetterPuzzleScreen> {
               Navigator.pop(ctx);
               setState(_setupPuzzle);
             },
-            child: const Text('Rejouer'),
+            child: Text(t.t('games.replay')),
           ),
           FilledButton(
             onPressed: () {
@@ -245,7 +249,7 @@ class _LetterPuzzleScreenState extends ConsumerState<LetterPuzzleScreen> {
                 _setupPuzzle();
               });
             },
-            child: const Text('Lettre suivante'),
+            child: Text(t.t('games.nextLetter')),
           ),
         ],
       ),
@@ -255,6 +259,7 @@ class _LetterPuzzleScreenState extends ConsumerState<LetterPuzzleScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
 
     // Upgrade from the local seed to the backend configs (AR/FR/EN) once,
     // when they load. The fetch is kicked off by watching the provider.
@@ -279,7 +284,7 @@ class _LetterPuzzleScreenState extends ConsumerState<LetterPuzzleScreen> {
         actions: [
           PopupMenuButton<int>(
             icon: const Icon(Icons.apps),
-            tooltip: 'Choisir une lettre',
+            tooltip: t.t('games.chooseLetter'),
             onSelected: (i) => setState(() {
               _letterIndex = i;
               _setupPuzzle();

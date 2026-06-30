@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'feed_provider.dart';
 
 class FeedScreen extends ConsumerWidget {
@@ -127,15 +128,16 @@ class FeedScreen extends ConsumerWidget {
   }
 }
 
-class _ErrorView extends StatelessWidget {
+class _ErrorView extends ConsumerWidget {
   final String error;
   final VoidCallback onRetry;
 
   const _ErrorView({required this.error, required this.onRetry});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
 
     return Center(
       child: Padding(
@@ -149,7 +151,7 @@ class _ErrorView extends StatelessWidget {
             const SizedBox(height: 16),
             FilledButton.tonal(
               onPressed: onRetry,
-              child: const Text('Réessayer'),
+              child: Text(t.t('common.retry')),
             ),
           ],
         ),

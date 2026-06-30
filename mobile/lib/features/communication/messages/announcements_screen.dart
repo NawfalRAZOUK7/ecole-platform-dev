@@ -3,6 +3,7 @@
 /// Reference: Phase 12B — Announcements mobile screen
 
 import 'package:flutter/material.dart';
+import 'package:ecole_platform/shared/ui/widgets/shimmer_skeleton.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:ecole_platform/l10n/app_localizations.dart';
@@ -36,7 +37,7 @@ class AnnouncementsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
 
     if (state.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const MobileListSkeleton();
     }
     if (state.error != null && state.items.isEmpty) {
       return Center(

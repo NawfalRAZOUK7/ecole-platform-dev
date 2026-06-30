@@ -374,7 +374,7 @@ void main() {
         ),
       );
 
-      await tester.tap(find.byTooltip('Clear search'));
+      await tester.tap(find.byTooltip('Effacer la recherche'));
       await tester.pump();
 
       expect(currentSearch, isEmpty);

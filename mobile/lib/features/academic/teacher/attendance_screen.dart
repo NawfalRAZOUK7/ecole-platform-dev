@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/lms/teacher.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 
 const _slots = ['slot_1', 'slot_2', 'slot_3', 'slot_4', 'slot_5', 'slot_6'];
@@ -121,7 +122,8 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Présences enregistrées avec succès'),
+            content:
+                Text(AppLocalizations.of(ref).t('attendance.savedSuccess')),
             backgroundColor: Theme.of(context).semanticPalette.success,
           ),
         );
@@ -151,12 +153,13 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Présences')),
+      appBar: AppBar(title: Text(t.t('teacher.attendance'))),
       body: Semantics(
         container: true,
-        label: 'Écran de gestion des présences',
+        label: t.t('attendance.screenLabel'),
         child: _loadingInit
             ? const Center(child: CircularProgressIndicator())
             : ListView(
@@ -197,6 +200,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                             const SizedBox(height: 12),
                             DropdownButtonFormField<String>(
                               initialValue: _selectedClassId,
+                              menuMaxHeight: 240,
                               decoration: const InputDecoration(
                                 labelText: 'Classe *',
                                 border: OutlineInputBorder(),
@@ -217,9 +221,10 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                             const SizedBox(height: 12),
                             DropdownButtonFormField<String>(
                               initialValue: _selectedPeriodId,
-                              decoration: const InputDecoration(
-                                labelText: 'Période *',
-                                border: OutlineInputBorder(),
+                              menuMaxHeight: 240,
+                              decoration: InputDecoration(
+                                labelText: t.t('attendance.periodLabel'),
+                                border: const OutlineInputBorder(),
                               ),
                               items: _periods
                                   .map(
@@ -242,11 +247,12 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                                     child: InkWell(
                                       onTap: _pickDate,
                                       child: InputDecorator(
-                                        decoration: const InputDecoration(
-                                          labelText: 'Date',
-                                          border: OutlineInputBorder(),
+                                        decoration: InputDecoration(
+                                          labelText:
+                                              t.t('attendance.dateLabel'),
+                                          border: const OutlineInputBorder(),
                                           suffixIcon:
-                                              Icon(Icons.calendar_today),
+                                              const Icon(Icons.calendar_today),
                                         ),
                                         child: Text(
                                           DateFormat.yMMMd('fr')
@@ -260,9 +266,10 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                                 Expanded(
                                   child: DropdownButtonFormField<String>(
                                     initialValue: _selectedSlot,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Créneau',
-                                      border: OutlineInputBorder(),
+                                    menuMaxHeight: 240,
+                                    decoration: InputDecoration(
+                                      labelText: t.t('attendance.slotLabel'),
+                                      border: const OutlineInputBorder(),
                                     ),
                                     items: _slots
                                         .map(
@@ -300,7 +307,9 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                     Row(
                       children: [
                         Text(
-                          'Élèves (${_students.length})',
+                          t
+                              .t('attendance.studentsCount')
+                              .replaceAll('{n}', '${_students.length}'),
                           style: theme.textTheme.titleSmall
                               ?.copyWith(fontWeight: FontWeight.w600),
                         ),
@@ -318,7 +327,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                                 }
                               });
                             },
-                            child: const Text('Tous présents'),
+                            child: Text(t.t('attendance.allPresent')),
                           ),
                         ),
                       ],
@@ -438,10 +447,10 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                       ),
                     ),
                   ] else if (_selectedClassId != null)
-                    const Center(
+                    Center(
                       child: Padding(
-                        padding: EdgeInsets.all(32),
-                        child: Text('Aucun élève dans cette classe'),
+                        padding: const EdgeInsets.all(32),
+                        child: Text(t.t('classProgress.noStudents')),
                       ),
                     ),
                 ],

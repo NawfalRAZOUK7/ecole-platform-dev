@@ -84,10 +84,13 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Send reset link'), findsOneWidget);
+    expect(
+      find.text('Envoyer le lien de réinitialisation'),
+      findsOneWidget,
+    );
 
     await tester.enterText(find.byType(TextField).first, 'parent@ecole.test');
-    await tester.tap(find.text('Send reset link'));
+    await tester.tap(find.text('Envoyer le lien de réinitialisation'));
     await tester.pumpAndSettle();
 
     verify(() => authRepository.requestRecovery('parent@ecole.test')).called(1);

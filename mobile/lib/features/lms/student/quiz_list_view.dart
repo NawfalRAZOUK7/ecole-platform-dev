@@ -3,9 +3,10 @@ part of 'quiz_player_screen.dart';
 extension _QuizListView on _QuizPlayerScreenState {
   Widget _buildListView(BuildContext context) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Quiz')),
+      appBar: AppBar(title: Text(t.t('quiz.title'))),
       body: _loadingList
           ? const Center(child: CircularProgressIndicator())
           : _error != null
@@ -23,7 +24,7 @@ extension _QuizListView on _QuizPlayerScreenState {
                       const SizedBox(height: 16),
                       FilledButton.tonal(
                         onPressed: _fetchQuizzes,
-                        child: const Text('Réessayer'),
+                        child: Text(t.t('common.retry')),
                       ),
                     ],
                   ),

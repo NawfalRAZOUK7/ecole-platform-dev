@@ -4,8 +4,10 @@
 /// Phase 5B: Added search bar + sort toggle.
 
 import 'package:flutter/material.dart';
+import 'package:ecole_platform/shared/ui/widgets/shimmer_skeleton.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/widgets/search_filter_bar.dart';
 import 'content_provider.dart';
@@ -17,37 +19,61 @@ class ContentScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(contentProvider);
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Bibliothèque')),
+      appBar: AppBar(title: Text(t.t('nav.contentLibrary'))),
       body: Column(
         children: [
           // Search + filter bar
           SearchFilterBar(
-            searchHint: 'Rechercher du contenu...',
+            searchHint: t.t('contentLibrary.searchHint'),
             searchValue: state.search,
             onSearchChanged: (v) =>
                 ref.read(contentProvider.notifier).setSearch(v),
-            filters: {
-              'Type': const [
-                FilterOption(label: 'Tous', value: null),
-                FilterOption(label: 'Vidéo', value: 'video'),
-                FilterOption(label: 'Document', value: 'document'),
-                FilterOption(label: 'Quiz', value: 'quiz'),
-              ],
-              'Niveau': const [
-                FilterOption(label: 'Tous', value: null),
-                FilterOption(label: 'Débutant', value: 'beginner'),
-                FilterOption(label: 'Intermédiaire', value: 'intermediate'),
-                FilterOption(label: 'Avancé', value: 'advanced'),
-              ],
-            },
+            filters: [
+              FilterGroup(
+                id: 'type',
+                label: t.t('content.filter.type'),
+                options: [
+                  FilterOption(label: t.t('common.all'), value: null),
+                  FilterOption(
+                    label: t.t('content.type.video'),
+                    value: 'video',
+                  ),
+                  FilterOption(
+                    label: t.t('content.type.document'),
+                    value: 'document',
+                  ),
+                  FilterOption(label: t.t('content.type.quiz'), value: 'quiz'),
+                ],
+              ),
+              FilterGroup(
+                id: 'level',
+                label: t.t('content.filter.level'),
+                options: [
+                  FilterOption(label: t.t('common.all'), value: null),
+                  FilterOption(
+                    label: t.t('content.level.beginner'),
+                    value: 'beginner',
+                  ),
+                  FilterOption(
+                    label: t.t('content.level.intermediate'),
+                    value: 'intermediate',
+                  ),
+                  FilterOption(
+                    label: t.t('content.level.advanced'),
+                    value: 'advanced',
+                  ),
+                ],
+              ),
+            ],
             filterValues: {
-              'Type': state.typeFilter,
-              'Niveau': state.levelFilter,
+              'type': state.typeFilter,
+              'level': state.levelFilter,
             },
-            onFilterChanged: (key, value) {
-              if (key == 'Type') {
+            onFilterChanged: (id, value) {
+              if (id == 'type') {
                 ref.read(contentProvider.notifier).setTypeFilter(value);
               } else {
                 ref.read(contentProvider.notifier).setLevelFilter(value);
@@ -71,8 +97,9 @@ class ContentScreen extends ConsumerWidget {
     ContentState state,
     ThemeData theme,
   ) {
+    final t = AppLocalizations.of(ref);
     if (state.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const MobileListSkeleton();
     }
 
     if (state.error != null && state.items.isEmpty) {
@@ -86,7 +113,7 @@ class ContentScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             FilledButton.tonal(
               onPressed: () => ref.read(contentProvider.notifier).load(),
-              child: const Text('Réessayer'),
+              child: Text(t.t('common.retry')),
             ),
           ],
         ),

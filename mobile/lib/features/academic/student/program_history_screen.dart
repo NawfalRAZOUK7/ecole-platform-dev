@@ -17,6 +17,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:ecole_platform/shared/ui/widgets/app_snackbar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -108,9 +109,7 @@ class _AcademicHistoryScreenState extends ConsumerState<AcademicHistoryScreen> {
     final year = _resolveTranscriptYear();
     if (year == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(t.t('academicHistory.transcriptUnavailable'))),
-        );
+        AppSnackBar.show(context, t.t('academicHistory.transcriptUnavailable'));
       }
       return null;
     }

@@ -3,6 +3,7 @@
 /// Reference: Phase 12B — Messaging inbox
 
 import 'package:flutter/material.dart';
+import 'package:ecole_platform/shared/ui/widgets/shimmer_skeleton.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -49,7 +50,7 @@ class ConversationsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
 
     if (state.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const MobileListSkeleton();
     }
     if (state.error != null && state.items.isEmpty) {
       return Center(
@@ -172,7 +173,7 @@ class ConversationsScreen extends ConsumerWidget {
                         body: {
                           'type': 'DIRECT',
                           'participant_ids': [recipientCtrl.text.trim()],
-                          'subject': subjectCtrl.text.isNotEmpty
+                          'subject_line': subjectCtrl.text.isNotEmpty
                               ? subjectCtrl.text
                               : null,
                           'initial_message': messageCtrl.text,
@@ -230,7 +231,7 @@ class _ConversationTile extends StatelessWidget {
     return Semantics(
       button: true,
       label:
-          'Conversation ${conversation.subject ?? _otherParticipant()}${conversation.unreadCount > 0 ? ', ${conversation.unreadCount} messages non lus' : ''}',
+          'Conversation ${conversation.subjectLine ?? _otherParticipant()}${conversation.unreadCount > 0 ? ', ${conversation.unreadCount} messages non lus' : ''}',
       child: ListTile(
         leading: Semantics(
           excludeSemantics: true,
@@ -243,7 +244,7 @@ class _ConversationTile extends StatelessWidget {
           ),
         ),
         title: Text(
-          conversation.subject ?? _otherParticipant(),
+          conversation.subjectLine ?? _otherParticipant(),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
@@ -306,7 +307,10 @@ class _ConversationTile extends StatelessWidget {
   String _otherParticipant() {
     final other =
         conversation.participants.where((p) => p.userId != userId).firstOrNull;
-    if (other != null) return '${other.userId.substring(0, 8)}...';
+    if (other != null) {
+      final id = other.userId;
+      return id.length > 8 ? '${id.substring(0, 8)}...' : id;
+    }
     return t.t('messages.conversation');
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ecole_platform/shared/ui/widgets/app_snackbar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/app/providers.dart';
@@ -88,9 +89,7 @@ class _LateFeePolicyScreenState extends ConsumerState<LateFeePolicyScreen> {
           );
       ref.invalidate(lateFeePolicyProvider);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Late fee policy updated')),
-      );
+      AppSnackBar.show(context, 'Late fee policy updated');
     } finally {
       setState(() => _saving = false);
       graceController.dispose();

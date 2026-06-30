@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:ecole_platform/shared/ui/motion.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/ui/tokens/radii.dart';
 import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
@@ -20,6 +21,7 @@ final ThemeData appLightTheme = ThemeData(
     KidsThemeColors.light,
   ],
   useMaterial3: true,
+  pageTransitionsTheme: appPageTransitionsTheme,
   fontFamily: 'Cairo',
   scaffoldBackgroundColor: AppColors.background,
   appBarTheme: const AppBarTheme(
@@ -103,6 +105,26 @@ final ThemeData appLightTheme = ThemeData(
       }),
       shadowColor: WidgetStateProperty.all(
         AppColors.primary.withValues(alpha: 0.35),
+      ),
+    ),
+  ),
+  outlinedButtonTheme: OutlinedButtonThemeData(
+    style: OutlinedButton.styleFrom(
+      minimumSize: const Size(0, 48),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      foregroundColor: AppColors.primary,
+      side: const BorderSide(color: AppColors.primary, width: 1.2),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.md),
+      ),
+    ),
+  ),
+  textButtonTheme: TextButtonThemeData(
+    style: TextButton.styleFrom(
+      foregroundColor: AppColors.primary,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.sm),
       ),
     ),
   ),

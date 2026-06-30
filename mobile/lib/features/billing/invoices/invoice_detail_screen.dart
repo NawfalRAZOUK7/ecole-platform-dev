@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:ecole_platform/shared/ui/widgets/app_snackbar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:open_filex/open_filex.dart';
 
@@ -103,9 +104,7 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
       ref.invalidate(invoiceDetailProvider(widget.invoiceId));
       ref.read(invoicesProvider.notifier).refresh();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Payment created')),
-      );
+      AppSnackBar.show(context, 'Payment created');
     } finally {
       if (mounted) {
         setState(() => _submittingPayment = false);
@@ -127,9 +126,7 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
           );
       ref.invalidate(invoiceDetailProvider(widget.invoiceId));
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Payment proof uploaded')),
-      );
+      AppSnackBar.show(context, 'Payment proof uploaded');
     } finally {
       if (mounted) {
         setState(() => _uploadingProof = false);
@@ -184,9 +181,7 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      AppSnackBar.error(context, 'Error: $e');
     } finally {
       if (mounted) setState(() => _downloadingPdf = false);
     }
@@ -210,9 +205,7 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      AppSnackBar.error(context, 'Error: $e');
     } finally {
       if (mounted) setState(() => _downloadingReceipt = false);
     }

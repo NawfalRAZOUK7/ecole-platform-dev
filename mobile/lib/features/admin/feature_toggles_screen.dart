@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ecole_platform/shared/ui/widgets/app_snackbar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/app/providers.dart';
@@ -51,9 +52,7 @@ class _FeatureTogglesScreenState extends ConsumerState<FeatureTogglesScreen> {
         body: {'features': _toggles},
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Feature toggles saved')),
-      );
+      AppSnackBar.success(context, 'Feature toggles saved');
     } finally {
       if (mounted) {
         setState(() => _saving = false);

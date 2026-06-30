@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:ecole_platform/shared/ui/widgets/app_snackbar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -111,9 +112,7 @@ class FinancialExportScreen extends ConsumerWidget {
                       .read(financialHealthRepositoryProvider)
                       .exportCsv();
                   if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('CSV exported: ${file.path}')),
-                  );
+                  AppSnackBar.show(context, 'CSV exported: ${file.path}');
                 },
                 icon: const Icon(Icons.table_chart_outlined),
                 label: const Text('CSV'),
@@ -127,9 +126,7 @@ class FinancialExportScreen extends ConsumerWidget {
                       .read(financialHealthRepositoryProvider)
                       .exportPdf();
                   if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('PDF exported: ${file.path}')),
-                  );
+                  AppSnackBar.show(context, 'PDF exported: ${file.path}');
                 },
                 icon: const Icon(Icons.picture_as_pdf_outlined),
                 label: const Text('PDF'),
@@ -197,7 +194,11 @@ class _RetentionChart extends StatelessWidget {
               barRods: [
                 BarChartRodData(
                   toY: points[i].rate,
-                  color: theme.colorScheme.tertiary,
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [(theme.colorScheme.tertiary).withValues(alpha: 0.55), theme.colorScheme.tertiary],
+                  ),
                 ),
               ],
             ),

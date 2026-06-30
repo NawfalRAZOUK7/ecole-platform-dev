@@ -4,9 +4,11 @@
 /// French strings hardcoded (no l10n framework in mobile).
 
 import 'package:flutter/material.dart';
+import 'package:ecole_platform/shared/ui/widgets/shimmer_skeleton.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'my_children_provider.dart';
 
 class MyChildrenScreen extends ConsumerWidget {
@@ -16,9 +18,10 @@ class MyChildrenScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(myChildrenProvider);
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mes enfants')),
+      appBar: AppBar(title: Text(t.t('family.myChildren'))),
       body: _buildBody(context, ref, state, theme),
     );
   }
@@ -29,8 +32,9 @@ class MyChildrenScreen extends ConsumerWidget {
     MyChildrenState state,
     ThemeData theme,
   ) {
+    final t = AppLocalizations.of(ref);
     if (state.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const MobileListSkeleton();
     }
 
     if (state.error != null && state.items.isEmpty) {
@@ -44,7 +48,7 @@ class MyChildrenScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             FilledButton.tonal(
               onPressed: () => ref.read(myChildrenProvider.notifier).load(),
-              child: const Text('Réessayer'),
+              child: Text(t.t('common.retry')),
             ),
           ],
         ),
@@ -62,7 +66,7 @@ class MyChildrenScreen extends ConsumerWidget {
               color: theme.colorScheme.outline,
             ),
             const SizedBox(height: 16),
-            const Text('Aucun enfant lié à votre compte'),
+            Text(t.t('family.noChildren')),
           ],
         ),
       );

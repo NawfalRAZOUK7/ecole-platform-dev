@@ -7,7 +7,7 @@ class Conversation {
   final String schoolId;
   final String type;
   final String createdBy;
-  final String? subject;
+  final String? subjectLine;
   final List<Participant> participants;
   final String? lastMessageAt;
   final String? lastMessageBody;
@@ -19,7 +19,7 @@ class Conversation {
     required this.schoolId,
     required this.type,
     required this.createdBy,
-    this.subject,
+    this.subjectLine,
     required this.participants,
     this.lastMessageAt,
     this.lastMessageBody,
@@ -33,7 +33,7 @@ class Conversation {
       schoolId: json['school_id'] as String,
       type: json['type'] as String,
       createdBy: json['created_by'] as String,
-      subject: json['subject'] as String?,
+      subjectLine: (json['subject_line'] ?? json['subject']) as String?,
       participants: (json['participants'] as List<dynamic>?)
               ?.map((p) => Participant.fromJson(p as Map<String, dynamic>))
               .toList() ??

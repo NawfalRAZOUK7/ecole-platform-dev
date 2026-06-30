@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ecole_platform/shared/ui/widgets/app_snackbar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/l10n/app_localizations.dart';
@@ -36,9 +37,7 @@ class _MicroSchoolEnrollScreenState
           studentName: _studentNameController.text.trim(),
         );
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Enrollment submitted')),
-    );
+    AppSnackBar.show(context, 'Enrollment submitted');
     Navigator.of(context).pop();
   }
 

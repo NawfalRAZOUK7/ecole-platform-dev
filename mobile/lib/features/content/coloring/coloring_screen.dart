@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:ecole_platform/shared/ui/widgets/app_snackbar.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
@@ -304,9 +305,7 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen> {
     final page = await ref.read(coloringPageProvider(widget.pageId).future);
     if (page == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Coloring page not found.')),
-        );
+        AppSnackBar.show(context, 'Coloring page not found.');
       }
       return false;
     }
@@ -361,9 +360,7 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen> {
         _lastSavedDocumentId = uploaded.id;
       });
       if (showSavedMessage) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Coloring saved and rewarded.')),
-        );
+        AppSnackBar.success(context, 'Coloring saved and rewarded.');
       }
       return true;
     } catch (error) {

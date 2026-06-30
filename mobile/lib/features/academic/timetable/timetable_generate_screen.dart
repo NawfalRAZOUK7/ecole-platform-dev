@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/academic/timetable.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/shared/widgets/widgets.dart';
 
 import 'timetable_provider.dart';
@@ -101,14 +102,16 @@ class _TimetableGenerateScreenState
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(ref);
     return Scaffold(
-      appBar: AppBar(title: const Text('Generate timetable')),
+      appBar: AppBar(title: Text(t.t('timetable.generate.title'))),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           TextField(
             controller: _academicYearController,
-            decoration: const InputDecoration(labelText: 'Academic year ID'),
+            decoration:
+                InputDecoration(labelText: t.t('timetable.generate.academicYearId')),
           ),
           const SizedBox(height: 16),
           FilledButton.icon(
@@ -120,12 +123,12 @@ class _TimetableGenerateScreenState
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.auto_awesome_outlined),
-            label: const Text('Generate preview'),
+            label: Text(t.t('timetable.generate.preview')),
           ),
           if (_job != null) ...[
             const SizedBox(height: 24),
             AppStatCard(
-              label: 'Generation status',
+              label: t.t('timetable.generate.status'),
               value: '${_job!.status} (${_job!.progress}%)',
               icon: Icons.sync_outlined,
             ),
@@ -139,7 +142,7 @@ class _TimetableGenerateScreenState
                 Expanded(
                   child: FilledButton.tonal(
                     onPressed: _loading ? null : _refreshGeneration,
-                    child: const Text('Refresh'),
+                    child: Text(t.t('common.refresh')),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -147,7 +150,7 @@ class _TimetableGenerateScreenState
                   child: FilledButton.tonal(
                     onPressed:
                         _loading || _preview == null ? null : _applyGeneration,
-                    child: const Text('Apply'),
+                    child: Text(t.t('common.apply')),
                   ),
                 ),
               ],
@@ -177,7 +180,7 @@ class _TimetableGenerateScreenState
           if (_preview != null) ...[
             const SizedBox(height: 24),
             Text(
-              'Preview slots',
+              t.t('timetable.generate.previewSlots'),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),

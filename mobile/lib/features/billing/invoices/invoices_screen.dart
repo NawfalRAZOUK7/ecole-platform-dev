@@ -4,6 +4,7 @@
 /// Phase 12B: Added overdue indicators + retry payment.
 
 import 'package:flutter/material.dart';
+import 'package:ecole_platform/shared/ui/widgets/shimmer_skeleton.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -76,7 +77,7 @@ class InvoicesScreen extends ConsumerWidget {
     AppLocalizations t,
   ) {
     if (state.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const MobileListSkeleton();
     }
 
     if (state.error != null && state.items.isEmpty) {

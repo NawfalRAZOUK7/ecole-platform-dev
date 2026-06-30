@@ -36,7 +36,7 @@ void main() {
       );
       expect(
         primaryNavigationRoutesForRole('PAR'),
-        ['/family', '/results', '/invoices', '/messages'],
+        ['/family', '/grades', '/invoices', '/messages'],
       );
       expect(
         primaryNavigationRoutesForRole('STD'),

@@ -3,6 +3,7 @@ part of 'quiz_player_screen.dart';
 extension _QuizResultsView on _QuizPlayerScreenState {
   Widget _buildResultsView(BuildContext context) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
     final result = _result!;
     final attempt = result.attempt;
     final score = attempt.score ?? 0;
@@ -11,7 +12,7 @@ extension _QuizResultsView on _QuizPlayerScreenState {
     final passed = percent >= 50;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Résultats')),
+      appBar: AppBar(title: Text(t.t('quiz.results'))),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [

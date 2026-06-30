@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:ecole_platform/shared/ui/widgets/app_snackbar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -155,9 +156,7 @@ class _AbsenceItemState extends ConsumerState<_AbsenceItem> {
             attachment: _attachment,
           );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.t('justification.submitSuccess'))),
-      );
+      AppSnackBar.success(context, t.t('justification.submitSuccess'));
       setState(() {
         _expanded = false;
         _attachment = null;
@@ -165,9 +164,7 @@ class _AbsenceItemState extends ConsumerState<_AbsenceItem> {
       });
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e')),
-      );
+      AppSnackBar.show(context, '$e');
     } finally {
       if (mounted) setState(() => _submitting = false);
     }

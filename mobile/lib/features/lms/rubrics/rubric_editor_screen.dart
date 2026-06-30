@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:ecole_platform/shared/ui/widgets/app_snackbar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/app/providers.dart';
@@ -104,9 +105,7 @@ class _RubricEditorScreenState extends ConsumerState<RubricEditorScreen> {
       ref.invalidate(rubricsProvider);
       ref.invalidate(rubricProvider(widget.rubricId));
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Rubric updated')),
-      );
+      AppSnackBar.show(context, 'Rubric updated');
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

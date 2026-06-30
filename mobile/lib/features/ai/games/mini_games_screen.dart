@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ecole_platform/domain/entities/ai/rewards.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/features/ai/rewards/rewards_provider.dart';
 import 'package:ecole_platform/features/ai/rewards/rewards_widgets.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
@@ -22,10 +23,11 @@ class MiniGamesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
     final rewardsAsync = ref.watch(rewardsProvider);
     if (rewardsAsync.isLoading) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Jeux éducatifs')),
+        appBar: AppBar(title: Text(t.t('games.title'))),
         body: const GamesGridSkeleton(),
       );
     }
@@ -33,7 +35,7 @@ class MiniGamesScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Jeux éducatifs'),
+        title: Text(t.t('games.title')),
         actions: const [
           StarCounter(compact: true),
           SizedBox(width: AppSpacing.sm),
@@ -46,7 +48,7 @@ class MiniGamesScreen extends ConsumerWidget {
           children: [
             LevelBadge(rewards: rewards, compact: true),
             const SizedBox(height: AppSpacing.lg),
-            Text('Choisis un jeu', style: theme.textTheme.titleMedium),
+            Text(t.t('games.chooseGame'), style: theme.textTheme.titleMedium),
             const SizedBox(height: AppSpacing.md),
             Expanded(
               child: GridView.count(
@@ -57,30 +59,30 @@ class MiniGamesScreen extends ConsumerWidget {
                 children: [
                   _GameCard(
                     icon: Icons.grid_on,
-                    label: 'Memory\nMatch',
+                    label: t.t('games.memoryLabel'),
                     color: KidsContentColors.gameBlue,
-                    description: 'Retrouve les paires !',
+                    description: t.t('games.memoryDesc'),
                     onTap: () => context.push('/games/memory'),
                   ),
                   _GameCard(
                     icon: Icons.sort,
-                    label: 'Trier\nles objets',
+                    label: t.t('games.sortingLabel'),
                     color: KidsContentColors.gameGreen,
-                    description: 'Classe dans la bonne case !',
+                    description: t.t('games.sortingDesc'),
                     onTap: () => context.push('/games/sorting'),
                   ),
                   _GameCard(
                     icon: Icons.translate,
-                    label: 'Vocabulaire',
+                    label: t.t('games.vocabLabel'),
                     color: KidsContentColors.gamePurple,
-                    description: 'Apprends des nouveaux mots !',
+                    description: t.t('games.vocabDesc'),
                     onTap: () => context.push('/games/vocabulary'),
                   ),
                   _GameCard(
                     icon: Icons.extension,
-                    label: 'Puzzle\nde lettres',
+                    label: t.t('games.puzzleLabel'),
                     color: KidsContentColors.gameYellow,
-                    description: 'Assemble la lettre !',
+                    description: t.t('games.puzzleDesc'),
                     onTap: () => context.push('/games/letter-puzzle'),
                   ),
                 ],

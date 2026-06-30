@@ -247,7 +247,7 @@ Conversation createConversation() {
     schoolId: 'school-1',
     type: 'direct',
     createdBy: 'user-1',
-    subject: 'Progress update',
+    subjectLine: 'Progress update',
     participants: [createParticipant()],
     lastMessageAt: '2026-04-10T10:00:00Z',
     lastMessageBody: 'Thanks for the update',

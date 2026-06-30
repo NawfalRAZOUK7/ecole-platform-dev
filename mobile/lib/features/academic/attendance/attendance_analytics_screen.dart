@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:ecole_platform/shared/ui/widgets/app_snackbar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/app/providers.dart';
@@ -194,11 +195,7 @@ class _AnalyticsContent extends ConsumerWidget {
                           format: 'csv',
                         );
                         if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Export ready: ${result.fileName}'),
-                          ),
-                        );
+                        AppSnackBar.show(context, 'Export ready: ${result.fileName}');
                       },
                       icon: const Icon(Icons.download),
                       label: const Text('Export'),

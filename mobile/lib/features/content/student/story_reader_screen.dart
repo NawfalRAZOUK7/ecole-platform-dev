@@ -8,6 +8,7 @@ import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/content/content_item.dart';
 import 'package:ecole_platform/features/ai/rewards/rewards_widgets.dart';
 import 'package:ecole_platform/features/content/student/story_reader_provider.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
 import 'package:ecole_platform/shared/ui/widgets/animated_guide.dart';
@@ -208,7 +209,7 @@ class _StoryReaderScreenState extends ConsumerState<StoryReaderScreen> {
                   onPressed: () => ref
                       .read(storyReaderProvider(_request).notifier)
                       .refresh(),
-                  child: const Text('Réessayer'),
+                  child: Text(AppLocalizations.of(ref).t('common.retry')),
                 ),
               ],
             ),
@@ -538,7 +539,7 @@ class _StoryPageCanvas extends StatelessWidget {
   }
 }
 
-class _StoryBottomBar extends StatelessWidget {
+class _StoryBottomBar extends ConsumerWidget {
   final Color accentColor;
   final double progress;
   final int currentPage;
@@ -568,7 +569,8 @@ class _StoryBottomBar extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = AppLocalizations.of(ref);
     return SafeArea(
       top: false,
       child: Container(
@@ -616,7 +618,7 @@ class _StoryBottomBar extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: canGoBack ? onBack : null,
                     icon: const Icon(Icons.chevron_left),
-                    label: const Text('Précédent'),
+                    label: Text(t.t('quiz.previous')),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
@@ -628,7 +630,11 @@ class _StoryBottomBar extends StatelessWidget {
                           ? Icons.celebration_outlined
                           : Icons.chevron_right,
                     ),
-                    label: Text(showFinishAction ? 'Terminer' : 'Suivant'),
+                    label: Text(
+                      showFinishAction
+                          ? t.t('story.finish')
+                          : t.t('quiz.next'),
+                    ),
                   ),
                 ),
               ],
@@ -638,7 +644,7 @@ class _StoryBottomBar extends StatelessWidget {
               TextButton.icon(
                 onPressed: onOpenQuiz,
                 icon: const Icon(Icons.quiz_outlined),
-                label: const Text('Passer au quiz'),
+                label: Text(t.t('story.goToQuiz')),
               ),
             ],
           ],

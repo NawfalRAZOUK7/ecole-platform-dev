@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:ecole_platform/shared/ui/widgets/app_snackbar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
@@ -257,9 +258,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
   Future<void> _openFile(File file) async {
     final result = await OpenFilex.open(file.path);
     if (result.type != ResultType.done && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${result.message} (${file.path})')),
-      );
+      AppSnackBar.show(context, '${result.message} (${file.path})');
     }
   }
 

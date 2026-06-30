@@ -36,30 +36,51 @@ class _ContentFilters extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final t = AppLocalizations.of(ref);
     return SearchFilterBar(
-      searchHint: 'Rechercher du contenu...',
+      searchHint: t.t('contentLibrary.searchHint'),
       searchValue: '',
       onSearchChanged: (_) {},
-      filters: {
-        'Type': const [
-          FilterOption(label: 'Tous', value: null),
-          FilterOption(label: 'Vidéo', value: 'VIDEO'),
-          FilterOption(label: 'Audio', value: 'AUDIO'),
-          FilterOption(label: 'Document', value: 'DOCUMENT'),
-          FilterOption(label: 'Interactif', value: 'INTERACTIVE'),
-        ],
-        'Origine': const [
-          FilterOption(label: 'Tous', value: null),
-          FilterOption(label: 'Plateforme', value: 'platform'),
-          FilterOption(label: 'École', value: 'school'),
-        ],
-      },
+      filters: [
+        FilterGroup(
+          id: 'type',
+          label: t.t('content.filter.type'),
+          options: [
+            FilterOption(label: t.t('common.all'), value: null),
+            FilterOption(label: t.t('content.type.video'), value: 'VIDEO'),
+            FilterOption(label: t.t('content.type.audio'), value: 'AUDIO'),
+            FilterOption(
+              label: t.t('content.type.document'),
+              value: 'DOCUMENT',
+            ),
+            FilterOption(
+              label: t.t('content.type.interactive'),
+              value: 'INTERACTIVE',
+            ),
+          ],
+        ),
+        FilterGroup(
+          id: 'origin',
+          label: t.t('content.filter.origin'),
+          options: [
+            FilterOption(label: t.t('common.all'), value: null),
+            FilterOption(
+              label: t.t('contentLibrary.filterPlatform'),
+              value: 'platform',
+            ),
+            FilterOption(
+              label: t.t('contentLibrary.filterSchool'),
+              value: 'school',
+            ),
+          ],
+        ),
+      ],
       filterValues: {
-        'Type': state.typeFilter,
-        'Origine': state.originFilter,
+        'type': state.typeFilter,
+        'origin': state.originFilter,
       },
-      onFilterChanged: (key, value) {
-        if (key == 'Type') {
+      onFilterChanged: (id, value) {
+        if (id == 'type') {
           ref.read(_libraryProvider.notifier).setTypeFilter(value);
         } else {
           ref.read(_libraryProvider.notifier).setOriginFilter(value);

@@ -185,7 +185,11 @@ class _ScoreDistribution extends StatelessWidget {
                         barRods: [
                           BarChartRodData(
                             toY: values[i].value,
-                            color: theme.colorScheme.primary,
+                            gradient: LinearGradient(
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                              colors: [(theme.colorScheme.primary).withValues(alpha: 0.55), theme.colorScheme.primary],
+                            ),
                             width: 28,
                             borderRadius: const BorderRadius.vertical(
                               top: Radius.circular(6),

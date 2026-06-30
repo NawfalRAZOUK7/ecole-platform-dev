@@ -54,7 +54,7 @@ const _allNavItems = [
     route: '/admin/invitations',
     icon: Icons.mark_email_unread_outlined,
     labelKey: 'admin.invitations',
-    roles: ['ADM', 'DIR'],
+    roles: ['ADM'],
     groupKey: 'shell.group.administration',
   ),
   _NavItem(
@@ -68,14 +68,14 @@ const _allNavItems = [
     route: '/admin/features',
     icon: Icons.toggle_on_outlined,
     labelKey: 'admin.featureToggles',
-    roles: ['ADM', 'DIR'],
+    roles: ['ADM'],
     groupKey: 'shell.group.administration',
   ),
   _NavItem(
     route: '/admin/school',
     icon: Icons.school_outlined,
     labelKey: 'admin.schoolSettings',
-    roles: ['ADM', 'DIR'],
+    roles: ['ADM'],
     groupKey: 'shell.group.administration',
   ),
   _NavItem(
@@ -121,6 +121,21 @@ const _allNavItems = [
     roles: ['TCH'],
     groupKey: 'shell.group.academic',
   ),
+  // Parité web↔mobile : devoirs et assiduité (écrans déjà présents côté mobile).
+  _NavItem(
+    route: '/teacher/assignments',
+    icon: Icons.assignment_outlined,
+    labelKey: 'shell.assignments',
+    roles: ['TCH'],
+    groupKey: 'shell.group.academic',
+  ),
+  _NavItem(
+    route: '/teacher/attendance',
+    icon: Icons.checklist_outlined,
+    labelKey: 'shell.attendance',
+    roles: ['TCH'],
+    groupKey: 'shell.group.academic',
+  ),
   _NavItem(
     route: '/teacher/quizzes',
     icon: Icons.quiz,
@@ -158,7 +173,7 @@ const _allNavItems = [
     groupKey: 'shell.group.academic',
   ),
   _NavItem(
-    route: '/justification',
+    route: '/attendance/justify',
     icon: Icons.assignment_late,
     labelKey: 'shell.justification',
     roles: ['PAR'],
@@ -187,6 +202,29 @@ const _allNavItems = [
     groupKey: 'shell.group.academic',
   ),
   _NavItem(
+    route: '/student/writing',
+    icon: Icons.edit_note_outlined,
+    labelKey: 'shell.writing',
+    roles: ['STD'],
+    groupKey: 'shell.group.academic',
+  ),
+  // Jeux éducatifs — parité avec le web (/student/games). L'écran hub existait
+  // (MiniGamesScreen) mais n'était relié à aucune route/nav.
+  _NavItem(
+    route: '/student/games',
+    icon: Icons.videogame_asset_outlined,
+    labelKey: 'shell.games',
+    roles: ['STD'],
+    groupKey: 'shell.group.academic',
+  ),
+  _NavItem(
+    route: '/skills',
+    icon: Icons.psychology_outlined,
+    labelKey: 'shell.skills',
+    roles: ['STD'],
+    groupKey: 'shell.group.analytics',
+  ),
+  _NavItem(
     route: '/leaderboard',
     icon: Icons.emoji_events,
     labelKey: 'shell.leaderboard',
@@ -212,21 +250,21 @@ const _allNavItems = [
     route: '/calendar',
     icon: Icons.event_note,
     labelKey: 'shell.calendar',
-    roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR'],
+    roles: ['PAR', 'STD', 'TCH', 'EDUCATOR', 'ADM', 'DIR'],
     groupKey: 'shell.group.communication',
   ),
   _NavItem(
     route: '/messages',
     icon: Icons.chat,
     labelKey: 'shell.messages',
-    roles: ['PAR', 'TCH', 'ADM', 'DIR'],
+    roles: ['PAR', 'TCH', 'EDUCATOR', 'ADM', 'DIR'],
     groupKey: 'shell.group.communication',
   ),
   _NavItem(
     route: '/announcements',
     icon: Icons.campaign,
     labelKey: 'shell.announcements',
-    roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR'],
+    roles: ['PAR', 'STD', 'TCH', 'EDUCATOR', 'ADM', 'DIR'],
     groupKey: 'shell.group.communication',
   ),
   // Common tabs
@@ -248,7 +286,17 @@ const _allNavItems = [
     route: '/reports',
     icon: Icons.picture_as_pdf_outlined,
     labelKey: 'shell.reports',
-    roles: ['PAR', 'STD', 'TCH', 'ADM', 'DIR'],
+    // Génération de rapports = fonction staff (pas élève/parent).
+    roles: ['TCH', 'ADM', 'DIR'],
+    groupKey: 'shell.group.analytics',
+  ),
+  // Conformité (oversight DIR + ADM) — la route existe déjà (/compliance) mais
+  // n'apparaissait dans aucune nav : ajout d'une entrée pilotage/conformité.
+  _NavItem(
+    route: '/compliance',
+    icon: Icons.verified_outlined,
+    labelKey: 'shell.compliance',
+    roles: ['ADM', 'DIR'],
     groupKey: 'shell.group.analytics',
   ),
   _NavItem(
@@ -262,11 +310,11 @@ const _allNavItems = [
     route: '/content',
     icon: Icons.library_books,
     labelKey: 'shell.content',
-    roles: ['PAR', 'ADM'],
+    roles: ['PAR', 'EDUCATOR', 'ADM'],
     groupKey: 'shell.group.academic',
   ),
   _NavItem(
-    route: '/results',
+    route: '/grades',
     icon: Icons.assessment,
     labelKey: 'shell.results',
     roles: ['STD', 'PAR'],
@@ -283,7 +331,7 @@ const _allNavItems = [
   _NavItem(
     route: '/parent/progress',
     icon: Icons.trending_up,
-    labelKey: 'shell.progress',
+    labelKey: 'shell.parentProgress',
     roles: ['PAR'],
     groupKey: 'shell.group.analytics',
   ),
@@ -312,10 +360,19 @@ const _primaryRoutesByRole = <String, List<String>>{
     '/teacher/submissions',
     '/teacher/class-progress',
   ],
-  'PAR': ['/family', '/results', '/invoices', '/messages'],
+  'PAR': ['/family', '/grades', '/invoices', '/messages'],
   'STD': ['/student/home', '/student/content', '/student/quizzes', '/progress'],
-  'EDUCATOR': ['/micro-schools', '/notifications', '/profile'],
-  'SUP': ['/notifications', '/profile'],
+  'EDUCATOR': [
+    '/micro-schools',
+    '/content',
+    '/messages',
+    '/notifications',
+    '/profile',
+  ],
+  // SUP / CONTENT_MGR : pas d'espace mobile dédié (SUP n'a pas la lecture des
+  // notifications ; le CMS est web-only) → profil uniquement.
+  'SUP': ['/profile'],
+  'CONTENT_MGR': ['/profile'],
 };
 
 const _groupOrder = [
@@ -379,8 +436,18 @@ class ShellScreen extends ConsumerWidget {
     final kidsPalette = Theme.of(context).brightness == Brightness.dark
         ? KidsThemeColors.dark
         : KidsThemeColors.light;
-    final visibleItems =
-        _allNavItems.where((item) => item.roles.contains(userRole)).toList();
+    // Micro-écoles : contexte informel uniquement (ou SUP en supervision).
+    final informalContext =
+        (user?.schoolType == 'informal') || userRole == 'EDUCATOR';
+    final canSeeMicroSchools = informalContext || userRole == 'SUP';
+    // Garde-fou anti-doublon : une route n'apparaît qu'une fois par rôle,
+    // quelle que soit sa déclaration (corrige le pattern, pas un onglet précis).
+    final seenRoutes = <String>{};
+    final visibleItems = _allNavItems
+        .where((item) => item.roles.contains(userRole))
+        .where((item) => canSeeMicroSchools || !item.route.startsWith('/micro'))
+        .where((item) => seenRoutes.add(item.route))
+        .toList();
     final primaryRoutes = _primaryRoutesByRole[userRole] ?? const <String>[];
     final primaryItems = primaryRoutes
         .map((route) => _itemForRoute(visibleItems, route))
@@ -416,7 +483,7 @@ class ShellScreen extends ConsumerWidget {
     final scaffold = Scaffold(
       appBar: AppBar(
         toolbarHeight: 44,
-        title: const Text('École Platform'),
+        title: Text(t.t('auth.appName')),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(3),
           child: Container(
@@ -481,12 +548,22 @@ class ShellScreen extends ConsumerWidget {
             );
           },
           destinations: [
-            ...primaryItems.map(
-              (item) => NavigationDestination(
-                icon: _buildIcon(item, notificationsState.unreadCount),
-                label: t.t(item.labelKey),
-              ),
-            ),
+            ...primaryItems.asMap().entries.map(
+                  (entry) => NavigationDestination(
+                    icon: AnimatedScale(
+                      scale: selectedIndex == entry.key ? 1.12 : 1.0,
+                      duration: MediaQuery.of(context).disableAnimations
+                          ? Duration.zero
+                          : const Duration(milliseconds: 250),
+                      curve: Curves.easeOutCubic,
+                      child: _buildIcon(
+                        entry.value,
+                        notificationsState.unreadCount,
+                      ),
+                    ),
+                    label: t.t(entry.value.labelKey),
+                  ),
+                ),
             if (showMoreDestination)
               NavigationDestination(
                 icon: _buildMoreIcon(
@@ -500,22 +577,31 @@ class ShellScreen extends ConsumerWidget {
       ),
     );
 
+    // Identité visuelle pilotée par le CONTEXTE d'école (formel/informel), pour TOUS
+    // les rôles, y compris l'élève. L'âge de l'élève n'ajoute qu'un accent (taille,
+    // espacement, icônes) et ne remplace plus le thème par un thème « kids » séparé.
+    final schoolThemedScaffold = designMode == SchoolDesignMode.informal
+        ? Theme(
+            data: applyInformalSchoolTheme(Theme.of(context)),
+            child: scaffold,
+          )
+        : scaffold;
+
     if (isStudent) {
+      // Accent ludique (tailles/espacement) réservé aux jeunes enfants : contexte
+      // INFORMEL (rawd) OU préscolaire FORMEL (PS/MS/GS → maternelle). Le primaire
+      // formel et au-delà gardent le rendu standard (piloté par niveau/matière).
+      final accentTier = (informalContext || ageTier == AgeTier.maternelle)
+          ? ageTier
+          : AgeTier.college;
       return AgeThemedView(
-        tier: ageTier,
-        useKidsColors: true,
-        child: scaffold,
+        tier: accentTier,
+        useKidsColors: false,
+        child: schoolThemedScaffold,
       );
     }
 
-    if (designMode == SchoolDesignMode.informal) {
-      return Theme(
-        data: applyInformalSchoolTheme(Theme.of(context)),
-        child: scaffold,
-      );
-    }
-
-    return scaffold;
+    return schoolThemedScaffold;
   }
 
   bool _matchesRoute(String currentLocation, String route) {

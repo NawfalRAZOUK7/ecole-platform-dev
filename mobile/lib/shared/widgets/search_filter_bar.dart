@@ -3,6 +3,9 @@
 /// Reference: Phase 5B (from 3D) — Search & filter on mobile list screens.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:ecole_platform/l10n/app_localizations.dart';
 
 /// A single filter chip option.
 class FilterOption {
@@ -12,20 +15,40 @@ class FilterOption {
   const FilterOption({required this.label, this.value});
 }
 
+/// A named group of filter options.
+///
+/// [id] is a **stable logic identifier** (e.g. `'role'`, `'status'`) used by
+/// callers in [SearchFilterBar.onFilterChanged] and as the key into
+/// [SearchFilterBar.filterValues]. [label] is the **localized display text**
+/// shown on the chip. Keeping the two separate decouples the displayed string
+/// from the comparison logic, so the label can be translated freely without
+/// breaking `key == ...` checks.
+class FilterGroup {
+  final String id;
+  final String label;
+  final List<FilterOption> options;
+
+  const FilterGroup({
+    required this.id,
+    required this.label,
+    required this.options,
+  });
+}
+
 /// Search bar with optional filter chips and sort toggle.
-class SearchFilterBar extends StatelessWidget {
+class SearchFilterBar extends ConsumerWidget {
   final String? searchHint;
   final String searchValue;
   final ValueChanged<String> onSearchChanged;
 
-  /// Named filter groups: key → list of options.
-  final Map<String, List<FilterOption>> filters;
+  /// Filter groups, each with a stable [FilterGroup.id] and localized label.
+  final List<FilterGroup> filters;
 
-  /// Current selected values per filter key.
+  /// Current selected values keyed by [FilterGroup.id].
   final Map<String, String?> filterValues;
 
-  /// Called when a filter selection changes.
-  final void Function(String key, String? value)? onFilterChanged;
+  /// Called when a filter selection changes. [id] is the [FilterGroup.id].
+  final void Function(String id, String? value)? onFilterChanged;
 
   /// Sort toggle.
   final bool showSort;
@@ -38,7 +61,7 @@ class SearchFilterBar extends StatelessWidget {
     this.searchHint,
     this.searchValue = '',
     required this.onSearchChanged,
-    this.filters = const {},
+    this.filters = const [],
     this.filterValues = const {},
     this.onFilterChanged,
     this.showSort = false,
@@ -48,13 +71,14 @@ class SearchFilterBar extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
     const chipRowHeight = 56.0;
 
     return Semantics(
       container: true,
-      label: 'Search and filter controls',
+      label: t.t('common.searchAndFilter'),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -62,11 +86,11 @@ class SearchFilterBar extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: TextField(
               decoration: InputDecoration(
-                hintText: searchHint ?? 'Rechercher...',
+                hintText: searchHint ?? t.t('common.search'),
                 prefixIcon: const Icon(Icons.search, size: 20),
                 suffixIcon: searchValue.isNotEmpty
                     ? IconButton(
-                        tooltip: 'Clear search',
+                        tooltip: t.t('common.clearSearch'),
                         icon: const Icon(Icons.clear),
                         onPressed: () => onSearchChanged(''),
                       )
@@ -94,12 +118,10 @@ class SearchFilterBar extends StatelessWidget {
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
-                  ...filters.entries.map((entry) {
-                    final key = entry.key;
-                    final options = entry.value;
-                    final selected = filterValues[key];
+                  ...filters.map((group) {
+                    final selected = filterValues[group.id];
                     final selectedLabel =
-                        _selectedLabel(options, selected) ?? key;
+                        _selectedLabel(group.options, selected) ?? group.label;
 
                     return Padding(
                       padding: const EdgeInsets.only(right: 8),
@@ -110,13 +132,15 @@ class SearchFilterBar extends StatelessWidget {
                         ),
                         child: Semantics(
                           button: true,
-                          label: '$key filter',
+                          label: t
+                              .t('common.filterFor')
+                              .replaceAll('{name}', group.label),
                           value: selectedLabel,
                           child: PopupMenuButton<String?>(
                             initialValue: selected,
                             onSelected: (value) =>
-                                onFilterChanged?.call(key, value),
-                            itemBuilder: (_) => options
+                                onFilterChanged?.call(group.id, value),
+                            itemBuilder: (_) => group.options
                                 .map(
                                   (option) => PopupMenuItem(
                                     value: option.value,
@@ -161,9 +185,11 @@ class SearchFilterBar extends StatelessWidget {
                       ),
                       child: Semantics(
                         button: true,
-                        label: 'Sort order',
+                        label: t.t('common.sortOrder'),
                         value: sortLabel ??
-                            (sortAscending ? 'Ascending' : 'Descending'),
+                            (sortAscending
+                                ? t.t('common.sortAscending')
+                                : t.t('common.sortDescending')),
                         child: ActionChip(
                           label: Text(
                             sortLabel ?? (sortAscending ? 'A → Z' : 'Z → A'),

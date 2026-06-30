@@ -140,7 +140,7 @@ class _TrueFalseInput extends StatelessWidget {
   }
 }
 
-class _FillInInput extends StatelessWidget {
+class _FillInInput extends ConsumerWidget {
   final String answer;
   final ValueChanged<String> onChanged;
 
@@ -150,21 +150,22 @@ class _FillInInput extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = AppLocalizations.of(ref);
     return TextFormField(
       initialValue: answer,
       onChanged: onChanged,
-      decoration: const InputDecoration(
-        labelText: 'Votre réponse',
-        hintText: 'Tapez votre réponse ici...',
-        border: OutlineInputBorder(),
+      decoration: InputDecoration(
+        labelText: t.t('quiz.fillInLabel'),
+        hintText: t.t('quiz.fillInHint'),
+        border: const OutlineInputBorder(),
       ),
       maxLines: 3,
     );
   }
 }
 
-class _DragDropInput extends StatelessWidget {
+class _DragDropInput extends ConsumerWidget {
   final Question question;
   final Map<String, String> answers;
   final ValueChanged<Map<String, String>> onChanged;
@@ -176,8 +177,9 @@ class _DragDropInput extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
     final zones = question.options?['zones'] as List<dynamic>? ?? [];
     final items = question.options?['items'] as List<dynamic>? ?? [];
 
@@ -185,7 +187,7 @@ class _DragDropInput extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Faites glisser les éléments vers les zones :',
+          t.t('quiz.dragDropHint'),
           style: theme.textTheme.bodySmall,
         ),
         const SizedBox(height: 12),
@@ -219,7 +221,7 @@ class _DragDropInput extends StatelessWidget {
                         horizontal: 12,
                         vertical: 8,
                       ),
-                      hintText: 'Sélectionner...',
+                      hintText: t.t('quiz.selectHint'),
                       fillColor: theme.colorScheme.surface,
                     ),
                     items: items.map((item) {
@@ -252,7 +254,7 @@ class _DragDropInput extends StatelessWidget {
   }
 }
 
-class _MatchingInput extends StatelessWidget {
+class _MatchingInput extends ConsumerWidget {
   final Question question;
   final Map<String, String> answers;
   final ValueChanged<Map<String, String>> onChanged;
@@ -264,8 +266,9 @@ class _MatchingInput extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
     final leftItems = question.options?['left'] as List<dynamic>? ?? [];
     final rightItems = question.options?['right'] as List<dynamic>? ?? [];
 
@@ -273,7 +276,7 @@ class _MatchingInput extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Associez chaque élément de gauche avec celui de droite :',
+          t.t('quiz.matchingHint'),
           style: theme.textTheme.bodySmall,
         ),
         const SizedBox(height: 12),
@@ -311,11 +314,13 @@ class _MatchingInput extends StatelessWidget {
                   flex: 3,
                   child: DropdownButtonFormField<String>(
                     initialValue: answers[leftId],
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      contentPadding:
-                          EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      hintText: 'Sélectionner...',
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      hintText: t.t('quiz.selectHint'),
                     ),
                     items: rightItems.map((right) {
                       final label = right is Map

@@ -5,11 +5,13 @@
 /// Disable: enter code → confirm.
 
 import 'package:flutter/material.dart';
+import 'package:ecole_platform/shared/ui/widgets/app_snackbar.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import 'package:ecole_platform/app/providers.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 
 enum _Step { idle, setup, done, disable }
 
@@ -95,7 +97,9 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
       await repo.disable2fa(code);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('2FA désactivée')),
+          SnackBar(
+            content: Text(AppLocalizations.of(ref).t('twoFactor.disabledSnack')),
+          ),
         );
         setState(() => _step = _Step.idle);
         _disableCodeController.clear();
@@ -110,16 +114,17 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
   void _copyBackupCodes() {
     Clipboard.setData(ClipboardData(text: _backupCodes.join('\n')));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Codes copiés dans le presse-papiers')),
+      SnackBar(content: Text(AppLocalizations.of(ref).t('twoFactor.codesCopied'))),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Authentification 2FA')),
+      appBar: AppBar(title: Text(t.t('twoFactor.title'))),
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
@@ -147,13 +152,13 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Sécurisez votre compte',
+                      t.t('twoFactor.secureAccount'),
                       style: theme.textTheme.titleMedium
                           ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Ajoutez une couche de sécurité supplémentaire avec une application d\'authentification (Google Authenticator, Authy, etc.)',
+                      t.t('twoFactor.secureAccountDesc'),
                       style: theme.textTheme.bodyMedium
                           ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                     ),
@@ -163,13 +168,13 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                         FilledButton.icon(
                           onPressed: _loading ? null : _startSetup,
                           icon: const Icon(Icons.security),
-                          label: const Text('Activer la 2FA'),
+                          label: Text(t.t('twoFactor.enable')),
                         ),
                         const SizedBox(width: 8),
                         OutlinedButton(
                           onPressed: () =>
                               setState(() => _step = _Step.disable),
-                          child: const Text('Désactiver'),
+                          child: Text(t.t('common.disable')),
                         ),
                       ],
                     ),
@@ -190,13 +195,13 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Configurer l\'application',
+                      t.t('twoFactor.configureApp'),
                       style: theme.textTheme.titleMedium
                           ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Scannez le QR code ou entrez la clé manuellement dans votre application d\'authentification.',
+                      t.t('twoFactor.scanQr'),
                       style: theme.textTheme.bodyMedium
                           ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                     ),
@@ -240,7 +245,7 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                             ),
                           const SizedBox(height: 12),
                           Text(
-                            'Clé secrète :',
+                            t.t('twoFactor.secretKey'),
                             style: theme.textTheme.labelSmall,
                           ),
                           const SizedBox(height: 4),
@@ -256,12 +261,10 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                           TextButton.icon(
                             onPressed: () {
                               Clipboard.setData(ClipboardData(text: _secret));
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Clé copiée')),
-                              );
+                              AppSnackBar.success(context, t.t('twoFactor.keyCopied'));
                             },
                             icon: const Icon(Icons.copy, size: 16),
-                            label: const Text('Copier la clé'),
+                            label: Text(t.t('twoFactor.copyKey')),
                           ),
                         ],
                       ),
@@ -279,10 +282,10 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                         letterSpacing: 8,
                         fontWeight: FontWeight.bold,
                       ),
-                      decoration: const InputDecoration(
-                        labelText: 'Code de vérification',
+                      decoration: InputDecoration(
+                        labelText: t.t('auth.verificationCode'),
                         counterText: '',
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -299,7 +302,7 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                                     color: theme.colorScheme.onPrimary,
                                   ),
                                 )
-                              : const Text('Vérifier'),
+                              : Text(t.t('common.verify')),
                         ),
                         const SizedBox(width: 8),
                         OutlinedButton(
@@ -307,7 +310,7 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                             setState(() => _step = _Step.idle);
                             _codeController.clear();
                           },
-                          child: const Text('Annuler'),
+                          child: Text(t.t('common.cancel')),
                         ),
                       ],
                     ),
@@ -333,7 +336,7 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '2FA activée !',
+                          t.t('twoFactor.enabledTitle'),
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: theme.colorScheme.primary,
@@ -343,7 +346,7 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Sauvegardez ces codes de secours. Chaque code ne peut être utilisé qu\'une seule fois.',
+                      t.t('twoFactor.backupCodesDesc'),
                       style: theme.textTheme.bodyMedium
                           ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                     ),
@@ -381,7 +384,7 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                         FilledButton.icon(
                           onPressed: _copyBackupCodes,
                           icon: const Icon(Icons.copy),
-                          label: const Text('Copier les codes'),
+                          label: Text(t.t('twoFactor.copyCodes')),
                         ),
                         const SizedBox(width: 8),
                         OutlinedButton(
@@ -390,7 +393,7 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                               Navigator.pop(context);
                             }
                           },
-                          child: const Text('Fermer'),
+                          child: Text(t.t('common.close')),
                         ),
                       ],
                     ),
@@ -409,23 +412,23 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Désactiver la 2FA',
+                      t.t('twoFactor.disableTitle'),
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Entrez votre code d\'authentification ou un code de secours pour désactiver la 2FA.',
+                      t.t('twoFactor.disableDesc'),
                       style: theme.textTheme.bodyMedium
                           ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _disableCodeController,
-                      decoration: const InputDecoration(
-                        labelText: 'Code ou code de secours',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: t.t('twoFactor.codeOrBackup'),
+                        border: const OutlineInputBorder(),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -445,7 +448,7 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                                     color: theme.colorScheme.onPrimary,
                                   ),
                                 )
-                              : const Text('Désactiver'),
+                              : Text(t.t('common.disable')),
                         ),
                         const SizedBox(width: 8),
                         OutlinedButton(
@@ -453,7 +456,7 @@ class _TwoFactorSetupScreenState extends ConsumerState<TwoFactorSetupScreen> {
                             setState(() => _step = _Step.idle);
                             _disableCodeController.clear();
                           },
-                          child: const Text('Annuler'),
+                          child: Text(t.t('common.cancel')),
                         ),
                       ],
                     ),
@@ -533,7 +536,9 @@ class _SmsTwoFactorCardState extends ConsumerState<SmsTwoFactorCard> {
       await ref.read(authRepositoryProvider).verifySetupSms2fa(code);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('2FA par SMS activée')),
+          SnackBar(
+            content: Text(AppLocalizations.of(ref).t('twoFactor.smsEnabledSnack')),
+          ),
         );
         setState(() => _step = _SmsStep.idle);
       }
@@ -547,7 +552,10 @@ class _SmsTwoFactorCardState extends ConsumerState<SmsTwoFactorCard> {
       await ref.read(authRepositoryProvider).disableSms2fa(code);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('2FA par SMS désactivée')),
+          SnackBar(
+            content:
+                Text(AppLocalizations.of(ref).t('twoFactor.smsDisabledSnack')),
+          ),
         );
         setState(() => _step = _SmsStep.idle);
       }
@@ -557,6 +565,7 @@ class _SmsTwoFactorCardState extends ConsumerState<SmsTwoFactorCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -568,7 +577,7 @@ class _SmsTwoFactorCardState extends ConsumerState<SmsTwoFactorCard> {
                 Icon(Icons.sms_outlined, color: theme.colorScheme.primary),
                 const SizedBox(width: 8),
                 Text(
-                  '2FA par SMS',
+                  t.t('twoFactor.smsTitle'),
                   style: theme.textTheme.titleMedium
                       ?.copyWith(fontWeight: FontWeight.bold),
                 ),
@@ -584,7 +593,7 @@ class _SmsTwoFactorCardState extends ConsumerState<SmsTwoFactorCard> {
             ],
             if (_step == _SmsStep.idle) ...[
               Text(
-                'Recevez un code à 6 chiffres par SMS comme méthode alternative.',
+                t.t('twoFactor.smsDesc'),
                 style: theme.textTheme.bodyMedium
                     ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
               ),
@@ -596,14 +605,14 @@ class _SmsTwoFactorCardState extends ConsumerState<SmsTwoFactorCard> {
                         ? null
                         : () => setState(() => _step = _SmsStep.enterPhone),
                     icon: const Icon(Icons.sms),
-                    label: const Text('Activer'),
+                    label: Text(t.t('common.enable')),
                   ),
                   const SizedBox(width: 8),
                   OutlinedButton(
                     onPressed: _loading
                         ? null
                         : () => setState(() => _step = _SmsStep.disable),
-                    child: const Text('Désactiver'),
+                    child: Text(t.t('common.disable')),
                   ),
                 ],
               ),
@@ -612,8 +621,8 @@ class _SmsTwoFactorCardState extends ConsumerState<SmsTwoFactorCard> {
               TextField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: 'Numéro de téléphone',
+                decoration: InputDecoration(
+                  labelText: t.t('twoFactor.phoneNumber'),
                   hintText: '+212...',
                 ),
               ),
@@ -628,19 +637,19 @@ class _SmsTwoFactorCardState extends ConsumerState<SmsTwoFactorCard> {
                             height: 16,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Envoyer le code'),
+                        : Text(t.t('twoFactor.sendCode')),
                   ),
                   const SizedBox(width: 8),
                   TextButton(
                     onPressed: () => setState(() => _step = _SmsStep.idle),
-                    child: const Text('Annuler'),
+                    child: Text(t.t('common.cancel')),
                   ),
                 ],
               ),
             ],
             if (_step == _SmsStep.verify) ...[
               Text(
-                'Entrez le code envoyé au $_phone.',
+                t.t('twoFactor.smsCodeSentTo').replaceAll('{phone}', _phone),
                 style: theme.textTheme.bodyMedium
                     ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
               ),
@@ -650,30 +659,30 @@ class _SmsTwoFactorCardState extends ConsumerState<SmsTwoFactorCard> {
                 keyboardType: TextInputType.number,
                 maxLength: 6,
                 decoration:
-                    const InputDecoration(labelText: 'Code (6 chiffres)'),
+                    InputDecoration(labelText: t.t('twoFactor.code6')),
               ),
               Row(
                 children: [
                   FilledButton(
                     onPressed: _loading ? null : _verify,
-                    child: const Text('Vérifier'),
+                    child: Text(t.t('common.verify')),
                   ),
                   const SizedBox(width: 8),
                   TextButton(
                     onPressed: _loading ? null : _sendCode,
-                    child: const Text('Renvoyer'),
+                    child: Text(t.t('twoFactor.resend')),
                   ),
                   const Spacer(),
                   TextButton(
                     onPressed: () => setState(() => _step = _SmsStep.idle),
-                    child: const Text('Annuler'),
+                    child: Text(t.t('common.cancel')),
                   ),
                 ],
               ),
             ],
             if (_step == _SmsStep.disable) ...[
               Text(
-                'Entrez un code reçu par SMS pour désactiver.',
+                t.t('twoFactor.smsDisableDesc'),
                 style: theme.textTheme.bodyMedium
                     ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
               ),
@@ -683,7 +692,7 @@ class _SmsTwoFactorCardState extends ConsumerState<SmsTwoFactorCard> {
                 keyboardType: TextInputType.number,
                 maxLength: 6,
                 decoration:
-                    const InputDecoration(labelText: 'Code (6 chiffres)'),
+                    InputDecoration(labelText: t.t('twoFactor.code6')),
               ),
               Row(
                 children: [
@@ -692,12 +701,12 @@ class _SmsTwoFactorCardState extends ConsumerState<SmsTwoFactorCard> {
                     style: FilledButton.styleFrom(
                       backgroundColor: theme.colorScheme.error,
                     ),
-                    child: const Text('Désactiver'),
+                    child: Text(t.t('common.disable')),
                   ),
                   const SizedBox(width: 8),
                   TextButton(
                     onPressed: () => setState(() => _step = _SmsStep.idle),
-                    child: const Text('Annuler'),
+                    child: Text(t.t('common.cancel')),
                   ),
                 ],
               ),

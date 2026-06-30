@@ -3,11 +3,14 @@
 /// Reference: Phase 5B (from 4B)
 
 import 'package:flutter/material.dart';
+import 'package:ecole_platform/shared/ui/widgets/animated_entrance.dart';
+import 'package:ecole_platform/shared/ui/widgets/shimmer_skeleton.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/lms/teacher.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 
 // ── State ──
@@ -164,9 +167,10 @@ class SubmissionsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(_submissionsProvider);
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Soumissions')),
+      appBar: AppBar(title: Text(t.t('submissions.title'))),
       body: Column(
         children: [
           // Filter chips
@@ -182,7 +186,7 @@ class SubmissionsScreen extends ConsumerWidget {
                     padding: const EdgeInsets.only(right: 6),
                     child: FilterChip(
                       label: Text(
-                        _statusLabel(s),
+                        _statusLabel(s, t),
                         style: const TextStyle(fontSize: 12),
                       ),
                       selected: selected,
@@ -228,7 +232,7 @@ class SubmissionsScreen extends ConsumerWidget {
     ThemeData theme,
   ) {
     if (state.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const MobileListSkeleton();
     }
     if (state.items.isEmpty) {
       return Center(
@@ -268,9 +272,11 @@ class SubmissionsScreen extends ConsumerWidget {
           final isGrading = state.gradingId == sub.id;
           final isActionLoading = state.actionLoading.contains(sub.id);
 
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            child: Column(
+          return AnimatedEntrance(
+            delay: AnimatedEntrance.stagger(index),
+            child: Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: Column(
               children: [
                 ListTile(
                   leading: CircleAvatar(
@@ -334,23 +340,17 @@ class SubmissionsScreen extends ConsumerWidget {
                   ),
               ],
             ),
+            ),
           );
         },
       ),
     );
   }
 
-  String _statusLabel(String s) {
-    switch (s) {
-      case 'submitted':
-        return 'Soumis';
-      case 'graded':
-        return 'Noté';
-      case 'draft':
-        return 'Brouillon';
-      default:
-        return s;
-    }
+  String _statusLabel(String s, AppLocalizations t) {
+    // Enum code [s] stays the logic identifier; display is externalized.
+    final label = t.t('submissions.reviewStatus.$s');
+    return label == 'submissions.reviewStatus.$s' ? s : label;
   }
 
   Color _statusColor(ThemeData theme, String s) {
@@ -418,7 +418,7 @@ class _SubStatusBadge extends StatelessWidget {
 
 // ── Inline grading form ──
 
-class _GradingForm extends StatefulWidget {
+class _GradingForm extends ConsumerStatefulWidget {
   final Submission submission;
   final bool isLoading;
   final void Function(double score, String? feedback, bool publish) onGrade;
@@ -430,10 +430,10 @@ class _GradingForm extends StatefulWidget {
   });
 
   @override
-  State<_GradingForm> createState() => _GradingFormState();
+  ConsumerState<_GradingForm> createState() => _GradingFormState();
 }
 
-class _GradingFormState extends State<_GradingForm> {
+class _GradingFormState extends ConsumerState<_GradingForm> {
   late final TextEditingController _scoreController;
   late final TextEditingController _feedbackController;
   bool _publish = true;
@@ -459,6 +459,7 @@ class _GradingFormState extends State<_GradingForm> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
     final maxPoints = widget.submission.assignmentTotalPoints ?? 20;
 
     return Container(
@@ -474,7 +475,7 @@ class _GradingFormState extends State<_GradingForm> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Noter la soumission',
+            t.t('grading.gradeSubmission'),
             style: theme.textTheme.titleSmall
                 ?.copyWith(fontWeight: FontWeight.bold),
           ),
@@ -488,7 +489,7 @@ class _GradingFormState extends State<_GradingForm> {
                   keyboardType:
                       const TextInputType.numberWithOptions(decimal: true),
                   decoration: InputDecoration(
-                    labelText: 'Note',
+                    labelText: t.t('grading.score'),
                     suffixText: '/$maxPoints',
                     border: const OutlineInputBorder(),
                     contentPadding:
@@ -500,11 +501,11 @@ class _GradingFormState extends State<_GradingForm> {
               Expanded(
                 child: TextFormField(
                   controller: _feedbackController,
-                  decoration: const InputDecoration(
-                    labelText: 'Commentaire',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: t.t('grading.comment'),
+                    border: const OutlineInputBorder(),
                     contentPadding:
-                        EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                 ),
               ),
@@ -517,7 +518,7 @@ class _GradingFormState extends State<_GradingForm> {
                 value: _publish,
                 onChanged: (v) => setState(() => _publish = v ?? true),
               ),
-              const Text('Publier immédiatement'),
+              Text(t.t('grading.publishNow')),
               const Spacer(),
               FilledButton(
                 onPressed: widget.isLoading
@@ -543,7 +544,7 @@ class _GradingFormState extends State<_GradingForm> {
                           color: theme.colorScheme.onPrimary,
                         ),
                       )
-                    : const Text('Enregistrer'),
+                    : Text(t.t('common.save')),
               ),
             ],
           ),

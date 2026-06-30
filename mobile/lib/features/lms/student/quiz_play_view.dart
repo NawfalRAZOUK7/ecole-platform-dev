@@ -99,7 +99,7 @@ extension _QuizPlayView on _QuizPlayerScreenState {
                   OutlinedButton.icon(
                     onPressed: () => _goToQuestion(_currentIdx - 1),
                     icon: const Icon(Icons.arrow_back, size: 18),
-                    label: const Text('Précédent'),
+                    label: Text(t.t('quiz.previous')),
                   )
                 else
                   const SizedBox.shrink(),
@@ -108,7 +108,7 @@ extension _QuizPlayView on _QuizPlayerScreenState {
                   FilledButton.icon(
                     onPressed: () => _goToQuestion(_currentIdx + 1),
                     icon: const Icon(Icons.arrow_forward, size: 18),
-                    label: const Text('Suivant'),
+                    label: Text(t.t('quiz.next')),
                   )
                 else
                   FilledButton.icon(
@@ -123,7 +123,9 @@ extension _QuizPlayView on _QuizPlayerScreenState {
                             ),
                           )
                         : const Icon(Icons.check, size: 18),
-                    label: Text(_submitting ? 'Envoi...' : 'Soumettre'),
+                    label: Text(
+                      _submitting ? t.t('quiz.submitting') : t.t('quiz.submit'),
+                    ),
                     style: FilledButton.styleFrom(
                       backgroundColor: theme.semanticPalette.success,
                     ),
@@ -137,6 +139,7 @@ extension _QuizPlayView on _QuizPlayerScreenState {
   }
 
   Widget _buildQuestionInput(Question question) {
+    final t = AppLocalizations.of(ref);
     switch (question.questionType.toUpperCase()) {
       case 'MCQ':
         return _McqInput(
@@ -167,29 +170,32 @@ extension _QuizPlayView on _QuizPlayerScreenState {
           onChanged: (value) => _setAnswer(question.id, value),
         );
       default:
-        return Text('Type de question non supporté: ${question.questionType}');
+        return Text(
+          t
+              .t('quiz.unsupportedQuestionType')
+              .replaceAll('{type}', question.questionType),
+        );
     }
   }
 
   Future<void> _showExitConfirm(BuildContext context) async {
+    final t = AppLocalizations.of(ref);
     final exit = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Quitter le quiz ?'),
-        content: const Text(
-          'Vos réponses seront perdues si vous quittez maintenant.',
-        ),
+        title: Text(t.t('quiz.exitTitle')),
+        content: Text(t.t('quiz.exitMsg')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Annuler'),
+            child: Text(t.t('quiz.cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
-            child: const Text('Quitter'),
+            child: Text(t.t('quiz.exit')),
           ),
         ],
       ),

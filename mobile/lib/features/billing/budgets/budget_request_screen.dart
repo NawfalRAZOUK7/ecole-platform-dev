@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ecole_platform/shared/ui/widgets/app_snackbar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/domain/entities/billing/budget.dart';
@@ -41,9 +42,7 @@ class _BudgetRequestScreenState extends ConsumerState<BudgetRequestScreen> {
           justification: _justificationController.text.trim(),
         );
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Budget request submitted')),
-    );
+    AppSnackBar.show(context, 'Budget request submitted');
     _amountController.clear();
     _descriptionController.clear();
     _justificationController.clear();

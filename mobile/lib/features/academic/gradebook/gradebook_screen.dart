@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ecole_platform/shared/ui/widgets/app_snackbar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -49,9 +50,7 @@ class _GradebookScreenState extends ConsumerState<GradebookScreen> {
           if (!mounted) {
             return;
           }
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(t.t('gradebook.saveSuccess'))),
-          );
+          AppSnackBar.success(context, t.t('gradebook.saveSuccess'));
         },
         error: (error, _) {
           if (!mounted) {

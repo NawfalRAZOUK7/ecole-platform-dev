@@ -349,7 +349,11 @@ class _ActivityTab extends StatelessWidget {
         barRods: [
           BarChartRodData(
             toY: e.value,
-            color: theme.semanticPalette.chartPalette[6],
+            gradient: LinearGradient(
+              begin: Alignment.bottomCenter,
+              end: Alignment.topCenter,
+              colors: [(theme.semanticPalette.chartPalette[6]).withValues(alpha: 0.55), theme.semanticPalette.chartPalette[6]],
+            ),
             width: 20,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
           ),

@@ -82,24 +82,30 @@ class _RubricsListScreenState extends ConsumerState<RubricsListScreen> {
     final shouldCreate = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Create rubric'),
+        title: Text(AppLocalizations.of(ref).t('rubrics.create')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: titleController,
-              decoration: const InputDecoration(labelText: 'Title'),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(ref).t('common.title'),
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: subjectController,
-              decoration: const InputDecoration(labelText: 'Subject'),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(ref).t('common.subject'),
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: descriptionController,
               maxLines: 3,
-              decoration: const InputDecoration(labelText: 'Description'),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(ref).t('common.description'),
+              ),
             ),
           ],
         ),
@@ -110,7 +116,7 @@ class _RubricsListScreenState extends ConsumerState<RubricsListScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Create'),
+            child: Text(AppLocalizations.of(ref).t('common.create')),
           ),
         ],
       ),
@@ -240,7 +246,7 @@ class _RubricsListScreenState extends ConsumerState<RubricsListScreen> {
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
             : const Icon(Icons.add_outlined),
-        label: const Text('Create'),
+        label: Text(AppLocalizations.of(ref).t('common.create')),
       ),
     );
   }

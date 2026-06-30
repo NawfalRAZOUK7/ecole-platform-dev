@@ -3,11 +3,14 @@
 /// Reference: Phase 5B (from 4A)
 
 import 'package:flutter/material.dart';
+import 'package:ecole_platform/shared/ui/widgets/animated_entrance.dart';
+import 'package:ecole_platform/shared/ui/widgets/shimmer_skeleton.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/admin/admin.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 
 // ── State ──
@@ -131,12 +134,13 @@ class JustificationReviewScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(_justificationsProvider);
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Justifications')),
+      appBar: AppBar(title: Text(t.t('justification.reviewTitle'))),
       body: Semantics(
         container: true,
-        label: 'Validation des justificatifs',
+        label: t.t('justification.reviewSemantics'),
         child: Column(
           children: [
             // Status filter chips
@@ -152,7 +156,7 @@ class JustificationReviewScreen extends ConsumerWidget {
                       padding: const EdgeInsets.only(right: 6),
                       child: FilterChip(
                         label: Text(
-                          _statusLabel(s),
+                          _statusLabel(s, t),
                           style: const TextStyle(fontSize: 12),
                         ),
                         selected: selected,
@@ -201,7 +205,7 @@ class JustificationReviewScreen extends ConsumerWidget {
     final colors = theme.colorScheme;
 
     if (state.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const MobileListSkeleton();
     }
     if (state.items.isEmpty) {
       return Center(
@@ -225,9 +229,11 @@ class JustificationReviewScreen extends ConsumerWidget {
           final j = state.items[index];
           final isActionLoading = state.actionLoading.contains(j.id);
 
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            child: Padding(
+          return AnimatedEntrance(
+            delay: AnimatedEntrance.stagger(index),
+            child: Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -318,6 +324,7 @@ class JustificationReviewScreen extends ConsumerWidget {
                 ],
               ),
             ),
+            ),
           );
         },
       ),
@@ -325,23 +332,24 @@ class JustificationReviewScreen extends ConsumerWidget {
   }
 
   void _showRejectDialog(BuildContext context, WidgetRef ref, String id) {
+    final t = AppLocalizations(ref.read(localeProvider));
     final controller = TextEditingController();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Rejeter la justification'),
+        title: Text(t.t('justification.rejectTitle')),
         content: TextField(
           controller: controller,
           maxLines: 3,
-          decoration: const InputDecoration(
-            labelText: 'Raison du rejet',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: t.t('justification.rejectReason'),
+            border: const OutlineInputBorder(),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Annuler'),
+            child: Text(t.t('common.cancel')),
           ),
           FilledButton(
             onPressed: () {
@@ -354,24 +362,17 @@ class JustificationReviewScreen extends ConsumerWidget {
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
-            child: const Text('Rejeter'),
+            child: Text(t.t('justification.reject')),
           ),
         ],
       ),
     );
   }
 
-  String _statusLabel(String s) {
-    switch (s) {
-      case 'pending':
-        return 'En attente';
-      case 'justified':
-        return 'Approuvées';
-      case 'rejected':
-        return 'Rejetées';
-      default:
-        return s;
-    }
+  String _statusLabel(String s, AppLocalizations t) {
+    // Enum code [s] stays the logic identifier; display is externalized.
+    final label = t.t('justification.status.$s');
+    return label == 'justification.status.$s' ? s : label;
   }
 
   IconData _statusIcon(String s) {

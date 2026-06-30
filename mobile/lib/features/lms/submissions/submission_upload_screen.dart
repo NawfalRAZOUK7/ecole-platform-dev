@@ -18,6 +18,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/core/network/upload_client.dart';
 import 'package:ecole_platform/features/auth/auth_provider.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 
 /// Represents a file selected for upload.
@@ -344,7 +345,8 @@ class _SubmissionUploadScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Devoir soumis avec succès'),
+            content:
+                Text(AppLocalizations.of(ref).t('submission.submitSuccess')),
             backgroundColor: Theme.of(context).semanticPalette.success,
           ),
         );
@@ -363,10 +365,11 @@ class _SubmissionUploadScreenState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.assignmentTitle ?? 'Soumettre un devoir'),
+        title: Text(widget.assignmentTitle ?? t.t('submission.uploadTitle')),
       ),
       body: ListView(
         padding: const EdgeInsets.all(24),
@@ -569,10 +572,10 @@ class _SubmissionUploadScreenState
           TextFormField(
             controller: _commentController,
             maxLines: 3,
-            decoration: const InputDecoration(
-              labelText: 'Commentaire (optionnel)',
-              hintText: 'Ajoutez un commentaire à votre soumission...',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: t.t('submission.commentLabel'),
+              hintText: t.t('submission.commentHint'),
+              border: const OutlineInputBorder(),
               alignLabelWithHint: true,
             ),
             enabled: !_uploading,

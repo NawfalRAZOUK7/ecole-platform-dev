@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:ecole_platform/shared/ui/widgets/app_snackbar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/l10n/app_localizations.dart';
+import 'package:ecole_platform/shared/taxonomy/taxonomy.g.dart';
 import 'package:ecole_platform/shared/widgets/widgets.dart';
 
 import 'question_bank_provider.dart';
@@ -19,42 +21,77 @@ class _QuestionBankScreenState extends ConsumerState<QuestionBankScreen> {
   bool _creating = false;
 
   Future<void> _createQuestion() async {
-    final subjectController = TextEditingController();
     final textController = TextEditingController();
     final answerController = TextEditingController();
     final tagsController = TextEditingController();
+    String subject = Taxonomy.subjects.first;
     String type = 'mcq';
     String difficulty = 'medium';
+    final t = AppLocalizations.of(ref);
 
     final shouldCreate = await showDialog<bool>(
       context: context,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setStateDialog) => AlertDialog(
-            title: const Text('Create question'),
+            title: Text(t.t('questionBank.createQuestion')),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  TextField(
-                    controller: subjectController,
-                    decoration: const InputDecoration(labelText: 'Subject'),
+                  DropdownButtonFormField<String>(
+                    initialValue: subject,
+                    decoration: InputDecoration(
+                      labelText: t.t('questionBank.subject'),
+                    ),
+                    items: Taxonomy.subjects
+                        .map(
+                          (code) => DropdownMenuItem(
+                            value: code,
+                            child: Text(_subjectLabel(code, t.locale)),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setStateDialog(() => subject = value);
+                      }
+                    },
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     initialValue: type,
-                    decoration: const InputDecoration(labelText: 'Type'),
-                    items: const [
-                      DropdownMenuItem(value: 'mcq', child: Text('MCQ')),
+                    decoration: InputDecoration(
+                      labelText:
+                          AppLocalizations.of(ref).t('questionBank.type'),
+                    ),
+                    items: [
+                      DropdownMenuItem(
+                        value: 'mcq',
+                        child: Text(
+                          AppLocalizations.of(ref).t('questionBank.typeMcq'),
+                        ),
+                      ),
                       DropdownMenuItem(
                         value: 'true_false',
-                        child: Text('True / False'),
+                        child: Text(
+                          AppLocalizations.of(ref)
+                              .t('questionBank.typeTrueFalse'),
+                        ),
                       ),
                       DropdownMenuItem(
                         value: 'short_answer',
-                        child: Text('Short answer'),
+                        child: Text(
+                          AppLocalizations.of(ref)
+                              .t('questionBank.typeShortAnswer'),
+                        ),
                       ),
-                      DropdownMenuItem(value: 'essay', child: Text('Essay')),
+                      DropdownMenuItem(
+                        value: 'essay',
+                        child: Text(
+                          AppLocalizations.of(ref).t('questionBank.typeEssay'),
+                        ),
+                      ),
                     ],
                     onChanged: (value) {
                       if (value != null) {
@@ -65,11 +102,23 @@ class _QuestionBankScreenState extends ConsumerState<QuestionBankScreen> {
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     initialValue: difficulty,
-                    decoration: const InputDecoration(labelText: 'Difficulty'),
-                    items: const [
-                      DropdownMenuItem(value: 'easy', child: Text('Easy')),
-                      DropdownMenuItem(value: 'medium', child: Text('Medium')),
-                      DropdownMenuItem(value: 'hard', child: Text('Hard')),
+                    decoration: InputDecoration(
+                      labelText:
+                          AppLocalizations.of(ref).t('questionBank.difficulty'),
+                    ),
+                    items: [
+                      DropdownMenuItem(
+                        value: 'easy',
+                        child: Text(AppLocalizations.of(ref).t('quiz.easy')),
+                      ),
+                      DropdownMenuItem(
+                        value: 'medium',
+                        child: Text(AppLocalizations.of(ref).t('quiz.medium')),
+                      ),
+                      DropdownMenuItem(
+                        value: 'hard',
+                        child: Text(AppLocalizations.of(ref).t('quiz.hard')),
+                      ),
                     ],
                     onChanged: (value) {
                       if (value != null) {
@@ -81,20 +130,25 @@ class _QuestionBankScreenState extends ConsumerState<QuestionBankScreen> {
                   TextField(
                     controller: textController,
                     maxLines: 4,
-                    decoration:
-                        const InputDecoration(labelText: 'Question text'),
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(ref)
+                          .t('questionBank.questionText'),
+                    ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: answerController,
-                    decoration:
-                        const InputDecoration(labelText: 'Correct answer'),
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(ref)
+                          .t('questionBank.correctAnswer'),
+                    ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: tagsController,
-                    decoration: const InputDecoration(
-                      labelText: 'Tags (comma separated)',
+                    decoration: InputDecoration(
+                      labelText:
+                          AppLocalizations.of(ref).t('questionBank.tags'),
                     ),
                   ),
                 ],
@@ -107,7 +161,7 @@ class _QuestionBankScreenState extends ConsumerState<QuestionBankScreen> {
               ),
               FilledButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Create'),
+                child: Text(AppLocalizations.of(ref).t('common.create')),
               ),
             ],
           ),
@@ -116,7 +170,6 @@ class _QuestionBankScreenState extends ConsumerState<QuestionBankScreen> {
     );
 
     if (shouldCreate != true) {
-      subjectController.dispose();
       textController.dispose();
       answerController.dispose();
       tagsController.dispose();
@@ -126,7 +179,7 @@ class _QuestionBankScreenState extends ConsumerState<QuestionBankScreen> {
     setState(() => _creating = true);
     try {
       await ref.read(questionBankRepositoryProvider).createQuestion(
-            subject: subjectController.text.trim(),
+            subject: subject,
             type: type,
             difficulty: difficulty,
             text: textController.text.trim(),
@@ -142,16 +195,18 @@ class _QuestionBankScreenState extends ConsumerState<QuestionBankScreen> {
       ref.invalidate(questionBankQuestionsProvider);
       ref.invalidate(questionBankStatsProvider);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Question created')),
-      );
+      AppSnackBar.show(context, 'Question created');
     } finally {
       setState(() => _creating = false);
-      subjectController.dispose();
       textController.dispose();
       answerController.dispose();
       tagsController.dispose();
     }
+  }
+
+  String _subjectLabel(String code, String locale) {
+    final titles = Taxonomy.subjectTitles[code];
+    return titles?[locale] ?? titles?['fr'] ?? code;
   }
 
   @override
@@ -212,8 +267,8 @@ class _QuestionBankScreenState extends ConsumerState<QuestionBankScreen> {
               children: [
                 Expanded(
                   child: TextField(
-                    decoration: const InputDecoration(
-                      labelText: 'Subject filter',
+                    decoration: InputDecoration(
+                      labelText: t.t('questionBank.subjectFilter'),
                     ),
                     onChanged: (value) {
                       ref
@@ -226,7 +281,8 @@ class _QuestionBankScreenState extends ConsumerState<QuestionBankScreen> {
                 Expanded(
                   child: DropdownButtonFormField<String?>(
                     initialValue: ref.read(questionBankTypeFilterProvider),
-                    decoration: const InputDecoration(labelText: 'Type'),
+                    decoration:
+                        InputDecoration(labelText: t.t('questionBank.type')),
                     items: types
                         .map(
                           (value) => DropdownMenuItem<String?>(
@@ -246,7 +302,9 @@ class _QuestionBankScreenState extends ConsumerState<QuestionBankScreen> {
                   child: DropdownButtonFormField<String?>(
                     initialValue:
                         ref.read(questionBankDifficultyFilterProvider),
-                    decoration: const InputDecoration(labelText: 'Difficulty'),
+                    decoration: InputDecoration(
+                      labelText: t.t('questionBank.difficulty'),
+                    ),
                     items: difficulties
                         .map(
                           (value) => DropdownMenuItem<String?>(
@@ -350,7 +408,7 @@ class _QuestionBankScreenState extends ConsumerState<QuestionBankScreen> {
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
             : const Icon(Icons.add_outlined),
-        label: const Text('Create'),
+        label: Text(t.t('common.create')),
       ),
     );
   }

@@ -38,6 +38,7 @@ class _SubmissionsTabState extends ConsumerState<_SubmissionsTab> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
 
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
@@ -53,7 +54,7 @@ class _SubmissionsTabState extends ConsumerState<_SubmissionsTab> {
             const SizedBox(height: 16),
             FilledButton.tonal(
               onPressed: _fetch,
-              child: const Text('Réessayer'),
+              child: Text(t.t('common.retry')),
             ),
           ],
         ),
@@ -66,7 +67,7 @@ class _SubmissionsTabState extends ConsumerState<_SubmissionsTab> {
           children: [
             Icon(Icons.inbox, size: 48, color: theme.colorScheme.outline),
             const SizedBox(height: 16),
-            const Text('Aucune soumission'),
+            Text(t.t('contentLibrary.noSubmissions')),
           ],
         ),
       );

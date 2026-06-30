@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ecole_platform/shared/ui/widgets/app_snackbar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/app/providers.dart';
@@ -70,9 +71,7 @@ class _SchoolSettingsScreenState extends ConsumerState<SchoolSettingsScreen> {
         },
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('School settings saved')),
-      );
+      AppSnackBar.success(context, 'School settings saved');
     } finally {
       if (mounted) {
         setState(() => _saving = false);

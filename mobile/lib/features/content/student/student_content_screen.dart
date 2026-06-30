@@ -17,6 +17,7 @@ import 'package:pdf_render/pdf_render_widgets.dart';
 import 'package:video_player/video_player.dart';
 
 import 'package:ecole_platform/app/providers.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/domain/entities/lms/quiz.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
@@ -117,20 +118,21 @@ class _StudentContentScreenState extends ConsumerState<StudentContentScreen> {
       );
     }
 
+    final t = AppLocalizations.of(ref);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mon contenu'),
+        title: Text(t.t('studentContent.title')),
         actions: [
           IconButton(
             onPressed: () => context.push('/rewards'),
             icon: const Icon(Icons.auto_awesome_rounded),
-            tooltip: 'Recompenses',
+            tooltip: t.t('shell.rewards'),
           ),
         ],
       ),
       body: Semantics(
         container: true,
-        label: 'Contenu pédagogique de l’élève',
+        label: t.t('studentContent.semanticsLabel'),
         child: _buildBody(context),
       ),
     );
@@ -156,7 +158,7 @@ class _StudentContentScreenState extends ConsumerState<StudentContentScreen> {
             const SizedBox(height: 16),
             FilledButton.tonal(
               onPressed: _fetchContent,
-              child: const Text('Réessayer'),
+              child: Text(AppLocalizations.of(ref).t('common.retry')),
             ),
           ],
         ),
@@ -392,7 +394,7 @@ class _ProgressBadge extends StatelessWidget {
 
 // ── Download Button ──
 
-class _DownloadButton extends StatefulWidget {
+class _DownloadButton extends ConsumerStatefulWidget {
   final String contentItemId;
   final OfflineContentManager offlineManager;
 
@@ -402,10 +404,10 @@ class _DownloadButton extends StatefulWidget {
   });
 
   @override
-  State<_DownloadButton> createState() => _DownloadButtonState();
+  ConsumerState<_DownloadButton> createState() => _DownloadButtonState();
 }
 
-class _DownloadButtonState extends State<_DownloadButton> {
+class _DownloadButtonState extends ConsumerState<_DownloadButton> {
   late final StreamSubscription<Map<String, DownloadState>> _sub;
   DownloadState _state = const DownloadState();
 
@@ -441,6 +443,7 @@ class _DownloadButtonState extends State<_DownloadButton> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
 
     return switch (_state.status) {
       DownloadStatus.downloading => SizedBox(
@@ -459,7 +462,7 @@ class _DownloadButtonState extends State<_DownloadButton> {
       DownloadStatus.error => IconButton(
           icon: const Icon(Icons.error_outline, size: 20),
           color: theme.colorScheme.error,
-          tooltip: 'Erreur de téléchargement — réessayer',
+          tooltip: t.t('studentContent.downloadError'),
           onPressed: () =>
               widget.offlineManager.downloadForOffline(widget.contentItemId),
           padding: EdgeInsets.zero,
@@ -468,7 +471,7 @@ class _DownloadButtonState extends State<_DownloadButton> {
       DownloadStatus.idle => IconButton(
           icon: const Icon(Icons.download_outlined, size: 20),
           color: theme.colorScheme.outline,
-          tooltip: 'Télécharger pour utilisation hors ligne',
+          tooltip: t.t('studentContent.downloadOffline'),
           onPressed: () =>
               widget.offlineManager.downloadForOffline(widget.contentItemId),
           padding: EdgeInsets.zero,
@@ -488,7 +491,7 @@ String _streamPath(AssignedContent item) {
   return '/content-items/${item.contentItemId}/stream';
 }
 
-class _ContentPlayer extends StatelessWidget {
+class _ContentPlayer extends ConsumerWidget {
   final AssignedContent item;
   final VoidCallback onBack;
   final void Function(String progress) onProgress;
@@ -500,8 +503,9 @@ class _ContentPlayer extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
     final type = item.contentType.toUpperCase();
 
     return Scaffold(
@@ -517,19 +521,19 @@ class _ContentPlayer extends StatelessWidget {
               onProgress('completed');
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: const Text('Marqué comme terminé'),
+                  content: Text(t.t('studentContent.markedComplete')),
                   backgroundColor: theme.semanticPalette.success,
                 ),
               );
             },
             icon: const Icon(Icons.check_circle_outline, size: 18),
-            label: const Text('Terminé'),
+            label: Text(t.t('studentContent.markComplete')),
           ),
         ],
       ),
       body: Column(
         children: [
-          Expanded(child: _buildPlayer(type)),
+          Expanded(child: _buildPlayer(type, t)),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -578,7 +582,7 @@ class _ContentPlayer extends StatelessWidget {
     );
   }
 
-  Widget _buildPlayer(String type) {
+  Widget _buildPlayer(String type, AppLocalizations t) {
     final path = _streamPath(item);
     switch (type) {
       case 'VIDEO':
@@ -609,7 +613,7 @@ class _ContentPlayer extends StatelessWidget {
           onOpened: () => onProgress('in_progress'),
         );
       default:
-        return const Center(child: Text('Type de contenu non supporté'));
+        return Center(child: Text(t.t('studentContent.unsupportedType')));
     }
   }
 }
@@ -1183,7 +1187,7 @@ class _SignedOpenFilePanelState extends ConsumerState<_SignedOpenFilePanel> {
   }
 }
 
-class _MediaError extends StatelessWidget {
+class _MediaError extends ConsumerWidget {
   final String message;
   final VoidCallback onRetry;
 
@@ -1193,7 +1197,7 @@ class _MediaError extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -1206,7 +1210,7 @@ class _MediaError extends StatelessWidget {
             const SizedBox(height: 12),
             FilledButton.tonal(
               onPressed: onRetry,
-              child: const Text('Réessayer'),
+              child: Text(AppLocalizations.of(ref).t('common.retry')),
             ),
           ],
         ),

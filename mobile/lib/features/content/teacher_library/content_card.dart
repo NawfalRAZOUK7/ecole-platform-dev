@@ -10,6 +10,7 @@ class _LibraryGrid extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
 
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -25,7 +26,7 @@ class _LibraryGrid extends ConsumerWidget {
             const SizedBox(height: 16),
             FilledButton.tonal(
               onPressed: () => ref.read(_libraryProvider.notifier).load(),
-              child: const Text('Réessayer'),
+              child: Text(t.t('common.retry')),
             ),
           ],
         ),
@@ -42,7 +43,7 @@ class _LibraryGrid extends ConsumerWidget {
               color: theme.colorScheme.outline,
             ),
             const SizedBox(height: 16),
-            const Text('Aucun contenu disponible'),
+            Text(t.t('contentLibrary.noContent')),
           ],
         ),
       );
@@ -73,6 +74,7 @@ class ContentCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
     final typeColor = _typeColor(theme, item.contentType);
 
     return Card(
@@ -103,7 +105,9 @@ class ContentCard extends ConsumerWidget {
             const SizedBox(width: 4),
             Chip(
               label: Text(
-                item.origin == 'platform' ? 'Plateforme' : 'École',
+                item.origin == 'platform'
+                    ? t.t('contentLibrary.filterPlatform')
+                    : t.t('contentLibrary.filterSchool'),
                 style: TextStyle(
                   fontSize: 10,
                   color: item.origin == 'platform'
@@ -122,18 +126,18 @@ class ContentCard extends ConsumerWidget {
           children: [
             IconButton(
               icon: const Icon(Icons.assignment_add, size: 20),
-              tooltip: 'Assigner à une classe',
+              tooltip: t.t('contentLibrary.assignToClass'),
               onPressed: () => _showAssignDialog(context, ref, item),
             ),
             IconButton(
               icon: const Icon(Icons.quiz_outlined, size: 20),
-              tooltip: 'Générer un quiz',
+              tooltip: t.t('questionBank.generate'),
               onPressed: () => _showGenerateQuizDialog(context, ref, item),
             ),
             if (item.origin == 'school')
               IconButton(
                 icon: const Icon(Icons.publish, size: 20),
-                tooltip: 'Soumettre pour révision',
+                tooltip: t.t('contentLibrary.submitForReview'),
                 onPressed: () => _submitForReview(context, ref, item.id),
               ),
           ],
@@ -148,6 +152,7 @@ Future<void> _showAssignDialog(
   WidgetRef ref,
   LibraryItem item,
 ) async {
+  final t = AppLocalizations(ref.read(localeProvider));
   final repo = ref.read(contentLibraryRepositoryProvider);
   late final List<ClassInfo> classes;
   try {
@@ -156,7 +161,7 @@ Future<void> _showAssignDialog(
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Erreur: $e'),
+          content: Text('${AppLocalizations(ref.read(localeProvider)).t('common.error')}: $e'),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -169,14 +174,20 @@ Future<void> _showAssignDialog(
   final selectedClass = await showDialog<ClassInfo>(
     context: context,
     builder: (ctx) => SimpleDialog(
-      title: Text('Assigner "${item.title}"'),
+      title: Text(
+        t.t('contentLibrary.assignDialogTitle').replaceAll('{title}', item.title),
+      ),
       children: classes
           .map(
             (schoolClass) => SimpleDialogOption(
               onPressed: () => Navigator.pop(ctx, schoolClass),
               child: ListTile(
                 title: Text(schoolClass.name),
-                subtitle: Text('${schoolClass.studentCount} élèves'),
+                subtitle: Text(
+                  t
+                      .t('contentLibrary.studentsCount')
+                      .replaceAll('{n}', '${schoolClass.studentCount}'),
+                ),
                 leading: const Icon(Icons.class_),
               ),
             ),
@@ -195,7 +206,11 @@ Future<void> _showAssignDialog(
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Contenu assigné à ${selectedClass.name}'),
+          content: Text(
+            t
+                .t('contentLibrary.assignedTo')
+                .replaceAll('{name}', selectedClass.name),
+          ),
           backgroundColor: Theme.of(context).semanticPalette.success,
         ),
       );
@@ -204,7 +219,7 @@ Future<void> _showAssignDialog(
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Erreur: $e'),
+          content: Text('${AppLocalizations(ref.read(localeProvider)).t('common.error')}: $e'),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -366,7 +381,7 @@ Future<void> _showGenerateQuizDialog(
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('Erreur: $e'),
+                                    content: Text('${AppLocalizations(ref.read(localeProvider)).t('common.error')}: $e'),
                                     backgroundColor:
                                         Theme.of(context).colorScheme.error,
                                   ),
@@ -406,12 +421,13 @@ Future<void> _submitForReview(
   WidgetRef ref,
   String contentId,
 ) async {
+  final t = AppLocalizations(ref.read(localeProvider));
   try {
     await ref.read(contentLibraryRepositoryProvider).submitForReview(contentId);
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Soumis pour révision'),
+          content: Text(t.t('contentLibrary.submitted')),
           backgroundColor: Theme.of(context).semanticPalette.success,
         ),
       );
@@ -420,7 +436,7 @@ Future<void> _submitForReview(
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Erreur: $e'),
+          content: Text('${AppLocalizations(ref.read(localeProvider)).t('common.error')}: $e'),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );

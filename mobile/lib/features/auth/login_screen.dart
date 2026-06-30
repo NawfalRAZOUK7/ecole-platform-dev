@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:ecole_platform/l10n/app_localizations.dart';
+import 'package:ecole_platform/shared/ui/widgets/ecole_logo_mark.dart';
 import 'auth_provider.dart';
 
 /// Default school ID from seed data.
@@ -68,6 +70,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
 
     // 2FA verification step
     if (authState.requires2fa) {
@@ -230,7 +233,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                         TextButton(
                           onPressed: _handleCancel2fa,
-                          child: const Text('Annuler'),
+                          child: Text(t.t('common.cancel')),
                         ),
                       ],
                     ),
@@ -316,31 +319,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           // Logo / Title
                           Semantics(
                             excludeSemantics: true,
-                            child: Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    theme.colorScheme.primary,
-                                    theme.colorScheme.secondary,
+                            child: Center(
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(24),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: theme.colorScheme.primary
+                                          .withValues(alpha: 0.3),
+                                      blurRadius: 24,
+                                      offset: const Offset(0, 10),
+                                    ),
                                   ],
                                 ),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: theme.colorScheme.primary
-                                        .withValues(alpha: 0.3),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 8),
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(
-                                Icons.school,
-                                size: 48,
-                                color: Colors.white,
+                                child: const EcoleLogoMark(size: 104),
                               ),
                             ),
                           ),
@@ -377,7 +369,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         _schoolIdController.text.trim(),
                                       ),
                               icon: const Icon(Icons.login, size: 20),
-                              label: const Text('Se connecter avec Google'),
+                              label: Text(t.t('auth.signInWithGoogle')),
                               style: FilledButton.styleFrom(
                                 backgroundColor: Colors.white,
                                 foregroundColor: Colors.black87,
@@ -401,7 +393,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         _schoolIdController.text.trim(),
                                       ),
                               icon: const Icon(Icons.business, size: 20),
-                              label: const Text('Se connecter avec Microsoft'),
+                              label: Text(t.t('auth.signInWithMicrosoft')),
                               style: FilledButton.styleFrom(
                                 backgroundColor: const Color(0xFF0078D4),
                                 foregroundColor: Colors.white,
@@ -411,14 +403,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                           ),
                           const SizedBox(height: 20),
-                          const Row(
+                          Row(
                             children: [
-                              Expanded(child: Divider()),
+                              const Expanded(child: Divider()),
                               Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 12),
-                                child: Text('ou'),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 12),
+                                child: Text(t.t('auth.or')),
                               ),
-                              Expanded(child: Divider()),
+                              const Expanded(child: Divider()),
                             ],
                           ),
                           const SizedBox(height: 20),
@@ -466,13 +459,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
                             autofillHints: const [AutofillHints.email],
-                            decoration: const InputDecoration(
-                              labelText: 'Adresse email',
-                              prefixIcon: Icon(Icons.email_outlined),
-                              border: OutlineInputBorder(),
+                            decoration: InputDecoration(
+                              labelText: t.t('auth.email'),
+                              prefixIcon: const Icon(Icons.email_outlined),
+                              border: const OutlineInputBorder(),
                             ),
                             validator: (v) => (v == null || v.isEmpty)
-                                ? 'Email requis'
+                                ? t.t('auth.emailRequired')
                                 : null,
                             enabled: !authState.isLoading,
                           ),
@@ -483,13 +476,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             controller: _passwordController,
                             obscureText: true,
                             autofillHints: const [AutofillHints.password],
-                            decoration: const InputDecoration(
-                              labelText: 'Mot de passe',
-                              prefixIcon: Icon(Icons.lock_outlined),
-                              border: OutlineInputBorder(),
+                            decoration: InputDecoration(
+                              labelText: t.t('auth.password'),
+                              prefixIcon: const Icon(Icons.lock_outlined),
+                              border: const OutlineInputBorder(),
                             ),
                             validator: (v) => (v == null || v.isEmpty)
-                                ? 'Mot de passe requis'
+                                ? t.t('auth.passwordRequired')
                                 : null,
                             enabled: !authState.isLoading,
                           ),
@@ -498,10 +491,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           // School ID field
                           TextFormField(
                             controller: _schoolIdController,
-                            decoration: const InputDecoration(
-                              labelText: 'ID Établissement',
-                              prefixIcon: Icon(Icons.business),
-                              border: OutlineInputBorder(),
+                            decoration: InputDecoration(
+                              labelText: t.t('auth.schoolId'),
+                              prefixIcon: const Icon(Icons.business),
+                              border: const OutlineInputBorder(),
                             ),
                             validator: (v) => (v == null || v.isEmpty)
                                 ? 'ID établissement requis'
@@ -530,9 +523,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         color: theme.colorScheme.onPrimary,
                                       ),
                                     )
-                                  : const Text(
-                                      'Se connecter',
-                                      style: TextStyle(fontSize: 16),
+                                  : Text(
+                                      t.t('auth.signIn'),
+                                      style: const TextStyle(fontSize: 16),
                                     ),
                             ),
                           ),
@@ -546,7 +539,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 onPressed: authState.isLoading
                                     ? null
                                     : () => context.push('/forgot-password'),
-                                child: const Text('Mot de passe oublié ?'),
+                                child: Text(t.t('auth.forgotPassword')),
                               ),
                             ),
                           ),

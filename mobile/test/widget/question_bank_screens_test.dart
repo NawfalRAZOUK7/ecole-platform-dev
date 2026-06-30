@@ -50,7 +50,7 @@ void main() {
     final repository = MockQuestionBankRepository();
     when(
       () => repository.generateQuiz(
-        subject: 'Mathematics',
+        subject: 'math',
         difficulty: 'medium',
         count: 5,
         tags: const [],
@@ -71,7 +71,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextField).at(0), 'Mathematics');
+    await tester.tap(find.byType(DropdownButtonFormField<String>).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Mathématiques').last);
+    await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.auto_awesome_outlined));
     await tester.pumpAndSettle();
 

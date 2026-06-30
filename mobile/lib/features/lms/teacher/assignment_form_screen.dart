@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/lms/teacher.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 
 // ── State ──
 
@@ -195,7 +196,9 @@ class _AssignmentFormScreenState extends ConsumerState<AssignmentFormScreen> {
         _showForm = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Devoir créé avec succès')),
+        SnackBar(
+          content: Text(AppLocalizations.of(ref).t('assignment.createdSuccess')),
+        ),
       );
     }
   }
@@ -204,9 +207,10 @@ class _AssignmentFormScreenState extends ConsumerState<AssignmentFormScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(_assignmentFormProvider);
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Devoirs')),
+      appBar: AppBar(title: Text(t.t('teacher.assignments'))),
       floatingActionButton: FloatingActionButton(
         onPressed: () => setState(() => _showForm = !_showForm),
         child: Icon(_showForm ? Icons.close : Icons.add),
@@ -219,16 +223,16 @@ class _AssignmentFormScreenState extends ConsumerState<AssignmentFormScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: DropdownButtonFormField<String>(
                 initialValue: state.courseFilter,
-                decoration: const InputDecoration(
-                  labelText: 'Filtrer par cours',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: t.t('assignment.filterByCourse'),
+                  border: const OutlineInputBorder(),
                   contentPadding:
-                      EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 ),
                 items: [
-                  const DropdownMenuItem(
+                  DropdownMenuItem(
                     value: null,
-                    child: Text('Tous les cours'),
+                    child: Text(t.t('assignment.allCourses')),
                   ),
                   ...state.courses.map(
                     (c) => DropdownMenuItem(
@@ -344,7 +348,7 @@ class _AssignmentFormScreenState extends ConsumerState<AssignmentFormScreen> {
                                   color: theme.colorScheme.onPrimary,
                                 ),
                               )
-                            : const Text('Créer le devoir'),
+                            : Text(t.t('assignment.create')),
                       ),
                     ],
                   ),

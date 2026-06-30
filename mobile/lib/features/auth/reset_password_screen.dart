@@ -75,32 +75,32 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       appBar: AppBar(title: Text(t.t('auth.resetPassword'))),
       body: Semantics(
         container: true,
-        label: 'Définition du nouveau mot de passe',
+        label: t.t('auth.setNewPassword'),
         child: ListView(
           padding: const EdgeInsets.all(24),
           children: [
             TextField(
               controller: _tokenController,
-              decoration: const InputDecoration(
-                labelText: 'Recovery token',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: t.t('auth.recoveryToken'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _codeController,
-              decoration: const InputDecoration(
-                labelText: 'Verification code (optional)',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: t.t('auth.verificationCodeOptional'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _passwordController,
               obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'New password',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: t.t('auth.newPassword'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),

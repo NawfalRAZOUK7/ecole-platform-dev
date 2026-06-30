@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/lms/question_bank.dart';
 import 'package:ecole_platform/l10n/app_localizations.dart';
+import 'package:ecole_platform/shared/taxonomy/taxonomy.g.dart';
 
 class GenerateQuizScreen extends ConsumerStatefulWidget {
   const GenerateQuizScreen({super.key});
@@ -13,16 +14,15 @@ class GenerateQuizScreen extends ConsumerStatefulWidget {
 }
 
 class _GenerateQuizScreenState extends ConsumerState<GenerateQuizScreen> {
-  final _subjectController = TextEditingController();
   final _countController = TextEditingController(text: '5');
   final _tagsController = TextEditingController();
   bool _loading = false;
+  String _subject = Taxonomy.subjects.first;
   String difficulty = 'medium';
   GeneratedQuestionQuiz? _result;
 
   @override
   void dispose() {
-    _subjectController.dispose();
     _countController.dispose();
     _tagsController.dispose();
     super.dispose();
@@ -33,7 +33,7 @@ class _GenerateQuizScreenState extends ConsumerState<GenerateQuizScreen> {
     try {
       final result =
           await ref.read(questionBankRepositoryProvider).generateQuiz(
-                subject: _subjectController.text.trim(),
+                subject: _subject,
                 difficulty: difficulty,
                 count: int.tryParse(_countController.text) ?? 5,
                 tags: _tagsController.text
@@ -59,18 +59,42 @@ class _GenerateQuizScreenState extends ConsumerState<GenerateQuizScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          TextField(
-            controller: _subjectController,
-            decoration: const InputDecoration(labelText: 'Subject'),
+          DropdownButtonFormField<String>(
+            initialValue: _subject,
+            menuMaxHeight: 320,
+            decoration: InputDecoration(labelText: t.t('questionBank.subject')),
+            items: Taxonomy.subjects
+                .map(
+                  (subject) => DropdownMenuItem(
+                    value: subject,
+                    child: Text(_subjectLabel(subject, t.locale)),
+                  ),
+                )
+                .toList(),
+            onChanged: (value) {
+              if (value != null) {
+                setState(() => _subject = value);
+              }
+            },
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             initialValue: difficulty,
-            decoration: const InputDecoration(labelText: 'Difficulty'),
-            items: const [
-              DropdownMenuItem(value: 'easy', child: Text('Easy')),
-              DropdownMenuItem(value: 'medium', child: Text('Medium')),
-              DropdownMenuItem(value: 'hard', child: Text('Hard')),
+            decoration:
+                InputDecoration(labelText: t.t('questionBank.difficulty')),
+            items: [
+              DropdownMenuItem(
+                value: 'easy',
+                child: Text(t.t('quiz.easy')),
+              ),
+              DropdownMenuItem(
+                value: 'medium',
+                child: Text(t.t('quiz.medium')),
+              ),
+              DropdownMenuItem(
+                value: 'hard',
+                child: Text(t.t('quiz.hard')),
+              ),
             ],
             onChanged: (value) {
               if (value != null) {
@@ -82,13 +106,14 @@ class _GenerateQuizScreenState extends ConsumerState<GenerateQuizScreen> {
           TextField(
             controller: _countController,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: 'Question count'),
+            decoration:
+                InputDecoration(labelText: t.t('questionBank.questionCount')),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _tagsController,
-            decoration: const InputDecoration(
-              labelText: 'Tags (comma separated)',
+            decoration: InputDecoration(
+              labelText: t.t('questionBank.tags'),
             ),
           ),
           const SizedBox(height: 16),
@@ -129,5 +154,10 @@ class _GenerateQuizScreenState extends ConsumerState<GenerateQuizScreen> {
         ],
       ),
     );
+  }
+
+  String _subjectLabel(String code, String locale) {
+    final titles = Taxonomy.subjectTitles[code];
+    return titles?[locale] ?? titles?['fr'] ?? code;
   }
 }

@@ -17,6 +17,7 @@ import 'package:ecole_platform/features/auth/auth_provider.dart';
 import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/domain/entities/lms/quiz.dart';
 import 'package:ecole_platform/domain/entities/lms/teacher.dart';
+import 'package:ecole_platform/shared/taxonomy/taxonomy.g.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/widgets/platform_bridge_card.dart';
 import 'package:ecole_platform/shared/widgets/search_filter_bar.dart';
@@ -144,15 +145,16 @@ class _ContentLibraryScreenState extends ConsumerState<ContentLibraryScreen>
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(ref);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Bibliothèque de contenu'),
+        title: Text(t.t('contentLibrary.title')),
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(text: 'Parcourir'),
-            Tab(text: 'Téléverser'),
-            Tab(text: 'Soumissions'),
+          tabs: [
+            Tab(text: t.t('contentLibrary.browse')),
+            Tab(text: t.t('contentLibrary.upload')),
+            Tab(text: t.t('contentLibrary.submissions')),
           ],
         ),
       ),

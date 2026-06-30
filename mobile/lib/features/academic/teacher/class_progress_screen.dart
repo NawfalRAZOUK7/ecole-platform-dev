@@ -346,7 +346,11 @@ class _GradeComparisonChart extends StatelessWidget {
                         barRods: [
                           BarChartRodData(
                             toY: series.values[i] ?? 0,
-                            color: color,
+                            gradient: LinearGradient(
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                              colors: [(color).withValues(alpha: 0.55), color],
+                            ),
                             width: 18,
                             borderRadius: const BorderRadius.vertical(
                               top: Radius.circular(4),

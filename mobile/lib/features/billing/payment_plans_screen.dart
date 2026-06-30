@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ecole_platform/shared/ui/widgets/app_snackbar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -145,9 +146,7 @@ class _PaymentPlansScreenState extends ConsumerState<PaymentPlansScreen> {
           );
       ref.invalidate(paymentPlansProvider);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Payment plan created')),
-      );
+      AppSnackBar.show(context, 'Payment plan created');
     } finally {
       setState(() => _creating = false);
       for (final controller in [

@@ -144,6 +144,8 @@ class _UploadTabState extends ConsumerState<_UploadTab> {
       descriptionController: _descriptionController,
       contentType: _contentType,
       language: _language,
+      level: _level,
+      subject: _subject,
       fileName: _fileName,
       uploading: _uploading,
       uploadProgress: _uploadProgress,
@@ -151,6 +153,8 @@ class _UploadTabState extends ConsumerState<_UploadTab> {
       success: _success,
       onContentTypeChanged: (value) => setState(() => _contentType = value),
       onLanguageChanged: (value) => setState(() => _language = value),
+      onLevelChanged: (value) => setState(() => _level = value),
+      onSubjectChanged: (value) => setState(() => _subject = value),
       onPickFile: _pickFile,
       onPickCamera: _pickFromCamera,
       onPickGallery: _pickFromGallery,
@@ -164,11 +168,13 @@ class _UploadTabState extends ConsumerState<_UploadTab> {
   }
 }
 
-class UploadForm extends StatelessWidget {
+class UploadForm extends ConsumerWidget {
   final TextEditingController titleController;
   final TextEditingController descriptionController;
   final String contentType;
   final String language;
+  final String? level;
+  final String? subject;
   final String? fileName;
   final bool uploading;
   final double uploadProgress;
@@ -176,6 +182,8 @@ class UploadForm extends StatelessWidget {
   final String? success;
   final ValueChanged<String> onContentTypeChanged;
   final ValueChanged<String> onLanguageChanged;
+  final ValueChanged<String?> onLevelChanged;
+  final ValueChanged<String?> onSubjectChanged;
   final VoidCallback onPickFile;
   final VoidCallback onPickCamera;
   final VoidCallback onPickGallery;
@@ -189,6 +197,8 @@ class UploadForm extends StatelessWidget {
     required this.descriptionController,
     required this.contentType,
     required this.language,
+    required this.level,
+    required this.subject,
     required this.fileName,
     required this.uploading,
     required this.uploadProgress,
@@ -196,6 +206,8 @@ class UploadForm extends StatelessWidget {
     required this.success,
     required this.onContentTypeChanged,
     required this.onLanguageChanged,
+    required this.onLevelChanged,
+    required this.onSubjectChanged,
     required this.onPickFile,
     required this.onPickCamera,
     required this.onPickGallery,
@@ -205,8 +217,9 @@ class UploadForm extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
 
     return ListView(
       padding: const EdgeInsets.all(24),
@@ -269,9 +282,9 @@ class UploadForm extends StatelessWidget {
         ],
         TextFormField(
           controller: titleController,
-          decoration: const InputDecoration(
-            labelText: 'Titre *',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: t.t('upload.titleLabel'),
+            border: const OutlineInputBorder(),
           ),
           enabled: !uploading,
         ),
@@ -279,9 +292,9 @@ class UploadForm extends StatelessWidget {
         TextFormField(
           controller: descriptionController,
           maxLines: 3,
-          decoration: const InputDecoration(
-            labelText: 'Description',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: t.t('contentLibrary.uploadDescription'),
+            border: const OutlineInputBorder(),
             alignLabelWithHint: true,
           ),
           enabled: !uploading,
@@ -289,15 +302,27 @@ class UploadForm extends StatelessWidget {
         const SizedBox(height: 16),
         DropdownButtonFormField<String>(
           initialValue: contentType,
-          decoration: const InputDecoration(
-            labelText: 'Type de contenu',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: t.t('contentLibrary.uploadType'),
+            border: const OutlineInputBorder(),
           ),
-          items: const [
-            DropdownMenuItem(value: 'DOCUMENT', child: Text('Document (PDF)')),
-            DropdownMenuItem(value: 'VIDEO', child: Text('Vidéo')),
-            DropdownMenuItem(value: 'AUDIO', child: Text('Audio')),
-            DropdownMenuItem(value: 'INTERACTIVE', child: Text('Interactif')),
+          items: [
+            DropdownMenuItem(
+              value: 'DOCUMENT',
+              child: Text(t.t('upload.typeDocument')),
+            ),
+            DropdownMenuItem(
+              value: 'VIDEO',
+              child: Text(t.t('upload.typeVideo')),
+            ),
+            DropdownMenuItem(
+              value: 'AUDIO',
+              child: Text(t.t('upload.typeAudio')),
+            ),
+            DropdownMenuItem(
+              value: 'INTERACTIVE',
+              child: Text(t.t('upload.typeInteractive')),
+            ),
           ],
           onChanged: uploading
               ? null
@@ -308,9 +333,9 @@ class UploadForm extends StatelessWidget {
         const SizedBox(height: 16),
         DropdownButtonFormField<String>(
           initialValue: language,
-          decoration: const InputDecoration(
-            labelText: 'Langue',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: t.t('contentLibrary.uploadLanguage'),
+            border: const OutlineInputBorder(),
           ),
           items: const [
             DropdownMenuItem(value: 'fr', child: Text('Français')),
@@ -322,6 +347,48 @@ class UploadForm extends StatelessWidget {
               : (value) {
                   if (value != null) onLanguageChanged(value);
                 },
+        ),
+        const SizedBox(height: 16),
+        DropdownButtonFormField<String?>(
+          initialValue: level,
+          decoration: InputDecoration(
+            labelText: t.t('content.filter.level'),
+            border: const OutlineInputBorder(),
+          ),
+          items: [
+            DropdownMenuItem<String?>(
+              value: null,
+              child: Text(t.t('profileForm.select')),
+            ),
+            ...Taxonomy.levelBands.map(
+              (level) => DropdownMenuItem<String?>(
+                value: level,
+                child: Text(level),
+              ),
+            ),
+          ],
+          onChanged: uploading ? null : onLevelChanged,
+        ),
+        const SizedBox(height: 16),
+        DropdownButtonFormField<String?>(
+          initialValue: subject,
+          decoration: InputDecoration(
+            labelText: t.t('common.subject'),
+            border: const OutlineInputBorder(),
+          ),
+          items: [
+            DropdownMenuItem<String?>(
+              value: null,
+              child: Text(t.t('profileForm.select')),
+            ),
+            ...Taxonomy.subjects.map(
+              (subject) => DropdownMenuItem<String?>(
+                value: subject,
+                child: Text(_subjectLabel(subject, t.locale)),
+              ),
+            ),
+          ],
+          onChanged: uploading ? null : onSubjectChanged,
         ),
         const SizedBox(height: 16),
         Card(
@@ -420,6 +487,11 @@ class UploadForm extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  String _subjectLabel(String code, String locale) {
+    final titles = Taxonomy.subjectTitles[code];
+    return titles?[locale] ?? titles?['fr'] ?? code;
   }
 }
 

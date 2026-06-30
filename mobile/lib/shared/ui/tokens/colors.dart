@@ -35,17 +35,27 @@ class AppColors {
     Color(0xFF14B8A6),
   ];
 
+  // Keyed by the Moroccan ContentSubject enum (mirrors backend taxonomy).
   static const subjectColors = <String, Color>{
     'math': Color(0xFFEFF6FF),
     'french': Color(0xFFFEF3C7),
     'arabic': Color(0xFFECFDF5),
-    'science': Color(0xFFF0FDF4),
-    'history': Color(0xFFFAF5FF),
-    'geography': Color(0xFFFFF7ED),
     'english': Color(0xFFFDF2F8),
-    'islamic_studies': Color(0xFFF0F9FF),
+    'amazigh': Color(0xFFFFF7ED),
+    'activite_scientifique': Color(0xFFF0FDF4),
+    'svt': Color(0xFFF0FDF4),
+    'physique_chimie': Color(0xFFECFEFF),
+    'histoire_geo': Color(0xFFFAF5FF),
+    'civic': Color(0xFFFFF7ED),
+    'philosophy': Color(0xFFFDF4FF),
+    'islamic': Color(0xFFF0F9FF),
+    'quranic': Color(0xFFF0F9FF),
     'art': Color(0xFFFEFCE8),
+    'music': Color(0xFFFCE7F3),
     'sport': Color(0xFFF0FDFA),
+    'informatique': Color(0xFFEFF6FF),
+    'arabic_letters': Color(0xFFECFDF5),
+    'literacy': Color(0xFFFEF3C7),
     'default': Color(0xFFF3F4F6),
   };
 
@@ -94,17 +104,27 @@ class AppColors {
     Color(0xFF2DD4BF),
   ];
 
+  // Keyed by the Moroccan ContentSubject enum (mirrors backend taxonomy).
   static const darkSubjectColors = <String, Color>{
     'math': Color(0xFF1E3A8A),
     'french': Color(0xFF78350F),
     'arabic': Color(0xFF14532D),
-    'science': Color(0xFF166534),
-    'history': Color(0xFF581C87),
-    'geography': Color(0xFF7C2D12),
     'english': Color(0xFF831843),
-    'islamic_studies': Color(0xFF0C4A6E),
+    'amazigh': Color(0xFF7C2D12),
+    'activite_scientifique': Color(0xFF166534),
+    'svt': Color(0xFF166534),
+    'physique_chimie': Color(0xFF155E75),
+    'histoire_geo': Color(0xFF581C87),
+    'civic': Color(0xFF7C2D12),
+    'philosophy': Color(0xFF701A75),
+    'islamic': Color(0xFF0C4A6E),
+    'quranic': Color(0xFF0C4A6E),
     'art': Color(0xFF713F12),
+    'music': Color(0xFF831843),
     'sport': Color(0xFF134E4A),
+    'informatique': Color(0xFF1E3A8A),
+    'arabic_letters': Color(0xFF14532D),
+    'literacy': Color(0xFF78350F),
     'default': Color(0xFF334155),
   };
 }

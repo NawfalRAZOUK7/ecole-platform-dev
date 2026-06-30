@@ -2,11 +2,12 @@ part of 'register_screen.dart';
 
 extension _RegisterSteps on _RegisterScreenState {
   Widget _buildCodeStep(ThemeData theme) {
+    final t = AppLocalizations.of(ref);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Entrez votre code d\'invitation',
+          t.t('register.codePrompt'),
           textAlign: TextAlign.center,
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
@@ -20,10 +21,10 @@ extension _RegisterSteps on _RegisterScreenState {
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 20, letterSpacing: 6),
           autofocus: true,
-          decoration: const InputDecoration(
-            labelText: 'Code d\'invitation',
-            prefixIcon: Icon(Icons.confirmation_number_outlined),
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: t.t('register.codeLabel'),
+            prefixIcon: const Icon(Icons.confirmation_number_outlined),
+            border: const OutlineInputBorder(),
             counterText: '',
           ),
           enabled: !_loading,
@@ -36,13 +37,16 @@ extension _RegisterSteps on _RegisterScreenState {
           style: FilledButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),
           ),
-          child: const Text('Suivant', style: TextStyle(fontSize: 16)),
+          child: Text(
+            t.t('register.next'),
+            style: const TextStyle(fontSize: 16),
+          ),
         ),
         const SizedBox(height: 16),
         Center(
           child: TextButton(
             onPressed: () => context.go('/login'),
-            child: const Text('Vous avez déjà un compte ? Connectez-vous'),
+            child: Text(t.t('register.haveAccount')),
           ),
         ),
       ],
@@ -58,11 +62,12 @@ extension _RegisterSteps on _RegisterScreenState {
         _allRulesPassed(password) &&
         password == confirm;
 
+    final t = AppLocalizations.of(ref);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Vos informations personnelles',
+          t.t('register.infoPrompt'),
           textAlign: TextAlign.center,
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
@@ -74,10 +79,10 @@ extension _RegisterSteps on _RegisterScreenState {
           keyboardType: TextInputType.emailAddress,
           autofillHints: const [AutofillHints.email],
           autofocus: true,
-          decoration: const InputDecoration(
-            labelText: 'Adresse email',
-            prefixIcon: Icon(Icons.email_outlined),
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: t.t('auth.email'),
+            prefixIcon: const Icon(Icons.email_outlined),
+            border: const OutlineInputBorder(),
           ),
           onChanged: (_) => _applyState(() {}),
         ),
@@ -85,10 +90,10 @@ extension _RegisterSteps on _RegisterScreenState {
         TextFormField(
           controller: _fullNameController,
           textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(
-            labelText: 'Nom complet',
-            prefixIcon: Icon(Icons.person_outlined),
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: t.t('register.fullName'),
+            prefixIcon: const Icon(Icons.person_outlined),
+            border: const OutlineInputBorder(),
           ),
           onChanged: (_) => _applyState(() {}),
         ),
@@ -96,10 +101,10 @@ extension _RegisterSteps on _RegisterScreenState {
         TextFormField(
           controller: _phoneController,
           keyboardType: TextInputType.phone,
-          decoration: const InputDecoration(
-            labelText: 'Téléphone (optionnel)',
-            prefixIcon: Icon(Icons.phone_outlined),
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: t.t('register.phoneOptional'),
+            prefixIcon: const Icon(Icons.phone_outlined),
+            border: const OutlineInputBorder(),
           ),
         ),
         const SizedBox(height: 12),
@@ -107,10 +112,10 @@ extension _RegisterSteps on _RegisterScreenState {
           controller: _passwordController,
           obscureText: true,
           autofillHints: const [AutofillHints.newPassword],
-          decoration: const InputDecoration(
-            labelText: 'Mot de passe',
-            prefixIcon: Icon(Icons.lock_outlined),
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: t.t('auth.password'),
+            prefixIcon: const Icon(Icons.lock_outlined),
+            border: const OutlineInputBorder(),
           ),
           onChanged: (_) => _applyState(() {}),
         ),
@@ -147,10 +152,10 @@ extension _RegisterSteps on _RegisterScreenState {
         TextFormField(
           controller: _confirmPasswordController,
           obscureText: true,
-          decoration: const InputDecoration(
-            labelText: 'Confirmer le mot de passe',
-            prefixIcon: Icon(Icons.lock_outlined),
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: t.t('auth.confirmPassword'),
+            prefixIcon: const Icon(Icons.lock_outlined),
+            border: const OutlineInputBorder(),
           ),
           onChanged: (_) => _applyState(() {}),
         ),
@@ -159,7 +164,7 @@ extension _RegisterSteps on _RegisterScreenState {
           Padding(
             padding: const EdgeInsets.only(left: 8),
             child: Text(
-              'Les mots de passe ne correspondent pas',
+              t.t('register.passwordMismatch'),
               style: TextStyle(fontSize: 12, color: theme.colorScheme.error),
             ),
           ),
@@ -173,7 +178,7 @@ extension _RegisterSteps on _RegisterScreenState {
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: const Text('Retour'),
+                child: Text(t.t('register.back')),
               ),
             ),
             const SizedBox(width: 12),
@@ -184,7 +189,10 @@ extension _RegisterSteps on _RegisterScreenState {
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: const Text('Suivant', style: TextStyle(fontSize: 16)),
+                child: Text(
+                  t.t('register.next'),
+                  style: const TextStyle(fontSize: 16),
+                ),
               ),
             ),
           ],
@@ -194,11 +202,12 @@ extension _RegisterSteps on _RegisterScreenState {
   }
 
   Widget _buildRoleStep(ThemeData theme) {
+    final t = AppLocalizations.of(ref);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Informations complémentaires (remplissez ce qui correspond à votre rôle)',
+          t.t('register.rolePrompt'),
           textAlign: TextAlign.center,
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
@@ -208,10 +217,10 @@ extension _RegisterSteps on _RegisterScreenState {
         TextFormField(
           controller: _dobController,
           readOnly: true,
-          decoration: const InputDecoration(
-            labelText: 'Date de naissance',
-            prefixIcon: Icon(Icons.calendar_today),
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: t.t('profileForm.birthDate'),
+            prefixIcon: const Icon(Icons.calendar_today),
+            border: const OutlineInputBorder(),
           ),
           onTap: () async {
             final date = await showDatePicker(
@@ -227,26 +236,39 @@ extension _RegisterSteps on _RegisterScreenState {
           },
         ),
         const SizedBox(height: 12),
-        TextFormField(
-          controller: _classLevelController,
-          decoration: const InputDecoration(
-            labelText: 'Niveau scolaire',
-            prefixIcon: Icon(Icons.school_outlined),
-            border: OutlineInputBorder(),
+        DropdownButtonFormField<String>(
+          initialValue: _classLevel.isEmpty ? null : _classLevel,
+          decoration: InputDecoration(
+            labelText: t.t('profileForm.gradeLevel'),
+            prefixIcon: const Icon(Icons.school_outlined),
+            border: const OutlineInputBorder(),
           ),
+          items: [
+            DropdownMenuItem(
+              value: '',
+              child: Text(t.t('profileForm.selectOptional')),
+            ),
+            ...Taxonomy.levelBands.map(
+              (level) => DropdownMenuItem(
+                value: level,
+                child: Text(level),
+              ),
+            ),
+          ],
+          onChanged: (value) => _applyState(() => _classLevel = value ?? ''),
         ),
         const SizedBox(height: 12),
         DropdownButtonFormField<String>(
           initialValue: _relationshipType.isEmpty ? null : _relationshipType,
-          decoration: const InputDecoration(
-            labelText: 'Lien de parenté',
-            prefixIcon: Icon(Icons.family_restroom),
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: t.t('profileForm.relationship'),
+            prefixIcon: const Icon(Icons.family_restroom),
+            border: const OutlineInputBorder(),
           ),
           items: [
-            const DropdownMenuItem(
+            DropdownMenuItem(
               value: '',
-              child: Text('Sélectionner (optionnel)'),
+              child: Text(t.t('profileForm.selectOptional')),
             ),
             ..._relationshipTypes.map(
               (relationship) => DropdownMenuItem(
@@ -259,21 +281,35 @@ extension _RegisterSteps on _RegisterScreenState {
               _applyState(() => _relationshipType = value ?? ''),
         ),
         const SizedBox(height: 12),
-        TextFormField(
-          controller: _subjectController,
-          decoration: const InputDecoration(
-            labelText: 'Spécialité',
-            prefixIcon: Icon(Icons.book_outlined),
-            border: OutlineInputBorder(),
+        DropdownButtonFormField<String>(
+          initialValue: _subjectSpecialty.isEmpty ? null : _subjectSpecialty,
+          decoration: InputDecoration(
+            labelText: t.t('profileForm.specialty'),
+            prefixIcon: const Icon(Icons.book_outlined),
+            border: const OutlineInputBorder(),
           ),
+          items: [
+            DropdownMenuItem(
+              value: '',
+              child: Text(t.t('profileForm.selectOptional')),
+            ),
+            ...Taxonomy.subjects.map(
+              (subject) => DropdownMenuItem(
+                value: subject,
+                child: Text(_subjectLabel(subject, t.locale)),
+              ),
+            ),
+          ],
+          onChanged: (value) =>
+              _applyState(() => _subjectSpecialty = value ?? ''),
         ),
         const SizedBox(height: 12),
         TextFormField(
           controller: _qualificationController,
-          decoration: const InputDecoration(
-            labelText: 'Diplôme / Qualification',
-            prefixIcon: Icon(Icons.workspace_premium_outlined),
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: t.t('profileForm.qualification'),
+            prefixIcon: const Icon(Icons.workspace_premium_outlined),
+            border: const OutlineInputBorder(),
           ),
         ),
         const SizedBox(height: 24),
@@ -287,7 +323,7 @@ extension _RegisterSteps on _RegisterScreenState {
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: const Text('Retour'),
+                child: Text(t.t('register.back')),
               ),
             ),
             const SizedBox(width: 12),
@@ -307,9 +343,9 @@ extension _RegisterSteps on _RegisterScreenState {
                           color: theme.colorScheme.onPrimary,
                         ),
                       )
-                    : const Text(
-                        'Créer le compte',
-                        style: TextStyle(fontSize: 16),
+                    : Text(
+                        t.t('register.createAccount'),
+                        style: const TextStyle(fontSize: 16),
                       ),
               ),
             ),
@@ -320,11 +356,12 @@ extension _RegisterSteps on _RegisterScreenState {
   }
 
   Widget _buildOtpStep(ThemeData theme) {
+    final t = AppLocalizations.of(ref);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Entrez le code à 6 chiffres envoyé à votre adresse email',
+          t.t('register.otpPrompt'),
           textAlign: TextAlign.center,
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
@@ -342,10 +379,10 @@ extension _RegisterSteps on _RegisterScreenState {
             letterSpacing: 8,
             fontWeight: FontWeight.bold,
           ),
-          decoration: const InputDecoration(
-            labelText: 'Code de vérification',
-            prefixIcon: Icon(Icons.pin_outlined),
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: t.t('auth.verificationCode'),
+            prefixIcon: const Icon(Icons.pin_outlined),
+            border: const OutlineInputBorder(),
             counterText: '',
           ),
           enabled: !_loading,
@@ -368,19 +405,27 @@ extension _RegisterSteps on _RegisterScreenState {
                     color: theme.colorScheme.onPrimary,
                   ),
                 )
-              : const Text('Vérifier', style: TextStyle(fontSize: 16)),
+              : Text(
+                  t.t('common.verify'),
+                  style: const TextStyle(fontSize: 16),
+                ),
         ),
         const SizedBox(height: 8),
         Center(
           child: TextButton(
             onPressed: _navigateToHome,
             child: Text(
-              'Passer pour l\'instant',
+              t.t('register.skipForNow'),
               style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
             ),
           ),
         ),
       ],
     );
+  }
+
+  String _subjectLabel(String code, String locale) {
+    final titles = Taxonomy.subjectTitles[code];
+    return titles?[locale] ?? titles?['fr'] ?? code;
   }
 }

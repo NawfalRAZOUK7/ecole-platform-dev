@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/app/providers.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 
 class ChangePasswordScreen extends ConsumerStatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -33,13 +34,22 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   }
 
   String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) return 'Mot de passe requis';
-    if (value.length < 12) return 'Minimum 12 caractères';
-    if (!value.contains(RegExp(r'[A-Z]'))) return 'Une majuscule requise';
-    if (!value.contains(RegExp(r'[a-z]'))) return 'Une minuscule requise';
-    if (!value.contains(RegExp(r'[0-9]'))) return 'Un chiffre requis';
+    final t = AppLocalizations.of(ref);
+    if (value == null || value.isEmpty) {
+      return t.t('passwordValidation.required');
+    }
+    if (value.length < 12) return t.t('passwordValidation.minLength');
+    if (!value.contains(RegExp(r'[A-Z]'))) {
+      return t.t('passwordValidation.uppercase');
+    }
+    if (!value.contains(RegExp(r'[a-z]'))) {
+      return t.t('passwordValidation.lowercase');
+    }
+    if (!value.contains(RegExp(r'[0-9]'))) {
+      return t.t('passwordValidation.digit');
+    }
     if (!value.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
-      return 'Un caractère spécial requis';
+      return t.t('passwordValidation.special');
     }
     return null;
   }
@@ -65,7 +75,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Mot de passe modifié avec succès')),
+          SnackBar(
+            content:
+                Text(AppLocalizations.of(ref).t('changePassword.success')),
+          ),
         );
         Navigator.pop(context);
       }
@@ -79,9 +92,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Changer le mot de passe')),
+      appBar: AppBar(title: Text(t.t('profile.changePassword'))),
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
@@ -106,24 +120,24 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 TextFormField(
                   controller: _currentController,
                   obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Mot de passe actuel',
-                    prefixIcon: Icon(Icons.lock_outline),
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: t.t('changePassword.current'),
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    border: const OutlineInputBorder(),
                   ),
-                  validator: (v) => (v == null || v.isEmpty) ? 'Requis' : null,
+                  validator: (v) =>
+                      (v == null || v.isEmpty) ? t.t('common.required') : null,
                   enabled: !_loading,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _newController,
                   obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Nouveau mot de passe',
-                    prefixIcon: Icon(Icons.lock),
-                    border: OutlineInputBorder(),
-                    helperText:
-                        '12+ caractères, majuscule, minuscule, chiffre, spécial',
+                  decoration: InputDecoration(
+                    labelText: t.t('auth.newPassword'),
+                    prefixIcon: const Icon(Icons.lock),
+                    border: const OutlineInputBorder(),
+                    helperText: t.t('changePassword.helper'),
                     helperMaxLines: 2,
                   ),
                   validator: _validatePassword,
@@ -133,15 +147,15 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 TextFormField(
                   controller: _confirmController,
                   obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Confirmer le nouveau mot de passe',
-                    prefixIcon: Icon(Icons.lock),
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: t.t('changePassword.confirmNew'),
+                    prefixIcon: const Icon(Icons.lock),
+                    border: const OutlineInputBorder(),
                   ),
                   validator: (v) {
-                    if (v == null || v.isEmpty) return 'Requis';
+                    if (v == null || v.isEmpty) return t.t('common.required');
                     if (v != _newController.text) {
-                      return 'Les mots de passe ne correspondent pas';
+                      return t.t('register.passwordMismatch');
                     }
                     return null;
                   },
@@ -163,9 +177,9 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                             color: Theme.of(context).colorScheme.onPrimary,
                           ),
                         )
-                      : const Text(
-                          'Modifier le mot de passe',
-                          style: TextStyle(fontSize: 16),
+                      : Text(
+                          t.t('profile.changePassword'),
+                          style: const TextStyle(fontSize: 16),
                         ),
                 ),
               ],

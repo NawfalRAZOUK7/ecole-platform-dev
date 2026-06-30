@@ -67,7 +67,10 @@ void main() {
     await tester.pumpAndSettle();
 
     _expectDarkMaterialApp(tester);
-    _expectReadableText(tester, find.text('Send reset link'));
+    _expectReadableText(
+      tester,
+      find.text('Envoyer le lien de réinitialisation'),
+    );
   });
 
   testWidgets('ComplianceDashboardScreen renders correctly in dark mode',

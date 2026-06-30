@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ecole_platform/shared/ui/widgets/app_snackbar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/app/providers.dart';
@@ -57,9 +58,7 @@ class _GdprScreenState extends ConsumerState<GdprScreen> {
         .read(apiClientProvider)
         .post('/users/$userId/data-deletion', body: {});
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Deletion request submitted')),
-    );
+    AppSnackBar.show(context, 'Deletion request submitted');
   }
 
   @override
