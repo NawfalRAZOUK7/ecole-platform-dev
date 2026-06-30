@@ -4670,7 +4670,7 @@
           "lms-activities"
         ],
         "summary": "List activities",
-        "description": "List available activities with filtering, sorting, and full-text search.\n\nShows school-specific + platform-wide activities.\nFilters: ?filter[type]=quiz&filter[difficulty]=easy\nSort: ?sort=-created_at\nSearch: ?search=multiplication",
+        "description": "List available activities with filtering, sorting, and full-text search.\n\nShows school-specific + platform-wide activities.\nFilters: ?filter[type]=quiz&filter[difficulty]=EASY\nSort: ?sort=-created_at\nSearch: ?search=multiplication",
         "operationId": "list_activities_api_v1_activities_get",
         "security": [
           {
@@ -12594,7 +12594,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/MicroBudgetCreateRequest"
+                "$ref": "#/components/schemas/SchoolBudgetCreateRequest"
               }
             }
           }
@@ -12827,7 +12827,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/MicroBudgetUpdateRequest"
+                "$ref": "#/components/schemas/SchoolBudgetUpdateRequest"
               }
             }
           }
@@ -22852,6 +22852,312 @@
         }
       }
     },
+    "/api/v1/curriculum": {
+      "get": {
+        "tags": [
+          "Curriculum"
+        ],
+        "summary": "Full curriculum tree (cycle → level → matière → topics)",
+        "operationId": "get_curriculum_api_v1_curriculum_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/curriculum/cycles": {
+      "get": {
+        "tags": [
+          "Curriculum"
+        ],
+        "summary": "Cycles and their niveaux",
+        "operationId": "get_cycles_api_v1_curriculum_cycles_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/curriculum/levels/{level}/matieres": {
+      "get": {
+        "tags": [
+          "Curriculum"
+        ],
+        "summary": "Matières offered at a niveau",
+        "operationId": "get_level_matieres_api_v1_curriculum_levels__level__matieres_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "level",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Level"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/curriculum/class/{class_id}/matieres": {
+      "get": {
+        "tags": [
+          "Curriculum"
+        ],
+        "summary": "Matières for a class (official for its niveau + the school's custom)",
+        "description": "Class → matières: official matières for the class's niveau, plus the\nschool's active custom matières scoped to that niveau/cycle (or global).",
+        "operationId": "get_class_matieres_api_v1_curriculum_class__class_id__matieres_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "class_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Class Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/curriculum/levels/{level}/matieres/{subject}/topics": {
+      "get": {
+        "tags": [
+          "Curriculum"
+        ],
+        "summary": "Topics (sujets) for a matière at a niveau",
+        "operationId": "get_topics_api_v1_curriculum_levels__level__matieres__subject__topics_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "level",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Level"
+            }
+          },
+          {
+            "name": "subject",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Subject"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/custom-subjects": {
+      "get": {
+        "tags": [
+          "Curriculum"
+        ],
+        "summary": "List this school's custom matières",
+        "operationId": "list_custom_subjects_api_v1_custom_subjects_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Curriculum"
+        ],
+        "summary": "Add a custom matière (ADM/DIR)",
+        "operationId": "create_custom_subject_api_v1_custom_subjects_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomSubjectCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/custom-subjects/{subject_id}": {
+      "delete": {
+        "tags": [
+          "Curriculum"
+        ],
+        "summary": "Deactivate a custom matière (ADM/DIR)",
+        "operationId": "deactivate_custom_subject_api_v1_custom_subjects__subject_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "subject_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Subject Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/programs": {
       "get": {
         "tags": [
@@ -25688,6 +25994,30 @@
             ],
             "title": "Subject"
           },
+          "subject_other": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Other"
+          },
+          "topic": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Topic"
+          },
           "description": {
             "anyOf": [
               {
@@ -25830,6 +26160,30 @@
               }
             ],
             "title": "Subject"
+          },
+          "subject_other": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Other"
+          },
+          "topic": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Topic"
           },
           "description": {
             "anyOf": [
@@ -26106,7 +26460,7 @@
             "title": "Type",
             "default": "DIRECT"
           },
-          "subject": {
+          "subject_line": {
             "anyOf": [
               {
                 "type": "string",
@@ -26116,7 +26470,7 @@
                 "type": "null"
               }
             ],
-            "title": "Subject"
+            "title": "Subject Line"
           },
           "initial_message": {
             "type": "string",
@@ -26289,6 +26643,81 @@
         ],
         "title": "CurriculumMappingCreateRequest",
         "description": "Payload for creating a curriculum mapping."
+      },
+      "CustomSubjectCreateRequest": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "title_ar": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title Ar"
+          },
+          "title_en": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title En"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "cycle": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cycle"
+          },
+          "level_band": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level Band"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "title": "CustomSubjectCreateRequest"
       },
       "DeviceRegistrationRequest": {
         "properties": {
@@ -27546,7 +27975,7 @@
             "maxLength": 20,
             "minLength": 1,
             "title": "Difficulty",
-            "default": "easy"
+            "default": "EASY"
           },
           "target_age_min": {
             "anyOf": [
@@ -27759,11 +28188,11 @@
         "properties": {
           "subject": {
             "type": "string",
-            "maxLength": 120,
+            "maxLength": 50,
             "minLength": 1,
             "title": "Subject"
           },
-          "level": {
+          "level_band": {
             "anyOf": [
               {
                 "type": "string",
@@ -27773,7 +28202,7 @@
                 "type": "null"
               }
             ],
-            "title": "Level"
+            "title": "Level Band"
           },
           "distribution": {
             "additionalProperties": {
@@ -28851,82 +29280,6 @@
         "title": "Meta",
         "description": "Metadata for single-item responses."
       },
-      "MicroBudgetCreateRequest": {
-        "properties": {
-          "academic_year_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Academic Year Id"
-          },
-          "total_amount": {
-            "type": "number",
-            "minimum": 0.0,
-            "title": "Total Amount"
-          },
-          "currency": {
-            "type": "string",
-            "pattern": "^MAD$",
-            "title": "Currency",
-            "default": "MAD"
-          },
-          "status": {
-            "type": "string",
-            "pattern": "^(active|frozen|closed)$",
-            "title": "Status",
-            "default": "active"
-          }
-        },
-        "type": "object",
-        "required": [
-          "academic_year_id",
-          "total_amount"
-        ],
-        "title": "MicroBudgetCreateRequest",
-        "description": "Payload for creating a micro-budget."
-      },
-      "MicroBudgetUpdateRequest": {
-        "properties": {
-          "total_amount": {
-            "anyOf": [
-              {
-                "type": "number",
-                "minimum": 0.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Total Amount"
-          },
-          "currency": {
-            "anyOf": [
-              {
-                "type": "string",
-                "pattern": "^MAD$"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Currency"
-          },
-          "status": {
-            "anyOf": [
-              {
-                "type": "string",
-                "pattern": "^(active|frozen|closed)$"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Status"
-          }
-        },
-        "type": "object",
-        "title": "MicroBudgetUpdateRequest",
-        "description": "Payload for updating a micro-budget."
-      },
       "MicroEnrollmentCreateRequest": {
         "properties": {
           "micro_group_id": {
@@ -28944,6 +29297,18 @@
             "type": "string",
             "format": "uuid",
             "title": "Parent Id"
+          },
+          "student_user_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Student User Id"
           },
           "date_of_birth": {
             "type": "string",
@@ -30123,11 +30488,23 @@
         "properties": {
           "subject": {
             "type": "string",
-            "maxLength": 120,
+            "maxLength": 50,
             "minLength": 1,
             "title": "Subject"
           },
-          "level": {
+          "subject_other": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Other"
+          },
+          "level_band": {
             "anyOf": [
               {
                 "type": "string",
@@ -30137,11 +30514,11 @@
                 "type": "null"
               }
             ],
-            "title": "Level"
+            "title": "Level Band"
           },
           "difficulty": {
             "type": "string",
-            "pattern": "^(easy|medium|hard)$",
+            "maxLength": 20,
             "title": "Difficulty"
           },
           "tags": {
@@ -30301,6 +30678,18 @@
             ],
             "title": "Subject"
           },
+          "subject_other": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Other"
+          },
           "level_band": {
             "anyOf": [
               {
@@ -30317,7 +30706,7 @@
             "anyOf": [
               {
                 "type": "string",
-                "pattern": "^(EASY|MEDIUM|HARD)$"
+                "maxLength": 20
               },
               {
                 "type": "null"
@@ -30501,7 +30890,7 @@
             "anyOf": [
               {
                 "type": "string",
-                "pattern": "^(EASY|MEDIUM|HARD)$"
+                "maxLength": 20
               },
               {
                 "type": "null"
@@ -31566,6 +31955,82 @@
           "points_awarded"
         ],
         "title": "RubricScoreInput"
+      },
+      "SchoolBudgetCreateRequest": {
+        "properties": {
+          "academic_year_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Academic Year Id"
+          },
+          "total_amount": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Total Amount"
+          },
+          "currency": {
+            "type": "string",
+            "pattern": "^MAD$",
+            "title": "Currency",
+            "default": "MAD"
+          },
+          "status": {
+            "type": "string",
+            "pattern": "^(active|frozen|closed)$",
+            "title": "Status",
+            "default": "active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "academic_year_id",
+          "total_amount"
+        ],
+        "title": "SchoolBudgetCreateRequest",
+        "description": "Payload for creating a micro-budget."
+      },
+      "SchoolBudgetUpdateRequest": {
+        "properties": {
+          "total_amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Amount"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^MAD$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(active|frozen|closed)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "title": "SchoolBudgetUpdateRequest",
+        "description": "Payload for updating a micro-budget."
       },
       "SchoolCreateRequest": {
         "properties": {
@@ -33341,7 +33806,7 @@
             "minLength": 1,
             "title": "Text"
           },
-          "subject": {
+          "topic": {
             "anyOf": [
               {
                 "type": "string",
@@ -33351,7 +33816,7 @@
                 "type": "null"
               }
             ],
-            "title": "Subject"
+            "title": "Topic"
           },
           "language": {
             "anyOf": [
