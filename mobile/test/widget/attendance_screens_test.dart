@@ -113,7 +113,8 @@ void main() {
       );
       await _settle(tester);
 
-      expect(find.text('Attendance history'), findsOneWidget);
+      // 'Historique' appears in both the app bar title and the filters card header.
+      expect(find.text('Historique'), findsNWidgets(2));
       expect(find.text('Recent sessions'), findsOneWidget);
       expect(find.textContaining('50.0%'), findsOneWidget);
       expect(find.text('present'), findsWidgets);
@@ -146,8 +147,8 @@ void main() {
       );
       await _settle(tester);
 
-      expect(find.text('Class'), findsOneWidget);
-      expect(find.text('Student'), findsOneWidget);
+      expect(find.text('Classe'), findsOneWidget);
+      expect(find.text('Élève'), findsOneWidget);
       expect(find.byType(DropdownButtonFormField<String>), findsNWidgets(2));
     });
 

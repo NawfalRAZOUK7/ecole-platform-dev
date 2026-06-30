@@ -79,6 +79,6 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Upload proof'), findsOneWidget);
+    expect(find.text('Téléverser un justificatif'), findsOneWidget);
   });
 }

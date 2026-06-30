@@ -325,7 +325,7 @@ void main() {
         ),
       );
 
-      await tester.tap(find.text('Retry'));
+      await tester.tap(find.text('Réessayer'));
       await tester.pump();
 
       expect(retried, isTrue);

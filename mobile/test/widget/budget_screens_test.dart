@@ -196,8 +196,8 @@ void main() {
 
       expect(find.text('Approval queue'), findsOneWidget);
       expect(find.text('Lab kits'), findsOneWidget);
-      expect(find.text('Approve'), findsOneWidget);
-      expect(find.text('Reject'), findsOneWidget);
+      expect(find.text('Approuver'), findsOneWidget);
+      expect(find.text('Rejeter'), findsOneWidget);
     });
 
     testWidgets('BudgetRequestScreen submits new requests', (tester) async {
