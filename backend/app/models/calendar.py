@@ -21,7 +21,13 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.database import Base, SchoolScopedMixin, SoftDeleteMixin, TimestampMixin
+from app.core.database import (
+    Base,
+    SchoolScopedMixin,
+    SoftDeleteMixin,
+    TimestampMixin,
+    TranslatableMixin,
+)
 
 
 def _short_id(value: object | None) -> str:
@@ -54,7 +60,7 @@ class EventReminderChannel(str, enum.Enum):
     PUSH = "push"
 
 
-class Event(TimestampMixin, SchoolScopedMixin, SoftDeleteMixin, Base):
+class Event(TimestampMixin, SchoolScopedMixin, SoftDeleteMixin, TranslatableMixin, Base):
     """Calendar event created by a user within a school."""
 
     __tablename__ = "events"
@@ -210,7 +216,7 @@ class EventReminderPreference(TimestampMixin, SchoolScopedMixin, Base):
         )
 
 
-class MoroccanHoliday(TimestampMixin, Base):
+class MoroccanHoliday(TimestampMixin, TranslatableMixin, Base):
     """Global holiday seed rows used to auto-populate school calendars."""
 
     __tablename__ = "moroccan_holidays"

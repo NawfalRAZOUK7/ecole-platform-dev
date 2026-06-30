@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import uuid
 from datetime import datetime
 from typing import Any
@@ -30,6 +31,41 @@ from app.models.lms import (
     SubmissionFile,
 )
 from app.repositories.base import BaseRepository
+
+
+def _level_bands_from_class_label(value: str | None) -> set[str]:
+    if not value:
+        return set()
+    normalized = value.strip().lower().replace("è", "e").replace("é", "e")
+    # Map both Moroccan codes and legacy French labels -> Moroccan level_band.
+    # Matched per separator-delimited token (exact or prefix) so a track suffix
+    # like "2BAC-PC" can never collide with a primary code (e.g. "cp").
+    label_map = {
+        # préscolaire
+        "maternelle": "GS", "creche": "GS", "prescolaire": "GS",
+        "ps": "PS", "ms": "MS", "gs": "GS",
+        # primaire (Moroccan 1AEP..6AEP; French CP..CM2)
+        "1aep": "1AEP", "2aep": "2AEP", "3aep": "3AEP",
+        "4aep": "4AEP", "5aep": "5AEP", "6aep": "6AEP",
+        "cp": "1AEP", "ce1": "2AEP", "ce2": "3AEP", "cm1": "4AEP", "cm2": "6AEP",
+        "primaire": "1AEP",
+        # collège (Moroccan 1AC..3AC; French 6eme..3eme)
+        "1ac": "1AC", "2ac": "2AC", "3ac": "3AC",
+        "6eme": "1AC", "5eme": "2AC", "4eme": "3AC", "3eme": "3AC",
+        "college": "1AC",
+        # lycée (Moroccan TC/1BAC/2BAC; French 2nde/1ere/Terminale)
+        "tc": "TC", "1bac": "1BAC", "2bac": "2BAC",
+        "2nde": "TC", "1ere": "1BAC", "terminale": "2BAC", "term": "2BAC",
+        "lycee": "TC",
+    }
+    levels: set[str] = set()
+    for token in re.split(r"[^a-z0-9]+", normalized):
+        if not token:
+            continue
+        for key, band in label_map.items():
+            if token == key or token.startswith(key):
+                levels.add(band)
+    return levels
 
 
 class LMSRepository(BaseRepository):
@@ -485,11 +521,19 @@ class LMSRepository(BaseRepository):
         search: str | None,
         cursor: str | None,
         limit: int,
+        content_item_ids: set[uuid.UUID] | None = None,
+        level_bands: set[str] | None = None,
     ) -> tuple[list[ContentItem], bool]:
         query = select(ContentItem).where(
             ContentItem.status == "published",
             (ContentItem.school_id == school_id) | (ContentItem.school_id.is_(None)),
         )
+        # Restriction par affectation (STD/PAR) : ne renvoyer que ces id. Un ensemble
+        # vide produit volontairement zéro résultat (aucun contenu affecté).
+        if content_item_ids is not None:
+            query = query.where(ContentItem.id.in_(content_item_ids))
+        if level_bands is not None:
+            query = query.where(ContentItem.level_band.in_(level_bands))
 
         if content_type:
             query = query.where(ContentItem.content_type == content_type)
@@ -521,6 +565,38 @@ class LMSRepository(BaseRepository):
             query = query.where(ContentItem.id > last_id)
 
         return await self._paginate_scalars(query, limit=limit)
+
+    async def list_teacher_level_bands(
+        self,
+        *,
+        teacher_id: uuid.UUID,
+        school_id: uuid.UUID,
+    ) -> set[str]:
+        """Derive content level bands from classes assigned to a teacher.
+
+        Prefers the canonical ``Class.level_band`` column. Falls back to parsing
+        the level out of the class ``code``/``name`` only when the column is null
+        (legacy rows not yet backfilled), keeping the parser conservative and
+        aligned with seeded codes such as CP-A, CE2-A, 6A, 5A, 3eme-A, Term-A.
+        """
+        from app.models.erp import TeacherAssignment
+
+        result = await self.db.execute(
+            select(Class.level_band, Class.code, Class.name)
+            .join(TeacherAssignment, TeacherAssignment.class_id == Class.id)
+            .where(
+                TeacherAssignment.teacher_id == teacher_id,
+                TeacherAssignment.school_id == school_id,
+            )
+        )
+        levels: set[str] = set()
+        for level_band, code, name in result.all():
+            if level_band:
+                levels.add(level_band)
+            else:
+                levels.update(_level_bands_from_class_label(code))
+                levels.update(_level_bands_from_class_label(name))
+        return levels
 
     async def get_content_progress(
         self,
@@ -631,11 +707,14 @@ class LMSRepository(BaseRepository):
         target_age: int | None,
         cursor: str | None,
         limit: int,
+        level_bands: set[str] | None = None,
     ) -> tuple[list[ContentItem], bool]:
         query = select(ContentItem).where(
             ContentItem.status == "published",
             (ContentItem.school_id == school_id) | (ContentItem.school_id.is_(None)),
         )
+        if level_bands is not None:
+            query = query.where(ContentItem.level_band.in_(level_bands))
 
         if content_type:
             query = query.where(ContentItem.content_type == content_type)
@@ -668,6 +747,21 @@ class LMSRepository(BaseRepository):
             query = query.where(ContentItem.id > last_id)
 
         return await self._paginate_scalars(query, limit=limit)
+
+    async def list_assigned_content_item_ids(
+        self,
+        *,
+        class_ids: set[uuid.UUID],
+    ) -> set[uuid.UUID]:
+        """Identifiants de contenu affectés à un ensemble de classes (portée élève/parent)."""
+        if not class_ids:
+            return set()
+        result = await self.db.execute(
+            select(ClassContentAssignment.content_item_id).where(
+                ClassContentAssignment.class_id.in_(class_ids)
+            )
+        )
+        return set(result.scalars().all())
 
     async def find_class_content_assignment(
         self,

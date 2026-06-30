@@ -70,7 +70,7 @@ class ConversationCreateRequest(BaseModel):
         description="User IDs of the other participants (not including initiator)",
     )
     type: str = Field("DIRECT", pattern="^(DIRECT|GROUP)$")
-    subject: str | None = Field(None, max_length=300)
+    subject_line: str | None = Field(None, max_length=300)
     initial_message: str = Field(
         ...,
         min_length=1,
@@ -91,7 +91,7 @@ class ConversationResponse(BaseModel):
     school_id: str
     type: str
     created_by: str
-    subject: str | None = None
+    subject_line: str | None = None
     participants: list[ConversationParticipantResponse] = []
     last_message_at: str | None = None
     created_at: str

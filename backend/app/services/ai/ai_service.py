@@ -423,7 +423,7 @@ class AIService:
                     WritingAttempt(
                         student_id=auth.user_id,
                         school_id=auth.school_id,
-                        subject=body.subject,
+                        topic=body.topic,
                         input_text="[opted_out]",
                         input_word_count=len(body.text.split()),
                         status="fallback",
@@ -451,7 +451,7 @@ class AIService:
 
         result = await self.process_writing_assist(
             text=body.text,
-            subject=body.subject,
+            subject=body.topic,
             student_id=auth.user_id,
             school_id=auth.school_id,
             language=getattr(body, "language", None),
@@ -463,7 +463,7 @@ class AIService:
                 WritingAttempt(
                     student_id=auth.user_id,
                     school_id=auth.school_id,
-                    subject=body.subject,
+                    topic=body.topic,
                     input_text=body.text[:500],
                     input_word_count=len(body.text.split()),
                     status=result.get("status", "completed"),
@@ -482,7 +482,7 @@ class AIService:
                 target_type="writing_attempt",
                 target_id=attempt.id,
                 entity_after={
-                    "subject": body.subject,
+                    "topic": body.topic,
                     "word_count": attempt.input_word_count,
                     "status": attempt.status,
                     "prompt_id": attempt.prompt_id,
@@ -495,7 +495,7 @@ class AIService:
             actor_id=auth.user_id,
             actor_role=auth.role,
             properties={
-                "subject": body.subject or "general",
+                "topic": body.topic or "general",
                 "word_count": attempt.input_word_count,
             },
         )

@@ -3,6 +3,7 @@
 Reference: Phase 11 — Suspicious Activity Detection
 """
 
+import logging
 import os
 from typing import Any, Optional
 
@@ -10,6 +11,8 @@ from geoip2.database import Reader
 from geoip2.errors import AddressNotFoundError
 
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class SuspiciousActivityService:
@@ -20,8 +23,8 @@ class SuspiciousActivityService:
         if os.path.exists(settings.geoip_database_path):
             try:
                 self.geoip_reader = Reader(settings.geoip_database_path)
-            except Exception as e:
-                print(f"Failed to load GeoIP database: {e}")
+            except Exception:
+                logger.warning("Failed to load GeoIP database", exc_info=True)
 
     def get_ip_location(self, ip_address: str) -> dict[str, Any]:
         """Get location information for an IP address."""
@@ -39,8 +42,8 @@ class SuspiciousActivityService:
             }
         except AddressNotFoundError:
             return {"country_code": None, "city": None, "region": None}
-        except Exception as e:
-            print(f"GeoIP lookup failed: {e}")
+        except Exception:
+            logger.warning("GeoIP lookup failed for %s", ip_address, exc_info=True)
             return {"country_code": None, "city": None, "region": None}
 
     def is_new_location(

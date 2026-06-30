@@ -21,6 +21,7 @@ from sqlalchemy.dialects.postgresql import ARRAY, ENUM as PgEnum
 from sqlalchemy.orm import Mapped, mapped_column, validates
 
 from app.core.database import Base, SchoolScopedMixin, SoftDeleteMixin, TimestampMixin
+from app.models.taxonomy import ContentSubject
 
 
 def _short_id(value: object | None) -> str:
@@ -162,7 +163,16 @@ class Resource(TimestampMixin, SchoolScopedMixin, SoftDeleteMixin, Base):
     )
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    subject: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    subject: Mapped[str | None] = mapped_column(
+        # Native enum incl. OTHER; school-specific matière = 'other' + free text.
+        PgEnum(
+            ContentSubject,
+            name="content_subject_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=True,
+    )
     level: Mapped[str | None] = mapped_column(String(120), nullable=True)
     type: Mapped[str] = mapped_column(
         PgEnum(

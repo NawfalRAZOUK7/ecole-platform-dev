@@ -12,7 +12,8 @@ from app.core.dependencies import AuthContext, verify_school_boundary
 from app.core.exceptions import AuthorizationError, NotFoundError, ValidationError
 from app.core.permissions import PLATFORM_ROLES
 from app.core.unit_of_work import UnitOfWork
-from app.models.games import GameConfig, GameDifficulty, GameType
+from app.models.games import GameConfig, GameType
+from app.models.taxonomy import DifficultyLevel
 from app.repositories.ai_games import GamesRepository
 from app.schemas.ai.games import (
     GameCompletionRequest,
@@ -42,8 +43,9 @@ def _normalize_game_type(raw: str) -> str:
 
 
 def _normalize_difficulty(raw: str) -> str:
-    cleaned = raw.strip().lower()
-    allowed = {item.value for item in GameDifficulty}
+    # Canonical difficulty is UPPERCASE; accept any case from clients.
+    cleaned = raw.strip().upper()
+    allowed = {item.value for item in DifficultyLevel}
     if cleaned not in allowed:
         raise ValidationError(
             "Unsupported game difficulty",

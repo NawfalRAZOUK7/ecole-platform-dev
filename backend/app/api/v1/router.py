@@ -169,6 +169,8 @@ from app.api.v1.lms.shared_review import router as shared_review_router
 
 # G46 — Level-age mappings
 from app.api.v1.lms.levels import router as levels_router
+from app.api.v1.lms.curriculum import router as curriculum_router
+from app.api.v1.lms.custom_subjects import router as custom_subjects_router
 
 # G49 — Academic Program Management & Student Academic History
 from app.api.v1.lms.programs import (
@@ -400,6 +402,8 @@ router.include_router(shared_review_router)
 
 # Mount sub-routers — G46 Level-age mappings
 router.include_router(levels_router)
+router.include_router(curriculum_router)
+router.include_router(custom_subjects_router)
 
 # Mount sub-routers — G49 Academic Program Management
 router.include_router(programs_router)

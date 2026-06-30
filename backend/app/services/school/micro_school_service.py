@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import AuthContext
 from app.core.exceptions import AuthorizationError, NotFoundError, ValidationError
-from app.core.permissions import ADM, EDUCATOR, PAR, SUP, SYS, TCH
+from app.core.permissions import ADM, EDUCATOR, PAR, STD, SUP, SYS, TCH
 from app.core.unit_of_work import UnitOfWork
 from app.domain.events.micro_school import (
     MicroEnrollmentCreated,
@@ -178,6 +178,9 @@ class _MicroServiceBase:
             id=str(micro_enrollment.id),
             micro_group_id=str(micro_enrollment.micro_group_id),
             parent_id=str(micro_enrollment.parent_id),
+            student_user_id=str(getattr(micro_enrollment, "student_user_id", None))
+            if getattr(micro_enrollment, "student_user_id", None)
+            else None,
             child_name=micro_enrollment.child_name,
             date_of_birth=micro_enrollment.date_of_birth.isoformat(),
             enrolled_at=_iso(micro_enrollment.enrolled_at) or "",
@@ -709,6 +712,17 @@ class MicroGroupService(_MicroServiceBase):
             await self._ensure_school_manage_access(group.micro_school, auth)
         if await self.repo.get_user(body.parent_id) is None:
             raise NotFoundError("Parent user not found", error_code="ERR-MICRO-404")
+        if body.student_user_id is not None:
+            student_user = await self.repo.get_user(body.student_user_id)
+            if student_user is None or student_user.school_id != auth.school_id:
+                raise NotFoundError(
+                    "Student user not found", error_code="ERR-MICRO-404"
+                )
+            if await self.repo.get_membership_role(body.student_user_id) != STD:
+                raise AuthorizationError(
+                    "Micro-enrollment student user must have STD role",
+                    error_code="ERR-MICRO-403",
+                )
 
         async with UnitOfWork(self.db) as uow:
             repo = MicroSchoolRepository(uow.session)
@@ -718,6 +732,7 @@ class MicroGroupService(_MicroServiceBase):
                 micro_group_id=body.micro_group_id,
                 child_name=body.child_name,
                 parent_id=body.parent_id,
+                student_user_id=body.student_user_id,
                 date_of_birth=body.date_of_birth,
                 enrolled_at=body.enrolled_at or datetime.now(timezone.utc),
                 status=body.status,
@@ -815,6 +830,17 @@ class MicroGroupService(_MicroServiceBase):
             if disallowed:
                 raise AuthorizationError(
                     "Parents can only update enrollment identity and status fields",
+                    error_code="ERR-MICRO-403",
+                )
+        if "student_user_id" in payload and payload["student_user_id"] is not None:
+            student_user = await self.repo.get_user(payload["student_user_id"])
+            if student_user is None or student_user.school_id != auth.school_id:
+                raise NotFoundError(
+                    "Student user not found", error_code="ERR-MICRO-404"
+                )
+            if await self.repo.get_membership_role(payload["student_user_id"]) != STD:
+                raise AuthorizationError(
+                    "Micro-enrollment student user must have STD role",
                     error_code="ERR-MICRO-403",
                 )
 

@@ -34,7 +34,7 @@ class GameConfigCreateRequest(BaseModel):
     title_ar: str | None = Field(None, max_length=300)
     title_fr: str | None = Field(None, max_length=300)
     subject: str | None = Field(None, max_length=50)
-    difficulty: str = Field("easy", min_length=1, max_length=20)
+    difficulty: str = Field("EASY", min_length=1, max_length=20)
     target_age_min: int | None = Field(None, ge=0)
     target_age_max: int | None = Field(None, ge=0)
     config: dict[str, Any]

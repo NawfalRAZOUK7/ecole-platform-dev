@@ -37,6 +37,9 @@ class RewardBadgeResponse(BaseModel):
     description_en: str | None = None
     description_fr: str | None = None
     description_ar: str | None = None
+    # Unified i18n store (dual-read phase): {"title": {"fr": ...}, ...}.
+    # Clients should prefer this; legacy *_fr/_ar/_en remain during migration.
+    translations: dict | None = None
     icon: str | None = None
     criteria_type: str | None = None
     criteria_value: int | None = None

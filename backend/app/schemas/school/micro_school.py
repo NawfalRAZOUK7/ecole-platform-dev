@@ -80,6 +80,7 @@ class MicroEnrollmentCreateRequest(BaseModel):
     micro_group_id: uuid.UUID
     child_name: str = Field(..., min_length=1, max_length=200)
     parent_id: uuid.UUID
+    student_user_id: uuid.UUID | None = None
     date_of_birth: date_type
     enrolled_at: datetime_type | None = None
     status: str = Field("active", pattern="^(active|withdrawn)$")
@@ -90,6 +91,7 @@ class MicroEnrollmentUpdateRequest(BaseModel):
 
     child_name: str | None = Field(None, min_length=1, max_length=200)
     parent_id: uuid.UUID | None = None
+    student_user_id: uuid.UUID | None = None
     date_of_birth: date_type | None = None
     enrolled_at: datetime_type | None = None
     status: str | None = Field(None, pattern="^(active|withdrawn)$")
@@ -101,6 +103,7 @@ class MicroEnrollmentResponse(BaseModel):
     id: str
     micro_group_id: str
     parent_id: str
+    student_user_id: str | None = None
     child_name: str
     date_of_birth: str
     enrolled_at: str

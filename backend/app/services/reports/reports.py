@@ -1206,11 +1206,8 @@ class ReportsService:
             total_tva += tva_amount
             total_ttc += amount_ttc
 
-            # Parse sibling discounts from description if present
-            applied_discounts = []
-            if item.description and "discount" in item.description.lower():
-                # TODO: Implement discount parsing in Phase 2.1 refinement
-                pass
+            # Parse any discounts encoded in the line-item description.
+            applied_discounts = self._parse_item_discounts(item.description, amount_ht)
 
             items.append(
                 {
@@ -1227,6 +1224,24 @@ class ReportsService:
 
         # Generate QR code
         qr_code_base64 = self._generate_qr_code(str(invoice.id), settings.api_base_url)
+
+        # Children covered by this parent's statement (id, name, class context).
+        children = await self.repo.list_children(
+            parent_id=parent.id, school_id=job.school_id
+        )
+        students = []
+        for child in children:
+            class_ctx = await self.repo.get_student_class_context(
+                student_id=child.id, school_id=job.school_id
+            )
+            students.append(
+                {
+                    "id": str(child.id),
+                    "full_name": child.full_name,
+                    "class_name": (class_ctx or {}).get("class_name"),
+                    "class_code": (class_ctx or {}).get("class_code"),
+                }
+            )
 
         return {
             "lang": job.parameters.get("locale", "fr"),
@@ -1274,10 +1289,54 @@ class ReportsService:
                 "full_name": parent.full_name,
                 "email": parent.email,
             },
-            "students": [],  # TODO: Fetch children in Phase 2.1 refinement
+            "students": students,
             "totals": {"ht": total_ht, "tva": total_tva, "ttc": total_ttc},
             "qr_code_base64": qr_code_base64,
         }
+
+    @staticmethod
+    def _parse_item_discounts(
+        description: str | None, amount_ht: float
+    ) -> list[dict[str, Any]]:
+        """Best-effort extraction of discounts encoded in a line-item description.
+
+        Recognises percentage (e.g. "-10%") and fixed-amount (e.g. "-200 MAD")
+        mentions on lines that reference a discount / réduction / remise / fratrie.
+        Returns a structured list and never raises — it only reflects what the
+        description actually states, it does not invent discounts.
+        """
+        if not description:
+            return []
+        text = description.lower()
+        discount_terms = (
+            "discount",
+            "réduction",
+            "reduction",
+            "remise",
+            "fratrie",
+            "sibling",
+        )
+        if not any(term in text for term in discount_terms):
+            return []
+        discounts: list[dict[str, Any]] = []
+        pct_match = re.search(r"(\d+(?:[.,]\d+)?)\s*%", text)
+        if pct_match:
+            pct = float(pct_match.group(1).replace(",", "."))
+            discounts.append(
+                {
+                    "type": "percentage",
+                    "label": description.strip(),
+                    "rate": pct,
+                    "amount": round(amount_ht * pct / 100.0, 2),
+                }
+            )
+        amt_match = re.search(r"(\d+(?:[.,]\d+)?)\s*(?:mad|dh|dhs|درهم)\b", text)
+        if amt_match:
+            amt = float(amt_match.group(1).replace(",", "."))
+            discounts.append(
+                {"type": "fixed", "label": description.strip(), "amount": amt}
+            )
+        return discounts
 
     async def _payment_receipt_context(self, job: ReportJob) -> dict[str, Any]:
         """Build context for payment receipt PDF generation."""

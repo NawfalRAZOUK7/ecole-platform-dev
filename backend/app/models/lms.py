@@ -735,6 +735,29 @@ class ContentSubmissionStatus(str, enum.Enum):
     REJECTED = "REJECTED"
 
 
+# Canonical taxonomy now lives in app/models/taxonomy.py (single source of truth).
+# Re-exported here for backward compatibility with existing imports.
+from app.models.taxonomy import (  # noqa: E402
+    CONTENT_LEVEL_BANDS,
+    CONTENT_SUBJECTS,
+    DIFFICULTY_LEVELS,
+    ContentLevelBand,
+    ContentSubject,
+    DifficultyLevel,
+    Language,
+)
+
+__all_taxonomy__ = [
+    "ContentLevelBand",
+    "ContentSubject",
+    "DifficultyLevel",
+    "Language",
+    "CONTENT_LEVEL_BANDS",
+    "CONTENT_SUBJECTS",
+    "DIFFICULTY_LEVELS",
+]
+
+
 class ContentItem(TimestampMixin, NullableSchoolScopedMixin, Base):
     """Educational content item (video, document, interactive).
 
@@ -746,13 +769,43 @@ class ContentItem(TimestampMixin, NullableSchoolScopedMixin, Base):
 
     title: Mapped[str] = mapped_column(String(300), nullable=False)
     content_type: Mapped[str] = mapped_column(String(50), nullable=False)
-    level_band: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    language: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    level_band: Mapped[str | None] = mapped_column(
+        PgEnum(
+            ContentLevelBand,
+            name="content_level_band_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=True,
+    )
+    language: Mapped[str | None] = mapped_column(
+        PgEnum(
+            Language,
+            name="language_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=True,
+    )
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default=ContentItemStatus.DRAFT.value
     )
     # Phase 9A fields
-    subject: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    subject: Mapped[str | None] = mapped_column(
+        # Native enum incl. OTHER; for OTHER the name is in subject_other.
+        PgEnum(
+            ContentSubject,
+            name="content_subject_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=True,
+    )
+    # Free-text matière name used only when subject == "other".
+    subject_other: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    # Sujet — the chapter/topic within the matière (e.g. "Les fractions").
+    # Open user input (suggestions from curriculum.topics_for); free text by design.
+    topic: Mapped[str | None] = mapped_column(String(200), nullable=True)
     created_by: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
@@ -865,7 +918,15 @@ class Activity(TimestampMixin, NullableSchoolScopedMixin, Base):
     __tablename__ = "activities"
 
     type: Mapped[str] = mapped_column(String(50), nullable=False)
-    difficulty: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    difficulty: Mapped[str | None] = mapped_column(
+        PgEnum(
+            DifficultyLevel,
+            name="difficulty_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=True,
+    )
     title: Mapped[str] = mapped_column(String(300), nullable=False)
     pedagogical_objective: Mapped[str | None] = mapped_column(Text, nullable=True)
 
@@ -1024,9 +1085,38 @@ class Quiz(TimestampMixin, NullableSchoolScopedMixin, Base):
     )
     title: Mapped[str] = mapped_column(String(300), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    subject: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    level_band: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    difficulty: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    subject: Mapped[str | None] = mapped_column(
+        # Native enum incl. OTHER; for OTHER the name is in subject_other.
+        PgEnum(
+            ContentSubject,
+            name="content_subject_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=True,
+    )
+    # Free-text matière name used only when subject == "other".
+    subject_other: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    # Sujet — chapter/topic within the matière (open user input; free text).
+    topic: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    level_band: Mapped[str | None] = mapped_column(
+        PgEnum(
+            ContentLevelBand,
+            name="content_level_band_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=True,
+    )
+    difficulty: Mapped[str | None] = mapped_column(
+        PgEnum(
+            DifficultyLevel,
+            name="difficulty_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=True,
+    )
     time_limit_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
     max_attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     shuffle_questions: Mapped[bool] = mapped_column(
@@ -1040,7 +1130,15 @@ class Quiz(TimestampMixin, NullableSchoolScopedMixin, Base):
         ForeignKey("content_items.id", ondelete="SET NULL"), nullable=True
     )
     # Content language ("ar" | "fr" | "en") — drives quiz audio (TTS) in players.
-    language: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    language: Mapped[str | None] = mapped_column(
+        PgEnum(
+            Language,
+            name="language_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=True,
+    )
 
     # Relationships
     questions: Mapped[list["QuizQuestion"]] = relationship(
@@ -1219,9 +1317,36 @@ class QuestionBankItem(TimestampMixin, SchoolScopedMixin, Base):
     teacher_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    subject: Mapped[str] = mapped_column(String(120), nullable=False)
-    level: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    difficulty: Mapped[str] = mapped_column(String(20), nullable=False)
+    # Coded curriculum taxonomy (ContentSubject / ContentLevelBand).
+    subject: Mapped[str] = mapped_column(
+        # Native enum incl. OTHER; for OTHER the name is in subject_other.
+        PgEnum(
+            ContentSubject,
+            name="content_subject_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+    )
+    subject_other: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    level_band: Mapped[str | None] = mapped_column(
+        PgEnum(
+            ContentLevelBand,
+            name="content_level_band_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=True,
+    )
+    difficulty: Mapped[str] = mapped_column(
+        PgEnum(
+            DifficultyLevel,
+            name="difficulty_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+    )
     question_type: Mapped[str] = mapped_column(String(20), nullable=False)
     question_data: Mapped[dict] = mapped_column(JSONB, nullable=False)
     tags: Mapped[list[str]] = mapped_column(

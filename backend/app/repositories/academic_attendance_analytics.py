@@ -51,6 +51,39 @@ class AttendanceAnalyticsRepository(BaseRepository):
         absence_count, total_sessions = result.one()
         return int(absence_count or 0), int(total_sessions or 0)
 
+    async def compute_period_absence_counts(
+        self,
+        *,
+        period_id: uuid.UUID,
+    ) -> dict[uuid.UUID, tuple[int, int]]:
+        """Batched counterpart of ``compute_student_absence_count`` for a whole
+        period — one GROUP BY query instead of one query per student (avoids N+1
+        in the alert-generation loop)."""
+        result = await self.db.execute(
+            select(
+                AttendanceRecord.student_id,
+                func.coalesce(
+                    func.sum(case((AttendanceRecord.status == "absent", 1), else_=0)),
+                    0,
+                ),
+                func.coalesce(
+                    func.sum(case((AttendanceRecord.status != "excused", 1), else_=0)),
+                    0,
+                ),
+            )
+            .select_from(AttendanceRecord)
+            .join(
+                AttendanceSession,
+                AttendanceSession.id == AttendanceRecord.attendance_session_id,
+            )
+            .where(AttendanceSession.period_id == period_id)
+            .group_by(AttendanceRecord.student_id)
+        )
+        return {
+            student_id: (int(absence_count or 0), int(total_sessions or 0))
+            for student_id, absence_count, total_sessions in result.all()
+        }
+
     async def list_class_students(
         self,
         *,

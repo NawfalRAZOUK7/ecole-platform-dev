@@ -12,6 +12,7 @@ from app.core.exceptions import ConflictError, NotFoundError, ValidationError
 from app.core.permissions import ADM, DIR, PAR, STD, TCH
 from app.core.response import encode_cursor
 from app.core.unit_of_work import UnitOfWork
+from app.services.content.subject_rules import validate_subject
 from app.models.com import Announcement
 from app.models.lms import ContentItem
 from app.repositories.content_cms import CMSRepository
@@ -45,6 +46,8 @@ class CMSService:
             "level_band": content_item.level_band,
             "language": content_item.language,
             "subject": content_item.subject,
+            "subject_other": content_item.subject_other,
+            "topic": content_item.topic,
             "description": content_item.description,
             "page_count": content_item.page_count,
             "letter": content_item.letter,
@@ -92,6 +95,14 @@ class CMSService:
         auth: AuthContext,
         ip_address: str | None,
     ) -> dict:
+        # Platform content => official matières only (no school custom matières).
+        await validate_subject(
+            self.db,
+            school_id=None,
+            subject=body.subject,
+            level_band=body.level_band,
+            subject_other=body.subject_other,
+        )
         async with UnitOfWork(self.db) as uow:
             repo = CMSRepository(uow.session)
             audit = AuditService(uow.session)
@@ -102,6 +113,8 @@ class CMSService:
                 level_band=body.level_band,
                 language=body.language,
                 subject=body.subject,
+                subject_other=body.subject_other,
+                topic=body.topic,
                 description=body.description,
                 page_count=body.page_count,
                 letter=body.letter,
@@ -301,6 +314,8 @@ class CMSService:
                     level_band=original.level_band,
                     language=original.language,
                     subject=original.subject,
+                    subject_other=original.subject_other,
+                    topic=original.topic,
                     description=original.description,
                     page_count=original.page_count,
                     letter=original.letter,

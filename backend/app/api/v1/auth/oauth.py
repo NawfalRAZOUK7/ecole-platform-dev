@@ -7,6 +7,7 @@ Public endpoints: login URL generation, token exchange.
 from __future__ import annotations
 
 import uuid
+from datetime import UTC, datetime, timedelta
 
 import redis.asyncio as aioredis
 from fastapi import APIRouter, Depends, Request
@@ -175,6 +176,16 @@ async def oauth_login(
             error_code="ERR-OAUTH-TOKEN",
         )
 
+    # Parse the token lifetime (OAuth2 `expires_in`, seconds) into an absolute
+    # expiry so the stored OAuth account knows when its access token is stale.
+    token_expires_at: datetime | None = None
+    expires_in = token_data.get("expires_in")
+    if expires_in is not None:
+        try:
+            token_expires_at = datetime.now(UTC) + timedelta(seconds=int(expires_in))
+        except (TypeError, ValueError):
+            token_expires_at = None
+
     # Get user info from provider
     try:
         user_info = await service.get_user_info(provider, access_token)
@@ -251,7 +262,7 @@ async def oauth_login(
             provider_user_id=provider_user_id,
             provider_email=email,
             access_token=access_token,
-            token_expires_at=None,  # TODO: parse expires_in
+            token_expires_at=token_expires_at,
         )
 
         membership = await repo.get_membership(
@@ -292,6 +303,7 @@ async def oauth_login(
         provider_user_id=provider_user_id,
         provider_email=email,
         access_token=access_token,
+        token_expires_at=token_expires_at,
     )
 
     token_bundle = await issue_oauth_tokens(user.id, membership.role_code)

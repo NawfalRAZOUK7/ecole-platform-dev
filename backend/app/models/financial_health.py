@@ -16,9 +16,11 @@ from sqlalchemy import (
     String,
     UniqueConstraint,
 )
+from sqlalchemy.dialects.postgresql import ENUM as PgEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.core.database import Base, SchoolScopedMixin, TimestampMixin
+from app.models.taxonomy import Currency, enum_values as _enum_values
 
 
 def _short_id(value: object | None) -> str:
@@ -29,7 +31,14 @@ ALLOWED_CURRENCIES = {"MAD", "EUR", "USD"}
 
 
 class RetentionMetric(TimestampMixin, SchoolScopedMixin, Base):
-    """Year-over-year student retention metric for a school."""
+    """Year-over-year student **enrollment** retention metric for a school.
+
+    NOTE (taxonomy): this is an *enrollment* metric (student head-counts), not a
+    *financial* one — it carries no ``currency`` and no money amount. It lives in
+    ``financial_health.py`` for historical reasons (computed by the same
+    financial-health job); conceptually it belongs with enrollment/analytics. A
+    physical move is deferred to avoid churn — see BACKEND_DB_AUDIT.md §11 A3.
+    """
 
     __tablename__ = "retention_metrics"
 
@@ -109,7 +118,16 @@ class CashflowForecast(TimestampMixin, SchoolScopedMixin, Base):
     expected_expenses: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
     actual_income: Mapped[float | None] = mapped_column(Numeric(14, 2), nullable=True)
     actual_expenses: Mapped[float | None] = mapped_column(Numeric(14, 2), nullable=True)
-    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="MAD")
+    currency: Mapped[str] = mapped_column(
+        PgEnum(
+            Currency,
+            name="currency_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+        default=Currency.MAD.value,
+    )
     confidence_score: Mapped[float] = mapped_column(Numeric(4, 3), nullable=False)
     computed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -192,7 +210,16 @@ class CostPerStudent(TimestampMixin, SchoolScopedMixin, Base):
     cost_per_student: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
     revenue_per_student: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
     margin_per_student: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
-    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="MAD")
+    currency: Mapped[str] = mapped_column(
+        PgEnum(
+            Currency,
+            name="currency_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+        default=Currency.MAD.value,
+    )
     computed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
@@ -265,7 +292,16 @@ class FinancialSnapshot(TimestampMixin, SchoolScopedMixin, Base):
     avg_payment_delay_days: Mapped[float | None] = mapped_column(
         Numeric(6, 2), nullable=True
     )
-    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="MAD")
+    currency: Mapped[str] = mapped_column(
+        PgEnum(
+            Currency,
+            name="currency_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+        default=Currency.MAD.value,
+    )
     computed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

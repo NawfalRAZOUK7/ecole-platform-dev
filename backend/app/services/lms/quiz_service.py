@@ -15,6 +15,7 @@ from app.schemas.lms.quiz import (
     QuizRespondRequest,
     QuizUpdateRequest,
 )
+from app.services.content.subject_rules import validate_subject
 from app.services.platform.audit import AuditService
 from app.services.lms._helpers import LMSServiceBase, _utc_now
 from app.services.lms.quiz_grading import grade_attempt
@@ -31,6 +32,13 @@ class QuizService(LMSServiceBase):
         ip_address: str | None,
     ) -> dict:
         school_id = None if auth.role == CONTENT_MGR else auth.school_id
+        await validate_subject(
+            self.db,
+            school_id=school_id,
+            subject=body.subject,
+            level_band=body.level_band,
+            subject_other=body.subject_other,
+        )
         async with UnitOfWork(self.db) as uow:
             quiz_repo = QuizRepository(uow.session)
             audit = AuditService(uow.session)
@@ -40,6 +48,7 @@ class QuizService(LMSServiceBase):
                 title=body.title,
                 description=body.description,
                 subject=body.subject,
+                subject_other=body.subject_other,
                 level_band=body.level_band,
                 difficulty=body.difficulty,
                 time_limit_minutes=body.time_limit_minutes,

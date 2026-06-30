@@ -17,6 +17,7 @@ from app.schemas.lms.question_bank import (
     GenerateQuizFromBankRequest,
     QuestionBankCreateRequest,
 )
+from app.services.content.subject_rules import validate_subject
 from app.services.platform.audit import AuditService
 from app.services.lms._helpers import LMSServiceBase
 
@@ -34,7 +35,7 @@ class QuestionBankService(LMSServiceBase):
             "school_id": str(item.school_id),
             "teacher_id": str(item.teacher_id),
             "subject": item.subject,
-            "level": item.level,
+            "level_band": item.level_band,
             "difficulty": item.difficulty,
             "question_type": item.question_type,
             "question_data": item.question_data,
@@ -95,6 +96,13 @@ class QuestionBankService(LMSServiceBase):
         auth: AuthContext,
         ip_address: str | None,
     ) -> dict[str, Any]:
+        await validate_subject(
+            self.db,
+            school_id=auth.school_id,
+            subject=body.subject,
+            level_band=body.level_band,
+            subject_other=body.subject_other,
+        )
         async with UnitOfWork(self.db) as uow:
             repo = QuestionBankRepository(uow.session)
             audit = AuditService(uow.session)
@@ -102,7 +110,8 @@ class QuestionBankService(LMSServiceBase):
                 school_id=auth.school_id,
                 teacher_id=auth.user_id,
                 subject=body.subject,
-                level=body.level,
+                subject_other=body.subject_other,
+                level_band=body.level_band,
                 difficulty=body.difficulty,
                 question_type=body.question_data.question_type,
                 question_data=body.question_data.model_dump(),
@@ -194,9 +203,9 @@ class QuestionBankService(LMSServiceBase):
                         teacher_id=auth.user_id,
                         subject=quiz.subject or "General",
                         level=quiz.level_band,
-                        difficulty=difficulty
-                        if difficulty in {"easy", "medium", "hard"}
-                        else "medium",
+                        difficulty=(difficulty or "").upper()
+                        if (difficulty or "").upper() in {"EASY", "MEDIUM", "HARD"}
+                        else "MEDIUM",
                         question_type=question.question_type,
                         question_data={
                             "question_type": question.question_type,
@@ -241,7 +250,7 @@ class QuestionBankService(LMSServiceBase):
             candidates = await self.question_bank_repo.list_generation_candidates(
                 school_id=auth.school_id,
                 subject=body.subject,
-                level=body.level,
+                level=body.level_band,
                 difficulty=difficulty,
             )
             if len(candidates) < required_count:
@@ -272,7 +281,7 @@ class QuestionBankService(LMSServiceBase):
                 title=body.title or f"Generated Quiz - {body.subject}",
                 description=body.description or "Generated from question bank",
                 subject=body.subject,
-                level_band=body.level,
+                level_band=body.level_band,
                 difficulty=(
                     next(iter(distribution.keys())).upper()
                     if len(distribution) == 1

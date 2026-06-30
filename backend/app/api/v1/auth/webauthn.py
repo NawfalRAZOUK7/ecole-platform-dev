@@ -271,13 +271,24 @@ async def authenticate_finish(
 
     await redis_client.delete(f"webauthn_challenge:auth:{credential_id}")
 
+    # Resolve the user's real role from their active membership in this school.
+    # (Previously hard-coded to "STD", which mis-scoped every passkey login.)
+    membership = await repo.get_membership(
+        credential.user_id, credential.school_id
+    )
+    if membership is None:
+        raise ValidationError(
+            "No active membership for this credential",
+            error_code="ERR-WEBAUTHN-NO-MEMBERSHIP",
+        )
+
     # Issue tokens (delegate to AuthService)
     from app.services.auth.auth import AuthService
 
     auth_service = AuthService(db, redis_client)
     token_bundle = await auth_service._issue_token_bundle(
         user_id=credential.user_id,
-        role="STD",  # TODO: resolve actual role from membership
+        role=membership.role_code,
         school_id=credential.school_id,
         session_id=uuid.uuid4(),
     )

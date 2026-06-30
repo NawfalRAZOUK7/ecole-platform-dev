@@ -114,7 +114,6 @@ from app.models.billing import (
     LateFeePolicy,
     PaymentAttempt,
     PaymentPlan,
-    PaymentProof,
     ProviderWebhookEvent,
     SiblingDiscountPolicy,
 )
@@ -142,8 +141,8 @@ from app.models.budget import (
     BudgetRequestStatus,
     BudgetTransaction,
     BudgetTransactionType,
-    MicroBudget,
-    MicroBudgetStatus,
+    SchoolBudget,
+    SchoolBudgetStatus,
 )
 
 # G5D — Skills
@@ -192,6 +191,7 @@ from app.models.rewards import (
 
 # G46 — Level-age mappings
 from app.models.levels import LevelAgeMapping
+from app.models.custom_subject import CustomSubject
 
 # G5I — Games
 from app.models.games import GameConfig
@@ -330,7 +330,6 @@ __all__ = [
     "PaymentPlan",
     "Installment",
     "PaymentAttempt",
-    "PaymentProof",
     "ProviderWebhookEvent",
     # Micro-school
     "MicroSchool",
@@ -345,8 +344,8 @@ __all__ = [
     "MicroResourceType",
     "MicroProgressLog",
     # Budget
-    "MicroBudget",
-    "MicroBudgetStatus",
+    "SchoolBudget",
+    "SchoolBudgetStatus",
     "BudgetAllocation",
     "BudgetAllocationStatus",
     "BudgetRequest",
@@ -384,6 +383,7 @@ __all__ = [
     "RewardEvent",
     # Level-age mappings
     "LevelAgeMapping",
+    "CustomSubject",
     # Games
     "GameConfig",
     "ApplicationStatus",

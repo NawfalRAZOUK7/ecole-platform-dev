@@ -486,7 +486,7 @@ async def _upsert_quiz(
     quiz.title = title
     quiz.description = description
     quiz.subject = subject
-    quiz.level_band = "primaire"
+    quiz.level_band = "1AEP"
     quiz.difficulty = difficulty
     quiz.time_limit_minutes = 5
     quiz.max_attempts = 3
@@ -940,7 +940,7 @@ async def _import_mascot_assets(
             content_id=_content_uuid("mascot-asset", source.name),
             title=title,
             content_type="mascot_asset",
-            subject="branding",
+            subject="pedagogy",
             language=LANGUAGE_AR,
             description=description,
             created_by=creator_user_id,

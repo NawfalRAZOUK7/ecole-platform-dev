@@ -9,7 +9,12 @@ from sqlalchemy import DateTime, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, validates
 
-from app.core.database import Base, SoftDeleteMixin, TimestampMixin
+from app.core.database import (
+    Base,
+    SoftDeleteMixin,
+    TimestampMixin,
+    TranslatableMixin,
+)
 
 
 class SchoolStatus(str, enum.Enum):
@@ -23,7 +28,7 @@ class SchoolType(str, enum.Enum):
     INFORMAL = "informal"
 
 
-class School(TimestampMixin, SoftDeleteMixin, Base):
+class School(TimestampMixin, SoftDeleteMixin, TranslatableMixin, Base):
     """A school (tenant) on the platform."""
 
     __tablename__ = "schools"

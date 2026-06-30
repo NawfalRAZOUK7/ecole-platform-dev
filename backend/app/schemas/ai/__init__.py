@@ -17,7 +17,7 @@ class WritingAttemptRequest(BaseModel):
     """POST /writing-attempts — student writing assistance request."""
 
     text: str = Field(..., min_length=1, max_length=5000)
-    subject: str | None = Field(default=None, max_length=200)
+    topic: str | None = Field(default=None, max_length=200)
     language: str | None = Field(default=None, pattern="^(fr|ar|en)$")
 
 

@@ -58,6 +58,19 @@ class ContentService(LMSServiceBase):
         limit: int,
         auth: AuthContext,
     ) -> tuple[list[dict], str | None, bool]:
+        # Portée par affectation : l'élève/parent ne voit dans la bibliothèque que le
+        # contenu affecté à ses classes (filtré au niveau requête, pagination préservée).
+        content_item_ids: set[uuid.UUID] | None = None
+        if auth.role in ("STD", "PAR"):
+            content_item_ids = await self.repo.list_assigned_content_item_ids(
+                class_ids=await self._user_class_ids(auth)
+            )
+        level_bands: set[str] | None = None
+        if auth.role == "TCH":
+            level_bands = await self.repo.list_teacher_level_bands(
+                teacher_id=auth.user_id,
+                school_id=auth.school_id,
+            )
         items_list, has_more = await self.repo.list_content_items(
             school_id=auth.school_id,
             content_type=content_type,
@@ -70,6 +83,8 @@ class ContentService(LMSServiceBase):
             search=search,
             cursor=cursor,
             limit=limit,
+            content_item_ids=content_item_ids,
+            level_bands=level_bands,
         )
         items = [self._content_item_to_dict(item) for item in items_list]
         next_cursor = (
@@ -90,6 +105,10 @@ class ContentService(LMSServiceBase):
             raise NotFoundError("Content item not found", error_code="ERR-LMS-404")
         if content_item.school_id is not None:
             verify_school_boundary(content_item.school_id, auth)
+        if auth.role in ("STD", "PAR") and not await self._content_assigned_to_user(
+            content_item_id=content_item_id, auth=auth
+        ):
+            raise NotFoundError("Content item not found", error_code="ERR-LMS-404")
 
         async with UnitOfWork(self.db) as uow:
             repo = LMSRepository(uow.session)
@@ -223,6 +242,10 @@ class ContentService(LMSServiceBase):
             raise NotFoundError("Content item not found", error_code="ERR-LMS-404")
         if content_item.school_id is not None:
             verify_school_boundary(content_item.school_id, auth)
+        if auth.role in ("STD", "PAR") and not await self._content_assigned_to_user(
+            content_item_id=content_item_id, auth=auth
+        ):
+            raise NotFoundError("Content item not found", error_code="ERR-LMS-404")
 
         async with UnitOfWork(self.db) as uow:
             repo = LMSRepository(uow.session)
@@ -449,6 +472,12 @@ class ContentService(LMSServiceBase):
         limit: int,
         auth: AuthContext,
     ) -> tuple[list[dict], str | None, bool]:
+        level_bands: set[str] | None = None
+        if auth.role == "TCH":
+            level_bands = await self.repo.list_teacher_level_bands(
+                teacher_id=auth.user_id,
+                school_id=auth.school_id,
+            )
         items_list, has_more = await self.repo.browse_content_library(
             school_id=auth.school_id,
             content_type=content_type,
@@ -460,6 +489,7 @@ class ContentService(LMSServiceBase):
             target_age=target_age,
             cursor=cursor,
             limit=limit,
+            level_bands=level_bands,
         )
         items = [
             {
@@ -701,6 +731,14 @@ class ContentService(LMSServiceBase):
         limit: int,
         auth: AuthContext,
     ) -> tuple[list[dict], str | None, bool]:
+        # Portée relationnelle : TCH/STD/PAR ne peuvent lister que le contenu d'une
+        # classe à laquelle ils sont rattachés (anti-IDOR). ADM/DIR/SUP : cloisonnés
+        # par school_id (verify ci-dessous via le filtre repo).
+        if (
+            auth.role in ("TCH", "STD", "PAR")
+            and class_id not in await self._user_class_ids(auth)
+        ):
+            raise NotFoundError("Content item not found", error_code="ERR-LMS-404")
         rows, has_more = await self.repo.list_class_content(
             class_id=class_id,
             school_id=auth.school_id,

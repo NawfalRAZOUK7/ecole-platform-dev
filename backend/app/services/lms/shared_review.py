@@ -156,7 +156,7 @@ class SharedReviewService:
         writing_q = (
             select(
                 WritingAttempt.id,
-                WritingAttempt.subject,
+                WritingAttempt.topic,
                 WritingAttempt.status,
                 WritingAttempt.hints,
                 WritingAttempt.created_at,
@@ -172,7 +172,7 @@ class SharedReviewService:
                 {
                     "id": str(row.id),
                     "type": "writing",
-                    "title": row.subject or "Writing",
+                    "title": row.topic or "Writing",
                     "score": hints.get("score"),
                     "status": row.status or "completed",
                     "started_at": (
@@ -311,7 +311,7 @@ class SharedReviewService:
             return {
                 "id": str(wa.id),
                 "type": "writing",
-                "title": wa.subject or "Writing",
+                "title": wa.topic or "Writing",
                 "text": wa.input_text,
                 "suggestion": wa.suggestion,
                 "hints": hints,

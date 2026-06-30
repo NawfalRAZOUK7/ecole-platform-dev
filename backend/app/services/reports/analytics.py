@@ -140,7 +140,7 @@ _EVENT_PROPERTY_WHITELIST: dict[str, frozenset[str]] = {
     ),
     "ai_opt_out_updated": frozenset({"opt_out", "target_user_id_hash"}),
     "ai_fallback_used": frozenset({"reason", "request_type"}),
-    "writing_attempt_created": frozenset({"subject", "word_count"}),
+    "writing_attempt_created": frozenset({"topic", "word_count"}),
     "recommendation_served": frozenset({"reason_code", "item_count"}),
 }
 

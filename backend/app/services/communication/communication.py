@@ -61,7 +61,7 @@ class CommunicationService:
             school_id=str(conversation.school_id),
             type=conversation.type,
             created_by=str(conversation.created_by),
-            subject=conversation.subject,
+            subject_line=conversation.subject_line,
             participants=participants,
             last_message_at=last_message_at,
             created_at=conversation.created_at.isoformat(),
@@ -274,7 +274,7 @@ class CommunicationService:
                 school_id=auth.school_id,
                 type=body.type,
                 created_by=auth.user_id,
-                subject=body.subject,
+                subject_line=body.subject_line,
             )
             await repo.create_conversation_participants(
                 [

@@ -19,6 +19,7 @@ from sqlalchemy.dialects.postgresql import ENUM as PgEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.core.database import Base, SchoolScopedMixin, TimestampMixin
+from app.models.taxonomy import Currency
 
 ALLOWED_BUDGET_CURRENCIES = {"MAD"}
 
@@ -31,7 +32,7 @@ def _enum_values(enum_cls: type[enum.Enum]) -> list[str]:
     return [item.value for item in enum_cls]
 
 
-class MicroBudgetStatus(str, enum.Enum):
+class SchoolBudgetStatus(str, enum.Enum):
     """Lifecycle states for a micro-budget."""
 
     ACTIVE = "active"
@@ -65,10 +66,10 @@ class BudgetTransactionType(str, enum.Enum):
     ADJUSTMENT = "adjustment"
 
 
-class MicroBudget(TimestampMixin, SchoolScopedMixin, Base):
+class SchoolBudget(TimestampMixin, SchoolScopedMixin, Base):
     """School budget envelope for a given academic year."""
 
-    __tablename__ = "micro_budgets"
+    __tablename__ = "school_budgets"
 
     academic_year_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("academic_years.id", ondelete="CASCADE"),
@@ -85,16 +86,25 @@ class MicroBudget(TimestampMixin, SchoolScopedMixin, Base):
         nullable=False,
         default=0,
     )
-    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="MAD")
-    status: Mapped[str] = mapped_column(
+    currency: Mapped[str] = mapped_column(
         PgEnum(
-            MicroBudgetStatus,
-            name="micro_budget_status_enum",
+            Currency,
+            name="currency_enum",
             create_type=False,
             values_callable=_enum_values,
         ),
         nullable=False,
-        default=MicroBudgetStatus.ACTIVE.value,
+        default=Currency.MAD.value,
+    )
+    status: Mapped[str] = mapped_column(
+        PgEnum(
+            SchoolBudgetStatus,
+            name="school_budget_status_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+        default=SchoolBudgetStatus.ACTIVE.value,
     )
     created_by: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -110,28 +120,28 @@ class MicroBudget(TimestampMixin, SchoolScopedMixin, Base):
     )
 
     __table_args__ = (
-        CheckConstraint("total_amount >= 0", name="ck_micro_budgets_total_amount"),
+        CheckConstraint("total_amount >= 0", name="ck_school_budgets_total_amount"),
         CheckConstraint(
             "allocated_amount >= 0",
-            name="ck_micro_budgets_allocated_amount",
+            name="ck_school_budgets_allocated_amount",
         ),
         CheckConstraint(
             "remaining_amount >= 0",
-            name="ck_micro_budgets_remaining_amount",
+            name="ck_school_budgets_remaining_amount",
         ),
         CheckConstraint(
             "allocated_amount <= total_amount",
-            name="ck_micro_budgets_allocated_lte_total",
+            name="ck_school_budgets_allocated_lte_total",
         ),
         Index(
-            "idx_micro_budgets_school_year_status",
+            "idx_school_budgets_school_year_status",
             "school_id",
             "academic_year_id",
             "status",
         ),
-        Index("idx_micro_budgets_creator", "created_by"),
-        Index("idx_micro_budgets_academic_year_id", "academic_year_id"),
-        Index("idx_micro_budgets_created_by", "created_by"),
+        Index("idx_school_budgets_creator", "created_by"),
+        Index("idx_school_budgets_academic_year_id", "academic_year_id"),
+        Index("idx_school_budgets_created_by", "created_by"),
     )
 
     @validates("currency")
@@ -143,7 +153,7 @@ class MicroBudget(TimestampMixin, SchoolScopedMixin, Base):
 
     def __repr__(self) -> str:
         return (
-            f"<MicroBudget id={_short_id(self.id)} total={self.total_amount} "
+            f"<SchoolBudget id={_short_id(self.id)} total={self.total_amount} "
             f"status={self.status}>"
         )
 
@@ -154,7 +164,7 @@ class BudgetAllocation(TimestampMixin, Base):
     __tablename__ = "budget_allocations"
 
     budget_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("micro_budgets.id", ondelete="CASCADE"),
+        ForeignKey("school_budgets.id", ondelete="CASCADE"),
         nullable=False,
     )
     class_id: Mapped[uuid.UUID | None] = mapped_column(
@@ -173,7 +183,16 @@ class BudgetAllocation(TimestampMixin, Base):
         nullable=False,
         default=0,
     )
-    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="MAD")
+    currency: Mapped[str] = mapped_column(
+        PgEnum(
+            Currency,
+            name="currency_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+        default=Currency.MAD.value,
+    )
     allocated_by: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
@@ -194,7 +213,7 @@ class BudgetAllocation(TimestampMixin, Base):
         default=BudgetAllocationStatus.ACTIVE.value,
     )
 
-    budget: Mapped["MicroBudget"] = relationship(back_populates="allocations")
+    budget: Mapped["SchoolBudget"] = relationship(back_populates="allocations")
     school_class = relationship("Class", foreign_keys=[class_id])
     teacher = relationship("User", foreign_keys=[teacher_id])
     allocator = relationship("User", foreign_keys=[allocated_by])
@@ -265,7 +284,16 @@ class BudgetRequest(TimestampMixin, Base):
         nullable=False,
     )
     amount: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
-    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="MAD")
+    currency: Mapped[str] = mapped_column(
+        PgEnum(
+            Currency,
+            name="currency_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+        default=Currency.MAD.value,
+    )
     description: Mapped[str] = mapped_column(Text, nullable=False)
     justification: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(
@@ -398,6 +426,6 @@ __all__ = [
     "BudgetRequestStatus",
     "BudgetTransaction",
     "BudgetTransactionType",
-    "MicroBudget",
-    "MicroBudgetStatus",
+    "SchoolBudget",
+    "SchoolBudgetStatus",
 ]

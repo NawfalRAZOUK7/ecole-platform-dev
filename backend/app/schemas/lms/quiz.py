@@ -8,7 +8,32 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, model_validator
+
+from app.models.curriculum import (
+    is_official_subject,
+    is_subject_valid_for_level,
+    matieres_for_level,
+)
+from app.models.taxonomy import normalize_difficulty
+
+
+def _ensure_subject_for_level(level_band: str | None, subject: str | None) -> None:
+    """Curriculum cross-field rule: an OFFICIAL matière must be taught at its niveau.
+
+    Custom (school-defined) matières bypass this check; out-of-scope levels too.
+    """
+    if (
+        level_band
+        and subject
+        and is_official_subject(subject)
+        and not is_subject_valid_for_level(subject, level_band)
+    ):
+        allowed = ", ".join(matieres_for_level(level_band)) or "(none defined yet)"
+        raise ValueError(
+            f"subject '{subject}' is not taught at level '{level_band}'. "
+            f"Allowed matières: {allowed}"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -31,12 +56,23 @@ class QuizCreateRequest(BaseModel):
     title: str = Field(..., min_length=1, max_length=300)
     description: str | None = None
     subject: str | None = Field(None, max_length=50)
+    subject_other: str | None = Field(None, max_length=120)  # name when subject == "other"
     level_band: str | None = Field(None, max_length=50)
-    difficulty: str | None = Field(None, pattern="^(EASY|MEDIUM|HARD)$")
+    difficulty: str | None = Field(None, max_length=20)
     time_limit_minutes: int | None = Field(None, ge=0)
     max_attempts: int = Field(default=1, ge=1)
     shuffle_questions: bool = False
     questions: list[QuizQuestionInput] = Field(default_factory=list)
+
+    @field_validator("difficulty", mode="before")
+    @classmethod
+    def _normalize_difficulty(cls, v: str | None) -> str | None:
+        return normalize_difficulty(v)
+
+    @model_validator(mode="after")
+    def _check_subject_for_level(self) -> "QuizCreateRequest":
+        _ensure_subject_for_level(self.level_band, self.subject)
+        return self
 
 
 class QuizUpdateRequest(BaseModel):
@@ -44,9 +80,19 @@ class QuizUpdateRequest(BaseModel):
     description: str | None = None
     subject: str | None = Field(None, max_length=50)
     level_band: str | None = Field(None, max_length=50)
-    difficulty: str | None = Field(None, pattern="^(EASY|MEDIUM|HARD)$")
+    difficulty: str | None = Field(None, max_length=20)
     time_limit_minutes: int | None = Field(None, ge=0)
     max_attempts: int | None = Field(None, ge=1)
+
+    @field_validator("difficulty", mode="before")
+    @classmethod
+    def _normalize_difficulty(cls, v: str | None) -> str | None:
+        return normalize_difficulty(v)
+
+    @model_validator(mode="after")
+    def _check_subject_for_level(self) -> "QuizUpdateRequest":
+        _ensure_subject_for_level(self.level_band, self.subject)
+        return self
     shuffle_questions: bool | None = None
     questions: list[QuizQuestionInput] | None = None
 

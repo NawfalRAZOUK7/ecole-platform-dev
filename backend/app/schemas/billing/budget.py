@@ -7,7 +7,7 @@ import uuid
 from pydantic import BaseModel, Field
 
 
-class MicroBudgetCreateRequest(BaseModel):
+class SchoolBudgetCreateRequest(BaseModel):
     """Payload for creating a micro-budget."""
 
     academic_year_id: uuid.UUID
@@ -16,7 +16,7 @@ class MicroBudgetCreateRequest(BaseModel):
     status: str = Field("active", pattern="^(active|frozen|closed)$")
 
 
-class MicroBudgetUpdateRequest(BaseModel):
+class SchoolBudgetUpdateRequest(BaseModel):
     """Payload for updating a micro-budget."""
 
     total_amount: float | None = Field(None, ge=0)
@@ -24,7 +24,7 @@ class MicroBudgetUpdateRequest(BaseModel):
     status: str | None = Field(None, pattern="^(active|frozen|closed)$")
 
 
-class MicroBudgetResponse(BaseModel):
+class SchoolBudgetResponse(BaseModel):
     """Serialized micro-budget response."""
 
     id: str
@@ -180,9 +180,9 @@ class BudgetAnalyticsResponse(BaseModel):
 
 
 __all__ = [
-    "MicroBudgetCreateRequest",
-    "MicroBudgetUpdateRequest",
-    "MicroBudgetResponse",
+    "SchoolBudgetCreateRequest",
+    "SchoolBudgetUpdateRequest",
+    "SchoolBudgetResponse",
     "BudgetAllocationCreateRequest",
     "BudgetAllocationUpdateRequest",
     "BudgetAllocationResponse",

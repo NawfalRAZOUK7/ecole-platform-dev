@@ -14,11 +14,8 @@ from app.core.dependencies import (
     AuthContext,
     get_current_user,
     requires_permission,
-    requires_role,
 )
 from app.core.permissions import (
-    ADM,
-    DIR,
     PERM_ADM_AUDIT_READ,
     PERM_ADM_DASHBOARD_READ,
     PERM_ADM_IMPERSONATE,
@@ -28,10 +25,10 @@ from app.core.permissions import (
     PERM_ADM_USER_READ,
     PERM_ERP_ABSENCE_REVIEW,
     PERM_ERP_ENROLLMENT_READ,
+    PERM_IAM_LOGIN_HISTORY_READ,
     PERM_IAM_PARENT_LINK_CREATE,
     PERM_IAM_PARENT_LINK_DELETE,
     PERM_IAM_PARENT_LINK_READ,
-    SUP,
 )
 from app.core.redis import get_redis
 from app.core.request_utils import get_client_ip, parse_device_name
@@ -228,7 +225,7 @@ async def stop_impersonation(
 )
 async def list_user_login_history(
     user_id: uuid.UUID,
-    auth: AuthContext = Depends(requires_role(ADM, DIR, SUP)),
+    auth: AuthContext = Depends(requires_permission(PERM_IAM_LOGIN_HISTORY_READ)),
     db: AsyncSession = Depends(get_db),
     redis: aioredis.Redis = Depends(get_redis),
     cursor: str | None = Query(None),

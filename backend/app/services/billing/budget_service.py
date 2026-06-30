@@ -6,6 +6,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
+from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import AuthContext, verify_school_boundary
@@ -22,7 +23,7 @@ from app.models.budget import (
     BudgetAllocation,
     BudgetRequest,
     BudgetTransaction,
-    MicroBudget,
+    SchoolBudget,
 )
 from app.repositories.budget import BudgetRepository
 from app.schemas.billing.budget import (
@@ -37,9 +38,9 @@ from app.schemas.billing.budget import (
     BudgetTransactionCreateRequest,
     BudgetTransactionResponse,
     BudgetTransactionUpdateRequest,
-    MicroBudgetCreateRequest,
-    MicroBudgetResponse,
-    MicroBudgetUpdateRequest,
+    SchoolBudgetCreateRequest,
+    SchoolBudgetResponse,
+    SchoolBudgetUpdateRequest,
 )
 from app.services.platform.audit import AuditService
 from app.services.communication.event_dispatcher import EventDispatcher
@@ -58,8 +59,92 @@ class BudgetService:
         self.audit = AuditService(db)
         self._dispatcher = EventDispatcher(db)
 
-    def _budget_to_response(self, budget: MicroBudget) -> dict[str, Any]:
-        return MicroBudgetResponse(
+    # ------------------------------------------------------------------
+    # Cached-aggregate invariants (BACKEND_DB_AUDIT.md §11 A2)
+    #
+    # `BudgetAllocation.spent/remaining` and `SchoolBudget.allocated_amount/
+    # remaining_amount` are denormalized caches. The source of truth is the
+    # `budget_transactions` ledger (every spent change writes a mirroring row:
+    # expense +, refund -) and the set of `budget_allocations` (allocated =
+    # SUM(amount)). These recompute helpers derive the caches authoritatively
+    # from those sources and are **idempotent**, so calling them at the end of a
+    # mutating operation self-heals any drift instead of trusting inline math.
+    #
+    # NOTE: validate with the budget test suite (`pytest tests -k budget`) before
+    # relying on this in production — money logic, not runnable in this sandbox.
+    # ------------------------------------------------------------------
+    async def _recompute_allocation_rollup(
+        self, session: AsyncSession, allocation: BudgetAllocation
+    ) -> None:
+        await session.flush()
+        spent = await session.scalar(
+            select(
+                func.coalesce(
+                    func.sum(
+                        case(
+                            (
+                                BudgetTransaction.transaction_type == "expense",
+                                BudgetTransaction.amount,
+                            ),
+                            (
+                                BudgetTransaction.transaction_type == "refund",
+                                -BudgetTransaction.amount,
+                            ),
+                            else_=0,
+                        )
+                    ),
+                    0,
+                )
+            ).where(BudgetTransaction.allocation_id == allocation.id)
+        )
+        spent = max(float(spent or 0), 0.0)
+        allocation.spent = spent
+        allocation.remaining = float(allocation.amount) - spent
+        if allocation.remaining <= 0:
+            allocation.remaining = 0
+            if allocation.status == "active":
+                allocation.status = "exhausted"
+
+    async def _recompute_budget_rollup(
+        self, session: AsyncSession, budget: SchoolBudget
+    ) -> None:
+        await session.flush()
+        allocated = await session.scalar(
+            select(func.coalesce(func.sum(BudgetAllocation.amount), 0)).where(
+                BudgetAllocation.budget_id == budget.id
+            )
+        )
+        allocated = float(allocated or 0)
+        budget.allocated_amount = allocated
+        budget.remaining_amount = float(budget.total_amount) - allocated
+
+    async def recompute_budget_rollups(
+        self, *, budget_id: uuid.UUID, auth: AuthContext
+    ) -> dict[str, Any]:
+        """Authoritative repair/verification pass for a whole budget tree.
+
+        Recomputes every allocation's spent/remaining from the ledger and the
+        budget's allocated/remaining from its allocations, then persists. Safe to
+        run any time; returns the corrected budget snapshot.
+        """
+        async with UnitOfWork(self.db) as uow:
+            repo = BudgetRepository(uow.session)
+            budget = await repo.get_budget(budget_id, school_id=auth.school_id)
+            if budget is None:
+                raise NotFoundError("Budget not found", error_code="ERR-BUDGET-404")
+            allocations = await repo.list_allocations(
+                budget_id=budget_id, school_id=auth.school_id
+            )
+            for allocation in allocations:
+                await self._recompute_allocation_rollup(uow.session, allocation)
+                await repo.save_allocation(allocation)
+            await self._recompute_budget_rollup(uow.session, budget)
+            await repo.save_budget(budget)
+            await uow.commit()
+        return self._budget_to_response(budget)
+
+    def _budget_to_response(self, budget: SchoolBudget) -> dict[str, Any]:
+        return SchoolBudgetResponse(
             id=str(budget.id),
             school_id=str(budget.school_id),
             academic_year_id=str(budget.academic_year_id),
@@ -136,7 +221,7 @@ class BudgetService:
 
     async def _get_budget_or_404(
         self, budget_id: uuid.UUID, auth: AuthContext
-    ) -> MicroBudget:
+    ) -> SchoolBudget:
         budget = await self.repo.get_budget(budget_id, school_id=auth.school_id)
         if budget is None:
             raise NotFoundError("Budget not found", error_code="ERR-BUDGET-404")
@@ -195,7 +280,7 @@ class BudgetService:
     async def create_budget(
         self,
         *,
-        body: MicroBudgetCreateRequest,
+        body: SchoolBudgetCreateRequest,
         auth: AuthContext,
         ip_address: str | None = None,
     ) -> dict[str, Any]:
@@ -208,7 +293,7 @@ class BudgetService:
             repo = BudgetRepository(uow.session)
             audit = AuditService(uow.session)
             dispatcher = EventDispatcher(uow.session)
-            budget = MicroBudget(
+            budget = SchoolBudget(
                 school_id=auth.school_id,
                 academic_year_id=body.academic_year_id,
                 total_amount=body.total_amount,
@@ -225,7 +310,7 @@ class BudgetService:
                 actor_id=auth.user_id,
                 action_type="budget.create",
                 outcome="success",
-                target_type="micro_budget",
+                target_type="school_budget",
                 target_id=created.id,
                 entity_after=response,
                 ip_address=ip_address,
@@ -269,7 +354,7 @@ class BudgetService:
         self,
         *,
         budget_id: uuid.UUID,
-        body: MicroBudgetUpdateRequest,
+        body: SchoolBudgetUpdateRequest,
         auth: AuthContext,
         ip_address: str | None = None,
     ) -> dict[str, Any]:
@@ -304,7 +389,7 @@ class BudgetService:
                 actor_id=auth.user_id,
                 action_type="budget.update",
                 outcome="success",
-                target_type="micro_budget",
+                target_type="school_budget",
                 target_id=saved.id,
                 entity_before=before,
                 entity_after=response,
@@ -744,6 +829,9 @@ class BudgetService:
                 recorded_at=reviewed_at,
             )
             saved_transaction = await repo.create_transaction(transaction)
+            # Authoritative self-heal of the allocation cache from the ledger.
+            await self._recompute_allocation_rollup(uow.session, allocation)
+            await repo.save_allocation(allocation)
             response = self._request_to_response(saved_request)
             await audit.log_event(
                 school_id=auth.school_id,
@@ -918,6 +1006,11 @@ class BudgetService:
                 recorded_by=auth.user_id,
             )
             created = await repo.create_transaction(transaction)
+            # Authoritative self-heal of both caches from the ledger / allocations.
+            await self._recompute_allocation_rollup(uow.session, allocation)
+            await self._recompute_budget_rollup(uow.session, budget)
+            await repo.save_allocation(allocation)
+            await repo.save_budget(budget)
             response = self._transaction_to_response(created)
             await audit.log_event(
                 school_id=auth.school_id,

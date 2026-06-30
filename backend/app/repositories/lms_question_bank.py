@@ -62,7 +62,7 @@ class QuestionBankRepository(BaseRepository):
         if subject:
             query = query.where(QuestionBankItem.subject == subject)
         if level:
-            query = query.where(QuestionBankItem.level == level)
+            query = query.where(QuestionBankItem.level_band == level)
         if difficulty:
             query = query.where(QuestionBankItem.difficulty == difficulty)
         if tags:
@@ -99,7 +99,7 @@ class QuestionBankRepository(BaseRepository):
             QuestionBankItem.is_archived.is_(False),
         )
         if level is not None:
-            query = query.where(QuestionBankItem.level == level)
+            query = query.where(QuestionBankItem.level_band == level)
 
         result = await self.db.execute(query.order_by(QuestionBankItem.id.asc()))
         return list(result.scalars().all())

@@ -22,7 +22,12 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import ENUM as PgEnum, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
-from app.core.database import Base, SchoolScopedMixin, TimestampMixin
+from app.core.database import (
+    Base,
+    SchoolScopedMixin,
+    TimestampMixin,
+    TranslatableMixin,
+)
 
 
 def _short_id(value: object | None) -> str:
@@ -41,7 +46,7 @@ class SkillProgressStatus(str, enum.Enum):
     UNLOCKED = "unlocked"
 
 
-class SkillDimension(TimestampMixin, Base):
+class SkillDimension(TimestampMixin, TranslatableMixin, Base):
     """Top-level behavioral skill tracked by the passport engine."""
 
     __tablename__ = "skill_dimensions"
@@ -81,7 +86,7 @@ class SkillDimension(TimestampMixin, Base):
         return f"<SkillDimension id={_short_id(self.id)} code={self.code}>"
 
 
-class SkillMilestone(TimestampMixin, Base):
+class SkillMilestone(TimestampMixin, TranslatableMixin, Base):
     """Rule-driven milestone inside a skill dimension."""
 
     __tablename__ = "skill_milestones"

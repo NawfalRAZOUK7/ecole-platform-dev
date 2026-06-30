@@ -3,11 +3,14 @@
 Reference: Phase 10 — SMS 2FA Support
 """
 
+import logging
 import secrets
 
 from twilio.rest import Client as TwilioClient
 
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class Sms2FAService:
@@ -41,7 +44,7 @@ class Sms2FAService:
             or not self.twilio_client
         ):
             # In development mode, log the OTP instead
-            print(f"[SMS 2FA - DEV MODE] OTP for {phone}: {otp}")
+            logger.debug("[SMS 2FA - DEV MODE] OTP for %s: %s", phone, otp)
             return True
 
         try:
@@ -54,8 +57,8 @@ class Sms2FAService:
                 to=phone,
             )
             return True
-        except Exception as e:
-            print(f"Failed to send SMS: {e}")
+        except Exception:
+            logger.warning("Failed to send SMS to %s", phone, exc_info=True)
             return False
 
     def verify_otp(

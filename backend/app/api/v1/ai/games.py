@@ -8,8 +8,13 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import AuthContext, get_current_user, requires_role
-from app.core.permissions import ADM, DIR, STD, SUP, SYS, TCH
+from app.core.dependencies import (
+    AuthContext,
+    get_current_user,
+    requires_permission,
+    requires_role,
+)
+from app.core.permissions import PERM_AI_GAME_CONFIG_MANAGE, STD
 from app.services.lms.student_service import get_student_age
 from app.core.response import clamp_page_size, list_response, success_response
 from app.schemas.ai.games import (
@@ -65,7 +70,7 @@ async def get_game_config(
 @router.post("/configs", status_code=201, summary="Create game config")
 async def create_game_config(
     body: GameConfigCreateRequest,
-    auth: AuthContext = Depends(requires_role(TCH, DIR, ADM, SUP, SYS)),
+    auth: AuthContext = Depends(requires_permission(PERM_AI_GAME_CONFIG_MANAGE)),
     db: AsyncSession = Depends(get_db),
 ):
     service = GameService(db)
@@ -76,7 +81,7 @@ async def create_game_config(
 async def update_game_config(
     game_id: uuid.UUID,
     body: GameConfigUpdateRequest,
-    auth: AuthContext = Depends(requires_role(TCH, DIR, ADM, SUP, SYS)),
+    auth: AuthContext = Depends(requires_permission(PERM_AI_GAME_CONFIG_MANAGE)),
     db: AsyncSession = Depends(get_db),
 ):
     service = GameService(db)

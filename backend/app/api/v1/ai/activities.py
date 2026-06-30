@@ -58,7 +58,7 @@ async def list_activities(
     """List available activities with filtering, sorting, and full-text search.
 
     Shows school-specific + platform-wide activities.
-    Filters: ?filter[type]=quiz&filter[difficulty]=easy
+    Filters: ?filter[type]=quiz&filter[difficulty]=EASY
     Sort: ?sort=-created_at
     Search: ?search=multiplication
     """

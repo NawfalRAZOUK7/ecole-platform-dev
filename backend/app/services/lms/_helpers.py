@@ -27,6 +27,7 @@ from app.models.lms import (
     Submission,
 )
 from app.repositories.lms import LMSRepository
+from app.repositories.content_documents import DocumentsRepository
 from app.repositories.lms_quiz import QuizRepository
 from app.services.communication.event_dispatcher import EventDispatcher
 from app.services.lms._serializers import LMSSerializerMixin
@@ -210,6 +211,46 @@ class LMSServiceBase(LMSSerializerMixin):
             ],
         }
 
+    async def _user_class_ids(self, auth: AuthContext) -> set[uuid.UUID]:
+        """Classes auxquelles l'utilisateur est rattaché (portée relationnelle).
+
+        TCH : ses classes affectées ; STD : ses inscriptions ;
+        PAR : les classes de ses enfants liés. Autres rôles : ensemble vide.
+        """
+        if auth.school_id is None:
+            return set()
+        docs = DocumentsRepository(self.db)
+        if auth.role == "TCH":
+            return await docs.list_teacher_class_ids(
+                teacher_id=auth.user_id, school_id=auth.school_id
+            )
+        if auth.role == "STD":
+            return await docs.list_student_class_ids(
+                student_id=auth.user_id, school_id=auth.school_id
+            )
+        if auth.role == "PAR":
+            child_ids = await docs.list_parent_child_ids(
+                parent_id=auth.user_id, school_id=auth.school_id
+            )
+            class_ids: set[uuid.UUID] = set()
+            for child_id in child_ids:
+                class_ids |= await docs.list_student_class_ids(
+                    student_id=child_id, school_id=auth.school_id
+                )
+            return class_ids
+        return set()
+
+    async def _content_assigned_to_user(
+        self, *, content_item_id: uuid.UUID, auth: AuthContext
+    ) -> bool:
+        """Vrai si le contenu est affecté à au moins une classe de l'utilisateur."""
+        for class_id in await self._user_class_ids(auth):
+            if await self.repo.find_class_content_assignment(
+                class_id=class_id, content_item_id=content_item_id
+            ):
+                return True
+        return False
+
     async def get_content_item(
         self,
         *,
@@ -222,6 +263,11 @@ class LMSServiceBase(LMSSerializerMixin):
         if content_item.school_id is not None:
             verify_school_boundary(content_item.school_id, auth)
         if content_item.status != "published":
+            raise NotFoundError("Content item not found", error_code="ERR-LMS-404")
+        # Portée par affectation : l'élève/parent ne voit que le contenu affecté à sa classe.
+        if auth.role in ("STD", "PAR") and not await self._content_assigned_to_user(
+            content_item_id=content_item_id, auth=auth
+        ):
             raise NotFoundError("Content item not found", error_code="ERR-LMS-404")
         return self._content_item_to_dict(content_item)
 
@@ -244,6 +290,10 @@ class LMSServiceBase(LMSSerializerMixin):
             raise NotFoundError("Content item not found", error_code="ERR-LMS-404")
         if content_item.school_id is not None:
             verify_school_boundary(content_item.school_id, auth)
+        if auth.role in ("STD", "PAR") and not await self._content_assigned_to_user(
+            content_item_id=content_item_id, auth=auth
+        ):
+            raise NotFoundError("Asset not found", error_code="ERR-UPLOAD-404")
 
         return (
             asset.file_path,

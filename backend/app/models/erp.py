@@ -27,6 +27,7 @@ from sqlalchemy.dialects.postgresql import ENUM as PgEnum, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.core.database import Base, SchoolScopedMixin, TimestampMixin
+from app.models.taxonomy import ContentLevelBand, SchoolCycle
 
 
 def _short_id(value: object | None) -> str:
@@ -163,6 +164,29 @@ class Class(TimestampMixin, SchoolScopedMixin, Base):
         ForeignKey("academic_years.id", ondelete="CASCADE"), nullable=False
     )
     name: Mapped[str] = mapped_column(String(200), nullable=False)
+    # Canonical level + cycle. Source of truth for teacher CMS-library scoping,
+    # replacing the fragile parsing of the level out of `code`/`name`
+    # (see repositories/lms.py:list_teacher_level_bands). Nullable for
+    # backward compatibility — scoping falls back to code parsing when null.
+    # Values: ContentLevelBand / SchoolCycle (app/models/taxonomy.py).
+    level_band: Mapped[str | None] = mapped_column(
+        PgEnum(
+            ContentLevelBand,
+            name="content_level_band_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=True,
+    )
+    cycle: Mapped[str | None] = mapped_column(
+        PgEnum(
+            SchoolCycle,
+            name="school_cycle_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=True,
+    )
 
     # Relationships
     academic_year: Mapped["AcademicYear"] = relationship(back_populates="classes")

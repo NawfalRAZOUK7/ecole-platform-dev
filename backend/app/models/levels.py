@@ -19,14 +19,17 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.database import Base
+from app.core.database import (
+    Base,
+    TranslatableMixin,
+)
 
 
 def _utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
 
-class LevelAgeMapping(Base):
+class LevelAgeMapping(TranslatableMixin, Base):
     """Mapping from academic level code to a default age range.
 
     school_id=NULL rows are platform defaults.

@@ -353,13 +353,15 @@ class AttendanceAnalyticsService:
             created_alerts = []
             skipped = 0
 
+            # Batched: one GROUP BY query for the whole period instead of one
+            # query per student (was N+1 over the class roster).
+            absence_by_student = await repo.compute_period_absence_counts(
+                period_id=body.period_id,
+            )
+
             for student_id, student_name in students:
-                (
-                    absence_count,
-                    total_sessions,
-                ) = await repo.compute_student_absence_count(
-                    student_id=student_id,
-                    period_id=body.period_id,
+                absence_count, total_sessions = absence_by_student.get(
+                    student_id, (0, 0)
                 )
                 if total_sessions <= 0:
                     skipped += 1

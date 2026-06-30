@@ -18,7 +18,7 @@ from app.models.budget import (
     BudgetAllocation,
     BudgetTransaction,
     BudgetTransactionType,
-    MicroBudget,
+    SchoolBudget,
 )
 from app.models.erp import AcademicYear, Enrollment, EnrollmentStatus, Period
 from app.models.financial_health import (
@@ -342,9 +342,9 @@ class FinancialHealthRepository(BaseRepository):
             .join(
                 BudgetAllocation, BudgetAllocation.id == BudgetTransaction.allocation_id
             )
-            .join(MicroBudget, MicroBudget.id == BudgetAllocation.budget_id)
+            .join(SchoolBudget, SchoolBudget.id == BudgetAllocation.budget_id)
             .where(
-                MicroBudget.school_id == school_id,
+                SchoolBudget.school_id == school_id,
                 BudgetTransaction.recorded_at >= start_datetime,
                 BudgetTransaction.recorded_at <= end_datetime,
                 BudgetTransaction.transaction_type.in_(
@@ -399,9 +399,9 @@ class FinancialHealthRepository(BaseRepository):
         academic_year_id: uuid.UUID,
     ) -> float:
         result = await self.db.execute(
-            select(func.sum(MicroBudget.total_amount)).where(
-                MicroBudget.school_id == school_id,
-                MicroBudget.academic_year_id == academic_year_id,
+            select(func.sum(SchoolBudget.total_amount)).where(
+                SchoolBudget.school_id == school_id,
+                SchoolBudget.academic_year_id == academic_year_id,
             )
         )
         return _as_float(result.scalar())
@@ -435,10 +435,10 @@ class FinancialHealthRepository(BaseRepository):
             .join(
                 BudgetAllocation, BudgetAllocation.id == BudgetTransaction.allocation_id
             )
-            .join(MicroBudget, MicroBudget.id == BudgetAllocation.budget_id)
+            .join(SchoolBudget, SchoolBudget.id == BudgetAllocation.budget_id)
             .where(
-                MicroBudget.school_id == school_id,
-                MicroBudget.academic_year_id == academic_year_id,
+                SchoolBudget.school_id == school_id,
+                SchoolBudget.academic_year_id == academic_year_id,
                 BudgetTransaction.transaction_type.in_(
                     [
                         BudgetTransactionType.EXPENSE.value,

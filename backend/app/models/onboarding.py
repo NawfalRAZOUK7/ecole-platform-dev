@@ -19,10 +19,11 @@ from sqlalchemy import (
     String,
     Text,
 )
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import ENUM as PgEnum, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.core.database import Base, TimestampMixin
+from app.models.taxonomy import Language, enum_values as _enum_values
 
 
 class ApplicationType(str, enum.Enum):
@@ -59,7 +60,15 @@ class SchoolApplication(TimestampMixin, Base):
     applicant_email: Mapped[str] = mapped_column(String(255), nullable=False)
     applicant_phone: Mapped[str | None] = mapped_column(String(30), nullable=True)
     city: Mapped[str | None] = mapped_column(String(120), nullable=True)
-    language: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    language: Mapped[str | None] = mapped_column(
+        PgEnum(
+            Language,
+            name="language_enum",
+            create_type=False,
+            values_callable=_enum_values,
+        ),
+        nullable=True,
+    )
 
     # Organisation (the school / micro-école being requested)
     org_name: Mapped[str] = mapped_column(String(250), nullable=False)

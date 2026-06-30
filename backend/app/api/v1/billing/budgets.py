@@ -29,8 +29,8 @@ from app.schemas.billing.budget import (
     BudgetRequestCreateRequest,
     BudgetRequestReviewRequest,
     BudgetTransactionCreateRequest,
-    MicroBudgetCreateRequest,
-    MicroBudgetUpdateRequest,
+    SchoolBudgetCreateRequest,
+    SchoolBudgetUpdateRequest,
 )
 from app.services.billing.budget_service import BudgetService
 
@@ -45,7 +45,7 @@ router = APIRouter(prefix="/budgets", tags=["budget"])
     response_description="Created budget",
 )
 async def create_budget(
-    body: MicroBudgetCreateRequest,
+    body: SchoolBudgetCreateRequest,
     request: Request,
     auth: AuthContext = Depends(requires_permission(PERM_BUDGET_CREATE)),
     db: AsyncSession = Depends(get_db),
@@ -129,7 +129,7 @@ async def get_budget(
 )
 async def update_budget(
     budget_id: uuid.UUID,
-    body: MicroBudgetUpdateRequest,
+    body: SchoolBudgetUpdateRequest,
     request: Request,
     auth: AuthContext = Depends(requires_permission(PERM_BUDGET_CREATE)),
     db: AsyncSession = Depends(get_db),
@@ -161,7 +161,7 @@ async def delete_budget(
     return success_response(
         await service.update_budget(
             budget_id=budget_id,
-            body=MicroBudgetUpdateRequest(status="closed"),
+            body=SchoolBudgetUpdateRequest(status="closed"),
             auth=auth,
             ip_address=get_client_ip(request),
         )
