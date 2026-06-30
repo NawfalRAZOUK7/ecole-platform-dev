@@ -654,11 +654,11 @@ class _StoryBottomBar extends ConsumerWidget {
   }
 }
 
-class _PagePlaceholder extends StatelessWidget {
+class _PagePlaceholder extends ConsumerWidget {
   const _PagePlaceholder();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -669,20 +669,20 @@ class _PagePlaceholder extends StatelessWidget {
             color: KidsContentColors.storyPageTurn.withAlpha(90),
           ),
           const SizedBox(height: AppSpacing.base),
-          const Text('Page indisponible'),
+          Text(AppLocalizations.of(ref).t('content.pageUnavailable')),
         ],
       ),
     );
   }
 }
 
-class _EmptyStoryState extends StatelessWidget {
+class _EmptyStoryState extends ConsumerWidget {
   const _EmptyStoryState();
 
   @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Aucune page disponible pour cette histoire.'),
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Center(
+      child: Text(AppLocalizations.of(ref).t('content.noPagesForStory')),
     );
   }
 }

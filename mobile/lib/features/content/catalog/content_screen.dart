@@ -132,7 +132,7 @@ class ContentScreen extends ConsumerWidget {
               color: theme.colorScheme.outline,
             ),
             const SizedBox(height: 16),
-            const Text('Aucun contenu disponible'),
+            Text(t.t('contentLibrary.noContent')),
           ],
         ),
       );

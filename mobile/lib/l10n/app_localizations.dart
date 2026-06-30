@@ -1095,6 +1095,20 @@ const Map<String, Map<String, String>> _translations = {
     'submissions.empty': 'Aucune soumission',
     'questionBank.quizId': 'ID du quiz',
     'questionBank.importHelper': "Importe les questions d'un quiz existant",
+
+    // ── Content (coloring / stories / feed / catalog) ──
+    'content.coloring': 'Coloriage',
+    'content.coloringPages': 'Coloriages',
+    'content.pageUnavailable': 'Page indisponible',
+    'content.noPagesForStory': 'Aucune page disponible pour cette histoire.',
+    'content.open': 'Ouvrir',
+    'content.feedTitle': "Fil d'actualité",
+    'coloring.saveDrawing': 'Enregistrer le dessin',
+    'coloring.saveChangesTitle': 'Enregistrer les modifications ?',
+    'coloring.discard': 'Abandonner',
+    'coloring.unsavedBody':
+        "Votre dessin contient des modifications non enregistrées. "
+        "L'enregistrer avant de quitter ?",
   },
   'ar': {
     // ── Nav ──
@@ -2143,6 +2157,19 @@ const Map<String, Map<String, String>> _translations = {
     'submissions.empty': 'لا توجد تسليمات',
     'questionBank.quizId': 'معرّف الاختبار',
     'questionBank.importHelper': 'يستورد الأسئلة من اختبار موجود',
+
+    // ── Content (coloring / stories / feed / catalog) ──
+    'content.coloring': 'تلوين',
+    'content.coloringPages': 'صفحات التلوين',
+    'content.pageUnavailable': 'الصفحة غير متاحة',
+    'content.noPagesForStory': 'لا توجد صفحات متاحة لهذه القصة.',
+    'content.open': 'فتح',
+    'content.feedTitle': 'آخر الأخبار',
+    'coloring.saveDrawing': 'حفظ الرسم',
+    'coloring.saveChangesTitle': 'حفظ التغييرات؟',
+    'coloring.discard': 'تجاهل',
+    'coloring.unsavedBody':
+        'يحتوي رسمك على تغييرات غير محفوظة. هل تريد حفظه قبل المغادرة؟',
   },
   'en': {
     // ── Nav ──
@@ -3196,6 +3223,19 @@ const Map<String, Map<String, String>> _translations = {
     'submissions.empty': 'No submissions',
     'questionBank.quizId': 'Quiz ID',
     'questionBank.importHelper': 'Imports questions from an existing quiz',
+
+    // ── Content (coloring / stories / feed / catalog) ──
+    'content.coloring': 'Coloring',
+    'content.coloringPages': 'Coloring pages',
+    'content.pageUnavailable': 'Page unavailable',
+    'content.noPagesForStory': 'No pages available for this story.',
+    'content.open': 'Open',
+    'content.feedTitle': 'News feed',
+    'coloring.saveDrawing': 'Save drawing',
+    'coloring.saveChangesTitle': 'Save changes?',
+    'coloring.discard': 'Discard',
+    'coloring.unsavedBody':
+        'Your drawing has unsaved changes. Save it before leaving?',
   },
 };
 

@@ -1087,7 +1087,7 @@ class _SignedPdfPlayerState extends ConsumerState<_SignedPdfPlayer>
             child: OutlinedButton.icon(
               onPressed: _openExternally,
               icon: const Icon(Icons.open_in_new),
-              label: const Text('Ouvrir'),
+              label: Text(AppLocalizations.of(ref).t('content.open')),
             ),
           ),
         ),

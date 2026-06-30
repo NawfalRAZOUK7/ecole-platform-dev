@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'package:ecole_platform/app/providers.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/features/auth/auth_provider.dart';
 import 'package:ecole_platform/features/content/coloring/coloring_provider.dart';
 import 'package:ecole_platform/features/ai/rewards/rewards_provider.dart';
@@ -81,9 +82,11 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: pageAsync.when(
-            data: (page) => Text(page?.title ?? 'Coloring'),
-            loading: () => const Text('Coloring'),
-            error: (_, __) => const Text('Coloring'),
+            data: (page) =>
+                Text(page?.title ?? AppLocalizations.of(ref).t('content.coloring')),
+            loading: () => Text(AppLocalizations.of(ref).t('content.coloring')),
+            error: (_, __) =>
+                Text(AppLocalizations.of(ref).t('content.coloring')),
           ),
           actions: <Widget>[
             if (_saving)
@@ -99,7 +102,7 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen> {
             else
               IconButton(
                 onPressed: () => _saveColoring(),
-                tooltip: 'Save drawing',
+                tooltip: AppLocalizations.of(ref).t('coloring.saveDrawing'),
                 icon: Icon(
                   _hasUnsavedChanges ? Icons.save_outlined : Icons.check_circle,
                   color:
@@ -264,22 +267,20 @@ class _ColoringScreenState extends ConsumerState<ColoringScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Save changes?'),
-          content: const Text(
-            'Your drawing has unsaved changes. Save it before leaving?',
-          ),
+          title: Text(AppLocalizations.of(ref).t('coloring.saveChangesTitle')),
+          content: Text(AppLocalizations.of(ref).t('coloring.unsavedBody')),
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(_ExitChoice.cancel),
-              child: const Text('Cancel'),
+              child: Text(AppLocalizations.of(ref).t('common.cancel')),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(_ExitChoice.discard),
-              child: const Text('Discard'),
+              child: Text(AppLocalizations.of(ref).t('coloring.discard')),
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(_ExitChoice.save),
-              child: const Text('Save'),
+              child: Text(AppLocalizations.of(ref).t('common.save')),
             ),
           ],
         );

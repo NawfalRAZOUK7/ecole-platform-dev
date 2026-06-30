@@ -18,7 +18,7 @@ class FeedScreen extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Fil d\'actualité')),
+      appBar: AppBar(title: Text(AppLocalizations.of(ref).t('content.feedTitle'))),
       body: _buildBody(context, ref, feedState, theme),
     );
   }

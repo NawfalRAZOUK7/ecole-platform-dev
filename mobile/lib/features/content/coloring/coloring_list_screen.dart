@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ecole_platform/features/content/coloring/coloring_provider.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 import 'package:ecole_platform/shared/ui/tokens/colors.dart';
 import 'package:ecole_platform/shared/ui/tokens/spacing.dart';
 import 'package:ecole_platform/shared/widgets/app_error_widget.dart';
@@ -19,7 +20,7 @@ class ColoringListScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Coloring Pages'),
+        title: Text(AppLocalizations.of(ref).t('content.coloringPages')),
       ),
       body: coloringAsync.when(
         loading: () => const ColoringGridSkeleton(),
