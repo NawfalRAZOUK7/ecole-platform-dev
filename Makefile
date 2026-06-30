@@ -1,4 +1,4 @@
-.PHONY: audit-export backup backup-status build build-prod clean deploy-blue-green deploy-rollback deploy-status design-tokens dev-init dev-reset docker-prune docs docs-schema doppler-run down format health hooks-install lint lint-fix logs migrate migrate-down migrate-new migrate-status migrate-validate monitoring-down monitoring-up ngrok-webhook openapi openapi-check prod-down prod-logs prod-up redis-cli redis-cli-staging restart restore restore-drill rotate-all rotate-db rotate-jwt rotate-redis seed seed-all seed-audit seed-core seed-friend-content shell shell-db shell-db-staging staging-down staging-logs staging-up status test test-cov test-full test-integration test-load test-perf test-postman test-postman-full test-postman-phases test-postman-scenarios test-security test-unit up up-doppler version web-install web-lint worker worker-logs mobile-run mobile-build mobile-clean mobile-test mobile-run-sim mobile-run-iphone mobile-run-device mobile-full web-build web-test web-test-e2e web-format pre-rollout
+.PHONY: audit-export backup backup-status build build-prod clean deploy-blue-green deploy-rollback deploy-status design-tokens dev-init dev-reset docker-prune docs docs-schema doppler-run down format health hooks-install lint lint-fix logs migrate migrate-down migrate-new migrate-status migrate-validate monitoring-down monitoring-up ngrok-webhook openapi openapi-check prod-down prod-logs prod-up redis-cli redis-cli-staging restart restore restore-drill rotate-all rotate-db rotate-jwt rotate-redis seed seed-all seed-audit seed-core seed-friend-content shell shell-db shell-db-staging staging-down staging-logs staging-up status test test-cov test-full test-integration test-load test-perf test-postman test-postman-full test-postman-phases test-postman-scenarios test-security test-unit up up-doppler version web-install web-lint worker worker-logs mobile-run mobile-build mobile-clean mobile-test mobile-i18n-scan mobile-i18n-check mobile-run-sim mobile-run-iphone mobile-run-device mobile-full web-build web-test web-test-e2e web-format pre-rollout
 
 # ==================== Compose Files ====================
 COMPOSE_FILE = infra/docker-compose.dev.yml
@@ -11,7 +11,7 @@ COMPOSE_ENV_FILE = .env
 DC = docker compose --env-file $(COMPOSE_ENV_FILE) -f $(COMPOSE_FILE)
 DC_STAGING = docker compose -f $(COMPOSE_STAGING)
 DC_PROD = docker compose -f $(COMPOSE_PROD)
-DC_MONITORING = docker compose -f $(COMPOSE_MONITORING)
+DC_MONITORING = docker compose --env-file $(COMPOSE_ENV_FILE) -f $(COMPOSE_MONITORING)
 
 # Doppler-injected Docker Compose (no .env file needed)
 # Usage: doppler run -- make up-doppler  OR  make doppler-run
@@ -457,6 +457,12 @@ mobile-run-device:  ## Auto-detect USB IP → patch .env → run --profile on an
 
 mobile-test:  ## Run Flutter unit tests
 	cd mobile && flutter test
+
+mobile-i18n-scan:  ## List hardcoded UI strings to externalize (informational)
+	cd mobile && node scripts/i18n_scan.mjs
+
+mobile-i18n-check:  ## CI guard — fail if hardcoded strings remain in enforced dirs
+	cd mobile && node scripts/i18n_scan.mjs --enforce
 
 mobile-full:  ## FROM SCRATCH → iPhone: clean + deps + pods + IP patch + run --profile
 	@echo "══════════════════════════════════════════════"

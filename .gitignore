@@ -116,6 +116,12 @@ History_claude.md
 
 # Dockerised test coverage/junit output
 test-artifacts/
+.coverage-*.json
+backend/.coverage-*.json
+playwright-report/
+test-results/
+web/playwright-report/
+web/test-results/
 
 # ==================== Seed / Local Artifacts ====================
 *-report.md
