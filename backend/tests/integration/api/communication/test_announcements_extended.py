@@ -26,6 +26,9 @@ from tests.integration.api.helpers import (
 
 ADMIN_EMAIL = "admin@ecole-benani.ma"
 ADMIN_PASSWORD = "admin123"
+# Announcement create/publish/update are DIR-only (_DIR_OVERSIGHT); ADM may only read.
+DIRECTOR_EMAIL = "directeur@ecole-benani.ma"
+DIRECTOR_PASSWORD = "director123"
 TEACHER_EMAIL = "prof.math@ecole-benani.ma"
 TEACHER_PASSWORD = "teacher123"
 STUDENT_EMAIL = "yassine.alaoui@ecole-benani.ma"
@@ -73,20 +76,24 @@ class TestAnnouncementsExtended:
         self, client, legacy_api_seed
     ):
         _ = legacy_api_seed
-        token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+        token = await login_token(
+            client, email=DIRECTOR_EMAIL, password=DIRECTOR_PASSWORD
+        )
         payload = _announcement_payload()
         del payload["title"]
         response = await client.post(
             "/announcements", headers=auth_header(token), json=payload
         )
-        assert response.status_code == 422
+        assert response.status_code == 422  # DIR passes auth, then validation fails
 
     @pytest.mark.asyncio
     async def test_create_announcement_missing_body_returns_422(
         self, client, legacy_api_seed
     ):
         _ = legacy_api_seed
-        token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+        token = await login_token(
+            client, email=DIRECTOR_EMAIL, password=DIRECTOR_PASSWORD
+        )
         payload = _announcement_payload()
         del payload["body"]
         response = await client.post(
@@ -99,7 +106,9 @@ class TestAnnouncementsExtended:
         self, client, legacy_api_seed
     ):
         _ = legacy_api_seed
-        token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+        token = await login_token(
+            client, email=DIRECTOR_EMAIL, password=DIRECTOR_PASSWORD
+        )
         response = await client.put(
             f"/announcements/{uuid.uuid4()}",
             headers=auth_header(token),
@@ -112,7 +121,9 @@ class TestAnnouncementsExtended:
         self, client, legacy_api_seed
     ):
         _ = legacy_api_seed
-        token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+        token = await login_token(
+            client, email=DIRECTOR_EMAIL, password=DIRECTOR_PASSWORD
+        )
         response = await client.post(
             f"/announcements/{uuid.uuid4()}/publish",
             headers=auth_header(token),
@@ -154,8 +165,10 @@ class TestAnnouncementsExtended:
         self, client, legacy_api_seed
     ):
         _ = legacy_api_seed
-        # Create + publish as admin
-        a_token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+        # Create + publish as director (announcement management is DIR-only)
+        a_token = await login_token(
+            client, email=DIRECTOR_EMAIL, password=DIRECTOR_PASSWORD
+        )
         cr = await client.post(
             "/announcements", headers=auth_header(a_token), json=_announcement_payload()
         )
@@ -190,7 +203,9 @@ class TestAnnouncementsExtended:
     @pytest.mark.asyncio
     async def test_full_create_update_publish_cycle(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+        token = await login_token(
+            client, email=DIRECTOR_EMAIL, password=DIRECTOR_PASSWORD
+        )
 
         # Create
         cr = await client.post(
@@ -222,7 +237,9 @@ class TestAnnouncementsExtended:
     @pytest.mark.asyncio
     async def test_create_announcement_db_side_effect(self, client, session_factory):
         """(c) Verify announcement is persisted with correct status in DB."""
-        token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+        token = await login_token(
+            client, email=DIRECTOR_EMAIL, password=DIRECTOR_PASSWORD
+        )
         title = f"DBVerify-{unique_suffix()}"
         response = await client.post(
             "/announcements",

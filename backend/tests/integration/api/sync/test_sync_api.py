@@ -340,13 +340,14 @@ class TestSyncApi:
         assert len(response.json()["data"]) >= 1
 
     @pytest.mark.asyncio
-    async def test_director_can_resolve_conflict(self, client, sync_api_context):
+    async def test_admin_can_resolve_conflict(self, client, sync_api_context):
+        # Conflict resolution is an ADM operation (_ADM_OPS), not DIR.
         payload = await _create_conflict(client, sync_api_context)
         conflict_id = payload["conflict_ids"][0]
 
         response = await client.post(
             f"/sync/conflicts/{conflict_id}/resolve",
-            headers=auth_header(sync_api_context["director"]["token"]),
+            headers=auth_header(sync_api_context["admin"]["token"]),
             json={"resolution": "manual"},
         )
 

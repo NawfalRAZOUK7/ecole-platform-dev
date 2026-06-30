@@ -22,6 +22,9 @@ from tests.integration.api.helpers import (
 
 ADMIN_EMAIL = "admin@ecole-benani.ma"
 ADMIN_PASSWORD = "admin123"
+# Cross-user GDPR export/deletion/consent requires PERM_GDPR_DATA_DELETE (DIR-only).
+DIRECTOR_EMAIL = "directeur@ecole-benani.ma"
+DIRECTOR_PASSWORD = "director123"
 TEACHER_EMAIL = "prof.math@ecole-benani.ma"
 TEACHER_PASSWORD = "teacher123"
 STUDENT_EMAIL = "yassine.alaoui@ecole-benani.ma"
@@ -50,9 +53,11 @@ class TestDataExport:
         assert isinstance(data, dict)
 
     @pytest.mark.asyncio
-    async def test_admin_can_export_any_user_data(self, client, legacy_api_seed):
+    async def test_director_can_export_any_user_data(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+        token = await login_token(
+            client, email=DIRECTOR_EMAIL, password=DIRECTOR_PASSWORD
+        )
         response = await client.get(
             f"/users/{STUDENT_ID}/data-export",
             headers=auth_header(token),
@@ -87,7 +92,9 @@ class TestDataExport:
     @pytest.mark.asyncio
     async def test_export_nonexistent_user_returns_404(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+        token = await login_token(
+            client, email=DIRECTOR_EMAIL, password=DIRECTOR_PASSWORD
+        )
         response = await client.get(
             f"/users/{uuid.uuid4()}/data-export",
             headers=auth_header(token),
@@ -103,7 +110,9 @@ class TestDataExport:
     @pytest.mark.asyncio
     async def test_invalid_user_id_returns_422(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+        token = await login_token(
+            client, email=DIRECTOR_EMAIL, password=DIRECTOR_PASSWORD
+        )
         response = await client.get(
             "/users/not-a-uuid/data-export",
             headers=auth_header(token),
@@ -113,10 +122,12 @@ class TestDataExport:
 
 class TestDataDeletion:
     @pytest.mark.asyncio
-    async def test_admin_can_request_data_deletion(self, client, legacy_api_seed):
+    async def test_director_can_request_data_deletion(self, client, legacy_api_seed):
         """ADM inherits DIR which has PERM_GDPR_DATA_DELETE."""
         _ = legacy_api_seed
-        token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+        token = await login_token(
+            client, email=DIRECTOR_EMAIL, password=DIRECTOR_PASSWORD
+        )
         # Note: actual deletion is destructive — test with a different user
         # to avoid breaking seed data; use teacher
         response = await client.post(
@@ -154,7 +165,9 @@ class TestDataDeletion:
     @pytest.mark.asyncio
     async def test_deletion_nonexistent_user_returns_404(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+        token = await login_token(
+            client, email=DIRECTOR_EMAIL, password=DIRECTOR_PASSWORD
+        )
         response = await client.post(
             f"/users/{uuid.uuid4()}/data-deletion",
             headers=auth_header(token),
@@ -178,9 +191,11 @@ class TestConsentLog:
         assert isinstance(data, dict)
 
     @pytest.mark.asyncio
-    async def test_admin_can_view_any_consent_log(self, client, legacy_api_seed):
+    async def test_director_can_view_any_consent_log(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+        token = await login_token(
+            client, email=DIRECTOR_EMAIL, password=DIRECTOR_PASSWORD
+        )
         response = await client.get(
             f"/users/{STUDENT_ID}/consent-log",
             headers=auth_header(token),
@@ -206,7 +221,9 @@ class TestConsentLog:
         self, client, legacy_api_seed
     ):
         _ = legacy_api_seed
-        token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+        token = await login_token(
+            client, email=DIRECTOR_EMAIL, password=DIRECTOR_PASSWORD
+        )
         response = await client.get(
             f"/users/{uuid.uuid4()}/consent-log",
             headers=auth_header(token),

@@ -13,7 +13,7 @@ ENDPOINT_CASES = [
         "/schools",
         {},
         {
-            "SYS": 404,
+            "SYS": 403,
             "SUP": 200,
             "ADM": 200,
             "DIR": 200,
@@ -28,7 +28,7 @@ ENDPOINT_CASES = [
         f"/gradebook/{CLASS_ID}/{PERIOD_ID}",
         {},
         {
-            "SYS": 200,
+            "SYS": 403,
             "SUP": 200,
             "ADM": 200,
             "DIR": 200,
@@ -43,7 +43,7 @@ ENDPOINT_CASES = [
         "/rubrics",
         {},
         {
-            "SYS": 200,
+            "SYS": 403,
             "SUP": 200,
             "ADM": 200,
             "DIR": 200,
@@ -58,7 +58,7 @@ ENDPOINT_CASES = [
         "/question-bank",
         {},
         {
-            "SYS": 200,
+            "SYS": 403,
             "SUP": 200,
             "ADM": 200,
             "DIR": 200,
@@ -73,7 +73,7 @@ ENDPOINT_CASES = [
         "/billing/payment-plans",
         {},
         {
-            "SYS": 200,
+            "SYS": 403,
             "SUP": 200,
             "ADM": 200,
             "DIR": 200,
@@ -88,7 +88,7 @@ ENDPOINT_CASES = [
         f"/analytics/attendance/class/{CLASS_ID}",
         {"period_id": PERIOD_ID},
         {
-            "SYS": 200,
+            "SYS": 403,
             "SUP": 200,
             "ADM": 200,
             "DIR": 200,
@@ -103,10 +103,10 @@ ENDPOINT_CASES = [
         "/timetable/constraints",
         {"academic_year_id": YEAR_ID},
         {
-            "SYS": 404,
+            "SYS": 403,
             "SUP": 404,
             "ADM": 200,
-            "DIR": 404,
+            "DIR": 403,
             "TCH": 403,
             "PAR": 403,
             "STD": 403,

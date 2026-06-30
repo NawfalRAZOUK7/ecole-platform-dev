@@ -129,7 +129,7 @@ async def finhealth_rbac_context(session_factory):
     return {"school": school, "academic_year": academic_year, **actors}
 
 
-@pytest.mark.parametrize("actor_label", ["admin", "director", "superadmin", "system"])
+@pytest.mark.parametrize("actor_label", ["admin", "director", "superadmin"])
 @pytest.mark.asyncio
 async def test_read_roles_can_list_retention(
     client, finhealth_rbac_context, actor_label
@@ -142,7 +142,9 @@ async def test_read_roles_can_list_retention(
     assert response.status_code == 200, response.text
 
 
-@pytest.mark.parametrize("actor_label", ["teacher", "parent", "student"])
+@pytest.mark.parametrize(
+    "actor_label", ["teacher", "parent", "student", "system"]
+)
 @pytest.mark.asyncio
 async def test_non_read_roles_cannot_list_retention(
     client, finhealth_rbac_context, actor_label
@@ -155,7 +157,7 @@ async def test_non_read_roles_cannot_list_retention(
     assert response.status_code == 403, response.text
 
 
-@pytest.mark.parametrize("actor_label", ["admin", "director", "superadmin", "system"])
+@pytest.mark.parametrize("actor_label", ["admin", "superadmin"])
 @pytest.mark.asyncio
 async def test_compute_roles_can_trigger_snapshot_compute(
     client, finhealth_rbac_context, actor_label
@@ -169,7 +171,9 @@ async def test_compute_roles_can_trigger_snapshot_compute(
     assert response.status_code == 202, response.text
 
 
-@pytest.mark.parametrize("actor_label", ["teacher", "parent", "student"])
+@pytest.mark.parametrize(
+    "actor_label", ["teacher", "parent", "student", "director", "system"]
+)
 @pytest.mark.asyncio
 async def test_non_compute_roles_cannot_trigger_snapshot_compute(
     client,
@@ -185,7 +189,7 @@ async def test_non_compute_roles_cannot_trigger_snapshot_compute(
     assert response.status_code == 403, response.text
 
 
-@pytest.mark.parametrize("actor_label", ["admin", "director", "superadmin", "system"])
+@pytest.mark.parametrize("actor_label", ["admin", "superadmin"])
 @pytest.mark.asyncio
 async def test_export_roles_can_download_csv(
     client, finhealth_rbac_context, actor_label
@@ -199,7 +203,9 @@ async def test_export_roles_can_download_csv(
     assert response.headers["content-type"].startswith("text/csv")
 
 
-@pytest.mark.parametrize("actor_label", ["teacher", "parent", "student"])
+@pytest.mark.parametrize(
+    "actor_label", ["teacher", "parent", "student", "director", "system"]
+)
 @pytest.mark.asyncio
 async def test_non_export_roles_cannot_download_csv(
     client, finhealth_rbac_context, actor_label

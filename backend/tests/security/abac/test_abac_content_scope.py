@@ -27,7 +27,7 @@ from tests.security.conftest import (
 
 async def _create_content(
     *,
-    level_band: str = "6eme",
+    level_band: str = "1AC",
     subject: str = "math",
     assign_class: uuid.UUID | None = None,
     status: str = "published",

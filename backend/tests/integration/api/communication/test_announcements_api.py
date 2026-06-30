@@ -13,6 +13,9 @@ from tests.integration.api.helpers import (
 
 ADMIN_EMAIL = "admin@ecole-benani.ma"
 ADMIN_PASSWORD = "admin123"
+# Announcement create/publish/update are DIR-only (_DIR_OVERSIGHT); ADM lacks them.
+DIRECTOR_EMAIL = "directeur@ecole-benani.ma"
+DIRECTOR_PASSWORD = "director123"
 TEACHER_EMAIL = "prof.math@ecole-benani.ma"
 TEACHER_PASSWORD = "teacher123"
 
@@ -28,9 +31,11 @@ def _create_payload(**overrides) -> dict:
 
 class TestAnnouncementsApi:
     @pytest.mark.asyncio
-    async def test_admin_can_create_announcement(self, client, legacy_api_seed):
+    async def test_director_can_create_announcement(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+        token = await login_token(
+            client, email=DIRECTOR_EMAIL, password=DIRECTOR_PASSWORD
+        )
         response = await client.post(
             "/announcements",
             headers=auth_header(token),
@@ -55,9 +60,11 @@ class TestAnnouncementsApi:
         assert response.status_code in (403, 404)
 
     @pytest.mark.asyncio
-    async def test_admin_can_list_announcements(self, client, legacy_api_seed):
+    async def test_director_can_list_announcements(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+        token = await login_token(
+            client, email=DIRECTOR_EMAIL, password=DIRECTOR_PASSWORD
+        )
 
         await client.post(
             "/announcements",
@@ -75,9 +82,11 @@ class TestAnnouncementsApi:
         assert isinstance(payload["data"], list)
 
     @pytest.mark.asyncio
-    async def test_admin_can_publish_announcement(self, client, legacy_api_seed):
+    async def test_director_can_publish_announcement(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+        token = await login_token(
+            client, email=DIRECTOR_EMAIL, password=DIRECTOR_PASSWORD
+        )
 
         create_resp = await client.post(
             "/announcements",
@@ -95,9 +104,11 @@ class TestAnnouncementsApi:
         assert publish_resp.json()["data"]["status"] == "PUBLISHED"
 
     @pytest.mark.asyncio
-    async def test_admin_can_update_draft_announcement(self, client, legacy_api_seed):
+    async def test_director_can_update_draft_announcement(self, client, legacy_api_seed):
         _ = legacy_api_seed
-        token = await login_token(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+        token = await login_token(
+            client, email=DIRECTOR_EMAIL, password=DIRECTOR_PASSWORD
+        )
 
         create_resp = await client.post(
             "/announcements",

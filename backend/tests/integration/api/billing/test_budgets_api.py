@@ -233,10 +233,11 @@ class TestBudgetApi:
         assert response.json()["data"]["id"] == str(budget_api_context["budget"].id)
 
     @pytest.mark.asyncio
-    async def test_director_can_create_allocation(self, client, budget_api_context):
+    async def test_admin_can_create_allocation(self, client, budget_api_context):
+        # Budget allocation is an ADM operation (_ADM_OPS); DIR only approves.
         response = await client.post(
             f"/budgets/{budget_api_context['budget'].id}/allocations",
-            headers=auth_header(budget_api_context["director"]["token"]),
+            headers=auth_header(budget_api_context["admin"]["token"]),
             json={
                 "class_id": str(budget_api_context["school_class"].id),
                 "teacher_id": str(budget_api_context["teacher"]["user"].id),
@@ -339,12 +340,13 @@ class TestBudgetApi:
         assert response.json()["data"]["id"] == str(budget_api_context["request"].id)
 
     @pytest.mark.asyncio
-    async def test_director_can_record_budget_transaction(
+    async def test_admin_can_record_budget_transaction(
         self, client, budget_api_context
     ):
+        # Recording a budget transaction is an ADM operation (_ADM_OPS).
         response = await client.post(
             f"/budgets/allocations/{budget_api_context['allocation'].id}/transactions",
-            headers=auth_header(budget_api_context["director"]["token"]),
+            headers=auth_header(budget_api_context["admin"]["token"]),
             json={
                 "amount": 100,
                 "transaction_type": "expense",
