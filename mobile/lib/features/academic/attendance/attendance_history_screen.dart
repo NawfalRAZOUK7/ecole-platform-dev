@@ -117,7 +117,7 @@ class _AttendanceHistoryScreenState
   }
 }
 
-class _HistoryFilters extends StatelessWidget {
+class _HistoryFilters extends ConsumerWidget {
   final String? classId;
   final String? studentId;
   final List<ClassInfo> classes;
@@ -135,8 +135,9 @@ class _HistoryFilters extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final t = AppLocalizations.of(ref);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -144,7 +145,7 @@ class _HistoryFilters extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Attendance history',
+              t.t('attendance.history'),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -152,9 +153,9 @@ class _HistoryFilters extends StatelessWidget {
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               initialValue: classId,
-              decoration: const InputDecoration(
-                labelText: 'Class',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: t.t('attendance.selectClass'),
+                border: const OutlineInputBorder(),
               ),
               items: classes
                   .map<DropdownMenuItem<String>>(
@@ -169,9 +170,9 @@ class _HistoryFilters extends StatelessWidget {
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               initialValue: studentId,
-              decoration: const InputDecoration(
-                labelText: 'Student',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: t.t('attendance.selectStudent'),
+                border: const OutlineInputBorder(),
               ),
               items: students
                   .map<DropdownMenuItem<String>>(

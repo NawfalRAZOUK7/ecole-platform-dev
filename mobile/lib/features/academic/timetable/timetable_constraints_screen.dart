@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ecole_platform/app/providers.dart';
 import 'package:ecole_platform/domain/entities/academic/timetable.dart';
+import 'package:ecole_platform/l10n/app_localizations.dart';
 
 class TimetableConstraintsScreen extends ConsumerStatefulWidget {
   const TimetableConstraintsScreen({super.key});
@@ -117,20 +118,26 @@ class _TimetableConstraintsScreenState
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Timetable constraints')),
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(ref).t('timetable.constraintsTitle')),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           TextField(
             controller: _academicYearController,
-            decoration: const InputDecoration(labelText: 'Academic year ID'),
+            decoration: InputDecoration(
+              labelText: AppLocalizations.of(ref).t('timetable.academicYearId'),
+            ),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _maxConsecutiveController,
             keyboardType: TextInputType.number,
-            decoration:
-                const InputDecoration(labelText: 'Max consecutive classes'),
+            decoration: InputDecoration(
+              labelText:
+                  AppLocalizations.of(ref).t('timetable.maxConsecutiveClasses'),
+            ),
           ),
           const SizedBox(height: 16),
           Text(
@@ -171,7 +178,7 @@ class _TimetableConstraintsScreenState
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : const Icon(Icons.save_outlined),
-          label: const Text('Save constraints'),
+          label: Text(AppLocalizations.of(ref).t('timetable.saveConstraints')),
         ),
       ),
     );

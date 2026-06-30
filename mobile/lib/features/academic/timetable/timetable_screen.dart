@@ -33,12 +33,12 @@ class TimetableScreen extends ConsumerWidget {
           IconButton(
             onPressed: () => context.push('/timetable/constraints'),
             icon: const Icon(Icons.tune_outlined),
-            tooltip: 'Constraints',
+            tooltip: t.t('timetable.constraints'),
           ),
           IconButton(
             onPressed: () => context.push('/timetable/generate'),
             icon: const Icon(Icons.auto_awesome_outlined),
-            tooltip: 'Generate',
+            tooltip: t.t('timetable.generate'),
           ),
         ],
       ),

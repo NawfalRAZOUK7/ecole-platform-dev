@@ -201,9 +201,9 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                             DropdownButtonFormField<String>(
                               initialValue: _selectedClassId,
                               menuMaxHeight: 240,
-                              decoration: const InputDecoration(
-                                labelText: 'Classe *',
-                                border: OutlineInputBorder(),
+                              decoration: InputDecoration(
+                                labelText: '${t.t('attendance.selectClass')} *',
+                                border: const OutlineInputBorder(),
                               ),
                               items: _classes
                                   .map(
@@ -403,11 +403,11 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
                                 if (record.status == 'absent') ...[
                                   const SizedBox(height: 8),
                                   TextField(
-                                    decoration: const InputDecoration(
-                                      labelText: 'Motif d\'absence',
-                                      border: OutlineInputBorder(),
+                                    decoration: InputDecoration(
+                                      labelText: t.t('attendance.absenceReason'),
+                                      border: const OutlineInputBorder(),
                                       isDense: true,
-                                      contentPadding: EdgeInsets.symmetric(
+                                      contentPadding: const EdgeInsets.symmetric(
                                         horizontal: 12,
                                         vertical: 8,
                                       ),

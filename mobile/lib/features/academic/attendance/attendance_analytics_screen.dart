@@ -68,9 +68,9 @@ class _AttendanceAnalyticsScreenState
                       padding: const EdgeInsets.all(16),
                       child: DropdownButtonFormField<String>(
                         initialValue: _selectedClassId,
-                        decoration: const InputDecoration(
-                          labelText: 'Class',
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          labelText: t.t('attendance.selectClass'),
+                          border: const OutlineInputBorder(),
                         ),
                         items: classes
                             .map(
@@ -198,7 +198,7 @@ class _AnalyticsContent extends ConsumerWidget {
                         AppSnackBar.show(context, 'Export ready: ${result.fileName}');
                       },
                       icon: const Icon(Icons.download),
-                      label: const Text('Export'),
+                      label: Text(AppLocalizations.of(ref).t('attendance.export')),
                     ),
                   ],
                 ),

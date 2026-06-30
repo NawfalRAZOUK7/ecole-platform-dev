@@ -1109,6 +1109,16 @@ const Map<String, Map<String, String>> _translations = {
     'coloring.unsavedBody':
         "Votre dessin contient des modifications non enregistrées. "
         "L'enregistrer avant de quitter ?",
+
+    // ── Academic (timetable / attendance) ──
+    'timetable.constraintsTitle': "Contraintes d'emploi du temps",
+    'timetable.constraints': 'Contraintes',
+    'timetable.academicYearId': 'ID année scolaire',
+    'timetable.maxConsecutiveClasses': 'Cours consécutifs max',
+    'timetable.saveConstraints': 'Enregistrer les contraintes',
+    'timetable.generate': 'Générer',
+    'attendance.absenceReason': "Motif d'absence",
+    'attendance.export': 'Exporter',
   },
   'ar': {
     // ── Nav ──
@@ -2170,6 +2180,16 @@ const Map<String, Map<String, String>> _translations = {
     'coloring.discard': 'تجاهل',
     'coloring.unsavedBody':
         'يحتوي رسمك على تغييرات غير محفوظة. هل تريد حفظه قبل المغادرة؟',
+
+    // ── Academic (timetable / attendance) ──
+    'timetable.constraintsTitle': 'قيود الجدول الزمني',
+    'timetable.constraints': 'القيود',
+    'timetable.academicYearId': 'معرّف السنة الدراسية',
+    'timetable.maxConsecutiveClasses': 'الحد الأقصى للحصص المتتالية',
+    'timetable.saveConstraints': 'حفظ القيود',
+    'timetable.generate': 'إنشاء',
+    'attendance.absenceReason': 'سبب الغياب',
+    'attendance.export': 'تصدير',
   },
   'en': {
     // ── Nav ──
@@ -3236,6 +3256,16 @@ const Map<String, Map<String, String>> _translations = {
     'coloring.discard': 'Discard',
     'coloring.unsavedBody':
         'Your drawing has unsaved changes. Save it before leaving?',
+
+    // ── Academic (timetable / attendance) ──
+    'timetable.constraintsTitle': 'Timetable constraints',
+    'timetable.constraints': 'Constraints',
+    'timetable.academicYearId': 'Academic year ID',
+    'timetable.maxConsecutiveClasses': 'Max consecutive classes',
+    'timetable.saveConstraints': 'Save constraints',
+    'timetable.generate': 'Generate',
+    'attendance.absenceReason': 'Absence reason',
+    'attendance.export': 'Export',
   },
 };
 
