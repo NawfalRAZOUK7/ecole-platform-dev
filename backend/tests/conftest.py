@@ -43,6 +43,8 @@ pytest_plugins = ("tests._support.fixtures.common",)
 SCHOOL_ID = "00000000-0000-4000-8000-000000000001"
 ADMIN_EMAIL = "admin@ecole-benani.ma"
 ADMIN_PASSWORD = "admin123"
+DIRECTOR_EMAIL = "directeur@ecole-benani.ma"
+DIRECTOR_PASSWORD = "director123"
 TEACHER_EMAIL = "prof.math@ecole-benani.ma"
 TEACHER_PASSWORD = "teacher123"
 PARENT_EMAIL = "parent.alaoui@gmail.com"
@@ -74,6 +76,7 @@ SEED_AUTH_CREDENTIALS = {
 LIVE_SEED_AUTH_FIXTURES = {
     "client",
     "admin_token",
+    "director_token",
     "teacher_token",
     "student_token",
     "parent_token",
@@ -281,6 +284,16 @@ async def admin_token(client: httpx.AsyncClient) -> str:
         client,
         email=ADMIN_EMAIL,
         password=ADMIN_PASSWORD,
+    )
+
+
+@pytest_asyncio.fixture(loop_scope="function")
+async def director_token(client: httpx.AsyncClient) -> str:
+    """Get a director (DIR) access token — oversight, exports, approvals."""
+    return await _login_with_seed_retry(
+        client,
+        email=DIRECTOR_EMAIL,
+        password=DIRECTOR_PASSWORD,
     )
 
 

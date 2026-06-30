@@ -54,7 +54,7 @@ async def test_create_game_config_memory_match(client, api_context):
     assert response.status_code == 201, response.text
     payload = response.json()["data"]
     assert payload["game_type"] == "memory_match"
-    assert payload["difficulty"] == "easy"
+    assert payload["difficulty"] == "EASY"
     assert payload["reward_stars"] == 12
     assert payload["school_id"] == str(api_context["school"].id)
 

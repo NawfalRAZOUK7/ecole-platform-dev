@@ -117,7 +117,7 @@ class TestCmsContentCreate:
             json=_cms_content_payload(
                 content_type="VIDEO",
                 level_band="3AC",
-                subject="activite_scientifique",
+                subject="svt",
             ),
         )
         assert response.status_code == 201

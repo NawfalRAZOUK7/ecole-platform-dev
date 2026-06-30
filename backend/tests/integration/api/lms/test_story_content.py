@@ -3,14 +3,40 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime, timezone
 
 import pytest
-from sqlalchemy import select
+from sqlalchemy import select, text
 
 from app.models.documents import Document
-from app.models.lms import ContentProgress
+from app.models.lms import ClassContentAssignment, ContentProgress
 from app.models.rewards import RewardEvent
 from tests.integration.api.helpers import auth_header
+
+
+async def _make_content_visible(
+    session_factory, api_context, content_id: uuid.UUID, level_band: str
+) -> None:
+    """Make platform content discoverable under the new ABAC content scoping.
+
+    Students see only content assigned to their class; teachers see only content
+    matching their taught level band. Align both for the api_context class.
+    """
+    async with session_factory() as session:
+        await session.execute(
+            text("UPDATE classes SET level_band = :lb WHERE id = :cid"),
+            {"lb": level_band, "cid": api_context["class"].id},
+        )
+        session.add(
+            ClassContentAssignment(
+                teacher_id=api_context["teacher"]["user"].id,
+                class_id=api_context["class"].id,
+                content_item_id=content_id,
+                school_id=api_context["school"].id,
+                assigned_at=datetime.now(timezone.utc),
+            )
+        )
+        await session.commit()
 
 
 def _sample_png_bytes() -> bytes:
@@ -23,6 +49,8 @@ def _sample_png_bytes() -> bytes:
 async def _create_cms_content(
     client,
     token: str,
+    session_factory,
+    api_context,
     *,
     title: str,
     content_type: str = "story",
@@ -49,14 +77,22 @@ async def _create_cms_content(
         json=payload,
     )
     assert response.status_code == 201, response.text
-    return response.json()["data"]
+    data = response.json()["data"]
+    await _make_content_visible(
+        session_factory, api_context, uuid.UUID(data["id"]), payload["level_band"]
+    )
+    return data
 
 
 @pytest.mark.asyncio
-async def test_create_story_content_with_new_fields(client, api_context):
+async def test_create_story_content_with_new_fields(
+    client, api_context, session_factory
+):
     content = await _create_cms_content(
         client,
         api_context["content_manager"]["token"],
+        session_factory,
+        api_context,
         title="حرف الألف",
         page_count=12,
         letter="أ",
@@ -74,16 +110,20 @@ async def test_create_story_content_with_new_fields(client, api_context):
 
 
 @pytest.mark.asyncio
-async def test_list_content_filter_by_letter(client, api_context):
+async def test_list_content_filter_by_letter(client, api_context, session_factory):
     alif = await _create_cms_content(
         client,
         api_context["content_manager"]["token"],
+        session_factory,
+        api_context,
         title="قصة حرف الألف",
         letter="غ",
     )
     baa = await _create_cms_content(
         client,
         api_context["content_manager"]["token"],
+        session_factory,
+        api_context,
         title="قصة حرف الباء",
         letter="ق",
         theme_color="#009688",
@@ -103,10 +143,14 @@ async def test_list_content_filter_by_letter(client, api_context):
 
 
 @pytest.mark.asyncio
-async def test_list_content_filter_by_target_age(client, api_context):
+async def test_list_content_filter_by_target_age(
+    client, api_context, session_factory
+):
     younger = await _create_cms_content(
         client,
         api_context["content_manager"]["token"],
+        session_factory,
+        api_context,
         title="قصة للصغار",
         target_age_min=11,
         target_age_max=11,
@@ -114,6 +158,8 @@ async def test_list_content_filter_by_target_age(client, api_context):
     older = await _create_cms_content(
         client,
         api_context["content_manager"]["token"],
+        session_factory,
+        api_context,
         title="قصة للكبار",
         target_age_min=12,
         target_age_max=12,
@@ -135,10 +181,12 @@ async def test_list_content_filter_by_target_age(client, api_context):
 
 
 @pytest.mark.asyncio
-async def test_get_story_pages_ordered(client, api_context):
+async def test_get_story_pages_ordered(client, api_context, session_factory):
     story = await _create_cms_content(
         client,
         api_context["content_manager"]["token"],
+        session_factory,
+        api_context,
         title="قصة الصفحات المرتبة",
     )
 
@@ -179,6 +227,8 @@ async def test_complete_content_awards_stars(client, api_context, session_factor
     story = await _create_cms_content(
         client,
         api_context["content_manager"]["token"],
+        session_factory,
+        api_context,
         title="قصة الإكمال",
     )
 
@@ -230,6 +280,8 @@ async def test_save_coloring_creates_document(client, api_context, session_facto
     coloring_book = await _create_cms_content(
         client,
         api_context["content_manager"]["token"],
+        session_factory,
+        api_context,
         title="دفتر التلوين",
         content_type="coloring_book",
         letter=None,

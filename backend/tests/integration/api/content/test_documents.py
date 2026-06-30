@@ -91,7 +91,7 @@ async def _upload_resource(
     content: bytes,
     mime_type: str,
     title: str,
-    subject: str = "Mathematics",
+    subject: str = "math",
     level: str = "College",
     resource_type: str = "worksheet",
 ) -> dict:

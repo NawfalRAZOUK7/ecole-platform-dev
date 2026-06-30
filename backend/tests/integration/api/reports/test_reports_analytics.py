@@ -192,9 +192,10 @@ class TestReportsAndAnalyticsIntegration:
     async def test_csv_and_xlsx_exports_capture_audit_rows_and_fields(
         self,
         client: httpx.AsyncClient,
-        admin_token: str,
+        director_token: str,
         session_factory,
     ):
+        # Report exports require PERM_REP_EXPORT_CREATE (DIR oversight), not ADM.
         filters = {"from_date": "2020-01-01", "to_date": date.today().isoformat()}
 
         async with session_factory() as session:
@@ -202,7 +203,7 @@ class TestReportsAndAnalyticsIntegration:
 
         csv_response = await client.get(
             "/export/csv",
-            headers=_auth_headers(admin_token),
+            headers=_auth_headers(director_token),
             params={"entity": "grades", "filters": json.dumps(filters)},
         )
         assert csv_response.status_code == 200
@@ -220,7 +221,7 @@ class TestReportsAndAnalyticsIntegration:
 
         xlsx_response = await client.get(
             "/export/xlsx",
-            headers=_auth_headers(admin_token),
+            headers=_auth_headers(director_token),
             params={"entity": "grades", "filters": json.dumps(filters)},
         )
         assert xlsx_response.status_code == 200

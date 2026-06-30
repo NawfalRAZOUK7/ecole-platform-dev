@@ -121,7 +121,7 @@ class TestQuizCreate:
         assert response.status_code == 201
         data = response.json()["data"]
         assert data["title"].startswith("Quiz")
-        assert data["subject"] == "Maths"
+        assert data["subject"] == "math"
         assert data["difficulty"] == "MEDIUM"
 
     @pytest.mark.asyncio

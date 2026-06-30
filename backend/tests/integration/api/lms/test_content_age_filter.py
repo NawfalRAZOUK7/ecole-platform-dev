@@ -11,27 +11,56 @@ Tests that:
 from __future__ import annotations
 
 import uuid
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 import pytest
 from sqlalchemy import text
 
+from app.models.lms import ClassContentAssignment
 from tests.integration.api.helpers import auth_header
+
+
+async def _make_content_visible(
+    session_factory, api_context, content_id: uuid.UUID, level_band: str
+) -> None:
+    """Make platform content discoverable under the new ABAC content scoping.
+
+    Students see only content assigned to their class; teachers see only content
+    matching their taught level band. Align both for the api_context class.
+    """
+    async with session_factory() as session:
+        await session.execute(
+            text("UPDATE classes SET level_band = :lb WHERE id = :cid"),
+            {"lb": level_band, "cid": api_context["class"].id},
+        )
+        session.add(
+            ClassContentAssignment(
+                teacher_id=api_context["teacher"]["user"].id,
+                class_id=api_context["class"].id,
+                content_item_id=content_id,
+                school_id=api_context["school"].id,
+                assigned_at=datetime.now(timezone.utc),
+            )
+        )
+        await session.commit()
 
 
 async def _create_content(
     client,
     token: str,
+    session_factory,
+    api_context,
     *,
     title: str,
     target_age_min: int | None,
     target_age_max: int | None,
     status: str = "published",
 ) -> dict:
+    level_band = "1AEP"
     payload: dict = {
         "title": title,
         "content_type": "story",
-        "level_band": "1AEP",
+        "level_band": level_band,
         "language": "fr",
         "status": status,
     }
@@ -46,7 +75,11 @@ async def _create_content(
         json=payload,
     )
     assert response.status_code == 201, response.text
-    return response.json()["data"]
+    data = response.json()["data"]
+    await _make_content_visible(
+        session_factory, api_context, uuid.UUID(data["id"]), level_band
+    )
+    return data
 
 
 async def _set_student_dob(
@@ -98,6 +131,8 @@ async def test_student_without_dob_sees_all_content(
     await _create_content(
         client,
         cm_token,
+        session_factory,
+        api_context,
         title="Age Restricted Story",
         target_age_min=10,
         target_age_max=15,
@@ -106,6 +141,8 @@ async def test_student_without_dob_sees_all_content(
     await _create_content(
         client,
         cm_token,
+        session_factory,
+        api_context,
         title="Universal Story",
         target_age_min=None,
         target_age_max=None,
@@ -138,6 +175,8 @@ async def test_student_with_dob_gets_age_filtered(client, api_context, session_f
     await _create_content(
         client,
         cm_token,
+        session_factory,
+        api_context,
         title=f"Young Story {suffix}",
         target_age_min=5,
         target_age_max=8,
@@ -145,6 +184,8 @@ async def test_student_with_dob_gets_age_filtered(client, api_context, session_f
     await _create_content(
         client,
         cm_token,
+        session_factory,
+        api_context,
         title=f"Older Story {suffix}",
         target_age_min=10,
         target_age_max=15,
@@ -152,6 +193,8 @@ async def test_student_with_dob_gets_age_filtered(client, api_context, session_f
     await _create_content(
         client,
         cm_token,
+        session_factory,
+        api_context,
         title=f"Ageless Story {suffix}",
         target_age_min=None,
         target_age_max=None,
@@ -180,7 +223,9 @@ async def test_student_with_dob_gets_age_filtered(client, api_context, session_f
 
 
 @pytest.mark.asyncio
-async def test_teacher_with_explicit_target_age_sees_filtered(client, api_context):
+async def test_teacher_with_explicit_target_age_sees_filtered(
+    client, api_context, session_factory
+):
     """Teacher with explicit target_age=6 sees only age-appropriate content."""
     cm_token = api_context["content_manager"]["token"]
     suffix = uuid.uuid4().hex[:6]
@@ -188,6 +233,8 @@ async def test_teacher_with_explicit_target_age_sees_filtered(client, api_contex
     await _create_content(
         client,
         cm_token,
+        session_factory,
+        api_context,
         title=f"Young TCH Story {suffix}",
         target_age_min=5,
         target_age_max=8,
@@ -195,6 +242,8 @@ async def test_teacher_with_explicit_target_age_sees_filtered(client, api_contex
     await _create_content(
         client,
         cm_token,
+        session_factory,
+        api_context,
         title=f"Older TCH Story {suffix}",
         target_age_min=12,
         target_age_max=15,
@@ -211,7 +260,7 @@ async def test_teacher_with_explicit_target_age_sees_filtered(client, api_contex
 
 
 @pytest.mark.asyncio
-async def test_teacher_without_filter_sees_all(client, api_context):
+async def test_teacher_without_filter_sees_all(client, api_context, session_factory):
     """Teacher without target_age filter sees all published content."""
     cm_token = api_context["content_manager"]["token"]
     suffix = uuid.uuid4().hex[:6]
@@ -219,6 +268,8 @@ async def test_teacher_without_filter_sees_all(client, api_context):
     await _create_content(
         client,
         cm_token,
+        session_factory,
+        api_context,
         title=f"Any Age Story {suffix}",
         target_age_min=5,
         target_age_max=8,
@@ -226,6 +277,8 @@ async def test_teacher_without_filter_sees_all(client, api_context):
     await _create_content(
         client,
         cm_token,
+        session_factory,
+        api_context,
         title=f"High Age Story {suffix}",
         target_age_min=14,
         target_age_max=17,
@@ -250,6 +303,8 @@ async def test_content_without_age_always_visible(client, api_context, session_f
     await _create_content(
         client,
         cm_token,
+        session_factory,
+        api_context,
         title=f"No Age Story {suffix}",
         target_age_min=None,
         target_age_max=None,
