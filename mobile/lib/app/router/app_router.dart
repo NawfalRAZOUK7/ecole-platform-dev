@@ -38,12 +38,14 @@ import 'package:ecole_platform/features/user/profile/two_factor_setup_screen.dar
 import 'package:ecole_platform/features/user/profile/change_password_screen.dart';
 import 'package:ecole_platform/features/lms/submissions/submission_upload_screen.dart';
 import 'package:ecole_platform/features/admin/admin_dashboard_screen.dart';
+import 'package:ecole_platform/features/admin/audit_log_screen.dart';
 import 'package:ecole_platform/features/admin/users_screen.dart';
 import 'package:ecole_platform/features/admin/invitations_screen.dart';
 import 'package:ecole_platform/features/admin/justification_review_screen.dart';
 import 'package:ecole_platform/features/academic/attendance/attendance_analytics_screen.dart';
 import 'package:ecole_platform/features/academic/attendance/attendance_history_screen.dart';
 import 'package:ecole_platform/features/billing/budgets/budget_detail_screen.dart';
+import 'package:ecole_platform/features/billing/budgets/budget_analytics_screen.dart';
 import 'package:ecole_platform/features/billing/budgets/budget_list_screen.dart';
 import 'package:ecole_platform/features/billing/budgets/budget_request_screen.dart';
 import 'package:ecole_platform/features/school/micro_schools/micro_school_detail_screen.dart';
@@ -126,6 +128,7 @@ const _roleRedirects = <String, String>{
 const _routeRoles = <String, Set<String>>{
   '/student/content/:id/read': {'STD'},
   '/admin/dashboard': {'ADM', 'DIR'},
+  '/admin/audit-logs': {'DIR'},
   '/admin/users': {'ADM', 'DIR'},
   '/admin/invitations': {'ADM'},
   '/admin/justifications': {'ADM'},
@@ -134,6 +137,7 @@ const _routeRoles = <String, Set<String>>{
   '/admin/settings': {'ADM'},
   '/analytics': {'ADM', 'DIR'},
   '/budgets': {'ADM', 'DIR'},
+  '/budgets/analytics': {'ADM', 'DIR'},
   '/budgets/requests': {'ADM', 'DIR'},
   '/budgets/:id': {'ADM', 'DIR'},
   '/micro-schools': {'EDUCATOR', 'ADM', 'DIR', 'PAR'},
@@ -399,6 +403,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const AdminDashboardScreen(),
           ),
           GoRoute(
+            path: '/admin/audit-logs',
+            builder: (context, state) => const AuditLogScreen(),
+          ),
+          GoRoute(
             path: '/admin/users',
             builder: (context, state) => const UsersScreen(),
           ),
@@ -433,6 +441,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/budgets/requests',
             builder: (context, state) => const BudgetRequestScreen(),
+          ),
+          GoRoute(
+            path: '/budgets/analytics',
+            builder: (context, state) => const BudgetAnalyticsScreen(),
           ),
           GoRoute(
             path: '/budgets/:id',

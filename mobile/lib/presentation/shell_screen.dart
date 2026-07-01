@@ -93,6 +93,20 @@ const _allNavItems = [
     groupKey: 'shell.group.finance',
   ),
   _NavItem(
+    route: '/budgets/analytics',
+    icon: Icons.pie_chart_outline,
+    labelKey: 'budgetAnalytics.title',
+    roles: ['ADM', 'DIR'],
+    groupKey: 'shell.group.finance',
+  ),
+  _NavItem(
+    route: '/admin/audit-logs',
+    icon: Icons.receipt_long_outlined,
+    labelKey: 'audit.title',
+    roles: ['DIR'],
+    groupKey: 'shell.group.analytics',
+  ),
+  _NavItem(
     route: '/micro-schools',
     icon: Icons.location_city_outlined,
     labelKey: 'shell.microSchools',
